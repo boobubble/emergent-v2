@@ -165,7 +165,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       };
       if (trimmed.startsWith("!")) {
         const result = runCommand(trimmed, { state: next, channelId });
-        const sysMsgs: Message[] = result.replies.map(r => ({
+        const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }) => ({
           id: uid(), channelId, authorId: r.from || "bot-gamebot",
           text: r.text, ts: Date.now(), kind: "game",
         }));
