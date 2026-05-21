@@ -38,6 +38,7 @@ const HELP = `**Commands**
 !flip — coin flip
 !8ball <question> — magic 8-ball
 !slots — spin the slot machine
+!fish — cast a line and catch a fish
 !trivia — start a trivia question (answer with !a <choice>)
 !hangman — start hangman (guess with !g <letter>)
 !blackjack — quick blackjack hand
