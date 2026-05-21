@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { Send, Smile, Sparkles } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 
-const COMMANDS = ["!help", "!roll", "!flip", "!8ball", "!slots", "!trivia", "!a", "!hangman", "!g", "!blackjack", "!me", "!stats"];
+const COMMANDS = ["!help", "!roll", "!flip", "!8ball", "!slots", "!fish", "!trivia", "!a", "!hangman", "!g", "!blackjack", "!me", "!stats"];
 const EMOJIS = ["😀","😂","😎","🥳","👍","❤️","🔥","🎲","🎰","🏆","👀","🪙","💀","🎉"];
 
 export function MessageInput() {
