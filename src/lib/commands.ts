@@ -92,6 +92,42 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       return { replies: [{ text: `🎰 [ ${r.join(" | ")} ] ${win ? "**JACKPOT!**" : ""}` }] };
     }
 
+    case "fish": {
+      const catches = [
+        { name: "Tiny Minnow", emoji: "🐟", weight: 0.2, xp: 1, rarity: "common" },
+        { name: "Mackerel", emoji: "🐟", weight: 1.4, xp: 3, rarity: "common" },
+        { name: "Salmon", emoji: "🐠", weight: 3.2, xp: 5, rarity: "uncommon" },
+        { name: "Pufferfish", emoji: "🐡", weight: 1.1, xp: 6, rarity: "uncommon" },
+        { name: "Tropical Fish", emoji: "🐠", weight: 0.8, xp: 7, rarity: "rare" },
+        { name: "Squid", emoji: "🦑", weight: 4.5, xp: 9, rarity: "rare" },
+        { name: "Octopus", emoji: "🐙", weight: 6.7, xp: 12, rarity: "rare" },
+        { name: "Lobster", emoji: "🦞", weight: 2.9, xp: 14, rarity: "epic" },
+        { name: "Shark", emoji: "🦈", weight: 142.0, xp: 25, rarity: "epic" },
+        { name: "Whale", emoji: "🐋", weight: 8200.0, xp: 50, rarity: "legendary" },
+        { name: "Golden Koi", emoji: "✨🐠", weight: 4.1, xp: 75, rarity: "legendary" },
+      ];
+      const junk = [
+        "🥾 an old boot", "🪣 a rusty bucket", "🌿 a clump of seaweed",
+        "🥫 a tin can", "🦴 a strange bone", "🫧 just bubbles",
+      ];
+      // 25% chance of junk
+      if (Math.random() < 0.25) {
+        const j = junk[Math.floor(Math.random() * junk.length)];
+        return { replies: [{ text: `🎣 You cast your line... and reeled in ${j}. No XP.` }] };
+      }
+      // Weighted by rarity: common > uncommon > rare > epic > legendary
+      const weights: Record<string, number> = { common: 50, uncommon: 28, rare: 14, epic: 6, legendary: 2 };
+      const pool: typeof catches = [];
+      catches.forEach(c => { for (let i = 0; i < weights[c.rarity]; i++) pool.push(c); });
+      const fish = pool[Math.floor(Math.random() * pool.length)];
+      const tag =
+        fish.rarity === "legendary" ? "🌟 **LEGENDARY!**" :
+        fish.rarity === "epic" ? "💜 *Epic catch*" :
+        fish.rarity === "rare" ? "💎 Rare" :
+        fish.rarity === "uncommon" ? "Uncommon" : "Common";
+      return { replies: [{ text: `🎣 You caught a ${fish.emoji} **${fish.name}** — ${fish.weight}kg (+${fish.xp} XP) — ${tag}` }] };
+    }
+
     case "trivia": {
       const q = TRIVIA[Math.floor(Math.random() * TRIVIA.length)];
       return {
