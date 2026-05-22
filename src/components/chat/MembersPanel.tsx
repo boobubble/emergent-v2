@@ -1,7 +1,15 @@
-import { Crown, Shield, ShieldHalf, MessageCircle } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { Role } from "@/lib/chat-types";
 
 const ICONS: Record<Role, React.ReactNode> = {
