@@ -1,8 +1,10 @@
-import { createContext, useContext, useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
-import type { User, Message, Room, GameState } from "./chat-types";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from "react";
+import type { User, Message, Room, GameState, Attachment } from "./chat-types";
 import { runCommand } from "./commands";
 
-const STORAGE_KEY = "palrgo:state:v1";
+const STORAGE_KEY_BASE = "palrgo:state:v2";
+const SYNC_CHANNEL = "palrgo:sync:v2";
+function storageKeyFor(username: string) { return `${STORAGE_KEY_BASE}:${username.toLowerCase()}`; }
 const SEED_TIME = 1_700_000_000_000;
 
 const AVATAR_COLORS = [
