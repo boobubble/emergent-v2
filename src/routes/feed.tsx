@@ -8,6 +8,7 @@ import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, LeaderboardWidget, StreakWidget } from "@/components/feed/SideWidgets";
 import { AccountPanel } from "@/components/feed/AccountPanel";
+import { ProfilePanel } from "@/components/feed/ProfilePanel";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
 
 export const Route = createFileRoute("/feed")({
