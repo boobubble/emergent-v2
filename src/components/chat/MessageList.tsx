@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
-import { Download, Reply, CornerDownRight } from "lucide-react";
+import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.kind === "image") {
