@@ -42,14 +42,13 @@ export function UserMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link
-            to={isMe ? "/account" : "/u/$username"}
-            params={isMe ? undefined : { username }}
+            to="/feed"
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"
           >
             <ExternalLink className="mr-2 h-4 w-4" />
-            {isMe ? "Account settings (new tab)" : "Open profile (new tab)"}
+            {isMe ? "Open feed (new tab)" : "Open profile (new tab)"}
           </Link>
         </DropdownMenuItem>
         {!isMe && (
