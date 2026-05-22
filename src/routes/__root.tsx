@@ -10,6 +10,8 @@ import {
 import { AuthProvider, useAuth } from "@/lib/auth-store";
 import { ChatProvider } from "@/lib/chat-store";
 import { AuthScreen } from "@/components/auth/AuthScreen";
+import { useEffect } from "react";
+import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 
 import appCss from "../styles.css?url";
 
@@ -117,6 +119,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    applyAccent(getStoredAccent());
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

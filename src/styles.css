@@ -97,6 +97,76 @@
   --shadow-panel: 0 8px 24px oklch(0 0 0 / 0.08);
 }
 
+/* ===== Accent themes (applied via data-accent on <html>) =====
+   Each block overrides the primary/accent token family so every
+   surface that reads from --primary / --accent / --ring / --success
+   automatically restyles. Works for both dark and light modes. */
+
+:root[data-accent="blue"] {
+  --primary: oklch(0.62 0.18 252);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.62 0.18 252);
+  --accent-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.62 0.18 252);
+  --success: oklch(0.62 0.18 252);
+  --primary-glow: oklch(0.62 0.18 252 / 0.5);
+  --shadow-glow: 0 0 20px oklch(0.62 0.18 252 / 0.35);
+  --shadow-glow-sm: 0 0 8px oklch(0.62 0.18 252 / 0.5);
+  --gradient-primary: linear-gradient(135deg, oklch(0.62 0.18 252), oklch(0.55 0.2 270));
+}
+
+:root[data-accent="purple"] {
+  --primary: oklch(0.58 0.22 290);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.58 0.22 290);
+  --accent-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.58 0.22 290);
+  --success: oklch(0.58 0.22 290);
+  --primary-glow: oklch(0.58 0.22 290 / 0.5);
+  --shadow-glow: 0 0 20px oklch(0.58 0.22 290 / 0.35);
+  --shadow-glow-sm: 0 0 8px oklch(0.58 0.22 290 / 0.5);
+  --gradient-primary: linear-gradient(135deg, oklch(0.58 0.22 290), oklch(0.5 0.22 270));
+}
+
+:root[data-accent="orange"] {
+  --primary: oklch(0.7 0.19 45);
+  --primary-foreground: oklch(0.16 0 0);
+  --accent: oklch(0.7 0.19 45);
+  --accent-foreground: oklch(0.16 0 0);
+  --ring: oklch(0.7 0.19 45);
+  --success: oklch(0.7 0.19 45);
+  --primary-glow: oklch(0.7 0.19 45 / 0.5);
+  --shadow-glow: 0 0 20px oklch(0.7 0.19 45 / 0.4);
+  --shadow-glow-sm: 0 0 8px oklch(0.7 0.19 45 / 0.55);
+  --gradient-primary: linear-gradient(135deg, oklch(0.72 0.2 55), oklch(0.65 0.22 20));
+}
+
+:root[data-accent="rose"] {
+  --primary: oklch(0.66 0.23 10);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.66 0.23 10);
+  --accent-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.66 0.23 10);
+  --success: oklch(0.66 0.23 10);
+  --primary-glow: oklch(0.66 0.23 10 / 0.5);
+  --shadow-glow: 0 0 20px oklch(0.66 0.23 10 / 0.4);
+  --shadow-glow-sm: 0 0 8px oklch(0.66 0.23 10 / 0.55);
+  --gradient-primary: linear-gradient(135deg, oklch(0.7 0.23 5), oklch(0.55 0.22 305));
+}
+
+:root[data-accent="beige"] {
+  --primary: oklch(0.52 0.09 55);
+  --primary-foreground: oklch(0.98 0.01 80);
+  --accent: oklch(0.52 0.09 55);
+  --accent-foreground: oklch(0.98 0.01 80);
+  --ring: oklch(0.52 0.09 55);
+  --success: oklch(0.52 0.09 55);
+  --primary-glow: oklch(0.62 0.08 60 / 0.5);
+  --shadow-glow: 0 0 20px oklch(0.62 0.08 60 / 0.35);
+  --shadow-glow-sm: 0 0 8px oklch(0.62 0.08 60 / 0.5);
+  --gradient-primary: linear-gradient(135deg, oklch(0.78 0.06 75), oklch(0.45 0.07 50));
+}
+
 :root.light ::-webkit-scrollbar-thumb { background: oklch(0 0 0 / 0.12); }
 :root.light ::-webkit-scrollbar-thumb:hover { background: oklch(0 0 0 / 0.22); }
 
