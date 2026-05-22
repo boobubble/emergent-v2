@@ -467,6 +467,9 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
             messages: { ...s.messages, [msg.channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts) },
           };
         });
+        if (msg.channelId.startsWith("dm:") && msg.authorId !== "me") {
+          playDmPing();
+        }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
