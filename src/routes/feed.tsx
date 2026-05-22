@@ -142,8 +142,8 @@ function FeedPage() {
           <nav className="sticky top-20 space-y-1">
             <NavLink to="/" icon={Home} label="Home / Chat" />
             <NavLink to="/feed" icon={Sparkles} label="Feed" active />
-            <NavLink to="/leaderboard" icon={Flame} label="Leaderboard" />
-            <NavLink to="/achievements" icon={Bell} label="Achievements" />
+            <NavLink to="/feed" icon={Flame} label="Leaderboard" />
+            <NavLink to="/feed" icon={Bell} label="Achievements" />
           </nav>
         </aside>
 
