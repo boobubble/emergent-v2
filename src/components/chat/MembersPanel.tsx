@@ -5,8 +5,8 @@ import type { Role } from "@/lib/chat-types";
 
 const ICONS: Record<Role, React.ReactNode> = {
   owner: <Crown className="h-3 w-3 text-warning" />,
-  admin: <Shield className="h-3 w-3 text-accent" />,
-  mod: <ShieldHalf className="h-3 w-3 text-primary" />,
+  admin: <Shield className="h-3 w-3 text-primary" />,
+  mod: <ShieldHalf className="h-3 w-3 text-primary/70" />,
   member: null,
 };
 
@@ -24,39 +24,88 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   });
 
   const online = ranked.filter(id => state.users[id]?.status !== "offline");
+  const offline = ranked.filter(id => state.users[id]?.status === "offline");
 
   return (
     <aside className="hidden h-full w-60 shrink-0 flex-col border-l border-border bg-card lg:flex">
-      <div className="border-b border-border px-4 py-3">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Members</div>
-        <div className="text-sm">{online.length} online · {room.members.length} total</div>
+      <div className="px-5 pt-6">
+        <h2 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          Members &mdash; {room.members.length}
+        </h2>
       </div>
-      <div className="flex-1 overflow-y-auto p-2">
-        {ranked.map(id => {
-          const u = state.users[id];
-          if (!u) return null;
-          const role: Role = room.roles[id] || "member";
-          return (
-            <button
+
+      <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+        <div className="space-y-1">
+          {online.map(id => (
+            <MemberRow
               key={id}
+              id={id}
+              role={room.roles[id] || "member"}
               onClick={() => id !== "me" && startDM(id)}
-              className="mb-0.5 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-muted"
-              title={id === "me" ? "" : "Send DM"}
-            >
-              <Avatar user={u} size={28} />
-              <div className="min-w-0 flex-1 leading-tight">
-                <div className="flex items-center gap-1 truncate text-sm">
-                  {u.name}
-                  {ICONS[role]}
-                </div>
-                <div className="truncate text-[11px] text-muted-foreground">
-                  {u.isBot ? "Bot" : `Lv ${u.level}`}
-                </div>
-              </div>
-            </button>
-          );
-        })}
+            />
+          ))}
+        </div>
+
+        {offline.length > 0 && (
+          <div>
+            <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+              Offline — {offline.length}
+            </div>
+            <div className="space-y-1 opacity-60">
+              {offline.map(id => (
+                <MemberRow
+                  key={id}
+                  id={id}
+                  role={room.roles[id] || "member"}
+                  onClick={() => id !== "me" && startDM(id)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-5">
+        <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/15 to-transparent p-4">
+          <p className="mb-1 text-xs font-bold text-primary">Try a command</p>
+          <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">
+            Type{" "}
+            <code className="rounded bg-white/10 px-1 font-mono text-[10px] text-primary">!help</code>{" "}
+            to see games and fun stuff.
+          </p>
+        </div>
       </div>
     </aside>
   );
+
+  function MemberRow({
+    id,
+    role,
+    onClick,
+  }: {
+    id: string;
+    role: Role;
+    onClick: () => void;
+  }) {
+    const u = state.users[id];
+    if (!u) return null;
+    return (
+      <button
+        onClick={onClick}
+        className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-white/5"
+        title={id === "me" ? "" : "Send DM"}
+      >
+        <Avatar user={u} size={32} />
+        <div className="min-w-0 flex-1 leading-tight">
+          <div className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground/90">
+            {u.name}
+            {ICONS[role]}
+          </div>
+          <div className="truncate text-[10px] text-muted-foreground">
+            {u.isBot ? "Bot" : u.status === "offline" ? "Offline" : `Lv ${u.level}`}
+          </div>
+        </div>
+      </button>
+    );
+  }
 }
