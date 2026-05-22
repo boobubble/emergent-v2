@@ -71,8 +71,9 @@ interface State {
 function seed(name = "user0000"): State {
   const me: User = {
     id: "me", name, avatarColor: AVATAR_COLORS[4],
-    status: "online", xp: 0, level: 1, bio: "New here",
-    streak: 0, longestStreak: 0, messageCount: 0, commandCount: 0, badges: [],
+    status: "online", xp: 0, level: 1, bio: "New here", coins: 50,
+    streak: 0, longestStreak: 0, messageCount: 0, commandCount: 0,
+    badges: [], friends: [], blocked: [],
   };
   const users: Record<string, User> = { me };
   SEED_BOTS.forEach(b => (users[b.id] = b));
