@@ -324,7 +324,7 @@ function pickBotReply(text: string): string {
   else if (/\b(love|❤️|🫶|🥰|awesome|amazing|beautiful)\b/.test(t)) pool = BOT_REPLIES.love;
   else if (/\b(agree|same|true|right|exactly|facts)\b/.test(t)) pool = BOT_REPLIES.agree;
   else if (/\b(disagree|nope|wrong|nah)\b/.test(t)) pool = BOT_REPLIES.disagree;
-  else if (/\b(game|play|trivia|hangman|blackjack|roll|dice|fish|dig)\b/.test(t)) pool = BOT_REPLIES.game;
+  else if (/\b(game|play|trivia|hangman|roll|dice|fish|dig)\b/.test(t)) pool = BOT_REPLIES.game;
   else if (/\?\s*$/.test(text) || /\b(what|why|how|when|where|who)\b/.test(t)) pool = BOT_REPLIES.question;
   return pool[Math.floor(Math.random() * pool.length)];
 }
