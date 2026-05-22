@@ -71,7 +71,7 @@ export function ProfileModal({ open, onClose }: { open: boolean; onClose: () => 
 }
 
 export function LeaderboardModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { state } = useChat();
+  const { state, adjustPoints } = useChat();
   if (!open) return null;
   const ranked = Object.values(state.users).sort((a,b) => b.xp - a.xp).slice(0, 10);
   return (
@@ -90,9 +90,14 @@ export function LeaderboardModal({ open, onClose }: { open: boolean; onClose: ()
               <div className="text-xs text-muted-foreground">Lv {u.level}</div>
             </div>
             <div className="font-mono text-sm text-accent">{u.xp} XP</div>
+            <div className="flex gap-1">
+              <button onClick={() => adjustPoints(u.id, -10)} className="grid h-6 w-6 place-items-center rounded bg-muted text-xs hover:bg-destructive/30" title="-10 XP">−</button>
+              <button onClick={() => adjustPoints(u.id, 10)} className="grid h-6 w-6 place-items-center rounded bg-muted text-xs hover:bg-primary/30" title="+10 XP">+</button>
+            </div>
           </div>
         ))}
       </div>
+      <div className="border-t border-border px-4 py-2 text-[10px] text-muted-foreground">Adjust points with +/−. Changes sync across your open tabs.</div>
     </Backdrop>
   );
 }
