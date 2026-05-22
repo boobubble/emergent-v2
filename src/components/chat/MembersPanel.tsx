@@ -5,7 +5,7 @@ import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { supabase } from "@/integrations/supabase/client";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
 import {
