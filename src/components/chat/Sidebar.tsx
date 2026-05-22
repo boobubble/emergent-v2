@@ -164,6 +164,15 @@ export function Sidebar({ onOpenProfile, onOpenLeaderboard, onOpenAchievements }
         >
           <Trophy className="h-4 w-4" /> Leaderboard
         </button>
+        <button
+          onClick={onOpenAchievements}
+          className="mb-1 flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+        >
+          <Award className="h-4 w-4" /> Achievements
+          <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+            {state.me.badges?.length ?? 0}
+          </span>
+        </button>
         <div className="mb-2">
           <ThemeToggle />
         </div>
@@ -174,8 +183,13 @@ export function Sidebar({ onOpenProfile, onOpenLeaderboard, onOpenAchievements }
           <Avatar user={state.me} size={36} />
           <div className="min-w-0 flex-1 leading-tight">
             <div className="truncate text-sm font-bold text-foreground">{state.me.name}</div>
-            <div className="text-[10px] text-muted-foreground">
-              Lv {state.me.level} · {state.me.xp} XP
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <span>Lv {state.me.level} · {state.me.xp} XP</span>
+              {(state.me.streak ?? 0) > 0 && (
+                <span className="flex items-center gap-0.5 text-orange-400">
+                  <Flame className="h-2.5 w-2.5" />{state.me.streak}
+                </span>
+              )}
             </div>
           </div>
           <Settings className="h-4 w-4 text-muted-foreground" />
