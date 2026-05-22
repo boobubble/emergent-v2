@@ -87,7 +87,7 @@ export function AccountPanel() {
           </div>
 
           <div className="min-w-0 flex-1 space-y-4">
-            <Field label="Username (2–10 words)">
+            <Field label="Username (2–10 letters)">
               <input value={name} onChange={e => setName(e.target.value)} className="w-full rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="your display name" />
             </Field>
             <Field label="Bio">
