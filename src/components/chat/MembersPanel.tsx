@@ -118,9 +118,10 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const hiddenOffline = offlineSorted.length - offline.length;
 
 
-  return (
-    <aside className="hidden h-full w-60 shrink-0 flex-col border-l border-border bg-card lg:flex">
+  const body = (
+    <>
       <div className="flex items-center justify-end gap-1 px-3 pt-4">
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
