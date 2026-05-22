@@ -218,9 +218,9 @@ function FeedPage() {
         {/* Right widgets */}
         <aside className="hidden space-y-4 lg:block">
           <div className="sticky top-20 space-y-4">
+            <ChatroomOnlineWidget />
             <FriendsWidget meId={meId} profiles={profiles} />
             <HashtagsWidget />
-            <ChatroomOnlineWidget profiles={profiles} />
             <LeaderboardWidget profiles={profiles} />
             <StreakWidget profiles={profiles} />
           </div>
