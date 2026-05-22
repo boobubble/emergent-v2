@@ -107,22 +107,23 @@ function seed(name = "user0000"): State {
   };
 }
 
-function load(): State {
+function load(username: string): State {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return normalizeMe(JSON.parse(raw));
+    const raw = localStorage.getItem(storageKeyFor(username));
+    if (raw) return normalizeMe(JSON.parse(raw), username);
   } catch {}
-  return seed(generateUsername());
+  return seed(username);
 }
 
 interface Ctx {
   state: State;
   setActive: (channelId: string) => void;
-  send: (text: string) => void;
+  send: (text: string, attachment?: Attachment) => void;
   startDM: (userId: string) => void;
   joinRoom: (roomId: string) => void;
   createRoom: (name: string, topic: string) => void;
   updateMe: (patch: Partial<User>) => void;
+  adjustPoints: (userId: string, delta: number) => void;
   reset: () => void;
   channelMessages: (id: string) => Message[];
   channelLabel: (id: string) => string;
@@ -138,19 +139,39 @@ const BOT_REPLIES = [
   "I'm in", "🔥🔥", "anyone playing today?", "same here",
 ];
 
-export function ChatProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<State>(() => seed());
+export function ChatProvider({ username, children }: { username: string; children: ReactNode }) {
+  const [state, setState] = useState<State>(() => seed(username));
   const [storageReady, setStorageReady] = useState(false);
+  const syncRef = useRef<BroadcastChannel | null>(null);
+  const skipBroadcast = useRef(false);
 
   useEffect(() => {
-    setState(load());
+    setState(load(username));
     setStorageReady(true);
-  }, []);
+  }, [username]);
+
+  // Cross-tab realtime sync via BroadcastChannel + storage events
+  useEffect(() => {
+    if (!storageReady) return;
+    if (typeof BroadcastChannel !== "undefined") {
+      const ch = new BroadcastChannel(`${SYNC_CHANNEL}:${username.toLowerCase()}`);
+      syncRef.current = ch;
+      ch.onmessage = (e) => {
+        if (e.data?.type === "state") {
+          skipBroadcast.current = true;
+          setState(e.data.state as State);
+        }
+      };
+      return () => { ch.close(); syncRef.current = null; };
+    }
+  }, [storageReady, username]);
 
   useEffect(() => {
     if (!storageReady) return;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-  }, [state, storageReady]);
+    try { localStorage.setItem(storageKeyFor(username), JSON.stringify(state)); } catch {}
+    if (skipBroadcast.current) { skipBroadcast.current = false; return; }
+    syncRef.current?.postMessage({ type: "state", state });
+  }, [state, storageReady, username]);
 
   // Ambient bot chatter in active public room
   useEffect(() => {
