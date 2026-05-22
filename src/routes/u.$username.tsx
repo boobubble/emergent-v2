@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, MessageCircle, Crown, Shield, ShieldHalf, Trophy, Flame, Award } from "lucide-react";
+import { ArrowLeft, MessageCircle, Crown, Shield, ShieldHalf, Trophy, Flame, Award, Coins, UserPlus, UserMinus, Ban, ShieldCheck } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
