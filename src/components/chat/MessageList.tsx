@@ -75,6 +75,15 @@ function ReplyPreview({ message, align = "left" }: { message: Message; align?: "
 export function MessageList({ channelId }: { channelId: string }) {
   const { channelMessages, state, setReplyingTo, findMessage } = useChat();
   const msgs = channelMessages(channelId);
+  const lastSeenMeId = useMemo(() => {
+    let lastMeIdx = -1;
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      if (msgs[i].authorId === "me") { lastMeIdx = i; break; }
+    }
+    if (lastMeIdx === -1) return null;
+    const hasLaterOther = msgs.slice(lastMeIdx + 1).some(m => m.authorId !== "me");
+    return hasLaterOther ? msgs[lastMeIdx].id : null;
+  }, [msgs]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
