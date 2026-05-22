@@ -20,7 +20,7 @@ const ICONS: Record<Role, React.ReactNode> = {
 };
 
 export function MembersPanel({ roomId }: { roomId: string }) {
-  const { state, startDM, setActive } = useChat();
+  const { state, startDM, setActive, closeDM } = useChat();
   const room = state.rooms[roomId];
   if (!room) return null;
 
