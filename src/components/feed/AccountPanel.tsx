@@ -44,9 +44,9 @@ export function AccountPanel() {
 
   const save = async () => {
     const trimmed = name.trim();
-    const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
-    if (wordCount < 2 || wordCount > 10) {
-      alert("Username must be 2 to 10 words.");
+    const letterCount = trimmed.replace(/[^a-zA-Z]/g, "").length;
+    if (letterCount < 2 || letterCount > 10) {
+      alert("Username must contain 2 to 10 letters.");
       return;
     }
     updateMe({ name: trimmed, bio: bio.trim(), status });
