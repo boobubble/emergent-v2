@@ -305,13 +305,27 @@ export function ChatProvider({ username, children }: { username: string; childre
     }));
   }, []);
 
-  const reset = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setState(seed(generateUsername()));
+  const adjustPoints = useCallback((userId: string, delta: number) => {
+    setState(s => {
+      const u = s.users[userId];
+      if (!u) return s;
+      const newXp = Math.max(0, u.xp + delta);
+      const updated: User = { ...u, xp: newXp, level: Math.floor(newXp / 50) + 1 };
+      return {
+        ...s,
+        users: { ...s.users, [userId]: updated },
+        me: userId === "me" ? { ...s.me, xp: newXp, level: updated.level } : s.me,
+      };
+    });
   }, []);
 
+  const reset = useCallback(() => {
+    localStorage.removeItem(storageKeyFor(username));
+    setState(seed(username));
+  }, [username]);
+
   const value = useMemo<Ctx>(() => ({
-    state, setActive, send, startDM, joinRoom, createRoom, updateMe, reset,
+    state, setActive, send, startDM, joinRoom, createRoom, updateMe, adjustPoints, reset,
     channelMessages: (id) => state.messages[id] || [],
     channelLabel: (id) => {
       if (id.startsWith("dm:")) {
@@ -322,7 +336,7 @@ export function ChatProvider({ username, children }: { username: string; childre
     },
     isDM: (id) => id.startsWith("dm:"),
     dmUser: (id) => id.startsWith("dm:") ? state.users[id.slice(3)] : undefined,
-  }), [state, setActive, send, startDM, joinRoom, createRoom, updateMe, reset]);
+  }), [state, setActive, send, startDM, joinRoom, createRoom, updateMe, adjustPoints, reset]);
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
 }
