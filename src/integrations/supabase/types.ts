@@ -229,6 +229,7 @@ export type Database = {
           coins: number
           cover_url: string | null
           created_at: string
+          gender: string | null
           id: string
           is_private: boolean
           last_active_day: string | null
@@ -248,6 +249,7 @@ export type Database = {
           coins?: number
           cover_url?: string | null
           created_at?: string
+          gender?: string | null
           id: string
           is_private?: boolean
           last_active_day?: string | null
@@ -267,6 +269,7 @@ export type Database = {
           coins?: number
           cover_url?: string | null
           created_at?: string
+          gender?: string | null
           id?: string
           is_private?: boolean
           last_active_day?: string | null
