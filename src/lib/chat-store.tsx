@@ -25,7 +25,7 @@ function generateUsername() {
 }
 
 function normalizeMe(state: State, fallbackName = generateUsername()): State {
-  if (!isPlaceholderName(state.me.name)) return state;
+  if (state.me.name === fallbackName && !isPlaceholderName(state.me.name)) return state;
   const me = { ...state.me, name: fallbackName };
   const messages = Object.fromEntries(
     Object.entries(state.messages || {}).map(([channelId, msgs]) => [
