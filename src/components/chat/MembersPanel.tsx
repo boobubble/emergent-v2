@@ -83,7 +83,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                 return (
                   <DropdownMenuItem
                     key={uid}
-                    onSelect={(e) => { e.preventDefault(); setActive(`dm:${uid}`); }}
+                    onSelect={(e) => { e.preventDefault(); setActive(dmChannelFor(uid)); }}
                     className="gap-2"
                   >
                     <Avatar user={u} size={24} />
