@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
+import { UserMenu } from "./UserMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
 import { Download } from "lucide-react";
 
@@ -129,7 +129,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                 <div className="flex min-w-0 flex-1 flex-col items-end">
                   <div className="mb-1 flex items-center gap-2">
                     <Time ts={g[0].ts} />
-                    <Link to="/u/$username" params={{ username: author.name }} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-foreground hover:text-primary hover:underline">{author.name}</Link>
+                    <UserMenu userId={author.id} username={author.name}><span className="text-sm font-bold text-foreground">{author.name}</span></UserMenu>
                   </div>
                   <div className="flex max-w-[80%] flex-col items-end gap-1">
                     {g.map(m => (
@@ -156,15 +156,9 @@ export function MessageList({ channelId }: { channelId: string }) {
               <Avatar user={author} size={36} />
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
-                  <Link
-                    to="/u/$username"
-                    params={{ username: author.name }}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`text-sm font-bold text-foreground hover:text-primary hover:underline`}
-                  >
-                    {author.name}
-                  </Link>
+                  <UserMenu userId={author.id} username={author.name}>
+                    <span className="text-sm font-bold text-foreground">{author.name}</span>
+                  </UserMenu>
                   {author.isBot && (
                     <span className="rounded-md bg-primary/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight text-primary">
                       Bot

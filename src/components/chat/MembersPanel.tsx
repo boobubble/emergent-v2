@@ -1,7 +1,7 @@
 import { Crown, Shield, ShieldHalf, MessageCircle } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
+import { UserMenu } from "./UserMenu";
 import type { Role } from "@/lib/chat-types";
 
 const ICONS: Record<Role, React.ReactNode> = {
@@ -92,18 +92,20 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     if (!u) return null;
     return (
       <div className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2 transition-colors hover:bg-white/5">
-        <Link to="/u/$username" params={{ username: u.name }} target="_blank" rel="noopener noreferrer" className="shrink-0">
+        <UserMenu userId={u.id} username={u.name}>
           <Avatar user={u} size={32} />
-        </Link>
-        <Link to="/u/$username" params={{ username: u.name }} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 leading-tight">
-          <div className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground/90 hover:text-primary">
-            {u.name}
-            {ICONS[role]}
+        </UserMenu>
+        <UserMenu userId={u.id} username={u.name}>
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground/90 hover:text-primary">
+              {u.name}
+              {ICONS[role]}
+            </div>
+            <div className="truncate text-[10px] text-muted-foreground">
+              {u.isBot ? "Bot" : u.status === "offline" ? "Offline" : `Lv ${u.level}`}
+            </div>
           </div>
-          <div className="truncate text-[10px] text-muted-foreground">
-            {u.isBot ? "Bot" : u.status === "offline" ? "Offline" : `Lv ${u.level}`}
-          </div>
-        </Link>
+        </UserMenu>
         {id !== "me" && (
           <button
             onClick={onClick}
