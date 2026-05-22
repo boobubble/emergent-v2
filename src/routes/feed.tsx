@@ -165,8 +165,8 @@ function FeedPage() {
         {/* Left nav */}
         <aside className="hidden lg:block">
           <nav className="sticky top-20 space-y-1">
-            <NavLink to="/" icon={Home} label="Home / Chat" />
             <button onClick={() => setView("feed")} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors ${view === "feed" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}><Sparkles className="h-4 w-4" /> Feed</button>
+            <NavLink to="/" icon={Home} label="Chatrooms" />
             <NavLink to="/feed" icon={Flame} label="Leaderboard" />
             <NavLink to="/feed" icon={Bell} label="Achievements" />
             <button onClick={() => setView("account")} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors ${view === "account" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}><Settings className="h-4 w-4" /> Account</button>
