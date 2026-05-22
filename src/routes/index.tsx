@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Flame, Award } from "lucide-react";
+import { Flame, Award, PanelLeftOpen } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
@@ -30,6 +30,7 @@ function ChatApp() {
   const [lbOpen, setLbOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
   const [toast, setToast] = useState<EngageToast | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,12 +76,25 @@ function ChatApp() {
   return (
     <>
       <div ref={rootRef} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
-        <Sidebar
-          onOpenProfile={() => setProfileOpen(true)}
-          onOpenLeaderboard={() => setLbOpen(true)}
-          onOpenAchievements={() => setAchOpen(true)}
-        />
-        <main className="flex h-full min-w-0 flex-1 flex-col">
+        {sidebarOpen && (
+          <Sidebar
+            onOpenProfile={() => setProfileOpen(true)}
+            onOpenLeaderboard={() => setLbOpen(true)}
+            onOpenAchievements={() => setAchOpen(true)}
+            onCollapse={() => setSidebarOpen(false)}
+          />
+        )}
+        <main className="relative flex h-full min-w-0 flex-1 flex-col">
+          {!sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="absolute left-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-lg transition-all hover:scale-105 hover:text-primary"
+              title="Show sidebar"
+              aria-label="Show sidebar"
+            >
+              <PanelLeftOpen className="h-4 w-4" />
+            </button>
+          )}
           <ChatHeader />
           <MessageList channelId={state.activeChannel} />
           <MessageInput />
