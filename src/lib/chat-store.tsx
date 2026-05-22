@@ -2,6 +2,41 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, useCal
 import type { User, Message, Room, GameState, Attachment } from "./chat-types";
 import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
+import { supabase } from "@/integrations/supabase/client";
+import { useRemoteProfiles } from "./use-remote-profiles";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUuid(s: string) { return UUID_RE.test(s); }
+
+export function dmChannelFor(meId: string | null, peerId: string): string {
+  if (!meId || !isUuid(peerId)) return `dm:${peerId}`;
+  return "dm:" + [meId, peerId].sort().join(":");
+}
+function isRemoteChannel(channelId: string, meId: string | null): boolean {
+  if (channelId === "lobby") return true;
+  if (!meId) return false;
+  return channelId.startsWith("dm:") && channelId.includes(meId);
+}
+function rowToMessage(row: { id: string; channel_id: string; author_id: string; text: string; kind: string | null; attachment: unknown; reply_to_id: string | null; created_at: string }, meAuthUuid: string | null): Message {
+  const authorId = meAuthUuid && row.author_id === meAuthUuid ? "me" : row.author_id;
+  return {
+    id: row.id,
+    channelId: row.channel_id,
+    authorId,
+    text: row.text || "",
+    ts: new Date(row.created_at).getTime(),
+    kind: (row.kind as Message["kind"]) || "text",
+    attachment: (row.attachment as Attachment | null) ?? undefined,
+    replyToId: row.reply_to_id ?? undefined,
+  };
+}
+function newUuid(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
 
 const STORAGE_KEY_BASE = "palrgo:state:v3";
 const SYNC_CHANNEL = "palrgo:sync:v3";
