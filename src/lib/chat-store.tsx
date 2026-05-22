@@ -564,7 +564,7 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
         author_id: authUserId,
         text: out.text,
         kind: out.kind,
-        attachment: out.attachment,
+        attachment: out.attachment as unknown as never,
         reply_to_id: out.replyToId,
       }).then(({ error }) => { if (error) console.error("send failed", error); });
     }
