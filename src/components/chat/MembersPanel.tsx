@@ -1,4 +1,4 @@
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
