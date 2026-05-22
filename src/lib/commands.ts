@@ -276,19 +276,6 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       };
     }
 
-    case "blackjack": {
-      const player = [drawCard(), drawCard()];
-      const dealer = [drawCard(), drawCard()];
-      let pTotal = player.reduce((a, c) => a + c.v, 0);
-      while (pTotal < 17) { const c = drawCard(); player.push(c); pTotal += c.v; }
-      let dTotal = dealer.reduce((a, c) => a + c.v, 0);
-      while (dTotal < 17) { const c = drawCard(); dealer.push(c); dTotal += c.v; }
-      let outcome = "Push 🤝";
-      if (pTotal > 21) outcome = "Bust 💥 — Dealer wins";
-      else if (dTotal > 21 || pTotal > dTotal) outcome = `${who} wins! 🏆`;
-      else if (pTotal < dTotal) outcome = "Dealer wins 🪦";
-      return { replies: [{ text: `♠️ **Blackjack**\n${who}: ${player.map(c=>c.c).join(" ")} = ${pTotal}\nDealer: ${dealer.map(c=>c.c).join(" ")} = ${dTotal}\n${outcome}` }] };
-    }
 
     case "stats": {
       const me = ctx.state.me;
