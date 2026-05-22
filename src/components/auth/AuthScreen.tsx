@@ -75,7 +75,8 @@ export function AuthScreen() {
           {mode === "signup" && (
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Username</label>
-              <input value={username} onChange={e => setUsername(e.target.value)} maxLength={20} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="cool_user" />
+              <input value={username} onChange={e => setUsername(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. cool user" />
+              <p className="mt-1 text-[10px] text-muted-foreground">Must be 2 to 10 words.</p>
             </div>
           )}
           <div>
