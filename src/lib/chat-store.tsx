@@ -199,15 +199,16 @@ export function ChatProvider({ username, children }: { username: string; childre
   const pushMessages = (channelId: string, msgs: Message[]) =>
     setState(s => ({ ...s, messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), ...msgs] } }));
 
-  const send = useCallback((text: string) => {
+  const send = useCallback((text: string, attachment?: Attachment) => {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed && !attachment) return;
     setState(s => {
       const channelId = s.activeChannel;
       const userMsg: Message = {
         id: uid(), channelId, authorId: "me",
         text: trimmed, ts: Date.now(),
         kind: trimmed.startsWith("/me ") ? "me" : "text",
+        attachment,
       };
       const existing = s.messages[channelId] || [];
       let next: State = {
