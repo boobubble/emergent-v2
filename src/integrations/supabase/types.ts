@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      messages: {
+        Row: {
+          attachment: Json | null
+          author_id: string
+          channel_id: string
+          created_at: string
+          id: string
+          kind: string
+          reply_to_id: string | null
+          text: string
+        }
+        Insert: {
+          attachment?: Json | null
+          author_id: string
+          channel_id: string
+          created_at?: string
+          id?: string
+          kind?: string
+          reply_to_id?: string | null
+          text?: string
+        }
+        Update: {
+          attachment?: Json | null
+          author_id?: string
+          channel_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          reply_to_id?: string | null
+          text?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_color: string

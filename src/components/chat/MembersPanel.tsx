@@ -22,7 +22,7 @@ const ICONS: Record<Role, React.ReactNode> = {
 };
 
 export function MembersPanel({ roomId }: { roomId: string }) {
-  const { state, startDM, setActive, closeDM } = useChat();
+  const { state, startDM, setActive, closeDM, dmChannelFor } = useChat();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
   const room = state.rooms[roomId];
@@ -83,7 +83,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                 return (
                   <DropdownMenuItem
                     key={uid}
-                    onSelect={(e) => { e.preventDefault(); setActive(`dm:${uid}`); }}
+                    onSelect={(e) => { e.preventDefault(); setActive(dmChannelFor(uid)); }}
                     className="gap-2"
                   >
                     <Avatar user={u} size={24} />

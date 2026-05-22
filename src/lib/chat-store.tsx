@@ -2,6 +2,41 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, useCal
 import type { User, Message, Room, GameState, Attachment } from "./chat-types";
 import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
+import { supabase } from "@/integrations/supabase/client";
+import { useRemoteProfiles } from "./use-remote-profiles";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUuid(s: string) { return UUID_RE.test(s); }
+
+export function dmChannelFor(meId: string | null, peerId: string): string {
+  if (!meId || !isUuid(peerId)) return `dm:${peerId}`;
+  return "dm:" + [meId, peerId].sort().join(":");
+}
+function isRemoteChannel(channelId: string, meId: string | null): boolean {
+  if (channelId === "lobby") return true;
+  if (!meId) return false;
+  return channelId.startsWith("dm:") && channelId.includes(meId);
+}
+function rowToMessage(row: { id: string; channel_id: string; author_id: string; text: string; kind: string | null; attachment: unknown; reply_to_id: string | null; created_at: string }, meAuthUuid: string | null): Message {
+  const authorId = meAuthUuid && row.author_id === meAuthUuid ? "me" : row.author_id;
+  return {
+    id: row.id,
+    channelId: row.channel_id,
+    authorId,
+    text: row.text || "",
+    ts: new Date(row.created_at).getTime(),
+    kind: (row.kind as Message["kind"]) || "text",
+    attachment: (row.attachment as Attachment | null) ?? undefined,
+    replyToId: row.reply_to_id ?? undefined,
+  };
+}
+function newUuid(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
 
 const STORAGE_KEY_BASE = "palrgo:state:v3";
 const SYNC_CHANNEL = "palrgo:sync:v3";
@@ -232,6 +267,7 @@ interface Ctx {
   channelLabel: (id: string) => string;
   isDM: (id: string) => boolean;
   dmUser: (id: string) => User | undefined;
+  dmChannelFor: (peerId: string) => string;
   replyingTo: Message | null;
   setReplyingTo: (m: Message | null) => void;
   findMessage: (id: string) => Message | undefined;
@@ -273,13 +309,15 @@ function pickBotReply(text: string): string {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export function ChatProvider({ username, children }: { username: string; children: ReactNode }) {
+export function ChatProvider({ username, authUserId = null, children }: { username: string; authUserId?: string | null; children: ReactNode }) {
   const [state, setState] = useState<State>(() => seed(username));
   const [storageReady, setStorageReady] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const syncRef = useRef<BroadcastChannel | null>(null);
   const skipBroadcast = useRef(false);
   const streakChecked = useRef<string | null>(null);
+  const { profiles: remoteProfiles } = useRemoteProfiles();
+  const seenRemoteMsgIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     setState(load(username));
@@ -354,6 +392,78 @@ export function ChatProvider({ username, children }: { username: string; childre
     return () => clearInterval(t);
   }, []);
 
+  // Merge remote profiles into the users map (skips our own auth uuid; we render as "me")
+  useEffect(() => {
+    setState(s => {
+      const users = { ...s.users };
+      let changed = false;
+      Object.entries(remoteProfiles).forEach(([id, u]) => {
+        if (id === authUserId) return;
+        const prev = users[id];
+        if (!prev || prev.name !== u.name || prev.status !== u.status || prev.avatarColor !== u.avatarColor || prev.avatarUrl !== u.avatarUrl) {
+          users[id] = { ...prev, ...u };
+          changed = true;
+        }
+      });
+      return changed ? { ...s, users } : s;
+    });
+  }, [remoteProfiles, authUserId]);
+
+  // Fetch existing remote messages for lobby + the active remote channel
+  useEffect(() => {
+    if (!authUserId) return;
+    let cancelled = false;
+    const channelsToFetch = new Set<string>(["lobby"]);
+    if (isRemoteChannel(state.activeChannel, authUserId) && state.activeChannel !== "lobby") {
+      channelsToFetch.add(state.activeChannel);
+    }
+    (async () => {
+      for (const ch of channelsToFetch) {
+        const { data } = await supabase
+          .from("messages")
+          .select("id, channel_id, author_id, text, kind, attachment, reply_to_id, created_at")
+          .eq("channel_id", ch)
+          .order("created_at", { ascending: true })
+          .limit(200);
+        if (cancelled || !data) continue;
+        setState(s => {
+          const existing = s.messages[ch] || [];
+          const existingIds = new Set(existing.map(m => m.id));
+          const incoming = data
+            .filter(r => !existingIds.has(r.id))
+            .map(r => { seenRemoteMsgIds.current.add(r.id); return rowToMessage(r, authUserId); });
+          if (!incoming.length) return s;
+          const merged = [...existing, ...incoming].sort((a, b) => a.ts - b.ts);
+          return { ...s, messages: { ...s.messages, [ch]: merged } };
+        });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [authUserId, state.activeChannel]);
+
+  // Realtime subscription to new messages (RLS scopes us to lobby + our DMs)
+  useEffect(() => {
+    if (!authUserId) return;
+    const channel = supabase
+      .channel("palrgo-messages")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
+        const row = payload.new as Parameters<typeof rowToMessage>[0];
+        if (seenRemoteMsgIds.current.has(row.id)) return;
+        seenRemoteMsgIds.current.add(row.id);
+        const msg = rowToMessage(row, authUserId);
+        setState(s => {
+          const existing = s.messages[msg.channelId] || [];
+          if (existing.some(m => m.id === msg.id)) return s;
+          return {
+            ...s,
+            messages: { ...s.messages, [msg.channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts) },
+          };
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [authUserId]);
+
   const setActive = useCallback((channelId: string) => {
     setState(s => ({ ...s, activeChannel: channelId }));
     setReplyingTo(null);
@@ -364,15 +474,28 @@ export function ChatProvider({ username, children }: { username: string; childre
     const attachment = opts?.attachment;
     const replyToId = opts?.replyToId;
     if (!trimmed && !attachment) return;
+    type Outgoing = { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null };
+    let outgoingRemote: Outgoing | null = null;
     setState(s => {
       const channelId = s.activeChannel;
       const isCmd = trimmed.startsWith("!");
+      const remote = authUserId && isRemoteChannel(channelId, authUserId);
+      const msgId = remote ? newUuid() : uid();
       const userMsg: Message = {
-        id: uid(), channelId, authorId: "me",
+        id: msgId, channelId, authorId: "me",
         text: trimmed, ts: Date.now(),
         kind: trimmed.startsWith("/me ") ? "me" : "text",
         attachment, replyToId,
       };
+      if (remote) {
+        seenRemoteMsgIds.current.add(msgId);
+        outgoingRemote = {
+          id: msgId, channelId, text: trimmed,
+          kind: userMsg.kind ?? "text",
+          attachment: attachment ?? null,
+          replyToId: replyToId ?? null,
+        };
+      }
       const existing = s.messages[channelId] || [];
       const meXp = (s.me.xp ?? 0) + 1;
       const meMsgCount = (s.me.messageCount ?? 0) + 1;
@@ -433,11 +556,23 @@ export function ChatProvider({ username, children }: { username: string; childre
       }
       return badged.state;
     });
+    if (outgoingRemote && authUserId) {
+      const out = outgoingRemote as Outgoing;
+      void supabase.from("messages").insert({
+        id: out.id,
+        channel_id: out.channelId,
+        author_id: authUserId,
+        text: out.text,
+        kind: out.kind,
+        attachment: out.attachment as unknown as never,
+        reply_to_id: out.replyToId,
+      }).then(({ error }) => { if (error) console.error("send failed", error); });
+    }
     setReplyingTo(null);
-  }, []);
+  }, [authUserId]);
 
   const startDM = useCallback((userId: string) => {
-    const channelId = `dm:${userId}`;
+    const channelId = dmChannelFor(authUserId, userId);
     setState(s => {
       const next: State = {
         ...s,
@@ -450,10 +585,10 @@ export function ChatProvider({ username, children }: { username: string; childre
       }
       return badged.state;
     });
-  }, []);
+  }, [authUserId]);
 
   const closeDM = useCallback((userId: string) => {
-    const channelId = `dm:${userId}`;
+    const channelId = dmChannelFor(authUserId, userId);
     setState(s => ({
       ...s,
       dmOrder: s.dmOrder.filter(id => id !== userId),
@@ -592,16 +727,24 @@ export function ChatProvider({ username, children }: { username: string; childre
     channelMessages: (id) => state.messages[id] || [],
     channelLabel: (id) => {
       if (id.startsWith("dm:")) {
-        const u = state.users[id.slice(3)];
+        const rest = id.slice(3);
+        const peer = rest.includes(":") ? rest.split(":").find(p => p !== authUserId) || rest : rest;
+        const u = state.users[peer];
         return u ? u.name : "Direct Message";
       }
       return state.rooms[id]?.name || id;
     },
     isDM: (id) => id.startsWith("dm:"),
-    dmUser: (id) => id.startsWith("dm:") ? state.users[id.slice(3)] : undefined,
+    dmUser: (id) => {
+      if (!id.startsWith("dm:")) return undefined;
+      const rest = id.slice(3);
+      const peer = rest.includes(":") ? rest.split(":").find(p => p !== authUserId) || rest : rest;
+      return state.users[peer];
+    },
+    dmChannelFor: (peerId: string) => dmChannelFor(authUserId, peerId),
     replyingTo, setReplyingTo,
     findMessage,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage]);
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId]);
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
 }
