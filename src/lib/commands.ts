@@ -104,7 +104,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       const xpStr = find.xp > 0 ? ` (+${find.xp} XP)` : "";
       const rare = find.rarity === "rare" || find.rarity === "epic" || find.rarity === "legendary";
       return {
-        replies: [{ text: `⛏️ You dig deep and unearth ${find.emoji} **${find.name}**${xpStr} — ${tag}` }],
+        replies: [{ text: `⛏️ ${who} digs deep and unearths ${find.emoji} **${find.name}**${xpStr} — ${tag}` }],
         ...(rare ? { buzz: { reason: `${find.emoji} ${find.name}` } } : {}),
       };
     }
@@ -137,7 +137,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       // 25% chance of junk
       if (Math.random() < 0.25) {
         const j = junk[Math.floor(Math.random() * junk.length)];
-        return { replies: [{ text: `🎣 You cast your line... and reeled in ${j}. No XP.` }] };
+        return { replies: [{ text: `🎣 ${who} cast a line... and reeled in ${j}. No XP.` }] };
       }
       // Weighted by rarity: common > uncommon > rare > epic > legendary
       const weights: Record<string, number> = { common: 50, uncommon: 28, rare: 14, epic: 6, legendary: 2 };
@@ -151,7 +151,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
         fish.rarity === "uncommon" ? "Uncommon" : "Common";
       const rare = fish.rarity === "rare" || fish.rarity === "epic" || fish.rarity === "legendary";
       return {
-        replies: [{ text: `🎣 You caught a ${fish.emoji} **${fish.name}** — ${fish.weight}kg (+${fish.xp} XP) — ${tag}` }],
+        replies: [{ text: `🎣 ${who} caught a ${fish.emoji} **${fish.name}** — ${fish.weight}kg (+${fish.xp} XP) — ${tag}` }],
         ...(rare ? { buzz: { reason: `${fish.emoji} ${fish.name}` } } : {}),
       };
     }
@@ -196,8 +196,8 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       const mask = data.word.split("").map((c: string) => data.guessed.includes(c) ? c : "_").join(" ");
       const done = !mask.includes("_");
       const dead = data.wrong >= 6;
-      if (done) return { replies: [{ text: `🎉 You got it! **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
-      if (dead) return { replies: [{ text: `💀 You lose. The word was **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
+      if (done) return { replies: [{ text: `🎉 ${who} got it! **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
+      if (dead) return { replies: [{ text: `💀 ${who} lost. The word was **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
       return {
         replies: [{ text: `\`${mask}\` — wrong: ${data.wrong}/6, used: ${data.guessed.join(" ")}` }],
         gameUpdate: { channelId: ctx.channelId, type: "hangman", data },
@@ -213,7 +213,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       while (dTotal < 17) { const c = drawCard(); dealer.push(c); dTotal += c.v; }
       let outcome = "Push 🤝";
       if (pTotal > 21) outcome = "Bust 💥 — Dealer wins";
-      else if (dTotal > 21 || pTotal > dTotal) outcome = "You win! 🏆";
+      else if (dTotal > 21 || pTotal > dTotal) outcome = `${who} wins! 🏆`;
       else if (pTotal < dTotal) outcome = "Dealer wins 🪦";
       return { replies: [{ text: `♠️ **Blackjack**\nYou: ${player.map(c=>c.c).join(" ")} = ${pTotal}\nDealer: ${dealer.map(c=>c.c).join(" ")} = ${dTotal}\n${outcome}` }] };
     }
