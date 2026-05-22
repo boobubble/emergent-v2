@@ -75,19 +75,52 @@ function UserProfilePage() {
                   </div>
                   {user.bio && <p className="mt-2 text-sm text-muted-foreground">{user.bio}</p>}
                   {user.id !== "me" && (
-                    <button
-                      onClick={() => { startDM(user.id); navigate({ to: "/" }); }}
-                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
-                    >
-                      <MessageCircle className="h-4 w-4" /> Send message
-                    </button>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => { startDM(user.id); navigate({ to: "/" }); }}
+                        className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                      >
+                        <MessageCircle className="h-4 w-4" /> Send message
+                      </button>
+                      {isFriend(user.id) ? (
+                        <button
+                          onClick={() => removeFriend(user.id)}
+                          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-white/5"
+                        >
+                          <UserMinus className="h-4 w-4" /> Friends
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => addFriend(user.id)}
+                          className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20"
+                        >
+                          <UserPlus className="h-4 w-4" /> Add friend
+                        </button>
+                      )}
+                      {isBlocked(user.id) ? (
+                        <button
+                          onClick={() => unblockUser(user.id)}
+                          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-white/5"
+                        >
+                          <ShieldCheck className="h-4 w-4" /> Unblock
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => blockUser(user.id)}
+                          className="inline-flex items-center gap-2 rounded-full border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm font-semibold text-destructive hover:bg-destructive/20"
+                        >
+                          <Ban className="h-4 w-4" /> Block
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
                 <Stat label="Level" value={`Lv ${user.level}`} />
                 <Stat label="XP" value={`${user.xp}`} />
+                <Stat label="Coins" value={`${user.coins ?? 0}`} icon={<Coins className="h-3.5 w-3.5 text-yellow-500" />} />
                 <Stat label="Streak" value={`${user.streak ?? 0}d`} icon={<Flame className="h-3.5 w-3.5 text-orange-400" />} />
                 <Stat label="Rank" value={rank ? `#${rank}` : "—"} icon={<Trophy className="h-3.5 w-3.5 text-warning" />} />
               </div>
