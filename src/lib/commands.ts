@@ -181,9 +181,12 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
     }
 
     case "hangman": {
+      if (game && game.type) {
+        return { replies: [{ text: `⏳ A **${game.type}** game is already in progress in this room. Jump in and play!` }] };
+      }
       const word = HANGMAN_WORDS[Math.floor(Math.random() * HANGMAN_WORDS.length)];
       return {
-        replies: [{ text: `🪢 **Hangman started!** Word: \`${"_ ".repeat(word.length).trim()}\` (${word.length} letters)\nGuess with **!g <letter>**` }],
+        replies: [{ text: `🪢 **Hangman (everyone can guess!):** \`${"_ ".repeat(word.length).trim()}\` (${word.length} letters)\nGuess a letter with **!g <letter>**` }],
         gameUpdate: { channelId: ctx.channelId, type: "hangman", data: { word, guessed: [], wrong: 0 } },
       };
     }
