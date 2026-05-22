@@ -1,4 +1,5 @@
 import type { GameState } from "./chat-types";
+import { TRIVIA_QUESTIONS } from "./trivia-questions";
 
 interface CmdCtx {
   state: any;
@@ -17,14 +18,8 @@ export interface CmdResult {
   buzz?: { actor?: string; reason: string };
 }
 
-const TRIVIA: { q: string; a: string; choices: string[] }[] = [
-  { q: "Capital of Japan?", a: "tokyo", choices: ["Kyoto", "Tokyo", "Osaka", "Seoul"] },
-  { q: "How many continents are there?", a: "7", choices: ["5", "6", "7", "8"] },
-  { q: "Largest planet in our solar system?", a: "jupiter", choices: ["Earth", "Mars", "Saturn", "Jupiter"] },
-  { q: "Year humans first landed on the Moon?", a: "1969", choices: ["1965", "1969", "1972", "1958"] },
-  { q: "Chemical symbol for Gold?", a: "au", choices: ["Au", "Gd", "Go", "Ag"] },
-  { q: "Who wrote 'Hamlet'?", a: "shakespeare", choices: ["Dickens", "Shakespeare", "Tolkien", "Wilde"] },
-];
+const TRIVIA = TRIVIA_QUESTIONS;
+
 
 const HANGMAN_WORDS = ["palringo", "javascript", "tangerine", "lighthouse", "keyboard", "elephant", "midnight"];
 
@@ -183,7 +178,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
         }
         return {
           replies: [
-            { text: `✅ ${who} got it! The answer was **${answerLabel}** (+5 XP)` },
+            { text: `🏆 **WINNER: ${who}!** 🎉\nCorrect answer: **${answerLabel}**\nQuestion: _${q.q}_  (+5 XP)` },
             { text: `📚 **Next trivia:** ${nextQ.q}\n${nextQ.choices.map((c: string, i: number)=>`  ${i+1}. ${c}`).join("\n")}\nAnswer with **!a <number or text>**` },
           ],
           gameUpdate: { channelId: ctx.channelId, type: "trivia", data: nextQ },
@@ -217,8 +212,8 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       const mask = data.word.split("").map((c: string) => data.guessed.includes(c) ? c : "_").join(" ");
       const done = !mask.includes("_");
       const dead = data.wrong >= 6;
-      if (done) return { replies: [{ text: `🎉 ${who} got it! **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
-      if (dead) return { replies: [{ text: `💀 ${who} lost. The word was **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
+      if (done) return { replies: [{ text: `🏆 **WINNER: ${who}!** 🎉\nSolved the word: **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
+      if (dead) return { replies: [{ text: `💀 Hangman over — too many wrong guesses. The word was **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
       return {
         replies: [{ text: `\`${mask}\` — wrong: ${data.wrong}/6, used: ${data.guessed.join(" ")}` }],
         gameUpdate: { channelId: ctx.channelId, type: "hangman", data },
