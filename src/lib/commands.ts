@@ -104,7 +104,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       const xpStr = find.xp > 0 ? ` (+${find.xp} XP)` : "";
       const rare = find.rarity === "rare" || find.rarity === "epic" || find.rarity === "legendary";
       return {
-        replies: [{ text: `⛏️ ${who} digs deep and unearths ${find.emoji} **${find.name}**${xpStr} — ${tag}` }],
+        replies: [{ text: `⛏️ ${who} digs deep and unearths ${find.emoji} **${find.name}**${xpStr} — ${tag}`, from: "bot-dig" }],
         ...(rare ? { buzz: { reason: `${find.emoji} ${find.name}` } } : {}),
       };
     }
