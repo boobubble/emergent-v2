@@ -495,7 +495,7 @@ export function ChatProvider({ username, children }: { username: string; childre
     dmUser: (id) => id.startsWith("dm:") ? state.users[id.slice(3)] : undefined,
     replyingTo, setReplyingTo,
     findMessage,
-  }), [state, setActive, send, startDM, joinRoom, createRoom, updateMe, adjustPoints, reset, replyingTo, findMessage]);
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, reset, replyingTo, findMessage]);
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
 }
