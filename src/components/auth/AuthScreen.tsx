@@ -7,6 +7,7 @@ export function AuthScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
   const [err, setErr] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
