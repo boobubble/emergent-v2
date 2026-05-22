@@ -727,16 +727,24 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
     channelMessages: (id) => state.messages[id] || [],
     channelLabel: (id) => {
       if (id.startsWith("dm:")) {
-        const u = state.users[id.slice(3)];
+        const rest = id.slice(3);
+        const peer = rest.includes(":") ? rest.split(":").find(p => p !== authUserId) || rest : rest;
+        const u = state.users[peer];
         return u ? u.name : "Direct Message";
       }
       return state.rooms[id]?.name || id;
     },
     isDM: (id) => id.startsWith("dm:"),
-    dmUser: (id) => id.startsWith("dm:") ? state.users[id.slice(3)] : undefined,
+    dmUser: (id) => {
+      if (!id.startsWith("dm:")) return undefined;
+      const rest = id.slice(3);
+      const peer = rest.includes(":") ? rest.split(":").find(p => p !== authUserId) || rest : rest;
+      return state.users[peer];
+    },
+    dmChannelFor: (peerId: string) => dmChannelFor(authUserId, peerId),
     replyingTo, setReplyingTo,
     findMessage,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage]);
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId]);
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
 }
