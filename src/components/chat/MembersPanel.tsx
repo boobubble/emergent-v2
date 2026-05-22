@@ -219,6 +219,16 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Link
+          to="/feed"
+          search={{ tab: "account" } as never}
+          title="Profile settings"
+          aria-label="Profile settings"
+          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+        >
+          <UserCog className="h-4 w-4" />
+        </Link>
       </div>
 
       <div className="px-5 pt-3">
