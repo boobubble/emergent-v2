@@ -34,3 +34,26 @@ export function playDmPing() {
     /* ignore */
   }
 }
+
+/** Short rising chirp for @mentions. Distinct from DM ping. */
+export function playMentionPing() {
+  const ac = getCtx();
+  if (!ac) return;
+  try {
+    if (ac.state === "suspended") ac.resume();
+    const now = ac.currentTime;
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(1900, now + 0.12);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.09, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+    osc.connect(gain).connect(ac.destination);
+    osc.start(now);
+    osc.stop(now + 0.25);
+  } catch {
+    /* ignore */
+  }
+}
