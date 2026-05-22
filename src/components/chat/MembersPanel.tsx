@@ -43,8 +43,19 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   const roleOrder: Record<Role, number> = { owner: 0, admin: 1, mod: 2, member: 3 };
 
+  const ONLINE_WINDOW_MS = 5 * 60 * 1000; // treat as offline if not seen in 5 min
+  const now = Date.now();
+  const isOnline = (id: string) => {
+    const u = usersById[id];
+    if (!u) return false;
+    if (u.isBot) return u.status !== "offline";
+    if (u.status !== "online") return false;
+    if (u.lastSeen && now - u.lastSeen > ONLINE_WINDOW_MS) return false;
+    return true;
+  };
+
   const online = allIds
-    .filter(id => usersById[id]?.status !== "offline")
+    .filter(isOnline)
     .sort((a, b) => {
       const ra = roleOrder[room.roles[a] || "member"];
       const rb = roleOrder[room.roles[b] || "member"];
@@ -54,7 +65,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   // Offline sorted by most-recently-seen first (latest at top).
   const offlineSorted = allIds
-    .filter(id => usersById[id]?.status === "offline")
+    .filter(id => !isOnline(id))
     .sort((a, b) => (usersById[b]?.lastSeen ?? 0) - (usersById[a]?.lastSeen ?? 0));
 
   const OFFLINE_MIN = 20;
