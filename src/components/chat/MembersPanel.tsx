@@ -66,6 +66,12 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     return () => { supabase.removeChannel(ch); };
   }, [meId]);
 
+  useEffect(() => {
+    const open = () => setSheetOpen(true);
+    window.addEventListener("open-members-panel", open);
+    return () => window.removeEventListener("open-members-panel", open);
+  }, []);
+
   const unreadCount = notifs.filter(n => !n.read).length;
 
   async function markAllRead() {
