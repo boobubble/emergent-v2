@@ -13,6 +13,7 @@ export interface CmdReply {
 export interface CmdResult {
   replies: CmdReply[];
   gameUpdate?: GameState;
+  buzz?: { actor?: string; reason: string };
 }
 
 const TRIVIA: { q: string; a: string; choices: string[] }[] = [
