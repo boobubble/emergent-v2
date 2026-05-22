@@ -158,6 +158,27 @@ export function MessageInput() {
           ))}
         </div>
       )}
+      {mentionSuggestions.length > 0 && (
+        <div className="mb-2 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+          {mentionSuggestions.map((u, i) => (
+            <button
+              key={u.id}
+              onMouseDown={e => { e.preventDefault(); applyMention(u.name); }}
+              onMouseEnter={() => setMentionIdx(i)}
+              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${i === mentionIdx ? "bg-primary/15 text-primary" : "hover:bg-white/5"}`}
+            >
+              <span
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-[10px] font-bold text-white"
+                style={{ background: u.avatarColor }}
+              >
+                {u.name.slice(0, 1).toUpperCase()}
+              </span>
+              <span className="flex-1 truncate font-medium">@{u.name}</span>
+              <span className={`h-1.5 w-1.5 rounded-full ${u.status === "online" ? "bg-green-400" : u.status === "away" ? "bg-yellow-400" : "bg-muted-foreground/40"}`} />
+            </button>
+          ))}
+        </div>
+      )}
       {showEmoji && (
         <div className="mb-2 flex flex-wrap gap-1 rounded-2xl border border-border bg-card p-2">
           {EMOJIS.map(e => (
