@@ -645,7 +645,6 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       const allowedInDm = /^!(help|stats|nick|me)\b/i.test(trimmed);
       if (isCmd && inBotDm && !allowedInDm) {
         const targetId = channelId.slice(3);
-        const botName = next.users[targetId]?.name ?? "Bot";
         const sysMsg: Message = {
           id: uid(), channelId, authorId: targetId, ts: Date.now() + 400,
           text: `🚫 Games aren't available in DMs. Hop into a chatroom to play! I can still answer questions about my commands here — just ask. (Try !help to see what I can do.)`,
