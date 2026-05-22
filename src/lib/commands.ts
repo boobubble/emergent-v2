@@ -42,7 +42,7 @@ const HELP = `**Commands**
 !wine — order wine & beer by the round 🍷🍺
 !trivia — start a trivia question (answer with !a <choice>)
 !hangman — start hangman (guess with !g <letter>)
-!blackjack — quick blackjack hand
+
 !me <action> — roleplay action
 !nick <name> — change your display name
 !stats — show your level/xp
@@ -59,13 +59,6 @@ function roll(spec: string): string {
   return `🎲 ${spec} → [${rolls.join(", ")}] = **${total}**`;
 }
 
-function drawCard(): { c: string; v: number } {
-  const suits = ["♠", "♥", "♦", "♣"];
-  const ranks = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
-  const vals =   [11, 2, 3, 4, 5, 6, 7, 8, 9, 10,10,10,10];
-  const i = Math.floor(Math.random() * 13);
-  return { c: `${ranks[i]}${suits[Math.floor(Math.random()*4)]}`, v: vals[i] };
-}
 
 export function runCommand(input: string, ctx: CmdCtx): CmdResult {
   const [rawCmd, ...rest] = input.slice(1).split(/\s+/);
@@ -276,19 +269,6 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       };
     }
 
-    case "blackjack": {
-      const player = [drawCard(), drawCard()];
-      const dealer = [drawCard(), drawCard()];
-      let pTotal = player.reduce((a, c) => a + c.v, 0);
-      while (pTotal < 17) { const c = drawCard(); player.push(c); pTotal += c.v; }
-      let dTotal = dealer.reduce((a, c) => a + c.v, 0);
-      while (dTotal < 17) { const c = drawCard(); dealer.push(c); dTotal += c.v; }
-      let outcome = "Push 🤝";
-      if (pTotal > 21) outcome = "Bust 💥 — Dealer wins";
-      else if (dTotal > 21 || pTotal > dTotal) outcome = `${who} wins! 🏆`;
-      else if (pTotal < dTotal) outcome = "Dealer wins 🪦";
-      return { replies: [{ text: `♠️ **Blackjack**\n${who}: ${player.map(c=>c.c).join(" ")} = ${pTotal}\nDealer: ${dealer.map(c=>c.c).join(" ")} = ${dTotal}\n${outcome}` }] };
-    }
 
     case "stats": {
       const me = ctx.state.me;
