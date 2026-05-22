@@ -174,9 +174,24 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       const n = parseInt(guess);
       if (!isNaN(n) && q.choices[n - 1]) guess = q.choices[n - 1].toLowerCase();
       const correct = guess === q.a.toLowerCase();
+      const answerLabel = q.choices.find((c: string) => c.toLowerCase() === q.a.toLowerCase());
+      if (correct) {
+        // Auto-advance to next question
+        let nextQ = TRIVIA[Math.floor(Math.random() * TRIVIA.length)];
+        if (nextQ.q === q.q && TRIVIA.length > 1) {
+          nextQ = TRIVIA[(TRIVIA.indexOf(q) + 1) % TRIVIA.length];
+        }
+        return {
+          replies: [
+            { text: `✅ ${who} got it! The answer was **${answerLabel}** (+5 XP)` },
+            { text: `📚 **Next trivia:** ${nextQ.q}\n${nextQ.choices.map((c: string, i: number)=>`  ${i+1}. ${c}`).join("\n")}\nAnswer with **!a <number or text>**` },
+          ],
+          gameUpdate: { channelId: ctx.channelId, type: "trivia", data: nextQ },
+        };
+      }
       return {
-        replies: [{ text: correct ? `✅ Correct! The answer was **${q.choices.find((c:string)=>c.toLowerCase()===q.a.toLowerCase())}**` : `❌ Wrong. The answer was **${q.choices.find((c:string)=>c.toLowerCase()===q.a.toLowerCase())}**` }],
-        gameUpdate: { channelId: ctx.channelId, type: null, data: null },
+        replies: [{ text: `❌ ${who} guessed wrong — try again! (hint: it's not "${arg}")` }],
+        gameUpdate: { channelId: ctx.channelId, type: "trivia", data: q },
       };
     }
 
