@@ -15,17 +15,16 @@ const KEY = "palrgo-accent";
 
 export function applyAccent(a: Accent) {
   if (typeof document === "undefined") return;
-  if (a === "green") document.documentElement.removeAttribute("data-accent");
-  else document.documentElement.setAttribute("data-accent", a);
+  document.documentElement.setAttribute("data-accent", a);
 }
 
 export function getStoredAccent(): Accent {
-  if (typeof window === "undefined") return "green";
-  return ((localStorage.getItem(KEY) as Accent) || "green");
+  if (typeof window === "undefined") return "purple";
+  return ((localStorage.getItem(KEY) as Accent) || "purple");
 }
 
 export function useAccent() {
-  const [accent, setAccent] = useState<Accent>("green");
+  const [accent, setAccent] = useState<Accent>("purple");
 
   useEffect(() => {
     const a = getStoredAccent();
