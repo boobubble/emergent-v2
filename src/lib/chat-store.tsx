@@ -387,6 +387,15 @@ export function ChatProvider({ username, children }: { username: string; childre
     });
   }, []);
 
+  const closeDM = useCallback((userId: string) => {
+    const channelId = `dm:${userId}`;
+    setState(s => ({
+      ...s,
+      dmOrder: s.dmOrder.filter(id => id !== userId),
+      activeChannel: s.activeChannel === channelId ? s.roomOrder[0] || s.activeChannel : s.activeChannel,
+    }));
+  }, []);
+
   const joinRoom = useCallback((roomId: string) => {
     setState(s => {
       const room = s.rooms[roomId];
