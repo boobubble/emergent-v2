@@ -556,8 +556,8 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       }
       return badged.state;
     });
-    const out: Outgoing | null = outgoingRemote;
-    if (out && authUserId) {
+    if (outgoingRemote && authUserId) {
+      const out = outgoingRemote as Outgoing;
       void supabase.from("messages").insert({
         id: out.id,
         channel_id: out.channelId,
