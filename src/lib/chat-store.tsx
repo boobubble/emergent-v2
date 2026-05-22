@@ -437,12 +437,23 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
         setState(s => {
           const existing = s.messages[ch] || [];
           const existingIds = new Set(existing.map(m => m.id));
+          let games = s.games;
           const incoming = data
             .filter(r => !existingIds.has(r.id))
-            .map(r => { seenRemoteMsgIds.current.add(r.id); return rowToMessage(r, authUserId); });
+            .map(r => {
+              seenRemoteMsgIds.current.add(r.id);
+              const m = rowToMessage(r, authUserId);
+              const gs = (m.attachment as unknown as { __gameState?: GameState } | undefined)?.__gameState;
+              if (gs) {
+                m.attachment = undefined;
+                if (gs.type) games = { ...games, [ch]: gs };
+                else games = Object.fromEntries(Object.entries(games).filter(([k]) => k !== ch));
+              }
+              return m;
+            });
           if (!incoming.length) return s;
           const merged = [...existing, ...incoming].sort((a, b) => a.ts - b.ts);
-          return { ...s, messages: { ...s.messages, [ch]: merged } };
+          return { ...s, games, messages: { ...s.messages, [ch]: merged } };
         });
       }
     })();
@@ -459,11 +470,23 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
         if (seenRemoteMsgIds.current.has(row.id)) return;
         seenRemoteMsgIds.current.add(row.id);
         const msg = rowToMessage(row, authUserId);
+        // Sync shared game state piggybacked on the message
+        const gs = (msg.attachment as unknown as { __gameState?: GameState } | undefined)?.__gameState;
+        if (gs) {
+          // strip the sentinel so it doesn't render as a file attachment
+          msg.attachment = undefined;
+        }
         setState(s => {
           const existing = s.messages[msg.channelId] || [];
           if (existing.some(m => m.id === msg.id)) return s;
+          let games = s.games;
+          if (gs) {
+            if (gs.type) games = { ...games, [msg.channelId]: gs };
+            else games = Object.fromEntries(Object.entries(games).filter(([k]) => k !== msg.channelId));
+          }
           return {
             ...s,
+            games,
             messages: { ...s.messages, [msg.channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts) },
           };
         });
@@ -525,13 +548,18 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       };
       if (isCmd) {
         const result = runCommand(trimmed, { state: next, channelId, actor: next.me.name });
-        const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }) => {
+        const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }, idx: number) => {
           const id = remote ? newUuid() : uid();
+          // Piggyback game state on the first reply so other users sync
+          const gameAttach = (remote && idx === 0 && result.gameUpdate)
+            ? ({ __gameState: result.gameUpdate } as unknown as Attachment)
+            : undefined;
           if (remote) {
             seenRemoteMsgIds.current.add(id);
             outgoingRemotes.push({
               id, channelId, text: r.text, kind: "game",
-              attachment: null, replyToId: null,
+              attachment: (gameAttach ?? null) as Attachment | null,
+              replyToId: null,
             });
           }
           return {
@@ -542,7 +570,11 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
         next = {
           ...next,
           messages: { ...next.messages, [channelId]: [...next.messages[channelId], ...sysMsgs] },
-          games: result.gameUpdate ? { ...next.games, [channelId]: result.gameUpdate } : next.games,
+          games: result.gameUpdate
+            ? (result.gameUpdate.type
+                ? { ...next.games, [channelId]: result.gameUpdate }
+                : Object.fromEntries(Object.entries(next.games).filter(([k]) => k !== channelId)))
+            : next.games,
         };
         if (result.buzz && typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("palrgo:buzz", {

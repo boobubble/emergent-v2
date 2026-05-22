@@ -157,9 +157,12 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
     }
 
     case "trivia": {
+      if (game && game.type) {
+        return { replies: [{ text: `⏳ A **${game.type}** game is already in progress in this room. Jump in and play!` }] };
+      }
       const q = TRIVIA[Math.floor(Math.random() * TRIVIA.length)];
       return {
-        replies: [{ text: `📚 **Trivia:** ${q.q}\n${q.choices.map((c,i)=>`  ${i+1}. ${c}`).join("\n")}\nAnswer with **!a <number or text>**` }],
+        replies: [{ text: `📚 **Trivia (everyone can answer!):** ${q.q}\n${q.choices.map((c,i)=>`  ${i+1}. ${c}`).join("\n")}\nAnswer with **!a <number or text>** — first correct wins.` }],
         gameUpdate: { channelId: ctx.channelId, type: "trivia", data: q },
       };
     }
@@ -178,9 +181,12 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
     }
 
     case "hangman": {
+      if (game && game.type) {
+        return { replies: [{ text: `⏳ A **${game.type}** game is already in progress in this room. Jump in and play!` }] };
+      }
       const word = HANGMAN_WORDS[Math.floor(Math.random() * HANGMAN_WORDS.length)];
       return {
-        replies: [{ text: `🪢 **Hangman started!** Word: \`${"_ ".repeat(word.length).trim()}\` (${word.length} letters)\nGuess with **!g <letter>**` }],
+        replies: [{ text: `🪢 **Hangman (everyone can guess!):** \`${"_ ".repeat(word.length).trim()}\` (${word.length} letters)\nGuess a letter with **!g <letter>**` }],
         gameUpdate: { channelId: ctx.channelId, type: "hangman", data: { word, guessed: [], wrong: 0 } },
       };
     }
