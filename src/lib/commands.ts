@@ -1,4 +1,5 @@
 import type { GameState } from "./chat-types";
+import { TRIVIA_QUESTIONS } from "./trivia-questions";
 
 interface CmdCtx {
   state: any;
