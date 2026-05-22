@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, Settings, Trophy, LogOut, RotateCcw, Award, Flame } from "lucide-react";
+import { MessageCircle, Settings, Trophy, LogOut, RotateCcw, Award, Flame, PanelLeftClose } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "./Avatar";
@@ -10,9 +10,10 @@ interface Props {
   onOpenProfile: () => void;
   onOpenLeaderboard: () => void;
   onOpenAchievements: () => void;
+  onCollapse?: () => void;
 }
 
-export function Sidebar({ onOpenProfile, onOpenLeaderboard, onOpenAchievements }: Props) {
+export function Sidebar({ onOpenProfile, onOpenLeaderboard, onOpenAchievements, onCollapse }: Props) {
   const { state, setActive, createRoom, reset } = useChat();
   const { logout, user } = useAuth();
   const [showNew, setShowNew] = useState(false);
@@ -28,12 +29,22 @@ export function Sidebar({ onOpenProfile, onOpenLeaderboard, onOpenAchievements }
         >
           P
         </div>
-        <div className="leading-tight">
+        <div className="min-w-0 flex-1 leading-tight">
           <div className="font-bold text-foreground">Palrgo</div>
           <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Social Chat
           </div>
         </div>
+        {onCollapse && (
+          <button
+            onClick={onCollapse}
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+            title="Hide sidebar"
+            aria-label="Hide sidebar"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <nav className="flex-1 space-y-6 overflow-y-auto px-3">
