@@ -556,6 +556,7 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
             const reply = pickBotReply(trimmed);
             const m: Message = { id: uid(), channelId, authorId: targetId, text: reply, ts: Date.now() + 600 };
             next = { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], m] } };
+            setTimeout(() => playDmPing(), 600);
           }
         }
       }
