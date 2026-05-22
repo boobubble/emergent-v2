@@ -18,14 +18,8 @@ export interface CmdResult {
   buzz?: { actor?: string; reason: string };
 }
 
-const TRIVIA: { q: string; a: string; choices: string[] }[] = [
-  { q: "Capital of Japan?", a: "tokyo", choices: ["Kyoto", "Tokyo", "Osaka", "Seoul"] },
-  { q: "How many continents are there?", a: "7", choices: ["5", "6", "7", "8"] },
-  { q: "Largest planet in our solar system?", a: "jupiter", choices: ["Earth", "Mars", "Saturn", "Jupiter"] },
-  { q: "Year humans first landed on the Moon?", a: "1969", choices: ["1965", "1969", "1972", "1958"] },
-  { q: "Chemical symbol for Gold?", a: "au", choices: ["Au", "Gd", "Go", "Ag"] },
-  { q: "Who wrote 'Hamlet'?", a: "shakespeare", choices: ["Dickens", "Shakespeare", "Tolkien", "Wilde"] },
-];
+const TRIVIA = TRIVIA_QUESTIONS;
+
 
 const HANGMAN_WORDS = ["palringo", "javascript", "tangerine", "lighthouse", "keyboard", "elephant", "midnight"];
 
