@@ -50,7 +50,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
       const { data } = await supabase
         .from("notifications")
         .select("*")
-        .eq("user_id", meId)
+        .eq("user_id", meId as string)
         .in("kind", ["friend_post", "friend_comment"])
         .order("created_at", { ascending: false })
         .limit(20);
