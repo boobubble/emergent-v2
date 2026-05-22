@@ -437,12 +437,23 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
         setState(s => {
           const existing = s.messages[ch] || [];
           const existingIds = new Set(existing.map(m => m.id));
+          let games = s.games;
           const incoming = data
             .filter(r => !existingIds.has(r.id))
-            .map(r => { seenRemoteMsgIds.current.add(r.id); return rowToMessage(r, authUserId); });
+            .map(r => {
+              seenRemoteMsgIds.current.add(r.id);
+              const m = rowToMessage(r, authUserId);
+              const gs = (m.attachment as unknown as { __gameState?: GameState } | undefined)?.__gameState;
+              if (gs) {
+                m.attachment = undefined;
+                if (gs.type) games = { ...games, [ch]: gs };
+                else games = Object.fromEntries(Object.entries(games).filter(([k]) => k !== ch));
+              }
+              return m;
+            });
           if (!incoming.length) return s;
           const merged = [...existing, ...incoming].sort((a, b) => a.ts - b.ts);
-          return { ...s, messages: { ...s.messages, [ch]: merged } };
+          return { ...s, games, messages: { ...s.messages, [ch]: merged } };
         });
       }
     })();
