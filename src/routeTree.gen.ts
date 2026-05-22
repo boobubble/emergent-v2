@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as FeedRouteImport } from './routes/feed'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
@@ -18,6 +19,11 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedRoute = FeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AchievementsRoute = AchievementsRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
+  '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/u/$username': typeof UUsernameRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
+  '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/u/$username': typeof UUsernameRoute
 }
@@ -60,6 +68,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
+  '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/u/$username': typeof UUsernameRoute
 }
@@ -69,15 +78,23 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/achievements'
+    | '/feed'
     | '/leaderboard'
     | '/u/$username'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/achievements' | '/leaderboard' | '/u/$username'
+  to:
+    | '/'
+    | '/account'
+    | '/achievements'
+    | '/feed'
+    | '/leaderboard'
+    | '/u/$username'
   id:
     | '__root__'
     | '/'
     | '/account'
     | '/achievements'
+    | '/feed'
     | '/leaderboard'
     | '/u/$username'
   fileRoutesById: FileRoutesById
@@ -86,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AchievementsRoute: typeof AchievementsRoute
+  FeedRoute: typeof FeedRoute
   LeaderboardRoute: typeof LeaderboardRoute
   UUsernameRoute: typeof UUsernameRoute
 }
@@ -97,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feed': {
+      id: '/feed'
+      path: '/feed'
+      fullPath: '/feed'
+      preLoaderRoute: typeof FeedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/achievements': {
@@ -134,19 +159,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AchievementsRoute: AchievementsRoute,
+  FeedRoute: FeedRoute,
   LeaderboardRoute: LeaderboardRoute,
   UUsernameRoute: UUsernameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
