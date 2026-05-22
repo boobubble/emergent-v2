@@ -169,12 +169,15 @@ export function Sidebar({ onOpenProfile, onOpenLeaderboard, onOpenAchievements, 
       </nav>
 
       <div className="border-t border-border p-3">
-        <button
+        <a
+          href="/leaderboard"
+          target="_blank"
+          rel="noopener noreferrer"
           onClick={onOpenLeaderboard}
           className="mb-1 flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
         >
           <Trophy className="h-4 w-4" /> Leaderboard
-        </button>
+        </a>
         <button
           onClick={onOpenAchievements}
           className="mb-1 flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
