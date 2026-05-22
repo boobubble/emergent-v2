@@ -458,6 +458,43 @@ export function ChatProvider({ username, children }: { username: string; childre
     });
   }, []);
 
+  const adjustCoins = useCallback((userId: string, delta: number) => {
+    setState(s => {
+      const u = s.users[userId];
+      if (!u) return s;
+      const newCoins = Math.max(0, (u.coins ?? 0) + delta);
+      const updated: User = { ...u, coins: newCoins };
+      return {
+        ...s,
+        users: { ...s.users, [userId]: updated },
+        me: userId === "me" ? { ...s.me, coins: newCoins } : s.me,
+      };
+    });
+  }, []);
+
+  const toggleSocial = useCallback((key: "friends" | "blocked", userId: string, add: boolean) => {
+    setState(s => {
+      const me = s.users.me;
+      const list = new Set(me[key] ?? []);
+      if (add) list.add(userId); else list.delete(userId);
+      // friend/block are mutually exclusive
+      const other = key === "friends" ? "blocked" : "friends";
+      const otherList = new Set(me[other] ?? []);
+      if (add) otherList.delete(userId);
+      const updated: User = { ...me, [key]: [...list], [other]: [...otherList] };
+      return {
+        ...s,
+        me: { ...s.me, [key]: updated[key], [other]: updated[other] },
+        users: { ...s.users, me: updated },
+      };
+    });
+  }, []);
+
+  const addFriend = useCallback((id: string) => toggleSocial("friends", id, true), [toggleSocial]);
+  const removeFriend = useCallback((id: string) => toggleSocial("friends", id, false), [toggleSocial]);
+  const blockUser = useCallback((id: string) => toggleSocial("blocked", id, true), [toggleSocial]);
+  const unblockUser = useCallback((id: string) => toggleSocial("blocked", id, false), [toggleSocial]);
+
   const reset = useCallback(() => {
     localStorage.removeItem(storageKeyFor(username));
     streakChecked.current = null;
@@ -474,7 +511,11 @@ export function ChatProvider({ username, children }: { username: string; childre
 
 
   const value = useMemo<Ctx>(() => ({
-    state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, reset,
+    state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
+    adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
+    isFriend: (id) => (state.me.friends ?? []).includes(id),
+    isBlocked: (id) => (state.me.blocked ?? []).includes(id),
+    reset,
     channelMessages: (id) => state.messages[id] || [],
     channelLabel: (id) => {
       if (id.startsWith("dm:")) {
@@ -487,7 +528,7 @@ export function ChatProvider({ username, children }: { username: string; childre
     dmUser: (id) => id.startsWith("dm:") ? state.users[id.slice(3)] : undefined,
     replyingTo, setReplyingTo,
     findMessage,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, reset, replyingTo, findMessage]);
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage]);
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
 }
