@@ -623,6 +623,46 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
             detail: { actor: s.me.name, reason: result.buzz.reason },
           }));
         }
+        if (result.moderation) {
+          const { targetId, targetName, action } = result.moderation;
+          const voter = next.me.name;
+          const chanMod = { ...(next.moderation?.[channelId] || {}) };
+          const prev: ModEntry = chanMod[targetId] || { muteVotes: [], kickVotes: [] };
+          const voteKey = action === "mute" ? "muteVotes" : "kickVotes";
+          const threshold = action === "mute" ? MUTE_THRESHOLD : KICK_THRESHOLD;
+          const votes = prev[voteKey].includes(voter) ? prev[voteKey] : [...prev[voteKey], voter];
+          const updated: ModEntry = { ...prev, [voteKey]: votes };
+          const sysMsgs: Message[] = [];
+          const tsNow = Date.now();
+          sysMsgs.push({
+            id: uid(), channelId, authorId: "bot-gamebot", kind: "system", ts: tsNow,
+            text: `⚖️ **${voter}** voted to /${action} **@${targetName}** — ${votes.length}/${threshold} votes`,
+          });
+          if (votes.length >= threshold) {
+            const until = tsNow + MOD_DURATION_MS;
+            if (action === "mute") {
+              updated.mutedUntil = until;
+              updated.muteVotes = [];
+              sysMsgs.push({
+                id: uid(), channelId, authorId: "bot-gamebot", kind: "system", ts: tsNow + 1,
+                text: `🔇 **@${targetName}** has been **MUTED** for 5 minutes by community vote.`,
+              });
+            } else {
+              updated.kickedUntil = until;
+              updated.kickVotes = [];
+              sysMsgs.push({
+                id: uid(), channelId, authorId: "bot-gamebot", kind: "system", ts: tsNow + 1,
+                text: `🚪 **@${targetName}** has been **KICKED** from the room for 5 minutes by community vote.`,
+              });
+            }
+          }
+          chanMod[targetId] = updated;
+          next = {
+            ...next,
+            moderation: { ...(next.moderation || {}), [channelId]: chanMod },
+            messages: { ...next.messages, [channelId]: [...next.messages[channelId], ...sysMsgs] },
+          };
+        }
       } else {
         const room = next.rooms[channelId];
         if (room) {
