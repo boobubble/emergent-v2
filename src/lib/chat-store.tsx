@@ -267,6 +267,7 @@ interface Ctx {
   channelLabel: (id: string) => string;
   isDM: (id: string) => boolean;
   dmUser: (id: string) => User | undefined;
+  dmChannelFor: (peerId: string) => string;
   replyingTo: Message | null;
   setReplyingTo: (m: Message | null) => void;
   findMessage: (id: string) => Message | undefined;
