@@ -23,6 +23,7 @@ export const Route = createFileRoute("/feed")({
 });
 
 type Tab = "foryou" | "trending" | "latest" | "friends";
+type View = "feed" | "account";
 
 function FeedPage() {
   const { user } = useAuth();
