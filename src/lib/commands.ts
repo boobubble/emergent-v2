@@ -3,6 +3,7 @@ import type { GameState } from "./chat-types";
 interface CmdCtx {
   state: any;
   channelId: string;
+  actor?: string;
 }
 
 export interface CmdReply {
