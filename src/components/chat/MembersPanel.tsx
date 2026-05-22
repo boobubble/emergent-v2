@@ -185,7 +185,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     role: Role;
     onClick: () => void;
   }) {
-    const u = state.users[id];
+    const u = usersById[id];
     if (!u) return null;
     return (
       <div className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2 transition-colors hover:bg-white/5">
