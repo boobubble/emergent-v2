@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { MessageCircle, Plus, Settings, Trophy, LogOut } from "lucide-react";
+import { MessageCircle, Plus, Settings, Trophy, LogOut, RotateCcw } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ interface Props {
 
 export function Sidebar({ onOpenProfile, onOpenLeaderboard }: Props) {
   const { state, setActive, createRoom, reset } = useChat();
+  const { logout, user } = useAuth();
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newTopic, setNewTopic] = useState("");
@@ -177,14 +179,21 @@ export function Sidebar({ onOpenProfile, onOpenLeaderboard }: Props) {
           </div>
           <Settings className="h-4 w-4 text-muted-foreground" />
         </button>
-        <button
-          onClick={() => {
-            if (confirm("Reset all chat data?")) reset();
-          }}
-          className="mt-2 flex w-full items-center gap-2 rounded-full px-3 py-1 text-[11px] text-muted-foreground hover:text-destructive"
-        >
-          <LogOut className="h-3 w-3" /> Reset demo
-        </button>
+        <div className="mt-2 flex gap-1">
+          <button
+            onClick={() => { if (confirm("Reset chat data for this account?")) reset(); }}
+            className="flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+          >
+            <RotateCcw className="h-3 w-3" /> Reset
+          </button>
+          <button
+            onClick={logout}
+            className="flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground hover:text-destructive"
+            title={user?.email}
+          >
+            <LogOut className="h-3 w-3" /> Sign out
+          </button>
+        </div>
       </div>
     </aside>
   );
