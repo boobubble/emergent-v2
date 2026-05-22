@@ -81,15 +81,67 @@ function normalizeMe(state: State, fallbackName = generateUsername()): State {
   return { ...state, me, users: { ...state.users, me: { ...state.users.me, name: fallbackName } }, messages };
 }
 
+export const BOT_COMMANDS: Record<string, { tagline: string; commands: string[] }> = {
+  "bot-gamebot": {
+    tagline: "🎮 Master of ceremonies — runs every game in the lobby.",
+    commands: ["!help — list every command", "!trivia — start a trivia round", "!a <choice> — answer trivia", "!hangman — start hangman", "!g <letter> — guess a letter", "!roll [NdS] — roll dice", "!flip — coin flip", "!slots — spin the slot machine", "!me <action> — roleplay", "!stats — your level & XP"],
+  },
+  "bot-nova": {
+    tagline: "💬 Casual chatter — loves small talk and trivia nights.",
+    commands: ["!trivia — start a trivia round", "!a <choice> — answer trivia", "!me <action> — roleplay", "!stats — show your stats"],
+  },
+  "bot-pixel": {
+    tagline: "🧠 Trivia addict — challenge me anytime.",
+    commands: ["!trivia — start a trivia round", "!a <choice> — answer trivia", "!hangman — start hangman", "!g <letter> — guess a letter"],
+  },
+  "bot-echo": {
+    tagline: "🔁 Echoes vibes back to you.",
+    commands: ["!me <action> — roleplay", "!flip — coin flip", "!roll — roll dice"],
+  },
+  "bot-ryze": {
+    tagline: "🛡️ Mod & gamer — keeps the lobby in check.",
+    commands: ["/mute @user — vote-mute (5 votes → 5 min)", "/kick @user — vote-kick (8 votes → 5 min)", "!trivia — start a trivia round", "!hangman — start hangman", "!roll — roll dice", "!stats — show stats"],
+  },
+  "bot-dig": {
+    tagline: "⛏️ Digs all day for gold, gems and rare loot.",
+    commands: ["!dig — dig for treasure", "!stats — show stats"],
+  },
+  "bot-fish": {
+    tagline: "🎣 Casts lines from sunrise to sunset.",
+    commands: ["!fish — cast a line", "!stats — show stats"],
+  },
+  "bot-wine": {
+    tagline: "🍷 Pours wine & beer by the round.",
+    commands: ["!wine — order a round of wine or beer 🍷🍺"],
+  },
+};
+
+function bioFor(id: string, fallback: string): string {
+  const b = BOT_COMMANDS[id];
+  if (!b) return fallback;
+  return `${b.tagline}\nCommands: ${b.commands.map(c => c.split(" — ")[0]).join(", ")}`;
+}
+
 const SEED_BOTS: User[] = [
-  { id: "bot-gamebot", name: "GameBot", avatarColor: "oklch(0.78 0.13 195)", avatarUrl: gamebotImg, status: "online", isBot: true, xp: 9999, level: 99, bio: "Run !help to see games", streak: 30, longestStreak: 99, messageCount: 1200, badges: ["first_message","chatterbox","veteran","level_5","level_10","level_25","streak_3","streak_7","streak_30","gamer"] },
-  { id: "bot-nova", name: "Nova", avatarColor: AVATAR_COLORS[3], avatarUrl: novaImg, status: "online", isBot: true, xp: 1240, level: 12, bio: "Casual chatter", streak: 5, longestStreak: 12, messageCount: 320, badges: ["first_message","chatterbox","level_5","level_10","streak_3"] },
-  { id: "bot-pixel", name: "Pixel", avatarColor: AVATAR_COLORS[5], avatarUrl: pixelImg, status: "online", isBot: true, xp: 880, level: 9, bio: "Trivia addict", streak: 2, longestStreak: 8, messageCount: 210, badges: ["first_message","chatterbox","level_5","streak_3","gamer"] },
-  { id: "bot-echo", name: "Echo", avatarColor: AVATAR_COLORS[1], avatarUrl: echoImg, status: "away", isBot: true, xp: 410, level: 5, streak: 1, longestStreak: 4, messageCount: 88, badges: ["first_message","chatterbox","level_5"] },
-  { id: "bot-ryze", name: "Ryze", avatarColor: AVATAR_COLORS[0], avatarUrl: ryzeImg, status: "online", isBot: true, xp: 2100, level: 18, bio: "Mod & gamer", streak: 9, longestStreak: 21, messageCount: 540, badges: ["first_message","chatterbox","veteran","level_5","level_10","streak_3","streak_7","gamer"] },
-  { id: "bot-dig", name: "DigBot", avatarColor: AVATAR_COLORS[6], avatarUrl: digbotImg, status: "online", isBot: true, xp: 1560, level: 14, bio: "⛏️ Digging for treasure. Try !dig", streak: 7, longestStreak: 18, messageCount: 410, badges: ["first_message","chatterbox","level_5","level_10","streak_3","streak_7","gamer"] },
-  { id: "bot-fish", name: "FishBot", avatarColor: AVATAR_COLORS[2], avatarUrl: fishbotImg, status: "online", isBot: true, xp: 1320, level: 13, bio: "🎣 Casting lines all day. Try !fish", streak: 4, longestStreak: 15, messageCount: 360, badges: ["first_message","chatterbox","level_5","level_10","streak_3","gamer"] },
+  { id: "bot-gamebot", name: "GameBot", avatarColor: "oklch(0.78 0.13 195)", avatarUrl: gamebotImg, status: "online", isBot: true, xp: 9999, level: 99, bio: bioFor("bot-gamebot", "Run !help to see games"), streak: 30, longestStreak: 99, messageCount: 1200, badges: ["first_message","chatterbox","veteran","level_5","level_10","level_25","streak_3","streak_7","streak_30","gamer"] },
+  { id: "bot-nova", name: "Nova", avatarColor: AVATAR_COLORS[3], avatarUrl: novaImg, status: "online", isBot: true, xp: 1240, level: 12, bio: bioFor("bot-nova", "Casual chatter"), streak: 5, longestStreak: 12, messageCount: 320, badges: ["first_message","chatterbox","level_5","level_10","streak_3"] },
+  { id: "bot-pixel", name: "Pixel", avatarColor: AVATAR_COLORS[5], avatarUrl: pixelImg, status: "online", isBot: true, xp: 880, level: 9, bio: bioFor("bot-pixel", "Trivia addict"), streak: 2, longestStreak: 8, messageCount: 210, badges: ["first_message","chatterbox","level_5","streak_3","gamer"] },
+  { id: "bot-echo", name: "Echo", avatarColor: AVATAR_COLORS[1], avatarUrl: echoImg, status: "away", isBot: true, xp: 410, level: 5, bio: bioFor("bot-echo", "Echoes vibes"), streak: 1, longestStreak: 4, messageCount: 88, badges: ["first_message","chatterbox","level_5"] },
+  { id: "bot-ryze", name: "Ryze", avatarColor: AVATAR_COLORS[0], avatarUrl: ryzeImg, status: "online", isBot: true, xp: 2100, level: 18, bio: bioFor("bot-ryze", "Mod & gamer"), streak: 9, longestStreak: 21, messageCount: 540, badges: ["first_message","chatterbox","veteran","level_5","level_10","streak_3","streak_7","gamer"] },
+  { id: "bot-dig", name: "DigBot", avatarColor: AVATAR_COLORS[6], avatarUrl: digbotImg, status: "online", isBot: true, xp: 1560, level: 14, bio: bioFor("bot-dig", "⛏️ Try !dig"), streak: 7, longestStreak: 18, messageCount: 410, badges: ["first_message","chatterbox","level_5","level_10","streak_3","streak_7","gamer"] },
+  { id: "bot-fish", name: "FishBot", avatarColor: AVATAR_COLORS[2], avatarUrl: fishbotImg, status: "online", isBot: true, xp: 1320, level: 13, bio: bioFor("bot-fish", "🎣 Try !fish"), streak: 4, longestStreak: 15, messageCount: 360, badges: ["first_message","chatterbox","level_5","level_10","streak_3","gamer"] },
 ];
+
+function botHelpReply(botId: string, botName: string): string {
+  const info = BOT_COMMANDS[botId];
+  if (!info) return `Hey! I'm ${botName}. Type !help in the lobby to see all commands.`;
+  return `**${botName}** — ${info.tagline}\n\n${info.commands.map(c => `• ${c}`).join("\n")}`;
+}
+
+function isHelpQuery(t: string): boolean {
+  return /\b(help|command|commands|what can you do|what do you do|how do you work|games?|abilities|menu|guide|tutorial)\b/i.test(t)
+    || /\?\s*$/.test(t) && /\b(you|u)\b/i.test(t);
+}
 
 const SEED_ROOMS: Room[] = [
   {
