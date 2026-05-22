@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from "react";
 import type { User, Message, Room, GameState, Attachment } from "./chat-types";
 import { runCommand } from "./commands";
+import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 
 const STORAGE_KEY_BASE = "palrgo:state:v2";
 const SYNC_CHANNEL = "palrgo:sync:v2";
@@ -14,6 +15,7 @@ const AVATAR_COLORS = [
 ];
 
 function uid() { return Math.random().toString(36).slice(2, 10); }
+function xpToLevel(xp: number) { return Math.floor(xp / 50) + 1; }
 
 function isPlaceholderName(name?: string) {
   const cleaned = (name || "").trim().toLowerCase();
@@ -37,11 +39,11 @@ function normalizeMe(state: State, fallbackName = generateUsername()): State {
 }
 
 const SEED_BOTS: User[] = [
-  { id: "bot-gamebot", name: "GameBot", avatarColor: "oklch(0.78 0.13 195)", status: "online", isBot: true, xp: 9999, level: 99, bio: "Run !help to see games" },
-  { id: "bot-nova", name: "Nova", avatarColor: AVATAR_COLORS[3], status: "online", isBot: true, xp: 1240, level: 12, bio: "Casual chatter" },
-  { id: "bot-pixel", name: "Pixel", avatarColor: AVATAR_COLORS[5], status: "online", isBot: true, xp: 880, level: 9, bio: "Trivia addict" },
-  { id: "bot-echo", name: "Echo", avatarColor: AVATAR_COLORS[1], status: "away", isBot: true, xp: 410, level: 5 },
-  { id: "bot-ryze", name: "Ryze", avatarColor: AVATAR_COLORS[0], status: "online", isBot: true, xp: 2100, level: 18, bio: "Mod & gamer" },
+  { id: "bot-gamebot", name: "GameBot", avatarColor: "oklch(0.78 0.13 195)", status: "online", isBot: true, xp: 9999, level: 99, bio: "Run !help to see games", streak: 30, longestStreak: 99, messageCount: 1200, badges: ["first_message","chatterbox","veteran","level_5","level_10","level_25","streak_3","streak_7","streak_30","gamer"] },
+  { id: "bot-nova", name: "Nova", avatarColor: AVATAR_COLORS[3], status: "online", isBot: true, xp: 1240, level: 12, bio: "Casual chatter", streak: 5, longestStreak: 12, messageCount: 320, badges: ["first_message","chatterbox","level_5","level_10","streak_3"] },
+  { id: "bot-pixel", name: "Pixel", avatarColor: AVATAR_COLORS[5], status: "online", isBot: true, xp: 880, level: 9, bio: "Trivia addict", streak: 2, longestStreak: 8, messageCount: 210, badges: ["first_message","chatterbox","level_5","streak_3","gamer"] },
+  { id: "bot-echo", name: "Echo", avatarColor: AVATAR_COLORS[1], status: "away", isBot: true, xp: 410, level: 5, streak: 1, longestStreak: 4, messageCount: 88, badges: ["first_message","chatterbox","level_5"] },
+  { id: "bot-ryze", name: "Ryze", avatarColor: AVATAR_COLORS[0], status: "online", isBot: true, xp: 2100, level: 18, bio: "Mod & gamer", streak: 9, longestStreak: 21, messageCount: 540, badges: ["first_message","chatterbox","veteran","level_5","level_10","streak_3","streak_7","gamer"] },
 ];
 
 const SEED_ROOMS: Room[] = [
@@ -76,8 +78,8 @@ interface State {
   users: Record<string, User>;
   rooms: Record<string, Room>;
   roomOrder: string[];
-  dmOrder: string[]; // user ids
-  messages: Record<string, Message[]>; // channelId -> messages
+  dmOrder: string[];
+  messages: Record<string, Message[]>;
   games: Record<string, GameState>;
   activeChannel: string;
 }
@@ -86,6 +88,7 @@ function seed(name = "user0000"): State {
   const me: User = {
     id: "me", name, avatarColor: AVATAR_COLORS[4],
     status: "online", xp: 0, level: 1, bio: "New here",
+    streak: 0, longestStreak: 0, messageCount: 0, commandCount: 0, badges: [],
   };
   const users: Record<string, User> = { me };
   SEED_BOTS.forEach(b => (users[b.id] = b));
@@ -115,10 +118,72 @@ function load(username: string): State {
   return seed(username);
 }
 
+// Re-evaluate badges for "me", returning new state with badge updates and any new badge ids
+function applyBadges(s: State): { state: State; newBadges: string[] } {
+  const me = s.users.me;
+  const ctx = {
+    roomsJoined: Object.values(s.rooms).filter(r => r.members.includes("me")).length,
+    dmsStarted: s.dmOrder.length,
+  };
+  const merged = { ...me, badges: evaluateBadges(me, ctx) };
+  const prev = new Set(me.badges ?? []);
+  const newBadges = (merged.badges ?? []).filter(b => !prev.has(b));
+  if (!newBadges.length) return { state: s, newBadges: [] };
+  return {
+    state: {
+      ...s,
+      me: { ...s.me, badges: merged.badges },
+      users: { ...s.users, me: merged },
+    },
+    newBadges,
+  };
+}
+
+interface StreakResult {
+  state: State;
+  gained: number;       // streak bonus xp awarded today
+  newStreak: number;
+  rewarded: boolean;    // true if this run granted today's bonus
+}
+
+function applyDailyStreak(s: State): StreakResult {
+  const today = todayKey();
+  const me = s.users.me;
+  const last = me.lastActiveDay;
+  if (last === today) return { state: s, gained: 0, newStreak: me.streak ?? 0, rewarded: false };
+  let streak = 1;
+  if (last) {
+    const diff = daysBetween(last, today);
+    if (diff === 1) streak = (me.streak ?? 0) + 1;
+    else if (diff <= 0) streak = me.streak ?? 1;
+    else streak = 1;
+  }
+  const bonus = Math.min(50, 10 + (streak - 1) * 5);
+  const newXp = (me.xp ?? 0) + bonus;
+  const updatedMe: User = {
+    ...me,
+    streak,
+    longestStreak: Math.max(me.longestStreak ?? 0, streak),
+    lastActiveDay: today,
+    xp: newXp,
+    level: xpToLevel(newXp),
+  };
+  return {
+    state: {
+      ...s,
+      me: { ...s.me, streak, longestStreak: updatedMe.longestStreak, lastActiveDay: today, xp: newXp, level: updatedMe.level },
+      users: { ...s.users, me: updatedMe },
+    },
+    gained: bonus,
+    newStreak: streak,
+    rewarded: true,
+  };
+}
+
 interface Ctx {
   state: State;
   setActive: (channelId: string) => void;
-  send: (text: string, attachment?: Attachment) => void;
+  send: (text: string, opts?: { attachment?: Attachment; replyToId?: string }) => void;
   startDM: (userId: string) => void;
   joinRoom: (roomId: string) => void;
   createRoom: (name: string, topic: string) => void;
@@ -129,6 +194,9 @@ interface Ctx {
   channelLabel: (id: string) => string;
   isDM: (id: string) => boolean;
   dmUser: (id: string) => User | undefined;
+  replyingTo: Message | null;
+  setReplyingTo: (m: Message | null) => void;
+  findMessage: (id: string) => Message | undefined;
 }
 
 const ChatCtx = createContext<Ctx | null>(null);
@@ -142,15 +210,44 @@ const BOT_REPLIES = [
 export function ChatProvider({ username, children }: { username: string; children: ReactNode }) {
   const [state, setState] = useState<State>(() => seed(username));
   const [storageReady, setStorageReady] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const syncRef = useRef<BroadcastChannel | null>(null);
   const skipBroadcast = useRef(false);
+  const streakChecked = useRef<string | null>(null);
 
   useEffect(() => {
     setState(load(username));
     setStorageReady(true);
+    streakChecked.current = null;
   }, [username]);
 
-  // Cross-tab realtime sync via BroadcastChannel + storage events
+  // Daily streak check on first load per user
+  useEffect(() => {
+    if (!storageReady) return;
+    if (streakChecked.current === username) return;
+    streakChecked.current = username;
+    setState(s => {
+      const result = applyDailyStreak(s);
+      if (result.rewarded && typeof window !== "undefined") {
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("palrgo:streak", {
+            detail: { streak: result.newStreak, bonus: result.gained },
+          }));
+        }, 600);
+      }
+      const withBadges = applyBadges(result.state);
+      if (withBadges.newBadges.length && typeof window !== "undefined") {
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("palrgo:badge", {
+            detail: { ids: withBadges.newBadges },
+          }));
+        }, 1200);
+      }
+      return withBadges.state;
+    });
+  }, [storageReady, username]);
+
+  // Cross-tab sync
   useEffect(() => {
     if (!storageReady) return;
     if (typeof BroadcastChannel !== "undefined") {
@@ -173,7 +270,7 @@ export function ChatProvider({ username, children }: { username: string; childre
     syncRef.current?.postMessage({ type: "state", state });
   }, [state, storageReady, username]);
 
-  // Ambient bot chatter in active public room
+  // Ambient bot chatter
   useEffect(() => {
     const t = setInterval(() => {
       setState(s => {
@@ -191,33 +288,42 @@ export function ChatProvider({ username, children }: { username: string; childre
     return () => clearInterval(t);
   }, []);
 
-
   const setActive = useCallback((channelId: string) => {
     setState(s => ({ ...s, activeChannel: channelId }));
+    setReplyingTo(null);
   }, []);
 
-  const pushMessages = (channelId: string, msgs: Message[]) =>
-    setState(s => ({ ...s, messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), ...msgs] } }));
-
-  const send = useCallback((text: string, attachment?: Attachment) => {
+  const send = useCallback((text: string, opts?: { attachment?: Attachment; replyToId?: string }) => {
     const trimmed = text.trim();
+    const attachment = opts?.attachment;
+    const replyToId = opts?.replyToId;
     if (!trimmed && !attachment) return;
     setState(s => {
       const channelId = s.activeChannel;
+      const isCmd = trimmed.startsWith("!");
       const userMsg: Message = {
         id: uid(), channelId, authorId: "me",
         text: trimmed, ts: Date.now(),
         kind: trimmed.startsWith("/me ") ? "me" : "text",
-        attachment,
+        attachment, replyToId,
       };
       const existing = s.messages[channelId] || [];
+      const meXp = (s.me.xp ?? 0) + 1;
+      const meMsgCount = (s.me.messageCount ?? 0) + 1;
+      const meCmdCount = (s.me.commandCount ?? 0) + (isCmd ? 1 : 0);
+      const meNext: User = {
+        ...s.users.me,
+        xp: meXp, level: xpToLevel(meXp),
+        messageCount: meMsgCount,
+        commandCount: meCmdCount,
+      };
       let next: State = {
         ...s,
-        me: { ...s.me, xp: s.me.xp + 1, level: Math.floor((s.me.xp + 1) / 50) + 1 },
-        users: { ...s.users, me: { ...s.users.me, xp: s.users.me.xp + 1 } },
+        me: { ...s.me, xp: meXp, level: meNext.level, messageCount: meMsgCount, commandCount: meCmdCount },
+        users: { ...s.users, me: meNext },
         messages: { ...s.messages, [channelId]: [...existing, userMsg] },
       };
-      if (trimmed.startsWith("!")) {
+      if (isCmd) {
         const result = runCommand(trimmed, { state: next, channelId, actor: next.me.name });
         const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }) => ({
           id: uid(), channelId, authorId: r.from || "bot-gamebot",
@@ -234,7 +340,6 @@ export function ChatProvider({ username, children }: { username: string; childre
           }));
         }
       } else {
-        // Maybe one bot responds
         const room = next.rooms[channelId];
         if (room) {
           const candidates = room.members.filter(id => next.users[id]?.isBot && id !== "bot-gamebot");
@@ -254,28 +359,47 @@ export function ChatProvider({ username, children }: { username: string; childre
           }
         }
       }
-      return next;
+      const badged = applyBadges(next);
+      if (badged.newBadges.length && typeof window !== "undefined") {
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("palrgo:badge", { detail: { ids: badged.newBadges } }));
+        }, 200);
+      }
+      return badged.state;
     });
+    setReplyingTo(null);
   }, []);
 
   const startDM = useCallback((userId: string) => {
     const channelId = `dm:${userId}`;
-    setState(s => ({
-      ...s,
-      dmOrder: s.dmOrder.includes(userId) ? s.dmOrder : [...s.dmOrder, userId],
-      activeChannel: channelId,
-    }));
+    setState(s => {
+      const next: State = {
+        ...s,
+        dmOrder: s.dmOrder.includes(userId) ? s.dmOrder : [...s.dmOrder, userId],
+        activeChannel: channelId,
+      };
+      const badged = applyBadges(next);
+      if (badged.newBadges.length && typeof window !== "undefined") {
+        setTimeout(() => window.dispatchEvent(new CustomEvent("palrgo:badge", { detail: { ids: badged.newBadges } })), 200);
+      }
+      return badged.state;
+    });
   }, []);
 
   const joinRoom = useCallback((roomId: string) => {
     setState(s => {
       const room = s.rooms[roomId];
       if (!room || room.members.includes("me")) return { ...s, activeChannel: roomId };
-      return {
+      const next: State = {
         ...s,
         rooms: { ...s.rooms, [roomId]: { ...room, members: [...room.members, "me"] } },
         activeChannel: roomId,
       };
+      const badged = applyBadges(next);
+      if (badged.newBadges.length && typeof window !== "undefined") {
+        setTimeout(() => window.dispatchEvent(new CustomEvent("palrgo:badge", { detail: { ids: badged.newBadges } })), 200);
+      }
+      return badged.state;
     });
   }, []);
 
@@ -288,12 +412,17 @@ export function ChatProvider({ username, children }: { username: string; childre
         roles: { me: "owner", "bot-gamebot": "admin" },
         isPublic: true,
       };
-      return {
+      const next: State = {
         ...s,
         rooms: { ...s.rooms, [id]: room },
         roomOrder: [...s.roomOrder, id],
         activeChannel: id,
       };
+      const badged = applyBadges(next);
+      if (badged.newBadges.length && typeof window !== "undefined") {
+        setTimeout(() => window.dispatchEvent(new CustomEvent("palrgo:badge", { detail: { ids: badged.newBadges } })), 200);
+      }
+      return badged.state;
     });
   }, []);
 
@@ -310,19 +439,37 @@ export function ChatProvider({ username, children }: { username: string; childre
       const u = s.users[userId];
       if (!u) return s;
       const newXp = Math.max(0, u.xp + delta);
-      const updated: User = { ...u, xp: newXp, level: Math.floor(newXp / 50) + 1 };
-      return {
+      const updated: User = { ...u, xp: newXp, level: xpToLevel(newXp) };
+      const next: State = {
         ...s,
         users: { ...s.users, [userId]: updated },
         me: userId === "me" ? { ...s.me, xp: newXp, level: updated.level } : s.me,
       };
+      if (userId === "me") {
+        const badged = applyBadges(next);
+        if (badged.newBadges.length && typeof window !== "undefined") {
+          setTimeout(() => window.dispatchEvent(new CustomEvent("palrgo:badge", { detail: { ids: badged.newBadges } })), 200);
+        }
+        return badged.state;
+      }
+      return next;
     });
   }, []);
 
   const reset = useCallback(() => {
     localStorage.removeItem(storageKeyFor(username));
+    streakChecked.current = null;
     setState(seed(username));
   }, [username]);
+
+  const findMessage = useCallback((id: string) => {
+    for (const arr of Object.values(state.messages)) {
+      const m = arr.find(x => x.id === id);
+      if (m) return m;
+    }
+    return undefined;
+  }, [state.messages]);
+
 
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, joinRoom, createRoom, updateMe, adjustPoints, reset,
@@ -336,7 +483,9 @@ export function ChatProvider({ username, children }: { username: string; childre
     },
     isDM: (id) => id.startsWith("dm:"),
     dmUser: (id) => id.startsWith("dm:") ? state.users[id.slice(3)] : undefined,
-  }), [state, setActive, send, startDM, joinRoom, createRoom, updateMe, adjustPoints, reset]);
+    replyingTo, setReplyingTo,
+    findMessage,
+  }), [state, setActive, send, startDM, joinRoom, createRoom, updateMe, adjustPoints, reset, replyingTo, findMessage]);
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
 }

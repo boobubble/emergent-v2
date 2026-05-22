@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, MessageCircle, Crown, Shield, ShieldHalf, Trophy } from "lucide-react";
+import { ArrowLeft, MessageCircle, Crown, Shield, ShieldHalf, Trophy, Flame, Award } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
+import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
 
 export const Route = createFileRoute("/u/$username")({
   head: ({ params }) => ({
@@ -84,12 +85,33 @@ function UserProfilePage() {
                 </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-3 gap-3">
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <Stat label="Level" value={`Lv ${user.level}`} />
                 <Stat label="XP" value={`${user.xp}`} />
+                <Stat label="Streak" value={`${user.streak ?? 0}d`} icon={<Flame className="h-3.5 w-3.5 text-orange-400" />} />
                 <Stat label="Rank" value={rank ? `#${rank}` : "—"} icon={<Trophy className="h-3.5 w-3.5 text-warning" />} />
               </div>
             </div>
+
+            <section className="mt-8">
+              <h2 className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                <Award className="h-3.5 w-3.5 text-primary" /> Badges ({(user.badges || []).length})
+              </h2>
+              {(user.badges || []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">No badges yet.</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {(user.badges || []).map(id => {
+                    const b = BADGE_MAP[id]; if (!b) return null;
+                    return (
+                      <div key={id} className={`flex items-center gap-1 rounded-full border bg-gradient-to-br px-2.5 py-1 text-[11px] font-semibold ${TIER_COLOR[b.tier]}`} title={b.description}>
+                        <span>{b.emoji}</span>{b.name}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
 
             <section className="mt-8">
               <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Rooms ({sharedRooms.length})</h2>

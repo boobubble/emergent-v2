@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
-import { Send, Smile, Sparkles, Paperclip, X } from "lucide-react";
+import { Send, Smile, Sparkles, Paperclip, X, Reply } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import type { Attachment } from "@/lib/chat-types";
 
@@ -8,10 +8,10 @@ const COMMANDS = [
   "!trivia", "!a", "!hangman", "!g", "!blackjack", "!me", "!stats",
 ];
 const EMOJIS = ["😀","😂","😎","🥳","👍","❤️","🔥","🎲","🎰","🏆","👀","🪙","💀","🎉"];
-const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024; // 2 MB
+const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 export function MessageInput() {
-  const { send } = useChat();
+  const { send, state, replyingTo, setReplyingTo } = useChat();
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
@@ -30,9 +30,13 @@ export function MessageInput() {
     }
   }, [text]);
 
+  useEffect(() => {
+    if (replyingTo) inputRef.current?.focus();
+  }, [replyingTo]);
+
   function submit() {
     if (!text.trim() && !attachment) return;
-    send(text, attachment || undefined);
+    send(text, { attachment: attachment || undefined, replyToId: replyingTo?.id });
     setText("");
     setAttachment(null);
     setAttachError("");
@@ -42,6 +46,10 @@ export function MessageInput() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       submit();
+    }
+    if (e.key === "Escape" && replyingTo) {
+      e.preventDefault();
+      setReplyingTo(null);
     }
   }
 
@@ -73,8 +81,24 @@ export function MessageInput() {
     }
   }
 
+  const replyAuthor = replyingTo ? state.users[replyingTo.authorId] : null;
+
   return (
     <div className="px-6 pb-6 pt-2">
+      {replyingTo && (
+        <div className="mb-2 flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
+          <Reply className="h-3.5 w-3.5 shrink-0 text-primary" />
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold text-primary">Replying to {replyAuthor?.name || "user"}</div>
+            <div className="truncate text-muted-foreground">
+              {replyingTo.text || (replyingTo.attachment ? `📎 ${replyingTo.attachment.name}` : "(message)")}
+            </div>
+          </div>
+          <button onClick={() => setReplyingTo(null)} className="shrink-0 text-muted-foreground hover:text-destructive" aria-label="Cancel reply">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       {suggestions.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1.5">
           {suggestions.map(c => (
@@ -118,7 +142,7 @@ export function MessageInput() {
         <button onClick={() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !"))} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Command">
           <Sparkles className="h-5 w-5" />
         </button>
-        <textarea ref={inputRef} value={text} onChange={e => setText(e.target.value)} onKeyDown={onKey} rows={1} placeholder="Message — try !help" className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
+        <textarea ref={inputRef} value={text} onChange={e => setText(e.target.value)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help"} className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
         <button onClick={() => setShowEmoji(s => !s)} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground">
           <Smile className="h-5 w-5" />
         </button>
