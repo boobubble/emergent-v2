@@ -3,6 +3,7 @@ import type { User, Message, Room, GameState } from "./chat-types";
 import { runCommand } from "./commands";
 
 const STORAGE_KEY = "palrgo:state:v1";
+const SEED_TIME = 1_700_000_000_000;
 
 const AVATAR_COLORS = [
   "oklch(0.7 0.15 25)", "oklch(0.7 0.15 75)", "oklch(0.7 0.15 145)",
@@ -11,6 +12,21 @@ const AVATAR_COLORS = [
 ];
 
 function uid() { return Math.random().toString(36).slice(2, 10); }
+
+function isPlaceholderName(name?: string) {
+  const cleaned = (name || "").trim().toLowerCase();
+  return !cleaned || cleaned === "you";
+}
+
+function generateUsername() {
+  return `user${Math.floor(1000 + Math.random() * 9000)}`;
+}
+
+function normalizeMe(state: State, fallbackName = generateUsername()): State {
+  if (!isPlaceholderName(state.me.name)) return state;
+  const me = { ...state.me, name: fallbackName };
+  return { ...state, me, users: { ...state.users, me: { ...state.users.me, name: fallbackName } } };
+}
 
 const SEED_BOTS: User[] = [
   { id: "bot-gamebot", name: "GameBot", avatarColor: "oklch(0.78 0.13 195)", status: "online", isBot: true, xp: 9999, level: 99, bio: "Run !help to see games" },
@@ -58,9 +74,9 @@ interface State {
   activeChannel: string;
 }
 
-function seed(): State {
+function seed(name = "user0000"): State {
   const me: User = {
-    id: "me", name: "You", avatarColor: AVATAR_COLORS[4],
+    id: "me", name, avatarColor: AVATAR_COLORS[4],
     status: "online", xp: 0, level: 1, bio: "New here",
   };
   const users: Record<string, User> = { me };
@@ -69,9 +85,9 @@ function seed(): State {
   SEED_ROOMS.forEach(r => (rooms[r.id] = r));
   const messages: Record<string, Message[]> = {};
   rooms.lobby && (messages.lobby = [
-    { id: uid(), channelId: "lobby", authorId: "bot-gamebot", text: "Welcome to Palrgo! Type !help to see commands.", ts: Date.now() - 60000 },
-    { id: uid(), channelId: "lobby", authorId: "bot-nova", text: "hey everyone 👋", ts: Date.now() - 40000 },
-    { id: uid(), channelId: "lobby", authorId: "bot-ryze", text: "anyone up for trivia?", ts: Date.now() - 20000 },
+    { id: "seed-welcome", channelId: "lobby", authorId: "bot-gamebot", text: "Welcome to Palrgo! Type !help to see commands.", ts: SEED_TIME - 60000 },
+    { id: "seed-nova", channelId: "lobby", authorId: "bot-nova", text: "hey everyone 👋", ts: SEED_TIME - 40000 },
+    { id: "seed-ryze", channelId: "lobby", authorId: "bot-ryze", text: "anyone up for trivia?", ts: SEED_TIME - 20000 },
   ]);
   return {
     me, users, rooms,
@@ -86,9 +102,9 @@ function seed(): State {
 function load(): State {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return normalizeMe(JSON.parse(raw));
   } catch {}
-  return seed();
+  return seed(generateUsername());
 }
 
 interface Ctx {
