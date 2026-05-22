@@ -215,7 +215,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       if (pTotal > 21) outcome = "Bust 💥 — Dealer wins";
       else if (dTotal > 21 || pTotal > dTotal) outcome = `${who} wins! 🏆`;
       else if (pTotal < dTotal) outcome = "Dealer wins 🪦";
-      return { replies: [{ text: `♠️ **Blackjack**\nYou: ${player.map(c=>c.c).join(" ")} = ${pTotal}\nDealer: ${dealer.map(c=>c.c).join(" ")} = ${dTotal}\n${outcome}` }] };
+      return { replies: [{ text: `♠️ **Blackjack**\n${who}: ${player.map(c=>c.c).join(" ")} = ${pTotal}\nDealer: ${dealer.map(c=>c.c).join(" ")} = ${dTotal}\n${outcome}` }] };
     }
 
     case "stats": {
