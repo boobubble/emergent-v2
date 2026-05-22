@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, Plus, Settings, Trophy, LogOut, RotateCcw, Award, Flame } from "lucide-react";
+import { MessageCircle, Settings, Trophy, LogOut, RotateCcw, Award, Flame } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "./Avatar";

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from "react";
 import type { User, Message, Room, GameState, Attachment } from "./chat-types";
 import { runCommand } from "./commands";
-import { evaluateBadges, todayKey, daysBetween, BADGE_MAP } from "./achievements";
+import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 
 const STORAGE_KEY_BASE = "palrgo:state:v2";
 const SYNC_CHANNEL = "palrgo:sync:v2";
@@ -470,8 +470,6 @@ export function ChatProvider({ username, children }: { username: string; childre
     return undefined;
   }, [state.messages]);
 
-  // Suppress unused-warning for BADGE_MAP at module scope (used elsewhere)
-  void BADGE_MAP;
 
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, joinRoom, createRoom, updateMe, adjustPoints, reset,
