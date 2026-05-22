@@ -3,14 +3,50 @@ import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
-import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
+import { Download, Reply, CornerDownRight, CheckCheck, X } from "lucide-react";
 
 function AttachmentView({ a }: { a: Attachment }) {
+  const [preview, setPreview] = useState(false);
   if (a.kind === "image") {
     return (
-      <a href={a.dataUrl} download={a.name} className="mt-1 block max-w-[280px] overflow-hidden rounded-xl border border-border">
-        <img src={a.dataUrl} alt={a.name} className="block max-h-72 w-full object-contain bg-black/30" />
-      </a>
+      <>
+        <button
+          type="button"
+          onClick={() => setPreview(true)}
+          className="mt-1 block max-w-[280px] overflow-hidden rounded-xl border border-border cursor-zoom-in"
+        >
+          <img src={a.dataUrl} alt={a.name} className="block max-h-72 w-full object-contain bg-black/30" />
+        </button>
+        {preview && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 animate-in fade-in"
+            onClick={() => setPreview(false)}
+          >
+            <button
+              onClick={() => setPreview(false)}
+              className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              aria-label="Close preview"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <a
+              href={a.dataUrl}
+              download={a.name}
+              onClick={(e) => e.stopPropagation()}
+              className="absolute right-16 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              aria-label="Download image"
+            >
+              <Download className="h-5 w-5" />
+            </a>
+            <img
+              src={a.dataUrl}
+              alt={a.name}
+              onClick={(e) => e.stopPropagation()}
+              className="max-h-[90vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
+            />
+          </div>
+        )}
+      </>
     );
   }
   return (
