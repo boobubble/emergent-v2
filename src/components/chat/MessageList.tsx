@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 import type { Message, Attachment } from "@/lib/chat-types";
@@ -128,7 +129,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                 <div className="flex min-w-0 flex-1 flex-col items-end">
                   <div className="mb-1 flex items-center gap-2">
                     <Time ts={g[0].ts} />
-                    <span className="text-sm font-bold text-foreground">{author.name}</span>
+                    <Link to="/u/$username" params={{ username: author.name }} className="text-sm font-bold text-foreground hover:text-primary hover:underline">{author.name}</Link>
                   </div>
                   <div className="flex max-w-[80%] flex-col items-end gap-1">
                     {g.map(m => (
@@ -155,13 +156,13 @@ export function MessageList({ channelId }: { channelId: string }) {
               <Avatar user={author} size={36} />
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
-                  <span
-                    className={`text-sm font-bold ${
-                      author.isBot ? "text-foreground" : "text-foreground"
-                    }`}
+                  <Link
+                    to="/u/$username"
+                    params={{ username: author.name }}
+                    className={`text-sm font-bold text-foreground hover:text-primary hover:underline`}
                   >
                     {author.name}
-                  </span>
+                  </Link>
                   {author.isBot && (
                     <span className="rounded-md bg-primary/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight text-primary">
                       Bot
