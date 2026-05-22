@@ -13,7 +13,7 @@ interface Ctx {
   user: AuthUser | null;
   ready: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, username: string) => Promise<void>;
+  signup: (email: string, password: string, username: string, gender: "male" | "female" | "other") => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
