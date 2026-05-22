@@ -18,7 +18,11 @@ export function AuthScreen() {
       if (mode === "login") {
         await login(email, password);
       } else {
-        await signup(email, password, username);
+        const wordCount = username.trim().split(/\s+/).filter(Boolean).length;
+        if (wordCount < 2 || wordCount > 10) {
+          throw new Error("Username must be between 2 and 10 words.");
+        }
+        await signup(email, password, username.trim());
         setInfo("Account created! Check your email to confirm, then sign in.");
         setMode("login");
       }
