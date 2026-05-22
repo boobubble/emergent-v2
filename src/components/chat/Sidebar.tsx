@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MessageCircle, Plus, Settings, Trophy, LogOut } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
+import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -156,10 +157,13 @@ export function Sidebar({ onOpenProfile, onOpenLeaderboard }: Props) {
       <div className="border-t border-border p-3">
         <button
           onClick={onOpenLeaderboard}
-          className="mb-2 flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+          className="mb-1 flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
         >
           <Trophy className="h-4 w-4" /> Leaderboard
         </button>
+        <div className="mb-2">
+          <ThemeToggle />
+        </div>
         <button
           onClick={onOpenProfile}
           className="flex w-full items-center gap-3 rounded-2xl bg-white/5 p-2 text-left transition-colors hover:bg-white/10"
