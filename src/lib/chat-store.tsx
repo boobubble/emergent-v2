@@ -474,9 +474,8 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
     const attachment = opts?.attachment;
     const replyToId = opts?.replyToId;
     if (!trimmed && !attachment) return;
-    const activeChannel = (typeof window !== "undefined") ? undefined : undefined;
-    void activeChannel;
-    let outgoingRemote: { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null } | null = null;
+    type Outgoing = { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null };
+    let outgoingRemote: Outgoing | null = null;
     setState(s => {
       const channelId = s.activeChannel;
       const isCmd = trimmed.startsWith("!");
