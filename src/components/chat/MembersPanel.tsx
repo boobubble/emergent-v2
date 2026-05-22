@@ -174,20 +174,49 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={(open) => { if (!open) void markAllRead(); }}>
           <DropdownMenuTrigger asChild>
             <button
               title="Notifications"
               aria-label="Notifications"
-              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+              className="relative grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
             >
               <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-60">
+          <DropdownMenuContent align="end" className="w-72 max-h-96 overflow-y-auto">
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <div className="px-2 py-3 text-xs text-muted-foreground">You're all caught up.</div>
+            {notifs.length === 0 ? (
+              <div className="px-2 py-3 text-xs text-muted-foreground">You're all caught up.</div>
+            ) : (
+              notifs.map((n) => {
+                const actor = n.actor_id ? (usersById[n.actor_id] ?? profiles[n.actor_id]) : null;
+                const verb = n.kind === "friend_post" ? "shared a new post" : "commented on a post";
+                const preview = n.payload?.text;
+                return (
+                  <DropdownMenuItem key={n.id} asChild className={!n.read ? "bg-primary/5" : ""}>
+                    <Link to="/feed" className="flex items-start gap-2 py-2">
+                      {actor ? <Avatar user={actor} size={28} /> : <div className="h-7 w-7 rounded-full bg-muted" />}
+                      <div className="min-w-0 flex-1 leading-tight">
+                        <div className="text-xs">
+                          <span className="font-semibold">{actor?.name ?? "A friend"}</span>{" "}
+                          <span className="text-muted-foreground">{verb}</span>
+                        </div>
+                        {preview && <div className="truncate text-[11px] text-muted-foreground">{preview}</div>}
+                        <div className="text-[10px] text-muted-foreground/70">{new Date(n.created_at).toLocaleString()}</div>
+                      </div>
+                      {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
