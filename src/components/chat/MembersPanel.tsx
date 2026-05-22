@@ -128,7 +128,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
       <div className="px-5 pt-3">
         <h2 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          Members &mdash; {room.members.length}
+          Members &mdash; {allIds.length}
         </h2>
       </div>
 
