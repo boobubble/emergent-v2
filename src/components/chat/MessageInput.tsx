@@ -8,7 +8,7 @@ const COMMANDS = [
   "!trivia", "!a", "!hangman", "!g", "!me", "!stats",
 ];
 const EMOJIS = ["😀","😂","😎","🥳","👍","❤️","🔥","🎲","🎰","🏆","👀","🪙","💀","🎉"];
-const MAX_ATTACHMENT_BYTES = 30 * 1024 * 1024;
+const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 export function MessageInput() {
   const { send, state, replyingTo, setReplyingTo } = useChat();
