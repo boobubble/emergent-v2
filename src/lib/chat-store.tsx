@@ -557,11 +557,22 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       }
       return badged.state;
     });
+    if (outgoingRemote && authUserId) {
+      void supabase.from("messages").insert({
+        id: outgoingRemote.id,
+        channel_id: outgoingRemote.channelId,
+        author_id: authUserId,
+        text: outgoingRemote.text,
+        kind: outgoingRemote.kind,
+        attachment: outgoingRemote.attachment,
+        reply_to_id: outgoingRemote.replyToId,
+      }).then(({ error }) => { if (error) console.error("send failed", error); });
+    }
     setReplyingTo(null);
-  }, []);
+  }, [authUserId]);
 
   const startDM = useCallback((userId: string) => {
-    const channelId = `dm:${userId}`;
+    const channelId = dmChannelFor(authUserId, userId);
     setState(s => {
       const next: State = {
         ...s,
@@ -574,10 +585,10 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       }
       return badged.state;
     });
-  }, []);
+  }, [authUserId]);
 
   const closeDM = useCallback((userId: string) => {
-    const channelId = `dm:${userId}`;
+    const channelId = dmChannelFor(authUserId, userId);
     setState(s => ({
       ...s,
       dmOrder: s.dmOrder.filter(id => id !== userId),
