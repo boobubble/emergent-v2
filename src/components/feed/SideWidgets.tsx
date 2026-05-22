@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Flame, TrendingUp, Trophy, UserPlus, Check, X } from "lucide-react";
+import { Flame, TrendingUp, Trophy, UserPlus, Check, X, Radio } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
 import type { User } from "@/lib/chat-types";
