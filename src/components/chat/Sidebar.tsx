@@ -129,43 +129,6 @@ export function Sidebar({ onOpenProfile, onOpenLeaderboard, onOpenAchievements, 
           </div>
         </div>
 
-        <div>
-          <SectionLabel title="Direct Messages" />
-          {state.dmOrder.length === 0 && (
-            <div className="px-3 text-xs text-muted-foreground">Click a member to DM</div>
-          )}
-          <div className="space-y-1">
-            {state.dmOrder.map(uid => {
-              const u = state.users[uid];
-              if (!u) return null;
-              const cid = `dm:${uid}`;
-              const active = state.activeChannel === cid;
-              return (
-                <button
-                  key={uid}
-                  onClick={() => setActive(cid)}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-sm transition-all",
-                    active
-                      ? "bg-primary font-semibold text-primary-foreground"
-                      : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "h-2 w-2 rounded-full",
-                      u.status === "online"
-                        ? "bg-primary shadow-[0_0_8px_var(--primary-glow)]"
-                        : "bg-muted-foreground/50",
-                    )}
-                  />
-                  <MessageCircle className="h-3.5 w-3.5 opacity-60" />
-                  <span className="truncate">{u.name}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </nav>
 
       <div className="border-t border-border p-3">
