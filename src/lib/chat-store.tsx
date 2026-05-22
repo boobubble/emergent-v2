@@ -185,6 +185,7 @@ interface Ctx {
   setActive: (channelId: string) => void;
   send: (text: string, opts?: { attachment?: Attachment; replyToId?: string }) => void;
   startDM: (userId: string) => void;
+  closeDM: (userId: string) => void;
   joinRoom: (roomId: string) => void;
   createRoom: (name: string, topic: string) => void;
   updateMe: (patch: Partial<User>) => void;
