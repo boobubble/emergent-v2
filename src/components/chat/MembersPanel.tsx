@@ -127,7 +127,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   const body = (
     <>
-      <div className="flex items-center justify-end gap-1 px-3 pt-4">
+      <div className="flex items-center justify-end gap-1 px-3 pt-4 pr-12 lg:pr-3">
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
