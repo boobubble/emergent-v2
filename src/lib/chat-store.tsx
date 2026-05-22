@@ -346,7 +346,7 @@ export function ChatProvider({ username, children }: { username: string; childre
         if (!botMembers.length) return s;
         if (Math.random() > 0.35) return s;
         const author = botMembers[Math.floor(Math.random() * botMembers.length)];
-        const text = BOT_REPLIES[Math.floor(Math.random() * BOT_REPLIES.length)];
+        const text = pickBotReply("");
         const msg: Message = { id: uid(), channelId: room.id, authorId: author, text, ts: Date.now() };
         return { ...s, messages: { ...s.messages, [room.id]: [...(s.messages[room.id] || []), msg] } };
       });
