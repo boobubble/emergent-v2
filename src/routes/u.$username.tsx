@@ -19,7 +19,7 @@ export const Route = createFileRoute("/u/$username")({
 function UserProfilePage() {
   const { username } = Route.useParams();
   const navigate = useNavigate();
-  const { state, startDM } = useChat();
+  const { state, startDM, addFriend, removeFriend, blockUser, unblockUser, isFriend, isBlocked } = useChat();
 
   const user = Object.values(state.users).find(
     u => u.name.toLowerCase() === username.toLowerCase(),
