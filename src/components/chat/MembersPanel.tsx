@@ -41,6 +41,36 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [showAllOffline, setShowAllOffline] = useState(false);
+  const [notifs, setNotifs] = useState<FeedNotification[]>([]);
+  const meId = authUser?.id;
+
+  useEffect(() => {
+    if (!meId) return;
+    async function load() {
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", meId)
+        .in("kind", ["friend_post", "friend_comment"])
+        .order("created_at", { ascending: false })
+        .limit(20);
+      setNotifs((data ?? []) as FeedNotification[]);
+    }
+    load();
+    const ch = supabase
+      .channel(`notif-${meId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${meId}` }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [meId]);
+
+  const unreadCount = notifs.filter(n => !n.read).length;
+
+  async function markAllRead() {
+    if (!meId || unreadCount === 0) return;
+    await supabase.from("notifications").update({ read: true }).eq("user_id", meId).eq("read", false);
+  }
+
   const room = state.rooms[roomId];
   if (!room) return null;
 
