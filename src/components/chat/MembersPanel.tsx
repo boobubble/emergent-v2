@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { supabase } from "@/integrations/supabase/client";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
 import {
@@ -117,9 +118,10 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const hiddenOffline = offlineSorted.length - offline.length;
 
 
-  return (
-    <aside className="hidden h-full w-60 shrink-0 flex-col border-l border-border bg-card lg:flex">
+  const body = (
+    <>
       <div className="flex items-center justify-end gap-1 px-3 pt-4">
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -294,8 +296,31 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           </p>
         </div>
       </div>
-    </aside>
+    </>
   );
+
+  return (
+    <>
+      <aside className="hidden h-full w-60 shrink-0 flex-col border-l border-border bg-card lg:flex">
+        {body}
+      </aside>
+      <Sheet>
+        <SheetTrigger asChild>
+          <button
+            title="Members"
+            aria-label="Members"
+            className="fixed bottom-20 right-3 z-30 grid h-11 w-11 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/30 lg:hidden"
+          >
+            <Users className="h-5 w-5" />
+          </button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-72 bg-card p-0 flex flex-col">
+          {body}
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+
 
   function MemberRow({
     id,
