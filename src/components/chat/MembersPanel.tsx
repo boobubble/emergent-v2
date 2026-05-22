@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { supabase } from "@/integrations/supabase/client";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
 import {
@@ -42,6 +42,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [showAllOffline, setShowAllOffline] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [notifs, setNotifs] = useState<FeedNotification[]>([]);
   const meId = authUser?.id;
 
@@ -64,6 +65,12 @@ export function MembersPanel({ roomId }: { roomId: string }) {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [meId]);
+
+  useEffect(() => {
+    const open = () => setSheetOpen(true);
+    window.addEventListener("open-members-panel", open);
+    return () => window.removeEventListener("open-members-panel", open);
+  }, []);
 
   const unreadCount = notifs.filter(n => !n.read).length;
 
@@ -304,16 +311,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
       <aside className="hidden h-full w-60 shrink-0 flex-col border-l border-border bg-card lg:flex">
         {body}
       </aside>
-      <Sheet>
-        <SheetTrigger asChild>
-          <button
-            title="Members"
-            aria-label="Members"
-            className="fixed bottom-20 right-3 z-30 grid h-11 w-11 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/30 lg:hidden"
-          >
-            <Users className="h-5 w-5" />
-          </button>
-        </SheetTrigger>
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-72 bg-card p-0 flex flex-col">
           {body}
         </SheetContent>

@@ -49,12 +49,17 @@ export function ChatHeader() {
           <div className="truncate text-[11px] text-muted-foreground">{room.topic}</div>
         </div>
       </div>
-      <div className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5">
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new Event("open-members-panel"))}
+        className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 transition hover:bg-white/10 lg:pointer-events-none lg:hover:bg-white/5"
+        aria-label="Show members"
+      >
         <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary-glow)]" />
         <span className="text-xs font-semibold text-muted-foreground">
           {room.members.length} online
         </span>
-      </div>
+      </button>
     </header>
   );
 }
