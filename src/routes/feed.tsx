@@ -177,6 +177,8 @@ function FeedPage() {
         <main className="min-w-0">
           {view === "account" ? (
             <AccountPanel />
+          ) : view === "profile" ? (
+            <ProfilePanel username={profileUsername} onBack={() => setView("feed")} />
           ) : (
             <>
               <Composer authorId={meId} onPosted={loadPosts} />
