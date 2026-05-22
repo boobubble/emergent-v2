@@ -392,6 +392,78 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
     return () => clearInterval(t);
   }, []);
 
+  // Merge remote profiles into the users map (skips our own auth uuid; we render as "me")
+  useEffect(() => {
+    setState(s => {
+      const users = { ...s.users };
+      let changed = false;
+      Object.entries(remoteProfiles).forEach(([id, u]) => {
+        if (id === authUserId) return;
+        const prev = users[id];
+        if (!prev || prev.name !== u.name || prev.status !== u.status || prev.avatarColor !== u.avatarColor || prev.avatarUrl !== u.avatarUrl) {
+          users[id] = { ...prev, ...u };
+          changed = true;
+        }
+      });
+      return changed ? { ...s, users } : s;
+    });
+  }, [remoteProfiles, authUserId]);
+
+  // Fetch existing remote messages for lobby + the active remote channel
+  useEffect(() => {
+    if (!authUserId) return;
+    let cancelled = false;
+    const channelsToFetch = new Set<string>(["lobby"]);
+    if (isRemoteChannel(state.activeChannel, authUserId) && state.activeChannel !== "lobby") {
+      channelsToFetch.add(state.activeChannel);
+    }
+    (async () => {
+      for (const ch of channelsToFetch) {
+        const { data } = await supabase
+          .from("messages")
+          .select("id, channel_id, author_id, text, kind, attachment, reply_to_id, created_at")
+          .eq("channel_id", ch)
+          .order("created_at", { ascending: true })
+          .limit(200);
+        if (cancelled || !data) continue;
+        setState(s => {
+          const existing = s.messages[ch] || [];
+          const existingIds = new Set(existing.map(m => m.id));
+          const incoming = data
+            .filter(r => !existingIds.has(r.id))
+            .map(r => { seenRemoteMsgIds.current.add(r.id); return rowToMessage(r, authUserId); });
+          if (!incoming.length) return s;
+          const merged = [...existing, ...incoming].sort((a, b) => a.ts - b.ts);
+          return { ...s, messages: { ...s.messages, [ch]: merged } };
+        });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [authUserId, state.activeChannel]);
+
+  // Realtime subscription to new messages (RLS scopes us to lobby + our DMs)
+  useEffect(() => {
+    if (!authUserId) return;
+    const channel = supabase
+      .channel("palrgo-messages")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
+        const row = payload.new as Parameters<typeof rowToMessage>[0];
+        if (seenRemoteMsgIds.current.has(row.id)) return;
+        seenRemoteMsgIds.current.add(row.id);
+        const msg = rowToMessage(row, authUserId);
+        setState(s => {
+          const existing = s.messages[msg.channelId] || [];
+          if (existing.some(m => m.id === msg.id)) return s;
+          return {
+            ...s,
+            messages: { ...s.messages, [msg.channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts) },
+          };
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [authUserId]);
+
   const setActive = useCallback((channelId: string) => {
     setState(s => ({ ...s, activeChannel: channelId }));
     setReplyingTo(null);
