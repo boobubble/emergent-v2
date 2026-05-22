@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
+import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
 import {
@@ -14,6 +16,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Role, User } from "@/lib/chat-types";
+
+interface FeedNotification {
+  id: string;
+  user_id: string;
+  actor_id: string | null;
+  kind: string;
+  target_type: string | null;
+  target_id: string | null;
+  payload: { text?: string } | null;
+  read: boolean;
+  created_at: string;
+}
 
 const ICONS: Record<Role, React.ReactNode> = {
   owner: <Crown className="h-3 w-3 text-warning" />,
