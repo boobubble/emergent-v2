@@ -101,10 +101,35 @@ function seed(name = "user0000"): State {
   };
 }
 
+function ensureWelcome(state: State, name: string): State {
+  const lobbyMsgs = state.messages?.lobby || [];
+  const hasWelcome = lobbyMsgs.some(m => m.id === "seed-welcome");
+  const dmMsgs = state.messages?.["dm:bot-gamebot"] || [];
+  const hasDmWelcome = dmMsgs.some(m => m.id === "seed-dm-welcome");
+  if (hasWelcome && hasDmWelcome) return state;
+  const welcomeLobby: Message[] = hasWelcome ? [] : [
+    { id: "seed-welcome", channelId: "lobby", authorId: "bot-gamebot", text: `🎉 Welcome to Palrgo, @${name}! Glad to have you here. Type !help to see commands, customize your profile from the account page, and jump into a game anytime.`, ts: SEED_TIME - 60000 },
+    { id: "seed-nova", channelId: "lobby", authorId: "bot-nova", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
+  ];
+  const welcomeDm: Message[] = hasDmWelcome ? [] : [
+    { id: "seed-dm-welcome", channelId: "dm:bot-gamebot", authorId: "bot-gamebot", text: `Hi @${name}! 👋 I'm GameBot. Here's a quick start:\n• Type !help to see all commands\n• Try !trivia, !hangman, or !wordchain to play games\n• Earn XP, coins, and badges as you chat\n• Add friends from any user's profile\nHave fun! 🎮`, ts: SEED_TIME - 10000 },
+  ];
+  const dmOrder = state.dmOrder?.includes("bot-gamebot") ? state.dmOrder : ["bot-gamebot", ...(state.dmOrder || [])];
+  return {
+    ...state,
+    dmOrder,
+    messages: {
+      ...state.messages,
+      lobby: [...welcomeLobby, ...lobbyMsgs],
+      "dm:bot-gamebot": [...welcomeDm, ...dmMsgs],
+    },
+  };
+}
+
 function load(username: string): State {
   try {
     const raw = localStorage.getItem(storageKeyFor(username));
-    if (raw) return normalizeMe(JSON.parse(raw), username);
+    if (raw) return ensureWelcome(normalizeMe(JSON.parse(raw), username), username);
   } catch {}
   return seed(username);
 }
