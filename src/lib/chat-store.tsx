@@ -459,11 +459,23 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
         if (seenRemoteMsgIds.current.has(row.id)) return;
         seenRemoteMsgIds.current.add(row.id);
         const msg = rowToMessage(row, authUserId);
+        // Sync shared game state piggybacked on the message
+        const gs = (msg.attachment as unknown as { __gameState?: GameState } | undefined)?.__gameState;
+        if (gs) {
+          // strip the sentinel so it doesn't render as a file attachment
+          msg.attachment = undefined;
+        }
         setState(s => {
           const existing = s.messages[msg.channelId] || [];
           if (existing.some(m => m.id === msg.id)) return s;
+          let games = s.games;
+          if (gs) {
+            if (gs.type) games = { ...games, [msg.channelId]: gs };
+            else games = Object.fromEntries(Object.entries(games).filter(([k]) => k !== msg.channelId));
+          }
           return {
             ...s,
+            games,
             messages: { ...s.messages, [msg.channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts) },
           };
         });
