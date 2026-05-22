@@ -92,10 +92,10 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     if (!u) return null;
     return (
       <div className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2 transition-colors hover:bg-white/5">
-        <Link to="/u/$username" params={{ username: u.name }} className="shrink-0">
+        <Link to="/u/$username" params={{ username: u.name }} target="_blank" rel="noopener noreferrer" className="shrink-0">
           <Avatar user={u} size={32} />
         </Link>
-        <Link to="/u/$username" params={{ username: u.name }} className="min-w-0 flex-1 leading-tight">
+        <Link to="/u/$username" params={{ username: u.name }} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 leading-tight">
           <div className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground/90 hover:text-primary">
             {u.name}
             {ICONS[role]}
