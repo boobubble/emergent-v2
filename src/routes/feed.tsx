@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Home, Bell, Users, Sparkles, Flame, Clock, UserCircle } from "lucide-react";
+import { ArrowLeft, Home, Bell, Users, Sparkles, Flame, Clock, UserCircle, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, LeaderboardWidget, StreakWidget } from "@/components/feed/SideWidgets";
+import { AccountPanel } from "@/components/feed/AccountPanel";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
 
 export const Route = createFileRoute("/feed")({
