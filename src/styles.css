@@ -117,3 +117,59 @@
   ::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 0.06); border-radius: 999px; }
   ::-webkit-scrollbar-thumb:hover { background: oklch(1 0 0 / 0.12); }
 }
+
+@keyframes palrgo-buzz {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-6px, 4px) rotate(-0.6deg); }
+  20% { transform: translate(7px, -3px) rotate(0.5deg); }
+  30% { transform: translate(-8px, -2px) rotate(-0.4deg); }
+  40% { transform: translate(6px, 5px) rotate(0.6deg); }
+  50% { transform: translate(-5px, 3px) rotate(-0.3deg); }
+  60% { transform: translate(4px, -4px) rotate(0.4deg); }
+  70% { transform: translate(-3px, 2px); }
+  80% { transform: translate(2px, -1px); }
+  90% { transform: translate(-1px, 1px); }
+}
+
+.palrgo-buzzing {
+  animation: palrgo-buzz 0.7s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.palrgo-buzz-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: radial-gradient(circle at center, var(--primary-glow), transparent 70%);
+  opacity: 0;
+  animation: palrgo-flash 0.7s ease-out both;
+}
+
+@keyframes palrgo-flash {
+  0% { opacity: 0; }
+  20% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+
+.palrgo-buzz-toast {
+  position: fixed;
+  top: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  padding: 0.6rem 1.25rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  box-shadow: var(--shadow-glow);
+  animation: palrgo-toast 2.2s ease-out both;
+}
+
+@keyframes palrgo-toast {
+  0% { opacity: 0; transform: translate(-50%, -20px); }
+  15%, 85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -10px); }
+}

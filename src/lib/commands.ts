@@ -13,6 +13,7 @@ export interface CmdReply {
 export interface CmdResult {
   replies: CmdReply[];
   gameUpdate?: GameState;
+  buzz?: { actor?: string; reason: string };
 }
 
 const TRIVIA: { q: string; a: string; choices: string[] }[] = [
@@ -98,7 +99,11 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
         find.rarity === "uncommon" ? "Uncommon" :
         find.rarity === "common" ? "Common" : "—";
       const xpStr = find.xp > 0 ? ` (+${find.xp} XP)` : "";
-      return { replies: [{ text: `⛏️ You dig deep and unearth ${find.emoji} **${find.name}**${xpStr} — ${tag}` }] };
+      const rare = find.rarity === "rare" || find.rarity === "epic" || find.rarity === "legendary";
+      return {
+        replies: [{ text: `⛏️ You dig deep and unearth ${find.emoji} **${find.name}**${xpStr} — ${tag}` }],
+        ...(rare ? { buzz: { reason: `${find.emoji} ${find.name}` } } : {}),
+      };
     }
 
     case "slots": {
@@ -141,7 +146,11 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
         fish.rarity === "epic" ? "💜 *Epic catch*" :
         fish.rarity === "rare" ? "💎 Rare" :
         fish.rarity === "uncommon" ? "Uncommon" : "Common";
-      return { replies: [{ text: `🎣 You caught a ${fish.emoji} **${fish.name}** — ${fish.weight}kg (+${fish.xp} XP) — ${tag}` }] };
+      const rare = fish.rarity === "rare" || fish.rarity === "epic" || fish.rarity === "legendary";
+      return {
+        replies: [{ text: `🎣 You caught a ${fish.emoji} **${fish.name}** — ${fish.weight}kg (+${fish.xp} XP) — ${tag}` }],
+        ...(rare ? { buzz: { reason: `${fish.emoji} ${fish.name}` } } : {}),
+      };
     }
 
     case "trivia": {
