@@ -1,7 +1,27 @@
 import { useEffect, useRef, useState } from "react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
-import type { Message } from "@/lib/chat-types";
+import type { Message, Attachment } from "@/lib/chat-types";
+import { Download } from "lucide-react";
+
+function AttachmentView({ a }: { a: Attachment }) {
+  if (a.kind === "image") {
+    return (
+      <a href={a.dataUrl} download={a.name} className="mt-1 block max-w-[280px] overflow-hidden rounded-xl border border-border">
+        <img src={a.dataUrl} alt={a.name} className="block max-h-72 w-full object-contain bg-black/30" />
+      </a>
+    );
+  }
+  return (
+    <a href={a.dataUrl} download={a.name} className="mt-1 flex max-w-[280px] items-center gap-2 rounded-xl border border-border bg-white/5 px-3 py-2 text-xs hover:bg-white/10">
+      <Download className="h-4 w-4 text-primary" />
+      <div className="min-w-0 flex-1">
+        <div className="truncate font-medium">{a.name}</div>
+        <div className="text-muted-foreground">{(a.size / 1024).toFixed(1)} KB</div>
+      </div>
+    </a>
+  );
+}
 
 function formatTime(ts: number) {
   const d = new Date(ts);
@@ -121,6 +141,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                         }
                       >
                         <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                        {m.attachment && <AttachmentView a={m.attachment} />}
                       </div>
                     ))}
                   </div>
@@ -159,6 +180,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                       }
                     >
                       <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                      {m.attachment && <AttachmentView a={m.attachment} />}
                     </div>
                   ))}
                 </div>
