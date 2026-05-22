@@ -137,35 +137,49 @@ export function StreakWidget({ profiles }: { profiles: Record<string, User> }) {
     </Card>
   );
 }
-export function ChatroomOnlineWidget({ profiles }: { profiles: Record<string, User> }) {
-  const [tick, setTick] = useState(0);
+export function ChatroomOnlineWidget() {
+  const [counts, setCounts] = useState({ total: 0, male: 0, female: 0, other: 0 });
+
+  async function load() {
+    const { data } = await supabase
+      .from("profiles")
+      .select("gender,status")
+      .eq("status", "online");
+    const rows = (data ?? []) as { gender: string | null; status: string }[];
+    setCounts({
+      total: rows.length,
+      male: rows.filter((r) => r.gender === "male").length,
+      female: rows.filter((r) => r.gender === "female").length,
+      other: rows.filter((r) => r.gender !== "male" && r.gender !== "female").length,
+    });
+  }
 
   useEffect(() => {
+    load();
     const ch = supabase
       .channel("chatroom-presence")
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => setTick((t) => t + 1))
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
 
-  // tick is a re-render trigger so realtime profile changes refresh the list
-  void tick;
-
-  const online = Object.values(profiles).filter((u) => u.status === "online");
   return (
-    <Card title={`Online in chatrooms (${online.length})`} icon={<Radio className="h-3.5 w-3.5 text-green-500" />}>
-      {online.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Nobody online right now.</p>
-      ) : (
-        online.slice(0, 8).map((u) => (
-          <Link key={u.id} to="/" className="flex items-center gap-2 rounded-lg py-1.5 hover:bg-accent">
-            <Avatar user={u} size={24} />
-            <span className="flex-1 truncate text-sm">{u.name}</span>
-            <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.8)]" />
-          </Link>
-        ))
-      )}
+    <Card title={`Online in chatrooms (${counts.total})`} icon={<Radio className="h-3.5 w-3.5 text-green-500" />}>
+      <div className="grid grid-cols-3 gap-2 pt-1">
+        <Stat label="Male" value={counts.male} color="text-blue-500" />
+        <Stat label="Female" value={counts.female} color="text-pink-500" />
+        <Stat label="Other" value={counts.other} color="text-muted-foreground" />
+      </div>
     </Card>
+  );
+}
+
+function Stat({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="rounded-xl bg-accent/50 px-2 py-2 text-center">
+      <div className={`text-lg font-bold ${color}`}>{value}</div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    </div>
   );
 }
 
