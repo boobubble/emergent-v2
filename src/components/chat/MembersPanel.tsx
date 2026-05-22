@@ -158,7 +158,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         {offline.length > 0 && (
           <div>
             <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-              Offline — {offline.length}
+              Offline — {offlineSorted.length}
             </div>
             <div className="space-y-1 opacity-60">
               {offline.map(id => (
@@ -170,6 +170,22 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                 />
               ))}
             </div>
+            {hiddenOffline > 0 && (
+              <button
+                onClick={() => setShowAllOffline(true)}
+                className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
+              >
+                Show {hiddenOffline} more
+              </button>
+            )}
+            {showAllOffline && offlineSorted.length > OFFLINE_MIN && (
+              <button
+                onClick={() => setShowAllOffline(false)}
+                className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
+              >
+                Show less
+              </button>
+            )}
           </div>
         )}
       </div>
