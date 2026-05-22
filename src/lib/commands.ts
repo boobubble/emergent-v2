@@ -42,7 +42,7 @@ const HELP = `**Commands**
 !wine — order wine & beer by the round 🍷🍺
 !trivia — start a trivia question (answer with !a <choice>)
 !hangman — start hangman (guess with !g <letter>)
-!blackjack — quick blackjack hand
+
 !me <action> — roleplay action
 !nick <name> — change your display name
 !stats — show your level/xp
