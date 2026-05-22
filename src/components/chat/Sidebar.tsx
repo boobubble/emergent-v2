@@ -133,22 +133,18 @@ export function Sidebar({ onOpenProfile, onOpenLeaderboard, onOpenAchievements, 
 
       <div className="border-t border-border p-3">
         <a
-          href="/leaderboard"
+          href="/achievements"
           target="_blank"
           rel="noopener noreferrer"
           className="mb-1 flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
-        >
-          <Trophy className="h-4 w-4" /> Leaderboard
-        </a>
-        <button
-          onClick={onOpenAchievements}
-          className="mb-1 flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+          title="Open achievements in new tab"
         >
           <Award className="h-4 w-4" /> Achievements
           <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
             {state.me.badges?.length ?? 0}
           </span>
-        </button>
+        </a>
+
         <div className="mb-2">
           <ThemeToggle />
         </div>
