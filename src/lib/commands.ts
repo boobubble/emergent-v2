@@ -26,19 +26,13 @@ const TRIVIA: { q: string; a: string; choices: string[] }[] = [
 
 const HANGMAN_WORDS = ["palringo", "javascript", "tangerine", "lighthouse", "keyboard", "elephant", "midnight"];
 
-const EIGHT_BALL = [
-  "It is certain.", "Without a doubt.", "Yes definitely.", "Most likely.",
-  "Outlook good.", "Reply hazy, try again.", "Ask again later.",
-  "Don't count on it.", "My reply is no.", "Very doubtful.",
-];
-
 const HELP = `**Commands**
 !help — show this
 !roll [NdM] — dice roll (e.g. !roll 2d6)
 !flip — coin flip
-!8ball <question> — magic 8-ball
 !slots — spin the slot machine
 !fish — cast a line and catch a fish
+!dig — dig for gold and diamonds
 !trivia — start a trivia question (answer with !a <choice>)
 !hangman — start hangman (guess with !g <letter>)
 !blackjack — quick blackjack hand
@@ -80,9 +74,31 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
     case "flip":
       return { replies: [{ text: `🪙 ${Math.random() < 0.5 ? "Heads" : "Tails"}` }] };
 
-    case "8ball": {
-      if (!arg) return { replies: [{ text: "Ask a question: !8ball will I win?" }] };
-      return { replies: [{ text: `🎱 ${EIGHT_BALL[Math.floor(Math.random() * EIGHT_BALL.length)]}` }] };
+    case "dig": {
+      const finds = [
+        { name: "nothing but dirt", emoji: "🪨", xp: 0, rarity: "nothing" },
+        { name: "a few pebbles", emoji: "🪨", xp: 1, rarity: "nothing" },
+        { name: "Coal", emoji: "⬛", xp: 2, rarity: "common" },
+        { name: "Iron ore", emoji: "⛓️", xp: 4, rarity: "common" },
+        { name: "Copper nugget", emoji: "🟫", xp: 5, rarity: "common" },
+        { name: "Silver vein", emoji: "🥈", xp: 10, rarity: "uncommon" },
+        { name: "Gold nugget", emoji: "🪙", xp: 20, rarity: "rare" },
+        { name: "Gold bar", emoji: "🏆", xp: 35, rarity: "rare" },
+        { name: "Diamond", emoji: "💎", xp: 60, rarity: "epic" },
+        { name: "Flawless Diamond", emoji: "💠", xp: 100, rarity: "legendary" },
+      ];
+      const weights: Record<string, number> = { nothing: 30, common: 40, uncommon: 18, rare: 8, epic: 3, legendary: 1 };
+      const pool: typeof finds = [];
+      finds.forEach(f => { for (let i = 0; i < weights[f.rarity]; i++) pool.push(f); });
+      const find = pool[Math.floor(Math.random() * pool.length)];
+      const tag =
+        find.rarity === "legendary" ? "🌟 **LEGENDARY!**" :
+        find.rarity === "epic" ? "💜 *Epic find*" :
+        find.rarity === "rare" ? "✨ Rare" :
+        find.rarity === "uncommon" ? "Uncommon" :
+        find.rarity === "common" ? "Common" : "—";
+      const xpStr = find.xp > 0 ? ` (+${find.xp} XP)` : "";
+      return { replies: [{ text: `⛏️ You dig deep and unearth ${find.emoji} **${find.name}**${xpStr} — ${tag}` }] };
     }
 
     case "slots": {

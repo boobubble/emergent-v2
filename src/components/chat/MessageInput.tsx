@@ -3,7 +3,7 @@ import { Send, Smile, Sparkles } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 
 const COMMANDS = [
-  "!help", "!roll", "!flip", "!8ball", "!slots", "!fish",
+  "!help", "!roll", "!flip", "!slots", "!fish", "!dig",
   "!trivia", "!a", "!hangman", "!g", "!blackjack", "!me", "!stats",
 ];
 const EMOJIS = ["😀","😂","😎","🥳","👍","❤️","🔥","🎲","🎰","🏆","👀","🪙","💀","🎉"];
