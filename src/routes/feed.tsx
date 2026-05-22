@@ -141,7 +141,7 @@ function FeedPage() {
           <Link to="/" className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Chat
           </Link>
-          <h1 className="text-lg font-bold">{view === "account" ? "Account" : "Feed"}</h1>
+          <h1 className="text-lg font-bold">{view === "account" ? "Account" : view === "profile" ? `@${profileUsername}` : "Feed"}</h1>
           <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => setView(view === "account" ? "feed" : "account")}
@@ -150,9 +150,13 @@ function FeedPage() {
             >
               <Settings className="h-4 w-4" /> Settings
             </button>
-            <Link to="/u/$username" params={{ username: user.username }} className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground">
+            <button
+              onClick={() => { setProfileUsername(user.username); setView("profile"); }}
+              className={`rounded-full p-2 transition-colors ${view === "profile" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
+              title="My profile"
+            >
               <UserCircle className="h-5 w-5" />
-            </Link>
+            </button>
           </div>
         </div>
       </header>
