@@ -18,7 +18,11 @@ export function AuthScreen() {
       if (mode === "login") {
         await login(email, password);
       } else {
-        await signup(email, password, username);
+        const wordCount = username.trim().split(/\s+/).filter(Boolean).length;
+        if (wordCount < 2 || wordCount > 10) {
+          throw new Error("Username must be between 2 and 10 words.");
+        }
+        await signup(email, password, username.trim());
         setInfo("Account created! Check your email to confirm, then sign in.");
         setMode("login");
       }
@@ -71,7 +75,8 @@ export function AuthScreen() {
           {mode === "signup" && (
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Username</label>
-              <input value={username} onChange={e => setUsername(e.target.value)} maxLength={20} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="cool_user" />
+              <input value={username} onChange={e => setUsername(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. cool user" />
+              <p className="mt-1 text-[10px] text-muted-foreground">Must be 2 to 10 words.</p>
             </div>
           )}
           <div>
