@@ -104,7 +104,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       const xpStr = find.xp > 0 ? ` (+${find.xp} XP)` : "";
       const rare = find.rarity === "rare" || find.rarity === "epic" || find.rarity === "legendary";
       return {
-        replies: [{ text: `⛏️ ${who} digs deep and unearths ${find.emoji} **${find.name}**${xpStr} — ${tag}` }],
+        replies: [{ text: `⛏️ ${who} digs deep and unearths ${find.emoji} **${find.name}**${xpStr} — ${tag}`, from: "bot-dig" }],
         ...(rare ? { buzz: { reason: `${find.emoji} ${find.name}` } } : {}),
       };
     }
@@ -137,7 +137,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       // 25% chance of junk
       if (Math.random() < 0.25) {
         const j = junk[Math.floor(Math.random() * junk.length)];
-        return { replies: [{ text: `🎣 ${who} cast a line... and reeled in ${j}. No XP.` }] };
+        return { replies: [{ text: `🎣 ${who} cast a line... and reeled in ${j}. No XP.`, from: "bot-fish" }] };
       }
       // Weighted by rarity: common > uncommon > rare > epic > legendary
       const weights: Record<string, number> = { common: 50, uncommon: 28, rare: 14, epic: 6, legendary: 2 };
@@ -151,7 +151,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
         fish.rarity === "uncommon" ? "Uncommon" : "Common";
       const rare = fish.rarity === "rare" || fish.rarity === "epic" || fish.rarity === "legendary";
       return {
-        replies: [{ text: `🎣 ${who} caught a ${fish.emoji} **${fish.name}** — ${fish.weight}kg (+${fish.xp} XP) — ${tag}` }],
+        replies: [{ text: `🎣 ${who} caught a ${fish.emoji} **${fish.name}** — ${fish.weight}kg (+${fish.xp} XP) — ${tag}`, from: "bot-fish" }],
         ...(rare ? { buzz: { reason: `${fish.emoji} ${fish.name}` } } : {}),
       };
     }
@@ -195,7 +195,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
         drink.rarity === "uncommon" ? "Uncommon" : "Common";
       const rare = drink.rarity === "rare" || drink.rarity === "epic" || drink.rarity === "legendary";
       return {
-        replies: [{ text: `🍷 **Wine** serves ${who} ${qty} ${unit} of ${drink.emoji} **${drink.name}** — cheers! 🥂 (+${totalXp} XP) — ${tag}` }],
+        replies: [{ text: `🍷 **WineBot** serves ${who} ${qty} ${unit} of ${drink.emoji} **${drink.name}** — cheers! 🥂 (+${totalXp} XP) — ${tag}`, from: "bot-wine" }],
         ...(rare ? { buzz: { reason: `${drink.emoji} ${qty}× ${drink.name}` } } : {}),
       };
     }
