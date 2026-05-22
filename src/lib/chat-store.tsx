@@ -482,7 +482,7 @@ export function ChatProvider({ username, children }: { username: string; childre
 
 
   const value = useMemo<Ctx>(() => ({
-    state, setActive, send, startDM, joinRoom, createRoom, updateMe, adjustPoints, reset,
+    state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, reset,
     channelMessages: (id) => state.messages[id] || [],
     channelLabel: (id) => {
       if (id.startsWith("dm:")) {
