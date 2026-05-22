@@ -215,7 +215,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     const u = usersById[id];
     if (!u) return null;
     return (
-      <div className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2 transition-colors hover:bg-white/5">
+      <div className="group flex w-full items-center gap-2 rounded-xl px-2 py-1 transition-colors hover:bg-white/5">
         <UserMenu userId={u.id} username={u.name}>
           <Avatar user={u} size={32} />
         </UserMenu>
