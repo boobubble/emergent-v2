@@ -154,6 +154,36 @@ function AccountPage() {
           <Stat label="Rank" value={rank ? `#${rank}` : "—"} icon={<Flame className="h-3.5 w-3.5 text-orange-400" />} />
         </section>
 
+        {/* Accent theme */}
+        <section>
+          <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            Accent color
+          </h2>
+          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-3 sm:grid-cols-3">
+            {ACCENTS.map(a => {
+              const active = accent === a.id;
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => setAccent(a.id)}
+                  className={`group flex items-center gap-3 rounded-xl border px-3 py-2 text-left transition ${
+                    active ? "border-transparent ring-2 ring-primary" : "border-border hover:bg-white/5"
+                  }`}
+                >
+                  <span
+                    className="h-7 w-7 shrink-0 rounded-full ring-1 ring-black/10"
+                    style={{ background: a.gradient }}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-xs font-bold">{a.label}</span>
+                    {active && <span className="text-[10px] font-semibold text-primary">Active</span>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Friends */}
         <section>
           <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
