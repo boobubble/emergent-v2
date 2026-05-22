@@ -7,6 +7,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { AuthProvider, useAuth } from "@/lib/auth-store";
+import { ChatProvider } from "@/lib/chat-store";
+import { AuthScreen } from "@/components/auth/AuthScreen";
 
 import appCss from "../styles.css?url";
 
@@ -113,7 +116,20 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <AuthProvider>
+        <AuthGate />
+      </AuthProvider>
     </QueryClientProvider>
+  );
+}
+
+function AuthGate() {
+  const { user, ready } = useAuth();
+  if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
+  if (!user) return <AuthScreen />;
+  return (
+    <ChatProvider username={user.username}>
+      <Outlet />
+    </ChatProvider>
   );
 }

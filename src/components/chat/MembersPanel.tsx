@@ -1,4 +1,5 @@
-import { Crown, Shield, ShieldHalf } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 import type { Role } from "@/lib/chat-types";
@@ -90,22 +91,29 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     const u = state.users[id];
     if (!u) return null;
     return (
-      <button
-        onClick={onClick}
-        className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-white/5"
-        title={id === "me" ? "" : "Send DM"}
-      >
-        <Avatar user={u} size={32} />
-        <div className="min-w-0 flex-1 leading-tight">
-          <div className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground/90">
+      <div className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2 transition-colors hover:bg-white/5">
+        <Link to="/u/$username" params={{ username: u.name }} className="shrink-0">
+          <Avatar user={u} size={32} />
+        </Link>
+        <Link to="/u/$username" params={{ username: u.name }} className="min-w-0 flex-1 leading-tight">
+          <div className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground/90 hover:text-primary">
             {u.name}
             {ICONS[role]}
           </div>
           <div className="truncate text-[10px] text-muted-foreground">
             {u.isBot ? "Bot" : u.status === "offline" ? "Offline" : `Lv ${u.level}`}
           </div>
-        </div>
-      </button>
+        </Link>
+        {id !== "me" && (
+          <button
+            onClick={onClick}
+            title="Send DM"
+            className="shrink-0 rounded-full p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
     );
   }
 }

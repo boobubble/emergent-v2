@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ChatProvider, useChat } from "@/lib/chat-store";
-import { AuthProvider, useAuth } from "@/lib/auth-store";
-import { AuthScreen } from "@/components/auth/AuthScreen";
+import { useChat } from "@/lib/chat-store";
 import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
@@ -19,27 +17,8 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Hang out in public rooms, DM friends, share files, and play games with chat commands." },
     ],
   }),
-  component: Index,
+  component: ChatApp,
 });
-
-function Index() {
-  return (
-    <AuthProvider>
-      <Gate />
-    </AuthProvider>
-  );
-}
-
-function Gate() {
-  const { user, ready } = useAuth();
-  if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
-  if (!user) return <AuthScreen />;
-  return (
-    <ChatProvider username={user.username}>
-      <ChatApp />
-    </ChatProvider>
-  );
-}
 
 function ChatApp() {
   const { state, isDM } = useChat();
