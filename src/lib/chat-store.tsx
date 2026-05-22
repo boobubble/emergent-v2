@@ -589,7 +589,7 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
         messages: { ...s.messages, [channelId]: [...existing, userMsg] },
       };
       if (isCmd) {
-        const result = runCommand(trimmed, { state: next, channelId, actor: next.me.name });
+        const result = runCommand(cmdInput, { state: next, channelId, actor: next.me.name });
         const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }, idx: number) => {
           const id = remote ? newUuid() : uid();
           // Piggyback game state on the first reply so other users sync
