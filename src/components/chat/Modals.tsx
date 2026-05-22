@@ -59,7 +59,7 @@ export function ProfileModal({ open, onClose }: { open: boolean; onClose: () => 
       <div className="flex justify-end gap-2 border-t border-border p-3">
         <button onClick={onClose} className="rounded px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
         <button
-          onClick={() => { updateMe({ name: name.trim() || "You", bio, status }); onClose(); }}
+          onClick={() => { updateMe({ name: name.trim() || state.me.name, bio, status }); onClose(); }}
           className="rounded px-4 py-1.5 text-sm font-semibold text-primary-foreground"
           style={{ background: "var(--gradient-accent)" }}
         >

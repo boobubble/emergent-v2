@@ -25,7 +25,13 @@ function generateUsername() {
 function normalizeMe(state: State, fallbackName = generateUsername()): State {
   if (!isPlaceholderName(state.me.name)) return state;
   const me = { ...state.me, name: fallbackName };
-  return { ...state, me, users: { ...state.users, me: { ...state.users.me, name: fallbackName } } };
+  const messages = Object.fromEntries(
+    Object.entries(state.messages || {}).map(([channelId, msgs]) => [
+      channelId,
+      msgs.map(message => ({ ...message, text: message.text.replace(/@You\b/g, `@${fallbackName}`) })),
+    ]),
+  );
+  return { ...state, me, users: { ...state.users, me: { ...state.users.me, name: fallbackName } }, messages };
 }
 
 const SEED_BOTS: User[] = [
