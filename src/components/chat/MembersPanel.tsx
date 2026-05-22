@@ -42,6 +42,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [showAllOffline, setShowAllOffline] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [notifs, setNotifs] = useState<FeedNotification[]>([]);
   const meId = authUser?.id;
 
