@@ -1,16 +1,10 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
-
-const USERS_KEY = "palrgo:auth:users:v1";
-const SESSION_KEY = "palrgo:auth:session:v1";
-
-interface StoredUser {
-  email: string;
-  password: string; // mock only — never do this in production
-  username: string;
-  createdAt: number;
-}
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
+import type { Session } from "@supabase/supabase-js";
 
 export interface AuthUser {
+  id: string;
   email: string;
   username: string;
 }
@@ -20,17 +14,20 @@ interface Ctx {
   ready: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string) => Promise<void>;
-  logout: () => void;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthCtx = createContext<Ctx | null>(null);
 
-function loadUsers(): StoredUser[] {
-  try { return JSON.parse(localStorage.getItem(USERS_KEY) || "[]"); } catch { return []; }
-}
-function saveUsers(u: StoredUser[]) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
-function loadSession(): AuthUser | null {
-  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch { return null; }
+async function fetchUsername(userId: string, fallbackEmail?: string): Promise<string> {
+  // Poll briefly since the trigger inserts the row asynchronously after signup.
+  for (let i = 0; i < 8; i++) {
+    const { data } = await supabase.from("profiles").select("username").eq("id", userId).maybeSingle();
+    if (data?.username) return data.username;
+    await new Promise(r => setTimeout(r, 200));
+  }
+  return fallbackEmail?.split("@")[0] || "user";
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -38,47 +35,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setUser(loadSession());
-    setReady(true);
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === SESSION_KEY) setUser(loadSession());
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    let cancelled = false;
+    async function hydrate(session: Session | null) {
+      if (!session?.user) {
+        if (!cancelled) setUser(null);
+        return;
+      }
+      const username = await fetchUsername(session.user.id, session.user.email ?? undefined);
+      if (cancelled) return;
+      setUser({ id: session.user.id, email: session.user.email ?? "", username });
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      void hydrate(session);
+    });
+    supabase.auth.getSession().then(({ data }) => {
+      void hydrate(data.session).finally(() => { if (!cancelled) setReady(true); });
+    });
+
+    return () => { cancelled = true; subscription.unsubscribe(); };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const users = loadUsers();
-    const found = users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
-    if (!found) throw new Error("No account with that email");
-    if (found.password !== password) throw new Error("Incorrect password");
-    const session: AuthUser = { email: found.email, username: found.username };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    setUser(session);
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) throw new Error(error.message);
   }, []);
 
   const signup = useCallback(async (email: string, password: string, username: string) => {
     email = email.trim();
     username = username.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Invalid email");
-    if (password.length < 6) throw new Error("Password must be 6+ characters");
     if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) throw new Error("Username: 3-20 chars, letters/numbers/_-");
-    const users = loadUsers();
-    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) throw new Error("Email already registered");
-    if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) throw new Error("Username taken");
-    users.push({ email, password, username, createdAt: Date.now() });
-    saveUsers(users);
-    const session: AuthUser = { email, username };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    setUser(session);
+    if (password.length < 6) throw new Error("Password must be 6+ characters");
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: { username },
+      },
+    });
+    if (error) throw new Error(error.message);
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(SESSION_KEY);
+  const loginWithGoogle = useCallback(async () => {
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    if (result.error) throw new Error(result.error.message || "Google sign-in failed");
+  }, []);
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setUser(null);
   }, []);
 
-  const value = useMemo<Ctx>(() => ({ user, ready, login, signup, logout }), [user, ready, login, signup, logout]);
+  const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, logout }), [user, ready, login, signup, loginWithGoogle, logout]);
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 
