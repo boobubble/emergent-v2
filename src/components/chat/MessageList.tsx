@@ -141,6 +141,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                         }
                       >
                         <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                        {m.attachment && <AttachmentView a={m.attachment} />}
                       </div>
                     ))}
                   </div>
@@ -179,6 +180,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                       }
                     >
                       <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                      {m.attachment && <AttachmentView a={m.attachment} />}
                     </div>
                   ))}
                 </div>
