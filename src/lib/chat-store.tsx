@@ -640,6 +640,19 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
         users: { ...s.users, me: meNext },
         messages: { ...s.messages, [channelId]: [...existing, userMsg] },
       };
+      // Block game commands inside bot DMs — games are chatroom-only
+      const inBotDm = channelId.startsWith("dm:") && !!next.users[channelId.slice(3)]?.isBot;
+      const allowedInDm = /^!(help|stats|nick|me)\b/i.test(trimmed);
+      if (isCmd && inBotDm && !allowedInDm) {
+        const targetId = channelId.slice(3);
+        const sysMsg: Message = {
+          id: uid(), channelId, authorId: targetId, ts: Date.now() + 400,
+          text: `🚫 Games aren't available in DMs. Hop into a chatroom to play! I can still answer questions about my commands here — just ask. (Try !help to see what I can do.)`,
+          kind: "system",
+        };
+        setTimeout(() => playDmPing(), 400);
+        return { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], sysMsg] } };
+      }
       if (isCmd) {
         const result = runCommand(cmdInput, { state: next, channelId, actor: next.me.name });
         const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }, idx: number) => {
