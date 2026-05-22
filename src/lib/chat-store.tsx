@@ -3,8 +3,8 @@ import type { User, Message, Room, GameState, Attachment } from "./chat-types";
 import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 
-const STORAGE_KEY_BASE = "palrgo:state:v2";
-const SYNC_CHANNEL = "palrgo:sync:v2";
+const STORAGE_KEY_BASE = "palrgo:state:v3";
+const SYNC_CHANNEL = "palrgo:sync:v3";
 function storageKeyFor(username: string) { return `${STORAGE_KEY_BASE}:${username.toLowerCase()}`; }
 const SEED_TIME = 1_700_000_000_000;
 
@@ -53,22 +53,6 @@ const SEED_ROOMS: Room[] = [
     topic: "Main hangout. Type !help for games.",
     members: ["me", ...SEED_BOTS.map(b => b.id)],
     roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod" },
-    isPublic: true,
-  },
-  {
-    id: "games",
-    name: "Game Arena",
-    topic: "Pure games. !trivia !hangman !blackjack !slots !roll",
-    members: ["me", "bot-gamebot", "bot-pixel", "bot-nova"],
-    roles: { me: "member", "bot-gamebot": "owner", "bot-pixel": "admin" },
-    isPublic: true,
-  },
-  {
-    id: "lounge",
-    name: "Late Night Lounge",
-    topic: "Chill chat, no spam.",
-    members: ["me", "bot-nova", "bot-echo", "bot-ryze"],
-    roles: { me: "member", "bot-ryze": "owner" },
     isPublic: true,
   },
 ];
