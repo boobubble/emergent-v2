@@ -139,6 +139,36 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(t);
   }, []);
 
+  // Ambient bot games (!fish / !dig) — may trigger a screen buzz for everyone
+  useEffect(() => {
+    const t = setInterval(() => {
+      setState(s => {
+        const room = s.rooms[s.activeChannel];
+        if (!room) return s;
+        const botMembers = room.members.filter(id => s.users[id]?.isBot && s.users[id]?.status === "online" && id !== "bot-gamebot");
+        if (!botMembers.length) return s;
+        const author = botMembers[Math.floor(Math.random() * botMembers.length)];
+        const cmd = Math.random() < 0.5 ? "!fish" : "!dig";
+        const userMsg: Message = { id: uid(), channelId: room.id, authorId: author, text: cmd, ts: Date.now() };
+        const result = runCommand(cmd, { state: s, channelId: room.id });
+        const sysMsgs: Message[] = result.replies.map(r => ({
+          id: uid(), channelId: room.id, authorId: r.from || "bot-gamebot",
+          text: r.text, ts: Date.now() + 200, kind: "game" as const,
+        }));
+        if (result.buzz && typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("palrgo:buzz", {
+            detail: { actor: s.users[author]?.name, reason: result.buzz.reason },
+          }));
+        }
+        return {
+          ...s,
+          messages: { ...s.messages, [room.id]: [...(s.messages[room.id] || []), userMsg, ...sysMsgs] },
+        };
+      });
+    }, 18000);
+    return () => clearInterval(t);
+  }, []);
+
   const setActive = useCallback((channelId: string) => {
     setState(s => ({ ...s, activeChannel: channelId }));
   }, []);
