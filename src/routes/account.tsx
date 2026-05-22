@@ -4,6 +4,7 @@ import { ArrowLeft, Upload, Trash2, Save, LogOut, Coins, Flame, Trophy, Award, U
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
+import { ACCENTS, useAccent } from "@/lib/use-accent";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
