@@ -24,6 +24,7 @@ function AccountPage() {
   const { user: auth, logout } = useAuth();
   const me = state.me;
   const fileRef = useRef<HTMLInputElement>(null);
+  const { accent, setAccent } = useAccent();
 
   const [name, setName] = useState(me.name);
   const [bio, setBio] = useState(me.bio ?? "");
