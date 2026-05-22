@@ -1,4 +1,4 @@
-import type { GameState } from "./chat-types";
+import type { GameState, User } from "./chat-types";
 import { TRIVIA_QUESTIONS } from "./trivia-questions";
 
 interface CmdCtx {
@@ -12,10 +12,19 @@ export interface CmdReply {
   from?: string;
 }
 
+export interface ModerationUpdate {
+  targetId: string;
+  targetName: string;
+  action: "mute" | "kick";
+  actorBadges: number;
+  targetBadges: number;
+}
+
 export interface CmdResult {
   replies: CmdReply[];
   gameUpdate?: GameState;
   buzz?: { actor?: string; reason: string };
+  moderation?: ModerationUpdate;
 }
 
 const TRIVIA = TRIVIA_QUESTIONS;
@@ -36,7 +45,9 @@ const HELP = `**Commands**
 !blackjack — quick blackjack hand
 !me <action> — roleplay action
 !nick <name> — change your display name
-!stats — show your level/xp`;
+!stats — show your level/xp
+/mute @user — vote-mute a lower-rank user (5 votes → 5 min mute)
+/kick @user — vote-kick a lower-rank user (8 votes → 5 min kick)`;
 
 function roll(spec: string): string {
   const m = spec.match(/^(\d+)d(\d+)$/i);
@@ -292,6 +303,27 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
     case "me": {
       if (!arg) return { replies: [{ text: "Usage: !me <action>" }] };
       return { replies: [{ text: `_* ${ctx.state.me.name} ${arg} *_` }] };
+    }
+
+    case "mute":
+    case "kick": {
+      const targetName = arg.replace(/^@/, "").trim().split(/\s+/)[0];
+      if (!targetName) return { replies: [{ text: `Usage: /${cmd} @username` }] };
+      const users = ctx.state.users as Record<string, User>;
+      const me = ctx.state.me as User;
+      const target = Object.values(users).find(
+        u => u.id !== "me" && u.name.toLowerCase() === targetName.toLowerCase()
+      );
+      if (!target) return { replies: [{ text: `❓ User **@${targetName}** not found here.` }] };
+      const meBadges = (me.badges ?? []).length;
+      const targetBadges = (target.badges ?? []).length;
+      if (meBadges <= targetBadges) {
+        return { replies: [{ text: `🛡️ ${who} can't /${cmd} **@${target.name}** — your rank (${meBadges} 🏅) must be higher than theirs (${targetBadges} 🏅).` }] };
+      }
+      return {
+        replies: [],
+        moderation: { targetId: target.id, targetName: target.name, action: cmd as "mute" | "kick", actorBadges: meBadges, targetBadges },
+      };
     }
   }
 

@@ -102,6 +102,13 @@ const SEED_ROOMS: Room[] = [
   },
 ];
 
+interface ModEntry {
+  muteVotes: string[];      // unique voter names
+  kickVotes: string[];      // unique voter names
+  mutedUntil?: number;
+  kickedUntil?: number;
+}
+
 interface State {
   me: User;
   users: Record<string, User>;
@@ -111,7 +118,12 @@ interface State {
   messages: Record<string, Message[]>;
   games: Record<string, GameState>;
   activeChannel: string;
+  moderation?: Record<string, Record<string, ModEntry>>;
 }
+
+const MUTE_THRESHOLD = 5;
+const KICK_THRESHOLD = 8;
+const MOD_DURATION_MS = 5 * 60 * 1000;
 
 function seed(name = "user0000"): State {
   const me: User = {
@@ -520,7 +532,29 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
     const outgoingRemotes: Outgoing[] = [];
     setState(s => {
       const channelId = s.activeChannel;
-      const isCmd = trimmed.startsWith("!");
+      const isSlashMod = /^\/(mute|kick)\b/i.test(trimmed);
+      const isCmd = trimmed.startsWith("!") || isSlashMod;
+      const cmdInput = isSlashMod ? "!" + trimmed.slice(1) : trimmed;
+      // Enforce mute/kick on the sender for this channel
+      const now = Date.now();
+      const selfMod = s.moderation?.[channelId]?.me;
+      const room = s.rooms[channelId];
+      if (selfMod?.mutedUntil && selfMod.mutedUntil > now) {
+        const secs = Math.ceil((selfMod.mutedUntil - now) / 1000);
+        const sysId = uid();
+        return {
+          ...s,
+          messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-gamebot", text: `🔇 You are muted for another ${Math.ceil(secs/60)}m ${secs%60}s.`, ts: now, kind: "system" }] },
+        };
+      }
+      if (room && selfMod?.kickedUntil && selfMod.kickedUntil > now) {
+        const secs = Math.ceil((selfMod.kickedUntil - now) / 1000);
+        const sysId = uid();
+        return {
+          ...s,
+          messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-gamebot", text: `🚪 You were kicked. Re-entry in ${Math.ceil(secs/60)}m ${secs%60}s.`, ts: now, kind: "system" }] },
+        };
+      }
       const remote = authUserId && isRemoteChannel(channelId, authUserId);
       const msgId = remote ? newUuid() : uid();
       const userMsg: Message = {
@@ -555,7 +589,7 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
         messages: { ...s.messages, [channelId]: [...existing, userMsg] },
       };
       if (isCmd) {
-        const result = runCommand(trimmed, { state: next, channelId, actor: next.me.name });
+        const result = runCommand(cmdInput, { state: next, channelId, actor: next.me.name });
         const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }, idx: number) => {
           const id = remote ? newUuid() : uid();
           // Piggyback game state on the first reply so other users sync
@@ -588,6 +622,46 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
           window.dispatchEvent(new CustomEvent("palrgo:buzz", {
             detail: { actor: s.me.name, reason: result.buzz.reason },
           }));
+        }
+        if (result.moderation) {
+          const { targetId, targetName, action } = result.moderation;
+          const voter = next.me.name;
+          const chanMod = { ...(next.moderation?.[channelId] || {}) };
+          const prev: ModEntry = chanMod[targetId] || { muteVotes: [], kickVotes: [] };
+          const voteKey = action === "mute" ? "muteVotes" : "kickVotes";
+          const threshold = action === "mute" ? MUTE_THRESHOLD : KICK_THRESHOLD;
+          const votes = prev[voteKey].includes(voter) ? prev[voteKey] : [...prev[voteKey], voter];
+          const updated: ModEntry = { ...prev, [voteKey]: votes };
+          const sysMsgs: Message[] = [];
+          const tsNow = Date.now();
+          sysMsgs.push({
+            id: uid(), channelId, authorId: "bot-gamebot", kind: "system", ts: tsNow,
+            text: `⚖️ **${voter}** voted to /${action} **@${targetName}** — ${votes.length}/${threshold} votes`,
+          });
+          if (votes.length >= threshold) {
+            const until = tsNow + MOD_DURATION_MS;
+            if (action === "mute") {
+              updated.mutedUntil = until;
+              updated.muteVotes = [];
+              sysMsgs.push({
+                id: uid(), channelId, authorId: "bot-gamebot", kind: "system", ts: tsNow + 1,
+                text: `🔇 **@${targetName}** has been **MUTED** for 5 minutes by community vote.`,
+              });
+            } else {
+              updated.kickedUntil = until;
+              updated.kickVotes = [];
+              sysMsgs.push({
+                id: uid(), channelId, authorId: "bot-gamebot", kind: "system", ts: tsNow + 1,
+                text: `🚪 **@${targetName}** has been **KICKED** from the room for 5 minutes by community vote.`,
+              });
+            }
+          }
+          chanMod[targetId] = updated;
+          next = {
+            ...next,
+            moderation: { ...(next.moderation || {}), [channelId]: chanMod },
+            messages: { ...next.messages, [channelId]: [...next.messages[channelId], ...sysMsgs] },
+          };
         }
       } else {
         const room = next.rooms[channelId];
