@@ -11,6 +11,14 @@ export interface User {
   level: number;
 }
 
+export interface Attachment {
+  kind: "image" | "file";
+  name: string;
+  mime: string;
+  size: number;
+  dataUrl: string;
+}
+
 export interface Message {
   id: string;
   channelId: string; // room id OR dm:userId
@@ -18,6 +26,7 @@ export interface Message {
   text: string;
   ts: number;
   kind?: "text" | "system" | "game" | "me";
+  attachment?: Attachment;
 }
 
 export interface Room {
