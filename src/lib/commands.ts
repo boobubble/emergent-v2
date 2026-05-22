@@ -66,6 +66,8 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
   const arg = rest.join(" ");
   const game: GameState | undefined = ctx.state.games[ctx.channelId];
 
+  const who = ctx.actor ? `@${ctx.actor}` : "You";
+
   switch (cmd) {
     case "help":
       return { replies: [{ text: HELP }] };
