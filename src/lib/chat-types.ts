@@ -4,18 +4,23 @@ export interface User {
   id: string;
   name: string;
   avatarColor: string;
+  avatarUrl?: string;         // optional uploaded avatar (data URL)
   status: "online" | "away" | "offline";
   bio?: string;
   isBot?: boolean;
   xp: number;
   level: number;
+  coins?: number;             // virtual currency
   // Engagement
-  streak?: number;            // current daily streak
+  streak?: number;
   longestStreak?: number;
-  lastActiveDay?: string;     // YYYY-MM-DD (local)
+  lastActiveDay?: string;
   messageCount?: number;
   commandCount?: number;
-  badges?: string[];          // badge ids
+  badges?: string[];
+  // Social
+  friends?: string[];         // user ids
+  blocked?: string[];         // user ids
 }
 
 export interface Attachment {
