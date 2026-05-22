@@ -8,6 +8,7 @@ import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, LeaderboardWidget, StreakWidget } from "@/components/feed/SideWidgets";
 import { AccountPanel } from "@/components/feed/AccountPanel";
+import { ProfilePanel } from "@/components/feed/ProfilePanel";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
 
 export const Route = createFileRoute("/feed")({
@@ -23,13 +24,23 @@ export const Route = createFileRoute("/feed")({
 });
 
 type Tab = "foryou" | "trending" | "latest" | "friends";
-type View = "feed" | "account";
+type View = "feed" | "account" | "profile";
+
+function getInitialView(): { view: View; username: string } {
+  if (typeof window === "undefined") return { view: "feed", username: "" };
+  const sp = new URLSearchParams(window.location.search);
+  if (sp.get("u")) return { view: "profile", username: sp.get("u") || "" };
+  if (sp.get("tab") === "account") return { view: "account", username: "" };
+  return { view: "feed", username: "" };
+}
 
 function FeedPage() {
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [tab, setTab] = useState<Tab>("foryou");
-  const [view, setView] = useState<View>(() => (typeof window !== "undefined" && window.location.search.includes("tab=account") ? "account" : "feed"));
+  const initial = getInitialView();
+  const [view, setView] = useState<View>(initial.view);
+  const [profileUsername, setProfileUsername] = useState<string>(initial.username);
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -130,7 +141,7 @@ function FeedPage() {
           <Link to="/" className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Chat
           </Link>
-          <h1 className="text-lg font-bold">{view === "account" ? "Account" : "Feed"}</h1>
+          <h1 className="text-lg font-bold">{view === "account" ? "Account" : view === "profile" ? `@${profileUsername}` : "Feed"}</h1>
           <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => setView(view === "account" ? "feed" : "account")}
@@ -139,9 +150,13 @@ function FeedPage() {
             >
               <Settings className="h-4 w-4" /> Settings
             </button>
-            <Link to="/u/$username" params={{ username: user.username }} className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground">
+            <button
+              onClick={() => { setProfileUsername(user.username); setView("profile"); }}
+              className={`rounded-full p-2 transition-colors ${view === "profile" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
+              title="My profile"
+            >
               <UserCircle className="h-5 w-5" />
-            </Link>
+            </button>
           </div>
         </div>
       </header>
@@ -162,6 +177,8 @@ function FeedPage() {
         <main className="min-w-0">
           {view === "account" ? (
             <AccountPanel />
+          ) : view === "profile" ? (
+            <ProfilePanel username={profileUsername} onBack={() => setView("feed")} />
           ) : (
             <>
               <Composer authorId={meId} onPosted={loadPosts} />
@@ -214,7 +231,7 @@ function FeedPage() {
         <MobileNav to="/" icon={Home} label="Chat" />
         <button onClick={() => setView("feed")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "feed" ? "text-primary" : "text-muted-foreground"}`}><Sparkles className="h-5 w-5" /> Feed</button>
         <button onClick={() => setView("account")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "account" ? "text-primary" : "text-muted-foreground"}`}><Settings className="h-5 w-5" /> Settings</button>
-        <MobileNav to="/u/$username" params={{ username: user.username }} icon={UserCircle} label="Me" />
+        <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
     </div>
   );
