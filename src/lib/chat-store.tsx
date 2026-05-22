@@ -532,7 +532,29 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
     const outgoingRemotes: Outgoing[] = [];
     setState(s => {
       const channelId = s.activeChannel;
-      const isCmd = trimmed.startsWith("!");
+      const isSlashMod = /^\/(mute|kick)\b/i.test(trimmed);
+      const isCmd = trimmed.startsWith("!") || isSlashMod;
+      const cmdInput = isSlashMod ? "!" + trimmed.slice(1) : trimmed;
+      // Enforce mute/kick on the sender for this channel
+      const now = Date.now();
+      const selfMod = s.moderation?.[channelId]?.me;
+      const room = s.rooms[channelId];
+      if (selfMod?.mutedUntil && selfMod.mutedUntil > now) {
+        const secs = Math.ceil((selfMod.mutedUntil - now) / 1000);
+        const sysId = uid();
+        return {
+          ...s,
+          messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-gamebot", text: `🔇 You are muted for another ${Math.ceil(secs/60)}m ${secs%60}s.`, ts: now, kind: "system" }] },
+        };
+      }
+      if (room && selfMod?.kickedUntil && selfMod.kickedUntil > now) {
+        const secs = Math.ceil((selfMod.kickedUntil - now) / 1000);
+        const sysId = uid();
+        return {
+          ...s,
+          messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-gamebot", text: `🚪 You were kicked. Re-entry in ${Math.ceil(secs/60)}m ${secs%60}s.`, ts: now, kind: "system" }] },
+        };
+      }
       const remote = authUserId && isRemoteChannel(channelId, authUserId);
       const msgId = remote ? newUuid() : uid();
       const userMsg: Message = {
