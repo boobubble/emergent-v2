@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
@@ -25,6 +26,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const { state, startDM, setActive, closeDM, dmChannelFor } = useChat();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
+  const [showAllOffline, setShowAllOffline] = useState(false);
   const room = state.rooms[roomId];
   if (!room) return null;
 
@@ -39,16 +41,25 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const remoteIds = Object.keys(profiles).filter(id => !authUser || id !== authUser.id);
   const allIds = Array.from(new Set([...localIds, ...remoteIds]));
 
-  const ranked = allIds.sort((a, b) => {
-    const order: Record<Role, number> = { owner: 0, admin: 1, mod: 2, member: 3 };
-    const ra = order[room.roles[a] || "member"];
-    const rb = order[room.roles[b] || "member"];
-    if (ra !== rb) return ra - rb;
-    return (usersById[a]?.name || "").localeCompare(usersById[b]?.name || "");
-  });
+  const roleOrder: Record<Role, number> = { owner: 0, admin: 1, mod: 2, member: 3 };
 
-  const online = ranked.filter(id => usersById[id]?.status !== "offline");
-  const offline = ranked.filter(id => usersById[id]?.status === "offline");
+  const online = allIds
+    .filter(id => usersById[id]?.status !== "offline")
+    .sort((a, b) => {
+      const ra = roleOrder[room.roles[a] || "member"];
+      const rb = roleOrder[room.roles[b] || "member"];
+      if (ra !== rb) return ra - rb;
+      return (usersById[a]?.name || "").localeCompare(usersById[b]?.name || "");
+    });
+
+  // Offline sorted by most-recently-seen first (latest at top).
+  const offlineSorted = allIds
+    .filter(id => usersById[id]?.status === "offline")
+    .sort((a, b) => (usersById[b]?.lastSeen ?? 0) - (usersById[a]?.lastSeen ?? 0));
+
+  const OFFLINE_MIN = 20;
+  const offline = showAllOffline ? offlineSorted : offlineSorted.slice(0, OFFLINE_MIN);
+  const hiddenOffline = offlineSorted.length - offline.length;
 
 
   return (
@@ -147,7 +158,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         {offline.length > 0 && (
           <div>
             <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-              Offline — {offline.length}
+              Offline — {offlineSorted.length}
             </div>
             <div className="space-y-1 opacity-60">
               {offline.map(id => (
@@ -159,6 +170,22 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                 />
               ))}
             </div>
+            {hiddenOffline > 0 && (
+              <button
+                onClick={() => setShowAllOffline(true)}
+                className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
+              >
+                Show {hiddenOffline} more
+              </button>
+            )}
+            {showAllOffline && offlineSorted.length > OFFLINE_MIN && (
+              <button
+                onClick={() => setShowAllOffline(false)}
+                className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
+              >
+                Show less
+              </button>
+            )}
           </div>
         )}
       </div>

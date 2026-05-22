@@ -12,6 +12,7 @@ export interface RemoteProfile {
   level: number;
   coins: number;
   status: string;
+  last_seen: string | null;
 }
 
 function toUser(p: RemoteProfile): User {
@@ -25,6 +26,7 @@ function toUser(p: RemoteProfile): User {
     xp: p.xp,
     level: p.level,
     coins: p.coins,
+    lastSeen: p.last_seen ? new Date(p.last_seen).getTime() : undefined,
   };
 }
 
@@ -39,7 +41,7 @@ export function useRemoteProfiles() {
     async function load() {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, bio, avatar_url, avatar_color, xp, level, coins, status")
+        .select("id, username, bio, avatar_url, avatar_color, xp, level, coins, status, last_seen")
         .order("username", { ascending: true });
       if (cancelled) return;
       if (error) { setLoading(false); return; }
