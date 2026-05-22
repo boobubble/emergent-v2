@@ -175,6 +175,13 @@ interface Ctx {
   createRoom: (name: string, topic: string) => void;
   updateMe: (patch: Partial<User>) => void;
   adjustPoints: (userId: string, delta: number) => void;
+  adjustCoins: (userId: string, delta: number) => void;
+  addFriend: (userId: string) => void;
+  removeFriend: (userId: string) => void;
+  blockUser: (userId: string) => void;
+  unblockUser: (userId: string) => void;
+  isFriend: (userId: string) => boolean;
+  isBlocked: (userId: string) => boolean;
   reset: () => void;
   channelMessages: (id: string) => Message[];
   channelLabel: (id: string) => string;
