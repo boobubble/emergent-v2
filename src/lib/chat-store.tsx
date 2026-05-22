@@ -55,22 +55,6 @@ const SEED_ROOMS: Room[] = [
     roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod" },
     isPublic: true,
   },
-  {
-    id: "games",
-    name: "Game Arena",
-    topic: "Pure games. !trivia !hangman !blackjack !slots !roll",
-    members: ["me", "bot-gamebot", "bot-pixel", "bot-nova"],
-    roles: { me: "member", "bot-gamebot": "owner", "bot-pixel": "admin" },
-    isPublic: true,
-  },
-  {
-    id: "lounge",
-    name: "Late Night Lounge",
-    topic: "Chill chat, no spam.",
-    members: ["me", "bot-nova", "bot-echo", "bot-ryze"],
-    roles: { me: "member", "bot-ryze": "owner" },
-    isPublic: true,
-  },
 ];
 
 interface State {
