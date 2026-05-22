@@ -556,15 +556,16 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       }
       return badged.state;
     });
-    if (outgoingRemote && authUserId) {
+    const out: Outgoing | null = outgoingRemote;
+    if (out && authUserId) {
       void supabase.from("messages").insert({
-        id: outgoingRemote.id,
-        channel_id: outgoingRemote.channelId,
+        id: out.id,
+        channel_id: out.channelId,
         author_id: authUserId,
-        text: outgoingRemote.text,
-        kind: outgoingRemote.kind,
-        attachment: outgoingRemote.attachment,
-        reply_to_id: outgoingRemote.replyToId,
+        text: out.text,
+        kind: out.kind,
+        attachment: out.attachment,
+        reply_to_id: out.replyToId,
       }).then(({ error }) => { if (error) console.error("send failed", error); });
     }
     setReplyingTo(null);
