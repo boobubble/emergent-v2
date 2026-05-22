@@ -309,13 +309,15 @@ function pickBotReply(text: string): string {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export function ChatProvider({ username, children }: { username: string; children: ReactNode }) {
+export function ChatProvider({ username, authUserId = null, children }: { username: string; authUserId?: string | null; children: ReactNode }) {
   const [state, setState] = useState<State>(() => seed(username));
   const [storageReady, setStorageReady] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const syncRef = useRef<BroadcastChannel | null>(null);
   const skipBroadcast = useRef(false);
   const streakChecked = useRef<string | null>(null);
+  const { profiles: remoteProfiles } = useRemoteProfiles();
+  const seenRemoteMsgIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     setState(load(username));
