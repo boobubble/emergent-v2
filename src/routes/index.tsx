@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ChatProvider, useChat } from "@/lib/chat-store";
+import { AuthProvider, useAuth } from "@/lib/auth-store";
+import { AuthScreen } from "@/components/auth/AuthScreen";
 import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
@@ -12,9 +14,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Palrgo — Chat rooms & command-driven games" },
-      { name: "description", content: "Public chat rooms, private DMs, and game commands like !trivia, !hangman, !blackjack, !roll, !fish and !dig." },
+      { name: "description", content: "Public chat rooms, private DMs, file sharing, and game commands like !trivia, !hangman, !blackjack, !roll, !fish and !dig." },
       { property: "og:title", content: "Palrgo — Chat & Games" },
-      { property: "og:description", content: "Hang out in public rooms, DM friends, and play games with chat commands." },
+      { property: "og:description", content: "Hang out in public rooms, DM friends, share files, and play games with chat commands." },
     ],
   }),
   component: Index,
@@ -22,7 +24,18 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <ChatProvider>
+    <AuthProvider>
+      <Gate />
+    </AuthProvider>
+  );
+}
+
+function Gate() {
+  const { user, ready } = useAuth();
+  if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
+  if (!user) return <AuthScreen />;
+  return (
+    <ChatProvider username={user.username}>
       <ChatApp />
     </ChatProvider>
   );
@@ -42,7 +55,6 @@ function ChatApp() {
       const el = rootRef.current;
       if (el) {
         el.classList.remove("palrgo-buzzing");
-        // force reflow to restart animation
         void el.offsetWidth;
         el.classList.add("palrgo-buzzing");
         setTimeout(() => el.classList.remove("palrgo-buzzing"), 750);
