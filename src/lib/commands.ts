@@ -212,8 +212,8 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       const mask = data.word.split("").map((c: string) => data.guessed.includes(c) ? c : "_").join(" ");
       const done = !mask.includes("_");
       const dead = data.wrong >= 6;
-      if (done) return { replies: [{ text: `🎉 ${who} got it! **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
-      if (dead) return { replies: [{ text: `💀 ${who} lost. The word was **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
+      if (done) return { replies: [{ text: `🏆 **WINNER: ${who}!** 🎉\nSolved the word: **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
+      if (dead) return { replies: [{ text: `💀 Hangman over — too many wrong guesses. The word was **${data.word}**` }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
       return {
         replies: [{ text: `\`${mask}\` — wrong: ${data.wrong}/6, used: ${data.guessed.join(" ")}` }],
         gameUpdate: { channelId: ctx.channelId, type: "hangman", data },
