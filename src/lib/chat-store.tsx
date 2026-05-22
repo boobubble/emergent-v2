@@ -486,7 +486,7 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
     const replyToId = opts?.replyToId;
     if (!trimmed && !attachment) return;
     type Outgoing = { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null };
-    let outgoingRemote: Outgoing | null = null;
+    const outgoingRemotes: Outgoing[] = [];
     setState(s => {
       const channelId = s.activeChannel;
       const isCmd = trimmed.startsWith("!");
@@ -500,12 +500,12 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       };
       if (remote) {
         seenRemoteMsgIds.current.add(msgId);
-        outgoingRemote = {
+        outgoingRemotes.push({
           id: msgId, channelId, text: trimmed,
           kind: userMsg.kind ?? "text",
           attachment: attachment ?? null,
           replyToId: replyToId ?? null,
-        };
+        });
       }
       const existing = s.messages[channelId] || [];
       const meXp = (s.me.xp ?? 0) + 1;
@@ -525,10 +525,20 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       };
       if (isCmd) {
         const result = runCommand(trimmed, { state: next, channelId, actor: next.me.name });
-        const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }) => ({
-          id: uid(), channelId, authorId: r.from || "bot-gamebot",
-          text: r.text, ts: Date.now(), kind: "game",
-        }));
+        const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }) => {
+          const id = remote ? newUuid() : uid();
+          if (remote) {
+            seenRemoteMsgIds.current.add(id);
+            outgoingRemotes.push({
+              id, channelId, text: r.text, kind: "game",
+              attachment: null, replyToId: null,
+            });
+          }
+          return {
+            id, channelId, authorId: r.from || "bot-gamebot",
+            text: r.text, ts: Date.now(), kind: "game",
+          };
+        });
         next = {
           ...next,
           messages: { ...next.messages, [channelId]: [...next.messages[channelId], ...sysMsgs] },
@@ -568,17 +578,18 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       }
       return badged.state;
     });
-    if (outgoingRemote && authUserId) {
-      const out = outgoingRemote as Outgoing;
-      void supabase.from("messages").insert({
-        id: out.id,
-        channel_id: out.channelId,
-        author_id: authUserId,
-        text: out.text,
-        kind: out.kind,
-        attachment: out.attachment as unknown as never,
-        reply_to_id: out.replyToId,
-      }).then(({ error }) => { if (error) console.error("send failed", error); });
+    if (outgoingRemotes.length && authUserId) {
+      void supabase.from("messages").insert(
+        outgoingRemotes.map(out => ({
+          id: out.id,
+          channel_id: out.channelId,
+          author_id: authUserId,
+          text: out.text,
+          kind: out.kind,
+          attachment: out.attachment as unknown as never,
+          reply_to_id: out.replyToId,
+        }))
+      ).then(({ error }) => { if (error) console.error("send failed", error); });
     }
     setReplyingTo(null);
   }, [authUserId]);
