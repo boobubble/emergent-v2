@@ -21,6 +21,7 @@ export interface User {
   // Social
   friends?: string[];         // user ids
   blocked?: string[];         // user ids
+  lastSeen?: number;          // epoch ms of last seen activity
 }
 
 export interface Attachment {
