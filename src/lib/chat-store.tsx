@@ -411,7 +411,7 @@ export function ChatProvider({ username, children }: { username: string; childre
           const candidates = room.members.filter(id => next.users[id]?.isBot && id !== "bot-gamebot");
           if (candidates.length && Math.random() > 0.4) {
             const author = candidates[Math.floor(Math.random() * candidates.length)];
-            const reply = BOT_REPLIES[Math.floor(Math.random() * BOT_REPLIES.length)];
+            const reply = pickBotReply(trimmed);
             const m: Message = { id: uid(), channelId, authorId: author, text: reply, ts: Date.now() + 800 };
             next = { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], m] } };
           }
