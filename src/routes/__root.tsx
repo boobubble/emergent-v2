@@ -132,7 +132,7 @@ function AuthGate() {
   if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
   if (!user) return <AuthScreen />;
   return (
-    <ChatProvider username={user.username}>
+    <ChatProvider username={user.username} authUserId={user.id}>
       <Outlet />
     </ChatProvider>
   );
