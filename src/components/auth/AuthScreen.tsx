@@ -7,6 +7,7 @@ export function AuthScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
   const [err, setErr] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
@@ -22,7 +23,8 @@ export function AuthScreen() {
         if (wordCount < 2 || wordCount > 10) {
           throw new Error("Username must be between 2 and 10 words.");
         }
-        await signup(email, password, username.trim());
+        if (!gender) throw new Error("Please select your gender.");
+        await signup(email, password, username.trim(), gender);
         setInfo("Account created! Check your email to confirm, then sign in.");
         setMode("login");
       }
@@ -73,11 +75,28 @@ export function AuthScreen() {
 
         <form onSubmit={onSubmit} className="space-y-3">
           {mode === "signup" && (
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Username</label>
-              <input value={username} onChange={e => setUsername(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. cool user" />
-              <p className="mt-1 text-[10px] text-muted-foreground">Must be 2 to 10 words.</p>
-            </div>
+            <>
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Username</label>
+                <input value={username} onChange={e => setUsername(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. cool user" />
+                <p className="mt-1 text-[10px] text-muted-foreground">Must be 2 to 10 words.</p>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Gender</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["male", "female", "other"] as const).map((g) => (
+                    <button
+                      type="button"
+                      key={g}
+                      onClick={() => setGender(g)}
+                      className={`rounded-lg border px-3 py-2 text-sm font-semibold capitalize transition-colors ${gender === g ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-foreground hover:bg-accent"}`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Email</label>

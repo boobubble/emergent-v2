@@ -13,7 +13,7 @@ interface Ctx {
   user: AuthUser | null;
   ready: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, username: string) => Promise<void>;
+  signup: (email: string, password: string, username: string, gender: "male" | "female" | "other") => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -61,17 +61,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error(error.message);
   }, []);
 
-  const signup = useCallback(async (email: string, password: string, username: string) => {
+  const signup = useCallback(async (email: string, password: string, username: string, gender: "male" | "female" | "other") => {
     email = email.trim();
     username = username.trim();
     if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) throw new Error("Username: 3-20 chars, letters/numbers/_-");
     if (password.length < 6) throw new Error("Password must be 6+ characters");
+    if (!["male", "female", "other"].includes(gender)) throw new Error("Please select a gender");
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
-        data: { username },
+        data: { username, gender },
       },
     });
     if (error) throw new Error(error.message);

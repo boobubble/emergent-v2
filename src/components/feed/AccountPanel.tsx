@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Upload, Trash2, Save, LogOut, Coins, Flame, Trophy, Award, UserX, UserMinus, MessageCircle } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { ACCENTS, useAccent } from "@/lib/use-accent";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AccountPanel() {
   const navigate = useNavigate();
@@ -17,7 +18,17 @@ export function AccountPanel() {
   const [name, setName] = useState(me.name);
   const [bio, setBio] = useState(me.bio ?? "");
   const [status, setStatus] = useState<typeof me.status>(me.status);
+  const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!auth?.id) return;
+    supabase.from("profiles").select("gender").eq("id", auth.id).maybeSingle()
+      .then(({ data }) => {
+        const g = (data as { gender?: string } | null)?.gender;
+        if (g === "male" || g === "female" || g === "other") setGender(g);
+      });
+  }, [auth?.id]);
 
   const friends = (me.friends ?? []).map(id => state.users[id]).filter(Boolean);
   const blocked = (me.blocked ?? []).map(id => state.users[id]).filter(Boolean);
@@ -31,7 +42,7 @@ export function AccountPanel() {
     reader.readAsDataURL(file);
   };
 
-  const save = () => {
+  const save = async () => {
     const trimmed = name.trim();
     const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
     if (wordCount < 2 || wordCount > 10) {
@@ -39,6 +50,9 @@ export function AccountPanel() {
       return;
     }
     updateMe({ name: trimmed, bio: bio.trim(), status });
+    if (auth?.id && gender) {
+      await supabase.from("profiles").update({ gender }).eq("id", auth.id);
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
   };
@@ -85,6 +99,15 @@ export function AccountPanel() {
                 {(["online", "away", "offline"] as const).map(s => (
                   <button key={s} onClick={() => setStatus(s)} className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${status === s ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}>
                     {s}
+                  </button>
+                ))}
+              </div>
+            </Field>
+            <Field label="Gender">
+              <div className="flex gap-2">
+                {(["male", "female", "other"] as const).map(g => (
+                  <button key={g} onClick={() => setGender(g)} className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider capitalize transition ${gender === g ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}>
+                    {g}
                   </button>
                 ))}
               </div>
