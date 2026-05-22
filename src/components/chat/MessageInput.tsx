@@ -83,6 +83,16 @@ export function MessageInput() {
   }
 
   function onKey(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (mentionSuggestions.length > 0) {
+      if (e.key === "ArrowDown") { e.preventDefault(); setMentionIdx(i => (i + 1) % mentionSuggestions.length); return; }
+      if (e.key === "ArrowUp") { e.preventDefault(); setMentionIdx(i => (i - 1 + mentionSuggestions.length) % mentionSuggestions.length); return; }
+      if (e.key === "Tab" || (e.key === "Enter" && !e.shiftKey)) {
+        e.preventDefault();
+        applyMention(mentionSuggestions[mentionIdx].name);
+        return;
+      }
+      if (e.key === "Escape") { e.preventDefault(); setCaret(-1); return; }
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       submit();
