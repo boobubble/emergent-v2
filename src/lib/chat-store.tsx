@@ -102,6 +102,13 @@ const SEED_ROOMS: Room[] = [
   },
 ];
 
+interface ModEntry {
+  muteVotes: string[];      // unique voter names
+  kickVotes: string[];      // unique voter names
+  mutedUntil?: number;
+  kickedUntil?: number;
+}
+
 interface State {
   me: User;
   users: Record<string, User>;
@@ -111,7 +118,12 @@ interface State {
   messages: Record<string, Message[]>;
   games: Record<string, GameState>;
   activeChannel: string;
+  moderation?: Record<string, Record<string, ModEntry>>;
 }
+
+const MUTE_THRESHOLD = 5;
+const KICK_THRESHOLD = 8;
+const MOD_DURATION_MS = 5 * 60 * 1000;
 
 function seed(name = "user0000"): State {
   const me: User = {
