@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
