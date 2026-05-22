@@ -14,6 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
+      comments: {
+        Row: {
+          author_id: string
+          created_at: string
+          id: string
+          parent_comment_id: string | null
+          post_id: string
+          text: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          id?: string
+          parent_comment_id?: string | null
+          post_id: string
+          text?: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          id?: string
+          parent_comment_id?: string | null
+          post_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      friendships: {
+        Row: {
+          created_at: string
+          id: string
+          receiver_id: string
+          sender_id: string
+          status: Database["public"]["Enums"]["friendship_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          receiver_id: string
+          sender_id: string
+          status?: Database["public"]["Enums"]["friendship_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          sender_id?: string
+          status?: Database["public"]["Enums"]["friendship_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hashtags: {
+        Row: {
+          last_used_at: string
+          tag: string
+          usage_count: number
+        }
+        Insert: {
+          last_used_at?: string
+          tag: string
+          usage_count?: number
+        }
+        Update: {
+          last_used_at?: string
+          tag?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachment: Json | null
@@ -47,17 +134,109 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          payload: Json | null
+          read: boolean
+          target_id: string | null
+          target_type: string | null
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          payload?: Json | null
+          read?: boolean
+          target_id?: string | null
+          target_type?: string | null
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          payload?: Json | null
+          read?: boolean
+          target_id?: string | null
+          target_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      posts: {
+        Row: {
+          author_id: string
+          comment_count: number
+          created_at: string
+          hashtags: string[]
+          id: string
+          is_anonymous: boolean
+          kind: Database["public"]["Enums"]["post_kind"]
+          media_urls: string[]
+          poll: Json | null
+          privacy: Database["public"]["Enums"]["post_privacy"]
+          reaction_count: number
+          text: string
+          trending_score: number
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          comment_count?: number
+          created_at?: string
+          hashtags?: string[]
+          id?: string
+          is_anonymous?: boolean
+          kind?: Database["public"]["Enums"]["post_kind"]
+          media_urls?: string[]
+          poll?: Json | null
+          privacy?: Database["public"]["Enums"]["post_privacy"]
+          reaction_count?: number
+          text?: string
+          trending_score?: number
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          comment_count?: number
+          created_at?: string
+          hashtags?: string[]
+          id?: string
+          is_anonymous?: boolean
+          kind?: Database["public"]["Enums"]["post_kind"]
+          media_urls?: string[]
+          poll?: Json | null
+          privacy?: Database["public"]["Enums"]["post_privacy"]
+          reaction_count?: number
+          text?: string
+          trending_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_color: string
           avatar_url: string | null
           bio: string | null
           coins: number
+          cover_url: string | null
           created_at: string
           id: string
+          is_private: boolean
+          last_active_day: string | null
           last_seen: string
           level: number
+          longest_streak: number
           status: string
+          streak: number
           updated_at: string
           username: string
           xp: number
@@ -67,11 +246,16 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           coins?: number
+          cover_url?: string | null
           created_at?: string
           id: string
+          is_private?: boolean
+          last_active_day?: string | null
           last_seen?: string
           level?: number
+          longest_streak?: number
           status?: string
+          streak?: number
           updated_at?: string
           username: string
           xp?: number
@@ -81,14 +265,46 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           coins?: number
+          cover_url?: string | null
           created_at?: string
           id?: string
+          is_private?: boolean
+          last_active_day?: string | null
           last_seen?: string
           level?: number
+          longest_streak?: number
           status?: string
+          streak?: number
           updated_at?: string
           username?: string
           xp?: number
+        }
+        Relationships: []
+      }
+      reactions: {
+        Row: {
+          created_at: string
+          id: string
+          target_id: string
+          target_type: string
+          type: Database["public"]["Enums"]["reaction_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          target_id: string
+          target_type: string
+          type: Database["public"]["Enums"]["reaction_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          target_id?: string
+          target_type?: string
+          type?: Database["public"]["Enums"]["reaction_type"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -97,10 +313,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      friendship_status: "pending" | "accepted" | "blocked"
+      post_kind: "text" | "image" | "gif" | "poll"
+      post_privacy: "public" | "friends" | "private"
+      reaction_type: "like" | "love" | "haha" | "angry" | "fire"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -227,6 +446,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      friendship_status: ["pending", "accepted", "blocked"],
+      post_kind: ["text", "image", "gif", "poll"],
+      post_privacy: ["public", "friends", "private"],
+      reaction_type: ["like", "love", "haha", "angry", "fire"],
+    },
   },
 } as const
