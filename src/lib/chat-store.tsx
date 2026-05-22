@@ -490,8 +490,16 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
             messages: { ...s.messages, [msg.channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts) },
           };
         });
-        if (msg.channelId.startsWith("dm:") && msg.authorId !== "me") {
-          playDmPing();
+        if (msg.authorId !== "me") {
+          if (msg.channelId.startsWith("dm:")) {
+            playDmPing();
+          } else {
+            // @mention beep for lobby/rooms
+            const myName = (typeof window !== "undefined" ? username : "");
+            if (myName && new RegExp(`@${myName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(msg.text)) {
+              playMentionPing();
+            }
+          }
         }
       })
       .subscribe();
