@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, Plus, Settings, Trophy, LogOut, RotateCcw } from "lucide-react";
+import { MessageCircle, Plus, Settings, Trophy, LogOut, RotateCcw, Award, Flame } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "./Avatar";
@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils";
 interface Props {
   onOpenProfile: () => void;
   onOpenLeaderboard: () => void;
+  onOpenAchievements: () => void;
 }
 
-export function Sidebar({ onOpenProfile, onOpenLeaderboard }: Props) {
+export function Sidebar({ onOpenProfile, onOpenLeaderboard, onOpenAchievements }: Props) {
   const { state, setActive, createRoom, reset } = useChat();
   const { logout, user } = useAuth();
   const [showNew, setShowNew] = useState(false);
