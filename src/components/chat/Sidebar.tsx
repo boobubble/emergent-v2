@@ -152,9 +152,12 @@ export function Sidebar({ onOpenProfile, onOpenLeaderboard, onOpenAchievements, 
         <div className="mb-2">
           <ThemeToggle />
         </div>
-        <button
-          onClick={onOpenProfile}
+        <a
+          href="/account"
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex w-full items-center gap-3 rounded-2xl bg-white/5 p-2 text-left transition-colors hover:bg-white/10"
+          title="Open account settings in new tab"
         >
           <Avatar user={state.me} size={36} />
           <div className="min-w-0 flex-1 leading-tight">
@@ -169,6 +172,13 @@ export function Sidebar({ onOpenProfile, onOpenLeaderboard, onOpenAchievements, 
             </div>
           </div>
           <Settings className="h-4 w-4 text-muted-foreground" />
+        </a>
+        <button
+          type="button"
+          onClick={onOpenProfile}
+          className="mt-1 w-full rounded-full px-3 py-1.5 text-[11px] text-muted-foreground hover:bg-white/5 hover:text-foreground"
+        >
+          Quick edit profile
         </button>
         <div className="mt-2 flex gap-1">
           <button

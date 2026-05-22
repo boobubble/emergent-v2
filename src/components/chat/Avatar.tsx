@@ -2,9 +2,10 @@ import type { User } from "@/lib/chat-types";
 
 export function Avatar({ user, size = 36, square = true }: { user: User; size?: number; square?: boolean }) {
   const initials = user.name.slice(0, 2).toUpperCase();
+  const hasImg = !!user.avatarUrl;
   return (
     <div
-      className={`relative flex shrink-0 items-center justify-center font-bold text-background ${
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden font-bold text-background ${
         square ? "rounded-2xl" : "rounded-full"
       }`}
       style={{
@@ -15,7 +16,11 @@ export function Avatar({ user, size = 36, square = true }: { user: User; size?: 
         boxShadow: "0 4px 12px oklch(0 0 0 / 0.4)",
       }}
     >
-      {initials}
+      {hasImg ? (
+        <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+      ) : (
+        initials
+      )}
       <span
         className="absolute -bottom-0.5 -right-0.5 rounded-full border-2 border-card"
         style={{
