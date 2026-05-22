@@ -1,4 +1,4 @@
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
@@ -20,7 +20,7 @@ const ICONS: Record<Role, React.ReactNode> = {
 };
 
 export function MembersPanel({ roomId }: { roomId: string }) {
-  const { state, startDM, setActive } = useChat();
+  const { state, startDM, setActive, closeDM } = useChat();
   const room = state.rooms[roomId];
   if (!room) return null;
 
@@ -65,7 +65,11 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                 const u = state.users[uid];
                 if (!u) return null;
                 return (
-                  <DropdownMenuItem key={uid} onClick={() => setActive(`dm:${uid}`)} className="gap-2">
+                  <DropdownMenuItem
+                    key={uid}
+                    onSelect={(e) => { e.preventDefault(); setActive(`dm:${uid}`); }}
+                    className="gap-2"
+                  >
                     <Avatar user={u} size={24} />
                     <span className="truncate">{u.name}</span>
                     <span
@@ -73,6 +77,14 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                         u.status === "online" ? "bg-primary" : "bg-muted-foreground/40"
                       }`}
                     />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); closeDM(uid); }}
+                      title="Close DM"
+                      aria-label="Close DM"
+                      className="grid h-5 w-5 place-items-center rounded-full text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </DropdownMenuItem>
                 );
               })

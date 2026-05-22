@@ -185,6 +185,7 @@ interface Ctx {
   setActive: (channelId: string) => void;
   send: (text: string, opts?: { attachment?: Attachment; replyToId?: string }) => void;
   startDM: (userId: string) => void;
+  closeDM: (userId: string) => void;
   joinRoom: (roomId: string) => void;
   createRoom: (name: string, topic: string) => void;
   updateMe: (patch: Partial<User>) => void;
@@ -386,6 +387,15 @@ export function ChatProvider({ username, children }: { username: string; childre
     });
   }, []);
 
+  const closeDM = useCallback((userId: string) => {
+    const channelId = `dm:${userId}`;
+    setState(s => ({
+      ...s,
+      dmOrder: s.dmOrder.filter(id => id !== userId),
+      activeChannel: s.activeChannel === channelId ? s.roomOrder[0] || s.activeChannel : s.activeChannel,
+    }));
+  }, []);
+
   const joinRoom = useCallback((roomId: string) => {
     setState(s => {
       const room = s.rooms[roomId];
@@ -472,7 +482,7 @@ export function ChatProvider({ username, children }: { username: string; childre
 
 
   const value = useMemo<Ctx>(() => ({
-    state, setActive, send, startDM, joinRoom, createRoom, updateMe, adjustPoints, reset,
+    state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, reset,
     channelMessages: (id) => state.messages[id] || [],
     channelLabel: (id) => {
       if (id.startsWith("dm:")) {
@@ -485,7 +495,7 @@ export function ChatProvider({ username, children }: { username: string; childre
     dmUser: (id) => id.startsWith("dm:") ? state.users[id.slice(3)] : undefined,
     replyingTo, setReplyingTo,
     findMessage,
-  }), [state, setActive, send, startDM, joinRoom, createRoom, updateMe, adjustPoints, reset, replyingTo, findMessage]);
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, reset, replyingTo, findMessage]);
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
 }
