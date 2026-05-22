@@ -239,11 +239,39 @@ interface Ctx {
 
 const ChatCtx = createContext<Ctx | null>(null);
 
-const BOT_REPLIES = [
-  "lol", "nice one", "wait what", "👀", "fr fr", "anyone seen the new update?",
-  "brb coffee", "gg", "that was wild", "hmm interesting",
-  "I'm in", "🔥🔥", "anyone playing today?", "same here",
-];
+const BOT_REPLIES = {
+  greeting: ["hey hey 👋", "yo!", "hi there 🙌", "sup", "heyy welcome", "o/", "howdy 🤠", "hello friend"],
+  thanks: ["anytime 🤝", "np!", "you got it", "🫡", "happy to help", "no worries"],
+  question: ["good question 🤔", "hmm depends", "not sure tbh", "I'd say yes", "maybe try !help", "interesting one", "🤷 let's find out"],
+  laugh: ["lmaooo", "💀💀", "haha same", "ikr 😂", "stop ur killing me", "🤣"],
+  agree: ["facts", "fr fr", "100%", "exactly this", "couldn't agree more", "💯"],
+  disagree: ["idk about that", "hmm not so sure", "🤨", "respectfully disagree", "interesting take tho"],
+  love: ["❤️", "🥰", "love that", "wholesome", "🫶"],
+  game: ["I'm in! 🎮", "ggwp", "let's run it", "ready when you are 🎲", "queue me up", "type !trivia 👀", "!hangman anyone?"],
+  bye: ["cya 👋", "later!", "gn", "take care", "✌️"],
+  fallback: [
+    "lol", "nice one", "wait what", "👀", "fr fr", "anyone seen the new update?",
+    "brb coffee", "gg", "that was wild", "hmm interesting", "I'm in", "🔥🔥",
+    "anyone playing today?", "same here", "no way 😳", "tell me more", "respect",
+    "big mood", "bet 🤝", "based", "📈", "vibes", "lmk how it goes", "neat",
+    "ooo spicy", "make it happen", "👏👏", "✨ love the energy", "story checks out",
+  ],
+};
+
+function pickBotReply(text: string): string {
+  const t = text.toLowerCase();
+  let pool: string[] = BOT_REPLIES.fallback;
+  if (/\b(hi|hey|hello|yo|sup|hola|howdy)\b/.test(t)) pool = BOT_REPLIES.greeting;
+  else if (/\b(thanks|thank you|thx|ty|appreciate)\b/.test(t)) pool = BOT_REPLIES.thanks;
+  else if (/\b(bye|cya|goodnight|gn|later|peace)\b/.test(t)) pool = BOT_REPLIES.bye;
+  else if (/\b(lol|lmao|rofl|haha|hehe|😂|🤣)\b/.test(t)) pool = BOT_REPLIES.laugh;
+  else if (/\b(love|❤️|🫶|🥰|awesome|amazing|beautiful)\b/.test(t)) pool = BOT_REPLIES.love;
+  else if (/\b(agree|same|true|right|exactly|facts)\b/.test(t)) pool = BOT_REPLIES.agree;
+  else if (/\b(disagree|nope|wrong|nah)\b/.test(t)) pool = BOT_REPLIES.disagree;
+  else if (/\b(game|play|trivia|hangman|blackjack|roll|dice|fish|dig)\b/.test(t)) pool = BOT_REPLIES.game;
+  else if (/\?\s*$/.test(text) || /\b(what|why|how|when|where|who)\b/.test(t)) pool = BOT_REPLIES.question;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
 
 export function ChatProvider({ username, children }: { username: string; children: ReactNode }) {
   const [state, setState] = useState<State>(() => seed(username));
@@ -318,7 +346,7 @@ export function ChatProvider({ username, children }: { username: string; childre
         if (!botMembers.length) return s;
         if (Math.random() > 0.35) return s;
         const author = botMembers[Math.floor(Math.random() * botMembers.length)];
-        const text = BOT_REPLIES[Math.floor(Math.random() * BOT_REPLIES.length)];
+        const text = pickBotReply("");
         const msg: Message = { id: uid(), channelId: room.id, authorId: author, text, ts: Date.now() };
         return { ...s, messages: { ...s.messages, [room.id]: [...(s.messages[room.id] || []), msg] } };
       });
@@ -383,7 +411,7 @@ export function ChatProvider({ username, children }: { username: string; childre
           const candidates = room.members.filter(id => next.users[id]?.isBot && id !== "bot-gamebot");
           if (candidates.length && Math.random() > 0.4) {
             const author = candidates[Math.floor(Math.random() * candidates.length)];
-            const reply = BOT_REPLIES[Math.floor(Math.random() * BOT_REPLIES.length)];
+            const reply = pickBotReply(trimmed);
             const m: Message = { id: uid(), channelId, authorId: author, text: reply, ts: Date.now() + 800 };
             next = { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], m] } };
           }
@@ -391,7 +419,7 @@ export function ChatProvider({ username, children }: { username: string; childre
           const targetId = channelId.slice(3);
           const target = next.users[targetId];
           if (target?.isBot) {
-            const reply = BOT_REPLIES[Math.floor(Math.random() * BOT_REPLIES.length)];
+            const reply = pickBotReply(trimmed);
             const m: Message = { id: uid(), channelId, authorId: targetId, text: reply, ts: Date.now() + 600 };
             next = { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], m] } };
           }

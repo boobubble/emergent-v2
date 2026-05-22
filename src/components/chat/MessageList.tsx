@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
-import { Download, Reply, CornerDownRight } from "lucide-react";
+import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.kind === "image") {
@@ -75,6 +75,15 @@ function ReplyPreview({ message, align = "left" }: { message: Message; align?: "
 export function MessageList({ channelId }: { channelId: string }) {
   const { channelMessages, state, setReplyingTo, findMessage } = useChat();
   const msgs = channelMessages(channelId);
+  const lastSeenMeId = useMemo(() => {
+    let lastMeIdx = -1;
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      if (msgs[i].authorId === "me") { lastMeIdx = i; break; }
+    }
+    if (lastMeIdx === -1) return null;
+    const hasLaterOther = msgs.slice(lastMeIdx + 1).some(m => m.authorId !== "me");
+    return hasLaterOther ? msgs[lastMeIdx].id : null;
+  }, [msgs]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -157,6 +166,12 @@ export function MessageList({ channelId }: { channelId: string }) {
                       );
                     })}
                   </div>
+                  {g.some(m => m.id === lastSeenMeId) && (
+                    <div className="mt-1 flex items-center gap-1 pr-1 text-[10px] font-medium text-primary/80">
+                      <CheckCheck className="h-3 w-3" />
+                      <span>Seen</span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
