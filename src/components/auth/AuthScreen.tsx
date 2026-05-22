@@ -19,9 +19,9 @@ export function AuthScreen() {
       if (mode === "login") {
         await login(email, password);
       } else {
-        const wordCount = username.trim().split(/\s+/).filter(Boolean).length;
-        if (wordCount < 2 || wordCount > 10) {
-          throw new Error("Username must be between 2 and 10 words.");
+        const letterCount = username.trim().replace(/[^a-zA-Z]/g, "").length;
+        if (letterCount < 2 || letterCount > 10) {
+          throw new Error("Username must contain between 2 and 10 letters.");
         }
         if (!gender) throw new Error("Please select your gender.");
         await signup(email, password, username.trim(), gender);
