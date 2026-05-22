@@ -92,7 +92,7 @@ function seed(name = "user0000"): State {
   return {
     me, users, rooms,
     roomOrder: SEED_ROOMS.map(r => r.id),
-    dmOrder: ["bot-nova"],
+    dmOrder: ["bot-gamebot", "bot-nova"],
     messages,
     games: {},
     activeChannel: "lobby",
