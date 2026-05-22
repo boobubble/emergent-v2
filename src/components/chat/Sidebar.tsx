@@ -38,7 +38,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
         {onCollapse && (
           <button
             onClick={onCollapse}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/30 transition-all hover:scale-105 hover:bg-primary hover:text-primary-foreground"
             title="Hide sidebar"
             aria-label="Hide sidebar"
           >
