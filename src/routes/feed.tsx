@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Home, Bell, Users, Sparkles, Flame, Clock, UserCircle } from "lucide-react";
+import { ArrowLeft, Home, Bell, Users, Sparkles, Flame, Clock, UserCircle, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, LeaderboardWidget, StreakWidget } from "@/components/feed/SideWidgets";
+import { AccountPanel } from "@/components/feed/AccountPanel";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
 
 export const Route = createFileRoute("/feed")({
@@ -22,11 +23,13 @@ export const Route = createFileRoute("/feed")({
 });
 
 type Tab = "foryou" | "trending" | "latest" | "friends";
+type View = "feed" | "account";
 
 function FeedPage() {
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [tab, setTab] = useState<Tab>("foryou");
+  const [view, setView] = useState<View>(() => (typeof window !== "undefined" && window.location.search.includes("tab=account") ? "account" : "feed"));
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -127,8 +130,15 @@ function FeedPage() {
           <Link to="/" className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Chat
           </Link>
-          <h1 className="text-lg font-bold">Feed</h1>
+          <h1 className="text-lg font-bold">{view === "account" ? "Account" : "Feed"}</h1>
           <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => setView(view === "account" ? "feed" : "account")}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors ${view === "account" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
+              title="Account settings"
+            >
+              <Settings className="h-4 w-4" /> Settings
+            </button>
             <Link to="/u/$username" params={{ username: user.username }} className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground">
               <UserCircle className="h-5 w-5" />
             </Link>
@@ -141,44 +151,51 @@ function FeedPage() {
         <aside className="hidden lg:block">
           <nav className="sticky top-20 space-y-1">
             <NavLink to="/" icon={Home} label="Home / Chat" />
-            <NavLink to="/feed" icon={Sparkles} label="Feed" active />
+            <button onClick={() => setView("feed")} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors ${view === "feed" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}><Sparkles className="h-4 w-4" /> Feed</button>
             <NavLink to="/feed" icon={Flame} label="Leaderboard" />
             <NavLink to="/feed" icon={Bell} label="Achievements" />
+            <button onClick={() => setView("account")} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors ${view === "account" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}><Settings className="h-4 w-4" /> Account</button>
           </nav>
         </aside>
 
         {/* Center */}
         <main className="min-w-0">
-          <Composer authorId={meId} onPosted={loadPosts} />
+          {view === "account" ? (
+            <AccountPanel />
+          ) : (
+            <>
+              <Composer authorId={meId} onPosted={loadPosts} />
 
-          <div className="mt-4 flex gap-1 overflow-x-auto rounded-full border border-border bg-card p-1">
-            {TABS.map((t) => {
-              const Icon = t.icon;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
-                  className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
-                >
-                  <Icon className="h-3.5 w-3.5" /> {t.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-4 space-y-4">
-            {loading && Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-48 animate-pulse rounded-3xl border border-border bg-card" />
-            ))}
-            {!loading && filtered.length === 0 && (
-              <div className="rounded-3xl border border-dashed border-border bg-card/50 p-12 text-center">
-                <p className="text-sm text-muted-foreground">No posts yet. Be the first to share something!</p>
+              <div className="mt-4 flex gap-1 overflow-x-auto rounded-full border border-border bg-card p-1">
+                {TABS.map((t) => {
+                  const Icon = t.icon;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setTab(t.id)}
+                      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
+                    >
+                      <Icon className="h-3.5 w-3.5" /> {t.label}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-            {!loading && filtered.map((post) => (
-              <PostCard key={post.id} post={post} profiles={profiles} meId={meId} />
-            ))}
-          </div>
+
+              <div className="mt-4 space-y-4">
+                {loading && Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-48 animate-pulse rounded-3xl border border-border bg-card" />
+                ))}
+                {!loading && filtered.length === 0 && (
+                  <div className="rounded-3xl border border-dashed border-border bg-card/50 p-12 text-center">
+                    <p className="text-sm text-muted-foreground">No posts yet. Be the first to share something!</p>
+                  </div>
+                )}
+                {!loading && filtered.map((post) => (
+                  <PostCard key={post.id} post={post} profiles={profiles} meId={meId} />
+                ))}
+              </div>
+            </>
+          )}
         </main>
 
         {/* Right widgets */}
@@ -195,8 +212,8 @@ function FeedPage() {
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-border bg-background/95 backdrop-blur-md lg:hidden">
         <MobileNav to="/" icon={Home} label="Chat" />
-        <MobileNav to="/feed" icon={Sparkles} label="Feed" active />
-        <MobileNav to="/leaderboard" icon={Flame} label="Top" />
+        <button onClick={() => setView("feed")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "feed" ? "text-primary" : "text-muted-foreground"}`}><Sparkles className="h-5 w-5" /> Feed</button>
+        <button onClick={() => setView("account")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "account" ? "text-primary" : "text-muted-foreground"}`}><Settings className="h-5 w-5" /> Settings</button>
         <MobileNav to="/u/$username" params={{ username: user.username }} icon={UserCircle} label="Me" />
       </nav>
     </div>
