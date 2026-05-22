@@ -4,7 +4,7 @@ import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
 import { useRemoteProfiles } from "./use-remote-profiles";
-import { playDmPing } from "./sounds";
+import { playDmPing, playMentionPing } from "./sounds";
 import gamebotImg from "@/assets/bots/gamebot.png";
 import novaImg from "@/assets/bots/nova.png";
 import pixelImg from "@/assets/bots/pixel.png";
