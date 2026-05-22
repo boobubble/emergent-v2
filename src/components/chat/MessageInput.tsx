@@ -16,12 +16,52 @@ export function MessageInput() {
   const [showEmoji, setShowEmoji] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
+  const [caret, setCaret] = useState(0);
+  const [mentionIdx, setMentionIdx] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const suggestions = text.startsWith("!")
     ? COMMANDS.filter(c => c.startsWith(text.split(" ")[0])).slice(0, 5)
     : [];
+
+  const mentionMatch = (() => {
+    const before = text.slice(0, caret);
+    const m = before.match(/(?:^|\s)@([\w-]*)$/);
+    if (!m) return null;
+    return { query: m[1].toLowerCase(), start: caret - m[1].length - 1 };
+  })();
+  const mentionSuggestions = mentionMatch
+    ? Object.values(state.users)
+        .filter(u => u.id !== "me" && u.name.toLowerCase().includes(mentionMatch.query))
+        .sort((a, b) => {
+          const aStarts = a.name.toLowerCase().startsWith(mentionMatch.query) ? 0 : 1;
+          const bStarts = b.name.toLowerCase().startsWith(mentionMatch.query) ? 0 : 1;
+          if (aStarts !== bStarts) return aStarts - bStarts;
+          const aOn = a.status === "online" ? 0 : 1;
+          const bOn = b.status === "online" ? 0 : 1;
+          if (aOn !== bOn) return aOn - bOn;
+          return a.name.localeCompare(b.name);
+        })
+        .slice(0, 6)
+    : [];
+
+  useEffect(() => { setMentionIdx(0); }, [mentionMatch?.query]);
+
+  function applyMention(name: string) {
+    if (!mentionMatch) return;
+    const before = text.slice(0, mentionMatch.start);
+    const after = text.slice(caret);
+    const inserted = `@${name} `;
+    const next = before + inserted + after;
+    setText(next);
+    const pos = (before + inserted).length;
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange(pos, pos);
+      setCaret(pos);
+    });
+  }
 
   useEffect(() => {
     if (inputRef.current) {
