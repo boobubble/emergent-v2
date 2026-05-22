@@ -88,7 +88,7 @@ function ChatApp() {
           {!sidebarOpen && (
             <button
               onClick={() => setSidebarOpen(true)}
-              className="absolute left-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-lg transition-all hover:scale-105 hover:text-primary"
+              className="absolute left-3 top-3.5 z-30 grid h-9 w-9 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-lg transition-all hover:scale-105 hover:text-primary"
               title="Show sidebar"
               aria-label="Show sidebar"
             >
