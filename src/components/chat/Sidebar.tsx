@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   onOpenProfile: () => void;
-  onOpenLeaderboard: () => void;
-  onOpenAchievements: () => void;
+  onOpenLeaderboard?: () => void;
+  onOpenAchievements?: () => void;
   onCollapse?: () => void;
 }
 
