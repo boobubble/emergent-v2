@@ -12,6 +12,7 @@ import echoImg from "@/assets/bots/echo.png";
 import ryzeImg from "@/assets/bots/ryze.png";
 import digbotImg from "@/assets/bots/digbot.png";
 import fishbotImg from "@/assets/bots/fishbot.png";
+import wineImg from "@/assets/bots/wine.png";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUuid(s: string) { return UUID_RE.test(s); }
@@ -130,6 +131,7 @@ const SEED_BOTS: User[] = [
   { id: "bot-ryze", name: "Ryze", avatarColor: AVATAR_COLORS[0], avatarUrl: ryzeImg, status: "online", isBot: true, xp: 2100, level: 18, bio: bioFor("bot-ryze", "Mod & gamer"), streak: 9, longestStreak: 21, messageCount: 540, badges: ["first_message","chatterbox","veteran","level_5","level_10","streak_3","streak_7","gamer"] },
   { id: "bot-dig", name: "DigBot", avatarColor: AVATAR_COLORS[6], avatarUrl: digbotImg, status: "online", isBot: true, xp: 1560, level: 14, bio: bioFor("bot-dig", "⛏️ Try !dig"), streak: 7, longestStreak: 18, messageCount: 410, badges: ["first_message","chatterbox","level_5","level_10","streak_3","streak_7","gamer"] },
   { id: "bot-fish", name: "FishBot", avatarColor: AVATAR_COLORS[2], avatarUrl: fishbotImg, status: "online", isBot: true, xp: 1320, level: 13, bio: bioFor("bot-fish", "🎣 Try !fish"), streak: 4, longestStreak: 15, messageCount: 360, badges: ["first_message","chatterbox","level_5","level_10","streak_3","gamer"] },
+  { id: "bot-wine", name: "WineBot", avatarColor: AVATAR_COLORS[4], avatarUrl: wineImg, status: "online", isBot: true, xp: 1100, level: 11, bio: bioFor("bot-wine", "🍷 Try !wine"), streak: 3, longestStreak: 10, messageCount: 280, badges: ["first_message","chatterbox","level_5","level_10","streak_3"] },
 ];
 
 function botHelpReply(botId: string, botName: string): string {
