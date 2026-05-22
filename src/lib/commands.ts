@@ -195,7 +195,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
         drink.rarity === "uncommon" ? "Uncommon" : "Common";
       const rare = drink.rarity === "rare" || drink.rarity === "epic" || drink.rarity === "legendary";
       return {
-        replies: [{ text: `🍷 **Wine** serves ${who} ${qty} ${unit} of ${drink.emoji} **${drink.name}** — cheers! 🥂 (+${totalXp} XP) — ${tag}` }],
+        replies: [{ text: `🍷 **WineBot** serves ${who} ${qty} ${unit} of ${drink.emoji} **${drink.name}** — cheers! 🥂 (+${totalXp} XP) — ${tag}`, from: "bot-wine" }],
         ...(rare ? { buzz: { reason: `${drink.emoji} ${qty}× ${drink.name}` } } : {}),
       };
     }
