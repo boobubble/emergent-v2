@@ -5,7 +5,7 @@ import type { Attachment } from "@/lib/chat-types";
 
 const COMMANDS = [
   "!help", "!roll", "!flip", "!slots", "!fish", "!dig",
-  "!trivia", "!a", "!hangman", "!g", "!blackjack", "!me", "!stats",
+  "!trivia", "!a", "!hangman", "!g", "!me", "!stats",
 ];
 const EMOJIS = ["😀","😂","😎","🥳","👍","❤️","🔥","🎲","🎰","🏆","👀","🪙","💀","🎉"];
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
