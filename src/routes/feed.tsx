@@ -220,6 +220,7 @@ function FeedPage() {
           <div className="sticky top-20 space-y-4">
             <FriendsWidget meId={meId} profiles={profiles} />
             <HashtagsWidget />
+            <ChatroomOnlineWidget profiles={profiles} />
             <LeaderboardWidget profiles={profiles} />
             <StreakWidget profiles={profiles} />
           </div>
