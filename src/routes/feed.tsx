@@ -29,6 +29,7 @@ function FeedPage() {
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [tab, setTab] = useState<Tab>("foryou");
+  const [view, setView] = useState<View>(() => (typeof window !== "undefined" && window.location.search.includes("tab=account") ? "account" : "feed"));
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
