@@ -525,13 +525,18 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       };
       if (isCmd) {
         const result = runCommand(trimmed, { state: next, channelId, actor: next.me.name });
-        const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }) => {
+        const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }, idx: number) => {
           const id = remote ? newUuid() : uid();
+          // Piggyback game state on the first reply so other users sync
+          const gameAttach = (remote && idx === 0 && result.gameUpdate)
+            ? ({ __gameState: result.gameUpdate } as unknown as Attachment)
+            : undefined;
           if (remote) {
             seenRemoteMsgIds.current.add(id);
             outgoingRemotes.push({
               id, channelId, text: r.text, kind: "game",
-              attachment: null, replyToId: null,
+              attachment: (gameAttach ?? null) as Attachment | null,
+              replyToId: null,
             });
           }
           return {
@@ -542,7 +547,11 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
         next = {
           ...next,
           messages: { ...next.messages, [channelId]: [...next.messages[channelId], ...sysMsgs] },
-          games: result.gameUpdate ? { ...next.games, [channelId]: result.gameUpdate } : next.games,
+          games: result.gameUpdate
+            ? (result.gameUpdate.type
+                ? { ...next.games, [channelId]: result.gameUpdate }
+                : Object.fromEntries(Object.entries(next.games).filter(([k]) => k !== channelId)))
+            : next.games,
         };
         if (result.buzz && typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("palrgo:buzz", {
