@@ -178,7 +178,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
         }
         return {
           replies: [
-            { text: `✅ ${who} got it! The answer was **${answerLabel}** (+5 XP)` },
+            { text: `🏆 **WINNER: ${who}!** 🎉\nCorrect answer: **${answerLabel}**\nQuestion: _${q.q}_  (+5 XP)` },
             { text: `📚 **Next trivia:** ${nextQ.q}\n${nextQ.choices.map((c: string, i: number)=>`  ${i+1}. ${c}`).join("\n")}\nAnswer with **!a <number or text>**` },
           ],
           gameUpdate: { channelId: ctx.channelId, type: "trivia", data: nextQ },
