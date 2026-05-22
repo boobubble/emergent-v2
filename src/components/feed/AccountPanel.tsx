@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Upload, Trash2, Save, LogOut, Coins, Flame, Trophy, Award, UserX, UserMinus, MessageCircle } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { ACCENTS, useAccent } from "@/lib/use-accent";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AccountPanel() {
   const navigate = useNavigate();
