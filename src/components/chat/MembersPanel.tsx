@@ -26,6 +26,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const { state, startDM, setActive, closeDM, dmChannelFor } = useChat();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
+  const [showAllOffline, setShowAllOffline] = useState(false);
   const room = state.rooms[roomId];
   if (!room) return null;
 
@@ -40,16 +41,25 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const remoteIds = Object.keys(profiles).filter(id => !authUser || id !== authUser.id);
   const allIds = Array.from(new Set([...localIds, ...remoteIds]));
 
-  const ranked = allIds.sort((a, b) => {
-    const order: Record<Role, number> = { owner: 0, admin: 1, mod: 2, member: 3 };
-    const ra = order[room.roles[a] || "member"];
-    const rb = order[room.roles[b] || "member"];
-    if (ra !== rb) return ra - rb;
-    return (usersById[a]?.name || "").localeCompare(usersById[b]?.name || "");
-  });
+  const roleOrder: Record<Role, number> = { owner: 0, admin: 1, mod: 2, member: 3 };
 
-  const online = ranked.filter(id => usersById[id]?.status !== "offline");
-  const offline = ranked.filter(id => usersById[id]?.status === "offline");
+  const online = allIds
+    .filter(id => usersById[id]?.status !== "offline")
+    .sort((a, b) => {
+      const ra = roleOrder[room.roles[a] || "member"];
+      const rb = roleOrder[room.roles[b] || "member"];
+      if (ra !== rb) return ra - rb;
+      return (usersById[a]?.name || "").localeCompare(usersById[b]?.name || "");
+    });
+
+  // Offline sorted by most-recently-seen first (latest at top).
+  const offlineSorted = allIds
+    .filter(id => usersById[id]?.status === "offline")
+    .sort((a, b) => (usersById[b]?.lastSeen ?? 0) - (usersById[a]?.lastSeen ?? 0));
+
+  const OFFLINE_MIN = 20;
+  const offline = showAllOffline ? offlineSorted : offlineSorted.slice(0, OFFLINE_MIN);
+  const hiddenOffline = offlineSorted.length - offline.length;
 
 
   return (
