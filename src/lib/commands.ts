@@ -304,6 +304,27 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       if (!arg) return { replies: [{ text: "Usage: !me <action>" }] };
       return { replies: [{ text: `_* ${ctx.state.me.name} ${arg} *_` }] };
     }
+
+    case "mute":
+    case "kick": {
+      const targetName = arg.replace(/^@/, "").trim().split(/\s+/)[0];
+      if (!targetName) return { replies: [{ text: `Usage: /${cmd} @username` }] };
+      const users = ctx.state.users as Record<string, User>;
+      const me = ctx.state.me as User;
+      const target = Object.values(users).find(
+        u => u.id !== "me" && u.name.toLowerCase() === targetName.toLowerCase()
+      );
+      if (!target) return { replies: [{ text: `❓ User **@${targetName}** not found here.` }] };
+      const meBadges = (me.badges ?? []).length;
+      const targetBadges = (target.badges ?? []).length;
+      if (meBadges <= targetBadges) {
+        return { replies: [{ text: `🛡️ ${who} can't /${cmd} **@${target.name}** — your rank (${meBadges} 🏅) must be higher than theirs (${targetBadges} 🏅).` }] };
+      }
+      return {
+        replies: [],
+        moderation: { targetId: target.id, targetName: target.name, action: cmd as "mute" | "kick", actorBadges: meBadges, targetBadges },
+      };
+    }
   }
 
   return { replies: [{ text: `Unknown command: !${cmd}. Try !help` }] };
