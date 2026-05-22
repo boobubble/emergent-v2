@@ -81,14 +81,18 @@ function seed(name = "user0000"): State {
   SEED_ROOMS.forEach(r => (rooms[r.id] = r));
   const messages: Record<string, Message[]> = {};
   rooms.lobby && (messages.lobby = [
-    { id: "seed-welcome", channelId: "lobby", authorId: "bot-gamebot", text: "Welcome to Palrgo! Type !help to see commands.", ts: SEED_TIME - 60000 },
-    { id: "seed-nova", channelId: "lobby", authorId: "bot-nova", text: "hey everyone 👋", ts: SEED_TIME - 40000 },
+    { id: "seed-welcome", channelId: "lobby", authorId: "bot-gamebot", text: `🎉 Welcome to Palrgo, @${name}! Glad to have you here. Type !help to see commands, customize your profile from the account page, and jump into a game anytime.`, ts: SEED_TIME - 60000 },
+    { id: "seed-nova", channelId: "lobby", authorId: "bot-nova", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
     { id: "seed-ryze", channelId: "lobby", authorId: "bot-ryze", text: "anyone up for trivia?", ts: SEED_TIME - 20000 },
   ]);
+  // Personal welcome DM from GameBot
+  messages["dm:bot-gamebot"] = [
+    { id: "seed-dm-welcome", channelId: "dm:bot-gamebot", authorId: "bot-gamebot", text: `Hi @${name}! 👋 I'm GameBot. Here's a quick start:\n• Type !help to see all commands\n• Try !trivia, !hangman, or !wordchain to play games\n• Earn XP, coins, and badges as you chat\n• Add friends from any user's profile\nHave fun! 🎮`, ts: SEED_TIME - 10000 },
+  ];
   return {
     me, users, rooms,
     roomOrder: SEED_ROOMS.map(r => r.id),
-    dmOrder: ["bot-nova"],
+    dmOrder: ["bot-gamebot", "bot-nova"],
     messages,
     games: {},
     activeChannel: "lobby",
