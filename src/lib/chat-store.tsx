@@ -4,6 +4,14 @@ import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
 import { useRemoteProfiles } from "./use-remote-profiles";
+import { playDmPing } from "./sounds";
+import gamebotImg from "@/assets/bots/gamebot.png";
+import novaImg from "@/assets/bots/nova.png";
+import pixelImg from "@/assets/bots/pixel.png";
+import echoImg from "@/assets/bots/echo.png";
+import ryzeImg from "@/assets/bots/ryze.png";
+import digbotImg from "@/assets/bots/digbot.png";
+import fishbotImg from "@/assets/bots/fishbot.png";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUuid(s: string) { return UUID_RE.test(s); }
@@ -74,13 +82,13 @@ function normalizeMe(state: State, fallbackName = generateUsername()): State {
 }
 
 const SEED_BOTS: User[] = [
-  { id: "bot-gamebot", name: "GameBot", avatarColor: "oklch(0.78 0.13 195)", status: "online", isBot: true, xp: 9999, level: 99, bio: "Run !help to see games", streak: 30, longestStreak: 99, messageCount: 1200, badges: ["first_message","chatterbox","veteran","level_5","level_10","level_25","streak_3","streak_7","streak_30","gamer"] },
-  { id: "bot-nova", name: "Nova", avatarColor: AVATAR_COLORS[3], status: "online", isBot: true, xp: 1240, level: 12, bio: "Casual chatter", streak: 5, longestStreak: 12, messageCount: 320, badges: ["first_message","chatterbox","level_5","level_10","streak_3"] },
-  { id: "bot-pixel", name: "Pixel", avatarColor: AVATAR_COLORS[5], status: "online", isBot: true, xp: 880, level: 9, bio: "Trivia addict", streak: 2, longestStreak: 8, messageCount: 210, badges: ["first_message","chatterbox","level_5","streak_3","gamer"] },
-  { id: "bot-echo", name: "Echo", avatarColor: AVATAR_COLORS[1], status: "away", isBot: true, xp: 410, level: 5, streak: 1, longestStreak: 4, messageCount: 88, badges: ["first_message","chatterbox","level_5"] },
-  { id: "bot-ryze", name: "Ryze", avatarColor: AVATAR_COLORS[0], status: "online", isBot: true, xp: 2100, level: 18, bio: "Mod & gamer", streak: 9, longestStreak: 21, messageCount: 540, badges: ["first_message","chatterbox","veteran","level_5","level_10","streak_3","streak_7","gamer"] },
-  { id: "bot-dig", name: "DigBot", avatarColor: AVATAR_COLORS[6], status: "online", isBot: true, xp: 1560, level: 14, bio: "⛏️ Digging for treasure. Try !dig", streak: 7, longestStreak: 18, messageCount: 410, badges: ["first_message","chatterbox","level_5","level_10","streak_3","streak_7","gamer"] },
-  { id: "bot-fish", name: "FishBot", avatarColor: AVATAR_COLORS[2], status: "online", isBot: true, xp: 1320, level: 13, bio: "🎣 Casting lines all day. Try !fish", streak: 4, longestStreak: 15, messageCount: 360, badges: ["first_message","chatterbox","level_5","level_10","streak_3","gamer"] },
+  { id: "bot-gamebot", name: "GameBot", avatarColor: "oklch(0.78 0.13 195)", avatarUrl: gamebotImg, status: "online", isBot: true, xp: 9999, level: 99, bio: "Run !help to see games", streak: 30, longestStreak: 99, messageCount: 1200, badges: ["first_message","chatterbox","veteran","level_5","level_10","level_25","streak_3","streak_7","streak_30","gamer"] },
+  { id: "bot-nova", name: "Nova", avatarColor: AVATAR_COLORS[3], avatarUrl: novaImg, status: "online", isBot: true, xp: 1240, level: 12, bio: "Casual chatter", streak: 5, longestStreak: 12, messageCount: 320, badges: ["first_message","chatterbox","level_5","level_10","streak_3"] },
+  { id: "bot-pixel", name: "Pixel", avatarColor: AVATAR_COLORS[5], avatarUrl: pixelImg, status: "online", isBot: true, xp: 880, level: 9, bio: "Trivia addict", streak: 2, longestStreak: 8, messageCount: 210, badges: ["first_message","chatterbox","level_5","streak_3","gamer"] },
+  { id: "bot-echo", name: "Echo", avatarColor: AVATAR_COLORS[1], avatarUrl: echoImg, status: "away", isBot: true, xp: 410, level: 5, streak: 1, longestStreak: 4, messageCount: 88, badges: ["first_message","chatterbox","level_5"] },
+  { id: "bot-ryze", name: "Ryze", avatarColor: AVATAR_COLORS[0], avatarUrl: ryzeImg, status: "online", isBot: true, xp: 2100, level: 18, bio: "Mod & gamer", streak: 9, longestStreak: 21, messageCount: 540, badges: ["first_message","chatterbox","veteran","level_5","level_10","streak_3","streak_7","gamer"] },
+  { id: "bot-dig", name: "DigBot", avatarColor: AVATAR_COLORS[6], avatarUrl: digbotImg, status: "online", isBot: true, xp: 1560, level: 14, bio: "⛏️ Digging for treasure. Try !dig", streak: 7, longestStreak: 18, messageCount: 410, badges: ["first_message","chatterbox","level_5","level_10","streak_3","streak_7","gamer"] },
+  { id: "bot-fish", name: "FishBot", avatarColor: AVATAR_COLORS[2], avatarUrl: fishbotImg, status: "online", isBot: true, xp: 1320, level: 13, bio: "🎣 Casting lines all day. Try !fish", streak: 4, longestStreak: 15, messageCount: 360, badges: ["first_message","chatterbox","level_5","level_10","streak_3","gamer"] },
 ];
 
 const SEED_ROOMS: Room[] = [
@@ -459,6 +467,9 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
             messages: { ...s.messages, [msg.channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts) },
           };
         });
+        if (msg.channelId.startsWith("dm:") && msg.authorId !== "me") {
+          playDmPing();
+        }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -545,6 +556,7 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
             const reply = pickBotReply(trimmed);
             const m: Message = { id: uid(), channelId, authorId: targetId, text: reply, ts: Date.now() + 600 };
             next = { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], m] } };
+            setTimeout(() => playDmPing(), 600);
           }
         }
       }
