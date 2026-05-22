@@ -1,7 +1,15 @@
-import { Crown, Shield, ShieldHalf, MessageCircle } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { Role } from "@/lib/chat-types";
 
 const ICONS: Record<Role, React.ReactNode> = {
@@ -12,7 +20,7 @@ const ICONS: Record<Role, React.ReactNode> = {
 };
 
 export function MembersPanel({ roomId }: { roomId: string }) {
-  const { state, startDM } = useChat();
+  const { state, startDM, setActive } = useChat();
   const room = state.rooms[roomId];
   if (!room) return null;
 
@@ -29,7 +37,68 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   return (
     <aside className="hidden h-full w-60 shrink-0 flex-col border-l border-border bg-card lg:flex">
-      <div className="px-5 pt-6">
+      <div className="flex items-center justify-end gap-1 px-3 pt-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              title="Direct messages"
+              aria-label="Direct messages"
+              className="relative grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+            >
+              <Inbox className="h-4 w-4" />
+              {state.dmOrder.length > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                  {state.dmOrder.length}
+                </span>
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuLabel>Direct messages</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {state.dmOrder.length === 0 ? (
+              <div className="px-2 py-3 text-xs text-muted-foreground">
+                No conversations yet. Click a member to start one.
+              </div>
+            ) : (
+              state.dmOrder.map(uid => {
+                const u = state.users[uid];
+                if (!u) return null;
+                return (
+                  <DropdownMenuItem key={uid} onClick={() => setActive(`dm:${uid}`)} className="gap-2">
+                    <Avatar user={u} size={24} />
+                    <span className="truncate">{u.name}</span>
+                    <span
+                      className={`ml-auto h-2 w-2 rounded-full ${
+                        u.status === "online" ? "bg-primary" : "bg-muted-foreground/40"
+                      }`}
+                    />
+                  </DropdownMenuItem>
+                );
+              })
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              title="Notifications"
+              aria-label="Notifications"
+              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+            >
+              <Bell className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <div className="px-2 py-3 text-xs text-muted-foreground">You're all caught up.</div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div className="px-5 pt-3">
         <h2 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
           Members &mdash; {room.members.length}
         </h2>
