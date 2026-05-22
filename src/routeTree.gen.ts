@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
@@ -17,6 +18,11 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -38,12 +44,14 @@ const UUsernameRoute = UUsernameRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/achievements': typeof AchievementsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/u/$username': typeof UUsernameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/achievements': typeof AchievementsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/u/$username': typeof UUsernameRoute
 }
@@ -51,20 +59,33 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/achievements': typeof AchievementsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/u/$username': typeof UUsernameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/leaderboard' | '/u/$username'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/achievements'
+    | '/leaderboard'
+    | '/u/$username'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/leaderboard' | '/u/$username'
-  id: '__root__' | '/' | '/account' | '/leaderboard' | '/u/$username'
+  to: '/' | '/account' | '/achievements' | '/leaderboard' | '/u/$username'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/achievements'
+    | '/leaderboard'
+    | '/u/$username'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
+  AchievementsRoute: typeof AchievementsRoute
   LeaderboardRoute: typeof LeaderboardRoute
   UUsernameRoute: typeof UUsernameRoute
 }
@@ -76,6 +97,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -105,6 +133,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
+  AchievementsRoute: AchievementsRoute,
   LeaderboardRoute: LeaderboardRoute,
   UUsernameRoute: UUsernameRoute,
 }
