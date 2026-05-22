@@ -19,9 +19,9 @@ export function AuthScreen() {
       if (mode === "login") {
         await login(email, password);
       } else {
-        const wordCount = username.trim().split(/\s+/).filter(Boolean).length;
-        if (wordCount < 2 || wordCount > 10) {
-          throw new Error("Username must be between 2 and 10 words.");
+        const letterCount = username.trim().replace(/[^a-zA-Z]/g, "").length;
+        if (letterCount < 2 || letterCount > 10) {
+          throw new Error("Username must contain between 2 and 10 letters.");
         }
         if (!gender) throw new Error("Please select your gender.");
         await signup(email, password, username.trim(), gender);
@@ -79,7 +79,7 @@ export function AuthScreen() {
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Username</label>
                 <input value={username} onChange={e => setUsername(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. cool user" />
-                <p className="mt-1 text-[10px] text-muted-foreground">Must be 2 to 10 words.</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">Must contain 2 to 10 letters.</p>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Gender</label>
