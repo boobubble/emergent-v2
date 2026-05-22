@@ -16,12 +16,52 @@ export function MessageInput() {
   const [showEmoji, setShowEmoji] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
+  const [caret, setCaret] = useState(0);
+  const [mentionIdx, setMentionIdx] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const suggestions = text.startsWith("!")
     ? COMMANDS.filter(c => c.startsWith(text.split(" ")[0])).slice(0, 5)
     : [];
+
+  const mentionMatch = (() => {
+    const before = text.slice(0, caret);
+    const m = before.match(/(?:^|\s)@([\w-]*)$/);
+    if (!m) return null;
+    return { query: m[1].toLowerCase(), start: caret - m[1].length - 1 };
+  })();
+  const mentionSuggestions = mentionMatch
+    ? Object.values(state.users)
+        .filter(u => u.id !== "me" && u.name.toLowerCase().includes(mentionMatch.query))
+        .sort((a, b) => {
+          const aStarts = a.name.toLowerCase().startsWith(mentionMatch.query) ? 0 : 1;
+          const bStarts = b.name.toLowerCase().startsWith(mentionMatch.query) ? 0 : 1;
+          if (aStarts !== bStarts) return aStarts - bStarts;
+          const aOn = a.status === "online" ? 0 : 1;
+          const bOn = b.status === "online" ? 0 : 1;
+          if (aOn !== bOn) return aOn - bOn;
+          return a.name.localeCompare(b.name);
+        })
+        .slice(0, 6)
+    : [];
+
+  useEffect(() => { setMentionIdx(0); }, [mentionMatch?.query]);
+
+  function applyMention(name: string) {
+    if (!mentionMatch) return;
+    const before = text.slice(0, mentionMatch.start);
+    const after = text.slice(caret);
+    const inserted = `@${name} `;
+    const next = before + inserted + after;
+    setText(next);
+    const pos = (before + inserted).length;
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange(pos, pos);
+      setCaret(pos);
+    });
+  }
 
   useEffect(() => {
     if (inputRef.current) {
@@ -43,6 +83,16 @@ export function MessageInput() {
   }
 
   function onKey(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (mentionSuggestions.length > 0) {
+      if (e.key === "ArrowDown") { e.preventDefault(); setMentionIdx(i => (i + 1) % mentionSuggestions.length); return; }
+      if (e.key === "ArrowUp") { e.preventDefault(); setMentionIdx(i => (i - 1 + mentionSuggestions.length) % mentionSuggestions.length); return; }
+      if (e.key === "Tab" || (e.key === "Enter" && !e.shiftKey)) {
+        e.preventDefault();
+        applyMention(mentionSuggestions[mentionIdx].name);
+        return;
+      }
+      if (e.key === "Escape") { e.preventDefault(); setCaret(-1); return; }
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       submit();
@@ -108,6 +158,27 @@ export function MessageInput() {
           ))}
         </div>
       )}
+      {mentionSuggestions.length > 0 && (
+        <div className="mb-2 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+          {mentionSuggestions.map((u, i) => (
+            <button
+              key={u.id}
+              onMouseDown={e => { e.preventDefault(); applyMention(u.name); }}
+              onMouseEnter={() => setMentionIdx(i)}
+              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${i === mentionIdx ? "bg-primary/15 text-primary" : "hover:bg-white/5"}`}
+            >
+              <span
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-[10px] font-bold text-white"
+                style={{ background: u.avatarColor }}
+              >
+                {u.name.slice(0, 1).toUpperCase()}
+              </span>
+              <span className="flex-1 truncate font-medium">@{u.name}</span>
+              <span className={`h-1.5 w-1.5 rounded-full ${u.status === "online" ? "bg-green-400" : u.status === "away" ? "bg-yellow-400" : "bg-muted-foreground/40"}`} />
+            </button>
+          ))}
+        </div>
+      )}
       {showEmoji && (
         <div className="mb-2 flex flex-wrap gap-1 rounded-2xl border border-border bg-card p-2">
           {EMOJIS.map(e => (
@@ -142,7 +213,7 @@ export function MessageInput() {
         <button onClick={() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !"))} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Command">
           <Sparkles className="h-5 w-5" />
         </button>
-        <textarea ref={inputRef} value={text} onChange={e => setText(e.target.value)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help"} className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
+        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help or @mention"} className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
         <button onClick={() => setShowEmoji(s => !s)} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground">
           <Smile className="h-5 w-5" />
         </button>
