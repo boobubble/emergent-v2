@@ -126,10 +126,24 @@ function ensureWelcome(state: State, name: string): State {
   };
 }
 
+function ensureBots(state: State): State {
+  const users = { ...state.users };
+  SEED_BOTS.forEach(b => { if (!users[b.id]) users[b.id] = b; });
+  const rooms = { ...state.rooms };
+  const lobby = rooms.lobby;
+  if (lobby) {
+    const missingBots = SEED_BOTS.map(b => b.id).filter(id => !lobby.members.includes(id));
+    if (missingBots.length) {
+      rooms.lobby = { ...lobby, members: [...lobby.members, ...missingBots] };
+    }
+  }
+  return { ...state, users, rooms };
+}
+
 function load(username: string): State {
   try {
     const raw = localStorage.getItem(storageKeyFor(username));
-    if (raw) return ensureWelcome(normalizeMe(JSON.parse(raw), username), username);
+    if (raw) return ensureBots(ensureWelcome(normalizeMe(JSON.parse(raw), username), username));
   } catch {}
   return seed(username);
 }
