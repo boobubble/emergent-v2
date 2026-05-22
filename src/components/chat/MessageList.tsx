@@ -166,6 +166,12 @@ export function MessageList({ channelId }: { channelId: string }) {
                       );
                     })}
                   </div>
+                  {g.some(m => m.id === lastSeenMeId) && (
+                    <div className="mt-1 flex items-center gap-1 pr-1 text-[10px] font-medium text-primary/80">
+                      <CheckCheck className="h-3 w-3" />
+                      <span>Seen</span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
