@@ -24,13 +24,23 @@ export const Route = createFileRoute("/feed")({
 });
 
 type Tab = "foryou" | "trending" | "latest" | "friends";
-type View = "feed" | "account";
+type View = "feed" | "account" | "profile";
+
+function getInitialView(): { view: View; username: string } {
+  if (typeof window === "undefined") return { view: "feed", username: "" };
+  const sp = new URLSearchParams(window.location.search);
+  if (sp.get("u")) return { view: "profile", username: sp.get("u") || "" };
+  if (sp.get("tab") === "account") return { view: "account", username: "" };
+  return { view: "feed", username: "" };
+}
 
 function FeedPage() {
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [tab, setTab] = useState<Tab>("foryou");
-  const [view, setView] = useState<View>(() => (typeof window !== "undefined" && window.location.search.includes("tab=account") ? "account" : "feed"));
+  const initial = getInitialView();
+  const [view, setView] = useState<View>(initial.view);
+  const [profileUsername, setProfileUsername] = useState<string>(initial.username);
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
