@@ -174,6 +174,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           messages: { ...next.messages, [channelId]: [...next.messages[channelId], ...sysMsgs] },
           games: result.gameUpdate ? { ...next.games, [channelId]: result.gameUpdate } : next.games,
         };
+        if (result.buzz && typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("palrgo:buzz", {
+            detail: { actor: s.me.name, reason: result.buzz.reason },
+          }));
+        }
       } else {
         // Maybe one bot responds
         const room = next.rooms[channelId];
