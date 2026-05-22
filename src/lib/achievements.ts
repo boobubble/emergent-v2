@@ -58,10 +58,10 @@ export const BADGE_MAP: Record<string, Badge> = Object.fromEntries(
 );
 
 export const TIER_COLOR: Record<Badge["tier"], string> = {
-  bronze: "from-amber-700/30 to-amber-900/20 text-amber-400 border-amber-700/40",
-  silver: "from-slate-400/30 to-slate-600/20 text-slate-200 border-slate-400/40",
-  gold: "from-yellow-400/30 to-yellow-600/20 text-yellow-300 border-yellow-500/40",
-  legendary: "from-fuchsia-500/30 to-violet-700/20 text-fuchsia-200 border-fuchsia-500/50",
+  bronze: "from-amber-500/20 to-amber-700/10 text-amber-700 dark:text-amber-300 border-amber-600/40",
+  silver: "from-slate-400/25 to-slate-500/10 text-slate-700 dark:text-slate-200 border-slate-400/50",
+  gold: "from-yellow-400/25 to-yellow-600/10 text-yellow-700 dark:text-yellow-300 border-yellow-500/50",
+  legendary: "from-fuchsia-500/25 to-violet-600/15 text-fuchsia-700 dark:text-fuchsia-200 border-fuchsia-500/50",
 };
 
 export function evaluateBadges(u: User, ctx: BadgeContext): string[] {
