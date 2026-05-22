@@ -1,5 +1,7 @@
 import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+import { useAuth } from "@/lib/auth-store";
+import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
 import {
@@ -10,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Role } from "@/lib/chat-types";
+import type { Role, User } from "@/lib/chat-types";
 
 const ICONS: Record<Role, React.ReactNode> = {
   owner: <Crown className="h-3 w-3 text-warning" />,
@@ -21,19 +23,33 @@ const ICONS: Record<Role, React.ReactNode> = {
 
 export function MembersPanel({ roomId }: { roomId: string }) {
   const { state, startDM, setActive, closeDM } = useChat();
+  const { user: authUser } = useAuth();
+  const { profiles } = useRemoteProfiles();
   const room = state.rooms[roomId];
   if (!room) return null;
 
-  const ranked = [...room.members].sort((a, b) => {
+  // Merge bots/me from local seed with remote profiles (skip our own remote profile — "me" represents us).
+  const usersById: Record<string, User> = { ...state.users };
+  Object.entries(profiles).forEach(([id, u]) => {
+    if (authUser && id === authUser.id) return;
+    usersById[id] = u;
+  });
+
+  const localIds = room.members;
+  const remoteIds = Object.keys(profiles).filter(id => !authUser || id !== authUser.id);
+  const allIds = Array.from(new Set([...localIds, ...remoteIds]));
+
+  const ranked = allIds.sort((a, b) => {
     const order: Record<Role, number> = { owner: 0, admin: 1, mod: 2, member: 3 };
     const ra = order[room.roles[a] || "member"];
     const rb = order[room.roles[b] || "member"];
     if (ra !== rb) return ra - rb;
-    return (state.users[a]?.name || "").localeCompare(state.users[b]?.name || "");
+    return (usersById[a]?.name || "").localeCompare(usersById[b]?.name || "");
   });
 
-  const online = ranked.filter(id => state.users[id]?.status !== "offline");
-  const offline = ranked.filter(id => state.users[id]?.status === "offline");
+  const online = ranked.filter(id => usersById[id]?.status !== "offline");
+  const offline = ranked.filter(id => usersById[id]?.status === "offline");
+
 
   return (
     <aside className="hidden h-full w-60 shrink-0 flex-col border-l border-border bg-card lg:flex">
@@ -112,7 +128,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
       <div className="px-5 pt-3">
         <h2 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          Members &mdash; {room.members.length}
+          Members &mdash; {allIds.length}
         </h2>
       </div>
 
@@ -169,7 +185,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     role: Role;
     onClick: () => void;
   }) {
-    const u = state.users[id];
+    const u = usersById[id];
     if (!u) return null;
     return (
       <div className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2 transition-colors hover:bg-white/5">
