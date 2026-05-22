@@ -1,9 +1,9 @@
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, X } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 
 export function ChatHeader() {
-  const { state, isDM, dmUser, channelLabel } = useChat();
+  const { state, isDM, dmUser, channelLabel, closeDM } = useChat();
   const id = state.activeChannel;
 
   if (isDM(id)) {
@@ -24,6 +24,13 @@ export function ChatHeader() {
             </div>
           </div>
         </div>
+        <button
+          onClick={() => closeDM(u.id)}
+          aria-label="Close DM"
+          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-destructive/15 hover:text-destructive"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </header>
     );
   }
