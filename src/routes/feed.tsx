@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
-import { FriendsWidget, HashtagsWidget, LeaderboardWidget, StreakWidget } from "@/components/feed/SideWidgets";
+import { FriendsWidget, HashtagsWidget, LeaderboardWidget, StreakWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
 import { AccountPanel } from "@/components/feed/AccountPanel";
 import { ProfilePanel } from "@/components/feed/ProfilePanel";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
@@ -220,6 +220,7 @@ function FeedPage() {
           <div className="sticky top-20 space-y-4">
             <FriendsWidget meId={meId} profiles={profiles} />
             <HashtagsWidget />
+            <ChatroomOnlineWidget profiles={profiles} />
             <LeaderboardWidget profiles={profiles} />
             <StreakWidget profiles={profiles} />
           </div>
