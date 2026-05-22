@@ -419,7 +419,7 @@ export function ChatProvider({ username, children }: { username: string; childre
           const targetId = channelId.slice(3);
           const target = next.users[targetId];
           if (target?.isBot) {
-            const reply = BOT_REPLIES[Math.floor(Math.random() * BOT_REPLIES.length)];
+            const reply = pickBotReply(trimmed);
             const m: Message = { id: uid(), channelId, authorId: targetId, text: reply, ts: Date.now() + 600 };
             next = { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], m] } };
           }
