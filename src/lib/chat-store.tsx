@@ -474,15 +474,29 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
     const attachment = opts?.attachment;
     const replyToId = opts?.replyToId;
     if (!trimmed && !attachment) return;
+    const activeChannel = (typeof window !== "undefined") ? undefined : undefined;
+    void activeChannel;
+    let outgoingRemote: { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null } | null = null;
     setState(s => {
       const channelId = s.activeChannel;
       const isCmd = trimmed.startsWith("!");
+      const remote = authUserId && isRemoteChannel(channelId, authUserId);
+      const msgId = remote ? newUuid() : uid();
       const userMsg: Message = {
-        id: uid(), channelId, authorId: "me",
+        id: msgId, channelId, authorId: "me",
         text: trimmed, ts: Date.now(),
         kind: trimmed.startsWith("/me ") ? "me" : "text",
         attachment, replyToId,
       };
+      if (remote) {
+        seenRemoteMsgIds.current.add(msgId);
+        outgoingRemote = {
+          id: msgId, channelId, text: trimmed,
+          kind: userMsg.kind ?? "text",
+          attachment: attachment ?? null,
+          replyToId: replyToId ?? null,
+        };
+      }
       const existing = s.messages[channelId] || [];
       const meXp = (s.me.xp ?? 0) + 1;
       const meMsgCount = (s.me.messageCount ?? 0) + 1;
