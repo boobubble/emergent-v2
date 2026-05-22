@@ -23,7 +23,8 @@ export function AuthScreen() {
         if (wordCount < 2 || wordCount > 10) {
           throw new Error("Username must be between 2 and 10 words.");
         }
-        await signup(email, password, username.trim());
+        if (!gender) throw new Error("Please select your gender.");
+        await signup(email, password, username.trim(), gender);
         setInfo("Account created! Check your email to confirm, then sign in.");
         setMode("login");
       }
