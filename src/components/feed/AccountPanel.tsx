@@ -18,7 +18,17 @@ export function AccountPanel() {
   const [name, setName] = useState(me.name);
   const [bio, setBio] = useState(me.bio ?? "");
   const [status, setStatus] = useState<typeof me.status>(me.status);
+  const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!auth?.id) return;
+    supabase.from("profiles").select("gender").eq("id", auth.id).maybeSingle()
+      .then(({ data }) => {
+        const g = (data as { gender?: string } | null)?.gender;
+        if (g === "male" || g === "female" || g === "other") setGender(g);
+      });
+  }, [auth?.id]);
 
   const friends = (me.friends ?? []).map(id => state.users[id]).filter(Boolean);
   const blocked = (me.blocked ?? []).map(id => state.users[id]).filter(Boolean);
@@ -32,7 +42,7 @@ export function AccountPanel() {
     reader.readAsDataURL(file);
   };
 
-  const save = () => {
+  const save = async () => {
     const trimmed = name.trim();
     const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
     if (wordCount < 2 || wordCount > 10) {
@@ -40,6 +50,9 @@ export function AccountPanel() {
       return;
     }
     updateMe({ name: trimmed, bio: bio.trim(), status });
+    if (auth?.id && gender) {
+      await supabase.from("profiles").update({ gender }).eq("id", auth.id);
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
   };
