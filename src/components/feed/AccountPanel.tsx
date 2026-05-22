@@ -103,6 +103,15 @@ export function AccountPanel() {
                 ))}
               </div>
             </Field>
+            <Field label="Gender">
+              <div className="flex gap-2">
+                {(["male", "female", "other"] as const).map(g => (
+                  <button key={g} onClick={() => setGender(g)} className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider capitalize transition ${gender === g ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}>
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </Field>
             <div className="flex items-center gap-3 pt-2">
               <button onClick={save} className="flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground hover:opacity-90">
                 <Save className="h-4 w-4" /> Save changes
