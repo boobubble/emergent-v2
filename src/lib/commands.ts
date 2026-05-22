@@ -152,6 +152,50 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       };
     }
 
+    case "wine": {
+      const wines = [
+        { name: "House Red", emoji: "🍷", xp: 2, rarity: "common" },
+        { name: "House White", emoji: "🥂", xp: 2, rarity: "common" },
+        { name: "Rosé", emoji: "🌸🍷", xp: 3, rarity: "common" },
+        { name: "Chardonnay", emoji: "🥂", xp: 4, rarity: "uncommon" },
+        { name: "Merlot", emoji: "🍷", xp: 5, rarity: "uncommon" },
+        { name: "Cabernet Sauvignon", emoji: "🍷", xp: 7, rarity: "rare" },
+        { name: "Champagne", emoji: "🍾", xp: 12, rarity: "rare" },
+        { name: "Vintage Bordeaux", emoji: "🍷✨", xp: 25, rarity: "epic" },
+        { name: "Romanée-Conti 1945", emoji: "🍷👑", xp: 75, rarity: "legendary" },
+      ];
+      const beers = [
+        { name: "Lager", emoji: "🍺", xp: 1, rarity: "common" },
+        { name: "Pilsner", emoji: "🍺", xp: 2, rarity: "common" },
+        { name: "Pale Ale", emoji: "🍻", xp: 3, rarity: "common" },
+        { name: "IPA", emoji: "🍺", xp: 4, rarity: "uncommon" },
+        { name: "Wheat Beer", emoji: "🍺🌾", xp: 4, rarity: "uncommon" },
+        { name: "Stout", emoji: "🍺", xp: 6, rarity: "rare" },
+        { name: "Belgian Trippel", emoji: "🍻", xp: 10, rarity: "rare" },
+        { name: "Barrel-Aged Imperial Stout", emoji: "🛢️🍺", xp: 20, rarity: "epic" },
+        { name: "Westvleteren 12", emoji: "🍺👑", xp: 60, rarity: "legendary" },
+      ];
+      const menu = Math.random() < 0.5 ? wines : beers;
+      const kind = menu === wines ? "wine" : "beer";
+      const weights: Record<string, number> = { common: 45, uncommon: 30, rare: 15, epic: 8, legendary: 2 };
+      const pool: typeof menu = [];
+      menu.forEach(d => { for (let i = 0; i < weights[d.rarity]; i++) pool.push(d); });
+      const drink = pool[Math.floor(Math.random() * pool.length)];
+      const qty = 1 + Math.floor(Math.random() * 6); // 1–6 servings
+      const unit = kind === "wine" ? (qty === 1 ? "glass" : "glasses") : (qty === 1 ? "pint" : "pints");
+      const totalXp = drink.xp * qty;
+      const tag =
+        drink.rarity === "legendary" ? "🌟 **LEGENDARY POUR!**" :
+        drink.rarity === "epic" ? "💜 *Top shelf*" :
+        drink.rarity === "rare" ? "✨ Rare" :
+        drink.rarity === "uncommon" ? "Uncommon" : "Common";
+      const rare = drink.rarity === "rare" || drink.rarity === "epic" || drink.rarity === "legendary";
+      return {
+        replies: [{ text: `🍷 **Wine** serves ${who} ${qty} ${unit} of ${drink.emoji} **${drink.name}** — cheers! 🥂 (+${totalXp} XP) — ${tag}` }],
+        ...(rare ? { buzz: { reason: `${drink.emoji} ${qty}× ${drink.name}` } } : {}),
+      };
+    }
+
     case "trivia": {
       if (game && game.type) {
         return { replies: [{ text: `⏳ A **${game.type}** game is already in progress in this room. Jump in and play!` }] };
