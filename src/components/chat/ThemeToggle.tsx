@@ -4,12 +4,12 @@ import { Moon, Sun } from "lucide-react";
 type Theme = "dark" | "light";
 
 function getInitial(): Theme {
-  if (typeof window === "undefined") return "dark";
-  return (localStorage.getItem("palrgo-theme") as Theme) || "dark";
+  if (typeof window === "undefined") return "light";
+  return (localStorage.getItem("palrgo-theme") as Theme) || "light";
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
     const t = getInitial();
