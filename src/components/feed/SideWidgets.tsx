@@ -137,6 +137,38 @@ export function StreakWidget({ profiles }: { profiles: Record<string, User> }) {
     </Card>
   );
 }
+export function ChatroomOnlineWidget({ profiles }: { profiles: Record<string, User> }) {
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const ch = supabase
+      .channel("chatroom-presence")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => setTick((t) => t + 1))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, []);
+
+  // tick is a re-render trigger so realtime profile changes refresh the list
+  void tick;
+
+  const online = Object.values(profiles).filter((u) => u.status === "online");
+  return (
+    <Card title={`Online in chatrooms (${online.length})`} icon={<Radio className="h-3.5 w-3.5 text-green-500" />}>
+      {online.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Nobody online right now.</p>
+      ) : (
+        online.slice(0, 8).map((u) => (
+          <Link key={u.id} to="/" className="flex items-center gap-2 rounded-lg py-1.5 hover:bg-accent">
+            <Avatar user={u} size={24} />
+            <span className="flex-1 truncate text-sm">{u.name}</span>
+            <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.8)]" />
+          </Link>
+        ))
+      )}
+    </Card>
+  );
+}
+
 
 function Card({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
