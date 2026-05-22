@@ -30,6 +30,7 @@ const HELP = `**Commands**
 !slots — spin the slot machine
 !fish — cast a line and catch a fish
 !dig — dig for gold and diamonds
+!wine — order wine & beer by the round 🍷🍺
 !trivia — start a trivia question (answer with !a <choice>)
 !hangman — start hangman (guess with !g <letter>)
 !blackjack — quick blackjack hand
