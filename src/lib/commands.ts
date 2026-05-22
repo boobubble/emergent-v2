@@ -59,13 +59,6 @@ function roll(spec: string): string {
   return `🎲 ${spec} → [${rolls.join(", ")}] = **${total}**`;
 }
 
-function drawCard(): { c: string; v: number } {
-  const suits = ["♠", "♥", "♦", "♣"];
-  const ranks = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
-  const vals =   [11, 2, 3, 4, 5, 6, 7, 8, 9, 10,10,10,10];
-  const i = Math.floor(Math.random() * 13);
-  return { c: `${ranks[i]}${suits[Math.floor(Math.random()*4)]}`, v: vals[i] };
-}
 
 export function runCommand(input: string, ctx: CmdCtx): CmdResult {
   const [rawCmd, ...rest] = input.slice(1).split(/\s+/);
