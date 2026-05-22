@@ -4,6 +4,14 @@ import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
 import { useRemoteProfiles } from "./use-remote-profiles";
+import { playDmPing } from "./sounds";
+import gamebotImg from "@/assets/bots/gamebot.png";
+import novaImg from "@/assets/bots/nova.png";
+import pixelImg from "@/assets/bots/pixel.png";
+import echoImg from "@/assets/bots/echo.png";
+import ryzeImg from "@/assets/bots/ryze.png";
+import digbotImg from "@/assets/bots/digbot.png";
+import fishbotImg from "@/assets/bots/fishbot.png";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUuid(s: string) { return UUID_RE.test(s); }
