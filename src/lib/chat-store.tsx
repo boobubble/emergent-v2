@@ -131,11 +131,18 @@ const BOT_REPLIES = [
 ];
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<State>(() => load());
+  const [state, setState] = useState<State>(() => seed());
+  const [storageReady, setStorageReady] = useState(false);
 
   useEffect(() => {
+    setState(load());
+    setStorageReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-  }, [state]);
+  }, [state, storageReady]);
 
   // Ambient bot chatter in active public room
   useEffect(() => {
@@ -270,7 +277,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const reset = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
-    setState(seed());
+    setState(seed(generateUsername()));
   }, []);
 
   const value = useMemo<Ctx>(() => ({
