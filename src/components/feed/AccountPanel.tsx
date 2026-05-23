@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { ACCENTS, useAccent } from "@/lib/use-accent";
 import { supabase } from "@/integrations/supabase/client";
+import { useUsernameCheck } from "@/lib/use-username-check";
 
 export function AccountPanel() {
   const navigate = useNavigate();
