@@ -19,6 +19,7 @@ interface Ctx {
   loginWithGoogle: () => Promise<void>;
   loginAsGuest: (username?: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUsername: () => Promise<void>;
 }
 
 const AuthCtx = createContext<Ctx | null>(null);
