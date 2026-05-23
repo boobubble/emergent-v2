@@ -67,6 +67,15 @@ export function AuthScreen() {
           Continue with Google
         </button>
 
+        <button
+          type="button"
+          onClick={async () => { setErr(""); setBusy(true); try { await loginAsGuest(); } catch (e) { setErr(e instanceof Error ? e.message : "Guest login failed"); setBusy(false); } }}
+          disabled={busy}
+          className="mb-4 flex w-full items-center justify-center gap-2 rounded-full border border-dashed border-border bg-background px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+        >
+          👤 Continue as guest
+        </button>
+
         <div className="mb-4 flex items-center gap-3">
           <div className="h-px flex-1 bg-border" />
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">or</span>
