@@ -816,7 +816,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       }
       return badged.state;
     });
-  }, [authUserId]);
+  }, [authUserId, isGuest]);
 
   const closeDM = useCallback((userId: string) => {
     const channelId = dmChannelFor(authUserId, userId);
