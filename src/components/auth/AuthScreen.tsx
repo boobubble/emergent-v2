@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-store";
+import { useUsernameCheck } from "@/lib/use-username-check";
+
 
 export function AuthScreen() {
   const { login, signup, loginWithGoogle, loginAsGuest } = useAuth();
