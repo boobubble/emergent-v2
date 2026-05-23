@@ -582,6 +582,24 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     const attachment = opts?.attachment;
     const replyToId = opts?.replyToId;
     if (!trimmed && !attachment) return;
+    if (isGuest) {
+      const isCmdGuest = trimmed.startsWith("!") || /^\/(mute|kick)\b/i.test(trimmed);
+      const hasLink = /\b(https?:\/\/|www\.)\S+/i.test(trimmed) || /\b[\w-]+\.(com|net|org|io|co|app|dev|me|gg|xyz|info|link|site)\b/i.test(trimmed);
+      const reason = isCmdGuest
+        ? "🚫 Guests can't command bots — sign up to play and use commands."
+        : hasLink
+          ? "🚫 Guests can't post links — sign up to share links."
+          : null;
+      if (reason) {
+        setState(s => {
+          const ch = s.activeChannel;
+          const sys: Message = { id: uid(), channelId: ch, authorId: "bot-gamebot", text: reason, ts: Date.now(), kind: "system" };
+          return { ...s, messages: { ...s.messages, [ch]: [...(s.messages[ch] || []), sys] } };
+        });
+        setReplyingTo(null);
+        return;
+      }
+    }
     type Outgoing = { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null };
     const outgoingRemotes: Outgoing[] = [];
     setState(s => {
