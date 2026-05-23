@@ -155,6 +155,24 @@ export function AuthScreen() {
           {mode === "signup" && (
             <>
               <div>
+                <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Profile picture (optional)</label>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border border-border bg-input text-[10px] text-muted-foreground">
+                    {avatarDataUrl
+                      ? <img src={avatarDataUrl} alt="avatar preview" className="h-full w-full object-cover" />
+                      : <span>No image</span>}
+                  </div>
+                  <label className="flex-1 cursor-pointer rounded-full border border-dashed border-border bg-background px-3 py-2 text-center text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground">
+                    {avatarDataUrl ? "Change image" : "Choose image"}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => onPickAvatar(e.target.files?.[0] ?? null)} />
+                  </label>
+                  {avatarDataUrl && (
+                    <button type="button" onClick={() => setAvatarDataUrl("")} className="rounded-full border border-border px-3 py-2 text-[10px] font-semibold text-muted-foreground hover:bg-accent hover:text-foreground">Remove</button>
+                  )}
+                </div>
+                <p className="mt-1 text-[10px] text-muted-foreground">PNG or JPG, up to 2MB.</p>
+              </div>
+              <div>
                 <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Username</label>
                 <input value={username} onChange={e => setUsername(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. cool user" />
                 <UsernameHint status={usernameStatus} />
