@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Trophy, Flame } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { BADGE_MAP } from "@/lib/achievements";
 
@@ -18,9 +19,11 @@ export const Route = createFileRoute("/leaderboard")({
 });
 
 function LeaderboardPage() {
+  const { user } = useAuth();
   const { state, adjustPoints } = useChat();
   const [tab, setTab] = useState<"xp" | "streak">("xp");
-  const all = Object.values(state.users);
+  if (user?.isGuest) return <GuestBlock label="Leaderboard" />;
+  const all = Object.values(state.users).filter(u => !u.isGuest);
   const ranked = tab === "xp"
     ? [...all].sort((a, b) => b.xp - a.xp).slice(0, 25)
     : [...all].sort((a, b) => (b.streak ?? 0) - (a.streak ?? 0) || (b.longestStreak ?? 0) - (a.longestStreak ?? 0)).slice(0, 25);
