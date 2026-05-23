@@ -56,6 +56,14 @@ export function AccountPanel() {
       alert("Username must contain 2 to 10 letters.");
       return;
     }
+    if (nameChanged && usernameStatus.state === "error") {
+      alert(usernameStatus.message);
+      return;
+    }
+    if (nameChanged && usernameStatus.state !== "ok") {
+      alert("Checking username, please wait…");
+      return;
+    }
     updateMe({ name: trimmed, bio: bio.trim(), status });
     if (auth?.id) {
       const patch: { username: string; bio: string; status: typeof me.status; gender?: "male" | "female" | "other" } = {
