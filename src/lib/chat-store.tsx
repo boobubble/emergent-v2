@@ -793,9 +793,16 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       ).then(({ error }) => { if (error) console.error("send failed", error); });
     }
     setReplyingTo(null);
-  }, [authUserId]);
+  }, [authUserId, isGuest]);
 
   const startDM = useCallback((userId: string) => {
+    if (isGuest) {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("palrgo:toast", { detail: { message: "🚫 Guest users not allowed DM. Sign up to message users." } }));
+        alert("Guest users not allowed DM. Sign up to message users.");
+      }
+      return;
+    }
     const channelId = dmChannelFor(authUserId, userId);
     setState(s => {
       const next: State = {
