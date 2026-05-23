@@ -55,7 +55,7 @@ export function AccountPanel() {
     }
     updateMe({ name: trimmed, bio: bio.trim(), status });
     if (auth?.id) {
-      const patch: Record<string, unknown> = {
+      const patch: { username: string; bio: string; status: typeof me.status; gender?: "male" | "female" | "other" } = {
         username: trimmed,
         bio: bio.trim(),
         status,
