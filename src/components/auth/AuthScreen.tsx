@@ -67,11 +67,6 @@ export function AuthScreen() {
   }
 
 
-  async function onGoogle() {
-    setErr(""); setBusy(true);
-    try { await loginWithGoogle(); }
-    catch (e: unknown) { setErr(e instanceof Error ? e.message : "Google sign-in failed"); setBusy(false); }
-  }
 
   return (
     <div className="grid min-h-screen place-items-center bg-background p-4 text-foreground">
