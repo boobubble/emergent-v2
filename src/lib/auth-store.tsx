@@ -94,12 +94,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (result.error) throw new Error(result.error.message || "Google sign-in failed");
   }, []);
 
+  const loginAsGuest = useCallback(async () => {
+    const { error } = await supabase.auth.signInAnonymously();
+    if (error) throw new Error(error.message);
+  }, []);
+
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
   }, []);
 
-  const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, logout }), [user, ready, login, signup, loginWithGoogle, logout]);
+  const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, loginAsGuest, logout }), [user, ready, login, signup, loginWithGoogle, loginAsGuest, logout]);
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 
