@@ -15,6 +15,7 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
 
 const LeaderboardRoute = LeaderboardRouteImport.update({
@@ -47,6 +48,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FeedSlugRoute = FeedSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => FeedRoute,
+} as any)
 const ApiPublicGuestCleanupRoute = ApiPublicGuestCleanupRouteImport.update({
   id: '/api/public/guest-cleanup',
   path: '/api/public/guest-cleanup',
@@ -57,8 +63,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
-  '/feed': typeof FeedRoute
+  '/feed': typeof FeedRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
+  '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
@@ -66,8 +73,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
-  '/feed': typeof FeedRoute
+  '/feed': typeof FeedRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
+  '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
@@ -76,8 +84,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
-  '/feed': typeof FeedRoute
+  '/feed': typeof FeedRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
+  '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/feed'
     | '/leaderboard'
+    | '/feed/$slug'
     | '/u/$username'
     | '/api/public/guest-cleanup'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/feed'
     | '/leaderboard'
+    | '/feed/$slug'
     | '/u/$username'
     | '/api/public/guest-cleanup'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/feed'
     | '/leaderboard'
+    | '/feed/$slug'
     | '/u/$username'
     | '/api/public/guest-cleanup'
   fileRoutesById: FileRoutesById
@@ -115,7 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AchievementsRoute: typeof AchievementsRoute
-  FeedRoute: typeof FeedRoute
+  FeedRoute: typeof FeedRouteWithChildren
   LeaderboardRoute: typeof LeaderboardRoute
   UUsernameRoute: typeof UUsernameRoute
   ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
@@ -165,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/feed/$slug': {
+      id: '/feed/$slug'
+      path: '/$slug'
+      fullPath: '/feed/$slug'
+      preLoaderRoute: typeof FeedSlugRouteImport
+      parentRoute: typeof FeedRoute
+    }
     '/api/public/guest-cleanup': {
       id: '/api/public/guest-cleanup'
       path: '/api/public/guest-cleanup'
@@ -175,11 +194,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface FeedRouteChildren {
+  FeedSlugRoute: typeof FeedSlugRoute
+}
+
+const FeedRouteChildren: FeedRouteChildren = {
+  FeedSlugRoute: FeedSlugRoute,
+}
+
+const FeedRouteWithChildren = FeedRoute._addFileChildren(FeedRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AchievementsRoute: AchievementsRoute,
-  FeedRoute: FeedRoute,
+  FeedRoute: FeedRouteWithChildren,
   LeaderboardRoute: LeaderboardRoute,
   UUsernameRoute: UUsernameRoute,
   ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,
