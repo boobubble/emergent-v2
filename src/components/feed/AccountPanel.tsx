@@ -21,6 +21,8 @@ export function AccountPanel() {
   const [status, setStatus] = useState<typeof me.status>(me.status);
   const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
   const [saved, setSaved] = useState(false);
+  const nameChanged = name.trim().toLowerCase() !== me.name.toLowerCase();
+  const usernameStatus = useUsernameCheck(nameChanged ? name : "", auth?.id);
 
   useEffect(() => {
     if (!auth?.id) return;
