@@ -1,5 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-store";
+import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check";
+
+function UsernameHint({ status }: { status: UsernameStatus }) {
+  if (status.state === "idle") return null;
+  if (status.state === "checking") return <p className="mt-1 text-[10px] text-muted-foreground">Checking…</p>;
+  if (status.state === "ok") return <p className="mt-1 text-[10px] font-semibold text-primary">✓ Available</p>;
+  return <p className="mt-1 text-[10px] font-semibold text-destructive">{status.message}</p>;
+}
+
+
 
 export function AuthScreen() {
   const { login, signup, loginWithGoogle, loginAsGuest } = useAuth();
@@ -14,6 +24,9 @@ export function AuthScreen() {
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const usernameStatus = useUsernameCheck(mode === "signup" ? username : "");
+  const guestStatus = useUsernameCheck(showGuest ? guestName : "");
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setErr(""); setInfo(""); setBusy(true);
@@ -26,6 +39,8 @@ export function AuthScreen() {
           throw new Error("Username must contain between 2 and 10 letters.");
         }
         if (!gender) throw new Error("Please select your gender.");
+        if (usernameStatus.state === "error") throw new Error(usernameStatus.message);
+        if (usernameStatus.state !== "ok") throw new Error("Checking username, please wait…");
         await signup(email, password, username.trim(), gender);
         setInfo("Account created! Check your email to confirm, then sign in.");
         setMode("login");
@@ -36,6 +51,7 @@ export function AuthScreen() {
       setBusy(false);
     }
   }
+
 
   async function onGoogle() {
     setErr(""); setBusy(true);
@@ -88,6 +104,7 @@ export function AuthScreen() {
               placeholder="e.g. nova"
               className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
             />
+            <UsernameHint status={guestStatus} />
             <p className="mt-1 text-[10px] text-muted-foreground">2–10 letters. Profile is temporary and removed when you leave.</p>
             <div className="mt-2 flex gap-2">
               <button
@@ -126,6 +143,7 @@ export function AuthScreen() {
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Username</label>
                 <input value={username} onChange={e => setUsername(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. cool user" />
+                <UsernameHint status={usernameStatus} />
                 <p className="mt-1 text-[10px] text-muted-foreground">Must contain 2 to 10 letters.</p>
               </div>
               <div>
@@ -155,7 +173,7 @@ export function AuthScreen() {
           </div>
           {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
           {info && <div className="rounded-lg bg-primary/15 px-3 py-2 text-xs text-primary">{info}</div>}
-          <button disabled={busy} type="submit" className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" style={{ background: "var(--gradient-accent, var(--primary))" }}>
+          <button disabled={busy || (mode === "signup" && usernameStatus.state !== "ok")} type="submit" className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" style={{ background: "var(--gradient-accent, var(--primary))" }}>
             {busy ? "..." : mode === "login" ? "Sign in" : "Create account"}
           </button>
         </form>

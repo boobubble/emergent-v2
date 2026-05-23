@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
 import { Send, Smile, Sparkles, Paperclip, X, Reply } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+import { useAuth } from "@/lib/auth-store";
+import { useTyping } from "@/lib/use-typing";
 import type { Attachment } from "@/lib/chat-types";
 
 const COMMANDS = [
@@ -12,6 +14,9 @@ const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 export function MessageInput() {
   const { send, state, replyingTo, setReplyingTo } = useChat();
+  const { user } = useAuth();
+  const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
+  const { typers, sendTyping } = useTyping(state.activeChannel, me, !!me);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
@@ -205,6 +210,20 @@ export function MessageInput() {
         </div>
       )}
       {attachError && <div className="mb-2 px-3 text-xs text-destructive">{attachError}</div>}
+      {typers.length > 0 && (
+        <div className="mb-1 flex items-center gap-1.5 px-3 text-[11px] italic text-muted-foreground">
+          <span className="inline-flex gap-0.5">
+            <span className="h-1 w-1 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+            <span className="h-1 w-1 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+            <span className="h-1 w-1 animate-bounce rounded-full bg-primary" />
+          </span>
+          {typers.length === 1
+            ? `${typers[0].name} is typing…`
+            : typers.length === 2
+              ? `${typers[0].name} and ${typers[1].name} are typing…`
+              : `${typers.length} people are typing…`}
+        </div>
+      )}
       <div className="group relative flex items-end gap-1 rounded-3xl border border-border bg-white/5 py-2 pl-4 pr-2 transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/30">
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
         <button onClick={() => fileRef.current?.click()} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Attach file">
@@ -213,7 +232,7 @@ export function MessageInput() {
         <button onClick={() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !"))} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Command">
           <Sparkles className="h-5 w-5" />
         </button>
-        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help or @mention"} className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
+        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help or @mention"} className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
         <button onClick={() => setShowEmoji(s => !s)} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground">
           <Smile className="h-5 w-5" />
         </button>
