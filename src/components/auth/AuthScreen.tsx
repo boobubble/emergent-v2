@@ -18,6 +18,7 @@ export function AuthScreen() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
+  const [avatarDataUrl, setAvatarDataUrl] = useState<string>("");
   const [guestName, setGuestName] = useState("");
   const [showGuest, setShowGuest] = useState(false);
   const [err, setErr] = useState("");
@@ -26,6 +27,16 @@ export function AuthScreen() {
 
   const usernameStatus = useUsernameCheck(mode === "signup" ? username : "");
   const guestStatus = useUsernameCheck(showGuest ? guestName : "");
+
+  function onPickAvatar(file: File | null) {
+    setErr("");
+    if (!file) { setAvatarDataUrl(""); return; }
+    if (!file.type.startsWith("image/")) { setErr("Please select an image file."); return; }
+    if (file.size > 2 * 1024 * 1024) { setErr("Image must be under 2MB."); return; }
+    const reader = new FileReader();
+    reader.onload = () => setAvatarDataUrl(typeof reader.result === "string" ? reader.result : "");
+    reader.readAsDataURL(file);
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -41,6 +52,9 @@ export function AuthScreen() {
         if (!gender) throw new Error("Please select your gender.");
         if (usernameStatus.state === "error") throw new Error(usernameStatus.message);
         if (usernameStatus.state !== "ok") throw new Error("Checking username, please wait…");
+        if (avatarDataUrl) {
+          try { sessionStorage.setItem(`pending-avatar:${email.trim().toLowerCase()}`, avatarDataUrl); } catch { /* ignore quota */ }
+        }
         await signup(email, password, username.trim(), gender);
         setInfo("Account created! Check your email to confirm, then sign in.");
         setMode("login");
@@ -140,6 +154,24 @@ export function AuthScreen() {
         <form onSubmit={onSubmit} className="space-y-3">
           {mode === "signup" && (
             <>
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Profile picture (optional)</label>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border border-border bg-input text-[10px] text-muted-foreground">
+                    {avatarDataUrl
+                      ? <img src={avatarDataUrl} alt="avatar preview" className="h-full w-full object-cover" />
+                      : <span>No image</span>}
+                  </div>
+                  <label className="flex-1 cursor-pointer rounded-full border border-dashed border-border bg-background px-3 py-2 text-center text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground">
+                    {avatarDataUrl ? "Change image" : "Choose image"}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => onPickAvatar(e.target.files?.[0] ?? null)} />
+                  </label>
+                  {avatarDataUrl && (
+                    <button type="button" onClick={() => setAvatarDataUrl("")} className="rounded-full border border-border px-3 py-2 text-[10px] font-semibold text-muted-foreground hover:bg-accent hover:text-foreground">Remove</button>
+                  )}
+                </div>
+                <p className="mt-1 text-[10px] text-muted-foreground">PNG or JPG, up to 2MB.</p>
+              </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Username</label>
                 <input value={username} onChange={e => setUsername(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. cool user" />

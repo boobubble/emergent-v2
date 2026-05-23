@@ -34,6 +34,27 @@ async function fetchUsername(userId: string, fallbackEmail?: string): Promise<st
   return fallbackEmail?.split("@")[0] || "user";
 }
 
+async function flushPendingAvatar(userId: string, email?: string) {
+  if (!email) return;
+  const key = `pending-avatar:${email.toLowerCase()}`;
+  let dataUrl: string | null = null;
+  try { dataUrl = sessionStorage.getItem(key); } catch { return; }
+  if (!dataUrl) return;
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const ext = (blob.type.split("/")[1] || "png").replace(/[^a-z0-9]/gi, "") || "png";
+    const path = `${userId}/avatar-${Date.now()}.${ext}`;
+    const up = await supabase.storage.from("avatars").upload(path, blob, { contentType: blob.type, upsert: true });
+    if (up.error) throw up.error;
+    const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+    await supabase.from("profiles").update({ avatar_url: pub.publicUrl }).eq("id", userId);
+    try { sessionStorage.removeItem(key); } catch { /* ignore */ }
+  } catch (e) {
+    console.error("avatar upload failed", e);
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
@@ -46,6 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       const isGuest = Boolean((session.user as { is_anonymous?: boolean }).is_anonymous);
+      if (!isGuest) {
+        void flushPendingAvatar(session.user.id, session.user.email ?? undefined);
+      }
       const username = await fetchUsername(session.user.id, session.user.email ?? undefined);
       if (cancelled) return;
       setUser({ id: session.user.id, email: session.user.email ?? "", username, isGuest });
