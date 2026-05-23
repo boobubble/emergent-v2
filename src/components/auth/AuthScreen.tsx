@@ -18,6 +18,7 @@ export function AuthScreen() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
+  const [avatarDataUrl, setAvatarDataUrl] = useState<string>("");
   const [guestName, setGuestName] = useState("");
   const [showGuest, setShowGuest] = useState(false);
   const [err, setErr] = useState("");
@@ -26,6 +27,16 @@ export function AuthScreen() {
 
   const usernameStatus = useUsernameCheck(mode === "signup" ? username : "");
   const guestStatus = useUsernameCheck(showGuest ? guestName : "");
+
+  function onPickAvatar(file: File | null) {
+    setErr("");
+    if (!file) { setAvatarDataUrl(""); return; }
+    if (!file.type.startsWith("image/")) { setErr("Please select an image file."); return; }
+    if (file.size > 2 * 1024 * 1024) { setErr("Image must be under 2MB."); return; }
+    const reader = new FileReader();
+    reader.onload = () => setAvatarDataUrl(typeof reader.result === "string" ? reader.result : "");
+    reader.readAsDataURL(file);
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
