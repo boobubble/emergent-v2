@@ -19,10 +19,11 @@ async function fetchPostForHead(slug: string) {
   if (!post.is_anonymous) {
     const { data: prof } = await supabase
       .from("profiles")
-      .select("username, display_name")
+      .select("username")
       .eq("id", post.author_id)
       .maybeSingle();
-    if (prof) authorName = prof.display_name || prof.username || authorName;
+    if (prof) authorName = prof.username || authorName;
+
   } else {
     authorName = "Anonymous";
   }
