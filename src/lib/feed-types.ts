@@ -8,6 +8,7 @@ export interface FeedPost {
   author_id: string;
   kind: PostKind;
   text: string;
+  slug: string;
   media_urls: string[];
   poll: { question: string; options: string[]; votes?: Record<string, number> } | null;
   privacy: PostPrivacy;
@@ -18,6 +19,7 @@ export interface FeedPost {
   trending_score: number;
   created_at: string;
 }
+
 
 export interface FeedComment {
   id: string;

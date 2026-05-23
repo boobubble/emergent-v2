@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
 import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type FeedReaction, type ReactionType } from "@/lib/feed-types";
 import { postSlug } from "@/lib/post-slug";
+import { ShareModal, type SharePayload } from "@/components/feed/ShareModal";
 import type { User } from "@/lib/chat-types";
+
 
 function timeAgo(iso: string) {
   const d = Date.now() - new Date(iso).getTime();
@@ -32,6 +34,8 @@ export function PostCard({
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState<SharePayload | null>(null);
+
 
   const author = post.is_anonymous ? null : profiles[post.author_id];
   const myReaction = reactions.find((r) => r.user_id === meId);
@@ -161,49 +165,30 @@ export function PostCard({
           onClick={async () => {
             const url = `${window.location.origin}/feed/${postSlug(post)}`;
             const authorName = author?.name ?? "Anonymous";
-            const shareText = post.text ? `${post.text}\n\n— ${authorName}` : `Post by ${authorName}`;
-            const shareData: ShareData = { title: `${authorName} on HoloChat`, text: shareText, url };
-            try {
-              if (post.media_urls.length > 0 && typeof fetch !== "undefined") {
-                try {
-                  const files: File[] = [];
-                  for (const mu of post.media_urls.slice(0, 4)) {
-                    const res = await fetch(mu);
-                    const blob = await res.blob();
-                    const ext = (blob.type.split("/")[1] || "jpg").split("+")[0];
-                    files.push(new File([blob], `post-image.${ext}`, { type: blob.type || "image/jpeg" }));
-                  }
-                  const withFiles = { ...shareData, files };
-                  if (navigator.canShare?.(withFiles)) {
-                    await navigator.share(withFiles);
-                    return;
-                  }
-                } catch { /* fall through */ }
-              }
-              if (navigator.share) {
-                await navigator.share(shareData);
-                return;
-              }
-              await navigator.clipboard.writeText(`${shareText}\n${url}`);
-              const { toast } = await import("sonner");
-              toast.success("Post link copied to clipboard");
-            } catch (e) {
-              if ((e as Error)?.name === "AbortError") return;
+            const title = post.text
+              ? `${authorName}: ${post.text.slice(0, 60)}${post.text.length > 60 ? "…" : ""}`
+              : `${authorName} on Palrgo`;
+            const shareText = post.text ? post.text : `Check out this post by ${authorName}`;
+            const payload: SharePayload = { title, text: shareText, url };
+            // Try native Web Share API first (best on mobile)
+            if (typeof navigator !== "undefined" && navigator.share) {
               try {
-                await navigator.clipboard.writeText(`${shareText}\n${url}`);
-                const { toast } = await import("sonner");
-                toast.success("Post link copied to clipboard");
-              } catch {
-                const { toast } = await import("sonner");
-                toast.error("Couldn't share this post");
+                await navigator.share({ title, text: shareText, url });
+                return;
+              } catch (e) {
+                if ((e as Error)?.name === "AbortError") return;
+                // fall through to modal
               }
             }
+            setShareOpen(payload);
           }}
           className="ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <Share2 className="h-4 w-4" /> Share
         </button>
       </footer>
+      {shareOpen && <ShareModal payload={shareOpen} onClose={() => setShareOpen(null)} />}
+
 
       {Object.keys(counts).length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1 text-xs text-muted-foreground">

@@ -75,9 +75,11 @@ async function publishWelcomePost(userId: string, email?: string) {
       author_id: userId,
       kind: "text",
       text,
+      slug: `welcome-${prof.username}`.toLowerCase(),
       media_urls: media,
       privacy: "public",
     });
+
     if (error) throw error;
     try { sessionStorage.removeItem(key); } catch { /* ignore */ }
   } catch (e) {

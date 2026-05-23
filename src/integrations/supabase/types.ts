@@ -183,6 +183,7 @@ export type Database = {
           poll: Json | null
           privacy: Database["public"]["Enums"]["post_privacy"]
           reaction_count: number
+          slug: string
           text: string
           trending_score: number
           updated_at: string
@@ -199,6 +200,7 @@ export type Database = {
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"]
           reaction_count?: number
+          slug: string
           text?: string
           trending_score?: number
           updated_at?: string
@@ -215,6 +217,7 @@ export type Database = {
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"]
           reaction_count?: number
+          slug?: string
           text?: string
           trending_score?: number
           updated_at?: string
@@ -317,6 +320,7 @@ export type Database = {
     }
     Functions: {
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
+      slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
       friendship_status: "pending" | "accepted" | "blocked"

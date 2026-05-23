@@ -5,15 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { PostCard } from "@/components/feed/PostCard";
-import { postIdFromSlug } from "@/lib/post-slug";
 import type { FeedPost } from "@/lib/feed-types";
 
 const SITE_URL = "https://holo-chat-quest.lovable.app";
 
 async function fetchPostForHead(slug: string) {
-  const id = postIdFromSlug(slug);
-  if (!id) return null;
-  const { data: post } = await supabase.from("posts").select("*").eq("id", id).maybeSingle();
+  const { data: post } = await supabase.from("posts").select("*").eq("slug", slug).maybeSingle();
   if (!post) return null;
   let authorName = "Someone";
   if (!post.is_anonymous) {
@@ -22,8 +19,7 @@ async function fetchPostForHead(slug: string) {
       .select("username")
       .eq("id", post.author_id)
       .maybeSingle();
-    if (prof) authorName = prof.username || authorName;
-
+    if (prof?.username) authorName = prof.username;
   } else {
     authorName = "Anonymous";
   }
@@ -91,20 +87,17 @@ function PostPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const postId = postIdFromSlug(slug);
-
   useEffect(() => {
-    if (!postId) { setNotFound(true); setLoading(false); return; }
     let alive = true;
     (async () => {
-      const { data } = await supabase.from("posts").select("*").eq("id", postId).maybeSingle();
+      const { data } = await supabase.from("posts").select("*").eq("slug", slug).maybeSingle();
       if (!alive) return;
       if (!data) setNotFound(true);
       else setPost(data as FeedPost);
       setLoading(false);
     })();
     return () => { alive = false; };
-  }, [postId]);
+  }, [slug]);
 
   if (!user) return <Navigate to="/" replace />;
 

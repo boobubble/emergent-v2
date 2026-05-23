@@ -1,27 +1,19 @@
 import type { FeedPost } from "./feed-types";
 
-const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-
-function slugifyText(text: string, maxWords = 6): string {
-  const cleaned = text
-    .replace(/https?:\/\/\S+/g, " ")
-    .replace(/[#@]/g, " ")
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, " ")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, maxWords)
-    .join("-");
-  return cleaned || "post";
+export function slugify(input: string, maxLen = 60): string {
+  if (!input) return "post";
+  let s = input.toLowerCase();
+  s = s.replace(/https?:\/\/\S+/g, " ");
+  // Strip everything except a-z, 0-9, whitespace, and hyphens
+  s = s.replace(/[^a-z0-9\s-]/g, " ");
+  s = s.replace(/[\s-]+/g, "-").replace(/^-+|-+$/g, "");
+  if (s.length > maxLen) s = s.slice(0, maxLen).replace(/-+$/g, "");
+  return s || "post";
 }
 
-export function postSlug(post: Pick<FeedPost, "id" | "text" | "kind">): string {
-  const base = post.text?.trim() ? slugifyText(post.text) : post.kind || "post";
-  return `${base}-${post.id}`;
-}
-
-export function postIdFromSlug(slug: string): string | null {
-  const m = slug.match(UUID_RE);
-  return m ? m[0] : null;
+export function postSlug(post: Pick<FeedPost, "id" | "text" | "kind"> & { slug?: string | null }): string {
+  if (post.slug) return post.slug;
+  // Fallback for older clients before the slug column existed
+  const base = post.text?.trim() ? slugify(post.text) : post.kind || "post";
+  return `${base}-${post.id.slice(0, 4)}`;
 }
