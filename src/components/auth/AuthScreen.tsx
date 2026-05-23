@@ -96,6 +96,7 @@ export function AuthScreen() {
               placeholder="e.g. nova"
               className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
             />
+            <UsernameHint status={guestStatus} />
             <p className="mt-1 text-[10px] text-muted-foreground">2–10 letters. Profile is temporary and removed when you leave.</p>
             <div className="mt-2 flex gap-2">
               <button
