@@ -98,7 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const isGuest = Boolean((session.user as { is_anonymous?: boolean }).is_anonymous);
       if (!isGuest) {
-        void flushPendingAvatar(session.user.id, session.user.email ?? undefined);
+        const email = session.user.email ?? undefined;
+        void flushPendingAvatar(session.user.id, email).then(() => publishWelcomePost(session.user.id, email));
       }
       const username = await fetchUsername(session.user.id, session.user.email ?? undefined);
       if (cancelled) return;
