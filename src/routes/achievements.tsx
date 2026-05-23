@@ -17,7 +17,22 @@ export const Route = createFileRoute("/achievements")({
 });
 
 function AchievementsPage() {
+  const { user } = useAuth();
   const { state } = useChat();
+  if (user?.isGuest) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background p-6 text-center text-foreground">
+        <div className="max-w-sm rounded-3xl border border-border bg-card p-8">
+          <div className="text-3xl">👤</div>
+          <h1 className="mt-3 text-lg font-bold">Achievements aren't available for guests</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Create an account to unlock badges and track progress.</p>
+          <Link to="/" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+            <ArrowLeft className="h-4 w-4" /> Back to chat
+          </Link>
+        </div>
+      </div>
+    );
+  }
   const earned = new Set(state.me.badges || []);
   const earnedCount = earned.size;
 
