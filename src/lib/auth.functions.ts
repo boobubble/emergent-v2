@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { validateUsername } from "./username-validation";
 
 export const checkUsernameAvailable = createServerFn({ method: "POST" })
   .inputValidator((input: { username: string; excludeUserId?: string }) => {
@@ -12,21 +13,13 @@ export const checkUsernameAvailable = createServerFn({ method: "POST" })
     return { username: v, excludeUserId };
   })
   .handler(async ({ data }) => {
-    const letters = data.username.replace(/[^a-zA-Z]/g, "").length;
-    if (letters < 2 || letters > 10) {
-      return { available: false, reason: "Username must contain 2 to 10 letters." };
-    }
-    if (!/^[a-zA-Z0-9_ ]+$/.test(data.username)) {
-      return { available: false, reason: "Only letters, numbers, spaces and _ allowed." };
-    }
-    if (/^guest-/i.test(data.username)) {
-      return { available: false, reason: "Reserved prefix." };
-    }
+    const check = validateUsername(data.username);
+    if (!check.ok) return { available: false, reason: check.reason };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("profiles")
       .select("id")
-      .ilike("username", data.username)
+      .ilike("username", check.value)
       .maybeSingle();
     if (error) return { available: false, reason: "Lookup failed. Try again." };
     if (row && row.id !== data.excludeUserId) {
@@ -34,6 +27,7 @@ export const checkUsernameAvailable = createServerFn({ method: "POST" })
     }
     return { available: true as const };
   });
+
 
 
 export const resolveLoginEmail = createServerFn({ method: "POST" })
