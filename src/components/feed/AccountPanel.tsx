@@ -38,7 +38,11 @@ export function AccountPanel() {
   const onPickAvatar = (file: File) => {
     if (file.size > 2_000_000) { alert("Image too large (max 2MB)"); return; }
     const reader = new FileReader();
-    reader.onload = () => updateMe({ avatarUrl: String(reader.result) });
+    reader.onload = async () => {
+      const dataUrl = String(reader.result);
+      updateMe({ avatarUrl: dataUrl });
+      if (auth?.id) await supabase.from("profiles").update({ avatar_url: dataUrl }).eq("id", auth.id);
+    };
     reader.readAsDataURL(file);
   };
 
@@ -50,8 +54,20 @@ export function AccountPanel() {
       return;
     }
     updateMe({ name: trimmed, bio: bio.trim(), status });
-    if (auth?.id && gender) {
-      await supabase.from("profiles").update({ gender }).eq("id", auth.id);
+    if (auth?.id) {
+      const patch: { username: string; bio: string; status: typeof me.status; gender?: "male" | "female" | "other" } = {
+        username: trimmed,
+        bio: bio.trim(),
+        status,
+      };
+      if (gender) patch.gender = gender;
+      const { error } = await supabase.from("profiles").update(patch).eq("id", auth.id);
+      if (error) {
+        alert(error.message.includes("duplicate") || error.code === "23505"
+          ? "That username is already taken."
+          : error.message);
+        return;
+      }
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);

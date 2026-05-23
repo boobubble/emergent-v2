@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveLoginEmail } from "@/lib/auth.functions";
 import { lovable } from "@/integrations/lovable/index";
 import type { Session } from "@supabase/supabase-js";
 
@@ -56,15 +57,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true; subscription.unsubscribe(); };
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+  const login = useCallback(async (identifier: string, password: string) => {
+    const id = identifier.trim();
+    let email = id;
+    if (!id.includes("@")) {
+      const res = await resolveLoginEmail({ data: { identifier: id } });
+      email = res.email;
+    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
   }, []);
 
   const signup = useCallback(async (email: string, password: string, username: string, gender: "male" | "female" | "other") => {
     email = email.trim();
     username = username.trim();
-    if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) throw new Error("Username: 3-20 chars, letters/numbers/_-");
+    const letterCount = username.replace(/[^a-zA-Z]/g, "").length;
+    if (letterCount < 2 || letterCount > 10) throw new Error("Username must contain 2 to 10 letters.");
     if (password.length < 6) throw new Error("Password must be 6+ characters");
     if (!["male", "female", "other"].includes(gender)) throw new Error("Please select a gender");
     const { error } = await supabase.auth.signUp({
