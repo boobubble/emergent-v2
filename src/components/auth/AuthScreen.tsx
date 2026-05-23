@@ -135,6 +135,7 @@ export function AuthScreen() {
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Username</label>
                 <input value={username} onChange={e => setUsername(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. cool user" />
+                <UsernameHint status={usernameStatus} />
                 <p className="mt-1 text-[10px] text-muted-foreground">Must contain 2 to 10 letters.</p>
               </div>
               <div>
