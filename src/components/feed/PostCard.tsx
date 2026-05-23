@@ -157,7 +157,47 @@ export function PostCard({
           <MessageCircle className="h-4 w-4" /> {post.comment_count || "Comment"}
         </button>
         <button
-          onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/feed#${post.id}`).catch(() => {}); }}
+          onClick={async () => {
+            const url = `${window.location.origin}/feed#${post.id}`;
+            const authorName = author?.name ?? "Anonymous";
+            const shareText = post.text ? `${post.text}\n\n— ${authorName}` : `Post by ${authorName}`;
+            const shareData: ShareData = { title: `${authorName} on HoloChat`, text: shareText, url };
+            try {
+              if (post.media_urls.length > 0 && typeof fetch !== "undefined") {
+                try {
+                  const files: File[] = [];
+                  for (const mu of post.media_urls.slice(0, 4)) {
+                    const res = await fetch(mu);
+                    const blob = await res.blob();
+                    const ext = (blob.type.split("/")[1] || "jpg").split("+")[0];
+                    files.push(new File([blob], `post-image.${ext}`, { type: blob.type || "image/jpeg" }));
+                  }
+                  const withFiles = { ...shareData, files };
+                  if (navigator.canShare?.(withFiles)) {
+                    await navigator.share(withFiles);
+                    return;
+                  }
+                } catch { /* fall through */ }
+              }
+              if (navigator.share) {
+                await navigator.share(shareData);
+                return;
+              }
+              await navigator.clipboard.writeText(`${shareText}\n${url}`);
+              const { toast } = await import("sonner");
+              toast.success("Post link copied to clipboard");
+            } catch (e) {
+              if ((e as Error)?.name === "AbortError") return;
+              try {
+                await navigator.clipboard.writeText(`${shareText}\n${url}`);
+                const { toast } = await import("sonner");
+                toast.success("Post link copied to clipboard");
+              } catch {
+                const { toast } = await import("sonner");
+                toast.error("Couldn't share this post");
+              }
+            }
+          }}
           className="ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <Share2 className="h-4 w-4" /> Share
