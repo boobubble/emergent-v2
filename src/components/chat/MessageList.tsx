@@ -4,6 +4,7 @@ import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
 import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
+import { NameEmojiBadge } from "@/lib/name-emoji";
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.kind === "image") {
@@ -133,7 +134,10 @@ export function MessageList({ channelId }: { channelId: string }) {
                   <div className="mb-1 flex items-center gap-2">
                     <Time ts={g[0].ts} />
                     <UserMenu userId={author.id} username={author.name}>
-                      <span className="text-sm font-bold text-foreground">{author.name}</span>
+                      <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
+                        {author.name}
+                        <NameEmojiBadge user={author} />
+                      </span>
                     </UserMenu>
                   </div>
                   <div className="flex max-w-[80%] flex-col items-end gap-1">
@@ -183,7 +187,10 @@ export function MessageList({ channelId }: { channelId: string }) {
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
                   <UserMenu userId={author.id} username={author.name}>
-                    <span className="text-sm font-bold text-foreground">{author.name}</span>
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
+                      {author.name}
+                      <NameEmojiBadge user={author} />
+                    </span>
                   </UserMenu>
                   {author.isBot && (
                     <span className="rounded-md bg-primary/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight text-primary">
