@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Trophy, Flame } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { BADGE_MAP } from "@/lib/achievements";
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/leaderboard")({
 
 function LeaderboardPage() {
   const { user } = useAuth();
-  const { state, adjustPoints } = useChat();
+  const { state } = useChat();
   const [tab, setTab] = useState<"xp" | "streak">("xp");
   if (user?.isGuest) return <GuestBlock label="Leaderboard" />;
   const all = Object.values(state.users).filter(u => !u.isGuest && !u.isBot);
@@ -74,14 +75,11 @@ function LeaderboardPage() {
               ) : (
                 <div className="font-mono text-sm text-orange-400">{u.streak ?? 0}d</div>
               )}
-              <div className="flex gap-1">
-                <button onClick={() => adjustPoints(u.id, -10)} className="grid h-6 w-6 place-items-center rounded bg-muted text-xs hover:bg-destructive/30" title="-10 XP">−</button>
-                <button onClick={() => adjustPoints(u.id, 10)} className="grid h-6 w-6 place-items-center rounded bg-muted text-xs hover:bg-primary/30" title="+10 XP">+</button>
-              </div>
             </div>
           ))}
         </div>
-        <p className="mt-3 text-center text-[10px] text-muted-foreground">Adjust points with +/−. Streaks rise by signing in on consecutive days.</p>
+        <p className="mt-3 text-center text-[10px] text-muted-foreground">Streaks rise by signing in on consecutive days.</p>
+
       </main>
     </div>
   );
