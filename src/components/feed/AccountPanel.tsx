@@ -144,7 +144,7 @@ export function AccountPanel() {
               </div>
             </Field>
             <div className="flex items-center gap-3 pt-2">
-              <button onClick={save} className="flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground hover:opacity-90">
+              <button onClick={save} disabled={nameChanged && usernameStatus.state !== "ok"} className="flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50">
                 <Save className="h-4 w-4" /> Save changes
               </button>
               {saved && <span className="text-xs font-semibold text-primary">✓ Saved</span>}
