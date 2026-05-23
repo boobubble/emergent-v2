@@ -1,8 +1,16 @@
 import type { User } from "@/lib/chat-types";
 
+function borderColor(user: User): string {
+  if (user.isGuest) return "oklch(0.6 0 0)"; // gray
+  if (user.gender === "male") return "oklch(0.65 0.18 250)"; // blue
+  if (user.gender === "female") return "oklch(0.72 0.18 350)"; // pink
+  return "oklch(0.6 0 0)"; // gray (bot/other/unknown)
+}
+
 export function Avatar({ user, size = 36, square = true }: { user: User; size?: number; square?: boolean }) {
   const initials = user.name.slice(0, 2).toUpperCase();
   const hasImg = !!user.avatarUrl;
+  const ring = borderColor(user);
   return (
     <div
       className={`relative flex shrink-0 items-center justify-center overflow-hidden font-bold text-background ${
@@ -13,7 +21,7 @@ export function Avatar({ user, size = 36, square = true }: { user: User; size?: 
         height: size,
         background: user.avatarColor,
         fontSize: size * 0.38,
-        boxShadow: "0 4px 12px oklch(0 0 0 / 0.4)",
+        boxShadow: `0 0 0 2px ${ring}, 0 4px 12px oklch(0 0 0 / 0.4)`,
       }}
     >
       {hasImg ? (
