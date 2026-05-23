@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { resolveLoginEmail } from "@/lib/auth.functions";
+import { resolveLoginEmail, deleteGuestAccount } from "@/lib/auth.functions";
 import { lovable } from "@/integrations/lovable/index";
 import type { Session } from "@supabase/supabase-js";
 
@@ -17,7 +17,7 @@ interface Ctx {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string, gender: "male" | "female" | "other") => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginAsGuest: () => Promise<void>;
+  loginAsGuest: (username?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       const isGuest = Boolean((session.user as { is_anonymous?: boolean }).is_anonymous);
-      const username = isGuest ? `guest-${session.user.id.slice(0, 5)}` : await fetchUsername(session.user.id, session.user.email ?? undefined);
+      const username = await fetchUsername(session.user.id, session.user.email ?? undefined);
       if (cancelled) return;
       setUser({ id: session.user.id, email: session.user.email ?? "", username, isGuest });
     }
@@ -59,6 +59,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => { cancelled = true; subscription.unsubscribe(); };
   }, []);
+
+  // Flush guest accounts when the tab closes / page hides.
+  useEffect(() => {
+    if (!user?.isGuest) return;
+    const onExit = () => {
+      supabase.auth.getSession().then(({ data }) => {
+        const token = data.session?.access_token;
+        if (!token) return;
+        const body = new Blob([JSON.stringify({ access_token: token })], { type: "application/json" });
+        try {
+          if (navigator.sendBeacon) navigator.sendBeacon("/api/public/guest-cleanup", body);
+          else fetch("/api/public/guest-cleanup", { method: "POST", body, keepalive: true });
+        } catch { /* noop */ }
+      });
+    };
+    window.addEventListener("pagehide", onExit);
+    return () => window.removeEventListener("pagehide", onExit);
+  }, [user?.isGuest]);
+
 
   const login = useCallback(async (identifier: string, password: string) => {
     const id = identifier.trim();
@@ -94,15 +113,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (result.error) throw new Error(result.error.message || "Google sign-in failed");
   }, []);
 
-  const loginAsGuest = useCallback(async () => {
-    const { error } = await supabase.auth.signInAnonymously();
+  const loginAsGuest = useCallback(async (username?: string) => {
+    const cleaned = (username ?? "").trim();
+    const letterCount = cleaned.replace(/[^a-zA-Z]/g, "").length;
+    if (cleaned && (letterCount < 2 || letterCount > 10)) {
+      throw new Error("Guest name must contain 2 to 10 letters.");
+    }
+    const meta = cleaned ? { username: cleaned, gender: "other" } : undefined;
+    const { error } = await supabase.auth.signInAnonymously(meta ? { options: { data: meta } } : undefined);
     if (error) throw new Error(error.message);
   }, []);
 
   const logout = useCallback(async () => {
+    const wasGuest = user?.isGuest === true;
+    if (wasGuest) {
+      try { await deleteGuestAccount(); } catch (e) { console.error("Guest cleanup failed", e); }
+    }
     await supabase.auth.signOut();
     setUser(null);
-  }, []);
+  }, [user?.isGuest]);
 
   const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, loginAsGuest, logout }), [user, ready, login, signup, loginWithGoogle, loginAsGuest, logout]);
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
