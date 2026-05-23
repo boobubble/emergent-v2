@@ -115,11 +115,12 @@ function FeedPage() {
     } else if (tab === "friends") {
       list = list.filter((p) => friendIds.has(p.author_id) || p.author_id === meId);
     } else {
-      // For You: friends first, then by engagement
+      // For You: newest first, with friends' posts gently boosted
       list.sort((a, b) => {
-        const af = friendIds.has(a.author_id) ? 1000 : 0;
-        const bf = friendIds.has(b.author_id) ? 1000 : 0;
-        return bf - af + (b.reaction_count + b.comment_count - a.reaction_count - a.comment_count);
+        const af = friendIds.has(a.author_id) ? 1 : 0;
+        const bf = friendIds.has(b.author_id) ? 1 : 0;
+        if (af !== bf) return bf - af;
+        return +new Date(b.created_at) - +new Date(a.created_at);
       });
     }
     return list;
