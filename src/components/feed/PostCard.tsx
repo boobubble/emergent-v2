@@ -115,7 +115,7 @@ export function PostCard({
             {post.trending_score > 50 && <Flame className="h-3.5 w-3.5 text-orange-500" />}
           </div>
           <div className="text-xs text-muted-foreground">
-            {timeAgo(post.created_at)} · <span className="capitalize">{post.privacy}</span>
+            <Link to="/feed/$slug" params={{ slug: postSlug(post) }} className="hover:underline">{timeAgo(post.created_at)}</Link> · <span className="capitalize">{post.privacy}</span>
           </div>
         </div>
         {post.author_id === meId && (
