@@ -8,13 +8,77 @@ import { PostCard } from "@/components/feed/PostCard";
 import { postIdFromSlug } from "@/lib/post-slug";
 import type { FeedPost } from "@/lib/feed-types";
 
+const SITE_URL = "https://holo-chat-quest.lovable.app";
+
+async function fetchPostForHead(slug: string) {
+  const id = postIdFromSlug(slug);
+  if (!id) return null;
+  const { data: post } = await supabase.from("posts").select("*").eq("id", id).maybeSingle();
+  if (!post) return null;
+  let authorName = "Someone";
+  if (!post.is_anonymous) {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("username, display_name")
+      .eq("id", post.author_id)
+      .maybeSingle();
+    if (prof) authorName = prof.display_name || prof.username || authorName;
+  } else {
+    authorName = "Anonymous";
+  }
+  return { post: post as FeedPost, authorName };
+}
+
 export const Route = createFileRoute("/feed/$slug")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `Post — Palrgo` },
-      { name: "description", content: `View this post on Palrgo (${params.slug}).` },
-    ],
-  }),
+  loader: async ({ params }) => {
+    const data = await fetchPostForHead(params.slug);
+    return { headData: data };
+  },
+  head: ({ params, loaderData }) => {
+    const url = `${SITE_URL}/feed/${params.slug}`;
+    if (!loaderData?.headData) {
+      return {
+        meta: [
+          { title: "Post — Palrgo" },
+          { name: "description", content: "View this post on Palrgo." },
+          { property: "og:title", content: "Post — Palrgo" },
+          { property: "og:description", content: "View this post on Palrgo." },
+          { property: "og:url", content: url },
+          { property: "og:type", content: "article" },
+          { name: "twitter:card", content: "summary_large_image" },
+        ],
+        links: [{ rel: "canonical", href: url }],
+      };
+    }
+    const { post, authorName } = loaderData.headData;
+    const rawText = (post.text || "").replace(/\s+/g, " ").trim();
+    const title = rawText
+      ? `${authorName}: ${rawText.slice(0, 60)}${rawText.length > 60 ? "…" : ""}`
+      : `${authorName} shared a post on Palrgo`;
+    const description = rawText
+      ? rawText.slice(0, 160)
+      : `See ${authorName}'s latest post on Palrgo.`;
+    const image = post.media_urls && post.media_urls.length > 0 ? post.media_urls[0] : undefined;
+    const meta: Array<Record<string, string>> = [
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:url", content: url },
+      { property: "og:type", content: "article" },
+      { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
+      { name: "twitter:title", content: title },
+      { name: "twitter:description", content: description },
+    ];
+    if (image) {
+      meta.push({ property: "og:image", content: image });
+      meta.push({ name: "twitter:image", content: image });
+    }
+    return {
+      meta,
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: PostPage,
 });
 
