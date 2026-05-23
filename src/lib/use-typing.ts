@@ -21,10 +21,12 @@ export function useTyping(channelId: string | null, me: { id: string; name: stri
     });
     ch.on("broadcast", { event: "typing" }, (msg) => {
       const p = msg.payload as { id?: string; name?: string };
-      if (!p?.id || !p.name || p.id === me.id) return;
+      const pid = p?.id;
+      const pname = p?.name;
+      if (!pid || !pname || pid === me.id) return;
       setTypers(prev => {
-        const others = prev.filter(t => t.id !== p.id);
-        return [...others, { id: p.id, name: p.name, ts: Date.now() }];
+        const others = prev.filter(t => t.id !== pid);
+        return [...others, { id: pid, name: pname, ts: Date.now() }];
       });
     });
     ch.subscribe();
