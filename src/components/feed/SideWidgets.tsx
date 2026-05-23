@@ -24,7 +24,7 @@ export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Reco
   const sentIds = new Set(friendships.filter((f) => f.sender_id === meId && f.status === "pending").map((f) => f.receiver_id));
   const friends = Array.from(friendIds).map((id) => profiles[id]).filter(Boolean) as User[];
   const suggestions = Object.values(profiles)
-    .filter((u) => u.id !== meId && !friendIds.has(u.id) && !sentIds.has(u.id))
+    .filter((u) => u.id !== meId && !friendIds.has(u.id) && !sentIds.has(u.id) && !u.isGuest && !u.isBot)
     .slice(0, 5);
 
   async function accept(f: FeedFriendship) {
