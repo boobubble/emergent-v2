@@ -159,7 +159,7 @@ export function PostCard({
         </button>
         <button
           onClick={async () => {
-            const url = `${window.location.origin}/feed#${post.id}`;
+            const url = `${window.location.origin}/feed/${postSlug(post)}`;
             const authorName = author?.name ?? "Anonymous";
             const shareText = post.text ? `${post.text}\n\n— ${authorName}` : `Post by ${authorName}`;
             const shareData: ShareData = { title: `${authorName} on HoloChat`, text: shareText, url };
