@@ -68,6 +68,7 @@ export function AccountPanel() {
           : error.message);
         return;
       }
+      await refreshUsername();
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
