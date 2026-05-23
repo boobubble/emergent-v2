@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const resolveLoginEmail = createServerFn({ method: "POST" })
   .inputValidator((input: { identifier: string }) => {
@@ -8,12 +9,10 @@ export const resolveLoginEmail = createServerFn({ method: "POST" })
     return { identifier: v };
   })
   .handler(async ({ data }) => {
-    // If it already looks like an email, return as-is
     if (data.identifier.includes("@")) return { email: data.identifier };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Find profile by username (case-insensitive)
     const { data: profile, error: pErr } = await supabaseAdmin
       .from("profiles")
       .select("id")
@@ -25,4 +24,27 @@ export const resolveLoginEmail = createServerFn({ method: "POST" })
     const { data: userRes, error: uErr } = await supabaseAdmin.auth.admin.getUserById(profile.id);
     if (uErr || !userRes?.user?.email) throw new Error("Unable to resolve account email");
     return { email: userRes.user.email };
+  });
+
+// Delete the current guest (anonymous) user: profile + auth user.
+// Refuses if the caller is not an anonymous user.
+export const deleteGuestAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId, claims } = context as { userId: string; claims: Record<string, unknown> };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Verify the user is actually anonymous before deleting
+    const { data: userRes, error: gErr } = await supabaseAdmin.auth.admin.getUserById(userId);
+    if (gErr || !userRes?.user) throw new Error("User not found");
+    const isAnon = Boolean(userRes.user.is_anonymous) || Boolean((claims as { is_anonymous?: boolean })?.is_anonymous);
+    if (!isAnon) throw new Error("Not a guest account");
+
+    // Best-effort cleanup. Profile + messages cascade is manual.
+    await supabaseAdmin.from("messages").delete().eq("author_id", userId);
+    await supabaseAdmin.from("reactions").delete().eq("user_id", userId);
+    await supabaseAdmin.from("profiles").delete().eq("id", userId);
+    const { error: dErr } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (dErr) throw new Error(dErr.message);
+    return { ok: true };
   });
