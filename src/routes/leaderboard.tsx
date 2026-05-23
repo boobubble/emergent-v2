@@ -23,7 +23,7 @@ function LeaderboardPage() {
   const { state, adjustPoints } = useChat();
   const [tab, setTab] = useState<"xp" | "streak">("xp");
   if (user?.isGuest) return <GuestBlock label="Leaderboard" />;
-  const all = Object.values(state.users).filter(u => !u.isGuest);
+  const all = Object.values(state.users).filter(u => !u.isGuest && !u.isBot);
   const ranked = tab === "xp"
     ? [...all].sort((a, b) => b.xp - a.xp).slice(0, 25)
     : [...all].sort((a, b) => (b.streak ?? 0) - (a.streak ?? 0) || (b.longestStreak ?? 0) - (a.longestStreak ?? 0)).slice(0, 25);
