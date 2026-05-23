@@ -94,15 +94,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (result.error) throw new Error(result.error.message || "Google sign-in failed");
   }, []);
 
-  const loginAsGuest = useCallback(async () => {
-    const { error } = await supabase.auth.signInAnonymously();
+  const loginAsGuest = useCallback(async (username?: string) => {
+    const cleaned = (username ?? "").trim();
+    const letterCount = cleaned.replace(/[^a-zA-Z]/g, "").length;
+    if (cleaned && (letterCount < 2 || letterCount > 10)) {
+      throw new Error("Guest name must contain 2 to 10 letters.");
+    }
+    const meta = cleaned ? { username: cleaned, gender: "other" } : undefined;
+    const { error } = await supabase.auth.signInAnonymously(meta ? { options: { data: meta } } : undefined);
     if (error) throw new Error(error.message);
   }, []);
 
   const logout = useCallback(async () => {
+    const wasGuest = user?.isGuest === true;
+    if (wasGuest) {
+      try { await deleteGuestAccount(); } catch (e) { console.error("Guest cleanup failed", e); }
+    }
     await supabase.auth.signOut();
     setUser(null);
-  }, []);
+  }, [user?.isGuest]);
 
   const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, loginAsGuest, logout }), [user, ready, login, signup, loginWithGoogle, loginAsGuest, logout]);
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
