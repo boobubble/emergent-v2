@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-store";
 
 export function AuthScreen() {
-  const { login, signup, loginWithGoogle } = useAuth();
+  const { login, signup, loginWithGoogle, loginAsGuest } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
