@@ -210,6 +210,20 @@ export function MessageInput() {
         </div>
       )}
       {attachError && <div className="mb-2 px-3 text-xs text-destructive">{attachError}</div>}
+      {typers.length > 0 && (
+        <div className="mb-1 flex items-center gap-1.5 px-3 text-[11px] italic text-muted-foreground">
+          <span className="inline-flex gap-0.5">
+            <span className="h-1 w-1 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+            <span className="h-1 w-1 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+            <span className="h-1 w-1 animate-bounce rounded-full bg-primary" />
+          </span>
+          {typers.length === 1
+            ? `${typers[0].name} is typing…`
+            : typers.length === 2
+              ? `${typers[0].name} and ${typers[1].name} are typing…`
+              : `${typers.length} people are typing…`}
+        </div>
+      )}
       <div className="group relative flex items-end gap-1 rounded-3xl border border-border bg-white/5 py-2 pl-4 pr-2 transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/30">
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
         <button onClick={() => fileRef.current?.click()} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Attach file">
