@@ -8,6 +8,7 @@ export interface AuthUser {
   id: string;
   email: string;
   username: string;
+  isGuest: boolean;
 }
 
 interface Ctx {
@@ -16,6 +17,7 @@ interface Ctx {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string, gender: "male" | "female" | "other") => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  loginAsGuest: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
