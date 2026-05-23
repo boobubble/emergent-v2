@@ -52,6 +52,9 @@ export function AuthScreen() {
         if (!gender) throw new Error("Please select your gender.");
         if (usernameStatus.state === "error") throw new Error(usernameStatus.message);
         if (usernameStatus.state !== "ok") throw new Error("Checking username, please wait…");
+        if (avatarDataUrl) {
+          try { sessionStorage.setItem(`pending-avatar:${email.trim().toLowerCase()}`, avatarDataUrl); } catch { /* ignore quota */ }
+        }
         await signup(email, password, username.trim(), gender);
         setInfo("Account created! Check your email to confirm, then sign in.");
         setMode("login");
