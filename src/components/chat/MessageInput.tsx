@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
 import { Send, Smile, Sparkles, Paperclip, X, Reply } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+import { useAuth } from "@/lib/auth-store";
+import { useTyping } from "@/lib/use-typing";
 import type { Attachment } from "@/lib/chat-types";
 
 const COMMANDS = [
