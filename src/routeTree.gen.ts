@@ -15,6 +15,7 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
 
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
@@ -46,6 +47,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicGuestCleanupRoute = ApiPublicGuestCleanupRouteImport.update({
+  id: '/api/public/guest-cleanup',
+  path: '/api/public/guest-cleanup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +79,7 @@ export interface FileRoutesById {
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +90,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/leaderboard'
     | '/u/$username'
+    | '/api/public/guest-cleanup'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/leaderboard'
     | '/u/$username'
+    | '/api/public/guest-cleanup'
   id:
     | '__root__'
     | '/'
@@ -97,6 +108,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/leaderboard'
     | '/u/$username'
+    | '/api/public/guest-cleanup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,6 +118,7 @@ export interface RootRouteChildren {
   FeedRoute: typeof FeedRoute
   LeaderboardRoute: typeof LeaderboardRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -152,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/guest-cleanup': {
+      id: '/api/public/guest-cleanup'
+      path: '/api/public/guest-cleanup'
+      fullPath: '/api/public/guest-cleanup'
+      preLoaderRoute: typeof ApiPublicGuestCleanupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -162,7 +182,18 @@ const rootRouteChildren: RootRouteChildren = {
   FeedRoute: FeedRoute,
   LeaderboardRoute: LeaderboardRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
