@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 export function AccountPanel() {
   const navigate = useNavigate();
   const { state, updateMe, removeFriend, unblockUser, startDM } = useChat();
-  const { user: auth, logout } = useAuth();
+  const { user: auth, logout, refreshUsername } = useAuth();
   const me = state.me;
   const fileRef = useRef<HTMLInputElement>(null);
   const { accent, setAccent } = useAccent();
@@ -68,6 +68,7 @@ export function AccountPanel() {
           : error.message);
         return;
       }
+      await refreshUsername();
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);

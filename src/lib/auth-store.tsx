@@ -19,6 +19,7 @@ interface Ctx {
   loginWithGoogle: () => Promise<void>;
   loginAsGuest: (username?: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUsername: () => Promise<void>;
 }
 
 const AuthCtx = createContext<Ctx | null>(null);
@@ -133,7 +134,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, [user?.isGuest]);
 
-  const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, loginAsGuest, logout }), [user, ready, login, signup, loginWithGoogle, loginAsGuest, logout]);
+  const refreshUsername = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    const u = data.session?.user;
+    if (!u) return;
+    const { data: prof } = await supabase.from("profiles").select("username").eq("id", u.id).maybeSingle();
+    const next = prof?.username;
+    if (!next) return;
+    setUser(prev => prev ? { ...prev, username: next } : prev);
+  }, []);
+
+  const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, loginAsGuest, logout, refreshUsername }), [user, ready, login, signup, loginWithGoogle, loginAsGuest, logout, refreshUsername]);
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 
