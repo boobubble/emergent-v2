@@ -2,7 +2,9 @@ import { useRef, useState } from "react";
 import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { extractHashtags } from "@/lib/feed-types";
+import { slugify } from "@/lib/post-slug";
 import type { PostPrivacy } from "@/lib/feed-types";
+
 
 const PRIVACY: { id: PostPrivacy; label: string; icon: typeof Globe }[] = [
   { id: "public", label: "Public", icon: Globe },
@@ -51,11 +53,13 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
         author_id: authorId,
         kind,
         text: text.trim(),
+        slug: slugify(text.trim() || kind),
         media_urls,
         privacy,
         is_anonymous: anonymous,
         hashtags,
       });
+
       if (error) throw new Error(error.message);
       // bump XP
       const { data: prof } = await supabase.from("profiles").select("xp").eq("id", authorId).maybeSingle();
