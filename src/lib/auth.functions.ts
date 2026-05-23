@@ -1,6 +1,41 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export const checkUsernameAvailable = createServerFn({ method: "POST" })
+  .inputValidator((input: { username: string; excludeUserId?: string }) => {
+    if (!input || typeof input.username !== "string") throw new Error("Invalid username");
+    const v = input.username.trim();
+    if (v.length < 1 || v.length > 32) throw new Error("Invalid username");
+    const excludeUserId = typeof input.excludeUserId === "string" && /^[0-9a-f-]{36}$/i.test(input.excludeUserId)
+      ? input.excludeUserId
+      : undefined;
+    return { username: v, excludeUserId };
+  })
+  .handler(async ({ data }) => {
+    const letters = data.username.replace(/[^a-zA-Z]/g, "").length;
+    if (letters < 2 || letters > 10) {
+      return { available: false, reason: "Username must contain 2 to 10 letters." };
+    }
+    if (!/^[a-zA-Z0-9_ ]+$/.test(data.username)) {
+      return { available: false, reason: "Only letters, numbers, spaces and _ allowed." };
+    }
+    if (/^guest-/i.test(data.username)) {
+      return { available: false, reason: "Reserved prefix." };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .ilike("username", data.username)
+      .maybeSingle();
+    if (error) return { available: false, reason: "Lookup failed. Try again." };
+    if (row && row.id !== data.excludeUserId) {
+      return { available: false, reason: "That username is already taken." };
+    }
+    return { available: true as const };
+  });
+
+
 export const resolveLoginEmail = createServerFn({ method: "POST" })
   .inputValidator((input: { identifier: string }) => {
     if (!input || typeof input.identifier !== "string") throw new Error("Invalid identifier");
