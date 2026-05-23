@@ -117,7 +117,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   // Offline sorted by most-recently-seen first (latest at top).
   const offlineSorted = allIds
-    .filter(id => !isOnline(id))
+    .filter(id => !isOnline(id) && !usersById[id]?.isGuest)
     .sort((a, b) => (usersById[b]?.lastSeen ?? 0) - (usersById[a]?.lastSeen ?? 0));
 
   const OFFLINE_MIN = 20;
