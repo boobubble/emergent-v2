@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Award, Lock, ArrowLeft } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+import { useAuth } from "@/lib/auth-store";
 import { BADGES, TIER_COLOR } from "@/lib/achievements";
 
 export const Route = createFileRoute("/achievements")({
