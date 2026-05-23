@@ -165,7 +165,7 @@ export function AuthScreen() {
           </div>
           {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
           {info && <div className="rounded-lg bg-primary/15 px-3 py-2 text-xs text-primary">{info}</div>}
-          <button disabled={busy} type="submit" className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" style={{ background: "var(--gradient-accent, var(--primary))" }}>
+          <button disabled={busy || (mode === "signup" && usernameStatus.state !== "ok")} type="submit" className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" style={{ background: "var(--gradient-accent, var(--primary))" }}>
             {busy ? "..." : mode === "login" ? "Sign in" : "Create account"}
           </button>
         </form>
