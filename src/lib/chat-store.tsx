@@ -394,10 +394,12 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   const seenRemoteMsgIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    setState(load(username));
+    const loaded = load(username);
+    const me = { ...loaded.me, isGuest };
+    setState({ ...loaded, me, users: { ...loaded.users, me } });
     setStorageReady(true);
     streakChecked.current = null;
-  }, [username]);
+  }, [username, isGuest]);
 
   // Daily streak check on first load per user
   useEffect(() => {
