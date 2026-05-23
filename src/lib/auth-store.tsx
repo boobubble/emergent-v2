@@ -55,6 +55,36 @@ async function flushPendingAvatar(userId: string, email?: string) {
   }
 }
 
+async function publishWelcomePost(userId: string, email?: string) {
+  if (!email) return;
+  const key = `pending-welcome:${email.toLowerCase()}`;
+  let flag: string | null = null;
+  try { flag = sessionStorage.getItem(key); } catch { return; }
+  if (!flag) return;
+  try {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("username, gender, avatar_url")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!prof) return;
+    const pronoun = prof.gender === "male" ? "him" : prof.gender === "female" ? "her" : "them";
+    const text = `👋 ${prof.username} just signed up! Start a chat with ${pronoun} in the chatroom.`;
+    const media = prof.avatar_url ? [prof.avatar_url] : [];
+    const { error } = await supabase.from("posts").insert({
+      author_id: userId,
+      kind: "text",
+      text,
+      media_urls: media,
+      privacy: "public",
+    });
+    if (error) throw error;
+    try { sessionStorage.removeItem(key); } catch { /* ignore */ }
+  } catch (e) {
+    console.error("welcome post failed", e);
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
@@ -68,7 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const isGuest = Boolean((session.user as { is_anonymous?: boolean }).is_anonymous);
       if (!isGuest) {
-        void flushPendingAvatar(session.user.id, session.user.email ?? undefined);
+        const email = session.user.email ?? undefined;
+        void flushPendingAvatar(session.user.id, email).then(() => publishWelcomePost(session.user.id, email));
       }
       const username = await fetchUsername(session.user.id, session.user.email ?? undefined);
       if (cancelled) return;
