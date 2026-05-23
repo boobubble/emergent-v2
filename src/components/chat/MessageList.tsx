@@ -133,7 +133,10 @@ export function MessageList({ channelId }: { channelId: string }) {
                   <div className="mb-1 flex items-center gap-2">
                     <Time ts={g[0].ts} />
                     <UserMenu userId={author.id} username={author.name}>
-                      <span className="text-sm font-bold text-foreground">{author.name}</span>
+                      <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
+                        {author.name}
+                        <NameEmojiBadge user={author} />
+                      </span>
                     </UserMenu>
                   </div>
                   <div className="flex max-w-[80%] flex-col items-end gap-1">
