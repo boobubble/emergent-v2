@@ -8,6 +8,8 @@ export function AuthScreen() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
+  const [guestName, setGuestName] = useState("");
+  const [showGuest, setShowGuest] = useState(false);
   const [err, setErr] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
