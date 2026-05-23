@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Trophy, Flame } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { BADGE_MAP } from "@/lib/achievements";
