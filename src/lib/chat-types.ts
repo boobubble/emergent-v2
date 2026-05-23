@@ -8,6 +8,8 @@ export interface User {
   status: "online" | "away" | "offline";
   bio?: string;
   isBot?: boolean;
+  isGuest?: boolean;
+  gender?: "male" | "female" | "other";
   xp: number;
   level: number;
   coins?: number;             // virtual currency
