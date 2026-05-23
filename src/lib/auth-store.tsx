@@ -60,6 +60,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true; subscription.unsubscribe(); };
   }, []);
 
+  // Flush guest accounts when the tab closes / page hides.
+  useEffect(() => {
+    if (!user?.isGuest) return;
+    const onExit = () => {
+      supabase.auth.getSession().then(({ data }) => {
+        const token = data.session?.access_token;
+        if (!token) return;
+        const body = new Blob([JSON.stringify({ access_token: token })], { type: "application/json" });
+        try {
+          if (navigator.sendBeacon) navigator.sendBeacon("/api/public/guest-cleanup", body);
+          else fetch("/api/public/guest-cleanup", { method: "POST", body, keepalive: true });
+        } catch { /* noop */ }
+      });
+    };
+    window.addEventListener("pagehide", onExit);
+    return () => window.removeEventListener("pagehide", onExit);
+  }, [user?.isGuest]);
+
+
   const login = useCallback(async (identifier: string, password: string) => {
     const id = identifier.trim();
     let email = id;
