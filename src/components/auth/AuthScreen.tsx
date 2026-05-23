@@ -69,14 +69,50 @@ export function AuthScreen() {
           Continue with Google
         </button>
 
-        <button
-          type="button"
-          onClick={async () => { setErr(""); setBusy(true); try { await loginAsGuest(); } catch (e) { setErr(e instanceof Error ? e.message : "Guest login failed"); setBusy(false); } }}
-          disabled={busy}
-          className="mb-4 flex w-full items-center justify-center gap-2 rounded-full border border-dashed border-border bg-background px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-        >
-          👤 Continue as guest
-        </button>
+        {!showGuest ? (
+          <button
+            type="button"
+            onClick={() => { setErr(""); setShowGuest(true); }}
+            disabled={busy}
+            className="mb-4 flex w-full items-center justify-center gap-2 rounded-full border border-dashed border-border bg-background px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+          >
+            👤 Continue as guest
+          </button>
+        ) : (
+          <div className="mb-4 rounded-2xl border border-dashed border-border bg-background/50 p-3">
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pick a guest name</label>
+            <input
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              maxLength={20}
+              placeholder="e.g. nova"
+              className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+            />
+            <p className="mt-1 text-[10px] text-muted-foreground">2–10 letters. Profile is temporary and removed when you leave.</p>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setShowGuest(false); setGuestName(""); setErr(""); }}
+                disabled={busy}
+                className="flex-1 rounded-full border border-border px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setErr(""); setBusy(true);
+                  try { await loginAsGuest(guestName); }
+                  catch (e) { setErr(e instanceof Error ? e.message : "Guest login failed"); setBusy(false); }
+                }}
+                disabled={busy}
+                className="flex-1 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50"
+              >
+                {busy ? "..." : "Enter as guest"}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="mb-4 flex items-center gap-3">
           <div className="h-px flex-1 bg-border" />
