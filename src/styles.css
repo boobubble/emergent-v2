@@ -69,7 +69,7 @@
   --gradient-primary: linear-gradient(135deg, oklch(0.82 0.2 130), oklch(0.7 0.18 150));
 }
 
-:root.light {
+:root.light, .light {
   --background: oklch(0.99 0 0);
   --foreground: oklch(0.18 0 0);
   --card: oklch(1 0 0);
