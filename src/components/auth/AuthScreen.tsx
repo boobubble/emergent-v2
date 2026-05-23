@@ -1,6 +1,14 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-store";
-import { useUsernameCheck } from "@/lib/use-username-check";
+import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check";
+
+function UsernameHint({ status }: { status: UsernameStatus }) {
+  if (status.state === "idle") return null;
+  if (status.state === "checking") return <p className="mt-1 text-[10px] text-muted-foreground">Checking…</p>;
+  if (status.state === "ok") return <p className="mt-1 text-[10px] font-semibold text-primary">✓ Available</p>;
+  return <p className="mt-1 text-[10px] font-semibold text-destructive">{status.message}</p>;
+}
+
 
 
 export function AuthScreen() {
