@@ -117,6 +117,9 @@ export function AccountPanel() {
           <div className="min-w-0 flex-1 space-y-4">
             <Field label="Username (2–10 letters)">
               <input value={name} onChange={e => setName(e.target.value)} className="w-full rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="your display name" />
+              {nameChanged && usernameStatus.state === "checking" && <p className="mt-1 text-[10px] text-muted-foreground">Checking…</p>}
+              {nameChanged && usernameStatus.state === "ok" && <p className="mt-1 text-[10px] font-semibold text-primary">✓ Available</p>}
+              {nameChanged && usernameStatus.state === "error" && <p className="mt-1 text-[10px] font-semibold text-destructive">{usernameStatus.message}</p>}
             </Field>
             <Field label="Bio">
               <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} maxLength={160} className="w-full resize-none rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="A short bio…" />
