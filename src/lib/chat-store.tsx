@@ -383,7 +383,7 @@ function pickBotReply(text: string): string {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export function ChatProvider({ username, authUserId = null, children }: { username: string; authUserId?: string | null; children: ReactNode }) {
+export function ChatProvider({ username, authUserId = null, isGuest = false, children }: { username: string; authUserId?: string | null; isGuest?: boolean; children: ReactNode }) {
   const [state, setState] = useState<State>(() => seed(username));
   const [storageReady, setStorageReady] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
