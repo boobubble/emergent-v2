@@ -86,3 +86,18 @@ function LeaderboardPage() {
     </div>
   );
 }
+
+function GuestBlock({ label }: { label: string }) {
+  return (
+    <div className="grid min-h-screen place-items-center bg-background p-6 text-center text-foreground">
+      <div className="max-w-sm rounded-3xl border border-border bg-card p-8">
+        <div className="text-3xl">👤</div>
+        <h1 className="mt-3 text-lg font-bold">{label} isn't available for guests</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Create an account to earn XP, badges and appear on the leaderboard.</p>
+        <Link to="/" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+          <ArrowLeft className="h-4 w-4" /> Back to chat
+        </Link>
+      </div>
+    </div>
+  );
+}
