@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Home, Bell, Users, Sparkles, Flame, Clock, UserCircle, Settings } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
-import { FriendsWidget, HashtagsWidget, LeaderboardWidget, StreakWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
+import { FriendsWidget, HashtagsWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
 import { AccountPanel } from "@/components/feed/AccountPanel";
 import { ProfilePanel } from "@/components/feed/ProfilePanel";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
@@ -152,55 +152,60 @@ function FeedPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 md:pb-0">
-      <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <Link to="/" className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Chat
+    <div className="light min-h-screen bg-[#f0f2f5] text-foreground pb-20 md:pb-0">
+      {/* Top bar — minimal, white, Facebook-style */}
+      <header className="sticky top-0 z-20 border-b border-border bg-white">
+        <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-4 py-2.5">
+          <Link to="/" className="flex items-center gap-2 text-primary">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground font-bold">P</div>
+            <span className="hidden text-lg font-semibold sm:inline">Palrgo</span>
           </Link>
-          <h1 className="text-lg font-bold">{view === "account" ? "Account" : view === "profile" ? `@${profileUsername}` : "Feed"}</h1>
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={() => setView(view === "account" ? "feed" : "account")}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors ${view === "account" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
-              title="Account settings"
-            >
-              <Settings className="h-4 w-4" /> Settings
-            </button>
-            <button
-              onClick={() => { setProfileUsername(user.username); setView("profile"); }}
-              className={`rounded-full p-2 transition-colors ${view === "profile" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
-              title="My profile"
-            >
-              <UserCircle className="h-5 w-5" />
-            </button>
+          <div className="mx-auto hidden w-full max-w-md md:block">
+            <div className="flex items-center gap-2 rounded-full bg-[#f0f2f5] px-4 py-2 text-sm text-muted-foreground">
+              <span>Search posts, people, hashtags…</span>
+            </div>
           </div>
+          <button
+            onClick={() => { setProfileUsername(user.username); setView("profile"); }}
+            className="ml-auto flex items-center gap-2 rounded-full px-2 py-1 hover:bg-accent"
+            title="My profile"
+          >
+            <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-primary text-sm font-semibold">
+              {user.username.slice(0, 1).toUpperCase()}
+            </div>
+            <span className="hidden text-sm font-medium sm:inline">{user.username}</span>
+          </button>
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[220px_1fr_280px]">
-        {/* Left nav */}
+      <div className="mx-auto grid max-w-[1280px] gap-5 px-4 py-5 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
+        {/* Left rail — minimal nav card */}
         <aside className="hidden lg:block">
-          <nav className="sticky top-20 space-y-1">
-            <button onClick={() => setView("feed")} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors ${view === "feed" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}><Sparkles className="h-4 w-4" /> Feed</button>
-            <NavLink to="/" icon={Home} label="Chatrooms" />
-            <NavLink to="/leaderboard" icon={Flame} label="Leaderboard" />
-            <NavLink to="/achievements" icon={Bell} label="Achievements" />
-            <button onClick={() => setView("account")} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors ${view === "account" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}><Settings className="h-4 w-4" /> Account</button>
+          <nav className="sticky top-20 rounded-2xl bg-white p-2 shadow-sm border border-border">
+            <SideItem active={view === "feed"} onClick={() => setView("feed")} icon={Sparkles} label="News Feed" />
+            <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
+            <SideItem
+              active={view === "profile"}
+              onClick={() => { setProfileUsername(user.username); setView("profile"); }}
+              icon={UserCircle}
+              label="My Profile"
+            />
           </nav>
         </aside>
 
         {/* Center */}
         <main className="min-w-0">
           {view === "account" ? (
-            <AccountPanel />
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-border"><AccountPanel /></div>
           ) : view === "profile" ? (
-            <ProfilePanel username={profileUsername} onBack={() => setView("feed")} />
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-border"><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></div>
           ) : (
             <>
-              <Composer authorId={meId} onPosted={loadPosts} />
+              <div className="rounded-2xl bg-white shadow-sm border border-border">
+                <Composer authorId={meId} onPosted={loadPosts} />
+              </div>
 
-              <div className="mt-4 flex gap-1 overflow-x-auto rounded-full border border-border bg-card p-1">
+              <div className="mt-4 flex gap-1 overflow-x-auto rounded-full bg-white p-1 shadow-sm border border-border">
                 {TABS.map((t) => {
                   const Icon = t.icon;
                   return (
@@ -217,10 +222,10 @@ function FeedPage() {
 
               <div className="mt-4 space-y-4">
                 {loading && Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-48 animate-pulse rounded-3xl border border-border bg-card" />
+                  <div key={i} className="h-48 animate-pulse rounded-2xl bg-white border border-border" />
                 ))}
                 {!loading && filtered.length === 0 && (
-                  <div className="rounded-3xl border border-dashed border-border bg-card/50 p-12 text-center">
+                  <div className="rounded-2xl bg-white p-12 text-center shadow-sm border border-border">
                     <p className="text-sm text-muted-foreground">No posts yet. Be the first to share something!</p>
                   </div>
                 )}
@@ -232,26 +237,34 @@ function FeedPage() {
           )}
         </main>
 
-        {/* Right widgets */}
+        {/* Right rail */}
         <aside className="hidden space-y-4 lg:block">
           <div className="sticky top-20 space-y-4">
             <ChatroomOnlineWidget />
             <FriendsWidget meId={meId} profiles={profiles} />
             <HashtagsWidget />
-            <LeaderboardWidget profiles={profiles} />
-            <StreakWidget profiles={profiles} />
           </div>
         </aside>
       </div>
 
-      {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-border bg-background/95 backdrop-blur-md lg:hidden">
+      {/* Mobile bottom nav — minimal */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-border bg-white lg:hidden">
         <button onClick={() => setView("feed")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "feed" ? "text-primary" : "text-muted-foreground"}`}><Sparkles className="h-5 w-5" /> Feed</button>
-        <MobileNav to="/" icon={Home} label="Chatrooms" />
-        <button onClick={() => setView("account")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "account" ? "text-primary" : "text-muted-foreground"}`}><Settings className="h-5 w-5" /> Settings</button>
+        <button onClick={() => setView("account")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "account" ? "text-primary" : "text-muted-foreground"}`}><Settings className="h-5 w-5" /> Account</button>
         <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
     </div>
+  );
+}
+
+function SideItem({ icon: Icon, label, active, onClick }: { icon: typeof Home; label: string; active?: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent"}`}
+    >
+      <Icon className="h-5 w-5" /> {label}
+    </button>
   );
 }
 
