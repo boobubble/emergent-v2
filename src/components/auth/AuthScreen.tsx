@@ -16,6 +16,9 @@ export function AuthScreen() {
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const usernameStatus = useUsernameCheck(mode === "signup" ? username : "");
+  const guestStatus = useUsernameCheck(showGuest ? guestName : "");
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setErr(""); setInfo(""); setBusy(true);
@@ -28,6 +31,8 @@ export function AuthScreen() {
           throw new Error("Username must contain between 2 and 10 letters.");
         }
         if (!gender) throw new Error("Please select your gender.");
+        if (usernameStatus.state === "error") throw new Error(usernameStatus.message);
+        if (usernameStatus.state !== "ok") throw new Error("Checking username, please wait…");
         await signup(email, password, username.trim(), gender);
         setInfo("Account created! Check your email to confirm, then sign in.");
         setMode("login");
@@ -38,6 +43,7 @@ export function AuthScreen() {
       setBusy(false);
     }
   }
+
 
   async function onGoogle() {
     setErr(""); setBusy(true);
