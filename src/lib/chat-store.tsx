@@ -383,7 +383,7 @@ function pickBotReply(text: string): string {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export function ChatProvider({ username, authUserId = null, children }: { username: string; authUserId?: string | null; children: ReactNode }) {
+export function ChatProvider({ username, authUserId = null, isGuest = false, children }: { username: string; authUserId?: string | null; isGuest?: boolean; children: ReactNode }) {
   const [state, setState] = useState<State>(() => seed(username));
   const [storageReady, setStorageReady] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
@@ -582,6 +582,24 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
     const attachment = opts?.attachment;
     const replyToId = opts?.replyToId;
     if (!trimmed && !attachment) return;
+    if (isGuest) {
+      const isCmdGuest = trimmed.startsWith("!") || /^\/(mute|kick)\b/i.test(trimmed);
+      const hasLink = /\b(https?:\/\/|www\.)\S+/i.test(trimmed) || /\b[\w-]+\.(com|net|org|io|co|app|dev|me|gg|xyz|info|link|site)\b/i.test(trimmed);
+      const reason = isCmdGuest
+        ? "🚫 Guests can't command bots — sign up to play and use commands."
+        : hasLink
+          ? "🚫 Guests can't post links — sign up to share links."
+          : null;
+      if (reason) {
+        setState(s => {
+          const ch = s.activeChannel;
+          const sys: Message = { id: uid(), channelId: ch, authorId: "bot-gamebot", text: reason, ts: Date.now(), kind: "system" };
+          return { ...s, messages: { ...s.messages, [ch]: [...(s.messages[ch] || []), sys] } };
+        });
+        setReplyingTo(null);
+        return;
+      }
+    }
     type Outgoing = { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null };
     const outgoingRemotes: Outgoing[] = [];
     setState(s => {
@@ -775,9 +793,16 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       ).then(({ error }) => { if (error) console.error("send failed", error); });
     }
     setReplyingTo(null);
-  }, [authUserId]);
+  }, [authUserId, isGuest]);
 
   const startDM = useCallback((userId: string) => {
+    if (isGuest) {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("palrgo:toast", { detail: { message: "🚫 Guest users not allowed DM. Sign up to message users." } }));
+        alert("Guest users not allowed DM. Sign up to message users.");
+      }
+      return;
+    }
     const channelId = dmChannelFor(authUserId, userId);
     setState(s => {
       const next: State = {
@@ -791,7 +816,7 @@ export function ChatProvider({ username, authUserId = null, children }: { userna
       }
       return badged.state;
     });
-  }, [authUserId]);
+  }, [authUserId, isGuest]);
 
   const closeDM = useCallback((userId: string) => {
     const channelId = dmChannelFor(authUserId, userId);

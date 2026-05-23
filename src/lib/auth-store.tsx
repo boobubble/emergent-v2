@@ -8,6 +8,7 @@ export interface AuthUser {
   id: string;
   email: string;
   username: string;
+  isGuest: boolean;
 }
 
 interface Ctx {
@@ -16,6 +17,7 @@ interface Ctx {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string, gender: "male" | "female" | "other") => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  loginAsGuest: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -42,9 +44,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!cancelled) setUser(null);
         return;
       }
-      const username = await fetchUsername(session.user.id, session.user.email ?? undefined);
+      const isGuest = Boolean((session.user as { is_anonymous?: boolean }).is_anonymous);
+      const username = isGuest ? `guest-${session.user.id.slice(0, 5)}` : await fetchUsername(session.user.id, session.user.email ?? undefined);
       if (cancelled) return;
-      setUser({ id: session.user.id, email: session.user.email ?? "", username });
+      setUser({ id: session.user.id, email: session.user.email ?? "", username, isGuest });
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -91,12 +94,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (result.error) throw new Error(result.error.message || "Google sign-in failed");
   }, []);
 
+  const loginAsGuest = useCallback(async () => {
+    const { error } = await supabase.auth.signInAnonymously();
+    if (error) throw new Error(error.message);
+  }, []);
+
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
   }, []);
 
-  const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, logout }), [user, ready, login, signup, loginWithGoogle, logout]);
+  const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, loginAsGuest, logout }), [user, ready, login, signup, loginWithGoogle, loginAsGuest, logout]);
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 
