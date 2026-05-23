@@ -17,7 +17,7 @@ interface Ctx {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string, gender: "male" | "female" | "other") => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginAsGuest: () => Promise<void>;
+  loginAsGuest: (username?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
