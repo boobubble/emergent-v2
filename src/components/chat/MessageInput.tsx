@@ -14,6 +14,9 @@ const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 export function MessageInput() {
   const { send, state, replyingTo, setReplyingTo } = useChat();
+  const { user } = useAuth();
+  const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
+  const { typers, sendTyping } = useTyping(state.activeChannel, me, !!me);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
