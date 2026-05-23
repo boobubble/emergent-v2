@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       const isGuest = Boolean((session.user as { is_anonymous?: boolean }).is_anonymous);
-      const username = isGuest ? `guest-${session.user.id.slice(0, 5)}` : await fetchUsername(session.user.id, session.user.email ?? undefined);
+      const username = await fetchUsername(session.user.id, session.user.email ?? undefined);
       if (cancelled) return;
       setUser({ id: session.user.id, email: session.user.email ?? "", username, isGuest });
     }
