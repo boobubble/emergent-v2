@@ -4,6 +4,7 @@ import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2 } from "luc
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
 import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type FeedReaction, type ReactionType } from "@/lib/feed-types";
+import { postSlug } from "@/lib/post-slug";
 import type { User } from "@/lib/chat-types";
 
 function timeAgo(iso: string) {
