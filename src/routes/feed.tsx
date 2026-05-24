@@ -201,18 +201,18 @@ function FeedPage() {
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></div>
           ) : (
             <>
-              <div className="rounded-2xl bg-card shadow-sm border border-border">
+              <div className="rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border">
                 <Composer authorId={meId} onPosted={loadPosts} />
               </div>
 
-              <div className="mt-4 flex gap-1 overflow-x-auto rounded-full bg-card p-1 shadow-sm border border-border">
+              <div className="mt-3 sm:mt-4 flex gap-1 overflow-x-auto rounded-full bg-card p-1 shadow-sm border border-border">
                 {TABS.map((t) => {
                   const Icon = t.icon;
                   return (
                     <button
                       key={t.id}
                       onClick={() => setTab(t.id)}
-                      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
+                      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition-colors ${tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
                     >
                       <Icon className="h-3.5 w-3.5" /> {t.label}
                     </button>
@@ -220,12 +220,12 @@ function FeedPage() {
                 })}
               </div>
 
-              <div className="mt-4 space-y-4">
+              <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
                 {loading && Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-48 animate-pulse rounded-2xl bg-card border border-border" />
+                  <div key={i} className="h-40 sm:h-48 animate-pulse rounded-xl sm:rounded-2xl bg-card border border-border" />
                 ))}
                 {!loading && filtered.length === 0 && (
-                  <div className="rounded-2xl bg-card p-12 text-center shadow-sm border border-border">
+                  <div className="rounded-xl sm:rounded-2xl bg-card p-8 sm:p-12 text-center shadow-sm border border-border">
                     <p className="text-sm text-muted-foreground">No posts yet. Be the first to share something!</p>
                   </div>
                 )}
