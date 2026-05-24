@@ -197,16 +197,24 @@ function FeedPage() {
       <div className="mx-auto grid max-w-[1280px] gap-3 px-2 py-3 sm:gap-5 sm:px-4 sm:py-5 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
         {/* Left rail — minimal nav card */}
         <aside className="hidden lg:block">
-          <nav className="sticky top-20 rounded-2xl bg-card p-2 shadow-sm border border-border">
-            <SideItem active={view === "feed"} onClick={() => setView("feed")} icon={Sparkles} label="News Feed" />
-            <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
-            <SideItem
-              active={view === "profile"}
-              onClick={() => { setProfileUsername(user.username); setView("profile"); }}
-              icon={UserCircle}
-              label="My Profile"
+          <div className="sticky top-20 space-y-3">
+            <nav className="rounded-2xl bg-card p-2 shadow-sm border border-border">
+              <SideItem active={view === "feed"} onClick={() => setView("feed")} icon={Sparkles} label="News Feed" />
+              <SideItem onClick={() => setDmOpenKey(k => k + 1)} icon={MessageCircle} label="Messages" />
+              <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
+              <SideItem
+                active={view === "profile"}
+                onClick={() => { setProfileUsername(user.username); setView("profile"); }}
+                icon={UserCircle}
+                label="My Profile"
+              />
+            </nav>
+            <FriendsListCard
+              friendIds={friendIds}
+              profiles={profiles}
+              onChat={() => setDmOpenKey(k => k + 1)}
             />
-          </nav>
+          </div>
         </aside>
 
         {/* Center */}
