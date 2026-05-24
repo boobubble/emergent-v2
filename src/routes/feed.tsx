@@ -178,7 +178,7 @@ function FeedPage() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1280px] gap-5 px-4 py-5 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
+      <div className="mx-auto grid max-w-[1280px] gap-3 px-2 py-3 sm:gap-5 sm:px-4 sm:py-5 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
         {/* Left rail — minimal nav card */}
         <aside className="hidden lg:block">
           <nav className="sticky top-20 rounded-2xl bg-card p-2 shadow-sm border border-border">
