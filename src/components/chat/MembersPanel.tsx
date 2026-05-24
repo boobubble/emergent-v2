@@ -74,6 +74,25 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     return () => window.removeEventListener("open-members-panel", open);
   }, []);
 
+  useEffect(() => {
+    if (!meId) return;
+    async function loadFriends() {
+      const { data } = await supabase
+        .from("friendships")
+        .select("sender_id,receiver_id,status")
+        .eq("status", "accepted")
+        .or(`sender_id.eq.${meId},receiver_id.eq.${meId}`);
+      const ids = (data ?? []).map((f) => (f.sender_id === meId ? f.receiver_id : f.sender_id));
+      setFriendIds(ids);
+    }
+    loadFriends();
+    const ch = supabase
+      .channel(`friends-${meId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, () => loadFriends())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [meId]);
+
   const unreadCount = notifs.filter(n => !n.read).length;
 
   async function markAllRead() {
