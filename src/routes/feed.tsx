@@ -201,7 +201,7 @@ function FeedPage() {
           <div className="sticky top-20 space-y-3">
             <nav className="rounded-2xl bg-card p-2 shadow-sm border border-border">
               <SideItem active={view === "feed"} onClick={() => setView("feed")} icon={Sparkles} label="News Feed" />
-              <SideItem onClick={() => setDmOpenKey(k => k + 1)} icon={MessageCircle} label="Messages" />
+              <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
               <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
               <SideItem
                 active={view === "profile"}
@@ -320,6 +320,18 @@ function SideItem({ icon: Icon, label, active, onClick }: { icon: typeof Home; l
     >
       <Icon className="h-5 w-5" /> {label}
     </button>
+  );
+}
+
+function SideLink({ to, iconSrc, label }: { to: string; iconSrc: string; label: string }) {
+  return (
+    <Link
+      to={to}
+      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+    >
+      <img src={iconSrc} alt="" className="h-5 w-5 rounded-full bg-white object-contain p-0.5" />
+      {label}
+    </Link>
   );
 }
 
