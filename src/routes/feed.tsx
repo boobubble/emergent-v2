@@ -170,16 +170,27 @@ function FeedPage() {
               <span>Search posts, people, hashtags…</span>
             </div>
           </div>
-          <button
-            onClick={() => { setProfileUsername(user.username); setView("profile"); }}
-            className="ml-auto flex items-center gap-2 rounded-full px-2 py-1 hover:bg-accent"
-            title="My profile"
-          >
-            <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-primary text-sm font-semibold">
-              {user.username.slice(0, 1).toUpperCase()}
-            </div>
-            <span className="hidden text-sm font-medium sm:inline">{user.username}</span>
-          </button>
+          <div className="ml-auto flex items-center gap-1">
+            <FeedNotifications meId={meId} profiles={profiles} />
+            <button
+              onClick={() => setDmOpenKey(k => k + 1)}
+              className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent"
+              title="Messages"
+              aria-label="Messages"
+            >
+              <MessageCircle className="h-5 w-5 text-foreground" />
+            </button>
+            <button
+              onClick={() => { setProfileUsername(user.username); setView("profile"); }}
+              className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-accent"
+              title="My profile"
+            >
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-primary text-sm font-semibold">
+                {user.username.slice(0, 1).toUpperCase()}
+              </div>
+              <span className="hidden text-sm font-medium sm:inline">{user.username}</span>
+            </button>
+          </div>
         </div>
       </header>
 
