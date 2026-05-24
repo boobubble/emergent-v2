@@ -323,6 +323,18 @@ function SideItem({ icon: Icon, label, active, onClick }: { icon: typeof Home; l
   );
 }
 
+function SideLink({ to, iconSrc, label }: { to: string; iconSrc: string; label: string }) {
+  return (
+    <Link
+      to={to}
+      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+    >
+      <img src={iconSrc} alt="" className="h-5 w-5 rounded-full bg-white object-contain p-0.5" />
+      {label}
+    </Link>
+  );
+}
+
 function NavLink({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active?: boolean }) {
   return (
     <Link to={to} className={`flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
