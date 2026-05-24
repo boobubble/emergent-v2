@@ -201,7 +201,7 @@ function FeedPage() {
           <div className="sticky top-20 space-y-3">
             <nav className="rounded-2xl bg-card p-2 shadow-sm border border-border">
               <SideItem active={view === "feed"} onClick={() => setView("feed")} icon={Sparkles} label="News Feed" />
-              <SideItem onClick={() => setDmOpenKey(k => k + 1)} icon={MessageCircle} label="Messages" />
+              <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
               <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
               <SideItem
                 active={view === "profile"}
