@@ -277,9 +277,21 @@ export function MembersPanel({ roomId }: { roomId: string }) {
       </div>
 
       <div className="px-5 pt-3">
-        <h2 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          {viewMode === "friends" ? <>Friends &mdash; {friendIds.length}</> : <>Members &mdash; {allIds.length}</>}
-        </h2>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            {viewMode === "friends" ? <>Friends &mdash; {friendIds.length}</> : <>Members &mdash; {allIds.length}</>}
+          </h2>
+          {viewMode === "friends" && (
+            <button
+              onClick={() => setViewMode("members")}
+              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary transition-colors hover:bg-primary/20"
+              title="Show online users"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Online Users
+            </button>
+          )}
+        </div>
       </div>
 
       {viewMode === "friends" ? (
