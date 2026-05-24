@@ -48,6 +48,7 @@ function FeedPage() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [dmOpenKey, setDmOpenKey] = useState(0);
 
   const meId = user?.id ?? "";
 
