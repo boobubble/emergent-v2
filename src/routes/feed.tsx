@@ -4,6 +4,7 @@ import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, M
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
+import { useChat } from "@/lib/chat-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
