@@ -82,9 +82,13 @@ export function MessageList({ channelId }: { channelId: string }) {
       if (msgs[i].authorId === "me") { lastMeIdx = i; break; }
     }
     if (lastMeIdx === -1) return null;
-    const hasLaterOther = msgs.slice(lastMeIdx + 1).some(m => m.authorId !== "me");
-    return hasLaterOther ? msgs[lastMeIdx].id : null;
-  }, [msgs]);
+    const hasLaterHuman = msgs.slice(lastMeIdx + 1).some(m => {
+      if (m.authorId === "me") return false;
+      const u = state.users[m.authorId];
+      return u && !u.isBot;
+    });
+    return hasLaterHuman ? msgs[lastMeIdx].id : null;
+  }, [msgs, state.users]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
