@@ -278,6 +278,35 @@ function FeedPage() {
         <button onClick={() => setView("account")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "account" ? "text-primary" : "text-muted-foreground"}`}><Settings className="h-5 w-5" /> Account</button>
         <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
+
+      <FeedDMDock key={dmOpenKey} meId={meId} profiles={profiles} initialOpen={dmOpenKey > 0} />
+    </div>
+  );
+}
+
+function FriendsListCard({ friendIds, profiles, onChat }: { friendIds: Set<string>; profiles: Record<string, import("@/lib/chat-types").User>; onChat: () => void }) {
+  const { startDM } = useChat();
+  const list = Array.from(friendIds).map(id => profiles[id]).filter(Boolean) as import("@/lib/chat-types").User[];
+  return (
+    <div className="rounded-2xl bg-card p-3 shadow-sm border border-border">
+      <div className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Friends ({list.length})</div>
+      {list.length === 0 ? (
+        <p className="px-1 py-2 text-xs text-muted-foreground">No friends yet.</p>
+      ) : (
+        <div className="space-y-0.5">
+          {list.slice(0, 8).map(u => (
+            <button
+              key={u.id}
+              onClick={() => { startDM(u.id); onChat(); }}
+              className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left hover:bg-accent"
+            >
+              <Avatar user={u} size={28} />
+              <span className="flex-1 truncate text-sm">{u.name}</span>
+              <span className={`h-2 w-2 rounded-full ${u.status === "online" ? "bg-green-500" : "bg-muted-foreground/40"}`} />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
