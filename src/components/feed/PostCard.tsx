@@ -7,6 +7,7 @@ import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type F
 import { postSlug } from "@/lib/post-slug";
 import { ShareModal, type SharePayload } from "@/components/feed/ShareModal";
 import type { User } from "@/lib/chat-types";
+import { NameEmojiBadge } from "@/lib/name-emoji";
 
 
 function timeAgo(iso: string) {
@@ -112,7 +113,10 @@ export function PostCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             {author ? (
-              <Link to="/u/$username" params={{ username: author.name }} className="font-semibold hover:underline">{author.name}</Link>
+              <>
+                <Link to="/u/$username" params={{ username: author.name }} className="font-semibold hover:underline">{author.name}</Link>
+                <NameEmojiBadge user={author} />
+              </>
             ) : (
               <span className="font-semibold text-muted-foreground">Anonymous</span>
             )}

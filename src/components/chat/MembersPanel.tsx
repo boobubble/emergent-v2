@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar } from "./Avatar";
 import { UserMenu } from "./UserMenu";
+import { NameEmojiBadge } from "@/lib/name-emoji";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -415,6 +416,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           <div className="min-w-0 flex-1 leading-tight">
             <div className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground/90 hover:text-primary">
               {u.name}
+              <NameEmojiBadge user={u} />
               {ICONS[role]}
             </div>
             <div className="truncate text-[10px] text-muted-foreground">
