@@ -44,6 +44,8 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [showAllOffline, setShowAllOffline] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notifs, setNotifs] = useState<FeedNotification[]>([]);
+  const [viewMode, setViewMode] = useState<"members" | "friends">("members");
+  const [friendIds, setFriendIds] = useState<string[]>([]);
   const meId = authUser?.id;
 
   useEffect(() => {
