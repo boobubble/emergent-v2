@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2 } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
@@ -44,6 +44,8 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [showAllOffline, setShowAllOffline] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notifs, setNotifs] = useState<FeedNotification[]>([]);
+  const [viewMode, setViewMode] = useState<"members" | "friends">("members");
+  const [friendIds, setFriendIds] = useState<string[]>([]);
   const meId = authUser?.id;
 
   useEffect(() => {
@@ -71,6 +73,25 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     window.addEventListener("open-members-panel", open);
     return () => window.removeEventListener("open-members-panel", open);
   }, []);
+
+  useEffect(() => {
+    if (!meId) return;
+    async function loadFriends() {
+      const { data } = await supabase
+        .from("friendships")
+        .select("sender_id,receiver_id,status")
+        .eq("status", "accepted")
+        .or(`sender_id.eq.${meId},receiver_id.eq.${meId}`);
+      const ids = (data ?? []).map((f) => (f.sender_id === meId ? f.receiver_id : f.sender_id));
+      setFriendIds(ids);
+    }
+    loadFriends();
+    const ch = supabase
+      .channel(`friends-${meId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, () => loadFriends())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [meId]);
 
   const unreadCount = notifs.filter(n => !n.read).length;
 
@@ -229,6 +250,21 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        <button
+          onClick={() => setViewMode(v => v === "friends" ? "members" : "friends")}
+          title={viewMode === "friends" ? "Show members" : "Show friends"}
+          aria-label="Toggle friends list"
+          aria-pressed={viewMode === "friends"}
+          className={`relative grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-white/5 hover:text-foreground ${viewMode === "friends" ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
+        >
+          <Users2 className="h-4 w-4" />
+          {friendIds.length > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+              {friendIds.length}
+            </span>
+          )}
+        </button>
+
         <Link
           to="/feed"
           search={{ tab: "account" } as never}
@@ -242,56 +278,83 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
       <div className="px-5 pt-3">
         <h2 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          Members &mdash; {allIds.length}
+          {viewMode === "friends" ? <>Friends &mdash; {friendIds.length}</> : <>Members &mdash; {allIds.length}</>}
         </h2>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
-        <div className="space-y-1">
-          {online.map(id => (
-            <MemberRow
-              key={id}
-              id={id}
-              role={room.roles[id] || "member"}
-              onClick={() => id !== "me" && startDM(id)}
-            />
-          ))}
-        </div>
-
-        {offline.length > 0 && (
-          <div>
-            <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-              Offline — {offlineSorted.length}
-            </div>
-            <div className="space-y-1 opacity-60">
-              {offline.map(id => (
+      {viewMode === "friends" ? (
+        <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
+          {friendIds.length === 0 ? (
+            <p className="px-3 py-8 text-center text-xs text-muted-foreground">
+              No friends yet. Add some from the feed or click a member to start.
+            </p>
+          ) : (
+            friendIds
+              .slice()
+              .sort((a, b) => {
+                const ao = isOnline(a) ? 0 : 1;
+                const bo = isOnline(b) ? 0 : 1;
+                if (ao !== bo) return ao - bo;
+                return (usersById[a]?.name || profiles[a]?.name || "").localeCompare(usersById[b]?.name || profiles[b]?.name || "");
+              })
+              .map(id => (
                 <MemberRow
                   key={id}
                   id={id}
                   role={room.roles[id] || "member"}
-                  onClick={() => id !== "me" && startDM(id)}
+                  onClick={() => startDM(id)}
                 />
-              ))}
-            </div>
-            {hiddenOffline > 0 && (
-              <button
-                onClick={() => setShowAllOffline(true)}
-                className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
-              >
-                Show {hiddenOffline} more
-              </button>
-            )}
-            {showAllOffline && offlineSorted.length > OFFLINE_MIN && (
-              <button
-                onClick={() => setShowAllOffline(false)}
-                className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
-              >
-                Show less
-              </button>
-            )}
+              ))
+          )}
+        </div>
+      ) : (
+        <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+          <div className="space-y-1">
+            {online.map(id => (
+              <MemberRow
+                key={id}
+                id={id}
+                role={room.roles[id] || "member"}
+                onClick={() => id !== "me" && startDM(id)}
+              />
+            ))}
           </div>
-        )}
-      </div>
+
+          {offline.length > 0 && (
+            <div>
+              <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                Offline — {offlineSorted.length}
+              </div>
+              <div className="space-y-1 opacity-60">
+                {offline.map(id => (
+                  <MemberRow
+                    key={id}
+                    id={id}
+                    role={room.roles[id] || "member"}
+                    onClick={() => id !== "me" && startDM(id)}
+                  />
+                ))}
+              </div>
+              {hiddenOffline > 0 && (
+                <button
+                  onClick={() => setShowAllOffline(true)}
+                  className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
+                >
+                  Show {hiddenOffline} more
+                </button>
+              )}
+              {showAllOffline && offlineSorted.length > OFFLINE_MIN && (
+                <button
+                  onClick={() => setShowAllOffline(false)}
+                  className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
+                >
+                  Show less
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="p-5">
         <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/15 to-transparent p-4">
