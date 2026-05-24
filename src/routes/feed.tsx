@@ -152,16 +152,16 @@ function FeedPage() {
   ];
 
   return (
-    <div className="light min-h-screen bg-[#f0f2f5] text-foreground pb-20 md:pb-0">
+    <div className="min-h-screen bg-background text-foreground pb-20 md:pb-0">
       {/* Top bar — minimal, white, Facebook-style */}
-      <header className="sticky top-0 z-20 border-b border-border bg-white">
+      <header className="sticky top-0 z-20 border-b border-border bg-card">
         <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-4 py-2.5">
           <Link to="/" className="flex items-center gap-2 text-primary">
             <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground font-bold">P</div>
             <span className="hidden text-lg font-semibold sm:inline">Palrgo</span>
           </Link>
           <div className="mx-auto hidden w-full max-w-md md:block">
-            <div className="flex items-center gap-2 rounded-full bg-[#f0f2f5] px-4 py-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
               <span>Search posts, people, hashtags…</span>
             </div>
           </div>
@@ -181,7 +181,7 @@ function FeedPage() {
       <div className="mx-auto grid max-w-[1280px] gap-5 px-4 py-5 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
         {/* Left rail — minimal nav card */}
         <aside className="hidden lg:block">
-          <nav className="sticky top-20 rounded-2xl bg-white p-2 shadow-sm border border-border">
+          <nav className="sticky top-20 rounded-2xl bg-card p-2 shadow-sm border border-border">
             <SideItem active={view === "feed"} onClick={() => setView("feed")} icon={Sparkles} label="News Feed" />
             <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
             <SideItem
@@ -196,16 +196,16 @@ function FeedPage() {
         {/* Center */}
         <main className="min-w-0">
           {view === "account" ? (
-            <div className="rounded-2xl bg-white p-4 shadow-sm border border-border"><AccountPanel /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><AccountPanel /></div>
           ) : view === "profile" ? (
-            <div className="rounded-2xl bg-white p-4 shadow-sm border border-border"><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></div>
           ) : (
             <>
-              <div className="rounded-2xl bg-white shadow-sm border border-border">
+              <div className="rounded-2xl bg-card shadow-sm border border-border">
                 <Composer authorId={meId} onPosted={loadPosts} />
               </div>
 
-              <div className="mt-4 flex gap-1 overflow-x-auto rounded-full bg-white p-1 shadow-sm border border-border">
+              <div className="mt-4 flex gap-1 overflow-x-auto rounded-full bg-card p-1 shadow-sm border border-border">
                 {TABS.map((t) => {
                   const Icon = t.icon;
                   return (
@@ -222,10 +222,10 @@ function FeedPage() {
 
               <div className="mt-4 space-y-4">
                 {loading && Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-48 animate-pulse rounded-2xl bg-white border border-border" />
+                  <div key={i} className="h-48 animate-pulse rounded-2xl bg-card border border-border" />
                 ))}
                 {!loading && filtered.length === 0 && (
-                  <div className="rounded-2xl bg-white p-12 text-center shadow-sm border border-border">
+                  <div className="rounded-2xl bg-card p-12 text-center shadow-sm border border-border">
                     <p className="text-sm text-muted-foreground">No posts yet. Be the first to share something!</p>
                   </div>
                 )}
@@ -248,7 +248,7 @@ function FeedPage() {
       </div>
 
       {/* Mobile bottom nav — minimal */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-border bg-white lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-border bg-card lg:hidden">
         <button onClick={() => setView("feed")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "feed" ? "text-primary" : "text-muted-foreground"}`}><Sparkles className="h-5 w-5" /> Feed</button>
         <button onClick={() => setView("account")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "account" ? "text-primary" : "text-muted-foreground"}`}><Settings className="h-5 w-5" /> Account</button>
         <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
