@@ -345,6 +345,8 @@ interface Ctx {
   replyingTo: Message | null;
   setReplyingTo: (m: Message | null) => void;
   findMessage: (id: string) => Message | undefined;
+  dmPeerReadAt: (channelId: string) => number;
+
 }
 
 const ChatCtx = createContext<Ctx | null>(null);
