@@ -502,16 +502,18 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     (async () => {
       const { data } = await supabase
         .from("messages")
-        .select("channel_id")
+        .select("channel_id, created_at")
         .like("channel_id", "dm:%")
         .order("created_at", { ascending: false })
         .limit(500);
       if (cancelled || !data) return;
       const peers: string[] = [];
       const seen = new Set<string>();
+      const latest: Record<string, number> = {};
       for (const row of data) {
         const ch = row.channel_id as string;
         if (!ch.startsWith("dm:")) continue;
+        if (latest[ch] === undefined) latest[ch] = new Date(row.created_at as string).getTime();
         const parts = ch.slice(3).split(":");
         const peer = parts.find(p => p !== authUserId && UUID_RE.test(p));
         if (peer && !seen.has(peer)) {
@@ -519,12 +521,36 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           peers.push(peer);
         }
       }
+      if (Object.keys(latest).length) {
+        setDmLatestTs(prev => ({ ...latest, ...prev }));
+      }
       if (!peers.length) return;
       setState(s => {
         const existing = new Set(s.dmOrder);
         const additions = peers.filter(p => !existing.has(p));
         if (!additions.length) return s;
         return { ...s, dmOrder: [...s.dmOrder, ...additions] };
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [authUserId]);
+
+  // Fetch all my DM read markers up-front so unread state survives reloads
+  useEffect(() => {
+    if (!authUserId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("dm_reads")
+        .select("user_id, channel_id, last_read_at");
+      if (cancelled || !data) return;
+      setDmReads(prev => {
+        const next = { ...prev };
+        for (const r of data) {
+          const ch = (next[r.channel_id] ||= { ...(prev[r.channel_id] || {}) });
+          ch[r.user_id] = new Date(r.last_read_at).getTime();
+        }
+        return next;
       });
     })();
     return () => { cancelled = true; };
