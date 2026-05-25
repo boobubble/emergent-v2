@@ -299,7 +299,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             {viewMode === "friends" ? <>Friends &mdash; {friendIds.length}</> : <>Members &mdash; {allIds.length}</>}
           </h2>
-          {viewMode === "friends" && (
+          {viewMode === "friends" ? (
             <button
               onClick={() => setViewMode("members")}
               className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary transition-colors hover:bg-primary/20"
@@ -308,9 +308,31 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               Online Users
             </button>
+          ) : (
+            <div className="inline-flex items-center gap-0.5 rounded-full bg-white/5 p-0.5">
+              {([
+                { id: "default", label: "Role" },
+                { id: "level", label: "Lvl" },
+                { id: "streak", label: "🔥" },
+              ] as const).map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => setSortBy(opt.id)}
+                  title={`Sort by ${opt.label}`}
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                    sortBy === opt.id
+                      ? "bg-primary/20 text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
+
 
       {viewMode === "friends" ? (
         <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
