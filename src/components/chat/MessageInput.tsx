@@ -3,13 +3,13 @@ import { Send, Smile, Sparkles, Paperclip, X, Reply } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useTyping } from "@/lib/use-typing";
+import { EmojiPicker } from "./EmojiPicker";
 import type { Attachment } from "@/lib/chat-types";
 
 const COMMANDS = [
   "!help", "!roll", "!flip", "!slots", "!fish", "!dig",
   "!trivia", "!a", "!hangman", "!g", "!me", "!stats",
 ];
-const EMOJIS = ["😀","😂","😎","🥳","👍","❤️","🔥","🎲","🎰","🏆","👀","🪙","💀","🎉"];
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 export function MessageInput() {
