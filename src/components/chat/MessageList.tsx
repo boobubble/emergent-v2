@@ -15,7 +15,7 @@ function AttachmentView({ a }: { a: Attachment }) {
         <img
           src={a.dataUrl}
           alt={a.name}
-          className="mt-1 block h-28 w-28 object-contain"
+          className="mt-1 block h-16 w-16 object-contain"
         />
       );
     }
