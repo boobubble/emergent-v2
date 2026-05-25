@@ -16,6 +16,7 @@ import { ProfilePanel } from "@/components/feed/ProfilePanel";
 import { FeedSettingsPanel } from "@/components/feed/FeedSettingsPanel";
 import { AchievementsPanel } from "@/components/feed/AchievementsPanel";
 import { LeaderboardPanel } from "@/components/feed/LeaderboardPanel";
+import { FindFriendsPanel } from "@/components/feed/FindFriendsPanel";
 import { FeedDMDock } from "@/components/feed/FeedDMDock";
 import { FeedNotifications } from "@/components/feed/FeedNotifications";
 import { Avatar } from "@/components/chat/Avatar";
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/feed")({
 });
 
 type Tab = "foryou" | "trending" | "latest" | "friends" | "saved" | "notifications";
-type View = "feed" | "account" | "profile" | "settings" | "achievements" | "leaderboard";
+type View = "feed" | "account" | "profile" | "settings" | "achievements" | "leaderboard" | "findFriends";
 
 function isVisibleFeedTab(tab: string): tab is Tab {
   return ["foryou", "trending", "latest", "friends", "saved", "notifications"].includes(tab);
