@@ -10,6 +10,7 @@ import { useFeedPrefs } from "@/lib/feed-prefs";
 import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
+import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
 import { AccountPanel } from "@/components/feed/AccountPanel";
 import { ProfilePanel } from "@/components/feed/ProfilePanel";
 import { FeedSettingsPanel } from "@/components/feed/FeedSettingsPanel";
@@ -269,6 +270,9 @@ function FeedPage() {
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></div>
           ) : (
             <>
+              <div className="mb-3 sm:mb-4 lg:hidden">
+                <DailyChallengesWidget meId={meId} />
+              </div>
               <div className="rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border">
                 <Composer authorId={meId} onPosted={loadPosts} />
               </div>
@@ -335,6 +339,7 @@ function FeedPage() {
         {/* Right rail */}
         <aside className="hidden space-y-4 lg:block">
           <div className="sticky top-20 space-y-4">
+            <DailyChallengesWidget meId={meId} />
             <ChatroomOnlineWidget />
             <FriendsWidget meId={meId} profiles={profiles} />
             <HashtagsWidget />
