@@ -177,7 +177,7 @@ export const PostCard = memo(function PostCard({
           )}
         </div>
         <button onClick={() => setShowComments(!showComments)} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
-          <MessageCircle className="h-4 w-4" /> {post.comment_count || "Comment"}
+          <MessageCircle className="h-4 w-4" /> {hideCounts ? "Comment" : (post.comment_count || "Comment")}
         </button>
         <button
           onClick={async () => {
