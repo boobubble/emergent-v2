@@ -346,7 +346,8 @@ interface Ctx {
   setReplyingTo: (m: Message | null) => void;
   findMessage: (id: string) => Message | undefined;
   dmPeerReadAt: (channelId: string) => number;
-
+  isDmUnread: (peerId: string) => boolean;
+  dmUnreadCount: number;
 }
 
 const ChatCtx = createContext<Ctx | null>(null);
@@ -396,6 +397,9 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   const seenRemoteMsgIds = useRef<Set<string>>(new Set());
   // dmReads[channelId][userId] = epoch ms of last read
   const [dmReads, setDmReads] = useState<Record<string, Record<string, number>>>({});
+  // Latest message timestamp per DM channel (for unread badges across reloads)
+  const [dmLatestTs, setDmLatestTs] = useState<Record<string, number>>({});
+
 
 
   useEffect(() => {
@@ -498,16 +502,18 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     (async () => {
       const { data } = await supabase
         .from("messages")
-        .select("channel_id")
+        .select("channel_id, created_at")
         .like("channel_id", "dm:%")
         .order("created_at", { ascending: false })
         .limit(500);
       if (cancelled || !data) return;
       const peers: string[] = [];
       const seen = new Set<string>();
+      const latest: Record<string, number> = {};
       for (const row of data) {
         const ch = row.channel_id as string;
         if (!ch.startsWith("dm:")) continue;
+        if (latest[ch] === undefined) latest[ch] = new Date(row.created_at as string).getTime();
         const parts = ch.slice(3).split(":");
         const peer = parts.find(p => p !== authUserId && UUID_RE.test(p));
         if (peer && !seen.has(peer)) {
@@ -515,12 +521,36 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           peers.push(peer);
         }
       }
+      if (Object.keys(latest).length) {
+        setDmLatestTs(prev => ({ ...latest, ...prev }));
+      }
       if (!peers.length) return;
       setState(s => {
         const existing = new Set(s.dmOrder);
         const additions = peers.filter(p => !existing.has(p));
         if (!additions.length) return s;
         return { ...s, dmOrder: [...s.dmOrder, ...additions] };
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [authUserId]);
+
+  // Fetch all my DM read markers up-front so unread state survives reloads
+  useEffect(() => {
+    if (!authUserId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("dm_reads")
+        .select("user_id, channel_id, last_read_at");
+      if (cancelled || !data) return;
+      setDmReads(prev => {
+        const next = { ...prev };
+        for (const r of data) {
+          const ch = (next[r.channel_id] ||= { ...(prev[r.channel_id] || {}) });
+          ch[r.user_id] = new Date(r.last_read_at).getTime();
+        }
+        return next;
       });
     })();
     return () => { cancelled = true; };
@@ -617,6 +647,10 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
             messages: { ...s.messages, [msg.channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts) },
           };
         });
+
+        if (msg.channelId.startsWith("dm:")) {
+          setDmLatestTs(prev => (prev[msg.channelId] ?? 0) >= msg.ts ? prev : { ...prev, [msg.channelId]: msg.ts });
+        }
 
         if (msg.authorId !== "me") {
           if (msg.channelId.startsWith("dm:")) {
@@ -1117,7 +1151,29 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       }
       return max;
     },
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads]);
+    isDmUnread: (peerId: string) => {
+      if (!authUserId) return false;
+      const ch = dmChannelFor(authUserId, peerId);
+      if (state.activeChannel === ch) return false;
+      const latest = dmLatestTs[ch] ?? 0;
+      if (!latest) return false;
+      const myRead = dmReads[ch]?.[authUserId] ?? 0;
+      return latest > myRead;
+    },
+    dmUnreadCount: (() => {
+      if (!authUserId) return 0;
+      let n = 0;
+      for (const peerId of state.dmOrder) {
+        const ch = dmChannelFor(authUserId, peerId);
+        if (state.activeChannel === ch) continue;
+        const latest = dmLatestTs[ch] ?? 0;
+        if (!latest) continue;
+        const myRead = dmReads[ch]?.[authUserId] ?? 0;
+        if (latest > myRead) n++;
+      }
+      return n;
+    })(),
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;

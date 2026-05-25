@@ -39,7 +39,7 @@ const ICONS: Record<Role, React.ReactNode> = {
 };
 
 export function MembersPanel({ roomId }: { roomId: string }) {
-  const { state, startDM, setActive, closeDM, dmChannelFor } = useChat();
+  const { state, startDM, setActive, closeDM, dmChannelFor, isDmUnread, dmUnreadCount } = useChat();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [showAllOffline, setShowAllOffline] = useState(false);
@@ -161,9 +161,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               className="relative grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
             >
               <Inbox className="h-4 w-4" />
-              {state.dmOrder.length > 0 && (
+              {dmUnreadCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
-                  {state.dmOrder.length}
+                  {dmUnreadCount > 9 ? "9+" : dmUnreadCount}
                 </span>
               )}
             </button>
@@ -187,6 +187,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                   >
                     <Avatar user={u} size={24} />
                     <span className="truncate">{u.name}</span>
+                    {isDmUnread(uid) && (
+                      <span className="ml-1 h-1.5 w-1.5 rounded-full bg-primary" title="Unread" />
+                    )}
                     <span
                       className={`ml-auto h-2 w-2 rounded-full ${
                         u.status === "online" ? "bg-primary" : "bg-muted-foreground/40"

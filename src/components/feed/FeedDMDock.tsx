@@ -16,7 +16,7 @@ interface Props {
 }
 
 export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Props) {
-  const { state, startDM, isDM } = useChat();
+  const { state, startDM, isDM, isDmUnread, dmUnreadCount } = useChat();
   const [open, setOpen] = useState(initialOpen);
   const [friendIds, setFriendIds] = useState<string[]>([]);
   const [view, setView] = useState<"list" | "chat">("list");
@@ -85,6 +85,11 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
         title="Messages"
       >
         <MessageCircle className="h-5 w-5" />
+        {dmUnreadCount > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
+            {dmUnreadCount > 9 ? "9+" : dmUnreadCount}
+          </span>
+        )}
       </button>
     );
   }
@@ -137,7 +142,12 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
               >
                 <Avatar user={u} size={32} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{u.name}</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-sm font-medium">{u.name}</span>
+                    {isDmUnread(u.id) && (
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" title="Unread" />
+                    )}
+                  </div>
                   <div className="truncate text-[11px] text-muted-foreground">
                     {u.status === "online" ? "Online" : "Offline"}
                   </div>
