@@ -397,6 +397,9 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   const seenRemoteMsgIds = useRef<Set<string>>(new Set());
   // dmReads[channelId][userId] = epoch ms of last read
   const [dmReads, setDmReads] = useState<Record<string, Record<string, number>>>({});
+  // Latest message timestamp per DM channel (for unread badges across reloads)
+  const [dmLatestTs, setDmLatestTs] = useState<Record<string, number>>({});
+
 
 
   useEffect(() => {
