@@ -187,6 +187,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                   >
                     <Avatar user={u} size={24} />
                     <span className="truncate">{u.name}</span>
+                    {isDmUnread(uid) && (
+                      <span className="ml-1 h-1.5 w-1.5 rounded-full bg-primary" title="Unread" />
+                    )}
                     <span
                       className={`ml-auto h-2 w-2 rounded-full ${
                         u.status === "online" ? "bg-primary" : "bg-muted-foreground/40"
