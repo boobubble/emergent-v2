@@ -115,7 +115,7 @@ export const PostCard = memo(function PostCard({
   }
 
   return (
-    <article className="rounded-3xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+    <article className={`rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md ${compact ? "p-3" : "p-4"}`}>
       <header className="flex items-center gap-3">
         {author ? (
           <Link to="/u/$username" params={{ username: author.name }}>
