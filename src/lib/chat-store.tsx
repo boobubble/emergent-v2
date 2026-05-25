@@ -59,7 +59,8 @@ const AVATAR_COLORS = [
 ];
 
 function uid() { return Math.random().toString(36).slice(2, 10); }
-function xpToLevel(xp: number) { return Math.floor(xp / 50) + 1; }
+const MAX_LEVEL = 999;
+function xpToLevel(xp: number) { return Math.min(MAX_LEVEL, Math.floor(xp / 50) + 1); }
 
 function isPlaceholderName(name?: string) {
   const cleaned = (name || "").trim().toLowerCase();
