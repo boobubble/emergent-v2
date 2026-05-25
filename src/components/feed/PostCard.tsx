@@ -156,7 +156,7 @@ export const PostCard = memo(function PostCard({
       <footer className="mt-3 flex items-center gap-1 border-t border-border pt-2">
         <div className="relative">
           <button
-            onClick={() => setPickerOpen(!pickerOpen)}
+            onClick={() => { ensureReactions(); setPickerOpen(!pickerOpen); }}
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${myReaction ? "text-primary" : "text-muted-foreground"} hover:bg-accent hover:text-foreground`}
           >
             <span className="text-base">{myReaction ? REACTION_EMOJI[myReaction.type] : "👍"}</span>
