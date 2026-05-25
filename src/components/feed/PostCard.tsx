@@ -8,6 +8,7 @@ import { postSlug } from "@/lib/post-slug";
 import { ShareModal, type SharePayload } from "@/components/feed/ShareModal";
 import type { User } from "@/lib/chat-types";
 import { NameEmojiBadge } from "@/lib/name-emoji";
+import { useFeedPrefs } from "@/lib/feed-prefs";
 
 
 function timeAgo(iso: string) {
