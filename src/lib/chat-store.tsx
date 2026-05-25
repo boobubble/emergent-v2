@@ -539,11 +539,17 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
         seenRemoteMsgIds.current.add(row.id);
         const msg = rowToMessage(row, authUserId);
         // Sync shared game state piggybacked on the message
-        const gs = (msg.attachment as unknown as { __gameState?: GameState } | undefined)?.__gameState;
-        if (gs) {
+        const attachMeta = msg.attachment as unknown as { __gameState?: GameState; __buzz?: { actor?: string; reason: string } } | undefined;
+        const gs = attachMeta?.__gameState;
+        const buzz = attachMeta?.__buzz;
+        if (gs || buzz) {
           // strip the sentinel so it doesn't render as a file attachment
           msg.attachment = undefined;
         }
+        if (buzz && typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("palrgo:buzz", { detail: buzz }));
+        }
+
         setState(s => {
           const existing = s.messages[msg.channelId] || [];
           if (existing.some(m => m.id === msg.id)) return s;
