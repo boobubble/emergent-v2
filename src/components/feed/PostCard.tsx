@@ -208,7 +208,7 @@ export const PostCard = memo(function PostCard({
       {shareOpen && <ShareModal payload={shareOpen} onClose={() => setShareOpen(null)} />}
 
 
-      {Object.keys(counts).length > 0 && (
+      {!hideCounts && Object.keys(counts).length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1 text-xs text-muted-foreground">
           {(Object.entries(counts) as [ReactionType, number][]).map(([k, v]) => (
             <span key={k} className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5">{REACTION_EMOJI[k]} {v}</span>
