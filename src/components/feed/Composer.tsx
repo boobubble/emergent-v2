@@ -3,7 +3,10 @@ import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff
 import { supabase } from "@/integrations/supabase/client";
 import { extractHashtags } from "@/lib/feed-types";
 import { slugify } from "@/lib/post-slug";
+import { EmojiPicker } from "@/components/chat/EmojiPicker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { PostPrivacy } from "@/lib/feed-types";
+
 
 
 const PRIVACY: { id: PostPrivacy; label: string; icon: typeof Globe }[] = [
@@ -103,9 +106,17 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           <ImageIcon className="h-4 w-4" /> Photo
         </button>
         <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => setFiles([...files, ...Array.from(e.target.files ?? [])])} />
-        <button onClick={() => updateText(text + " 😊")} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
-          <Smile className="h-4 w-4" /> Feeling
-        </button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
+              <Smile className="h-4 w-4" /> Emoji
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-[320px] p-0">
+            <EmojiPicker onPick={(e) => updateText(text + e)} />
+          </PopoverContent>
+        </Popover>
+
         <button onClick={() => updateText(text + " #")} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
           <Hash className="h-4 w-4" /> Tag
         </button>
