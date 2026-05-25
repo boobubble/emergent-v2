@@ -50,11 +50,17 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
   }, [open, state.activeChannel, isDM]);
 
   const friends = useMemo(() => {
-    const list = friendIds.map(id => profiles[id]).filter(Boolean) as User[];
+    const ids = new Set<string>(friendIds);
+    // Also include any peers the user has an active DM thread with
+    for (const id of state.dmOrder) ids.add(id);
+    const list = Array.from(ids)
+      .map(id => profiles[id] ?? state.users[id])
+      .filter(Boolean) as User[];
     if (!q.trim()) return list;
     const t = q.toLowerCase();
     return list.filter(u => u.name.toLowerCase().includes(t));
-  }, [friendIds, profiles, q]);
+  }, [friendIds, profiles, q, state.dmOrder, state.users]);
+
 
   const activePeerId = useMemo(() => {
     const ch = state.activeChannel;
@@ -121,7 +127,7 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
           <div className="mt-2 flex-1 overflow-y-auto px-1.5 pb-2">
             {friends.length === 0 ? (
               <p className="px-3 py-6 text-center text-xs text-muted-foreground">
-                {friendIds.length === 0 ? "Add friends to start chatting." : "No matches."}
+                {friendIds.length === 0 && state.dmOrder.length === 0 ? "Add friends or message a user to start chatting." : "No matches."}
               </p>
             ) : friends.map(u => (
               <button

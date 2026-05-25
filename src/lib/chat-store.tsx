@@ -490,6 +490,44 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     });
   }, [remoteProfiles, authUserId]);
 
+  // Hydrate dmOrder from existing DM conversations on the server so the inbox
+  // surfaces every peer the user has chatted with (across reloads, devices).
+  useEffect(() => {
+    if (!authUserId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("messages")
+        .select("channel_id")
+        .like("channel_id", "dm:%")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (cancelled || !data) return;
+      const peers: string[] = [];
+      const seen = new Set<string>();
+      for (const row of data) {
+        const ch = row.channel_id as string;
+        if (!ch.startsWith("dm:")) continue;
+        const parts = ch.slice(3).split(":");
+        const peer = parts.find(p => p !== authUserId && UUID_RE.test(p));
+        if (peer && !seen.has(peer)) {
+          seen.add(peer);
+          peers.push(peer);
+        }
+      }
+      if (!peers.length) return;
+      setState(s => {
+        const existing = new Set(s.dmOrder);
+        const additions = peers.filter(p => !existing.has(p));
+        if (!additions.length) return s;
+        return { ...s, dmOrder: [...s.dmOrder, ...additions] };
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [authUserId]);
+
+
+
   // Fetch existing remote messages for lobby + the active remote channel
   useEffect(() => {
     if (!authUserId) return;
