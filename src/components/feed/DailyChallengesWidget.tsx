@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Trophy, Check, Zap, Flame, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,11 +14,18 @@ interface Challenge {
 }
 
 const POOL: Challenge[] = [
-  { id: "post",     title: "Create a post",        emoji: "✍️", goal: 1, xp: 30, reward: "+30 XP" },
-  { id: "react5",   title: "React to 5 posts",     emoji: "❤️", goal: 5, xp: 20, reward: "+20 XP" },
-  { id: "comment3", title: "Comment on 3 posts",   emoji: "💬", goal: 3, xp: 25, reward: "+25 XP" },
-  { id: "friend",   title: "Add a friend",         emoji: "🤝", goal: 1, xp: 35, reward: "+35 XP · badge" },
-  { id: "login",    title: "Keep your login streak", emoji: "🔥", goal: 1, xp: 15, reward: "+15 XP · streak shield" },
+  { id: "post", title: "Create a post", emoji: "✍️", goal: 1, xp: 30, reward: "+30 XP" },
+  { id: "react5", title: "React to 5 posts", emoji: "❤️", goal: 5, xp: 20, reward: "+20 XP" },
+  { id: "comment3", title: "Comment on 3 posts", emoji: "💬", goal: 3, xp: 25, reward: "+25 XP" },
+  { id: "friend", title: "Add a friend", emoji: "🤝", goal: 1, xp: 35, reward: "+35 XP · badge" },
+  {
+    id: "login",
+    title: "Keep your login streak",
+    emoji: "🔥",
+    goal: 1,
+    xp: 15,
+    reward: "+15 XP · streak shield",
+  },
 ];
 
 function todayKey(): string {
@@ -72,10 +79,15 @@ function readProgress(meId: string): Progress {
 }
 
 function writeProgress(meId: string, p: Progress) {
-  try { localStorage.setItem(`dc:${meId}`, JSON.stringify(p)); } catch { /* noop */ }
+  try {
+    localStorage.setItem(`dc:${meId}`, JSON.stringify(p));
+  } catch {
+    /* noop */
+  }
 }
 
 export function DailyChallengesWidget({ meId }: { meId: string }) {
+  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const challenges = useMemo(pickDailyChallenges, []);
   const [progress, setProgress] = useState<Progress>(() => readProgress(meId));
   const [celebrate, setCelebrate] = useState<ChallengeId | null>(null);
@@ -85,7 +97,8 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
   useEffect(() => {
     function tick() {
       const now = new Date();
-      const end = new Date(now); end.setHours(24, 0, 0, 0);
+      const end = new Date(now);
+      end.setHours(24, 0, 0, 0);
       const ms = end.getTime() - now.getTime();
       const h = Math.floor(ms / 3_600_000);
       const m = Math.floor((ms % 3_600_000) / 60_000);
@@ -101,14 +114,32 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
     if (!meId) return;
     let cancelled = false;
     async function load() {
-      const start = new Date(); start.setHours(0, 0, 0, 0);
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
       const iso = start.toISOString();
 
       const [posts, reacts, comments, friends] = await Promise.all([
-        supabase.from("posts").select("id", { count: "exact", head: true }).eq("author_id", meId).gte("created_at", iso),
-        supabase.from("reactions").select("id", { count: "exact", head: true }).eq("user_id", meId).gte("created_at", iso),
-        supabase.from("comments").select("id", { count: "exact", head: true }).eq("author_id", meId).gte("created_at", iso),
-        supabase.from("friendships").select("id", { count: "exact", head: true }).eq("status", "accepted").or(`sender_id.eq.${meId},receiver_id.eq.${meId}`).gte("updated_at", iso),
+        supabase
+          .from("posts")
+          .select("id", { count: "exact", head: true })
+          .eq("author_id", meId)
+          .gte("created_at", iso),
+        supabase
+          .from("reactions")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", meId)
+          .gte("created_at", iso),
+        supabase
+          .from("comments")
+          .select("id", { count: "exact", head: true })
+          .eq("author_id", meId)
+          .gte("created_at", iso),
+        supabase
+          .from("friendships")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "accepted")
+          .or(`sender_id.eq.${meId},receiver_id.eq.${meId}`)
+          .gte("created_at", iso),
       ]);
 
       if (cancelled) return;
@@ -125,14 +156,29 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
     }
     load();
     const ch = supabase
-      .channel(`dc-${meId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "posts", filter: `author_id=eq.${meId}` }, load)
-      .on("postgres_changes", { event: "*", schema: "public", table: "reactions", filter: `user_id=eq.${meId}` }, load)
-      .on("postgres_changes", { event: "*", schema: "public", table: "comments", filter: `author_id=eq.${meId}` }, load)
+      .channel(`dc-${meId}-${instanceId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "posts", filter: `author_id=eq.${meId}` },
+        load,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "reactions", filter: `user_id=eq.${meId}` },
+        load,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "comments", filter: `author_id=eq.${meId}` },
+        load,
+      )
       .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, load)
       .subscribe();
-    return () => { cancelled = true; supabase.removeChannel(ch); };
-  }, [meId]);
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(ch);
+    };
+  }, [meId, instanceId]);
 
   // Trigger celebration when a challenge crosses completion (unclaimed)
   useEffect(() => {
@@ -151,7 +197,9 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
   }, [progress.values, challenges, meId]);
 
   const completed = challenges.filter((c) => (progress.values[c.id] ?? 0) >= c.goal).length;
-  const totalXp = challenges.filter((c) => (progress.values[c.id] ?? 0) >= c.goal).reduce((s, c) => s + c.xp, 0);
+  const totalXp = challenges
+    .filter((c) => (progress.values[c.id] ?? 0) >= c.goal)
+    .reduce((s, c) => s + c.xp, 0);
   const overallPct = Math.round((completed / challenges.length) * 100);
 
   return (
@@ -202,7 +250,9 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
                 <span className="text-base leading-none">{c.emoji}</span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className={`truncate text-[13px] font-medium ${done ? "text-foreground" : "text-foreground/90"}`}>
+                    <p
+                      className={`truncate text-[13px] font-medium ${done ? "text-foreground" : "text-foreground/90"}`}
+                    >
                       {c.title}
                     </p>
                     {done ? (
@@ -210,7 +260,9 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
                         <Check className="h-2.5 w-2.5" /> Done
                       </span>
                     ) : (
-                      <span className="text-[10px] font-semibold text-muted-foreground">{v}/{c.goal}</span>
+                      <span className="text-[10px] font-semibold text-muted-foreground">
+                        {v}/{c.goal}
+                      </span>
                     )}
                   </div>
                   <div className="mt-1 flex items-center gap-2">
@@ -220,7 +272,9 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-[10px] font-semibold text-muted-foreground">{c.reward}</span>
+                    <span className="text-[10px] font-semibold text-muted-foreground">
+                      {c.reward}
+                    </span>
                   </div>
                 </div>
               </div>
