@@ -142,6 +142,7 @@ function AuthGate() {
   return (
     <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
       <FeedPrefsProvider>
+        <FaviconSwitcher />
         <Outlet />
       </FeedPrefsProvider>
     </ChatProvider>
