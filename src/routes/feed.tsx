@@ -252,6 +252,19 @@ function FeedPage() {
               </div>
 
               <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
+                {tab === "saved" ? (
+                  <div className="rounded-xl sm:rounded-2xl bg-card p-8 sm:p-12 text-center shadow-sm border border-border">
+                    <Bookmark className="mx-auto h-8 w-8 text-muted-foreground/60" />
+                    <p className="mt-2 text-sm font-medium">No saved posts yet</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Bookmark posts from the feed to find them here later.</p>
+                  </div>
+                ) : tab === "notifications" ? (
+                  <div className="rounded-xl sm:rounded-2xl bg-card p-8 sm:p-12 text-center shadow-sm border border-border">
+                    <Bell className="mx-auto h-8 w-8 text-muted-foreground/60" />
+                    <p className="mt-2 text-sm font-medium">Notifications</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Tap the bell in the top bar to view your latest activity.</p>
+                  </div>
+                ) : (<>
                 {loading && Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="h-40 sm:h-48 animate-pulse rounded-xl sm:rounded-2xl bg-card border border-border" />
                 ))}
@@ -263,7 +276,9 @@ function FeedPage() {
                 {!loading && filtered.map((post) => (
                   <PostCard key={post.id} post={post} profiles={profiles} meId={meId} />
                 ))}
+                </>)}
               </div>
+
             </>
           )}
         </main>
