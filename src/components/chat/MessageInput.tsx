@@ -3,13 +3,13 @@ import { Send, Smile, Sparkles, Paperclip, X, Reply } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useTyping } from "@/lib/use-typing";
+import { EmojiPicker } from "./EmojiPicker";
 import type { Attachment } from "@/lib/chat-types";
 
 const COMMANDS = [
   "!help", "!roll", "!flip", "!slots", "!fish", "!dig",
   "!trivia", "!a", "!hangman", "!g", "!me", "!stats",
 ];
-const EMOJIS = ["😀","😂","😎","🥳","👍","❤️","🔥","🎲","🎰","🏆","👀","🪙","💀","🎉"];
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 export function MessageInput() {
@@ -185,12 +185,10 @@ export function MessageInput() {
         </div>
       )}
       {showEmoji && (
-        <div className="mb-2 flex flex-wrap gap-1 rounded-2xl border border-border bg-card p-2">
-          {EMOJIS.map(e => (
-            <button key={e} onClick={() => { setText(t => t + e); setShowEmoji(false); inputRef.current?.focus(); }} className="rounded-lg p-1 text-xl transition-colors hover:bg-white/5">
-              {e}
-            </button>
-          ))}
+        <div className="mb-2">
+          <EmojiPicker
+            onPick={(e) => { setText(t => t + e); inputRef.current?.focus(); }}
+          />
         </div>
       )}
       {attachment && (
