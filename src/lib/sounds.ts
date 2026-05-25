@@ -48,7 +48,7 @@ export function playMentionPing() {
     osc.frequency.setValueAtTime(1200, now);
     osc.frequency.exponentialRampToValueAtTime(1900, now + 0.12);
     gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.09, now + 0.01);
+    gain.gain.linearRampToValueAtTime(0.32, now + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
     osc.connect(gain).connect(ac.destination);
     osc.start(now);
