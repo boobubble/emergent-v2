@@ -142,7 +142,12 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
               >
                 <Avatar user={u} size={32} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{u.name}</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-sm font-medium">{u.name}</span>
+                    {isDmUnread(u.id) && (
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" title="Unread" />
+                    )}
+                  </div>
                   <div className="truncate text-[11px] text-muted-foreground">
                     {u.status === "online" ? "Online" : "Offline"}
                   </div>
