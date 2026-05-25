@@ -250,6 +250,7 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
           <Trophy className="h-3.5 w-3.5 text-yellow-500" /> Daily Challenges
+          <span className="ml-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold text-primary">Lv {level}</span>
         </h3>
         <span className="text-[10px] font-medium text-muted-foreground">Resets in {resetIn}</span>
       </div>
