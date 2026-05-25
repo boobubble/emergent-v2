@@ -308,28 +308,8 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               Online Users
             </button>
-          ) : (
-            <div className="inline-flex items-center gap-0.5 rounded-full bg-white/5 p-0.5">
-              {([
-                { id: "default", label: "Role" },
-                { id: "level", label: "Lvl" },
-                { id: "streak", label: "🔥" },
-              ] as const).map(opt => (
-                <button
-                  key={opt.id}
-                  onClick={() => setSortBy(opt.id)}
-                  title={`Sort by ${opt.label}`}
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                    sortBy === opt.id
-                      ? "bg-primary/20 text-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
+          ) : null}
+
         </div>
       </div>
 
