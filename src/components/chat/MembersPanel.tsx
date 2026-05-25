@@ -47,7 +47,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [notifs, setNotifs] = useState<FeedNotification[]>([]);
   const [viewMode, setViewMode] = useState<"members" | "friends">("members");
   const [friendIds, setFriendIds] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<"default" | "level" | "streak">("default");
+  
   const meId = authUser?.id;
 
   useEffect(() => {
@@ -132,27 +132,12 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const online = allIds
     .filter(isOnline)
     .sort((a, b) => {
-      if (sortBy === "level") {
-        const la = usersById[a]?.level ?? 0;
-        const lb = usersById[b]?.level ?? 0;
-        if (la !== lb) return lb - la;
-        const xa = usersById[a]?.xp ?? 0;
-        const xb = usersById[b]?.xp ?? 0;
-        if (xa !== xb) return xb - xa;
-      } else if (sortBy === "streak") {
-        const sa = usersById[a]?.streak ?? 0;
-        const sb = usersById[b]?.streak ?? 0;
-        if (sa !== sb) return sb - sa;
-        const la = usersById[a]?.longestStreak ?? 0;
-        const lb = usersById[b]?.longestStreak ?? 0;
-        if (la !== lb) return lb - la;
-      } else {
-        const ra = roleOrder[room.roles[a] || "member"];
-        const rb = roleOrder[room.roles[b] || "member"];
-        if (ra !== rb) return ra - rb;
-      }
+      const ra = roleOrder[room.roles[a] || "member"];
+      const rb = roleOrder[room.roles[b] || "member"];
+      if (ra !== rb) return ra - rb;
       return (usersById[a]?.name || "").localeCompare(usersById[b]?.name || "");
     });
+
 
   // Offline sorted by most-recently-seen first (latest at top).
   const offlineSorted = allIds
@@ -308,28 +293,8 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               Online Users
             </button>
-          ) : (
-            <div className="inline-flex items-center gap-0.5 rounded-full bg-white/5 p-0.5">
-              {([
-                { id: "default", label: "Role" },
-                { id: "level", label: "Lvl" },
-                { id: "streak", label: "🔥" },
-              ] as const).map(opt => (
-                <button
-                  key={opt.id}
-                  onClick={() => setSortBy(opt.id)}
-                  title={`Sort by ${opt.label}`}
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                    sortBy === opt.id
-                      ? "bg-primary/20 text-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
+          ) : null}
+
         </div>
       </div>
 
@@ -459,8 +424,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               {ICONS[role]}
             </div>
             <div className="truncate text-[10px] text-muted-foreground">
-              {u.isBot ? "Bot" : u.isGuest ? "Guest" : u.status === "offline" ? "Offline" : `Lv ${u.level}`}
+              {u.isBot ? "Bot" : u.isGuest ? "Guest" : u.status === "offline" ? "Offline" : "Online"}
             </div>
+
           </div>
         </UserMenu>
         {id !== "me" && (
