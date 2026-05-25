@@ -5,6 +5,7 @@ import { UserMenu } from "./UserMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
 import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
 import { NameEmojiBadge } from "@/lib/name-emoji";
+import { EmojiEffectLayer } from "./EmojiEffectLayer";
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.kind === "image") {
@@ -112,6 +113,8 @@ export function MessageList({ channelId }: { channelId: string }) {
   });
 
   return (
+    <div className="relative flex min-h-0 flex-1 flex-col">
+    <EmojiEffectLayer channelId={channelId} />
     <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6">
       {groups.length === 0 && (
         <div className="grid h-full place-items-center text-center text-sm text-muted-foreground">
@@ -238,6 +241,7 @@ export function MessageList({ channelId }: { channelId: string }) {
           );
         })}
       </div>
+    </div>
     </div>
   );
 }
