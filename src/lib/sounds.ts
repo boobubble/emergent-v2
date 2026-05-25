@@ -24,7 +24,7 @@ export function playDmPing() {
       osc.type = "sine";
       osc.frequency.setValueAtTime(freq, now + i * 0.08);
       gain.gain.setValueAtTime(0, now + i * 0.08);
-      gain.gain.linearRampToValueAtTime(0.08, now + i * 0.08 + 0.01);
+      gain.gain.linearRampToValueAtTime(0.28, now + i * 0.08 + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.08 + 0.22);
       osc.connect(gain).connect(ac.destination);
       osc.start(now + i * 0.08);
