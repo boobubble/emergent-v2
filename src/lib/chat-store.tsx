@@ -394,6 +394,9 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   const streakChecked = useRef<string | null>(null);
   const { profiles: remoteProfiles } = useRemoteProfiles();
   const seenRemoteMsgIds = useRef<Set<string>>(new Set());
+  // dmReads[channelId][userId] = epoch ms of last read
+  const [dmReads, setDmReads] = useState<Record<string, Record<string, number>>>({});
+
 
   useEffect(() => {
     const loaded = load(username);
