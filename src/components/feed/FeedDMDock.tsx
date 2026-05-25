@@ -16,7 +16,7 @@ interface Props {
 }
 
 export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Props) {
-  const { state, startDM, isDM } = useChat();
+  const { state, startDM, isDM, isDmUnread, dmUnreadCount } = useChat();
   const [open, setOpen] = useState(initialOpen);
   const [friendIds, setFriendIds] = useState<string[]>([]);
   const [view, setView] = useState<"list" | "chat">("list");
