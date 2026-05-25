@@ -147,12 +147,12 @@ export const PostCard = memo(function PostCard({
         )}
       </header>
 
-      {post.text && <p className="mt-3 whitespace-pre-wrap text-[15px] leading-relaxed">{renderText(post.text)}</p>}
+      {post.text && <p className={`mt-3 whitespace-pre-wrap leading-relaxed ${compact ? "text-sm" : "text-[15px]"}`}>{renderText(post.text)}</p>}
 
       {post.media_urls.length > 0 && (
-        <div className={`mt-3 grid gap-1 overflow-hidden rounded-2xl ${post.media_urls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+        <div className={`mt-3 grid gap-1 overflow-hidden rounded-xl ${post.media_urls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
           {post.media_urls.map((u, i) => (
-            <img key={i} src={u} alt="" loading="lazy" className="max-h-96 w-full object-cover" />
+            <img key={i} src={u} alt="" loading="lazy" decoding="async" className={`w-full object-cover ${compact ? "max-h-72" : "max-h-96"}`} />
           ))}
         </div>
       )}
