@@ -44,7 +44,8 @@ function getInitialView(): { view: View; username: string } {
 function FeedPage() {
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
-  const [tab, setTab] = useState<Tab>("foryou");
+  const { prefs } = useFeedPrefs();
+  const [tab, setTab] = useState<Tab>(prefs.defaultTab);
   const initial = getInitialView();
   const [view, setView] = useState<View>(initial.view);
   const [profileUsername, setProfileUsername] = useState<string>(initial.username);
@@ -52,8 +53,16 @@ function FeedPage() {
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [dmOpenKey, setDmOpenKey] = useState(0);
+  const [defaultTabApplied, setDefaultTabApplied] = useState(false);
 
   const meId = user?.id ?? "";
+
+  // Apply the saved default tab once prefs hydrate from localStorage
+  useEffect(() => {
+    if (defaultTabApplied) return;
+    setTab(prefs.defaultTab);
+    setDefaultTabApplied(true);
+  }, [prefs.defaultTab, defaultTabApplied]);
 
   // Daily streak ping on mount
   useEffect(() => {
