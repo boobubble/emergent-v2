@@ -244,6 +244,7 @@ function FeedPage() {
               />
               <div className="my-1 h-px bg-border/60" />
               <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
+              <SideItem onClick={() => setView("settings")} active={view === "settings"} icon={Sliders} label="Feed Settings" />
               <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
             </nav>
             <FriendsListCard
