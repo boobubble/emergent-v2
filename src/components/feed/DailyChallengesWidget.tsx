@@ -219,7 +219,7 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
           <span className="text-xs text-muted-foreground">/ {challenges.length}</span>
         </div>
         <div className="flex-1">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-accent">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-gradient-to-r from-primary to-yellow-500 transition-all duration-500"
               style={{ width: `${overallPct}%` }}
