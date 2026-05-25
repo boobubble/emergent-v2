@@ -9,6 +9,16 @@ import { EmojiEffectLayer } from "./EmojiEffectLayer";
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.kind === "image") {
+    const isSticker = a.mime === "image/gif" || /\.gif$/i.test(a.name || "");
+    if (isSticker) {
+      return (
+        <img
+          src={a.dataUrl}
+          alt={a.name}
+          className="mt-1 block h-28 w-28 object-contain"
+        />
+      );
+    }
     return (
       <a href={a.dataUrl} download={a.name} className="mt-1 block max-w-[280px] overflow-hidden rounded-xl border border-border">
         <img src={a.dataUrl} alt={a.name} className="block max-h-72 w-full object-contain bg-black/30" />
