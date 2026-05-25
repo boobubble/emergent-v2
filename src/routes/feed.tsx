@@ -300,7 +300,19 @@ function FeedPage() {
                   </div>
                 ) : (<>
                 {loading && Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-40 sm:h-48 animate-pulse rounded-xl sm:rounded-2xl bg-card border border-border" />
+                  <div key={i} className="rounded-xl sm:rounded-2xl bg-card border border-border p-4 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 w-1/3 rounded bg-muted animate-pulse" />
+                        <div className="h-2.5 w-1/4 rounded bg-muted animate-pulse" />
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <div className="h-3 w-full rounded bg-muted animate-pulse" />
+                      <div className="h-3 w-4/5 rounded bg-muted animate-pulse" />
+                    </div>
+                  </div>
                 ))}
                 {!loading && filtered.length === 0 && (
                   <div className="rounded-xl sm:rounded-2xl bg-card p-8 sm:p-12 text-center shadow-sm border border-border">
