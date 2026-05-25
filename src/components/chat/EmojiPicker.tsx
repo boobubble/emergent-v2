@@ -32,6 +32,7 @@ export function EmojiPicker({ onPick }: { onPick: (e: string) => void }) {
       <div className="flex items-center gap-0.5 border-b border-border px-1.5 py-1 overflow-x-auto">
         {categories.map(c => {
           if (c.id === "recent" && recent.length === 0) return null;
+          if (c.id !== "recent" && c.emojis.length === 0) return null;
           return (
             <button
               key={c.id}
