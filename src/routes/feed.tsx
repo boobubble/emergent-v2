@@ -279,9 +279,7 @@ function FeedPage() {
               />
               <div className="my-1 h-px bg-border/60" />
               <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
-              <Link to="/find-friends" className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent">
-                <Users className="h-4 w-4 shrink-0" /> <span className="truncate">Find Friends</span>
-              </Link>
+              <SideItem onClick={() => setView("findFriends")} active={view === "findFriends"} icon={Users} label="Find Friends" />
               <SideItem onClick={() => setView("achievements")} active={view === "achievements"} icon={Award} label="Achievements" />
               <SideItem onClick={() => setView("leaderboard")} active={view === "leaderboard"} icon={Trophy} label="Leaderboard" />
 
@@ -306,6 +304,8 @@ function FeedPage() {
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><AchievementsPanel /></div>
           ) : view === "leaderboard" ? (
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><LeaderboardPanel /></div>
+          ) : view === "findFriends" ? (
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><FindFriendsPanel /></div>
           ) : view === "profile" ? (
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></div>
           ) : (
