@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { AuthProvider, useAuth } from "@/lib/auth-store";
 import { ChatProvider } from "@/lib/chat-store";
+import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
