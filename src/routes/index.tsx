@@ -30,7 +30,9 @@ function ChatApp() {
   const [lbOpen, setLbOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
   const [toast, setToast] = useState<EngageToast | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches
+  );
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
