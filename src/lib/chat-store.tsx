@@ -539,11 +539,17 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
         seenRemoteMsgIds.current.add(row.id);
         const msg = rowToMessage(row, authUserId);
         // Sync shared game state piggybacked on the message
-        const gs = (msg.attachment as unknown as { __gameState?: GameState } | undefined)?.__gameState;
-        if (gs) {
+        const attachMeta = msg.attachment as unknown as { __gameState?: GameState; __buzz?: { actor?: string; reason: string } } | undefined;
+        const gs = attachMeta?.__gameState;
+        const buzz = attachMeta?.__buzz;
+        if (gs || buzz) {
           // strip the sentinel so it doesn't render as a file attachment
           msg.attachment = undefined;
         }
+        if (buzz && typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("palrgo:buzz", { detail: buzz }));
+        }
+
         setState(s => {
           const existing = s.messages[msg.channelId] || [];
           if (existing.some(m => m.id === msg.id)) return s;
@@ -679,15 +685,18 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
         const result = runCommand(cmdInput, { state: next, channelId, actor: next.me.name });
         const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }, idx: number) => {
           const id = remote ? newUuid() : uid();
-          // Piggyback game state on the first reply so other users sync
-          const gameAttach = (remote && idx === 0 && result.gameUpdate)
-            ? ({ __gameState: result.gameUpdate } as unknown as Attachment)
+          // Piggyback game state + buzz on the first reply so other users sync
+          const piggyback = (remote && idx === 0 && (result.gameUpdate || result.buzz))
+            ? ({
+                ...(result.gameUpdate ? { __gameState: result.gameUpdate } : {}),
+                ...(result.buzz ? { __buzz: { actor: s.me.name, reason: result.buzz.reason } } : {}),
+              } as unknown as Attachment)
             : undefined;
           if (remote) {
             seenRemoteMsgIds.current.add(id);
             outgoingRemotes.push({
               id, channelId, text: r.text, kind: "game",
-              attachment: (gameAttach ?? null) as Attachment | null,
+              attachment: (piggyback ?? null) as Attachment | null,
               replyToId: null,
             });
           }
@@ -710,6 +719,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
             detail: { actor: s.me.name, reason: result.buzz.reason },
           }));
         }
+
         if (result.moderation) {
           const { targetId, targetName, action } = result.moderation;
           const voter = next.me.name;
