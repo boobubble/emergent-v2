@@ -3,7 +3,10 @@ import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff
 import { supabase } from "@/integrations/supabase/client";
 import { extractHashtags } from "@/lib/feed-types";
 import { slugify } from "@/lib/post-slug";
+import { EmojiPicker } from "@/components/chat/EmojiPicker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { PostPrivacy } from "@/lib/feed-types";
+
 
 
 const PRIVACY: { id: PostPrivacy; label: string; icon: typeof Globe }[] = [
