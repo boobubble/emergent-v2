@@ -596,6 +596,73 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     return () => { supabase.removeChannel(channel); };
   }, [authUserId]);
 
+  // ---- DM read receipts ----
+  // Realtime subscribe to dm_reads changes (RLS scopes to my channels)
+  useEffect(() => {
+    if (!authUserId) return;
+    const ch = supabase
+      .channel("palrgo-dm-reads")
+      .on("postgres_changes", { event: "*", schema: "public", table: "dm_reads" }, (payload) => {
+        const row = (payload.new ?? payload.old) as { user_id: string; channel_id: string; last_read_at: string } | null;
+        if (!row) return;
+        const ts = new Date(row.last_read_at).getTime();
+        setDmReads(prev => {
+          const ch = prev[row.channel_id] || {};
+          if ((ch[row.user_id] ?? 0) >= ts) return prev;
+          return { ...prev, [row.channel_id]: { ...ch, [row.user_id]: ts } };
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [authUserId]);
+
+  // Fetch read markers for the active DM channel
+  useEffect(() => {
+    if (!authUserId) return;
+    const channelId = state.activeChannel;
+    if (!channelId.startsWith("dm:") || !channelId.includes(authUserId)) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("dm_reads")
+        .select("user_id, channel_id, last_read_at")
+        .eq("channel_id", channelId);
+      if (cancelled || !data) return;
+      setDmReads(prev => {
+        const ch = { ...(prev[channelId] || {}) };
+        for (const r of data) ch[r.user_id] = new Date(r.last_read_at).getTime();
+        return { ...prev, [channelId]: ch };
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [authUserId, state.activeChannel]);
+
+  // Upsert my read marker when I open a DM or new msgs arrive while viewing
+  const lastMsgTsRef = useRef<Record<string, number>>({});
+  useEffect(() => {
+    if (!authUserId) return;
+    const channelId = state.activeChannel;
+    if (!channelId.startsWith("dm:") || !channelId.includes(authUserId)) return;
+    const msgs = state.messages[channelId] || [];
+    const latest = msgs.length ? msgs[msgs.length - 1].ts : Date.now();
+    if (lastMsgTsRef.current[channelId] === latest) return;
+    lastMsgTsRef.current[channelId] = latest;
+    if (typeof document !== "undefined" && document.hidden) return;
+    const nowIso = new Date().toISOString();
+    void supabase
+      .from("dm_reads")
+      .upsert({ user_id: authUserId, channel_id: channelId, last_read_at: nowIso }, { onConflict: "user_id,channel_id" })
+      .then(() => {
+        // Optimistic local update so own "Seen" reflects without waiting realtime
+        setDmReads(prev => {
+          const ch = { ...(prev[channelId] || {}) };
+          ch[authUserId] = Date.now();
+          return { ...prev, [channelId]: ch };
+        });
+      });
+  }, [authUserId, state.activeChannel, state.messages]);
+
+
   const setActive = useCallback((channelId: string) => {
     setState(s => ({ ...s, activeChannel: channelId }));
     setReplyingTo(null);
