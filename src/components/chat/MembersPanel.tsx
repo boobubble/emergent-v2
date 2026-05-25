@@ -161,9 +161,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               className="relative grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
             >
               <Inbox className="h-4 w-4" />
-              {state.dmOrder.length > 0 && (
+              {dmUnreadCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
-                  {state.dmOrder.length}
+                  {dmUnreadCount > 9 ? "9+" : dmUnreadCount}
                 </span>
               )}
             </button>
