@@ -47,6 +47,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [notifs, setNotifs] = useState<FeedNotification[]>([]);
   const [viewMode, setViewMode] = useState<"members" | "friends">("members");
   const [friendIds, setFriendIds] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<"default" | "level" | "streak">("default");
   const meId = authUser?.id;
 
   useEffect(() => {
@@ -131,9 +132,25 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const online = allIds
     .filter(isOnline)
     .sort((a, b) => {
-      const ra = roleOrder[room.roles[a] || "member"];
-      const rb = roleOrder[room.roles[b] || "member"];
-      if (ra !== rb) return ra - rb;
+      if (sortBy === "level") {
+        const la = usersById[a]?.level ?? 0;
+        const lb = usersById[b]?.level ?? 0;
+        if (la !== lb) return lb - la;
+        const xa = usersById[a]?.xp ?? 0;
+        const xb = usersById[b]?.xp ?? 0;
+        if (xa !== xb) return xb - xa;
+      } else if (sortBy === "streak") {
+        const sa = usersById[a]?.streak ?? 0;
+        const sb = usersById[b]?.streak ?? 0;
+        if (sa !== sb) return sb - sa;
+        const la = usersById[a]?.longestStreak ?? 0;
+        const lb = usersById[b]?.longestStreak ?? 0;
+        if (la !== lb) return lb - la;
+      } else {
+        const ra = roleOrder[room.roles[a] || "member"];
+        const rb = roleOrder[room.roles[b] || "member"];
+        if (ra !== rb) return ra - rb;
+      }
       return (usersById[a]?.name || "").localeCompare(usersById[b]?.name || "");
     });
 
@@ -282,7 +299,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             {viewMode === "friends" ? <>Friends &mdash; {friendIds.length}</> : <>Members &mdash; {allIds.length}</>}
           </h2>
-          {viewMode === "friends" && (
+          {viewMode === "friends" ? (
             <button
               onClick={() => setViewMode("members")}
               className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary transition-colors hover:bg-primary/20"
@@ -291,9 +308,31 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               Online Users
             </button>
+          ) : (
+            <div className="inline-flex items-center gap-0.5 rounded-full bg-white/5 p-0.5">
+              {([
+                { id: "default", label: "Role" },
+                { id: "level", label: "Lvl" },
+                { id: "streak", label: "🔥" },
+              ] as const).map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => setSortBy(opt.id)}
+                  title={`Sort by ${opt.label}`}
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                    sortBy === opt.id
+                      ? "bg-primary/20 text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
+
 
       {viewMode === "friends" ? (
         <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
