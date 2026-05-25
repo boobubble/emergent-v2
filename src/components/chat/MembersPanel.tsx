@@ -439,8 +439,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               {ICONS[role]}
             </div>
             <div className="truncate text-[10px] text-muted-foreground">
-              {u.isBot ? "Bot" : u.isGuest ? "Guest" : u.status === "offline" ? "Offline" : `Lv ${u.level}`}
+              {u.isBot ? "Bot" : u.isGuest ? "Guest" : u.status === "offline" ? "Offline" : "Online"}
             </div>
+
           </div>
         </UserMenu>
         {id !== "me" && (
