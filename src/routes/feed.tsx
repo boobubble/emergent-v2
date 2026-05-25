@@ -121,18 +121,37 @@ function FeedPage() {
 
   const filtered = useMemo(() => {
     let list = [...posts];
-    if (tab === "trending") {
+
+    // Content filters (apply before sort)
+    if (prefs.hideMedia) {
+      list = list.filter(p => !(p.media_urls && p.media_urls.length > 0));
+    }
+    if (prefs.mutedKeywords.length > 0) {
+      list = list.filter(p => {
+        const t = (p.text || "").toLowerCase();
+        return !prefs.mutedKeywords.some(k => t.includes(k));
+      });
+    }
+    if (prefs.mutedHashtags.length > 0) {
+      list = list.filter(p => {
+        const tags = (p.hashtags || []).map(t => t.toLowerCase());
+        return !prefs.mutedHashtags.some(k => tags.includes(k));
+      });
+    }
+
+    // Sort: explicit override wins over tab-driven sort
+    const effective = prefs.sortOverride !== "smart" ? prefs.sortOverride : tab;
+    if (effective === "trending" || tab === "trending") {
       list.sort((a, b) => {
         const sa = a.reaction_count * 2 + a.comment_count * 3;
         const sb = b.reaction_count * 2 + b.comment_count * 3;
         return sb - sa;
       });
-    } else if (tab === "latest") {
+    } else if (effective === "latest" || tab === "latest") {
       list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
     } else if (tab === "friends") {
       list = list.filter((p) => friendIds.has(p.author_id) || p.author_id === meId);
     } else {
-      // For You: newest first, with friends' posts gently boosted
       list.sort((a, b) => {
         const af = friendIds.has(a.author_id) ? 1 : 0;
         const bf = friendIds.has(b.author_id) ? 1 : 0;
@@ -141,7 +160,8 @@ function FeedPage() {
       });
     }
     return list;
-  }, [posts, tab, friendIds, meId]);
+  }, [posts, tab, friendIds, meId, prefs.hideMedia, prefs.mutedKeywords, prefs.mutedHashtags, prefs.sortOverride]);
+
 
   if (!user) return null;
   if (user.isGuest) {
