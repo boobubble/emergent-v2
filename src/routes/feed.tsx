@@ -244,7 +244,7 @@ function FeedPage() {
               />
               <div className="my-1 h-px bg-border/60" />
               <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
-              <SideItem onClick={() => { setView("feed"); setTab("friends"); }} active={view === "feed" && tab === "friends"} icon={Users} label="Find Friends" />
+              <SideLinkRoute to="/find-friends" icon={Users} label="Find Friends" />
               <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
             </nav>
             <FriendsListCard
