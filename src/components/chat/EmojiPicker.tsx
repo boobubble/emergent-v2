@@ -28,15 +28,15 @@ export function EmojiPicker({ onPick }: { onPick: (e: string) => void }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
-      <div className="flex items-center gap-1 border-b border-border px-2 py-1.5 overflow-x-auto">
+    <div className="w-[300px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+      <div className="flex items-center gap-0.5 border-b border-border px-1.5 py-1 overflow-x-auto">
         {categories.map(c => {
           if (c.id === "recent" && recent.length === 0) return null;
           return (
             <button
               key={c.id}
               onClick={() => { setCat(c.id); setQ(""); }}
-              className={`shrink-0 grid h-8 w-8 place-items-center rounded-lg text-lg transition-colors ${cat === c.id && !q ? "bg-primary/15" : "hover:bg-white/5"}`}
+              className={`shrink-0 grid h-6 w-6 place-items-center rounded-md text-sm transition-colors ${cat === c.id && !q ? "bg-primary/15" : "hover:bg-white/5"}`}
               title={c.label}
               aria-label={c.label}
             >
@@ -45,31 +45,29 @@ export function EmojiPicker({ onPick }: { onPick: (e: string) => void }) {
           );
         })}
       </div>
-      <div className="flex items-center gap-2 px-2 py-1.5 border-b border-border">
-        <Search className="h-3.5 w-3.5 text-muted-foreground" />
+      <div className="flex items-center gap-1.5 px-2 py-1 border-b border-border">
+        <Search className="h-3 w-3 text-muted-foreground" />
         <input
           value={q}
           onChange={e => setQ(e.target.value)}
-          placeholder="Search emoji"
-          className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground/70"
+          placeholder="Search"
+          className="flex-1 bg-transparent text-[11px] outline-none placeholder:text-muted-foreground/70"
         />
       </div>
-      <div className="max-h-[260px] overflow-y-auto p-1.5">
-        {q && <div className="px-1 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">All</div>}
-        {!q && <div className="px-1 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">{active.label}</div>}
-        <div className="grid grid-cols-8 gap-0.5">
+      <div className="max-h-[180px] overflow-y-auto p-1">
+        <div className="grid grid-cols-9 gap-0.5">
           {visible.map((e, i) => (
             <button
               key={`${e}-${i}`}
               onClick={() => pick(e)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-xl transition-transform hover:scale-110 hover:bg-white/5 active:scale-95"
+              className="grid h-6 w-6 place-items-center rounded-md text-base transition-transform hover:scale-110 hover:bg-white/5 active:scale-95"
               title={e}
             >
               {e}
             </button>
           ))}
           {visible.length === 0 && (
-            <div className="col-span-8 py-6 text-center text-xs text-muted-foreground">No emoji</div>
+            <div className="col-span-9 py-4 text-center text-[11px] text-muted-foreground">No emoji</div>
           )}
         </div>
       </div>
