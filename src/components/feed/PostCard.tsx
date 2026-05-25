@@ -12,7 +12,8 @@ import { useFeedPrefs } from "@/lib/feed-prefs";
 
 
 function timeAgo(iso: string) {
-  const d = Date.now() - new Date(iso).getTime();
+  const time = new Date(iso).getTime();
+  const d = Number.isFinite(time) ? Date.now() - time : 0;
   const m = Math.floor(d / 60000);
   if (m < 1) return "now";
   if (m < 60) return `${m}m`;
@@ -44,10 +45,14 @@ export const PostCard = memo(function PostCard({
 
 
   const author = post.is_anonymous ? null : profiles[post.author_id];
+  const mediaUrls = Array.isArray(post.media_urls) ? post.media_urls : [];
+  const reactionCount = post.reaction_count ?? 0;
+  const commentCount = post.comment_count ?? 0;
+  const trendingScore = post.trending_score ?? 0;
   const myReaction = reactions.find((r) => r.user_id === meId);
   const counts: Partial<Record<ReactionType, number>> = {};
   for (const r of reactions) counts[r.type] = (counts[r.type] ?? 0) + 1;
-  const totalReactions = reactionsLoaded ? reactions.length : post.reaction_count;
+  const totalReactions = reactionsLoaded ? reactions.length : reactionCount;
 
   // Lazy: only load detailed reactions when user opens picker or reacts.
   // Live counts come from feed-level `posts` subscription via post.reaction_count.
@@ -134,7 +139,7 @@ export const PostCard = memo(function PostCard({
             ) : (
               <span className="font-semibold text-muted-foreground">Anonymous</span>
             )}
-            {post.trending_score > 50 && <Flame className="h-3.5 w-3.5 text-orange-500" />}
+            {trendingScore > 50 && <Flame className="h-3.5 w-3.5 text-orange-500" />}
           </div>
           <div className="text-xs text-muted-foreground">
             <Link to="/feed/$slug" params={{ slug: postSlug(post) }} className="hover:underline">{timeAgo(post.created_at)}</Link> · <span className="capitalize">{post.privacy}</span>
@@ -149,9 +154,9 @@ export const PostCard = memo(function PostCard({
 
       {post.text && <p className={`mt-3 whitespace-pre-wrap leading-relaxed ${compact ? "text-sm" : "text-[15px]"}`}>{renderText(post.text)}</p>}
 
-      {post.media_urls.length > 0 && (
-        <div className={`mt-3 grid gap-1 overflow-hidden rounded-xl ${post.media_urls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
-          {post.media_urls.map((u, i) => (
+      {mediaUrls.length > 0 && (
+        <div className={`mt-3 grid gap-1 overflow-hidden rounded-xl ${mediaUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+          {mediaUrls.map((u, i) => (
             <img key={i} src={u} alt="" loading="lazy" decoding="async" className={`w-full object-cover ${compact ? "max-h-72" : "max-h-96"}`} />
           ))}
         </div>
@@ -177,7 +182,7 @@ export const PostCard = memo(function PostCard({
           )}
         </div>
         <button onClick={() => setShowComments(!showComments)} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
-          <MessageCircle className="h-4 w-4" /> {hideCounts ? "Comment" : (post.comment_count || "Comment")}
+          <MessageCircle className="h-4 w-4" /> {hideCounts ? "Comment" : (commentCount || "Comment")}
         </button>
         <button
           onClick={async () => {
