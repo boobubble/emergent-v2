@@ -140,7 +140,9 @@ function AuthGate() {
   if (!user) return <AuthScreen />;
   return (
     <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
-      <Outlet />
+      <FeedPrefsProvider>
+        <Outlet />
+      </FeedPrefsProvider>
     </ChatProvider>
   );
 }
