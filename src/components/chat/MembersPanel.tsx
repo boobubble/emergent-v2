@@ -39,7 +39,7 @@ const ICONS: Record<Role, React.ReactNode> = {
 };
 
 export function MembersPanel({ roomId }: { roomId: string }) {
-  const { state, startDM, setActive, closeDM, dmChannelFor } = useChat();
+  const { state, startDM, setActive, closeDM, dmChannelFor, isDmUnread, dmUnreadCount } = useChat();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [showAllOffline, setShowAllOffline] = useState(false);
