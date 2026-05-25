@@ -337,9 +337,9 @@ function SideItem({ icon: Icon, label, active, onClick }: { icon: typeof Home; l
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent"}`}
+      className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent"}`}
     >
-      <Icon className="h-5 w-5" /> {label}
+      <Icon className="h-4 w-4 shrink-0" /> <span className="truncate">{label}</span>
     </button>
   );
 }
@@ -348,13 +348,14 @@ function SideLink({ to, iconSrc, label }: { to: string; iconSrc: string; label: 
   return (
     <Link
       to={to}
-      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+      className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
     >
-      <img src={iconSrc} alt="" className="h-5 w-5 rounded-full bg-white object-contain p-0.5" />
-      {label}
+      <img src={iconSrc} alt="" className="h-4 w-4 rounded-full bg-white object-contain p-0.5" />
+      <span className="truncate">{label}</span>
     </Link>
   );
 }
+
 
 function NavLink({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active?: boolean }) {
   return (
