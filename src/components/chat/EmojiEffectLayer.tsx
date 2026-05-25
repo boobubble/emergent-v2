@@ -33,9 +33,12 @@ export function EmojiEffectLayer({ channelId }: { channelId: string }) {
     if (last.id === lastIdRef.current) return;
     lastIdRef.current = last.id;
 
+    // Skip on small / low-power screens to save CPU + battery
+    if (typeof window !== "undefined" && window.innerWidth < 768) return;
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+
     const text = (last.text || "").trim();
     if (!text) return;
-    // Allow up to 3 repeats of a single supported emoji
     const eff = pickEffect(text);
     if (!eff) return;
 
