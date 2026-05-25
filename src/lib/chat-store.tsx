@@ -648,6 +648,10 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           };
         });
 
+        if (msg.channelId.startsWith("dm:")) {
+          setDmLatestTs(prev => (prev[msg.channelId] ?? 0) >= msg.ts ? prev : { ...prev, [msg.channelId]: msg.ts });
+        }
+
         if (msg.authorId !== "me") {
           if (msg.channelId.startsWith("dm:")) {
             playDmPing();
