@@ -9,6 +9,11 @@ export function ChatHeader() {
   if (isDM(id)) {
     const u = dmUser(id);
     if (!u) return null;
+    const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+    const isOnline = u.isBot
+      ? u.status !== "offline"
+      : u.status === "online" && (!u.lastSeen || Date.now() - u.lastSeen <= ONLINE_WINDOW_MS);
+    const statusLabel = isOnline ? "online" : "offline";
     return (
       <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/80 px-6 pl-14 backdrop-blur-md">
         <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -19,7 +24,7 @@ export function ChatHeader() {
               <span className="truncate">{u.name}</span>
             </div>
             <div className="truncate text-[11px] capitalize text-muted-foreground">
-              {u.status}
+              <span className={isOnline ? "text-primary" : ""}>{statusLabel}</span>
               {u.bio ? ` · ${u.bio}` : ""}
             </div>
           </div>
