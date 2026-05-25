@@ -86,12 +86,54 @@ function writeProgress(meId: string, p: Progress) {
   }
 }
 
+/** Scale challenges by user level: harder goals + bigger XP rewards as you level up. */
+function scaleChallenges(base: Challenge[], level: number): Challenge[] {
+  const tier = Math.max(1, Math.floor((Math.min(level, 999) - 1) / 5) + 1); // +1 every 5 levels
+  return base.map((c) => {
+    // Login stays a single daily check-in, but its reward scales.
+    const goal = c.id === "login" ? 1 : Math.ceil(c.goal * (1 + (tier - 1) * 0.5));
+    const xp = Math.round(c.xp * (1 + (tier - 1) * 0.35));
+    const reward = c.reward.replace(/\+\d+\s*XP/, `+${xp} XP`);
+    return { ...c, goal, xp, reward };
+  });
+}
+
 export function DailyChallengesWidget({ meId }: { meId: string }) {
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const challenges = useMemo(pickDailyChallenges, []);
+  const [level, setLevel] = useState<number>(1);
+  const challenges = useMemo(() => scaleChallenges(pickDailyChallenges(), level), [level]);
   const [progress, setProgress] = useState<Progress>(() => readProgress(meId));
   const [celebrate, setCelebrate] = useState<ChallengeId | null>(null);
   const [resetIn, setResetIn] = useState<string>("");
+
+  // Load user level (and keep it in sync with profile updates)
+  useEffect(() => {
+    if (!meId) return;
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("level")
+      .eq("id", meId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled && data?.level) setLevel(data.level);
+      });
+    const ch = supabase
+      .channel(`dc-lvl-${meId}-${instanceId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${meId}` },
+        (payload) => {
+          const lv = (payload.new as { level?: number })?.level;
+          if (typeof lv === "number") setLevel(lv);
+        },
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(ch);
+    };
+  }, [meId, instanceId]);
 
   // Live countdown to midnight
   useEffect(() => {
@@ -208,6 +250,7 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
           <Trophy className="h-3.5 w-3.5 text-yellow-500" /> Daily Challenges
+          <span className="ml-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold text-primary">Lv {level}</span>
         </h3>
         <span className="text-[10px] font-medium text-muted-foreground">Resets in {resetIn}</span>
       </div>
