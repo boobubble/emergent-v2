@@ -31,7 +31,7 @@ export const Route = createFileRoute("/feed")({
 });
 
 type Tab = "foryou" | "trending" | "latest" | "friends" | "saved" | "notifications";
-type View = "feed" | "account" | "profile";
+type View = "feed" | "account" | "profile" | "settings";
 
 function getInitialView(): { view: View; username: string } {
   if (typeof window === "undefined") return { view: "feed", username: "" };
