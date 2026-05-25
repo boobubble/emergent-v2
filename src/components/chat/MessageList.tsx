@@ -85,21 +85,27 @@ function ReplyPreview({ message, align = "left" }: { message: Message; align?: "
 }
 
 export function MessageList({ channelId }: { channelId: string }) {
-  const { channelMessages, state, setReplyingTo, findMessage } = useChat();
+  const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt } = useChat();
   const msgs = channelMessages(channelId);
+  const peerReadAt = isDM(channelId) ? dmPeerReadAt(channelId) : 0;
   const lastSeenMeId = useMemo(() => {
     let lastMeIdx = -1;
     for (let i = msgs.length - 1; i >= 0; i--) {
       if (msgs[i].authorId === "me") { lastMeIdx = i; break; }
     }
     if (lastMeIdx === -1) return null;
+    if (isDM(channelId)) {
+      // Real read receipt: show "Seen" only if peer's last_read_at >= my message ts
+      return peerReadAt && msgs[lastMeIdx].ts <= peerReadAt ? msgs[lastMeIdx].id : null;
+    }
     const hasLaterHuman = msgs.slice(lastMeIdx + 1).some(m => {
       if (m.authorId === "me") return false;
       const u = state.users[m.authorId];
       return u && !u.isBot;
     });
     return hasLaterHuman ? msgs[lastMeIdx].id : null;
-  }, [msgs, state.users]);
+  }, [msgs, state.users, isDM, channelId, peerReadAt]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
