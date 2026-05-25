@@ -270,6 +270,9 @@ function FeedPage() {
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></div>
           ) : (
             <>
+              <div className="mb-3 sm:mb-4 lg:hidden">
+                <DailyChallengesWidget meId={meId} />
+              </div>
               <div className="rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border">
                 <Composer authorId={meId} onPosted={loadPosts} />
               </div>
