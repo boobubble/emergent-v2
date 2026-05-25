@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,7 @@ function timeAgo(iso: string) {
   return `${Math.floor(h / 24)}d`;
 }
 
-export function PostCard({
+export const PostCard = memo(function PostCard({
   post,
   profiles,
   meId,
@@ -30,6 +30,7 @@ export function PostCard({
   meId: string;
 }) {
   const [reactions, setReactions] = useState<FeedReaction[]>([]);
+  const [reactionsLoaded, setReactionsLoaded] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<FeedComment[]>([]);
   const [commentText, setCommentText] = useState("");
@@ -42,40 +43,49 @@ export function PostCard({
   const myReaction = reactions.find((r) => r.user_id === meId);
   const counts: Partial<Record<ReactionType, number>> = {};
   for (const r of reactions) counts[r.type] = (counts[r.type] ?? 0) + 1;
+  const totalReactions = reactionsLoaded ? reactions.length : post.reaction_count;
 
-  useEffect(() => {
-    supabase.from("reactions").select("*").eq("target_type", "post").eq("target_id", post.id)
-      .then(({ data }) => setReactions((data ?? []) as FeedReaction[]));
-    const ch = supabase.channel(`post-r-${post.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "reactions", filter: `target_id=eq.${post.id}` }, (payload) => {
-        if (payload.eventType === "INSERT") setReactions((p) => [...p, payload.new as FeedReaction]);
-        if (payload.eventType === "DELETE") setReactions((p) => p.filter((x) => x.id !== (payload.old as FeedReaction).id));
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [post.id]);
+  // Lazy: only load detailed reactions when user opens picker or reacts.
+  // Live counts come from feed-level `posts` subscription via post.reaction_count.
+  async function ensureReactions() {
+    if (reactionsLoaded) return;
+    const { data } = await supabase.from("reactions").select("*")
+      .eq("target_type", "post").eq("target_id", post.id);
+    setReactions((data ?? []) as FeedReaction[]);
+    setReactionsLoaded(true);
+  }
 
   useEffect(() => {
     if (!showComments) return;
+    let cancelled = false;
     supabase.from("comments").select("*").eq("post_id", post.id).order("created_at", { ascending: true })
-      .then(({ data }) => setComments((data ?? []) as FeedComment[]));
+      .then(({ data }) => { if (!cancelled) setComments((data ?? []) as FeedComment[]); });
     const ch = supabase.channel(`post-c-${post.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "comments", filter: `post_id=eq.${post.id}` }, (payload) => {
         if (payload.eventType === "INSERT") setComments((p) => [...p, payload.new as FeedComment]);
         if (payload.eventType === "DELETE") setComments((p) => p.filter((c) => c.id !== (payload.old as FeedComment).id));
       })
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => { cancelled = true; supabase.removeChannel(ch); };
   }, [showComments, post.id]);
 
   async function react(type: ReactionType) {
     setPickerOpen(false);
-    if (myReaction?.type === type) {
-      await supabase.from("reactions").delete().eq("id", myReaction.id);
+    await ensureReactions();
+    const existing = reactions.find((r) => r.user_id === meId);
+    if (existing?.type === type) {
+      setReactions((p) => p.filter((r) => r.id !== existing.id));
+      await supabase.from("reactions").delete().eq("id", existing.id);
       return;
     }
-    if (myReaction) await supabase.from("reactions").delete().eq("id", myReaction.id);
-    await supabase.from("reactions").insert({ user_id: meId, target_type: "post", target_id: post.id, type });
+    if (existing) {
+      setReactions((p) => p.filter((r) => r.id !== existing.id));
+      await supabase.from("reactions").delete().eq("id", existing.id);
+    }
+    const { data } = await supabase.from("reactions")
+      .insert({ user_id: meId, target_type: "post", target_id: post.id, type })
+      .select().single();
+    if (data) setReactions((p) => [...p, data as FeedReaction]);
   }
 
   async function addComment() {
@@ -146,11 +156,11 @@ export function PostCard({
       <footer className="mt-3 flex items-center gap-1 border-t border-border pt-2">
         <div className="relative">
           <button
-            onClick={() => setPickerOpen(!pickerOpen)}
+            onClick={() => { ensureReactions(); setPickerOpen(!pickerOpen); }}
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${myReaction ? "text-primary" : "text-muted-foreground"} hover:bg-accent hover:text-foreground`}
           >
             <span className="text-base">{myReaction ? REACTION_EMOJI[myReaction.type] : "👍"}</span>
-            <span>{reactions.length || "React"}</span>
+            <span>{totalReactions || "React"}</span>
           </button>
           {pickerOpen && (
             <div className="absolute bottom-full left-0 z-10 mb-1 flex gap-1 rounded-full border border-border bg-card p-1 shadow-lg">
@@ -235,4 +245,4 @@ export function PostCard({
       )}
     </article>
   );
-}
+});
