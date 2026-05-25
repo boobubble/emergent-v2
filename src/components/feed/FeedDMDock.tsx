@@ -158,10 +158,18 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex min-h-0 flex-1 flex-col">
-            <MessageList channelId={state.activeChannel} />
-          </div>
-          <MessageInput />
+          {isDM(state.activeChannel) ? (
+            <>
+              <div className="flex min-h-0 flex-1 flex-col">
+                <MessageList channelId={state.activeChannel} />
+              </div>
+              <MessageInput />
+            </>
+          ) : (
+            <div className="grid flex-1 place-items-center px-6 text-center text-xs text-muted-foreground">
+              Select a friend to start a direct message.
+            </div>
+          )}
         </div>
       )}
     </div>
