@@ -176,7 +176,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                               className={
                                 m.kind === "me"
                                   ? "rounded-2xl bg-white/5 px-4 py-2.5 text-sm italic text-primary"
-                                  : "rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-[0_4px_15px_var(--primary-glow)]"
+                                  : "rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground"
                               }
                             >
                               <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
