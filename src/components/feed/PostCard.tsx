@@ -8,6 +8,7 @@ import { postSlug } from "@/lib/post-slug";
 import { ShareModal, type SharePayload } from "@/components/feed/ShareModal";
 import type { User } from "@/lib/chat-types";
 import { NameEmojiBadge } from "@/lib/name-emoji";
+import { useFeedPrefs } from "@/lib/feed-prefs";
 
 
 function timeAgo(iso: string) {
@@ -29,6 +30,9 @@ export const PostCard = memo(function PostCard({
   profiles: Record<string, User>;
   meId: string;
 }) {
+  const { prefs } = useFeedPrefs();
+  const compact = prefs.compactCards;
+  const hideCounts = prefs.hideCounts;
   const [reactions, setReactions] = useState<FeedReaction[]>([]);
   const [reactionsLoaded, setReactionsLoaded] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -111,7 +115,7 @@ export const PostCard = memo(function PostCard({
   }
 
   return (
-    <article className="rounded-3xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+    <article className={`rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md ${compact ? "p-3" : "p-4"}`}>
       <header className="flex items-center gap-3">
         {author ? (
           <Link to="/u/$username" params={{ username: author.name }}>
@@ -143,12 +147,12 @@ export const PostCard = memo(function PostCard({
         )}
       </header>
 
-      {post.text && <p className="mt-3 whitespace-pre-wrap text-[15px] leading-relaxed">{renderText(post.text)}</p>}
+      {post.text && <p className={`mt-3 whitespace-pre-wrap leading-relaxed ${compact ? "text-sm" : "text-[15px]"}`}>{renderText(post.text)}</p>}
 
       {post.media_urls.length > 0 && (
-        <div className={`mt-3 grid gap-1 overflow-hidden rounded-2xl ${post.media_urls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+        <div className={`mt-3 grid gap-1 overflow-hidden rounded-xl ${post.media_urls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
           {post.media_urls.map((u, i) => (
-            <img key={i} src={u} alt="" loading="lazy" className="max-h-96 w-full object-cover" />
+            <img key={i} src={u} alt="" loading="lazy" decoding="async" className={`w-full object-cover ${compact ? "max-h-72" : "max-h-96"}`} />
           ))}
         </div>
       )}
@@ -160,7 +164,7 @@ export const PostCard = memo(function PostCard({
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${myReaction ? "text-primary" : "text-muted-foreground"} hover:bg-accent hover:text-foreground`}
           >
             <span className="text-base">{myReaction ? REACTION_EMOJI[myReaction.type] : "👍"}</span>
-            <span>{totalReactions || "React"}</span>
+            <span>{hideCounts ? "React" : (totalReactions || "React")}</span>
           </button>
           {pickerOpen && (
             <div className="absolute bottom-full left-0 z-10 mb-1 flex gap-1 rounded-full border border-border bg-card p-1 shadow-lg">
@@ -173,7 +177,7 @@ export const PostCard = memo(function PostCard({
           )}
         </div>
         <button onClick={() => setShowComments(!showComments)} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
-          <MessageCircle className="h-4 w-4" /> {post.comment_count || "Comment"}
+          <MessageCircle className="h-4 w-4" /> {hideCounts ? "Comment" : (post.comment_count || "Comment")}
         </button>
         <button
           onClick={async () => {
@@ -204,7 +208,7 @@ export const PostCard = memo(function PostCard({
       {shareOpen && <ShareModal payload={shareOpen} onClose={() => setShareOpen(null)} />}
 
 
-      {Object.keys(counts).length > 0 && (
+      {!hideCounts && Object.keys(counts).length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1 text-xs text-muted-foreground">
           {(Object.entries(counts) as [ReactionType, number][]).map(([k, v]) => (
             <span key={k} className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5">{REACTION_EMOJI[k]} {v}</span>
