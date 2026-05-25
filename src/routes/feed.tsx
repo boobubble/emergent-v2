@@ -28,7 +28,7 @@ export const Route = createFileRoute("/feed")({
   component: FeedPage,
 });
 
-type Tab = "foryou" | "trending" | "latest" | "friends";
+type Tab = "foryou" | "trending" | "latest" | "friends" | "saved" | "notifications";
 type View = "feed" | "account" | "profile";
 
 function getInitialView(): { view: View; username: string } {
