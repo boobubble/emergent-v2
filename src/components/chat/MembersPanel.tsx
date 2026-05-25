@@ -132,27 +132,12 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const online = allIds
     .filter(isOnline)
     .sort((a, b) => {
-      if (sortBy === "level") {
-        const la = usersById[a]?.level ?? 0;
-        const lb = usersById[b]?.level ?? 0;
-        if (la !== lb) return lb - la;
-        const xa = usersById[a]?.xp ?? 0;
-        const xb = usersById[b]?.xp ?? 0;
-        if (xa !== xb) return xb - xa;
-      } else if (sortBy === "streak") {
-        const sa = usersById[a]?.streak ?? 0;
-        const sb = usersById[b]?.streak ?? 0;
-        if (sa !== sb) return sb - sa;
-        const la = usersById[a]?.longestStreak ?? 0;
-        const lb = usersById[b]?.longestStreak ?? 0;
-        if (la !== lb) return lb - la;
-      } else {
-        const ra = roleOrder[room.roles[a] || "member"];
-        const rb = roleOrder[room.roles[b] || "member"];
-        if (ra !== rb) return ra - rb;
-      }
+      const ra = roleOrder[room.roles[a] || "member"];
+      const rb = roleOrder[room.roles[b] || "member"];
+      if (ra !== rb) return ra - rb;
       return (usersById[a]?.name || "").localeCompare(usersById[b]?.name || "");
     });
+
 
   // Offline sorted by most-recently-seen first (latest at top).
   const offlineSorted = allIds
