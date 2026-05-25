@@ -226,7 +226,7 @@ function FeedPage() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1280px] gap-3 px-2 py-3 sm:gap-5 sm:px-4 sm:py-5 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
+      <div className="mx-auto grid max-w-[1200px] gap-3 px-2 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:grid-cols-[240px_minmax(0,640px)_280px] lg:justify-center">
         {/* Left rail — Sngine-style compact nav */}
         <aside className="hidden lg:block">
           <div className="sticky top-20 space-y-3">
