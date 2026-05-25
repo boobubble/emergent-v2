@@ -279,6 +279,12 @@ function FeedPage() {
               <Link to="/find-friends" className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent">
                 <Users className="h-4 w-4 shrink-0" /> <span className="truncate">Find Friends</span>
               </Link>
+              <Link to="/achievements" className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent">
+                <Award className="h-4 w-4 shrink-0" /> <span className="truncate">Achievements</span>
+              </Link>
+              <Link to="/leaderboard" className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent">
+                <Trophy className="h-4 w-4 shrink-0" /> <span className="truncate">Leaderboard</span>
+              </Link>
 
               <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
             </nav>
