@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper } from "lucide-react";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/feed")({
   component: FeedPage,
 });
 
-type Tab = "foryou" | "trending" | "latest" | "friends";
+type Tab = "foryou" | "trending" | "latest" | "friends" | "saved" | "notifications";
 type View = "feed" | "account" | "profile";
 
 function getInitialView(): { view: View; username: string } {
@@ -196,19 +196,24 @@ function FeedPage() {
       </header>
 
       <div className="mx-auto grid max-w-[1280px] gap-3 px-2 py-3 sm:gap-5 sm:px-4 sm:py-5 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
-        {/* Left rail — minimal nav card */}
+        {/* Left rail — Sngine-style compact nav */}
         <aside className="hidden lg:block">
           <div className="sticky top-20 space-y-3">
-            <nav className="rounded-2xl bg-card p-2 shadow-sm border border-border">
-              <SideItem active={view === "feed"} onClick={() => setView("feed")} icon={Sparkles} label="News Feed" />
-              <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
-              <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
+            <nav className="rounded-2xl bg-card p-1.5 shadow-sm border border-border">
+              <SideItem active={view === "feed" && tab === "foryou"} onClick={() => { setView("feed"); setTab("foryou"); }} icon={Newspaper} label="Feed" />
+              <SideItem active={view === "feed" && tab === "friends"} onClick={() => { setView("feed"); setTab("friends"); }} icon={Users} label="Friends" />
+              <SideItem active={view === "feed" && tab === "trending"} onClick={() => { setView("feed"); setTab("trending"); }} icon={Flame} label="Trending" />
+              <SideItem active={view === "feed" && tab === "saved"} onClick={() => { setView("feed"); setTab("saved"); }} icon={Bookmark} label="Saved Posts" />
+              <SideItem active={view === "feed" && tab === "notifications"} onClick={() => { setView("feed"); setTab("notifications"); }} icon={Bell} label="Notifications" />
               <SideItem
                 active={view === "profile"}
                 onClick={() => { setProfileUsername(user.username); setView("profile"); }}
                 icon={UserCircle}
                 label="My Profile"
               />
+              <div className="my-1 h-px bg-border/60" />
+              <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
+              <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
             </nav>
             <FriendsListCard
               friendIds={friendIds}
@@ -217,6 +222,7 @@ function FeedPage() {
             />
           </div>
         </aside>
+
 
         {/* Center */}
         <main className="min-w-0">
@@ -246,6 +252,19 @@ function FeedPage() {
               </div>
 
               <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
+                {tab === "saved" ? (
+                  <div className="rounded-xl sm:rounded-2xl bg-card p-8 sm:p-12 text-center shadow-sm border border-border">
+                    <Bookmark className="mx-auto h-8 w-8 text-muted-foreground/60" />
+                    <p className="mt-2 text-sm font-medium">No saved posts yet</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Bookmark posts from the feed to find them here later.</p>
+                  </div>
+                ) : tab === "notifications" ? (
+                  <div className="rounded-xl sm:rounded-2xl bg-card p-8 sm:p-12 text-center shadow-sm border border-border">
+                    <Bell className="mx-auto h-8 w-8 text-muted-foreground/60" />
+                    <p className="mt-2 text-sm font-medium">Notifications</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Tap the bell in the top bar to view your latest activity.</p>
+                  </div>
+                ) : (<>
                 {loading && Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="h-40 sm:h-48 animate-pulse rounded-xl sm:rounded-2xl bg-card border border-border" />
                 ))}
@@ -257,7 +276,9 @@ function FeedPage() {
                 {!loading && filtered.map((post) => (
                   <PostCard key={post.id} post={post} profiles={profiles} meId={meId} />
                 ))}
+                </>)}
               </div>
+
             </>
           )}
         </main>
@@ -316,9 +337,9 @@ function SideItem({ icon: Icon, label, active, onClick }: { icon: typeof Home; l
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent"}`}
+      className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent"}`}
     >
-      <Icon className="h-5 w-5" /> {label}
+      <Icon className="h-4 w-4 shrink-0" /> <span className="truncate">{label}</span>
     </button>
   );
 }
@@ -327,13 +348,14 @@ function SideLink({ to, iconSrc, label }: { to: string; iconSrc: string; label: 
   return (
     <Link
       to={to}
-      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+      className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
     >
-      <img src={iconSrc} alt="" className="h-5 w-5 rounded-full bg-white object-contain p-0.5" />
-      {label}
+      <img src={iconSrc} alt="" className="h-4 w-4 rounded-full bg-white object-contain p-0.5" />
+      <span className="truncate">{label}</span>
     </Link>
   );
 }
+
 
 function NavLink({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active?: boolean }) {
   return (
