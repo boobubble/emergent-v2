@@ -1070,7 +1070,17 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     dmChannelFor: (peerId: string) => dmChannelFor(authUserId, peerId),
     replyingTo, setReplyingTo,
     findMessage,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId]);
+    dmPeerReadAt: (channelId: string) => {
+      if (!authUserId || !channelId.startsWith("dm:")) return 0;
+      const reads = dmReads[channelId] || {};
+      let max = 0;
+      for (const [uid, ts] of Object.entries(reads)) {
+        if (uid !== authUserId && ts > max) max = ts;
+      }
+      return max;
+    },
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads]);
+
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
 }
