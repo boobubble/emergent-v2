@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
-import { Send, Smile, Sparkles, Paperclip, X, Reply } from "lucide-react";
+import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
+import { AnimatedEmojiPicker, gifUrlForSticker } from "./AnimatedEmojiPicker";
 import type { Attachment } from "@/lib/chat-types";
 
 const COMMANDS = [
@@ -19,6 +20,7 @@ export function MessageInput() {
   const { typers, sendTyping } = useTyping(state.activeChannel, me, !!me);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
+  const [showStickers, setShowStickers] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
   const [caret, setCaret] = useState(0);
@@ -191,6 +193,25 @@ export function MessageInput() {
           />
         </div>
       )}
+      {showStickers && (
+        <div className="mb-2">
+          <AnimatedEmojiPicker
+            onPick={(s) => {
+              send("", {
+                attachment: {
+                  kind: "image",
+                  name: `${s.name}.gif`,
+                  mime: "image/gif",
+                  size: 0,
+                  dataUrl: gifUrlForSticker(s.cp),
+                },
+                replyToId: replyingTo?.id,
+              });
+              setShowStickers(false);
+            }}
+          />
+        </div>
+      )}
       {attachment && (
         <div className="mb-2 flex items-center gap-2 rounded-2xl border border-border bg-white/5 px-3 py-2">
           {attachment.kind === "image" ? (
@@ -231,7 +252,10 @@ export function MessageInput() {
           <Sparkles className="h-5 w-5" />
         </button>
         <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help or @mention"} className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
-        <button onClick={() => setShowEmoji(s => !s)} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground">
+        <button onClick={() => { setShowStickers(s => !s); setShowEmoji(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Animated stickers">
+          <Sticker className="h-5 w-5" />
+        </button>
+        <button onClick={() => { setShowEmoji(s => !s); setShowStickers(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground" title="Emoji">
           <Smile className="h-5 w-5" />
         </button>
         <button onClick={submit} disabled={!text.trim() && !attachment} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100">
