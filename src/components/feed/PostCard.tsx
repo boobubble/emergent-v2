@@ -164,7 +164,7 @@ export const PostCard = memo(function PostCard({
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${myReaction ? "text-primary" : "text-muted-foreground"} hover:bg-accent hover:text-foreground`}
           >
             <span className="text-base">{myReaction ? REACTION_EMOJI[myReaction.type] : "👍"}</span>
-            <span>{totalReactions || "React"}</span>
+            <span>{hideCounts ? "React" : (totalReactions || "React")}</span>
           </button>
           {pickerOpen && (
             <div className="absolute bottom-full left-0 z-10 mb-1 flex gap-1 rounded-full border border-border bg-card p-1 shadow-lg">
