@@ -106,9 +106,17 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           <ImageIcon className="h-4 w-4" /> Photo
         </button>
         <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => setFiles([...files, ...Array.from(e.target.files ?? [])])} />
-        <button onClick={() => updateText(text + " 😊")} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
-          <Smile className="h-4 w-4" /> Feeling
-        </button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
+              <Smile className="h-4 w-4" /> Emoji
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-[320px] p-0">
+            <EmojiPicker onPick={(e) => updateText(text + e)} />
+          </PopoverContent>
+        </Popover>
+
         <button onClick={() => updateText(text + " #")} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
           <Hash className="h-4 w-4" /> Tag
         </button>
