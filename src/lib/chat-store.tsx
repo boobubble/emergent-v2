@@ -558,12 +558,23 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
             if (gs.type) games = { ...games, [msg.channelId]: gs };
             else games = Object.fromEntries(Object.entries(games).filter(([k]) => k !== msg.channelId));
           }
+          // Auto-open DM for the receiver so the conversation shows up in their inbox.
+          let dmOrder = s.dmOrder;
+          if (msg.channelId.startsWith("dm:") && msg.authorId !== "me" && authUserId) {
+            const parts = msg.channelId.slice(3).split(":");
+            const peerId = parts.find(p => p !== authUserId);
+            if (peerId && !dmOrder.includes(peerId)) {
+              dmOrder = [...dmOrder, peerId];
+            }
+          }
           return {
             ...s,
             games,
+            dmOrder,
             messages: { ...s.messages, [msg.channelId]: [...existing, msg].sort((a, b) => a.ts - b.ts) },
           };
         });
+
         if (msg.authorId !== "me") {
           if (msg.channelId.startsWith("dm:")) {
             playDmPing();
