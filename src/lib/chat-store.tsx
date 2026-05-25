@@ -1151,7 +1151,29 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       }
       return max;
     },
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads]);
+    isDmUnread: (peerId: string) => {
+      if (!authUserId) return false;
+      const ch = dmChannelFor(authUserId, peerId);
+      if (state.activeChannel === ch) return false;
+      const latest = dmLatestTs[ch] ?? 0;
+      if (!latest) return false;
+      const myRead = dmReads[ch]?.[authUserId] ?? 0;
+      return latest > myRead;
+    },
+    dmUnreadCount: (() => {
+      if (!authUserId) return 0;
+      let n = 0;
+      for (const peerId of state.dmOrder) {
+        const ch = dmChannelFor(authUserId, peerId);
+        if (state.activeChannel === ch) continue;
+        const latest = dmLatestTs[ch] ?? 0;
+        if (!latest) continue;
+        const myRead = dmReads[ch]?.[authUserId] ?? 0;
+        if (latest > myRead) n++;
+      }
+      return n;
+    })(),
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
