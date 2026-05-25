@@ -44,12 +44,28 @@ const DEFAULTS: FeedPrefs = {
 
 const KEY = "palrgo:feed-prefs:v1";
 
+function sanitizePrefs(raw: Partial<FeedPrefs>): FeedPrefs {
+  const defaultTab = ["foryou", "trending", "latest", "friends"].includes(raw.defaultTab ?? "") ? raw.defaultTab! : DEFAULTS.defaultTab;
+  const sortOverride = ["smart", "latest", "trending"].includes(raw.sortOverride ?? "") ? raw.sortOverride! : DEFAULTS.sortOverride;
+  const defaultPrivacy = ["public", "friends"].includes(raw.defaultPrivacy ?? "") ? raw.defaultPrivacy! : DEFAULTS.defaultPrivacy;
+
+  return {
+    ...DEFAULTS,
+    ...raw,
+    defaultTab,
+    sortOverride,
+    defaultPrivacy,
+    mutedKeywords: Array.isArray(raw.mutedKeywords) ? raw.mutedKeywords.filter((v): v is string => typeof v === "string") : [],
+    mutedHashtags: Array.isArray(raw.mutedHashtags) ? raw.mutedHashtags.filter((v): v is string => typeof v === "string") : [],
+  };
+}
+
 function load(): FeedPrefs {
   if (typeof window === "undefined") return DEFAULTS;
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return DEFAULTS;
-    return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<FeedPrefs>) };
+    return sanitizePrefs(JSON.parse(raw) as Partial<FeedPrefs>);
   } catch {
     return DEFAULTS;
   }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Sliders } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper } from "lucide-react";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -34,6 +34,29 @@ export const Route = createFileRoute("/feed")({
 type Tab = "foryou" | "trending" | "latest" | "friends" | "saved" | "notifications";
 type View = "feed" | "account" | "profile" | "settings";
 
+function isVisibleFeedTab(tab: string): tab is Tab {
+  return ["foryou", "trending", "latest", "friends", "saved", "notifications"].includes(tab);
+}
+
+function normalizePost(row: Partial<FeedPost>): FeedPost {
+  return {
+    id: row.id ?? "",
+    author_id: row.author_id ?? "",
+    kind: row.kind ?? "text",
+    text: row.text ?? "",
+    slug: row.slug ?? row.id ?? "post",
+    media_urls: Array.isArray(row.media_urls) ? row.media_urls : [],
+    poll: row.poll ?? null,
+    privacy: row.privacy ?? "public",
+    is_anonymous: Boolean(row.is_anonymous),
+    hashtags: Array.isArray(row.hashtags) ? row.hashtags : [],
+    reaction_count: row.reaction_count ?? 0,
+    comment_count: row.comment_count ?? 0,
+    trending_score: row.trending_score ?? 0,
+    created_at: row.created_at ?? new Date().toISOString(),
+  };
+}
+
 function getInitialView(): { view: View; username: string } {
   if (typeof window === "undefined") return { view: "feed", username: "" };
   const sp = new URLSearchParams(window.location.search);
@@ -46,7 +69,7 @@ function FeedPage() {
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const { prefs } = useFeedPrefs();
-  const [tab, setTab] = useState<Tab>(prefs.defaultTab);
+  const [tab, setTabState] = useState<Tab>(isVisibleFeedTab(prefs.defaultTab) ? prefs.defaultTab : "foryou");
   const initial = getInitialView();
   const [view, setView] = useState<View>(initial.view);
   const [profileUsername, setProfileUsername] = useState<string>(initial.username);
@@ -58,10 +81,14 @@ function FeedPage() {
 
   const meId = user?.id ?? "";
 
+  function setTab(next: Tab) {
+    setTabState(next);
+  }
+
   // Apply the saved default tab once prefs hydrate from localStorage
   useEffect(() => {
     if (defaultTabApplied) return;
-    setTab(prefs.defaultTab);
+    setTab(isVisibleFeedTab(prefs.defaultTab) ? prefs.defaultTab : "foryou");
     setDefaultTabApplied(true);
   }, [prefs.defaultTab, defaultTabApplied]);
 
@@ -87,7 +114,11 @@ function FeedPage() {
   useEffect(() => {
     if (!meId) return;
     async function loadF() {
-      const { data } = await supabase.from("friendships").select("*").eq("status", "accepted");
+      const { data } = await supabase
+        .from("friendships")
+        .select("*")
+        .eq("status", "accepted")
+        .or(`sender_id.eq.${meId},receiver_id.eq.${meId}`);
       const ids = new Set<string>();
       ((data ?? []) as FeedFriendship[]).forEach((f) => {
         ids.add(f.sender_id === meId ? f.receiver_id : f.sender_id);
@@ -103,7 +134,7 @@ function FeedPage() {
   async function loadPosts() {
     setLoading(true);
     const { data } = await supabase.from("posts").select("*").order("created_at", { ascending: false }).limit(50);
-    setPosts((data ?? []) as FeedPost[]);
+    setPosts(((data ?? []) as Partial<FeedPost>[]).map(normalizePost));
     setLoading(false);
   }
 
@@ -112,9 +143,9 @@ function FeedPage() {
     loadPosts();
     const ch = supabase.channel("feed-posts")
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, (payload) => {
-        if (payload.eventType === "INSERT") setPosts((p) => [payload.new as FeedPost, ...p]);
+        if (payload.eventType === "INSERT") setPosts((p) => [normalizePost(payload.new as Partial<FeedPost>), ...p]);
         else if (payload.eventType === "DELETE") setPosts((p) => p.filter((x) => x.id !== (payload.old as FeedPost).id));
-        else if (payload.eventType === "UPDATE") setPosts((p) => p.map((x) => x.id === (payload.new as FeedPost).id ? payload.new as FeedPost : x));
+        else if (payload.eventType === "UPDATE") setPosts((p) => p.map((x) => x.id === (payload.new as FeedPost).id ? normalizePost(payload.new as Partial<FeedPost>) : x));
       }).subscribe();
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps

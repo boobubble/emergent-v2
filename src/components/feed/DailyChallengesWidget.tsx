@@ -49,16 +49,25 @@ interface Progress {
   claimed: Partial<Record<ChallengeId, boolean>>;
 }
 
+function emptyProgress(): Progress {
+  return { date: todayKey(), values: {}, claimed: {} };
+}
+
+function normalizeProgress(value: Partial<Progress> | null | undefined): Progress {
+  if (!value || value.date !== todayKey()) return emptyProgress();
+  const values = value.values && typeof value.values === "object" ? value.values : {};
+  const claimed = value.claimed && typeof value.claimed === "object" ? value.claimed : {};
+  return { date: todayKey(), values, claimed };
+}
+
 function readProgress(meId: string): Progress {
-  if (typeof window === "undefined") return { date: todayKey(), values: {}, claimed: {} };
+  if (typeof window === "undefined") return emptyProgress();
   try {
     const raw = localStorage.getItem(`dc:${meId}`);
-    if (!raw) return { date: todayKey(), values: {}, claimed: {} };
-    const p = JSON.parse(raw) as Progress;
-    if (p.date !== todayKey()) return { date: todayKey(), values: {}, claimed: {} };
-    return p;
+    if (!raw) return emptyProgress();
+    return normalizeProgress(JSON.parse(raw) as Partial<Progress>);
   } catch {
-    return { date: todayKey(), values: {}, claimed: {} };
+    return emptyProgress();
   }
 }
 
