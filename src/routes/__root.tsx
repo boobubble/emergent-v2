@@ -13,6 +13,7 @@ import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
+import { FaviconSwitcher } from "@/components/FaviconSwitcher";
 
 import appCss from "../styles.css?url";
 
