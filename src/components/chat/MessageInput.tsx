@@ -185,12 +185,10 @@ export function MessageInput() {
         </div>
       )}
       {showEmoji && (
-        <div className="mb-2 flex flex-wrap gap-1 rounded-2xl border border-border bg-card p-2">
-          {EMOJIS.map(e => (
-            <button key={e} onClick={() => { setText(t => t + e); setShowEmoji(false); inputRef.current?.focus(); }} className="rounded-lg p-1 text-xl transition-colors hover:bg-white/5">
-              {e}
-            </button>
-          ))}
+        <div className="mb-2">
+          <EmojiPicker
+            onPick={(e) => { setText(t => t + e); inputRef.current?.focus(); }}
+          />
         </div>
       )}
       {attachment && (
