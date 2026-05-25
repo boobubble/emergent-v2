@@ -18,24 +18,33 @@ export interface RemoteProfile {
   gender: string | null;
 }
 
+const ONLINE_WINDOW_MS = 2 * 60 * 1000; // 2 minutes
+
 function toUser(p: RemoteProfile): User {
   const isGuest = /^guest-/i.test(p.username);
   const g = p.gender;
   const gender: User["gender"] | undefined =
     g === "male" || g === "female" || g === "other" ? g : undefined;
+  const lastSeenMs = p.last_seen ? new Date(p.last_seen).getTime() : undefined;
+  const rawStatus = (p.status as User["status"]) || "offline";
+  // Derive real online status from last_seen freshness so stale "online" rows
+  // (e.g. users who closed the tab without a clean disconnect) appear offline.
+  const fresh = lastSeenMs != null && Date.now() - lastSeenMs < ONLINE_WINDOW_MS;
+  const status: User["status"] =
+    rawStatus === "offline" ? "offline" : fresh ? rawStatus : "offline";
   return {
     id: p.id,
     name: p.username,
     avatarColor: p.avatar_color,
     avatarUrl: p.avatar_url ?? undefined,
-    status: (p.status as User["status"]) || "online",
+    status,
     bio: p.bio ?? undefined,
     xp: p.xp,
     level: p.level,
     coins: p.coins,
     streak: p.streak ?? 0,
     longestStreak: p.longest_streak ?? 0,
-    lastSeen: p.last_seen ? new Date(p.last_seen).getTime() : undefined,
+    lastSeen: lastSeenMs,
     isGuest,
     gender,
   };
