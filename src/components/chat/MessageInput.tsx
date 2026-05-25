@@ -189,7 +189,7 @@ export function MessageInput() {
       {showEmoji && (
         <div className="mb-2">
           <EmojiPicker
-            onPick={(e) => { setText(t => t + e); inputRef.current?.focus(); }}
+            onPick={(e) => { setText(t => t + e); setShowEmoji(false); inputRef.current?.focus(); }}
           />
         </div>
       )}
