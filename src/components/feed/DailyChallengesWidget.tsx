@@ -219,7 +219,7 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
           <span className="text-xs text-muted-foreground">/ {challenges.length}</span>
         </div>
         <div className="flex-1">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-accent">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-gradient-to-r from-primary to-yellow-500 transition-all duration-500"
               style={{ width: `${overallPct}%` }}
@@ -266,10 +266,10 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
                     )}
                   </div>
                   <div className="mt-1 flex items-center gap-2">
-                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-accent">
+                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${done ? "bg-primary" : "bg-primary/70"}`}
-                        style={{ width: `${pct}%` }}
+                        style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
                       />
                     </div>
                     <span className="text-[10px] font-semibold text-muted-foreground">
