@@ -127,7 +127,7 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
           <div className="mt-2 flex-1 overflow-y-auto px-1.5 pb-2">
             {friends.length === 0 ? (
               <p className="px-3 py-6 text-center text-xs text-muted-foreground">
-                {friendIds.length === 0 ? "Add friends to start chatting." : "No matches."}
+                {friendIds.length === 0 && state.dmOrder.length === 0 ? "Add friends or message a user to start chatting." : "No matches."}
               </p>
             ) : friends.map(u => (
               <button
