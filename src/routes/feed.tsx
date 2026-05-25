@@ -10,6 +10,7 @@ import { useFeedPrefs } from "@/lib/feed-prefs";
 import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
+import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
 import { AccountPanel } from "@/components/feed/AccountPanel";
 import { ProfilePanel } from "@/components/feed/ProfilePanel";
 import { FeedSettingsPanel } from "@/components/feed/FeedSettingsPanel";
