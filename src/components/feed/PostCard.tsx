@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
