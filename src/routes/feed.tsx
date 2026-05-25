@@ -260,6 +260,8 @@ function FeedPage() {
         <main className="min-w-0">
           {view === "account" ? (
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><AccountPanel /></div>
+          ) : view === "settings" ? (
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><FeedSettingsPanel /></div>
           ) : view === "profile" ? (
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></div>
           ) : (
