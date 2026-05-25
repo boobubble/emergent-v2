@@ -50,11 +50,17 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
   }, [open, state.activeChannel, isDM]);
 
   const friends = useMemo(() => {
-    const list = friendIds.map(id => profiles[id]).filter(Boolean) as User[];
+    const ids = new Set<string>(friendIds);
+    // Also include any peers the user has an active DM thread with
+    for (const id of state.dmOrder) ids.add(id);
+    const list = Array.from(ids)
+      .map(id => profiles[id] ?? state.users[id])
+      .filter(Boolean) as User[];
     if (!q.trim()) return list;
     const t = q.toLowerCase();
     return list.filter(u => u.name.toLowerCase().includes(t));
-  }, [friendIds, profiles, q]);
+  }, [friendIds, profiles, q, state.dmOrder, state.users]);
+
 
   const activePeerId = useMemo(() => {
     const ch = state.activeChannel;
