@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
@@ -21,6 +22,11 @@ import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/g
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FindFriendsRoute = FindFriendsRouteImport.update({
+  id: '/find-friends',
+  path: '/find-friends',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedRoute = FeedRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
   '/feed': typeof FeedRouteWithChildren
+  '/find-friends': typeof FindFriendsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
   '/feed': typeof FeedRouteWithChildren
+  '/find-friends': typeof FindFriendsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
   '/feed': typeof FeedRouteWithChildren
+  '/find-friends': typeof FindFriendsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/achievements'
     | '/feed'
+    | '/find-friends'
     | '/leaderboard'
     | '/feed/$slug'
     | '/u/$username'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/achievements'
     | '/feed'
+    | '/find-friends'
     | '/leaderboard'
     | '/feed/$slug'
     | '/u/$username'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/achievements'
     | '/feed'
+    | '/find-friends'
     | '/leaderboard'
     | '/feed/$slug'
     | '/u/$username'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AchievementsRoute: typeof AchievementsRoute
   FeedRoute: typeof FeedRouteWithChildren
+  FindFriendsRoute: typeof FindFriendsRoute
   LeaderboardRoute: typeof LeaderboardRoute
   UUsernameRoute: typeof UUsernameRoute
   ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
@@ -140,6 +153,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/find-friends': {
+      id: '/find-friends'
+      path: '/find-friends'
+      fullPath: '/find-friends'
+      preLoaderRoute: typeof FindFriendsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed': {
@@ -209,6 +229,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AchievementsRoute: AchievementsRoute,
   FeedRoute: FeedRouteWithChildren,
+  FindFriendsRoute: FindFriendsRoute,
   LeaderboardRoute: LeaderboardRoute,
   UUsernameRoute: UUsernameRoute,
   ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,

@@ -244,7 +244,10 @@ function FeedPage() {
               />
               <div className="my-1 h-px bg-border/60" />
               <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
-              <SideItem onClick={() => { setView("feed"); setTab("friends"); }} active={view === "feed" && tab === "friends"} icon={Users} label="Find Friends" />
+              <Link to="/find-friends" className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent">
+                <Users className="h-4 w-4 shrink-0" /> <span className="truncate">Find Friends</span>
+              </Link>
+
               <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
             </nav>
             <FriendsListCard
