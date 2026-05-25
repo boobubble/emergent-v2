@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Trophy, Check, Zap, Flame, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -76,6 +76,7 @@ function writeProgress(meId: string, p: Progress) {
 }
 
 export function DailyChallengesWidget({ meId }: { meId: string }) {
+  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const challenges = useMemo(pickDailyChallenges, []);
   const [progress, setProgress] = useState<Progress>(() => readProgress(meId));
   const [celebrate, setCelebrate] = useState<ChallengeId | null>(null);
@@ -108,7 +109,7 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
         supabase.from("posts").select("id", { count: "exact", head: true }).eq("author_id", meId).gte("created_at", iso),
         supabase.from("reactions").select("id", { count: "exact", head: true }).eq("user_id", meId).gte("created_at", iso),
         supabase.from("comments").select("id", { count: "exact", head: true }).eq("author_id", meId).gte("created_at", iso),
-        supabase.from("friendships").select("id", { count: "exact", head: true }).eq("status", "accepted").or(`sender_id.eq.${meId},receiver_id.eq.${meId}`).gte("updated_at", iso),
+        supabase.from("friendships").select("id", { count: "exact", head: true }).eq("status", "accepted").or(`sender_id.eq.${meId},receiver_id.eq.${meId}`).gte("created_at", iso),
       ]);
 
       if (cancelled) return;
@@ -125,14 +126,14 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
     }
     load();
     const ch = supabase
-      .channel(`dc-${meId}`)
+      .channel(`dc-${meId}-${instanceId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "posts", filter: `author_id=eq.${meId}` }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "reactions", filter: `user_id=eq.${meId}` }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "comments", filter: `author_id=eq.${meId}` }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, load)
       .subscribe();
     return () => { cancelled = true; supabase.removeChannel(ch); };
-  }, [meId]);
+  }, [meId, instanceId]);
 
   // Trigger celebration when a challenge crosses completion (unclaimed)
   useEffect(() => {
