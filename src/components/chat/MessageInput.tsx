@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
-import { Send, Smile, Sparkles, Paperclip, X, Reply } from "lucide-react";
+import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
+import { AnimatedEmojiPicker, gifUrlForSticker } from "./AnimatedEmojiPicker";
 import type { Attachment } from "@/lib/chat-types";
 
 const COMMANDS = [
@@ -19,6 +20,7 @@ export function MessageInput() {
   const { typers, sendTyping } = useTyping(state.activeChannel, me, !!me);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
+  const [showStickers, setShowStickers] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
   const [caret, setCaret] = useState(0);
