@@ -196,19 +196,24 @@ function FeedPage() {
       </header>
 
       <div className="mx-auto grid max-w-[1280px] gap-3 px-2 py-3 sm:gap-5 sm:px-4 sm:py-5 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
-        {/* Left rail — minimal nav card */}
+        {/* Left rail — Sngine-style compact nav */}
         <aside className="hidden lg:block">
           <div className="sticky top-20 space-y-3">
-            <nav className="rounded-2xl bg-card p-2 shadow-sm border border-border">
-              <SideItem active={view === "feed"} onClick={() => setView("feed")} icon={Sparkles} label="News Feed" />
-              <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
-              <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
+            <nav className="rounded-2xl bg-card p-1.5 shadow-sm border border-border">
+              <SideItem active={view === "feed" && tab === "foryou"} onClick={() => { setView("feed"); setTab("foryou"); }} icon={Newspaper} label="Feed" />
+              <SideItem active={view === "feed" && tab === "friends"} onClick={() => { setView("feed"); setTab("friends"); }} icon={Users} label="Friends" />
+              <SideItem active={view === "feed" && tab === "trending"} onClick={() => { setView("feed"); setTab("trending"); }} icon={Flame} label="Trending" />
+              <SideItem active={view === "feed" && tab === "saved"} onClick={() => { setView("feed"); setTab("saved"); }} icon={Bookmark} label="Saved Posts" />
+              <SideItem active={view === "feed" && tab === "notifications"} onClick={() => { setView("feed"); setTab("notifications"); }} icon={Bell} label="Notifications" />
               <SideItem
                 active={view === "profile"}
                 onClick={() => { setProfileUsername(user.username); setView("profile"); }}
                 icon={UserCircle}
                 label="My Profile"
               />
+              <div className="my-1 h-px bg-border/60" />
+              <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
+              <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
             </nav>
             <FriendsListCard
               friendIds={friendIds}
@@ -217,6 +222,7 @@ function FeedPage() {
             />
           </div>
         </aside>
+
 
         {/* Center */}
         <main className="min-w-0">
