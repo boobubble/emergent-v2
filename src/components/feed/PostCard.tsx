@@ -30,6 +30,9 @@ export const PostCard = memo(function PostCard({
   profiles: Record<string, User>;
   meId: string;
 }) {
+  const { prefs } = useFeedPrefs();
+  const compact = prefs.compactCards;
+  const hideCounts = prefs.hideCounts;
   const [reactions, setReactions] = useState<FeedReaction[]>([]);
   const [reactionsLoaded, setReactionsLoaded] = useState(false);
   const [showComments, setShowComments] = useState(false);
