@@ -65,9 +65,8 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
       });
 
       if (error) throw new Error(error.message);
-      // bump XP
-      const { data: prof } = await supabase.from("profiles").select("xp").eq("id", authorId).maybeSingle();
-      if (prof) await supabase.from("profiles").update({ xp: (prof.xp ?? 0) + 5 }).eq("id", authorId);
+      // bump XP (server-side; gamification trigger blocks client writes)
+      try { await awardXp({ data: { amount: 5 } }); } catch (e) { console.error("xp award failed", e); }
       setText(""); setFiles([]); setAnonymous(false);
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       onPosted?.();
