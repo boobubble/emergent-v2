@@ -18,9 +18,9 @@ import type { Role } from "@/lib/chat-types";
 type Tab = "info" | "about" | "friends" | "activity" | "daily";
 
 const ROLE_ICON: Record<Role, React.ReactNode> = {
-  owner: <Crown className="h-3.5 w-3.5 text-warning" />,
-  admin: <Shield className="h-3.5 w-3.5 text-primary" />,
-  mod: <ShieldHalf className="h-3.5 w-3.5 text-primary/70" />,
+  owner: <Crown className="h-4 w-4 shrink-0 text-warning" />,
+  admin: <Shield className="h-4 w-4 shrink-0 text-primary" />,
+  mod: <ShieldHalf className="h-4 w-4 shrink-0 text-primary/70" />,
   member: null,
 };
 
@@ -155,25 +155,25 @@ export function ProfilePopup({
           </h2>
           {user.bio && <p className="mx-auto mt-1 max-w-[260px] text-xs text-muted-foreground">{user.bio}</p>}
 
-          {/* Quick action chips */}
+          {/* Quick action chips - fixed height */}
           <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider">
-            <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-yellow-500"><Trophy className="h-3 w-3" /> Lv {user.level}</span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-amber-400"><Coins className="h-3 w-3" /> {user.coins ?? 0}</span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2 py-0.5 text-orange-400"><Flame className="h-3 w-3" /> {user.streak ?? 0}d</span>
-            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${user.status === "online" ? "bg-green-500/15 text-green-400" : "bg-muted-foreground/15 text-muted-foreground"}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${user.status === "online" ? "bg-green-400" : "bg-muted-foreground/60"}`} />
+            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-yellow-500/15 px-2 text-yellow-500"><Trophy className="h-3.5 w-3.5 shrink-0" /> Lv {user.level}</span>
+            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-amber-500/15 px-2 text-amber-400"><Coins className="h-3.5 w-3.5 shrink-0" /> {user.coins ?? 0}</span>
+            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-orange-500/15 px-2 text-orange-400"><Flame className="h-3.5 w-3.5 shrink-0" /> {user.streak ?? 0}d</span>
+            <span className={`inline-flex h-6 items-center gap-1 rounded-full px-2 ${user.status === "online" ? "bg-green-500/15 text-green-400" : "bg-muted-foreground/15 text-muted-foreground"}`}>
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${user.status === "online" ? "bg-green-400" : "bg-muted-foreground/60"}`} />
               {user.status === "online" ? "Online" : "Offline"}
             </span>
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - fixed height */}
         <div className="flex gap-1 border-b border-border bg-card px-3">
           {tabs.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`relative px-3 py-2 text-xs font-semibold transition-colors ${
+              className={`relative h-10 w-[68px] shrink-0 text-xs font-semibold transition-colors ${
                 tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -183,15 +183,15 @@ export function ProfilePopup({
           ))}
         </div>
 
-        <div className="max-h-[320px] overflow-y-auto px-5 py-4 text-sm">
+        <div className="h-[320px] overflow-y-auto px-5 py-4 text-sm">
           {tab === "info" && (
             <ul className="space-y-2.5">
-              <Row icon={<Eye className="h-3.5 w-3.5" />} label="Last seen" value={lastSeenLabel} />
-              <Row icon={<Globe className="h-3.5 w-3.5" />} label="Current room" value={currentRoom} />
-              <Row icon={<Calendar className="h-3.5 w-3.5" />} label="Member since" value={memberSince ?? (user.isBot ? "—" : "…")} />
-              <Row icon={<Sparkles className="h-3.5 w-3.5" />} label="XP" value={`${user.xp} pts`} />
-              <Row icon={<Heart className="h-3.5 w-3.5" />} label="Gender" value={user.gender ? user.gender[0].toUpperCase() + user.gender.slice(1) : "—"} />
-              <Row icon={<Award className="h-3.5 w-3.5" />} label="Badges" value={`${(user.badges || []).length}`} />
+              <Row icon={<Eye className="h-4 w-4 shrink-0" />} label="Last seen" value={lastSeenLabel} />
+              <Row icon={<Globe className="h-4 w-4 shrink-0" />} label="Current room" value={currentRoom} />
+              <Row icon={<Calendar className="h-4 w-4 shrink-0" />} label="Member since" value={memberSince ?? (user.isBot ? "—" : "…")} />
+              <Row icon={<Sparkles className="h-4 w-4 shrink-0" />} label="XP" value={`${user.xp} pts`} />
+              <Row icon={<Heart className="h-4 w-4 shrink-0" />} label="Gender" value={user.gender ? user.gender[0].toUpperCase() + user.gender.slice(1) : "—"} />
+              <Row icon={<Award className="h-4 w-4 shrink-0" />} label="Badges" value={`${(user.badges || []).length}`} />
             </ul>
           )}
 
@@ -259,44 +259,44 @@ export function ProfilePopup({
           )}
         </div>
 
-        {/* Footer actions */}
+        {/* Footer actions - fixed sizes */}
         {!isMe && (
-          <div className="flex flex-wrap gap-1.5 border-t border-border bg-card px-4 py-3">
+          <div className="flex items-center gap-2 border-t border-border bg-card px-4 py-3">
             <button
               onClick={() => { startDM(userId); onOpenChange(false); }}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90"
+              className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
             >
-              <MessageCircle className="h-3.5 w-3.5" /> Message
+              <MessageCircle className="h-4 w-4 shrink-0" /> Message
             </button>
             {friend ? (
-              <button onClick={() => removeFriend(userId)} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold hover:bg-white/5">
-                <UserMinus className="h-3.5 w-3.5" /> Friends
+              <button onClick={() => removeFriend(userId)} className="inline-flex h-10 w-[110px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-border bg-card text-xs font-semibold hover:bg-white/5">
+                <UserMinus className="h-4 w-4 shrink-0" /> Friends
               </button>
             ) : (
-              <button onClick={() => addFriend(userId)} className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/20">
-                <UserPlus className="h-3.5 w-3.5" /> Add
+              <button onClick={() => addFriend(userId)} className="inline-flex h-10 w-[110px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 text-xs font-semibold text-primary hover:bg-primary/20">
+                <UserPlus className="h-4 w-4 shrink-0" /> Add
               </button>
             )}
             {blocked ? (
-              <button onClick={() => unblockUser(userId)} className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unblock">
-                <ShieldCheck className="h-3.5 w-3.5" />
+              <button onClick={() => unblockUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unblock">
+                <ShieldCheck className="h-4 w-4 shrink-0" />
               </button>
             ) : (
-              <button onClick={() => blockUser(userId)} className="grid h-9 w-9 place-items-center rounded-full border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20" title="Block">
-                <Ban className="h-3.5 w-3.5" />
+              <button onClick={() => blockUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20" title="Block">
+                <Ban className="h-4 w-4 shrink-0" />
               </button>
             )}
           </div>
         )}
         {isMe && (
-          <div className="flex gap-1.5 border-t border-border bg-card px-4 py-3">
+          <div className="flex gap-2 border-t border-border bg-card px-4 py-3">
             <Link
               to="/feed"
               search={{ tab: "account" } as never}
               onClick={() => onOpenChange(false)}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90"
+              className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
             >
-              <ExternalLink className="h-3.5 w-3.5" /> Edit profile
+              <ExternalLink className="h-4 w-4 shrink-0" /> Edit profile
             </Link>
           </div>
         )}
