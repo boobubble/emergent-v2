@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { rtLog } from "@/lib/realtime-debug";
 import type { User } from "@/lib/chat-types";
 
 export interface RemoteProfile {
