@@ -401,7 +401,7 @@ export const rollDice = createServerFn({ method: "POST" })
     if (mustPass && !extraTurn) {
       updates.current_turn_seat = nextSeat(me.seat, totalSeats);
     }
-    await supabaseAdmin.from("games").update(updates).eq("id", data.gameId);
+    await supabaseAdmin.from("games").update(updates as never).eq("id", data.gameId);
     return { die };
   });
 
