@@ -17,6 +17,7 @@ export function usePresenceHeartbeat() {
         .from("profiles")
         .update({ last_seen: new Date().toISOString(), status })
         .eq("id", userId);
+      rtLog("heartbeat", status);
     }
 
     function sendOfflineBeacon() {
