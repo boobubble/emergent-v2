@@ -364,6 +364,9 @@ const BOT_REPLIES = {
     "hey hey 👋", "yo!", "hi there 🙌", "sup", "heyy welcome in", "o/", "howdy 🤠",
     "hello friend", "what's good?", "morning ☀️", "evenin' 🌙", "ayy you made it",
     "hey, how's your day going?", "glad to see ya", "wb 👋", "hiya!",
+    "arre wah, aa gaye aap 😎", "namaste ji 🙏", "kya haal chaal?", "kaisa hai bhai 🙌",
+    "oye hoye, swagat hai 🎉", "kidhar tha itne din?", "ram ram bhai", "salaam dosto ✋",
+    "scene kya hai aaj?", "ola amigo... matlab namaste 😄",
   ],
   thanks: [
     "anytime 🤝", "np!", "you got it", "🫡", "happy to help", "no worries",
