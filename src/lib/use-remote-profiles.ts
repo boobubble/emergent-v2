@@ -125,15 +125,18 @@ export function useRemoteProfiles() {
       const ch = supabase.channel(PRESENCE_CHANNEL, {
         config: { presence: { key: userId } },
       });
-      const recompute = () => {
+      const recompute = (event: string) => {
         if (cancelled) return;
         const state = ch.presenceState() as Record<string, unknown[]>;
-        setPresentIds(new Set(Object.keys(state)));
+        const ids = new Set(Object.keys(state));
+        setPresentIds(ids);
+        if (event !== "sync") rtLog("presence", event, `${ids.size} online`);
       };
-      ch.on("presence", { event: "sync" }, recompute)
-        .on("presence", { event: "join" }, recompute)
-        .on("presence", { event: "leave" }, recompute)
+      ch.on("presence", { event: "sync" }, () => recompute("sync"))
+        .on("presence", { event: "join" }, () => recompute("join"))
+        .on("presence", { event: "leave" }, () => recompute("leave"))
         .subscribe(async (status) => {
+          rtLog("ws", status, "presence");
           if (status === "SUBSCRIBED") {
             await ch.track({ online_at: new Date().toISOString() });
           }
