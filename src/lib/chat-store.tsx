@@ -371,6 +371,8 @@ const BOT_REPLIES = {
   thanks: [
     "anytime 🤝", "np!", "you got it", "🫡", "happy to help", "no worries",
     "of course 🙌", "always 💛", "don't mention it", "we got each other", "say less",
+    "arre koi baat nahi yaar 🤝", "itna formal mat ho 😄", "apna kaam tha bhai",
+    "bas yahi to dosti hai 💛", "kabhi bhi bolna 🙌", "tension not 😎",
   ],
   question: [
     "good question 🤔", "hmm depends honestly", "not sure tbh, lemme think",
