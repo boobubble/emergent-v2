@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award } from "lucide-react";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
@@ -11,17 +11,24 @@ import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
 import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
-import { AccountPanel } from "@/components/feed/AccountPanel";
-import { ProfilePanel } from "@/components/feed/ProfilePanel";
-import { FeedSettingsPanel } from "@/components/feed/FeedSettingsPanel";
-import { AchievementsPanel } from "@/components/feed/AchievementsPanel";
-import { LeaderboardPanel } from "@/components/feed/LeaderboardPanel";
-import { FindFriendsPanel } from "@/components/feed/FindFriendsPanel";
-import { FeedDMDock } from "@/components/feed/FeedDMDock";
 import { FeedNotifications } from "@/components/feed/FeedNotifications";
 import { Avatar } from "@/components/chat/Avatar";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
 import { pingDailyStreak } from "@/lib/gamification.functions";
+
+// Lazy-loaded panels — only fetched when the user navigates to them, keeping
+// the initial feed bundle small for faster first paint.
+const AccountPanel = lazy(() => import("@/components/feed/AccountPanel").then(m => ({ default: m.AccountPanel })));
+const ProfilePanel = lazy(() => import("@/components/feed/ProfilePanel").then(m => ({ default: m.ProfilePanel })));
+const FeedSettingsPanel = lazy(() => import("@/components/feed/FeedSettingsPanel").then(m => ({ default: m.FeedSettingsPanel })));
+const AchievementsPanel = lazy(() => import("@/components/feed/AchievementsPanel").then(m => ({ default: m.AchievementsPanel })));
+const LeaderboardPanel = lazy(() => import("@/components/feed/LeaderboardPanel").then(m => ({ default: m.LeaderboardPanel })));
+const FindFriendsPanel = lazy(() => import("@/components/feed/FindFriendsPanel").then(m => ({ default: m.FindFriendsPanel })));
+const FeedDMDock = lazy(() => import("@/components/feed/FeedDMDock").then(m => ({ default: m.FeedDMDock })));
+
+const PanelFallback = () => (
+  <div className="p-6 text-center text-sm text-muted-foreground">Loading…</div>
+);
 
 export const Route = createFileRoute("/feed")({
   head: () => ({
@@ -286,17 +293,17 @@ function FeedPage() {
         {/* Center */}
         <main className="min-w-0">
           {view === "account" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><AccountPanel /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><AccountPanel /></Suspense></div>
           ) : view === "settings" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><FeedSettingsPanel /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><FeedSettingsPanel /></Suspense></div>
           ) : view === "achievements" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><AchievementsPanel /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><AchievementsPanel /></Suspense></div>
           ) : view === "leaderboard" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><LeaderboardPanel /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><LeaderboardPanel /></Suspense></div>
           ) : view === "findFriends" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><FindFriendsPanel /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><FindFriendsPanel /></Suspense></div>
           ) : view === "profile" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></Suspense></div>
           ) : (
             <>
               <div className="mb-3 sm:mb-4 lg:hidden">
@@ -384,7 +391,11 @@ function FeedPage() {
         <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
 
-      <FeedDMDock key={dmOpenKey} meId={meId} profiles={profiles} initialOpen={dmOpenKey > 0} />
+      {dmOpenKey > 0 && (
+        <Suspense fallback={null}>
+          <FeedDMDock key={dmOpenKey} meId={meId} profiles={profiles} initialOpen={true} />
+        </Suspense>
+      )}
     </div>
   );
 }
