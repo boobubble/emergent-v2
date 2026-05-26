@@ -42,6 +42,7 @@ const HELP = `**Commands**
 !wine — order wine & beer by the round 🍷🍺
 !trivia — start a trivia question (answer with !a <choice>)
 !hangman — start hangman (guess with !g <letter>)
+!ludo — start a 1v1 Ludo race (opponent joins with !join, roll with !lr)
 
 !me <action> — roleplay action
 !nick <name> — change your display name
