@@ -13,7 +13,7 @@ function UsernameHint({ status }: { status: UsernameStatus }) {
 
 export function AuthScreen() {
   const { login, signup, loginAsGuest } = useAuth();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
