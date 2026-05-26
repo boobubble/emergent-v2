@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import {
   MessageCircle, UserPlus, UserMinus, Ban, ShieldCheck, ExternalLink,
   Crown, Shield, ShieldHalf, Flame, Coins, Trophy, Calendar, Eye, Globe,
-  Heart, Activity as ActivityIcon, Award, Sparkles, X,
+  Heart, Activity as ActivityIcon, Award, Sparkles, X, AtSign,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useChat } from "@/lib/chat-store";
