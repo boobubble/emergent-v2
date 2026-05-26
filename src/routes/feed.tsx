@@ -99,7 +99,7 @@ function FeedPage() {
   // Daily streak ping on mount
   useEffect(() => {
     if (!meId) return;
-    void pingDailyStreak().catch((e) => console.error("streak ping failed", e));
+    void pingDailyStreak().catch((e: unknown) => console.error("streak ping failed", e));
   }, [meId]);
 
   // Load friendships
