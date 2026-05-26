@@ -101,6 +101,174 @@ export type Database = {
         }
         Relationships: []
       }
+      game_invites: {
+        Row: {
+          created_at: string
+          game_id: string
+          id: string
+          receiver_id: string
+          responded_at: string | null
+          sender_id: string
+          status: Database["public"]["Enums"]["game_invite_status"]
+        }
+        Insert: {
+          created_at?: string
+          game_id: string
+          id?: string
+          receiver_id: string
+          responded_at?: string | null
+          sender_id: string
+          status?: Database["public"]["Enums"]["game_invite_status"]
+        }
+        Update: {
+          created_at?: string
+          game_id?: string
+          id?: string
+          receiver_id?: string
+          responded_at?: string | null
+          sender_id?: string
+          status?: Database["public"]["Enums"]["game_invite_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_invites_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_players: {
+        Row: {
+          color: string
+          game_id: string
+          id: string
+          is_ready: boolean
+          joined_at: string
+          score: number
+          seat: number
+          user_id: string
+        }
+        Insert: {
+          color: string
+          game_id: string
+          id?: string
+          is_ready?: boolean
+          joined_at?: string
+          score?: number
+          seat: number
+          user_id: string
+        }
+        Update: {
+          color?: string
+          game_id?: string
+          id?: string
+          is_ready?: boolean
+          joined_at?: string
+          score?: number
+          seat?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_players_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_rewards: {
+        Row: {
+          coins: number
+          created_at: string
+          game_id: string | null
+          id: string
+          reward_type: Database["public"]["Enums"]["game_reward_type"]
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          coins?: number
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          reward_type: Database["public"]["Enums"]["game_reward_type"]
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          coins?: number
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          reward_type?: Database["public"]["Enums"]["game_reward_type"]
+          user_id?: string
+          xp?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_rewards_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          created_at: string
+          created_by: string
+          current_turn_seat: number
+          finished_at: string | null
+          game_type: Database["public"]["Enums"]["game_type"]
+          id: string
+          started_at: string | null
+          state: Json
+          status: Database["public"]["Enums"]["game_status"]
+          turn_count: number
+          turn_started_at: string | null
+          updated_at: string
+          visibility: Database["public"]["Enums"]["game_visibility"]
+          winner_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          current_turn_seat?: number
+          finished_at?: string | null
+          game_type: Database["public"]["Enums"]["game_type"]
+          id?: string
+          started_at?: string | null
+          state?: Json
+          status?: Database["public"]["Enums"]["game_status"]
+          turn_count?: number
+          turn_started_at?: string | null
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["game_visibility"]
+          winner_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          current_turn_seat?: number
+          finished_at?: string | null
+          game_type?: Database["public"]["Enums"]["game_type"]
+          id?: string
+          started_at?: string | null
+          state?: Json
+          status?: Database["public"]["Enums"]["game_status"]
+          turn_count?: number
+          turn_started_at?: string | null
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["game_visibility"]
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
       hashtags: {
         Row: {
           last_used_at: string
@@ -342,6 +510,16 @@ export type Database = {
     }
     Enums: {
       friendship_status: "pending" | "accepted" | "blocked"
+      game_invite_status:
+        | "pending"
+        | "accepted"
+        | "rejected"
+        | "cancelled"
+        | "expired"
+      game_reward_type: "win" | "participation" | "daily_first" | "streak_bonus"
+      game_status: "waiting" | "active" | "finished" | "cancelled"
+      game_type: "ludo_1v1" | "ludo_4p"
+      game_visibility: "public" | "private"
       post_kind: "text" | "image" | "gif" | "poll"
       post_privacy: "public" | "friends" | "private"
       reaction_type: "like" | "love" | "haha" | "angry" | "fire"
@@ -473,6 +651,17 @@ export const Constants = {
   public: {
     Enums: {
       friendship_status: ["pending", "accepted", "blocked"],
+      game_invite_status: [
+        "pending",
+        "accepted",
+        "rejected",
+        "cancelled",
+        "expired",
+      ],
+      game_reward_type: ["win", "participation", "daily_first", "streak_bonus"],
+      game_status: ["waiting", "active", "finished", "cancelled"],
+      game_type: ["ludo_1v1", "ludo_4p"],
+      game_visibility: ["public", "private"],
       post_kind: ["text", "image", "gif", "poll"],
       post_privacy: ["public", "friends", "private"],
       reaction_type: ["like", "love", "haha", "angry", "fire"],

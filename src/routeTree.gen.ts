@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as AchievementsRouteImport } from './routes/achievements'
@@ -28,6 +29,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FindFriendsRoute = FindFriendsRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/achievements': typeof AchievementsRoute
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
+  '/games': typeof GamesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/feed/$slug': typeof FeedSlugRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/achievements': typeof AchievementsRoute
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
+  '/games': typeof GamesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/feed/$slug': typeof FeedSlugRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/achievements': typeof AchievementsRoute
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
+  '/games': typeof GamesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/feed/$slug': typeof FeedSlugRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/feed'
     | '/find-friends'
+    | '/games'
     | '/leaderboard'
     | '/reset-password'
     | '/feed/$slug'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/feed'
     | '/find-friends'
+    | '/games'
     | '/leaderboard'
     | '/reset-password'
     | '/feed/$slug'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/feed'
     | '/find-friends'
+    | '/games'
     | '/leaderboard'
     | '/reset-password'
     | '/feed/$slug'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   AchievementsRoute: typeof AchievementsRoute
   FeedRoute: typeof FeedRouteWithChildren
   FindFriendsRoute: typeof FindFriendsRoute
+  GamesRoute: typeof GamesRoute
   LeaderboardRoute: typeof LeaderboardRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -173,6 +186,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/find-friends': {
@@ -250,6 +270,7 @@ const rootRouteChildren: RootRouteChildren = {
   AchievementsRoute: AchievementsRoute,
   FeedRoute: FeedRouteWithChildren,
   FindFriendsRoute: FindFriendsRoute,
+  GamesRoute: GamesRoute,
   LeaderboardRoute: LeaderboardRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   UUsernameRoute: UUsernameRoute,
@@ -258,3 +279,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
