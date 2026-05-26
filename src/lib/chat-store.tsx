@@ -158,7 +158,7 @@ const SEED_ROOMS: Room[] = [
     name: "Lobby",
     topic: "Main hangout. Type !help for games.",
     members: ["me", ...SEED_BOTS.map(b => b.id)],
-    roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod" },
+    roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod", "bot-spam": "mod" },
     isPublic: true,
   },
 ];
