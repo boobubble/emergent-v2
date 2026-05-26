@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     username = username.trim();
     const letterCount = username.replace(/[^a-zA-Z]/g, "").length;
     if (letterCount < 2 || letterCount > 10) throw new Error("Username must contain 2 to 10 letters.");
-    if (password.length < 6) throw new Error("Password must be 6+ characters");
+    if (password.length < 4) throw new Error("Password must be at least 4 characters");
     if (!["male", "female", "other"].includes(gender)) throw new Error("Please select a gender");
     const { error } = await supabase.auth.signUp({
       email,
