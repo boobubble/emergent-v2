@@ -680,6 +680,28 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
 
 
 
+  // Bump this to trigger a re-fetch of the active channel's messages.
+  const [resyncTick, setResyncTick] = useState(0);
+
+  // When the tab becomes visible again or the network reconnects, resync
+  // missed messages. Realtime can drop events while a tab is suspended
+  // (mobile Safari, throttled background tabs) so we recover on resume.
+  useEffect(() => {
+    if (!authUserId) return;
+    const bump = (reason: string) => {
+      rtLog("channel", "resync", reason);
+      setResyncTick(t => t + 1);
+    };
+    const onVisible = () => { if (document.visibilityState === "visible") bump("visible"); };
+    const onOnline = () => bump("online");
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onOnline);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [authUserId]);
+
   // Fetch existing remote messages for lobby + the active remote channel
   useEffect(() => {
     if (!authUserId) return;
