@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award } from "lucide-react";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
@@ -11,17 +11,24 @@ import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
 import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
-import { AccountPanel } from "@/components/feed/AccountPanel";
-import { ProfilePanel } from "@/components/feed/ProfilePanel";
-import { FeedSettingsPanel } from "@/components/feed/FeedSettingsPanel";
-import { AchievementsPanel } from "@/components/feed/AchievementsPanel";
-import { LeaderboardPanel } from "@/components/feed/LeaderboardPanel";
-import { FindFriendsPanel } from "@/components/feed/FindFriendsPanel";
-import { FeedDMDock } from "@/components/feed/FeedDMDock";
 import { FeedNotifications } from "@/components/feed/FeedNotifications";
 import { Avatar } from "@/components/chat/Avatar";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
 import { pingDailyStreak } from "@/lib/gamification.functions";
+
+// Lazy-loaded panels — only fetched when the user navigates to them, keeping
+// the initial feed bundle small for faster first paint.
+const AccountPanel = lazy(() => import("@/components/feed/AccountPanel").then(m => ({ default: m.AccountPanel })));
+const ProfilePanel = lazy(() => import("@/components/feed/ProfilePanel").then(m => ({ default: m.ProfilePanel })));
+const FeedSettingsPanel = lazy(() => import("@/components/feed/FeedSettingsPanel").then(m => ({ default: m.FeedSettingsPanel })));
+const AchievementsPanel = lazy(() => import("@/components/feed/AchievementsPanel").then(m => ({ default: m.AchievementsPanel })));
+const LeaderboardPanel = lazy(() => import("@/components/feed/LeaderboardPanel").then(m => ({ default: m.LeaderboardPanel })));
+const FindFriendsPanel = lazy(() => import("@/components/feed/FindFriendsPanel").then(m => ({ default: m.FindFriendsPanel })));
+const FeedDMDock = lazy(() => import("@/components/feed/FeedDMDock").then(m => ({ default: m.FeedDMDock })));
+
+const PanelFallback = () => (
+  <div className="p-6 text-center text-sm text-muted-foreground">Loading…</div>
+);
 
 export const Route = createFileRoute("/feed")({
   head: () => ({
