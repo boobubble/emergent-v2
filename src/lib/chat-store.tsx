@@ -712,12 +712,13 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     }
     (async () => {
       for (const ch of channelsToFetch) {
-        const { data } = await supabase
+        const { data: rows } = await supabase
           .from("messages")
           .select("id, channel_id, author_id, text, kind, attachment, reply_to_id, created_at")
           .eq("channel_id", ch)
-          .order("created_at", { ascending: true })
+          .order("created_at", { ascending: false })
           .limit(200);
+        const data = rows ? [...rows].reverse() : null;
         if (cancelled || !data) continue;
         setState(s => {
           const existing = s.messages[ch] || [];
