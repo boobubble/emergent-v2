@@ -726,7 +726,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   useEffect(() => {
     if (!authUserId) return;
     const channel = supabase
-      .channel("palrgo-messages")
+      .channel(`palrgo-messages-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
         const row = payload.new as Parameters<typeof rowToMessage>[0];
         if (seenRemoteMsgIds.current.has(row.id)) return;
