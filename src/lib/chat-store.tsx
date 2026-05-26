@@ -162,6 +162,14 @@ const SEED_ROOMS: Room[] = [
     roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod", "bot-spam": "mod" },
     isPublic: true,
   },
+  {
+    id: "games",
+    name: "Games",
+    topic: "🎲 Game room — try !ludo for a 1v1 race, !trivia, !hangman and more.",
+    members: ["me", ...SEED_BOTS.map(b => b.id)],
+    roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod" },
+    isPublic: true,
+  },
 ];
 
 interface ModEntry {
