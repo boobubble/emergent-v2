@@ -1,0 +1,359 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import {
+  MessageCircle, UserPlus, UserMinus, Ban, ShieldCheck, ExternalLink,
+  Crown, Shield, ShieldHalf, Flame, Coins, Trophy, Calendar, Eye, Globe,
+  Heart, Activity as ActivityIcon, Award, Sparkles, X,
+} from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useChat } from "@/lib/chat-store";
+import { useAuth } from "@/lib/auth-store";
+import { useRemoteProfiles } from "@/lib/use-remote-profiles";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar } from "./Avatar";
+import { NameEmojiBadge } from "@/lib/name-emoji";
+import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
+import type { Role } from "@/lib/chat-types";
+
+type Tab = "info" | "about" | "friends" | "activity" | "daily";
+
+const ROLE_ICON: Record<Role, React.ReactNode> = {
+  owner: <Crown className="h-3.5 w-3.5 text-warning" />,
+  admin: <Shield className="h-3.5 w-3.5 text-primary" />,
+  mod: <ShieldHalf className="h-3.5 w-3.5 text-primary/70" />,
+  member: null,
+};
+
+function relTime(ms?: number): string {
+  if (!ms) return "—";
+  const diff = Date.now() - ms;
+  if (diff < 60_000) return "just now";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
+  return new Date(ms).toLocaleDateString();
+}
+
+export function ProfilePopup({
+  userId,
+  open,
+  onOpenChange,
+}: {
+  userId: string;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const { state, startDM, addFriend, removeFriend, blockUser, unblockUser, isFriend, isBlocked } = useChat();
+  const { user: authUser } = useAuth();
+  const { profiles } = useRemoteProfiles();
+  const [tab, setTab] = useState<Tab>("info");
+  const [friendCount, setFriendCount] = useState<number | null>(null);
+  const [memberSince, setMemberSince] = useState<string | null>(null);
+  const [recentPosts, setRecentPosts] = useState<{ id: string; text: string; created_at: string; reaction_count: number; comment_count: number }[]>([]);
+
+  const realId = userId === "me" ? authUser?.id ?? "me" : userId;
+  const user = state.users[userId] || profiles[realId] || state.users[realId];
+  const isMe = userId === "me" || (authUser && realId === authUser.id);
+  const friend = !isMe && isFriend(userId);
+  const blocked = !isMe && isBlocked(userId);
+  const room = state.rooms[state.activeChannel];
+  const role: Role = (room?.roles?.[userId] || room?.roles?.[realId] || "member") as Role;
+  const currentRoom = room && !state.activeChannel.startsWith("dm:") ? room.name : "N/A";
+
+  useEffect(() => {
+    if (!open || !user || user.isBot) return;
+    let cancel = false;
+    (async () => {
+      if (realId && realId !== "me") {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("created_at")
+          .eq("id", realId)
+          .maybeSingle();
+        if (!cancel && prof?.created_at) setMemberSince(new Date(prof.created_at).toLocaleDateString());
+
+        const { count } = await supabase
+          .from("friendships")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "accepted")
+          .or(`sender_id.eq.${realId},receiver_id.eq.${realId}`);
+        if (!cancel) setFriendCount(count ?? 0);
+
+        const { data: posts } = await supabase
+          .from("posts")
+          .select("id, text, created_at, reaction_count, comment_count")
+          .eq("author_id", realId)
+          .eq("privacy", "public")
+          .order("created_at", { ascending: false })
+          .limit(5);
+        if (!cancel) setRecentPosts(posts ?? []);
+      }
+    })();
+    return () => { cancel = true; };
+  }, [open, realId, user]);
+
+  // Daily progress (only for self) read from localStorage
+  const daily = useMemo(() => {
+    if (!isMe || !realId || typeof window === "undefined") return null;
+    try {
+      const raw = localStorage.getItem(`dc:${realId}`);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { date: string; values?: Record<string, number>; claimed?: Record<string, boolean> };
+      const today = new Date();
+      const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      if (parsed.date !== key) return null;
+      return parsed;
+    } catch { return null; }
+  }, [isMe, realId, open]);
+
+  if (!user) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-sm">
+          <p className="text-sm text-muted-foreground">User not found.</p>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  const lastSeenLabel = user.status === "online" ? "Online now" : `Last seen ${relTime(user.lastSeen)}`;
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "info", label: "Info" },
+    { id: "about", label: "About" },
+    { id: "friends", label: "Friends" },
+    { id: "activity", label: "Activity" },
+    ...(isMe ? [{ id: "daily" as Tab, label: "Daily" }] : []),
+  ];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="max-w-sm overflow-hidden rounded-3xl border-border bg-card p-0"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        {/* Header banner */}
+        <div className="relative bg-gradient-to-b from-primary/30 via-primary/10 to-transparent px-6 pb-4 pt-8 text-center">
+          <button
+            onClick={() => onOpenChange(false)}
+            className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-background/40 text-muted-foreground hover:bg-background/70 hover:text-foreground"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="mx-auto">
+            <Avatar user={user} size={88} square={false} />
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            {user.isBot ? "Bot" : user.isGuest ? "Guest" : "User"}
+            {ROLE_ICON[role]}
+          </div>
+          <h2 className="mt-0.5 flex items-center justify-center gap-1.5 text-xl font-bold">
+            {user.name}
+            <NameEmojiBadge user={user} />
+          </h2>
+          {user.bio && <p className="mx-auto mt-1 max-w-[260px] text-xs text-muted-foreground">{user.bio}</p>}
+
+          {/* Quick action chips */}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-yellow-500"><Trophy className="h-3 w-3" /> Lv {user.level}</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-amber-400"><Coins className="h-3 w-3" /> {user.coins ?? 0}</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2 py-0.5 text-orange-400"><Flame className="h-3 w-3" /> {user.streak ?? 0}d</span>
+            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${user.status === "online" ? "bg-green-500/15 text-green-400" : "bg-muted-foreground/15 text-muted-foreground"}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${user.status === "online" ? "bg-green-400" : "bg-muted-foreground/60"}`} />
+              {user.status === "online" ? "Online" : "Offline"}
+            </span>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 border-b border-border bg-card px-3">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`relative px-3 py-2 text-xs font-semibold transition-colors ${
+                tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+              {tab === t.id && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" />}
+            </button>
+          ))}
+        </div>
+
+        <div className="max-h-[320px] overflow-y-auto px-5 py-4 text-sm">
+          {tab === "info" && (
+            <ul className="space-y-2.5">
+              <Row icon={<Eye className="h-3.5 w-3.5" />} label="Last seen" value={lastSeenLabel} />
+              <Row icon={<Globe className="h-3.5 w-3.5" />} label="Current room" value={currentRoom} />
+              <Row icon={<Calendar className="h-3.5 w-3.5" />} label="Member since" value={memberSince ?? (user.isBot ? "—" : "…")} />
+              <Row icon={<Sparkles className="h-3.5 w-3.5" />} label="XP" value={`${user.xp} pts`} />
+              <Row icon={<Heart className="h-3.5 w-3.5" />} label="Gender" value={user.gender ? user.gender[0].toUpperCase() + user.gender.slice(1) : "—"} />
+              <Row icon={<Award className="h-3.5 w-3.5" />} label="Badges" value={`${(user.badges || []).length}`} />
+            </ul>
+          )}
+
+          {tab === "about" && (
+            <div className="space-y-3">
+              <p className="text-foreground/90">{user.bio || <span className="text-muted-foreground italic">No bio yet.</span>}</p>
+              {(user.badges || []).length > 0 && (
+                <div>
+                  <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Badges</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(user.badges || []).map(id => {
+                      const b = BADGE_MAP[id]; if (!b) return null;
+                      return (
+                        <span key={id} className={`flex items-center gap-1 rounded-full border bg-gradient-to-br px-2 py-0.5 text-[10px] font-semibold ${TIER_COLOR[b.tier]}`} title={b.description}>
+                          <span>{b.emoji}</span>{b.name}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === "friends" && (
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary">{friendCount ?? (user.isBot ? 0 : "…")}</div>
+              <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">Friends</div>
+              <Link
+                to="/find-friends"
+                onClick={() => onOpenChange(false)}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
+              >
+                <UserPlus className="h-3.5 w-3.5" /> Find more friends
+              </Link>
+            </div>
+          )}
+
+          {tab === "activity" && (
+            <div className="space-y-2">
+              {recentPosts.length === 0 ? (
+                <p className="text-center text-xs text-muted-foreground">No public feed activity yet.</p>
+              ) : (
+                recentPosts.map(p => (
+                  <Link
+                    key={p.id}
+                    to="/feed"
+                    onClick={() => onOpenChange(false)}
+                    className="block rounded-xl border border-border bg-white/[0.02] px-3 py-2 hover:bg-white/5"
+                  >
+                    <p className="line-clamp-2 text-xs text-foreground/90">{p.text || "—"}</p>
+                    <div className="mt-1 flex items-center gap-3 text-[10px] text-muted-foreground">
+                      <span>{new Date(p.created_at).toLocaleDateString()}</span>
+                      <span className="inline-flex items-center gap-1"><Heart className="h-2.5 w-2.5" />{p.reaction_count}</span>
+                      <span className="inline-flex items-center gap-1"><MessageCircle className="h-2.5 w-2.5" />{p.comment_count}</span>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          )}
+
+          {tab === "daily" && (
+            <DailyProgress data={daily} onClose={() => onOpenChange(false)} />
+          )}
+        </div>
+
+        {/* Footer actions */}
+        {!isMe && (
+          <div className="flex flex-wrap gap-1.5 border-t border-border bg-card px-4 py-3">
+            <button
+              onClick={() => { startDM(userId); onOpenChange(false); }}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90"
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> Message
+            </button>
+            {friend ? (
+              <button onClick={() => removeFriend(userId)} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold hover:bg-white/5">
+                <UserMinus className="h-3.5 w-3.5" /> Friends
+              </button>
+            ) : (
+              <button onClick={() => addFriend(userId)} className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/20">
+                <UserPlus className="h-3.5 w-3.5" /> Add
+              </button>
+            )}
+            {blocked ? (
+              <button onClick={() => unblockUser(userId)} className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unblock">
+                <ShieldCheck className="h-3.5 w-3.5" />
+              </button>
+            ) : (
+              <button onClick={() => blockUser(userId)} className="grid h-9 w-9 place-items-center rounded-full border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20" title="Block">
+                <Ban className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+        {isMe && (
+          <div className="flex gap-1.5 border-t border-border bg-card px-4 py-3">
+            <Link
+              to="/feed"
+              search={{ tab: "account" } as never}
+              onClick={() => onOpenChange(false)}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90"
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> Edit profile
+            </Link>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Row({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
+  return (
+    <li className="flex items-center justify-between gap-3 border-b border-border/50 pb-2 last:border-0">
+      <span className="flex items-center gap-2 text-xs text-muted-foreground">{icon}{label}</span>
+      <span className="text-xs font-semibold text-foreground">{value}</span>
+    </li>
+  );
+}
+
+function DailyProgress({ data, onClose }: { data: { values?: Record<string, number>; claimed?: Record<string, boolean> } | null; onClose: () => void }) {
+  const items = [
+    { id: "post", label: "Create a post", emoji: "✍️", goal: 1 },
+    { id: "react5", label: "React to 5 posts", emoji: "❤️", goal: 5 },
+    { id: "comment3", label: "Comment on 3 posts", emoji: "💬", goal: 3 },
+    { id: "friend", label: "Add a friend", emoji: "🤝", goal: 1 },
+    { id: "login", label: "Daily login", emoji: "🔥", goal: 1 },
+  ];
+  const completed = items.filter(i => (data?.values?.[i.id] ?? 0) >= i.goal).length;
+  return (
+    <div className="space-y-3">
+      <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/15 to-transparent px-4 py-3">
+        <div className="flex items-center gap-2 text-xs font-bold text-primary">
+          <ActivityIcon className="h-3.5 w-3.5" /> Today's progress
+        </div>
+        <div className="mt-1 text-2xl font-bold">{completed}<span className="text-sm text-muted-foreground"> / {items.length}</span></div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(completed / items.length) * 100}%` }} />
+        </div>
+      </div>
+      <ul className="space-y-1.5">
+        {items.map(i => {
+          const v = data?.values?.[i.id] ?? 0;
+          const done = v >= i.goal;
+          return (
+            <li key={i.id} className="flex items-center gap-2 rounded-xl border border-border bg-white/[0.02] px-3 py-2">
+              <span className="text-lg">{i.emoji}</span>
+              <div className="min-w-0 flex-1">
+                <div className={`text-xs font-semibold ${done ? "text-primary" : "text-foreground"}`}>{i.label}</div>
+                <div className="text-[10px] text-muted-foreground">{Math.min(v, i.goal)} / {i.goal}</div>
+              </div>
+              {done && <Sparkles className="h-3.5 w-3.5 text-primary" />}
+            </li>
+          );
+        })}
+      </ul>
+      <Link
+        to="/feed"
+        onClick={onClose}
+        className="block rounded-full bg-primary/10 py-2 text-center text-xs font-semibold text-primary hover:bg-primary/20"
+      >
+        Open feed to earn more
+      </Link>
+    </div>
+  );
+}
