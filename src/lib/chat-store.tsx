@@ -212,6 +212,10 @@ function seed(name = "user0000"): State {
     { id: "seed-nova", channelId: "lobby", authorId: "bot-nova", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
     { id: "seed-ryze", channelId: "lobby", authorId: "bot-ryze", text: "anyone up for trivia?", ts: SEED_TIME - 20000 },
   ]);
+  rooms.games && (messages.games = [
+    { id: "seed-games-intro", channelId: "games", authorId: "bot-gamebot", text: `🎮 **Welcome to the Games room!**\nThis is the place to play with everyone online. Try:\n• **!ludo** — start a 1v1 Ludo race (opponent types **!join**, roll with **!lr**)\n• **!trivia**, **!hangman**, **!roll**, **!fish**, **!dig**\nType **!help** for the full list.`, ts: SEED_TIME - 50000 },
+    { id: "seed-games-ryze", channelId: "games", authorId: "bot-ryze", text: "first one to !ludo me wins bragging rights 😏", ts: SEED_TIME - 30000 },
+  ]);
   // Personal welcome DM from GameBot
   messages["dm:bot-gamebot"] = [
     { id: "seed-dm-welcome", channelId: "dm:bot-gamebot", authorId: "bot-gamebot", text: `Hi @${name}! 👋 I'm GameBot. Here's a quick start:\n• Type !help to see all commands\n• Try !trivia, !hangman, or !wordchain to play games\n• Earn XP, coins, and badges as you chat\n• Add friends from any user's profile\nHave fun! 🎮`, ts: SEED_TIME - 10000 },
