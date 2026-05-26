@@ -42,6 +42,7 @@ const HELP = `**Commands**
 !wine — order wine & beer by the round 🍷🍺
 !trivia — start a trivia question (answer with !a <choice>)
 !hangman — start hangman (guess with !g <letter>)
+!ludo — start a 1v1 Ludo race (opponent joins with !join, roll with !lr)
 
 !me <action> — roleplay action
 !nick <name> — change your display name
@@ -268,6 +269,70 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
         gameUpdate: { channelId: ctx.channelId, type: "hangman", data },
       };
     }
+
+    case "ludo": {
+      if (game && game.type) {
+        return { replies: [{ text: `⏳ A **${game.type}** game is already in progress in this room.` }] };
+      }
+      const p1 = ctx.actor || "Player 1";
+      return {
+        replies: [{ text: `🎲 **Ludo 1v1 (short)** started by **@${p1}**!\nTrack: 20 squares. Roll a 6 for an extra turn. Land on opponent → send them back to start. Exact roll needed to finish.\nOpponent: type **!join** to accept, then **!lr** to roll on your turn.` }],
+        gameUpdate: { channelId: ctx.channelId, type: "ludo", data: { players: [{ name: p1, pos: 0 }], turn: 0, waiting: true } },
+      };
+    }
+
+    case "join": {
+      if (!game || game.type !== "ludo") return { replies: [{ text: "No Ludo game to join. Start one with !ludo" }] };
+      const d = { ...game.data };
+      if (!d.waiting) return { replies: [{ text: "This Ludo game is already full." }] };
+      const p2 = ctx.actor || "Player 2";
+      if (d.players[0].name === p2) return { replies: [{ text: "You can't join your own game — wait for someone else!" }] };
+      d.players = [...d.players, { name: p2, pos: 0 }];
+      d.waiting = false;
+      d.turn = 0;
+      return {
+        replies: [{ text: `🎲 **@${p2}** joined! Match on: **@${d.players[0].name}** 🆚 **@${p2}**\nIt's **@${d.players[0].name}**'s turn — type **!lr** to roll.` }],
+        gameUpdate: { channelId: ctx.channelId, type: "ludo", data: d },
+      };
+    }
+
+    case "lr": {
+      if (!game || game.type !== "ludo") return { replies: [{ text: "No Ludo game. Start one with !ludo" }] };
+      const d = { ...game.data, players: game.data.players.map((p: any) => ({ ...p })) };
+      if (d.waiting) return { replies: [{ text: "Waiting for an opponent — type **!join**." }] };
+      const me = ctx.actor || "";
+      const cur = d.players[d.turn];
+      if (me && cur.name !== me) return { replies: [{ text: `⏳ It's **@${cur.name}**'s turn, not yours.` }] };
+      const opp = d.players[1 - d.turn];
+      const die = 1 + Math.floor(Math.random() * 6);
+      const FINISH = 20;
+      let msg = `🎲 **@${cur.name}** rolled a **${die}**`;
+      const target = cur.pos + die;
+      if (target > FINISH) {
+        msg += ` — overshoots ${FINISH}, stays at ${cur.pos}.`;
+      } else {
+        cur.pos = target;
+        msg += ` → moves to square **${cur.pos}/${FINISH}**.`;
+        if (cur.pos === opp.pos && cur.pos !== 0 && cur.pos !== FINISH) {
+          opp.pos = 0;
+          msg += ` 💥 Sends **@${opp.name}** back to start!`;
+        }
+        if (cur.pos === FINISH) {
+          msg += `\n🏆 **WINNER: @${cur.name}!** 🎉 (+15 XP)`;
+          return { replies: [{ text: msg }], gameUpdate: { channelId: ctx.channelId, type: null, data: null } };
+        }
+      }
+      const extra = die === 6;
+      if (!extra) d.turn = 1 - d.turn;
+      else msg += ` 🎉 Rolled a 6 — **extra turn**!`;
+      const board = (p: any) => {
+        const cells = Array.from({ length: FINISH + 1 }, (_, i) => i === p.pos ? "●" : "·").join("");
+        return `\`${cells}\` (${p.pos}/${FINISH})`;
+      };
+      msg += `\n**@${d.players[0].name}** ${board(d.players[0])}\n**@${d.players[1].name}** ${board(d.players[1])}\nNext: **@${d.players[d.turn].name}** — type **!lr**`;
+      return { replies: [{ text: msg }], gameUpdate: { channelId: ctx.channelId, type: "ludo", data: d } };
+    }
+
 
 
     case "stats": {
