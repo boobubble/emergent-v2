@@ -81,6 +81,28 @@ export function MessageInput() {
     if (replyingTo) inputRef.current?.focus();
   }, [replyingTo]);
 
+  useEffect(() => {
+    function onMention(e: Event) {
+      const ce = e as CustomEvent<{ name?: string }>;
+      const name = ce.detail?.name;
+      if (!name) return;
+      setText(t => {
+        const needsSpace = t.length > 0 && !t.endsWith(" ");
+        return t + (needsSpace ? " " : "") + `@${name} `;
+      });
+      requestAnimationFrame(() => {
+        const el = inputRef.current;
+        if (!el) return;
+        el.focus();
+        const pos = el.value.length;
+        el.setSelectionRange(pos, pos);
+        setCaret(pos);
+      });
+    }
+    window.addEventListener("palrgo:mention", onMention);
+    return () => window.removeEventListener("palrgo:mention", onMention);
+  }, []);
+
   function submit() {
     if (!text.trim() && !attachment) return;
     send(text, { attachment: attachment || undefined, replyToId: replyingTo?.id });
