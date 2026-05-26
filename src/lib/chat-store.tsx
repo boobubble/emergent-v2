@@ -605,6 +605,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       setState(s => {
         const room = s.rooms[s.activeChannel];
         if (!room) return s;
+        if (room.id === "games") return s;
         const botMembers = room.members.filter(id => s.users[id]?.isBot && s.users[id]?.status === "online" && id !== "bot-gamebot");
         if (!botMembers.length) return s;
         if (Math.random() > 0.35) return s;
