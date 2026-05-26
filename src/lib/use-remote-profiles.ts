@@ -114,6 +114,13 @@ export function useRemoteProfiles() {
         await supabase.removeChannel(presenceChannel);
         presenceChannel = null;
       }
+      // In React StrictMode the effect remounts; remove any stale instance
+      // with the same topic so .on() doesn't throw "after subscribe()".
+      for (const c of supabase.getChannels()) {
+        if (c.topic === `realtime:${PRESENCE_CHANNEL}`) {
+          await supabase.removeChannel(c);
+        }
+      }
       const ch = supabase.channel(PRESENCE_CHANNEL, {
         config: { presence: { key: userId } },
       });
