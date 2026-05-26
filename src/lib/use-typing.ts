@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { rtLog } from "@/lib/realtime-debug";
 
 export interface Typer { id: string; name: string; ts: number }
 
