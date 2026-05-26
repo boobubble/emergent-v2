@@ -924,7 +924,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           await supabase.from("messages").insert({
             id, channel_id: ch, author_id: authUserId,
             text: `🛑 Ludo game ended — **@${myName}** (host) left the chat.`,
-            kind: "game", attachment: attachment as unknown as Record<string, unknown>, reply_to_id: null,
+            kind: "game", attachment: attachment as never, reply_to_id: null,
           });
         } catch (e) {
           console.error("end-ludo-on-logout failed", e);
