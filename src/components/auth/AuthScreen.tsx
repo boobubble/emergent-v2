@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-store";
 import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check";
+import { supabase } from "@/integrations/supabase/client";
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
   if (status.state === "idle") return null;
