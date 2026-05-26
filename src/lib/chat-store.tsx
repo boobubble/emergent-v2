@@ -746,6 +746,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   // SpamBot — tracks recent sends per channel to detect flooding / duplicates / shouting
   const spamHistoryRef = useRef<Record<string, { ts: number; text: string }[]>>({});
   const spamOffencesRef = useRef<Record<string, { count: number; until: number }>>({});
+  const cmdCooldownRef = useRef<Record<string, number>>({});
 
   const setActive = useCallback((channelId: string) => {
     setState(s => ({ ...s, activeChannel: channelId }));
@@ -920,6 +921,26 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
         return { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], sysMsg] } };
       }
       if (isCmd) {
+        // Per-command cooldown for !fish, !dig, !wine — 1 use per minute per user
+        const cdMatch = trimmed.match(/^!(fish|dig|wine)\b/i);
+        if (cdMatch) {
+          const cmdName = cdMatch[1].toLowerCase();
+          const cdKey = `${cmdName}`;
+          const lastUsed = cmdCooldownRef.current[cdKey] || 0;
+          const elapsed = now - lastUsed;
+          const COOLDOWN_MS = 60_000;
+          if (elapsed < COOLDOWN_MS) {
+            const remainSec = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+            const botId = cmdName === "fish" ? "bot-fish" : cmdName === "dig" ? "bot-dig" : "bot-wine";
+            const sysMsg: Message = {
+              id: uid(), channelId, authorId: botId, ts: now + 200,
+              text: `⏳ Slow down! You can use **!${cmdName}** again in **${remainSec}s**. (1 use per minute)`,
+              kind: "system",
+            };
+            return { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], sysMsg] } };
+          }
+          cmdCooldownRef.current[cdKey] = now;
+        }
         const result = runCommand(cmdInput, { state: next, channelId, actor: next.me.name });
         const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }, idx: number) => {
           const id = remote ? newUuid() : uid();
