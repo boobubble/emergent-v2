@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2 } from "lucide-react";
+import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
 import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type FeedReaction, type ReactionType } from "@/lib/feed-types";
@@ -9,6 +9,8 @@ import { ShareModal, type SharePayload } from "@/components/feed/ShareModal";
 import type { User } from "@/lib/chat-types";
 import { NameEmojiBadge } from "@/lib/name-emoji";
 import { useFeedPrefs } from "@/lib/feed-prefs";
+import { EmojiPicker } from "@/components/chat/EmojiPicker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 
 function timeAgo(iso: string) {
@@ -238,7 +240,7 @@ export const PostCard = memo(function PostCard({
               </div>
             );
           })}
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <input
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
@@ -246,6 +248,16 @@ export const PostCard = memo(function PostCard({
               placeholder="Write a comment…"
               className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
             />
+            <Popover>
+              <PopoverTrigger asChild>
+                <button type="button" className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Add emoji">
+                  <Smile className="h-4 w-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-auto p-0">
+                <EmojiPicker onPick={(e) => setCommentText((t) => t + e)} />
+              </PopoverContent>
+            </Popover>
             <button onClick={addComment} disabled={sending || !commentText.trim()} className="rounded-full bg-primary p-2 text-primary-foreground disabled:opacity-50">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
