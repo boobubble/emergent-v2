@@ -802,6 +802,52 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-gamebot", text: `🚪 You were kicked. Re-entry in ${Math.ceil(secs/60)}m ${secs%60}s.`, ts: now, kind: "system" }] },
         };
       }
+      // SpamBot — only in public rooms, skip commands and DMs
+      if (room && !isCmd && !channelId.startsWith("dm:")) {
+        const hist = (spamHistoryRef.current[channelId] || []).filter(h => now - h.ts < 10_000);
+        hist.push({ ts: now, text: trimmed });
+        spamHistoryRef.current[channelId] = hist;
+        const letters = trimmed.replace(/[^a-zA-Z]/g, "");
+        const upperRatio = letters.length > 10 ? letters.replace(/[^A-Z]/g, "").length / letters.length : 0;
+        const linkCount = (trimmed.match(/\b(https?:\/\/|www\.)\S+/gi) || []).length;
+        const repeatedChars = /(.)\1{9,}/.test(trimmed);
+        const dupCount = hist.filter(h => h.text === trimmed).length;
+        const floodCount = hist.length;
+        const reason =
+          floodCount >= 5 ? "flooding the chat (5+ msgs in 10s)" :
+          dupCount >= 3 ? "posting the same message repeatedly" :
+          upperRatio >= 0.8 ? "SHOUTING in ALL CAPS" :
+          linkCount >= 3 ? "posting too many links at once" :
+          repeatedChars ? "spamming repeated characters" :
+          null;
+        if (reason) {
+          const off = spamOffencesRef.current[channelId] || { count: 0, until: 0 };
+          const fresh = now - off.until > 10 * 60 * 1000 ? { count: 0, until: 0 } : off;
+          fresh.count += 1;
+          fresh.until = now;
+          spamOffencesRef.current[channelId] = fresh;
+          const sysMsgs: Message[] = [];
+          if (fresh.count >= 2) {
+            const muteMs = 2 * 60 * 1000;
+            const chanMod = { ...(s.moderation?.[channelId] || {}) };
+            const meMod: ModEntry = { ...(chanMod.me || { muteVotes: [], kickVotes: [] }), mutedUntil: now + muteMs };
+            chanMod.me = meMod;
+            sysMsgs.push({ id: uid(), channelId, authorId: "bot-spam", kind: "system", ts: now, text: `🛑 **SpamBot:** Auto-muted for **2 minutes** — ${reason}.` });
+            spamHistoryRef.current[channelId] = [];
+            spamOffencesRef.current[channelId] = { count: 0, until: now };
+            return {
+              ...s,
+              moderation: { ...(s.moderation || {}), [channelId]: chanMod },
+              messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), ...sysMsgs] },
+            };
+          }
+          sysMsgs.push({ id: uid(), channelId, authorId: "bot-spam", kind: "system", ts: now, text: `⚠️ **SpamBot:** Warning — ${reason}. Next offence = 2 min mute.` });
+          return {
+            ...s,
+            messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), ...sysMsgs] },
+          };
+        }
+      }
       const remote = authUserId && isRemoteChannel(channelId, authUserId);
       const msgId = remote ? newUuid() : uid();
       const userMsg: Message = {
