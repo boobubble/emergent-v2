@@ -140,6 +140,11 @@ export function MessageInput() {
 
   const replyAuthor = replyingTo ? state.users[replyingTo.authorId] : null;
 
+  const lobbyMuteUntil = state.moderation?.["lobby"]?.me?.mutedUntil;
+  const isLobbyMuted = !!(lobbyMuteUntil && lobbyMuteUntil > Date.now() && state.activeChannel === "lobby");
+  const muteSecsLeft = isLobbyMuted ? Math.ceil((lobbyMuteUntil! - Date.now()) / 1000) : 0;
+  const muteLabel = muteSecsLeft >= 60 ? `${Math.ceil(muteSecsLeft / 60)}m` : `${muteSecsLeft}s`;
+
   return (
     <div className="px-6 pb-6 pt-2">
       {replyingTo && (
