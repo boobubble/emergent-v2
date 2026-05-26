@@ -18,9 +18,9 @@ import type { Role } from "@/lib/chat-types";
 type Tab = "info" | "about" | "friends" | "activity" | "daily";
 
 const ROLE_ICON: Record<Role, React.ReactNode> = {
-  owner: <Crown className="h-3.5 w-3.5 text-warning" />,
-  admin: <Shield className="h-3.5 w-3.5 text-primary" />,
-  mod: <ShieldHalf className="h-3.5 w-3.5 text-primary/70" />,
+  owner: <Crown className="h-4 w-4 shrink-0 text-warning" />,
+  admin: <Shield className="h-4 w-4 shrink-0 text-primary" />,
+  mod: <ShieldHalf className="h-4 w-4 shrink-0 text-primary/70" />,
   member: null,
 };
 
