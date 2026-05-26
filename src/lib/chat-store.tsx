@@ -24,7 +24,7 @@ export function dmChannelFor(meId: string | null, peerId: string): string {
   return "dm:" + [meId, peerId].sort().join(":");
 }
 function isRemoteChannel(channelId: string, meId: string | null): boolean {
-  if (channelId === "lobby") return true;
+  if (channelId === "lobby" || channelId === "games") return true;
   if (!meId) return false;
   return channelId.startsWith("dm:") && channelId.includes(meId);
 }
@@ -162,6 +162,14 @@ const SEED_ROOMS: Room[] = [
     roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod", "bot-spam": "mod" },
     isPublic: true,
   },
+  {
+    id: "games",
+    name: "Games",
+    topic: "🎲 Game room — try !ludo for a 1v1 race, !trivia, !hangman and more.",
+    members: ["me", ...SEED_BOTS.map(b => b.id)],
+    roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod" },
+    isPublic: true,
+  },
 ];
 
 interface ModEntry {
@@ -203,6 +211,10 @@ function seed(name = "user0000"): State {
     { id: "seed-welcome", channelId: "lobby", authorId: "bot-gamebot", text: `🎉 Welcome to Palrgo, @${name}! Glad to have you here. Type !help to see commands, customize your profile from the account page, and jump into a game anytime.`, ts: SEED_TIME - 60000 },
     { id: "seed-nova", channelId: "lobby", authorId: "bot-nova", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
     { id: "seed-ryze", channelId: "lobby", authorId: "bot-ryze", text: "anyone up for trivia?", ts: SEED_TIME - 20000 },
+  ]);
+  rooms.games && (messages.games = [
+    { id: "seed-games-intro", channelId: "games", authorId: "bot-gamebot", text: `🎮 **Welcome to the Games room!**\nThis is the place to play with everyone online. Try:\n• **!ludo** — start a 1v1 Ludo race (opponent types **!join**, roll with **!lr**)\n• **!trivia**, **!hangman**, **!roll**, **!fish**, **!dig**\nType **!help** for the full list.`, ts: SEED_TIME - 50000 },
+    { id: "seed-games-ryze", channelId: "games", authorId: "bot-ryze", text: "first one to !ludo me wins bragging rights 😏", ts: SEED_TIME - 30000 },
   ]);
   // Personal welcome DM from GameBot
   messages["dm:bot-gamebot"] = [
@@ -247,14 +259,20 @@ function ensureBots(state: State): State {
   const users = { ...state.users };
   SEED_BOTS.forEach(b => { if (!users[b.id]) users[b.id] = b; });
   const rooms = { ...state.rooms };
-  const lobby = rooms.lobby;
-  if (lobby) {
-    const missingBots = SEED_BOTS.map(b => b.id).filter(id => !lobby.members.includes(id));
-    if (missingBots.length) {
-      rooms.lobby = { ...lobby, members: [...lobby.members, ...missingBots] };
+  const roomOrder = [...(state.roomOrder || [])];
+  // Make sure every seeded room exists (handles older cached state without "games")
+  SEED_ROOMS.forEach(seedRoom => {
+    if (!rooms[seedRoom.id]) {
+      rooms[seedRoom.id] = seedRoom;
+      if (!roomOrder.includes(seedRoom.id)) roomOrder.push(seedRoom.id);
     }
-  }
-  return { ...state, users, rooms };
+    const r = rooms[seedRoom.id];
+    const missingBots = SEED_BOTS.map(b => b.id).filter(id => !r.members.includes(id));
+    if (missingBots.length) {
+      rooms[seedRoom.id] = { ...r, members: [...r.members, ...missingBots] };
+    }
+  });
+  return { ...state, users, rooms, roomOrder };
 }
 
 function load(username: string): State {
@@ -706,8 +724,8 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   useEffect(() => {
     if (!authUserId) return;
     let cancelled = false;
-    const channelsToFetch = new Set<string>(["lobby"]);
-    if (isRemoteChannel(state.activeChannel, authUserId) && state.activeChannel !== "lobby") {
+    const channelsToFetch = new Set<string>(["lobby", "games"]);
+    if (isRemoteChannel(state.activeChannel, authUserId) && !channelsToFetch.has(state.activeChannel)) {
       channelsToFetch.add(state.activeChannel);
     }
     (async () => {
