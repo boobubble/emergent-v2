@@ -259,44 +259,44 @@ export function ProfilePopup({
           )}
         </div>
 
-        {/* Footer actions */}
+        {/* Footer actions - fixed sizes */}
         {!isMe && (
-          <div className="flex flex-wrap gap-1.5 border-t border-border bg-card px-4 py-3">
+          <div className="flex items-center gap-2 border-t border-border bg-card px-4 py-3">
             <button
               onClick={() => { startDM(userId); onOpenChange(false); }}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90"
+              className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
             >
-              <MessageCircle className="h-3.5 w-3.5" /> Message
+              <MessageCircle className="h-4 w-4 shrink-0" /> Message
             </button>
             {friend ? (
-              <button onClick={() => removeFriend(userId)} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold hover:bg-white/5">
-                <UserMinus className="h-3.5 w-3.5" /> Friends
+              <button onClick={() => removeFriend(userId)} className="inline-flex h-10 w-[110px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-border bg-card text-xs font-semibold hover:bg-white/5">
+                <UserMinus className="h-4 w-4 shrink-0" /> Friends
               </button>
             ) : (
-              <button onClick={() => addFriend(userId)} className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/20">
-                <UserPlus className="h-3.5 w-3.5" /> Add
+              <button onClick={() => addFriend(userId)} className="inline-flex h-10 w-[110px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 text-xs font-semibold text-primary hover:bg-primary/20">
+                <UserPlus className="h-4 w-4 shrink-0" /> Add
               </button>
             )}
             {blocked ? (
-              <button onClick={() => unblockUser(userId)} className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unblock">
-                <ShieldCheck className="h-3.5 w-3.5" />
+              <button onClick={() => unblockUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unblock">
+                <ShieldCheck className="h-4 w-4 shrink-0" />
               </button>
             ) : (
-              <button onClick={() => blockUser(userId)} className="grid h-9 w-9 place-items-center rounded-full border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20" title="Block">
-                <Ban className="h-3.5 w-3.5" />
+              <button onClick={() => blockUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20" title="Block">
+                <Ban className="h-4 w-4 shrink-0" />
               </button>
             )}
           </div>
         )}
         {isMe && (
-          <div className="flex gap-1.5 border-t border-border bg-card px-4 py-3">
+          <div className="flex gap-2 border-t border-border bg-card px-4 py-3">
             <Link
               to="/feed"
               search={{ tab: "account" } as never}
               onClick={() => onOpenChange(false)}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90"
+              className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
             >
-              <ExternalLink className="h-3.5 w-3.5" /> Edit profile
+              <ExternalLink className="h-4 w-4 shrink-0" /> Edit profile
             </Link>
           </div>
         )}
