@@ -296,6 +296,20 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       };
     }
 
+    case "stopludo":
+    case "endludo": {
+      if (!game || game.type !== "ludo") return { replies: [{ text: "No active Ludo game to stop." }] };
+      const starter = game.data?.players?.[0]?.name;
+      const me = ctx.actor || "";
+      if (starter && me && starter !== me) {
+        return { replies: [{ text: `🛑 Only **@${starter}** (who started the game) can stop it.` }] };
+      }
+      return {
+        replies: [{ text: `🛑 Ludo game stopped by **@${me || starter}**.` }],
+        gameUpdate: { channelId: ctx.channelId, type: null, data: null },
+      };
+    }
+
     case "lr": {
       if (!game || game.type !== "ludo") return { replies: [{ text: "No Ludo game. Start one with !ludo" }] };
       const d = { ...game.data, players: game.data.players.map((p: any) => ({ ...p })) };
