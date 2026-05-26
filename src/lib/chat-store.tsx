@@ -3,6 +3,7 @@ import type { User, Message, Room, GameState, Attachment } from "./chat-types";
 import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
+import { rtLog } from "./realtime-debug";
 import { useRemoteProfiles } from "./use-remote-profiles";
 import { playDmPing, playMentionPing } from "./sounds";
 import gamebotImg from "@/assets/bots/gamebot.png";
