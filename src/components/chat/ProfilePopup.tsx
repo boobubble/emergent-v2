@@ -127,8 +127,11 @@ export function ProfilePopup({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-sm overflow-hidden rounded-3xl border-border bg-card p-0"
+        className="max-w-sm overflow-hidden rounded-3xl border-border bg-card p-0 [&>button.absolute]:hidden"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         {/* Header banner */}
         <div className="relative bg-gradient-to-b from-primary/30 via-primary/10 to-transparent px-6 pb-4 pt-8 text-center">
