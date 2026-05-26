@@ -183,7 +183,7 @@ export function ProfilePopup({
           ))}
         </div>
 
-        <div className="h-[320px] overflow-y-auto px-5 py-4 text-sm">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-sm sm:max-h-[320px]">
           {tab === "info" && (
             <ul className="space-y-2.5">
               <Row icon={<Eye className="h-4 w-4 shrink-0" />} label="Last seen" value={lastSeenLabel} />
