@@ -360,28 +360,95 @@ interface Ctx {
 const ChatCtx = createContext<Ctx | null>(null);
 
 const BOT_REPLIES = {
-  greeting: ["hey hey 👋", "yo!", "hi there 🙌", "sup", "heyy welcome", "o/", "howdy 🤠", "hello friend"],
-  thanks: ["anytime 🤝", "np!", "you got it", "🫡", "happy to help", "no worries"],
-  question: ["good question 🤔", "hmm depends", "not sure tbh", "I'd say yes", "maybe try !help", "interesting one", "🤷 let's find out"],
-  laugh: ["lmaooo", "💀💀", "haha same", "ikr 😂", "stop ur killing me", "🤣"],
-  agree: ["facts", "fr fr", "100%", "exactly this", "couldn't agree more", "💯"],
-  disagree: ["idk about that", "hmm not so sure", "🤨", "respectfully disagree", "interesting take tho"],
-  love: ["❤️", "🥰", "love that", "wholesome", "🫶"],
-  game: ["I'm in! 🎮", "ggwp", "let's run it", "ready when you are 🎲", "queue me up", "type !trivia 👀", "!hangman anyone?"],
-  bye: ["cya 👋", "later!", "gn", "take care", "✌️"],
+  greeting: [
+    "hey hey 👋", "yo!", "hi there 🙌", "sup", "heyy welcome in", "o/", "howdy 🤠",
+    "hello friend", "what's good?", "morning ☀️", "evenin' 🌙", "ayy you made it",
+    "hey, how's your day going?", "glad to see ya", "wb 👋", "hiya!",
+  ],
+  thanks: [
+    "anytime 🤝", "np!", "you got it", "🫡", "happy to help", "no worries",
+    "of course 🙌", "always 💛", "don't mention it", "we got each other", "say less",
+  ],
+  question: [
+    "good question 🤔", "hmm depends honestly", "not sure tbh, lemme think",
+    "I'd say yes but with a vibe check", "maybe try !help?", "interesting one ngl",
+    "🤷 let's find out together", "depends on the day really", "I was just wondering the same",
+    "okay now you got me curious", "could go either way", "hmm... lean towards no",
+  ],
+  laugh: [
+    "lmaooo 💀", "💀💀💀", "haha same energy", "ikr 😂", "stop ur killing me",
+    "🤣 not me cackling", "okay that one got me", "deadass funny", "I'm wheezing",
+    "💀 send help", "actually lol'd",
+  ],
+  agree: [
+    "facts no printer 🖨️", "fr fr", "100% this", "exactly this", "couldn't agree more",
+    "💯", "you said it", "preach 🙌", "yep, called it", "this ^^^", "real talk",
+  ],
+  disagree: [
+    "idk about that one", "hmm not so sure tbh", "🤨", "respectfully disagree",
+    "interesting take tho", "I see it differently", "eh, jury's out", "hard pass from me lol",
+    "let's agree to disagree 🤝",
+  ],
+  love: [
+    "❤️ love it", "🥰", "wholesome stuff", "🫶", "this is so cute", "warms the heart fr",
+    "love that for you 💛", "ugh adorable", "🥹",
+  ],
+  game: [
+    "I'm in! 🎮", "ggwp", "let's run it", "ready when you are 🎲", "queue me up",
+    "type !trivia 👀", "!hangman anyone?", "down for a round", "first to 3 wins?",
+    "lemme grab my snacks first 🍿", "rematch incoming", "lock in 🎯",
+  ],
+  bye: [
+    "cya 👋", "later!", "gn 🌙", "take care", "✌️", "be safe out there",
+    "catch you next time", "peace ☮️", "see ya around", "ttyl",
+  ],
+  food: [
+    "ok now I'm hungry 😩", "what're we eating?", "pizza fixes everything 🍕",
+    "coffee first, talk later ☕", "anyone else snacking rn 👀", "I could go for ramen 🍜",
+    "midnight munchies hitting hard",
+  ],
+  weather: [
+    "weather's been wild lately 🌦️", "raining where I am 🌧️", "sunny vibes today ☀️",
+    "freezing in here 🥶", "perfect window weather honestly", "missing summer already",
+  ],
+  weekend: [
+    "weekend can't come fast enough", "plans for the weekend?", "Friday energy 🎉",
+    "Monday hit different today", "just here trying to survive til Friday lol",
+    "long weekend would be nice 🙏",
+  ],
+  music: [
+    "drop a song rec 🎧", "what're you listening to rn?", "this song is on repeat ngl",
+    "vibes playlist >>>", "music carrying me through the day fr",
+  ],
+  mood: [
+    "today's been a lot", "feeling pretty good actually 🌞", "low key tired",
+    "running on caffeine and chaos ☕", "mood is mood",
+    "decent day, no complaints", "just chillin tbh",
+  ],
+  compliment: [
+    "you got it 💪", "love your energy", "okay icon behavior", "respect 🤝",
+    "you're carrying the vibes today", "main character energy ✨",
+  ],
   fallback: [
-    "lol", "nice one", "wait what", "👀", "fr fr", "anyone seen the new update?",
-    "brb coffee", "gg", "that was wild", "hmm interesting", "I'm in", "🔥🔥",
-    "anyone playing today?", "same here", "no way 😳", "tell me more", "respect",
-    "big mood", "bet 🤝", "based", "📈", "vibes", "lmk how it goes", "neat",
-    "ooo spicy", "make it happen", "👏👏", "✨ love the energy", "story checks out",
+    "lol", "nice one", "wait what 👀", "fr fr", "anyone seen the new update?",
+    "brb coffee ☕", "gg", "that was wild", "hmm interesting", "I'm in",
+    "🔥🔥", "anyone playing today?", "same here", "no way 😳", "tell me more",
+    "respect", "big mood", "bet 🤝", "based", "📈 we're so back",
+    "vibes ✨", "lmk how it goes", "neat", "ooo spicy 👀", "make it happen",
+    "👏👏", "love the energy in here today", "story checks out",
+    "okay that's actually wild", "lowkey relatable", "this lobby never disappoints lol",
+    "scrolling back to catch up", "wait I missed something didn't I 😅",
+    "yall are too funny", "anyone here from earlier?", "what'd I miss",
+    "just lurking tbh 👻", "ngl that's a take", "hot take incoming",
+    "wholesome chat today 💛", "okay valid", "100% understandable",
+    "let him cook 🧑‍🍳", "the way I felt that ☝️",
   ],
 };
 
 function pickBotReply(text: string): string {
   const t = text.toLowerCase();
   let pool: string[] = BOT_REPLIES.fallback;
-  if (/\b(hi|hey|hello|yo|sup|hola|howdy)\b/.test(t)) pool = BOT_REPLIES.greeting;
+  if (/\b(hi|hey|hello|yo|sup|hola|howdy|morning|evening)\b/.test(t)) pool = BOT_REPLIES.greeting;
   else if (/\b(thanks|thank you|thx|ty|appreciate)\b/.test(t)) pool = BOT_REPLIES.thanks;
   else if (/\b(bye|cya|goodnight|gn|later|peace)\b/.test(t)) pool = BOT_REPLIES.bye;
   else if (/\b(lol|lmao|rofl|haha|hehe|😂|🤣)\b/.test(t)) pool = BOT_REPLIES.laugh;
@@ -389,6 +456,12 @@ function pickBotReply(text: string): string {
   else if (/\b(agree|same|true|right|exactly|facts)\b/.test(t)) pool = BOT_REPLIES.agree;
   else if (/\b(disagree|nope|wrong|nah)\b/.test(t)) pool = BOT_REPLIES.disagree;
   else if (/\b(game|play|trivia|hangman|roll|dice|fish|dig)\b/.test(t)) pool = BOT_REPLIES.game;
+  else if (/\b(food|eat|hungry|pizza|coffee|tea|lunch|dinner|breakfast|snack)\b/.test(t)) pool = BOT_REPLIES.food;
+  else if (/\b(weather|rain|sunny|hot|cold|snow|storm)\b/.test(t)) pool = BOT_REPLIES.weather;
+  else if (/\b(weekend|friday|monday|saturday|sunday|holiday)\b/.test(t)) pool = BOT_REPLIES.weekend;
+  else if (/\b(music|song|playlist|listening|spotify|album|band)\b/.test(t)) pool = BOT_REPLIES.music;
+  else if (/\b(tired|sleepy|bored|mood|feeling|sad|happy|stressed|chill)\b/.test(t)) pool = BOT_REPLIES.mood;
+  else if (/\b(cool|nice|great|good job|well done|legend|goat)\b/.test(t)) pool = BOT_REPLIES.compliment;
   else if (/\?\s*$/.test(text) || /\b(what|why|how|when|where|who)\b/.test(t)) pool = BOT_REPLIES.question;
   return pool[Math.floor(Math.random() * pool.length)];
 }
