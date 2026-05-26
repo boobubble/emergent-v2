@@ -42,7 +42,7 @@ const HELP = `**Commands**
 !wine — order wine & beer by the round 🍷🍺
 !trivia — start a trivia question (answer with !a <choice>)
 !hangman — start hangman (guess with !g <letter>)
-!ludo — start a 1v1 Ludo race (opponent joins with !join, roll with !lr)
+!ludo — start a 1v1 Ludo race (opponent joins with !join, roll with !lr, stop with !stopludo)
 
 !me <action> — roleplay action
 !nick <name> — change your display name
@@ -293,6 +293,20 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
       return {
         replies: [{ text: `🎲 **@${p2}** joined! Match on: **@${d.players[0].name}** 🆚 **@${p2}**\nIt's **@${d.players[0].name}**'s turn — type **!lr** to roll.` }],
         gameUpdate: { channelId: ctx.channelId, type: "ludo", data: d },
+      };
+    }
+
+    case "stopludo":
+    case "endludo": {
+      if (!game || game.type !== "ludo") return { replies: [{ text: "No active Ludo game to stop." }] };
+      const starter = game.data?.players?.[0]?.name;
+      const me = ctx.actor || "";
+      if (starter && me && starter !== me) {
+        return { replies: [{ text: `🛑 Only **@${starter}** (who started the game) can stop it.` }] };
+      }
+      return {
+        replies: [{ text: `🛑 Ludo game stopped by **@${me || starter}**.` }],
+        gameUpdate: { channelId: ctx.channelId, type: null, data: null },
       };
     }
 
