@@ -117,6 +117,10 @@ export const BOT_COMMANDS: Record<string, { tagline: string; commands: string[] 
     tagline: "🍷 Pours wine & beer by the round.",
     commands: ["!wine — order a round of wine or beer 🍷🍺"],
   },
+  "bot-spam": {
+    tagline: "🛑 Anti-spam guardian — auto-warns and mutes spammers.",
+    commands: ["Watches for flooding, duplicate spam, ALL-CAPS shouting and link spam — no commands needed."],
+  },
 };
 
 function bioFor(id: string, fallback: string): string {
