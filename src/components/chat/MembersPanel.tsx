@@ -130,7 +130,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   };
 
   const online = allIds
-    .filter(isOnline)
+    .filter(id => isOnline(id) && !usersById[id]?.isGuest)
     .sort((a, b) => {
       const ra = roleOrder[room.roles[a] || "member"];
       const rb = roleOrder[room.roles[b] || "member"];
