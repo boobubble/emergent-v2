@@ -279,7 +279,7 @@ function ForgotDialog({ open, onOpenChange, onBack }: { open: boolean; onOpenCha
     setErr(""); setInfo(""); setBusy(true);
     try {
       const target = email.trim();
-      if (!target || !target.includes("@")) throw new Error("Enter the email address for your account.");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) throw new Error("Enter a valid email address. Username is not supported here.");
       const { error } = await supabase.auth.resetPasswordForEmail(target, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
