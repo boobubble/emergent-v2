@@ -56,6 +56,6 @@ export interface Room {
 
 export interface GameState {
   channelId: string;
-  type: "trivia" | "hangman" | "wordchain" | null;
+  type: "trivia" | "hangman" | "wordchain" | "ludo" | null;
   data: any;
 }
