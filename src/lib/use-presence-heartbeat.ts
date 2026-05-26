@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { rtLog } from "@/lib/realtime-debug";
 
 /** Keeps the current user's `profiles.last_seen` fresh so other clients
  *  see them as online. Heartbeats every 25s while visible, marks offline
