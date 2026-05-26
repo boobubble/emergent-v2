@@ -259,14 +259,20 @@ function ensureBots(state: State): State {
   const users = { ...state.users };
   SEED_BOTS.forEach(b => { if (!users[b.id]) users[b.id] = b; });
   const rooms = { ...state.rooms };
-  const lobby = rooms.lobby;
-  if (lobby) {
-    const missingBots = SEED_BOTS.map(b => b.id).filter(id => !lobby.members.includes(id));
-    if (missingBots.length) {
-      rooms.lobby = { ...lobby, members: [...lobby.members, ...missingBots] };
+  const roomOrder = [...(state.roomOrder || [])];
+  // Make sure every seeded room exists (handles older cached state without "games")
+  SEED_ROOMS.forEach(seedRoom => {
+    if (!rooms[seedRoom.id]) {
+      rooms[seedRoom.id] = seedRoom;
+      if (!roomOrder.includes(seedRoom.id)) roomOrder.push(seedRoom.id);
     }
-  }
-  return { ...state, users, rooms };
+    const r = rooms[seedRoom.id];
+    const missingBots = SEED_BOTS.map(b => b.id).filter(id => !r.members.includes(id));
+    if (missingBots.length) {
+      rooms[seedRoom.id] = { ...r, members: [...r.members, ...missingBots] };
+    }
+  });
+  return { ...state, users, rooms, roomOrder };
 }
 
 function load(username: string): State {
