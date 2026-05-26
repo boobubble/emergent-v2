@@ -13,6 +13,7 @@ import ryzeImg from "@/assets/bots/ryze.png";
 import digbotImg from "@/assets/bots/digbot.png";
 import fishbotImg from "@/assets/bots/fishbot.png";
 import wineImg from "@/assets/bots/wine.png";
+import spambotImg from "@/assets/bots/spambot.png";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUuid(s: string) { return UUID_RE.test(s); }
@@ -116,6 +117,10 @@ export const BOT_COMMANDS: Record<string, { tagline: string; commands: string[] 
     tagline: "🍷 Pours wine & beer by the round.",
     commands: ["!wine — order a round of wine or beer 🍷🍺"],
   },
+  "bot-spam": {
+    tagline: "🛑 Anti-spam guardian — auto-warns and mutes spammers.",
+    commands: ["Watches for flooding, duplicate spam, ALL-CAPS shouting and link spam — no commands needed."],
+  },
 };
 
 function bioFor(id: string, fallback: string): string {
@@ -133,6 +138,7 @@ const SEED_BOTS: User[] = [
   { id: "bot-dig", name: "DigBot", avatarColor: AVATAR_COLORS[6], avatarUrl: digbotImg, status: "online", isBot: true, xp: 1560, level: 14, bio: bioFor("bot-dig", "⛏️ Try !dig"), streak: 7, longestStreak: 18, messageCount: 410, badges: ["first_message","chatterbox","level_5","level_10","streak_3","streak_7","gamer"] },
   { id: "bot-fish", name: "FishBot", avatarColor: AVATAR_COLORS[2], avatarUrl: fishbotImg, status: "online", isBot: true, xp: 1320, level: 13, bio: bioFor("bot-fish", "🎣 Try !fish"), streak: 4, longestStreak: 15, messageCount: 360, badges: ["first_message","chatterbox","level_5","level_10","streak_3","gamer"] },
   { id: "bot-wine", name: "WineBot", avatarColor: AVATAR_COLORS[4], avatarUrl: wineImg, status: "online", isBot: true, xp: 1100, level: 11, bio: bioFor("bot-wine", "🍷 Try !wine"), streak: 3, longestStreak: 10, messageCount: 280, badges: ["first_message","chatterbox","level_5","level_10","streak_3"] },
+  { id: "bot-spam", name: "SpamBot", avatarColor: "oklch(0.62 0.22 25)", avatarUrl: spambotImg, status: "online", isBot: true, xp: 3200, level: 22, bio: bioFor("bot-spam", "🛑 Anti-spam guardian"), streak: 30, longestStreak: 99, messageCount: 800, badges: ["first_message","chatterbox","veteran","level_5","level_10","level_25"] },
 ];
 
 function botHelpReply(botId: string, botName: string): string {
@@ -152,7 +158,7 @@ const SEED_ROOMS: Room[] = [
     name: "Lobby",
     topic: "Main hangout. Type !help for games.",
     members: ["me", ...SEED_BOTS.map(b => b.id)],
-    roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod" },
+    roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod", "bot-spam": "mod" },
     isPublic: true,
   },
 ];
@@ -736,6 +742,11 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   }, [authUserId, state.activeChannel, state.messages]);
 
 
+
+  // SpamBot — tracks recent sends per channel to detect flooding / duplicates / shouting
+  const spamHistoryRef = useRef<Record<string, { ts: number; text: string }[]>>({});
+  const spamOffencesRef = useRef<Record<string, { count: number; until: number }>>({});
+
   const setActive = useCallback((channelId: string) => {
     setState(s => ({ ...s, activeChannel: channelId }));
     setReplyingTo(null);
@@ -790,6 +801,52 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           ...s,
           messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-gamebot", text: `🚪 You were kicked. Re-entry in ${Math.ceil(secs/60)}m ${secs%60}s.`, ts: now, kind: "system" }] },
         };
+      }
+      // SpamBot — only in public rooms, skip commands and DMs
+      if (room && !isCmd && !channelId.startsWith("dm:")) {
+        const hist = (spamHistoryRef.current[channelId] || []).filter(h => now - h.ts < 10_000);
+        hist.push({ ts: now, text: trimmed });
+        spamHistoryRef.current[channelId] = hist;
+        const letters = trimmed.replace(/[^a-zA-Z]/g, "");
+        const upperRatio = letters.length > 10 ? letters.replace(/[^A-Z]/g, "").length / letters.length : 0;
+        const linkCount = (trimmed.match(/\b(https?:\/\/|www\.)\S+/gi) || []).length;
+        const repeatedChars = /(.)\1{9,}/.test(trimmed);
+        const dupCount = hist.filter(h => h.text === trimmed).length;
+        const floodCount = hist.length;
+        const reason =
+          floodCount >= 5 ? "flooding the chat (5+ msgs in 10s)" :
+          dupCount >= 3 ? "posting the same message repeatedly" :
+          upperRatio >= 0.8 ? "SHOUTING in ALL CAPS" :
+          linkCount >= 3 ? "posting too many links at once" :
+          repeatedChars ? "spamming repeated characters" :
+          null;
+        if (reason) {
+          const off = spamOffencesRef.current[channelId] || { count: 0, until: 0 };
+          const fresh = now - off.until > 10 * 60 * 1000 ? { count: 0, until: 0 } : off;
+          fresh.count += 1;
+          fresh.until = now;
+          spamOffencesRef.current[channelId] = fresh;
+          const sysMsgs: Message[] = [];
+          if (fresh.count >= 2) {
+            const muteMs = 2 * 60 * 1000;
+            const chanMod = { ...(s.moderation?.[channelId] || {}) };
+            const meMod: ModEntry = { ...(chanMod.me || { muteVotes: [], kickVotes: [] }), mutedUntil: now + muteMs };
+            chanMod.me = meMod;
+            sysMsgs.push({ id: uid(), channelId, authorId: "bot-spam", kind: "system", ts: now, text: `🛑 **SpamBot:** Auto-muted for **2 minutes** — ${reason}.` });
+            spamHistoryRef.current[channelId] = [];
+            spamOffencesRef.current[channelId] = { count: 0, until: now };
+            return {
+              ...s,
+              moderation: { ...(s.moderation || {}), [channelId]: chanMod },
+              messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), ...sysMsgs] },
+            };
+          }
+          sysMsgs.push({ id: uid(), channelId, authorId: "bot-spam", kind: "system", ts: now, text: `⚠️ **SpamBot:** Warning — ${reason}. Next offence = 2 min mute.` });
+          return {
+            ...s,
+            messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), ...sysMsgs] },
+          };
+        }
       }
       const remote = authUserId && isRemoteChannel(channelId, authUserId);
       const msgId = remote ? newUuid() : uid();
