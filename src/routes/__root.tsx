@@ -17,6 +17,7 @@ import { FaviconSwitcher } from "@/components/FaviconSwitcher";
 import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
 import { useSessionChangeDetector } from "@/lib/use-session-change-detector";
 import { RealtimeDebugOverlay } from "@/components/RealtimeDebugOverlay";
+import { SessionConflictBanner } from "@/components/SessionConflictBanner";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
