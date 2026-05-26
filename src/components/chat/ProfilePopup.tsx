@@ -119,10 +119,11 @@ export function ProfilePopup({
   const tabs: { id: Tab; label: string }[] = [
     { id: "info", label: "Info" },
     { id: "about", label: "About" },
-    { id: "friends", label: "Friends" },
-    { id: "activity", label: "Activity" },
+    ...(!user.isBot ? [{ id: "friends" as Tab, label: "Friends" }] : []),
+    ...(!user.isBot ? [{ id: "activity" as Tab, label: "Activity" }] : []),
     ...(isMe ? [{ id: "daily" as Tab, label: "Daily" }] : []),
   ];
+  const activeTab = tabs.some(t => t.id === tab) ? tab : "info";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -157,9 +158,13 @@ export function ProfilePopup({
 
           {/* Quick action chips - fixed height */}
           <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider">
-            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-yellow-500/15 px-2 text-yellow-500"><Trophy className="h-3.5 w-3.5 shrink-0" /> Lv {user.level}</span>
-            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-amber-500/15 px-2 text-amber-400"><Coins className="h-3.5 w-3.5 shrink-0" /> {user.coins ?? 0}</span>
-            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-orange-500/15 px-2 text-orange-400"><Flame className="h-3.5 w-3.5 shrink-0" /> {user.streak ?? 0}d</span>
+            {!user.isBot && (
+              <>
+                <span className="inline-flex h-6 items-center gap-1 rounded-full bg-yellow-500/15 px-2 text-yellow-500"><Trophy className="h-3.5 w-3.5 shrink-0" /> Lv {user.level}</span>
+                <span className="inline-flex h-6 items-center gap-1 rounded-full bg-amber-500/15 px-2 text-amber-400"><Coins className="h-3.5 w-3.5 shrink-0" /> {user.coins ?? 0}</span>
+                <span className="inline-flex h-6 items-center gap-1 rounded-full bg-orange-500/15 px-2 text-orange-400"><Flame className="h-3.5 w-3.5 shrink-0" /> {user.streak ?? 0}d</span>
+              </>
+            )}
             <span className={`inline-flex h-6 items-center gap-1 rounded-full px-2 ${user.status === "online" ? "bg-green-500/15 text-green-400" : "bg-muted-foreground/15 text-muted-foreground"}`}>
               <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${user.status === "online" ? "bg-green-400" : "bg-muted-foreground/60"}`} />
               {user.status === "online" ? "Online" : "Offline"}
@@ -184,18 +189,22 @@ export function ProfilePopup({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-sm sm:max-h-[320px]">
-          {tab === "info" && (
+          {activeTab === "info" && (
             <ul className="space-y-2.5">
               <Row icon={<Eye className="h-4 w-4 shrink-0" />} label="Last seen" value={lastSeenLabel} />
               <Row icon={<Globe className="h-4 w-4 shrink-0" />} label="Current room" value={currentRoom} />
-              <Row icon={<Calendar className="h-4 w-4 shrink-0" />} label="Member since" value={memberSince ?? (user.isBot ? "—" : "…")} />
-              <Row icon={<Sparkles className="h-4 w-4 shrink-0" />} label="XP" value={`${user.xp} pts`} />
-              <Row icon={<Heart className="h-4 w-4 shrink-0" />} label="Gender" value={user.gender ? user.gender[0].toUpperCase() + user.gender.slice(1) : "—"} />
-              <Row icon={<Award className="h-4 w-4 shrink-0" />} label="Badges" value={`${(user.badges || []).length}`} />
+              {!user.isBot && (
+                <>
+                  <Row icon={<Calendar className="h-4 w-4 shrink-0" />} label="Member since" value={memberSince ?? "…"} />
+                  <Row icon={<Sparkles className="h-4 w-4 shrink-0" />} label="XP" value={`${user.xp} pts`} />
+                  <Row icon={<Heart className="h-4 w-4 shrink-0" />} label="Gender" value={user.gender ? user.gender[0].toUpperCase() + user.gender.slice(1) : "—"} />
+                  <Row icon={<Award className="h-4 w-4 shrink-0" />} label="Badges" value={`${(user.badges || []).length}`} />
+                </>
+              )}
             </ul>
           )}
 
-          {tab === "about" && (
+          {activeTab === "about" && (
             <div className="space-y-3">
               <p className="text-foreground/90">{user.bio || <span className="text-muted-foreground italic">No bio yet.</span>}</p>
               {(user.badges || []).length > 0 && (
@@ -216,7 +225,7 @@ export function ProfilePopup({
             </div>
           )}
 
-          {tab === "friends" && (
+          {activeTab === "friends" && (
             <div className="text-center">
               <div className="text-3xl font-bold text-primary">{friendCount ?? (user.isBot ? 0 : "…")}</div>
               <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">Friends</div>
@@ -230,7 +239,7 @@ export function ProfilePopup({
             </div>
           )}
 
-          {tab === "activity" && (
+          {activeTab === "activity" && (
             <div className="space-y-2">
               {recentPosts.length === 0 ? (
                 <p className="text-center text-xs text-muted-foreground">No public feed activity yet.</p>
@@ -254,7 +263,7 @@ export function ProfilePopup({
             </div>
           )}
 
-          {tab === "daily" && (
+          {activeTab === "daily" && (
             <DailyProgress data={daily} onClose={() => onOpenChange(false)} />
           )}
         </div>
@@ -268,17 +277,19 @@ export function ProfilePopup({
             >
               <MessageCircle className="h-4 w-4 shrink-0" /> Message
             </button>
-            <button
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent("palrgo:mention", { detail: { name: user.name } }));
-                onOpenChange(false);
-              }}
-              title={`Mention @${user.name} in chat`}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
-            >
-              <AtSign className="h-4 w-4 shrink-0" />
-            </button>
-            {friend ? (
+            {!user.isBot && (
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("palrgo:mention", { detail: { name: user.name } }));
+                  onOpenChange(false);
+                }}
+                title={`Mention @${user.name} in chat`}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+              >
+                <AtSign className="h-4 w-4 shrink-0" />
+              </button>
+            )}
+            {!user.isBot && (friend ? (
               <button onClick={() => removeFriend(userId)} className="inline-flex h-10 w-[110px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-border bg-card text-xs font-semibold hover:bg-white/5">
                 <UserMinus className="h-4 w-4 shrink-0" /> Friends
               </button>
@@ -286,8 +297,8 @@ export function ProfilePopup({
               <button onClick={() => addFriend(userId)} className="inline-flex h-10 w-[110px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 text-xs font-semibold text-primary hover:bg-primary/20">
                 <UserPlus className="h-4 w-4 shrink-0" /> Add
               </button>
-            )}
-            {blocked ? (
+            ))}
+            {!user.isBot && (blocked ? (
               <button onClick={() => unblockUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unblock">
                 <ShieldCheck className="h-4 w-4 shrink-0" />
               </button>
@@ -295,7 +306,7 @@ export function ProfilePopup({
               <button onClick={() => blockUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20" title="Block">
                 <Ban className="h-4 w-4 shrink-0" />
               </button>
-            )}
+            ))}
           </div>
         )}
         {isMe && (
