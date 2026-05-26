@@ -157,7 +157,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
         sessionStorage.setItem(`pending-welcome:${k}`, "1");
       } catch { /* ignore */ }
       await signup(email, password, username.trim(), gender);
-      setInfo("Account created! Check your email to confirm, then sign in.");
+      setInfo("Account created! You're being signed in…");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Sign up failed");
     } finally {
