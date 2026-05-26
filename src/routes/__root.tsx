@@ -146,10 +146,11 @@ function AuthGate() {
   usePresenceHeartbeat();
   useSessionChangeDetector();
   if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
-  if (!user) return (<><AuthScreen /><Sonner /><RealtimeDebugOverlay /></>);
+  if (!user) return (<><SessionConflictBanner /><AuthScreen /><Sonner /><RealtimeDebugOverlay /></>);
   return (
     <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
       <FeedPrefsProvider>
+        <SessionConflictBanner />
         <FaviconSwitcher />
         <Outlet />
         <Sonner />
