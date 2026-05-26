@@ -140,6 +140,11 @@ export function MessageInput() {
 
   const replyAuthor = replyingTo ? state.users[replyingTo.authorId] : null;
 
+  const lobbyMuteUntil = state.moderation?.["lobby"]?.me?.mutedUntil;
+  const isLobbyMuted = !!(lobbyMuteUntil && lobbyMuteUntil > Date.now() && state.activeChannel === "lobby");
+  const muteSecsLeft = isLobbyMuted ? Math.ceil((lobbyMuteUntil! - Date.now()) / 1000) : 0;
+  const muteLabel = muteSecsLeft >= 60 ? `${Math.ceil(muteSecsLeft / 60)}m` : `${muteSecsLeft}s`;
+
   return (
     <div className="px-6 pb-6 pt-2">
       {replyingTo && (
@@ -243,6 +248,12 @@ export function MessageInput() {
               : `${typers.length} people are typing…`}
         </div>
       )}
+      {isLobbyMuted ? (
+        <div className="flex items-center gap-2 rounded-3xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <span className="text-base">🔇</span>
+          <span className="flex-1">You're muted in the lobby ({muteLabel} left). You can still DM friends from your friends list.</span>
+        </div>
+      ) : (
       <div className="group relative flex items-end gap-1 rounded-3xl border border-border bg-white/5 py-2 pl-4 pr-2 transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/30">
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
         <button onClick={() => fileRef.current?.click()} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Attach file">
@@ -262,6 +273,7 @@ export function MessageInput() {
           <Send className="h-4 w-4" />
         </button>
       </div>
+      )}
     </div>
   );
 }
