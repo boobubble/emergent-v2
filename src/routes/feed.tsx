@@ -21,6 +21,7 @@ import { FeedDMDock } from "@/components/feed/FeedDMDock";
 import { FeedNotifications } from "@/components/feed/FeedNotifications";
 import { Avatar } from "@/components/chat/Avatar";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
+import { pingDailyStreak } from "@/lib/gamification.functions";
 
 export const Route = createFileRoute("/feed")({
   head: () => ({
@@ -98,19 +99,7 @@ function FeedPage() {
   // Daily streak ping on mount
   useEffect(() => {
     if (!meId) return;
-    (async () => {
-      const today = new Date().toISOString().slice(0, 10);
-      const { data: p } = await supabase.from("profiles").select("last_active_day, streak, longest_streak").eq("id", meId).maybeSingle();
-      if (!p) return;
-      if (p.last_active_day === today) return;
-      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-      const next = p.last_active_day === yesterday ? (p.streak ?? 0) + 1 : 1;
-      await supabase.from("profiles").update({
-        last_active_day: today,
-        streak: next,
-        longest_streak: Math.max(p.longest_streak ?? 0, next),
-      }).eq("id", meId);
-    })();
+    void pingDailyStreak().catch((e: unknown) => console.error("streak ping failed", e));
   }, [meId]);
 
   // Load friendships
