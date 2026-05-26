@@ -47,6 +47,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [notifs, setNotifs] = useState<FeedNotification[]>([]);
   const [viewMode, setViewMode] = useState<"members" | "friends">("members");
   const [friendIds, setFriendIds] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
   
   const meId = authUser?.id;
 
