@@ -308,17 +308,38 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           ) : null}
 
         </div>
+
+        <div className="relative mb-3">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={viewMode === "friends" ? "Search friends…" : "Search users…"}
+            className="w-full rounded-full bg-white/5 py-1.5 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground outline-none ring-1 ring-border focus:ring-primary"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+              className="absolute right-2 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:bg-white/10 hover:text-foreground"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
       </div>
 
 
       {viewMode === "friends" ? (
         <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
-          {friendIds.length === 0 ? (
+          {friendIds.filter(matchesQuery).length === 0 ? (
             <p className="px-3 py-8 text-center text-xs text-muted-foreground">
-              No friends yet. Add some from the feed or click a member to start.
+              {q ? "No friends match your search." : "No friends yet. Add some from the feed or click a member to start."}
             </p>
           ) : (
             friendIds
+              .filter(matchesQuery)
               .slice()
               .sort((a, b) => {
                 const ao = isOnline(a) ? 0 : 1;
