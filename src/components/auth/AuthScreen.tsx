@@ -279,7 +279,7 @@ function ForgotDialog({ open, onOpenChange, onBack }: { open: boolean; onOpenCha
     setErr(""); setInfo(""); setBusy(true);
     try {
       const target = email.trim();
-      if (!target || !target.includes("@")) throw new Error("Enter the email address for your account.");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) throw new Error("Enter a valid email address. Username is not supported here.");
       const { error } = await supabase.auth.resetPasswordForEmail(target, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
@@ -297,7 +297,7 @@ function ForgotDialog({ open, onOpenChange, onBack }: { open: boolean; onOpenCha
       <DialogContent className="max-w-sm rounded-3xl">
         <DialogHeader>
           <DialogTitle>Reset your password</DialogTitle>
-          <DialogDescription>We'll email you a link to set a new password.</DialogDescription>
+          <DialogDescription>Enter the email address linked to your account — usernames can't be used here.</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
