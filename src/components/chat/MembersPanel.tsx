@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, VolumeX } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, VolumeX, Search } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
@@ -47,6 +47,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [notifs, setNotifs] = useState<FeedNotification[]>([]);
   const [viewMode, setViewMode] = useState<"members" | "friends">("members");
   const [friendIds, setFriendIds] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
   
   const meId = authUser?.id;
 
@@ -129,8 +130,15 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     return true;
   };
 
+  const q = search.trim().toLowerCase();
+  const matchesQuery = (id: string) => {
+    if (!q) return true;
+    const name = (usersById[id]?.name || "").toLowerCase();
+    return name.includes(q);
+  };
+
   const online = allIds
-    .filter(id => isOnline(id) && !usersById[id]?.isGuest)
+    .filter(id => isOnline(id) && !usersById[id]?.isGuest && matchesQuery(id))
     .sort((a, b) => {
       const ra = roleOrder[room.roles[a] || "member"];
       const rb = roleOrder[room.roles[b] || "member"];
@@ -141,11 +149,12 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   // Offline sorted by most-recently-seen first (latest at top).
   const offlineSorted = allIds
-    .filter(id => !isOnline(id) && !usersById[id]?.isGuest)
+    .filter(id => !isOnline(id) && !usersById[id]?.isGuest && matchesQuery(id))
     .sort((a, b) => (usersById[b]?.lastSeen ?? 0) - (usersById[a]?.lastSeen ?? 0));
 
+  // When searching, show all matching offline users; otherwise keep the collapsible cap.
   const OFFLINE_MIN = 20;
-  const offline = showAllOffline ? offlineSorted : offlineSorted.slice(0, OFFLINE_MIN);
+  const offline = (showAllOffline || q) ? offlineSorted : offlineSorted.slice(0, OFFLINE_MIN);
   const hiddenOffline = offlineSorted.length - offline.length;
 
 
@@ -299,17 +308,38 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           ) : null}
 
         </div>
+
+        <div className="relative mb-3">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={viewMode === "friends" ? "Search friends…" : "Search users…"}
+            className="w-full rounded-full bg-white/5 py-1.5 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground outline-none ring-1 ring-border focus:ring-primary"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+              className="absolute right-2 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:bg-white/10 hover:text-foreground"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
       </div>
 
 
       {viewMode === "friends" ? (
         <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
-          {friendIds.length === 0 ? (
+          {friendIds.filter(matchesQuery).length === 0 ? (
             <p className="px-3 py-8 text-center text-xs text-muted-foreground">
-              No friends yet. Add some from the feed or click a member to start.
+              {q ? "No friends match your search." : "No friends yet. Add some from the feed or click a member to start."}
             </p>
           ) : (
             friendIds
+              .filter(matchesQuery)
               .slice()
               .sort((a, b) => {
                 const ao = isOnline(a) ? 0 : 1;
