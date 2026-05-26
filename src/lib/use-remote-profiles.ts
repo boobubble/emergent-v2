@@ -99,7 +99,7 @@ export function useRemoteProfiles() {
           return next;
         });
       })
-      .subscribe();
+      .subscribe(status => rtLog("ws", status, "profiles-directory"));
 
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, []);
