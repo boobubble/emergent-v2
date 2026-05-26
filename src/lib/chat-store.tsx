@@ -807,7 +807,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           return { ...prev, [row.channel_id]: { ...ch, [row.user_id]: ts } };
         });
       })
-      .subscribe();
+      .subscribe(status => rtLog("ws", status, "dm-reads"));
     return () => { supabase.removeChannel(ch); };
   }, [authUserId]);
 
