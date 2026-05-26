@@ -119,10 +119,11 @@ export function ProfilePopup({
   const tabs: { id: Tab; label: string }[] = [
     { id: "info", label: "Info" },
     { id: "about", label: "About" },
-    { id: "friends", label: "Friends" },
-    { id: "activity", label: "Activity" },
+    ...(!user.isBot ? [{ id: "friends" as Tab, label: "Friends" }] : []),
+    ...(!user.isBot ? [{ id: "activity" as Tab, label: "Activity" }] : []),
     ...(isMe ? [{ id: "daily" as Tab, label: "Daily" }] : []),
   ];
+  const activeTab = tabs.some(t => t.id === tab) ? tab : "info";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
