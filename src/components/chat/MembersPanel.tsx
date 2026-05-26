@@ -130,8 +130,15 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     return true;
   };
 
+  const q = search.trim().toLowerCase();
+  const matchesQuery = (id: string) => {
+    if (!q) return true;
+    const name = (usersById[id]?.name || "").toLowerCase();
+    return name.includes(q);
+  };
+
   const online = allIds
-    .filter(id => isOnline(id) && !usersById[id]?.isGuest)
+    .filter(id => isOnline(id) && !usersById[id]?.isGuest && matchesQuery(id))
     .sort((a, b) => {
       const ra = roleOrder[room.roles[a] || "member"];
       const rb = roleOrder[room.roles[b] || "member"];
@@ -142,11 +149,12 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   // Offline sorted by most-recently-seen first (latest at top).
   const offlineSorted = allIds
-    .filter(id => !isOnline(id) && !usersById[id]?.isGuest)
+    .filter(id => !isOnline(id) && !usersById[id]?.isGuest && matchesQuery(id))
     .sort((a, b) => (usersById[b]?.lastSeen ?? 0) - (usersById[a]?.lastSeen ?? 0));
 
+  // When searching, show all matching offline users; otherwise keep the collapsible cap.
   const OFFLINE_MIN = 20;
-  const offline = showAllOffline ? offlineSorted : offlineSorted.slice(0, OFFLINE_MIN);
+  const offline = (showAllOffline || q) ? offlineSorted : offlineSorted.slice(0, OFFLINE_MIN);
   const hiddenOffline = offlineSorted.length - offline.length;
 
 
