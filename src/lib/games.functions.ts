@@ -52,7 +52,7 @@ async function maybeStartGame(gameId: string) {
       started_at: new Date().toISOString(),
       current_turn_seat: 0,
       turn_started_at: new Date().toISOString(),
-      state: state as unknown as Record<string, unknown>,
+      state: state as never,
     })
     .eq("id", gameId);
   // Notify other players
@@ -401,7 +401,7 @@ export const rollDice = createServerFn({ method: "POST" })
     if (mustPass && !extraTurn) {
       updates.current_turn_seat = nextSeat(me.seat, totalSeats);
     }
-    await supabaseAdmin.from("games").update(updates).eq("id", data.gameId);
+    await supabaseAdmin.from("games").update(updates as never).eq("id", data.gameId);
     return { die };
   });
 
@@ -441,7 +441,7 @@ export const moveToken = createServerFn({ method: "POST" })
     } else if (!result.extraTurn) {
       updates.current_turn_seat = nextSeat(me.seat, totalSeats);
     }
-    await supabaseAdmin.from("games").update(updates).eq("id", data.gameId);
+    await supabaseAdmin.from("games").update(updates as never).eq("id", data.gameId);
 
     if (finished && winnerId) {
       const losers = players.filter(p => p.user_id !== winnerId).map(p => p.user_id);
