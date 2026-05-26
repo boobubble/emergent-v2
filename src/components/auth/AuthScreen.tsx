@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-store";
 import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
   if (status.state === "idle") return null;
@@ -10,24 +11,126 @@ function UsernameHint({ status }: { status: UsernameStatus }) {
   return <p className="mt-1 text-[10px] font-semibold text-destructive">{status.message}</p>;
 }
 
-
+type Popup = null | "signin" | "signup" | "guest" | "forgot";
 
 export function AuthScreen() {
-  const { login, signup, loginAsGuest } = useAuth();
-  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
+  const [popup, setPopup] = useState<Popup>(null);
+
+  return (
+    <div className="grid min-h-screen place-items-center bg-background p-4 text-foreground">
+      <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-8 text-center shadow-2xl" style={{ boxShadow: "var(--shadow-panel)" }}>
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-3xl font-bold text-primary-foreground" style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}>P</div>
+        <h1 className="mt-4 text-2xl font-bold">Welcome to Palrgo</h1>
+        <p className="mt-1 text-xs text-muted-foreground">Chat, post, and play with friends.</p>
+
+        <div className="mt-6 space-y-2.5">
+          <button
+            onClick={() => setPopup("signin")}
+            className="w-full rounded-full px-4 py-3 text-sm font-bold text-primary-foreground"
+            style={{ background: "var(--gradient-accent, var(--primary))" }}
+          >
+            Sign in
+          </button>
+          <button
+            onClick={() => setPopup("signup")}
+            className="w-full rounded-full border border-primary/50 bg-primary/10 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/20"
+          >
+            Create account
+          </button>
+          <button
+            onClick={() => setPopup("guest")}
+            className="w-full rounded-full border border-dashed border-border bg-background px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            👤 Continue as guest
+          </button>
+        </div>
+      </div>
+
+      <SignInDialog
+        open={popup === "signin"}
+        onOpenChange={(v) => setPopup(v ? "signin" : null)}
+        onForgot={() => setPopup("forgot")}
+        onSwitchSignup={() => setPopup("signup")}
+      />
+      <SignUpDialog
+        open={popup === "signup"}
+        onOpenChange={(v) => setPopup(v ? "signup" : null)}
+        onSwitchSignin={() => setPopup("signin")}
+      />
+      <GuestDialog
+        open={popup === "guest"}
+        onOpenChange={(v) => setPopup(v ? "guest" : null)}
+      />
+      <ForgotDialog
+        open={popup === "forgot"}
+        onOpenChange={(v) => setPopup(v ? "forgot" : null)}
+        onBack={() => setPopup("signin")}
+      />
+    </div>
+  );
+}
+
+/* ---------------- Sign in ---------------- */
+function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: boolean; onOpenChange: (v: boolean) => void; onForgot: () => void; onSwitchSignup: () => void }) {
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    setErr(""); setBusy(true);
+    try { await login(email, password); }
+    catch (e) { setErr(e instanceof Error ? e.message : "Sign in failed"); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm rounded-3xl">
+        <DialogHeader>
+          <DialogTitle>Sign in</DialogTitle>
+          <DialogDescription>Welcome back to Palrgo.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Email or username</label>
+            <input type="text" value={email} onChange={e => setEmail(e.target.value)} maxLength={255} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="you@example.com or username" />
+          </div>
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-xs font-semibold uppercase text-muted-foreground">Password</label>
+              <button type="button" onClick={onForgot} className="text-[10px] font-semibold text-primary hover:underline">Forgot password?</button>
+            </div>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="••••••" />
+          </div>
+          {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
+          <button disabled={busy} type="submit" className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" style={{ background: "var(--gradient-accent, var(--primary))" }}>
+            {busy ? "..." : "Sign in"}
+          </button>
+        </form>
+        <div className="text-center text-xs text-muted-foreground">
+          New here?{" "}
+          <button onClick={onSwitchSignup} className="font-semibold text-primary hover:underline">Create an account</button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ---------------- Sign up ---------------- */
+function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; onOpenChange: (v: boolean) => void; onSwitchSignin: () => void }) {
+  const { signup } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
-  const [avatarDataUrl, setAvatarDataUrl] = useState<string>("");
-  const [guestName, setGuestName] = useState("");
-  const [showGuest, setShowGuest] = useState(false);
+  const [avatarDataUrl, setAvatarDataUrl] = useState("");
   const [err, setErr] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
-
-  const usernameStatus = useUsernameCheck(mode === "signup" ? username : "");
-  const guestStatus = useUsernameCheck(showGuest ? guestName : "");
+  const usernameStatus = useUsernameCheck(open ? username : "");
 
   function onPickAvatar(file: File | null) {
     setErr("");
@@ -43,189 +146,174 @@ export function AuthScreen() {
     e.preventDefault();
     setErr(""); setInfo(""); setBusy(true);
     try {
-      if (mode === "login") {
-        await login(email, password);
-      } else if (mode === "forgot") {
-        const target = email.trim();
-        if (!target || !target.includes("@")) throw new Error("Enter the email address for your account.");
-        const { error } = await supabase.auth.resetPasswordForEmail(target, {
-          redirectTo: `${window.location.origin}/reset-password`,
-        });
-        if (error) throw new Error(error.message);
-        setInfo("Reset link sent! Check your inbox.");
-      } else {
-        const letterCount = username.trim().replace(/[^a-zA-Z]/g, "").length;
-        if (letterCount < 2 || letterCount > 10) {
-          throw new Error("Username must contain between 2 and 10 letters.");
-        }
-        if (!gender) throw new Error("Please select your gender.");
-        if (usernameStatus.state === "error") throw new Error(usernameStatus.message);
-        if (usernameStatus.state !== "ok") throw new Error("Checking username, please wait…");
-        try {
-          const k = email.trim().toLowerCase();
-          if (avatarDataUrl) sessionStorage.setItem(`pending-avatar:${k}`, avatarDataUrl);
-          sessionStorage.setItem(`pending-welcome:${k}`, "1");
-        } catch { /* ignore quota */ }
-        await signup(email, password, username.trim(), gender);
-        setInfo("Account created! Check your email to confirm, then sign in.");
-        setMode("login");
-      }
-    } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Something went wrong");
+      const letterCount = username.trim().replace(/[^a-zA-Z]/g, "").length;
+      if (letterCount < 2 || letterCount > 10) throw new Error("Username must contain between 2 and 10 letters.");
+      if (!gender) throw new Error("Please select your gender.");
+      if (usernameStatus.state === "error") throw new Error(usernameStatus.message);
+      if (usernameStatus.state !== "ok") throw new Error("Checking username, please wait…");
+      try {
+        const k = email.trim().toLowerCase();
+        if (avatarDataUrl) sessionStorage.setItem(`pending-avatar:${k}`, avatarDataUrl);
+        sessionStorage.setItem(`pending-welcome:${k}`, "1");
+      } catch { /* ignore */ }
+      await signup(email, password, username.trim(), gender);
+      setInfo("Account created! Check your email to confirm, then sign in.");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Sign up failed");
     } finally {
       setBusy(false);
     }
   }
 
-
-
   return (
-    <div className="grid min-h-screen place-items-center bg-background p-4 text-foreground">
-      <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-8 shadow-2xl" style={{ boxShadow: "var(--shadow-panel)" }}>
-        <div className="mb-6 flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-xl text-2xl font-bold text-primary-foreground" style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}>P</div>
-          <div>
-            <h1 className="text-xl font-bold">Palrgo</h1>
-            <p className="text-xs text-muted-foreground">{mode === "login" ? "Welcome back" : mode === "forgot" ? "Reset your password" : "Create your account"}</p>
-          </div>
-        </div>
-
-
-        {!showGuest ? (
-          <button
-            type="button"
-            onClick={() => { setErr(""); setShowGuest(true); }}
-            disabled={busy}
-            className="mb-4 flex w-full items-center justify-center gap-2 rounded-full border border-dashed border-border bg-background px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-          >
-            👤 Continue as guest
-          </button>
-        ) : (
-          <div className="mb-4 rounded-2xl border border-dashed border-border bg-background/50 p-3">
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pick a guest name</label>
-            <input
-              value={guestName}
-              onChange={(e) => setGuestName(e.target.value)}
-              maxLength={20}
-              placeholder="e.g. nova"
-              className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-            />
-            <UsernameHint status={guestStatus} />
-            <p className="mt-1 text-[10px] text-muted-foreground">2–10 letters. Profile is temporary and removed when you leave.</p>
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                onClick={() => { setShowGuest(false); setGuestName(""); setErr(""); }}
-                disabled={busy}
-                className="flex-1 rounded-full border border-border px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  setErr(""); setBusy(true);
-                  try { await loginAsGuest(guestName); }
-                  catch (e) { setErr(e instanceof Error ? e.message : "Guest login failed"); setBusy(false); }
-                }}
-                disabled={busy}
-                className="flex-1 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50"
-              >
-                {busy ? "..." : "Enter as guest"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className="mb-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">or</span>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-sm overflow-y-auto rounded-3xl">
+        <DialogHeader>
+          <DialogTitle>Create your account</DialogTitle>
+          <DialogDescription>Join Palrgo in a few seconds.</DialogDescription>
+        </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-3">
-          {mode === "signup" && (
-            <>
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Profile picture (optional)</label>
-                <div className="flex items-center gap-3">
-                  <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border border-border bg-input text-[10px] text-muted-foreground">
-                    {avatarDataUrl
-                      ? <img src={avatarDataUrl} alt="avatar preview" className="h-full w-full object-cover" />
-                      : <span>No image</span>}
-                  </div>
-                  <label className="flex-1 cursor-pointer rounded-full border border-dashed border-border bg-background px-3 py-2 text-center text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground">
-                    {avatarDataUrl ? "Change image" : "Choose image"}
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => onPickAvatar(e.target.files?.[0] ?? null)} />
-                  </label>
-                  {avatarDataUrl && (
-                    <button type="button" onClick={() => setAvatarDataUrl("")} className="rounded-full border border-border px-3 py-2 text-[10px] font-semibold text-muted-foreground hover:bg-accent hover:text-foreground">Remove</button>
-                  )}
-                </div>
-                <p className="mt-1 text-[10px] text-muted-foreground">PNG or JPG, up to 2MB.</p>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Username</label>
-                <input value={username} onChange={e => setUsername(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. cool user" />
-                <UsernameHint status={usernameStatus} />
-                <p className="mt-1 text-[10px] text-muted-foreground">Must contain 2 to 10 letters.</p>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Gender</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["male", "female", "other"] as const).map((g) => (
-                    <button
-                      type="button"
-                      key={g}
-                      onClick={() => setGender(g)}
-                      className={`rounded-lg border px-3 py-2 text-sm font-semibold capitalize transition-colors ${gender === g ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-foreground hover:bg-accent"}`}
-                    >
-                      {g}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">{mode === "login" ? "Email or username" : "Email"}</label>
-            <input type={mode === "login" ? "text" : "email"} value={email} onChange={e => setEmail(e.target.value)} maxLength={255} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder={mode === "login" ? "you@example.com or username" : "you@example.com"} />
-          </div>
-          {mode !== "forgot" && (
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <label className="block text-xs font-semibold uppercase text-muted-foreground">Password</label>
-                {mode === "login" && (
-                  <button type="button" onClick={() => { setMode("forgot"); setErr(""); setInfo(""); }} className="text-[10px] font-semibold text-primary hover:underline">
-                    Forgot password?
-                  </button>
-                )}
+            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Profile picture (optional)</label>
+            <div className="flex items-center gap-3">
+              <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border border-border bg-input text-[10px] text-muted-foreground">
+                {avatarDataUrl ? <img src={avatarDataUrl} alt="avatar preview" className="h-full w-full object-cover" /> : <span>No image</span>}
               </div>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="••••••" />
-              {mode === "signup" && <p className="mt-1 text-[10px] text-muted-foreground">At least 4 characters. Any password is fine.</p>}
+              <label className="flex-1 cursor-pointer rounded-full border border-dashed border-border bg-background px-3 py-2 text-center text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground">
+                {avatarDataUrl ? "Change image" : "Choose image"}
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => onPickAvatar(e.target.files?.[0] ?? null)} />
+              </label>
+              {avatarDataUrl && (
+                <button type="button" onClick={() => setAvatarDataUrl("")} className="rounded-full border border-border px-3 py-2 text-[10px] font-semibold text-muted-foreground hover:bg-accent hover:text-foreground">Remove</button>
+              )}
             </div>
-          )}
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Username</label>
+            <input value={username} onChange={e => setUsername(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. cool user" />
+            <UsernameHint status={usernameStatus} />
+            <p className="mt-1 text-[10px] text-muted-foreground">Must contain 2 to 10 letters.</p>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Gender</label>
+            <div className="grid grid-cols-3 gap-2">
+              {(["male", "female", "other"] as const).map((g) => (
+                <button type="button" key={g} onClick={() => setGender(g)}
+                  className={`rounded-lg border px-3 py-2 text-sm font-semibold capitalize transition-colors ${gender === g ? "border-primary bg-primary/15 text-primary" : "border-border bg-input text-foreground hover:bg-accent"}`}>
+                  {g}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} maxLength={255} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="you@example.com" />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Password</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="••••••" />
+            <p className="mt-1 text-[10px] text-muted-foreground">At least 4 characters. Any password is fine.</p>
+          </div>
           {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
           {info && <div className="rounded-lg bg-primary/15 px-3 py-2 text-xs text-primary">{info}</div>}
-          <button disabled={busy || (mode === "signup" && usernameStatus.state !== "ok")} type="submit" className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" style={{ background: "var(--gradient-accent, var(--primary))" }}>
-            {busy ? "..." : mode === "login" ? "Sign in" : mode === "forgot" ? "Send reset link" : "Create account"}
+          <button disabled={busy || usernameStatus.state !== "ok"} type="submit" className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" style={{ background: "var(--gradient-accent, var(--primary))" }}>
+            {busy ? "..." : "Create account"}
           </button>
         </form>
-        <div className="mt-4 text-center text-xs text-muted-foreground">
-          {mode === "forgot" ? (
-            <button onClick={() => { setMode("login"); setErr(""); setInfo(""); }} className="font-semibold text-primary hover:underline">
-              ← Back to sign in
-            </button>
-          ) : (
-            <>
-              {mode === "login" ? "New here?" : "Already have one?"}{" "}
-              <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setErr(""); setInfo(""); }} className="font-semibold text-primary hover:underline">
-                {mode === "login" ? "Create account" : "Sign in"}
-              </button>
-            </>
-          )}
+        <div className="text-center text-xs text-muted-foreground">
+          Already have one?{" "}
+          <button onClick={onSwitchSignin} className="font-semibold text-primary hover:underline">Sign in</button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ---------------- Guest ---------------- */
+function GuestDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const { loginAsGuest } = useAuth();
+  const [guestName, setGuestName] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const status = useUsernameCheck(open ? guestName : "");
+
+  async function go() {
+    setErr(""); setBusy(true);
+    try { await loginAsGuest(guestName); }
+    catch (e) { setErr(e instanceof Error ? e.message : "Guest login failed"); setBusy(false); }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm rounded-3xl">
+        <DialogHeader>
+          <DialogTitle>Continue as guest</DialogTitle>
+          <DialogDescription>Your guest profile is temporary and removed when you leave.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Pick a guest name</label>
+            <input value={guestName} onChange={(e) => setGuestName(e.target.value)} maxLength={20} placeholder="e.g. nova" className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" />
+            <UsernameHint status={status} />
+            <p className="mt-1 text-[10px] text-muted-foreground">2–10 letters.</p>
+          </div>
+          {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
+          <button onClick={go} disabled={busy} className="w-full rounded-full bg-primary px-3 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">
+            {busy ? "..." : "Enter as guest"}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ---------------- Forgot ---------------- */
+function ForgotDialog({ open, onOpenChange, onBack }: { open: boolean; onOpenChange: (v: boolean) => void; onBack: () => void }) {
+  const [email, setEmail] = useState("");
+  const [err, setErr] = useState("");
+  const [info, setInfo] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    setErr(""); setInfo(""); setBusy(true);
+    try {
+      const target = email.trim();
+      if (!target || !target.includes("@")) throw new Error("Enter the email address for your account.");
+      const { error } = await supabase.auth.resetPasswordForEmail(target, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw new Error(error.message);
+      setInfo("Reset link sent! Check your inbox.");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to send reset link");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm rounded-3xl">
+        <DialogHeader>
+          <DialogTitle>Reset your password</DialogTitle>
+          <DialogDescription>We'll email you a link to set a new password.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} maxLength={255} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="you@example.com" />
+          </div>
+          {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
+          {info && <div className="rounded-lg bg-primary/15 px-3 py-2 text-xs text-primary">{info}</div>}
+          <button disabled={busy} type="submit" className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" style={{ background: "var(--gradient-accent, var(--primary))" }}>
+            {busy ? "..." : "Send reset link"}
+          </button>
+          <button type="button" onClick={onBack} className="w-full text-center text-xs font-semibold text-muted-foreground hover:text-foreground">
+            ← Back to sign in
+          </button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
