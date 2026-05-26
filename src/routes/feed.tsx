@@ -293,17 +293,17 @@ function FeedPage() {
         {/* Center */}
         <main className="min-w-0">
           {view === "account" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><AccountPanel /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><AccountPanel /></Suspense></div>
           ) : view === "settings" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><FeedSettingsPanel /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><FeedSettingsPanel /></Suspense></div>
           ) : view === "achievements" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><AchievementsPanel /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><AchievementsPanel /></Suspense></div>
           ) : view === "leaderboard" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><LeaderboardPanel /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><LeaderboardPanel /></Suspense></div>
           ) : view === "findFriends" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><FindFriendsPanel /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><FindFriendsPanel /></Suspense></div>
           ) : view === "profile" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></div>
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></Suspense></div>
           ) : (
             <>
               <div className="mb-3 sm:mb-4 lg:hidden">
