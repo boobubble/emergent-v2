@@ -1,0 +1,1 @@
+DELETE FROM auth.users WHERE is_anonymous = true;
