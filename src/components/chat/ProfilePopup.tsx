@@ -127,7 +127,7 @@ export function ProfilePopup({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-sm overflow-hidden rounded-3xl border-border bg-card p-0 [&>button.absolute]:hidden"
+        className="max-w-sm max-h-[92vh] flex flex-col overflow-hidden rounded-3xl border-border bg-card p-0 [&>button.absolute]:hidden"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
@@ -183,7 +183,7 @@ export function ProfilePopup({
           ))}
         </div>
 
-        <div className="h-[320px] overflow-y-auto px-5 py-4 text-sm">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-sm sm:max-h-[320px]">
           {tab === "info" && (
             <ul className="space-y-2.5">
               <Row icon={<Eye className="h-4 w-4 shrink-0" />} label="Last seen" value={lastSeenLabel} />
