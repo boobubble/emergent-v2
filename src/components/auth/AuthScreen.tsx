@@ -86,7 +86,7 @@ export function AuthScreen() {
           <div className="grid h-12 w-12 place-items-center rounded-xl text-2xl font-bold text-primary-foreground" style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}>P</div>
           <div>
             <h1 className="text-xl font-bold">Palrgo</h1>
-            <p className="text-xs text-muted-foreground">{mode === "login" ? "Welcome back" : "Create your account"}</p>
+            <p className="text-xs text-muted-foreground">{mode === "login" ? "Welcome back" : mode === "forgot" ? "Reset your password" : "Create your account"}</p>
           </div>
         </div>
 
