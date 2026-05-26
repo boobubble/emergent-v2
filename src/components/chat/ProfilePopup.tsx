@@ -155,13 +155,13 @@ export function ProfilePopup({
           </h2>
           {user.bio && <p className="mx-auto mt-1 max-w-[260px] text-xs text-muted-foreground">{user.bio}</p>}
 
-          {/* Quick action chips */}
+          {/* Quick action chips - fixed height */}
           <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider">
-            <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-yellow-500"><Trophy className="h-3 w-3" /> Lv {user.level}</span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-amber-400"><Coins className="h-3 w-3" /> {user.coins ?? 0}</span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2 py-0.5 text-orange-400"><Flame className="h-3 w-3" /> {user.streak ?? 0}d</span>
-            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${user.status === "online" ? "bg-green-500/15 text-green-400" : "bg-muted-foreground/15 text-muted-foreground"}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${user.status === "online" ? "bg-green-400" : "bg-muted-foreground/60"}`} />
+            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-yellow-500/15 px-2 text-yellow-500"><Trophy className="h-3.5 w-3.5 shrink-0" /> Lv {user.level}</span>
+            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-amber-500/15 px-2 text-amber-400"><Coins className="h-3.5 w-3.5 shrink-0" /> {user.coins ?? 0}</span>
+            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-orange-500/15 px-2 text-orange-400"><Flame className="h-3.5 w-3.5 shrink-0" /> {user.streak ?? 0}d</span>
+            <span className={`inline-flex h-6 items-center gap-1 rounded-full px-2 ${user.status === "online" ? "bg-green-500/15 text-green-400" : "bg-muted-foreground/15 text-muted-foreground"}`}>
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${user.status === "online" ? "bg-green-400" : "bg-muted-foreground/60"}`} />
               {user.status === "online" ? "Online" : "Offline"}
             </span>
           </div>
