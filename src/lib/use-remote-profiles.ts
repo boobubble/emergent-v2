@@ -84,7 +84,7 @@ export function useRemoteProfiles() {
     load();
 
     const channel = supabase
-      .channel(`profiles-directory`)
+      .channel(`profiles-directory-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, (payload) => {
         setRawProfiles(prev => {
           const next = { ...prev };
@@ -113,6 +113,13 @@ export function useRemoteProfiles() {
       if (presenceChannel) {
         await supabase.removeChannel(presenceChannel);
         presenceChannel = null;
+      }
+      // In React StrictMode the effect remounts; remove any stale instance
+      // with the same topic so .on() doesn't throw "after subscribe()".
+      for (const c of supabase.getChannels()) {
+        if (c.topic === `realtime:${PRESENCE_CHANNEL}`) {
+          await supabase.removeChannel(c);
+        }
       }
       const ch = supabase.channel(PRESENCE_CHANNEL, {
         config: { presence: { key: userId } },
