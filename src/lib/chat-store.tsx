@@ -785,8 +785,9 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
             }
           }
         }
+        rtLog(msg.channelId.startsWith("dm:") ? "dm" : "msg", "in", `${msg.channelId} · ${msg.text.slice(0, 30)}`);
       })
-      .subscribe();
+      .subscribe(status => rtLog("ws", status, "messages"));
     return () => { supabase.removeChannel(channel); };
   }, [authUserId]);
 
