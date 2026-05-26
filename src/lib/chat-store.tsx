@@ -724,8 +724,8 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   useEffect(() => {
     if (!authUserId) return;
     let cancelled = false;
-    const channelsToFetch = new Set<string>(["lobby"]);
-    if (isRemoteChannel(state.activeChannel, authUserId) && state.activeChannel !== "lobby") {
+    const channelsToFetch = new Set<string>(["lobby", "games"]);
+    if (isRemoteChannel(state.activeChannel, authUserId) && !channelsToFetch.has(state.activeChannel)) {
       channelsToFetch.add(state.activeChannel);
     }
     (async () => {
