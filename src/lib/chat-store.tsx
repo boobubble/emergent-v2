@@ -1180,7 +1180,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       } else {
         const room = next.rooms[channelId];
         if (room) {
-          const candidates = room.members.filter(id => next.users[id]?.isBot && id !== "bot-gamebot");
+          const candidates = room.id === "games" ? [] : room.members.filter(id => next.users[id]?.isBot && id !== "bot-gamebot");
           if (candidates.length && Math.random() > 0.4) {
             const author = candidates[Math.floor(Math.random() * candidates.length)];
             const reply = pickBotReply(trimmed);
