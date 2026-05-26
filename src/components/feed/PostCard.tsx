@@ -240,7 +240,7 @@ export const PostCard = memo(function PostCard({
               </div>
             );
           })}
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <input
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
@@ -248,6 +248,16 @@ export const PostCard = memo(function PostCard({
               placeholder="Write a comment…"
               className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
             />
+            <Popover>
+              <PopoverTrigger asChild>
+                <button type="button" className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Add emoji">
+                  <Smile className="h-4 w-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-auto p-0">
+                <EmojiPicker onPick={(e) => setCommentText((t) => t + e)} />
+              </PopoverContent>
+            </Popover>
             <button onClick={addComment} disabled={sending || !commentText.trim()} className="rounded-full bg-primary p-2 text-primary-foreground disabled:opacity-50">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
