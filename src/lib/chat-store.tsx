@@ -1189,6 +1189,9 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       return badged.state;
     });
     if (outgoingRemotes.length && authUserId) {
+      for (const out of outgoingRemotes) {
+        rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "out", `${out.channelId} · ${out.text.slice(0, 30)}`);
+      }
       void supabase.from("messages").insert(
         outgoingRemotes.map(out => ({
           id: out.id,
@@ -1199,7 +1202,9 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           attachment: out.attachment as unknown as never,
           reply_to_id: out.replyToId,
         }))
-      ).then(({ error }) => { if (error) console.error("send failed", error); });
+      ).then(({ error }) => {
+        if (error) { console.error("send failed", error); rtLog("error", "send-failed", error.message); }
+      });
     }
     setReplyingTo(null);
   }, [authUserId, isGuest]);
