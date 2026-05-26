@@ -18,7 +18,7 @@ export interface RemoteProfile {
   gender: string | null;
 }
 
-const ONLINE_WINDOW_MS = 2 * 60 * 1000; // 2 minutes
+const ONLINE_WINDOW_MS = 75 * 1000; // 75s — slightly longer than 1 missed 25s heartbeat
 const PRESENCE_CHANNEL = "online-users-presence";
 
 function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User {
