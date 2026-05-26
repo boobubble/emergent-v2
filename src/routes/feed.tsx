@@ -391,7 +391,11 @@ function FeedPage() {
         <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
 
-      <FeedDMDock key={dmOpenKey} meId={meId} profiles={profiles} initialOpen={dmOpenKey > 0} />
+      {dmOpenKey > 0 && (
+        <Suspense fallback={null}>
+          <FeedDMDock key={dmOpenKey} meId={meId} profiles={profiles} initialOpen={true} />
+        </Suspense>
+      )}
     </div>
   );
 }
