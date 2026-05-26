@@ -98,19 +98,7 @@ function FeedPage() {
   // Daily streak ping on mount
   useEffect(() => {
     if (!meId) return;
-    (async () => {
-      const today = new Date().toISOString().slice(0, 10);
-      const { data: p } = await supabase.from("profiles").select("last_active_day, streak, longest_streak").eq("id", meId).maybeSingle();
-      if (!p) return;
-      if (p.last_active_day === today) return;
-      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-      const next = p.last_active_day === yesterday ? (p.streak ?? 0) + 1 : 1;
-      await supabase.from("profiles").update({
-        last_active_day: today,
-        streak: next,
-        longest_streak: Math.max(p.longest_streak ?? 0, next),
-      }).eq("id", meId);
-    })();
+    void pingDailyStreak().catch((e) => console.error("streak ping failed", e));
   }, [meId]);
 
   // Load friendships
