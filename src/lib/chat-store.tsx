@@ -901,6 +901,42 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
 
 
 
+  // Expose a logout hook: when the starter of a Ludo game signs out,
+  // automatically post a stop message to each affected channel so all
+  // other players see the game end and clear it from their state.
+  const stateRef = useRef(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    (window as unknown as { __lovableEndMyLudoGames?: () => Promise<void> }).__lovableEndMyLudoGames = async () => {
+      const cur = stateRef.current;
+      const myName = cur.me?.name;
+      if (!myName || !authUserId) return;
+      const channels = Object.entries(cur.games).filter(
+        ([, g]) => g?.type === "ludo" && g?.data?.players?.[0]?.name === myName
+      ).map(([ch]) => ch);
+      if (channels.length === 0) return;
+      await Promise.all(channels.map(async ch => {
+        const id = newUuid();
+        seenRemoteMsgIds.current.add(id);
+        const attachment = { __gameState: { channelId: ch, type: null, data: null } } as unknown as Attachment;
+        try {
+          await supabase.from("messages").insert({
+            id, channel_id: ch, author_id: authUserId,
+            text: `🛑 Ludo game ended — **@${myName}** (host) left the chat.`,
+            kind: "game", attachment: attachment as unknown as Record<string, unknown>, reply_to_id: null,
+          });
+        } catch (e) {
+          console.error("end-ludo-on-logout failed", e);
+        }
+      }));
+    };
+    return () => {
+      try { delete (window as unknown as { __lovableEndMyLudoGames?: unknown }).__lovableEndMyLudoGames; } catch {}
+    };
+  }, [authUserId]);
+
+
   // SpamBot — tracks recent sends per channel to detect flooding / duplicates / shouting
   const spamHistoryRef = useRef<Record<string, { ts: number; text: string }[]>>({});
   const spamOffencesRef = useRef<Record<string, { count: number; until: number }>>({});
