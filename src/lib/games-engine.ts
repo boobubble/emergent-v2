@@ -69,7 +69,7 @@ export function applyMove(state: LudoState, seat: number, tokenIdx: number): Mov
   tokens[String(seat)][tokenIdx] = newPos;
 
   // Capture: any opponent token sitting on newPos (and not at start or home) goes back to 0.
-  let captured: { seat: number; tokenIdx: number } | null = null;
+  let captured = null as { seat: number; tokenIdx: number } | null;
   if (newPos > 0 && newPos < LUDO_TRACK_LEN) {
     for (const k of Object.keys(tokens)) {
       const s = Number(k);
