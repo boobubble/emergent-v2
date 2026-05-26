@@ -167,13 +167,13 @@ export function ProfilePopup({
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - fixed height */}
         <div className="flex gap-1 border-b border-border bg-card px-3">
           {tabs.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`relative px-3 py-2 text-xs font-semibold transition-colors ${
+              className={`relative h-10 w-[68px] shrink-0 text-xs font-semibold transition-colors ${
                 tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
