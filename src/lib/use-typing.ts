@@ -25,12 +25,13 @@ export function useTyping(channelId: string | null, me: { id: string; name: stri
       const pid = p?.id;
       const pname = p?.name;
       if (!pid || !pname || pid === me.id) return;
+      rtLog("typing", "in", `${pname} @ ${channelId}`);
       setTypers(prev => {
         const others = prev.filter(t => t.id !== pid);
         return [...others, { id: pid, name: pname, ts: Date.now() }];
       });
     });
-    ch.subscribe();
+    ch.subscribe(status => rtLog("ws", status, `typing:${channelId}`));
     channelRef.current = ch;
     return () => {
       supabase.removeChannel(ch);
