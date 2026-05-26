@@ -84,7 +84,7 @@ export function useRemoteProfiles() {
     load();
 
     const channel = supabase
-      .channel(`profiles-directory-${Math.random().toString(36).slice(2)}`)
+      .channel(`profiles-directory`)
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, (payload) => {
         setRawProfiles(prev => {
           const next = { ...prev };
