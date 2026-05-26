@@ -268,6 +268,16 @@ export function ProfilePopup({
             >
               <MessageCircle className="h-4 w-4 shrink-0" /> Message
             </button>
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent("palrgo:mention", { detail: { name: user.name } }));
+                onOpenChange(false);
+              }}
+              title={`Mention @${user.name} in chat`}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+            >
+              <AtSign className="h-4 w-4 shrink-0" />
+            </button>
             {friend ? (
               <button onClick={() => removeFriend(userId)} className="inline-flex h-10 w-[110px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-border bg-card text-xs font-semibold hover:bg-white/5">
                 <UserMinus className="h-4 w-4 shrink-0" /> Friends
