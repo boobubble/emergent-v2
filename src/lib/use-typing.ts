@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { rtLog } from "@/lib/realtime-debug";
 
 export interface Typer { id: string; name: string; ts: number }
 
@@ -24,12 +25,13 @@ export function useTyping(channelId: string | null, me: { id: string; name: stri
       const pid = p?.id;
       const pname = p?.name;
       if (!pid || !pname || pid === me.id) return;
+      rtLog("typing", "in", `${pname} @ ${channelId}`);
       setTypers(prev => {
         const others = prev.filter(t => t.id !== pid);
         return [...others, { id: pid, name: pname, ts: Date.now() }];
       });
     });
-    ch.subscribe();
+    ch.subscribe(status => rtLog("ws", status, `typing:${channelId}`));
     channelRef.current = ch;
     return () => {
       supabase.removeChannel(ch);

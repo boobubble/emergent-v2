@@ -3,6 +3,7 @@ import type { User, Message, Room, GameState, Attachment } from "./chat-types";
 import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
+import { rtLog } from "./realtime-debug";
 import { useRemoteProfiles } from "./use-remote-profiles";
 import { playDmPing, playMentionPing } from "./sounds";
 import gamebotImg from "@/assets/bots/gamebot.png";
@@ -679,6 +680,28 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
 
 
 
+  // Bump this to trigger a re-fetch of the active channel's messages.
+  const [resyncTick, setResyncTick] = useState(0);
+
+  // When the tab becomes visible again or the network reconnects, resync
+  // missed messages. Realtime can drop events while a tab is suspended
+  // (mobile Safari, throttled background tabs) so we recover on resume.
+  useEffect(() => {
+    if (!authUserId) return;
+    const bump = (reason: string) => {
+      rtLog("channel", "resync", reason);
+      setResyncTick(t => t + 1);
+    };
+    const onVisible = () => { if (document.visibilityState === "visible") bump("visible"); };
+    const onOnline = () => bump("online");
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onOnline);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [authUserId]);
+
   // Fetch existing remote messages for lobby + the active remote channel
   useEffect(() => {
     if (!authUserId) return;
@@ -720,7 +743,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       }
     })();
     return () => { cancelled = true; };
-  }, [authUserId, state.activeChannel]);
+  }, [authUserId, state.activeChannel, resyncTick]);
 
   // Realtime subscription to new messages (RLS scopes us to lobby + our DMs)
   useEffect(() => {
@@ -784,8 +807,9 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
             }
           }
         }
+        rtLog(msg.channelId.startsWith("dm:") ? "dm" : "msg", "in", `${msg.channelId} · ${msg.text.slice(0, 30)}`);
       })
-      .subscribe();
+      .subscribe(status => rtLog("ws", status, "messages"));
     return () => { supabase.removeChannel(channel); };
   }, [authUserId]);
 
@@ -805,7 +829,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           return { ...prev, [row.channel_id]: { ...ch, [row.user_id]: ts } };
         });
       })
-      .subscribe();
+      .subscribe(status => rtLog("ws", status, "dm-reads"));
     return () => { supabase.removeChannel(ch); };
   }, [authUserId]);
 
@@ -1165,6 +1189,9 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       return badged.state;
     });
     if (outgoingRemotes.length && authUserId) {
+      for (const out of outgoingRemotes) {
+        rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "out", `${out.channelId} · ${out.text.slice(0, 30)}`);
+      }
       void supabase.from("messages").insert(
         outgoingRemotes.map(out => ({
           id: out.id,
@@ -1175,7 +1202,9 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           attachment: out.attachment as unknown as never,
           reply_to_id: out.replyToId,
         }))
-      ).then(({ error }) => { if (error) console.error("send failed", error); });
+      ).then(({ error }) => {
+        if (error) { console.error("send failed", error); rtLog("error", "send-failed", error.message); }
+      });
     }
     setReplyingTo(null);
   }, [authUserId, isGuest]);

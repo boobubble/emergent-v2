@@ -15,6 +15,9 @@ import { useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
 import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
+import { useSessionChangeDetector } from "@/lib/use-session-change-detector";
+import { RealtimeDebugOverlay } from "@/components/RealtimeDebugOverlay";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 
@@ -140,13 +143,16 @@ function RootComponent() {
 function AuthGate() {
   const { user, ready } = useAuth();
   usePresenceHeartbeat();
+  useSessionChangeDetector();
   if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
-  if (!user) return <AuthScreen />;
+  if (!user) return (<><AuthScreen /><Sonner /><RealtimeDebugOverlay /></>);
   return (
     <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
       <FeedPrefsProvider>
         <FaviconSwitcher />
         <Outlet />
+        <Sonner />
+        <RealtimeDebugOverlay />
       </FeedPrefsProvider>
     </ChatProvider>
   );
