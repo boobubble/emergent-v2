@@ -297,7 +297,7 @@ function ForgotDialog({ open, onOpenChange, onBack }: { open: boolean; onOpenCha
       <DialogContent className="max-w-sm rounded-3xl">
         <DialogHeader>
           <DialogTitle>Reset your password</DialogTitle>
-          <DialogDescription>We'll email you a link to set a new password.</DialogDescription>
+          <DialogDescription>Enter the email address linked to your account — usernames can't be used here.</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
