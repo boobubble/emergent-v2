@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedRouteImport } from './routes/feed'
@@ -19,6 +20,11 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/find-friends'
     | '/leaderboard'
+    | '/reset-password'
     | '/feed/$slug'
     | '/u/$username'
     | '/api/public/guest-cleanup'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/find-friends'
     | '/leaderboard'
+    | '/reset-password'
     | '/feed/$slug'
     | '/u/$username'
     | '/api/public/guest-cleanup'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/find-friends'
     | '/leaderboard'
+    | '/reset-password'
     | '/feed/$slug'
     | '/u/$username'
     | '/api/public/guest-cleanup'
@@ -142,12 +154,20 @@ export interface RootRouteChildren {
   FeedRoute: typeof FeedRouteWithChildren
   FindFriendsRoute: typeof FindFriendsRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   UUsernameRoute: typeof UUsernameRoute
   ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leaderboard': {
       id: '/leaderboard'
       path: '/leaderboard'
@@ -231,6 +251,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedRoute: FeedRouteWithChildren,
   FindFriendsRoute: FindFriendsRoute,
   LeaderboardRoute: LeaderboardRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   UUsernameRoute: UUsernameRoute,
   ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,
 }

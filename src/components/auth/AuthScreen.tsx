@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-store";
 import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check";
+import { supabase } from "@/integrations/supabase/client";
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
   if (status.state === "idle") return null;
@@ -13,7 +14,7 @@ function UsernameHint({ status }: { status: UsernameStatus }) {
 
 export function AuthScreen() {
   const { login, signup, loginAsGuest } = useAuth();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -44,6 +45,14 @@ export function AuthScreen() {
     try {
       if (mode === "login") {
         await login(email, password);
+      } else if (mode === "forgot") {
+        const target = email.trim();
+        if (!target || !target.includes("@")) throw new Error("Enter the email address for your account.");
+        const { error } = await supabase.auth.resetPasswordForEmail(target, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw new Error(error.message);
+        setInfo("Reset link sent! Check your inbox.");
       } else {
         const letterCount = username.trim().replace(/[^a-zA-Z]/g, "").length;
         if (letterCount < 2 || letterCount > 10) {
@@ -77,7 +86,7 @@ export function AuthScreen() {
           <div className="grid h-12 w-12 place-items-center rounded-xl text-2xl font-bold text-primary-foreground" style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}>P</div>
           <div>
             <h1 className="text-xl font-bold">Palrgo</h1>
-            <p className="text-xs text-muted-foreground">{mode === "login" ? "Welcome back" : "Create your account"}</p>
+            <p className="text-xs text-muted-foreground">{mode === "login" ? "Welcome back" : mode === "forgot" ? "Reset your password" : "Create your account"}</p>
           </div>
         </div>
 
@@ -182,21 +191,39 @@ export function AuthScreen() {
             <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">{mode === "login" ? "Email or username" : "Email"}</label>
             <input type={mode === "login" ? "text" : "email"} value={email} onChange={e => setEmail(e.target.value)} maxLength={255} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder={mode === "login" ? "you@example.com or username" : "you@example.com"} />
           </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="••••••" />
-          </div>
+          {mode !== "forgot" && (
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-xs font-semibold uppercase text-muted-foreground">Password</label>
+                {mode === "login" && (
+                  <button type="button" onClick={() => { setMode("forgot"); setErr(""); setInfo(""); }} className="text-[10px] font-semibold text-primary hover:underline">
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="••••••" />
+              {mode === "signup" && <p className="mt-1 text-[10px] text-muted-foreground">At least 4 characters. Any password is fine.</p>}
+            </div>
+          )}
           {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
           {info && <div className="rounded-lg bg-primary/15 px-3 py-2 text-xs text-primary">{info}</div>}
           <button disabled={busy || (mode === "signup" && usernameStatus.state !== "ok")} type="submit" className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" style={{ background: "var(--gradient-accent, var(--primary))" }}>
-            {busy ? "..." : mode === "login" ? "Sign in" : "Create account"}
+            {busy ? "..." : mode === "login" ? "Sign in" : mode === "forgot" ? "Send reset link" : "Create account"}
           </button>
         </form>
         <div className="mt-4 text-center text-xs text-muted-foreground">
-          {mode === "login" ? "New here?" : "Already have one?"}{" "}
-          <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setErr(""); setInfo(""); }} className="font-semibold text-primary hover:underline">
-            {mode === "login" ? "Create account" : "Sign in"}
-          </button>
+          {mode === "forgot" ? (
+            <button onClick={() => { setMode("login"); setErr(""); setInfo(""); }} className="font-semibold text-primary hover:underline">
+              ← Back to sign in
+            </button>
+          ) : (
+            <>
+              {mode === "login" ? "New here?" : "Already have one?"}{" "}
+              <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setErr(""); setInfo(""); }} className="font-semibold text-primary hover:underline">
+                {mode === "login" ? "Create account" : "Sign in"}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
