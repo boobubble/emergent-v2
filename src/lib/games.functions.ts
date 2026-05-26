@@ -169,6 +169,19 @@ async function bumpProfile(userId: string, addXp: number, addCoins: number) {
 
 // ---------- public server fns ----------
 
+// Returns the user's currently-open game (waiting or active) if one exists.
+async function findUserOpenGame(userId: string) {
+  const { data: rows } = await supabaseAdmin
+    .from("game_players")
+    .select("game_id, games!inner(id, status, game_type, visibility)")
+    .eq("user_id", userId);
+  type Row = { games: { id: string; status: string; game_type: GameType; visibility: string } };
+  const open = ((rows ?? []) as unknown as Row[]).find(
+    r => r.games.status === "waiting" || r.games.status === "active",
+  );
+  return open ? open.games : null;
+}
+
 export const createLudoMatch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -179,17 +192,13 @@ export const createLudoMatch = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    // 60s cooldown: refuse if user created another game in last 60s that's still waiting
-    const cooldownStart = new Date(Date.now() - 60_000).toISOString();
-    const { data: recent } = await supabaseAdmin
-      .from("games")
-      .select("id")
-      .eq("created_by", userId)
-      .eq("status", "waiting")
-      .gte("created_at", cooldownStart)
-      .limit(1);
-    if (recent && recent.length) {
-      return { gameId: recent[0].id, reused: true };
+    // Block if user already has an open game. If still waiting, reuse it; if active, refuse.
+    const open = await findUserOpenGame(userId);
+    if (open) {
+      if (open.status === "active") {
+        throw new Error("You already have a game in progress. Finish or leave it first.");
+      }
+      return { gameId: open.id, reused: true };
     }
     const { data: game, error } = await supabaseAdmin
       .from("games")
@@ -203,7 +212,6 @@ export const createLudoMatch = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error || !game) throw new Error(error?.message || "Failed to create game");
-    // Add creator as seat 0
     await supabaseAdmin.from("game_players").insert({
       game_id: game.id,
       user_id: userId,
@@ -221,7 +229,13 @@ export const joinQuickMatch = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    // Find an open public game I haven't already joined
+    const open = await findUserOpenGame(userId);
+    if (open) {
+      if (open.status === "active") {
+        throw new Error("You already have a game in progress. Finish or leave it first.");
+      }
+      return { gameId: open.id, created: false };
+    }
     const { data: candidates } = await supabaseAdmin
       .from("games")
       .select("id, created_by")
@@ -234,14 +248,13 @@ export const joinQuickMatch = createServerFn({ method: "POST" })
     for (const c of candidates ?? []) {
       const { data: existing } = await supabaseAdmin
         .from("game_players")
-        .select("seat")
+        .select("seat, user_id")
         .eq("game_id", c.id);
       if (!existing) continue;
       const taken = new Set(existing.map(p => p.seat));
       const needed = LUDO_SEATS_FOR_TYPE[data.type] ?? 2;
       if (existing.length >= needed) continue;
-      if (existing.some(p => (p as { user_id?: string }).user_id === userId)) continue;
-      // Find next free seat
+      if (existing.some(p => p.user_id === userId)) continue;
       let seat = -1;
       for (let s = 0; s < needed; s++) if (!taken.has(s)) { seat = s; break; }
       if (seat < 0) continue;
@@ -256,7 +269,6 @@ export const joinQuickMatch = createServerFn({ method: "POST" })
       await maybeStartGame(c.id);
       return { gameId: c.id, created: false };
     }
-    // Otherwise create a new public match
     const { data: game, error } = await supabaseAdmin
       .from("games")
       .insert({
