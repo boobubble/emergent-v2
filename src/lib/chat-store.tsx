@@ -743,7 +743,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       }
     })();
     return () => { cancelled = true; };
-  }, [authUserId, state.activeChannel]);
+  }, [authUserId, state.activeChannel, resyncTick]);
 
   // Realtime subscription to new messages (RLS scopes us to lobby + our DMs)
   useEffect(() => {
