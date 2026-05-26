@@ -24,7 +24,7 @@ export function dmChannelFor(meId: string | null, peerId: string): string {
   return "dm:" + [meId, peerId].sort().join(":");
 }
 function isRemoteChannel(channelId: string, meId: string | null): boolean {
-  if (channelId === "lobby") return true;
+  if (channelId === "lobby" || channelId === "games") return true;
   if (!meId) return false;
   return channelId.startsWith("dm:") && channelId.includes(meId);
 }
