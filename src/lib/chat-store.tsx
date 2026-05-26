@@ -742,6 +742,11 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   }, [authUserId, state.activeChannel, state.messages]);
 
 
+
+  // SpamBot — tracks recent sends per channel to detect flooding / duplicates / shouting
+  const spamHistoryRef = useRef<Record<string, { ts: number; text: string }[]>>({});
+  const spamOffencesRef = useRef<Record<string, { count: number; until: number }>>({});
+
   const setActive = useCallback((channelId: string) => {
     setState(s => ({ ...s, activeChannel: channelId }));
     setReplyingTo(null);
