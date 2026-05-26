@@ -270,9 +270,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           title={viewMode === "friends" ? "Show members" : "Show friends"}
           aria-label="Toggle friends list"
           aria-pressed={viewMode === "friends"}
-          className={`relative grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-white/5 hover:text-foreground ${viewMode === "friends" ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
+          className={`relative grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-white/5 hover:text-foreground ${viewMode === "friends" ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
         >
-          <Users2 className="h-4 w-4" />
+          <Users2 className="h-5 w-5" />
           {friendIds.length > 0 && (
             <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
               {friendIds.length}
@@ -280,15 +280,16 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           )}
         </button>
 
-        <Link
-          to="/feed"
-          search={{ tab: "account" } as never}
-          title="Profile settings"
+        <a
+          href="/feed?tab=account"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Profile settings (opens in new tab)"
           aria-label="Profile settings"
-          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+          className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
         >
-          <UserCog className="h-4 w-4" />
-        </Link>
+          <UserCog className="h-5 w-5" />
+        </a>
       </div>
 
       <div className="px-5 pt-3">
