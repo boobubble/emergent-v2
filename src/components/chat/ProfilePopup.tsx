@@ -127,7 +127,7 @@ export function ProfilePopup({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-sm overflow-hidden rounded-3xl border-border bg-card p-0 [&>button.absolute]:hidden"
+        className="max-w-sm max-h-[92vh] flex flex-col overflow-hidden rounded-3xl border-border bg-card p-0 [&>button.absolute]:hidden"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
