@@ -204,7 +204,7 @@ export function ProfilePopup({
             </ul>
           )}
 
-          {tab === "about" && (
+          {activeTab === "about" && (
             <div className="space-y-3">
               <p className="text-foreground/90">{user.bio || <span className="text-muted-foreground italic">No bio yet.</span>}</p>
               {(user.badges || []).length > 0 && (
@@ -225,7 +225,7 @@ export function ProfilePopup({
             </div>
           )}
 
-          {tab === "friends" && (
+          {activeTab === "friends" && (
             <div className="text-center">
               <div className="text-3xl font-bold text-primary">{friendCount ?? (user.isBot ? 0 : "…")}</div>
               <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">Friends</div>
@@ -239,7 +239,7 @@ export function ProfilePopup({
             </div>
           )}
 
-          {tab === "activity" && (
+          {activeTab === "activity" && (
             <div className="space-y-2">
               {recentPosts.length === 0 ? (
                 <p className="text-center text-xs text-muted-foreground">No public feed activity yet.</p>
@@ -263,7 +263,7 @@ export function ProfilePopup({
             </div>
           )}
 
-          {tab === "daily" && (
+          {activeTab === "daily" && (
             <DailyProgress data={daily} onClose={() => onOpenChange(false)} />
           )}
         </div>
