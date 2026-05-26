@@ -802,6 +802,31 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-gamebot", text: `🚪 You were kicked. Re-entry in ${Math.ceil(secs/60)}m ${secs%60}s.`, ts: now, kind: "system" }] },
         };
       }
+      // If muted in lobby, restrict to DMs with existing friends only
+      const lobbyMod = s.moderation?.["lobby"]?.me;
+      if (lobbyMod?.mutedUntil && lobbyMod.mutedUntil > now && channelId !== "lobby") {
+        const secs = Math.ceil((lobbyMod.mutedUntil - now) / 1000);
+        const friends = s.me.friends ?? [];
+        if (channelId.startsWith("dm:")) {
+          const parts = channelId.split(":");
+          const meUid = authUserId || "me";
+          const otherId = parts[1] === meUid ? parts[2] : parts[1];
+          if (!friends.includes(otherId)) {
+            const sysId = uid();
+            return {
+              ...s,
+              messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-spam", text: `🔇 You're muted (${Math.ceil(secs/60)}m left). While muted you can only DM users on your friends list.`, ts: now, kind: "system" }] },
+            };
+          }
+        } else {
+          const sysId = uid();
+          return {
+            ...s,
+            messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-spam", text: `🔇 You're muted in the lobby. Public chat is paused — DM a friend instead.`, ts: now, kind: "system" }] },
+          };
+        }
+      }
+
       // SpamBot — only in public rooms, skip commands and DMs
       if (room && !isCmd && !channelId.startsWith("dm:")) {
         const hist = (spamHistoryRef.current[channelId] || []).filter(h => now - h.ts < 10_000);

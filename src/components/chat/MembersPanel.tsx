@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2 } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, VolumeX } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
@@ -414,10 +414,22 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   }) {
     const u = usersById[id];
     if (!u) return null;
+    const lobbyMod = state.moderation?.["lobby"]?.[id];
+    const muted = !!(lobbyMod?.mutedUntil && lobbyMod.mutedUntil > Date.now());
     return (
       <div className="group flex w-full items-center gap-2 rounded-xl px-2 py-1 transition-colors hover:bg-white/5">
         <UserMenu userId={u.id} username={u.name}>
-          <Avatar user={u} size={32} />
+          <div className="relative">
+            <Avatar user={u} size={32} />
+            {muted && (
+              <span
+                title="Muted in lobby"
+                className="absolute -bottom-0.5 -left-0.5 grid h-4 w-4 place-items-center rounded-full bg-destructive text-destructive-foreground shadow"
+              >
+                <VolumeX className="h-2.5 w-2.5" />
+              </span>
+            )}
+          </div>
         </UserMenu>
         <UserMenu userId={u.id} username={u.name}>
           <div className="min-w-0 flex-1 leading-tight">
@@ -425,14 +437,16 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               {u.name}
               <NameEmojiBadge user={u} />
               {ICONS[role]}
+              {muted && <VolumeX className="h-3 w-3 text-destructive" />}
             </div>
             <div className="truncate text-[10px] text-muted-foreground">
-              {u.isBot ? "Bot" : u.isGuest ? "Guest" : isOnline(u.id) ? "Online" : "Offline"}
+              {muted ? "Muted" : u.isBot ? "Bot" : u.isGuest ? "Guest" : isOnline(u.id) ? "Online" : "Offline"}
             </div>
 
 
           </div>
         </UserMenu>
+
         {id !== "me" && (
           <button
             onClick={onClick}
