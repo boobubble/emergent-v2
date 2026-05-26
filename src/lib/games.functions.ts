@@ -52,7 +52,7 @@ async function maybeStartGame(gameId: string) {
       started_at: new Date().toISOString(),
       current_turn_seat: 0,
       turn_started_at: new Date().toISOString(),
-      state: state as unknown as Record<string, unknown>,
+      state: state as never,
     })
     .eq("id", gameId);
   // Notify other players
