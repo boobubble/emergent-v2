@@ -14,6 +14,7 @@ import { AuthScreen } from "@/components/auth/AuthScreen";
 import { useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
+import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
 
 import appCss from "../styles.css?url";
 
@@ -138,6 +139,7 @@ function RootComponent() {
 
 function AuthGate() {
   const { user, ready } = useAuth();
+  usePresenceHeartbeat();
   if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
   if (!user) return <AuthScreen />;
   return (
