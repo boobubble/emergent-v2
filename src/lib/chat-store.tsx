@@ -794,7 +794,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   useEffect(() => {
     if (!authUserId) return;
     const ch = supabase
-      .channel("palrgo-dm-reads")
+      .channel(`palrgo-dm-reads-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "dm_reads" }, (payload) => {
         const row = (payload.new ?? payload.old) as { user_id: string; channel_id: string; last_read_at: string } | null;
         if (!row) return;
