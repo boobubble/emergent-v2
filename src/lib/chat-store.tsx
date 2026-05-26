@@ -138,6 +138,7 @@ const SEED_BOTS: User[] = [
   { id: "bot-dig", name: "DigBot", avatarColor: AVATAR_COLORS[6], avatarUrl: digbotImg, status: "online", isBot: true, xp: 1560, level: 14, bio: bioFor("bot-dig", "⛏️ Try !dig"), streak: 7, longestStreak: 18, messageCount: 410, badges: ["first_message","chatterbox","level_5","level_10","streak_3","streak_7","gamer"] },
   { id: "bot-fish", name: "FishBot", avatarColor: AVATAR_COLORS[2], avatarUrl: fishbotImg, status: "online", isBot: true, xp: 1320, level: 13, bio: bioFor("bot-fish", "🎣 Try !fish"), streak: 4, longestStreak: 15, messageCount: 360, badges: ["first_message","chatterbox","level_5","level_10","streak_3","gamer"] },
   { id: "bot-wine", name: "WineBot", avatarColor: AVATAR_COLORS[4], avatarUrl: wineImg, status: "online", isBot: true, xp: 1100, level: 11, bio: bioFor("bot-wine", "🍷 Try !wine"), streak: 3, longestStreak: 10, messageCount: 280, badges: ["first_message","chatterbox","level_5","level_10","streak_3"] },
+  { id: "bot-spam", name: "SpamBot", avatarColor: "oklch(0.62 0.22 25)", avatarUrl: spambotImg, status: "online", isBot: true, xp: 3200, level: 22, bio: bioFor("bot-spam", "🛑 Anti-spam guardian"), streak: 30, longestStreak: 99, messageCount: 800, badges: ["first_message","chatterbox","veteran","level_5","level_10","level_25"] },
 ];
 
 function botHelpReply(botId: string, botName: string): string {
