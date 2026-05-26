@@ -184,6 +184,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     const wasGuest = user?.isGuest === true;
+    // End any Ludo games this user is hosting so other players aren't stuck.
+    try {
+      const endFn = (window as unknown as { __lovableEndMyLudoGames?: () => Promise<void> }).__lovableEndMyLudoGames;
+      if (typeof endFn === "function") await endFn();
+    } catch (e) { console.error("end-ludo-on-logout failed", e); }
     if (wasGuest) {
       try { await deleteGuestAccount(); } catch (e) { console.error("Guest cleanup failed", e); }
     }
