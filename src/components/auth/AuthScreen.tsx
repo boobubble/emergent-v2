@@ -45,6 +45,14 @@ export function AuthScreen() {
     try {
       if (mode === "login") {
         await login(email, password);
+      } else if (mode === "forgot") {
+        const target = email.trim();
+        if (!target || !target.includes("@")) throw new Error("Enter the email address for your account.");
+        const { error } = await supabase.auth.resetPasswordForEmail(target, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw new Error(error.message);
+        setInfo("Reset link sent! Check your inbox.");
       } else {
         const letterCount = username.trim().replace(/[^a-zA-Z]/g, "").length;
         if (letterCount < 2 || letterCount > 10) {
