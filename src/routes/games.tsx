@@ -108,10 +108,10 @@ function GamesLobby({ userId, onOpenGame }: { userId: string; onOpenGame: (id: s
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  async function handleStartPrivate() {
+  async function handleStartPrivate(type: "ludo_1v1" | "ludo_4p") {
     setBusy(true);
     try {
-      const { gameId } = await create({ data: { type: "ludo_1v1", visibility: "private" } });
+      const { gameId } = await create({ data: { type, visibility: "private" } });
       setInvitingGameId(gameId);
     } catch (e) {
       toast.error((e as Error).message);
@@ -141,7 +141,7 @@ function GamesLobby({ userId, onOpenGame }: { userId: string; onOpenGame: (id: s
 
       <div className="mx-auto max-w-3xl space-y-6 px-4 pt-5">
         {/* Quick actions */}
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <button
             onClick={handleQuickMatch}
             disabled={busy}
@@ -154,17 +154,29 @@ function GamesLobby({ userId, onOpenGame }: { userId: string; onOpenGame: (id: s
             </div>
           </button>
           <button
-            onClick={handleStartPrivate}
+            onClick={() => handleStartPrivate("ludo_1v1")}
             disabled={busy}
             className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition-all hover:scale-[1.02] hover:border-primary disabled:opacity-50"
           >
             <div className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-accent-foreground"><Users className="h-6 w-6" /></div>
             <div>
-              <div className="font-bold">Invite a Friend</div>
-              <div className="text-xs text-muted-foreground">Private 1v1 — share with anyone</div>
+              <div className="font-bold">Invite · 2 Players</div>
+              <div className="text-xs text-muted-foreground">Private 1v1 with a friend</div>
+            </div>
+          </button>
+          <button
+            onClick={() => handleStartPrivate("ludo_4p")}
+            disabled={busy}
+            className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition-all hover:scale-[1.02] hover:border-primary disabled:opacity-50"
+          >
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-accent-foreground"><Users className="h-6 w-6" /></div>
+            <div>
+              <div className="font-bold">Invite · 4 Players</div>
+              <div className="text-xs text-muted-foreground">Private 4-player Ludo party</div>
             </div>
           </button>
         </section>
+
 
         {/* Active / recent games */}
         <section>
