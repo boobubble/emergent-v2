@@ -160,7 +160,7 @@ export function useRemoteProfiles() {
   // Re-derive freshness periodically so stale "online" rows flip to offline
   // without needing another realtime event.
   useEffect(() => {
-    const id = window.setInterval(() => setTick(t => t + 1), 30_000);
+    const id = window.setInterval(() => setTick(t => t + 1), 10_000);
     return () => window.clearInterval(id);
   }, []);
 
