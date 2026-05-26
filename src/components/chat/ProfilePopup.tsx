@@ -189,14 +189,18 @@ export function ProfilePopup({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-sm sm:max-h-[320px]">
-          {tab === "info" && (
+          {activeTab === "info" && (
             <ul className="space-y-2.5">
               <Row icon={<Eye className="h-4 w-4 shrink-0" />} label="Last seen" value={lastSeenLabel} />
               <Row icon={<Globe className="h-4 w-4 shrink-0" />} label="Current room" value={currentRoom} />
-              <Row icon={<Calendar className="h-4 w-4 shrink-0" />} label="Member since" value={memberSince ?? (user.isBot ? "—" : "…")} />
-              <Row icon={<Sparkles className="h-4 w-4 shrink-0" />} label="XP" value={`${user.xp} pts`} />
-              <Row icon={<Heart className="h-4 w-4 shrink-0" />} label="Gender" value={user.gender ? user.gender[0].toUpperCase() + user.gender.slice(1) : "—"} />
-              <Row icon={<Award className="h-4 w-4 shrink-0" />} label="Badges" value={`${(user.badges || []).length}`} />
+              {!user.isBot && (
+                <>
+                  <Row icon={<Calendar className="h-4 w-4 shrink-0" />} label="Member since" value={memberSince ?? "…"} />
+                  <Row icon={<Sparkles className="h-4 w-4 shrink-0" />} label="XP" value={`${user.xp} pts`} />
+                  <Row icon={<Heart className="h-4 w-4 shrink-0" />} label="Gender" value={user.gender ? user.gender[0].toUpperCase() + user.gender.slice(1) : "—"} />
+                  <Row icon={<Award className="h-4 w-4 shrink-0" />} label="Badges" value={`${(user.badges || []).length}`} />
+                </>
+              )}
             </ul>
           )}
 
