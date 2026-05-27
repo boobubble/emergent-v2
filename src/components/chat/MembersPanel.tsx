@@ -195,8 +195,8 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                     onSelect={(e) => { e.preventDefault(); setActive(dmChannelFor(uid)); }}
                     className="gap-2"
                   >
-                    <Avatar user={u} size={24} />
-                    <span className="truncate">{u.name}</span>
+                    <FrameAvatar user={u} size={24} />
+                    <span className="truncate"><CosmeticName userId={u.id} name={u.name} /></span>
                     {isDmUnread(uid) && (
                       <span className="ml-1 h-1.5 w-1.5 rounded-full bg-primary" title="Unread" />
                     )}
