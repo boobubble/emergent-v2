@@ -127,7 +127,7 @@ export const PostCard = memo(function PostCard({
       <header className="flex items-center gap-3">
         {author ? (
           <Link to="/u/$username" params={{ username: author.name }}>
-            <Avatar user={author} size={40} />
+            <FrameAvatar user={author} size={40} />
           </Link>
         ) : (
           <div className="grid h-10 w-10 place-items-center rounded-full bg-muted text-muted-foreground"><EyeOff className="h-5 w-5" /></div>
@@ -136,8 +136,11 @@ export const PostCard = memo(function PostCard({
           <div className="flex items-center gap-2">
             {author ? (
               <>
-                <Link to="/u/$username" params={{ username: author.name }} className="font-semibold hover:underline">{author.name}</Link>
+                <Link to="/u/$username" params={{ username: author.name }} className="font-semibold hover:underline">
+                  <CosmeticName userId={author.id} name={author.name} />
+                </Link>
                 <NameEmojiBadge user={author} />
+                <RankChip level={author.level} compact />
               </>
             ) : (
               <span className="font-semibold text-muted-foreground">Anonymous</span>
