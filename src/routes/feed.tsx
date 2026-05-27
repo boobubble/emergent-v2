@@ -327,7 +327,15 @@ function FeedPage() {
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></Suspense></div>
           ) : (
             <>
-              <div className="mb-3 sm:mb-4 lg:hidden">
+              <div className="mb-3 sm:mb-4 space-y-3 lg:hidden">
+                <Suspense fallback={null}>
+                  <RewardsWidget
+                    meId={meId}
+                    onOpenChest={() => setView("dailyChest")}
+                    onOpenSpin={() => setView("spin")}
+                    onOpenShop={() => setView("shop")}
+                  />
+                </Suspense>
                 <DailyChallengesWidget meId={meId} />
               </div>
               <div className="rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border">
