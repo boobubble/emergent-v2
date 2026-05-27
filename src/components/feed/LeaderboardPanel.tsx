@@ -1,24 +1,27 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Trophy, Flame } from "lucide-react";
+import { Trophy, Flame, Coins } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { BADGE_MAP } from "@/lib/achievements";
+import { rankFor } from "@/lib/ranks";
 
 export function LeaderboardPanel() {
   const { state } = useChat();
-  const [tab, setTab] = useState<"xp" | "streak">("xp");
+  const [tab, setTab] = useState<"xp" | "streak" | "coins">("xp");
   const all = Object.values(state.users).filter((u) => !u.isGuest && !u.isBot);
   const ranked =
     tab === "xp"
       ? [...all].sort((a, b) => b.xp - a.xp).slice(0, 25)
-      : [...all]
-          .sort(
-            (a, b) =>
-              (b.streak ?? 0) - (a.streak ?? 0) ||
-              (b.longestStreak ?? 0) - (a.longestStreak ?? 0),
-          )
-          .slice(0, 25);
+      : tab === "coins"
+        ? [...all].sort((a, b) => (b.coins ?? 0) - (a.coins ?? 0)).slice(0, 25)
+        : [...all]
+            .sort(
+              (a, b) =>
+                (b.streak ?? 0) - (a.streak ?? 0) ||
+                (b.longestStreak ?? 0) - (a.longestStreak ?? 0),
+            )
+            .slice(0, 25);
 
   return (
     <div>
