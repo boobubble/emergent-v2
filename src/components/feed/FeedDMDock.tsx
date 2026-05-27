@@ -103,8 +103,10 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
             <button onClick={() => setView("list")} className="grid h-8 w-8 place-items-center rounded-full hover:bg-accent" aria-label="Back">
               <ChevronLeft className="h-4 w-4" />
             </button>
-            {activePeer && <Avatar user={activePeer} size={28} />}
-            <div className="min-w-0 flex-1 truncate text-sm font-semibold">{activePeer?.name ?? "Direct message"}</div>
+            {activePeer && <FrameAvatar user={activePeer} size={28} />}
+            <div className="min-w-0 flex-1 truncate text-sm font-semibold">
+              {activePeer ? <CosmeticName userId={activePeer.id} name={activePeer.name} /> : "Direct message"}
+            </div>
           </>
         ) : (
           <>
