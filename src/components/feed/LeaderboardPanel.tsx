@@ -1,24 +1,27 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Trophy, Flame } from "lucide-react";
+import { Trophy, Flame, Coins } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { BADGE_MAP } from "@/lib/achievements";
+import { rankFor } from "@/lib/ranks";
 
 export function LeaderboardPanel() {
   const { state } = useChat();
-  const [tab, setTab] = useState<"xp" | "streak">("xp");
+  const [tab, setTab] = useState<"xp" | "streak" | "coins">("xp");
   const all = Object.values(state.users).filter((u) => !u.isGuest && !u.isBot);
   const ranked =
     tab === "xp"
       ? [...all].sort((a, b) => b.xp - a.xp).slice(0, 25)
-      : [...all]
-          .sort(
-            (a, b) =>
-              (b.streak ?? 0) - (a.streak ?? 0) ||
-              (b.longestStreak ?? 0) - (a.longestStreak ?? 0),
-          )
-          .slice(0, 25);
+      : tab === "coins"
+        ? [...all].sort((a, b) => (b.coins ?? 0) - (a.coins ?? 0)).slice(0, 25)
+        : [...all]
+            .sort(
+              (a, b) =>
+                (b.streak ?? 0) - (a.streak ?? 0) ||
+                (b.longestStreak ?? 0) - (a.longestStreak ?? 0),
+            )
+            .slice(0, 25);
 
   return (
     <div>
@@ -37,7 +40,13 @@ export function LeaderboardPanel() {
           onClick={() => setTab("streak")}
           className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold ${tab === "streak" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
         >
-          <Flame className="mr-1 inline h-3 w-3" /> Top Streaks
+          <Flame className="mr-1 inline h-3 w-3" /> Streaks
+        </button>
+        <button
+          onClick={() => setTab("coins")}
+          className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold ${tab === "coins" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
+        >
+          <Coins className="mr-1 inline h-3 w-3" /> Coins
         </button>
       </div>
 
@@ -66,12 +75,15 @@ export function LeaderboardPanel() {
                   );
                 })}
               </Link>
-              <div className="text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${rankFor(u.level).chip}`}>{rankFor(u.level).title}</span>
                 Lv {u.level} · 🔥 {u.streak ?? 0}
               </div>
             </div>
             {tab === "xp" ? (
               <div className="font-mono text-sm text-primary">{u.xp} XP</div>
+            ) : tab === "coins" ? (
+              <div className="font-mono text-sm text-amber-500">{u.coins ?? 0} 🪙</div>
             ) : (
               <div className="font-mono text-sm text-orange-400">{u.streak ?? 0}d</div>
             )}
@@ -79,7 +91,7 @@ export function LeaderboardPanel() {
         ))}
       </div>
       <p className="mt-3 text-center text-[10px] text-muted-foreground">
-        Streaks rise by signing in on consecutive days.
+        Earn XP and coins through posts, games, and daily activity.
       </p>
     </div>
   );

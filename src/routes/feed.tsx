@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins } from "lucide-react";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -24,6 +24,10 @@ const FeedSettingsPanel = lazy(() => import("@/components/feed/FeedSettingsPanel
 const AchievementsPanel = lazy(() => import("@/components/feed/AchievementsPanel").then(m => ({ default: m.AchievementsPanel })));
 const LeaderboardPanel = lazy(() => import("@/components/feed/LeaderboardPanel").then(m => ({ default: m.LeaderboardPanel })));
 const FindFriendsPanel = lazy(() => import("@/components/feed/FindFriendsPanel").then(m => ({ default: m.FindFriendsPanel })));
+const DailyChestPanel = lazy(() => import("@/components/feed/DailyChestPanel").then(m => ({ default: m.DailyChestPanel })));
+const SpinWheelPanel = lazy(() => import("@/components/feed/SpinWheelPanel").then(m => ({ default: m.SpinWheelPanel })));
+const ShopPanel = lazy(() => import("@/components/feed/ShopPanel").then(m => ({ default: m.ShopPanel })));
+const RewardsWidget = lazy(() => import("@/components/feed/RewardsWidget").then(m => ({ default: m.RewardsWidget })));
 const FeedDMDock = lazy(() => import("@/components/feed/FeedDMDock").then(m => ({ default: m.FeedDMDock })));
 
 const PanelFallback = () => (
@@ -43,7 +47,7 @@ export const Route = createFileRoute("/feed")({
 });
 
 type Tab = "foryou" | "trending" | "latest" | "friends" | "saved" | "notifications";
-type View = "feed" | "account" | "profile" | "settings" | "achievements" | "leaderboard" | "findFriends";
+type View = "feed" | "account" | "profile" | "settings" | "achievements" | "leaderboard" | "findFriends" | "dailyChest" | "spin" | "shop";
 
 function isVisibleFeedTab(tab: string): tab is Tab {
   return ["foryou", "trending", "latest", "friends", "saved", "notifications"].includes(tab);
@@ -278,9 +282,20 @@ function FeedPage() {
               <SideItem onClick={() => setView("findFriends")} active={view === "findFriends"} icon={Users} label="Find Friends" />
               <SideItem onClick={() => setView("achievements")} active={view === "achievements"} icon={Award} label="Achievements" />
               <SideItem onClick={() => setView("leaderboard")} active={view === "leaderboard"} icon={Trophy} label="Leaderboard" />
+              <SideItem onClick={() => setView("dailyChest")} active={view === "dailyChest"} icon={Gift} label="Daily Chest" />
+              <SideItem onClick={() => setView("spin")} active={view === "spin"} icon={Sparkles} label="Daily Spin" />
+              <SideItem onClick={() => setView("shop")} active={view === "shop"} icon={Coins} label="Shop" />
 
               <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
             </nav>
+            <Suspense fallback={null}>
+              <RewardsWidget
+                meId={meId}
+                onOpenChest={() => setView("dailyChest")}
+                onOpenSpin={() => setView("spin")}
+                onOpenShop={() => setView("shop")}
+              />
+            </Suspense>
             <FriendsListCard
               friendIds={friendIds}
               profiles={profiles}
@@ -302,11 +317,25 @@ function FeedPage() {
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><LeaderboardPanel /></Suspense></div>
           ) : view === "findFriends" ? (
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><FindFriendsPanel /></Suspense></div>
+          ) : view === "dailyChest" ? (
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><DailyChestPanel onBack={() => setView("feed")} /></Suspense></div>
+          ) : view === "spin" ? (
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><SpinWheelPanel onBack={() => setView("feed")} /></Suspense></div>
+          ) : view === "shop" ? (
+            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><ShopPanel onBack={() => setView("feed")} /></Suspense></div>
           ) : view === "profile" ? (
             <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></Suspense></div>
           ) : (
             <>
-              <div className="mb-3 sm:mb-4 lg:hidden">
+              <div className="mb-3 sm:mb-4 space-y-3 lg:hidden">
+                <Suspense fallback={null}>
+                  <RewardsWidget
+                    meId={meId}
+                    onOpenChest={() => setView("dailyChest")}
+                    onOpenSpin={() => setView("spin")}
+                    onOpenShop={() => setView("shop")}
+                  />
+                </Suspense>
                 <DailyChallengesWidget meId={meId} />
               </div>
               <div className="rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border">
