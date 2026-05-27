@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { MessageCircle, Crown, Shield, ShieldHalf, Trophy, Flame, Award, Coins, UserPlus, UserMinus, Ban, ShieldCheck } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
+import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
 
 export function ProfilePanel({ username, onBack }: { username: string; onBack: () => void }) {
@@ -30,10 +31,11 @@ export function ProfilePanel({ username, onBack }: { username: string; onBack: (
     <div className="space-y-8">
       <div className="rounded-3xl border border-border bg-card p-6" style={{ boxShadow: "var(--shadow-panel)" }}>
         <div className="flex items-start gap-5">
-          <Avatar user={user} size={96} />
+          <FrameAvatar user={user} size={96} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold">{user.name}</h1>
+              <h1 className="text-2xl font-bold"><CosmeticName userId={user.id} name={user.name} /></h1>
+              <RankChip level={user.level} />
               {user.isBot && <span className="rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight text-primary">Bot</span>}
               <span className={`flex items-center gap-1.5 text-xs capitalize ${user.status === "online" ? "text-primary" : "text-muted-foreground"}`}>
                 <span className={`h-2 w-2 rounded-full ${user.status === "online" ? "bg-primary" : "bg-muted-foreground/50"}`} />

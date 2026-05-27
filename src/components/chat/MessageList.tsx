@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
+import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { UserMenu } from "./UserMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
 import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
@@ -152,16 +153,17 @@ export function MessageList({ channelId }: { channelId: string }) {
           if (isMe) {
             return (
               <div key={gi} className="group flex flex-row-reverse gap-3">
-                <Avatar user={author} size={36} />
+                <FrameAvatar user={author} size={36} />
                 <div className="flex min-w-0 flex-1 flex-col items-end">
                   <div className="mb-1 flex items-center gap-2">
                     <Time ts={g[0].ts} />
                     <UserMenu userId={author.id} username={author.name}>
                       <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
-                        {author.name}
+                        <CosmeticName userId={author.id} name={author.name} />
                         <NameEmojiBadge user={author} />
                       </span>
                     </UserMenu>
+                    <RankChip level={author.level} compact />
                   </div>
                   <div className="flex max-w-[80%] flex-col items-end gap-1">
                     {g.map(m => {
@@ -206,12 +208,12 @@ export function MessageList({ channelId }: { channelId: string }) {
 
           return (
             <div key={gi} className="group flex gap-3">
-              <Avatar user={author} size={36} />
+              <FrameAvatar user={author} size={36} />
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
                   <UserMenu userId={author.id} username={author.name}>
                     <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
-                      {author.name}
+                      <CosmeticName userId={author.id} name={author.name} />
                       <NameEmojiBadge user={author} />
                     </span>
                   </UserMenu>
@@ -220,6 +222,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                       Bot
                     </span>
                   )}
+                  {!author.isBot && <RankChip level={author.level} compact />}
                   <Time ts={g[0].ts} />
                 </div>
                 <div className="flex flex-col gap-1">

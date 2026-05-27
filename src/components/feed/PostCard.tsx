@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
+import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type FeedReaction, type ReactionType } from "@/lib/feed-types";
 import { postSlug } from "@/lib/post-slug";
 import { ShareModal, type SharePayload } from "@/components/feed/ShareModal";
@@ -126,7 +127,7 @@ export const PostCard = memo(function PostCard({
       <header className="flex items-center gap-3">
         {author ? (
           <Link to="/u/$username" params={{ username: author.name }}>
-            <Avatar user={author} size={40} />
+            <FrameAvatar user={author} size={40} />
           </Link>
         ) : (
           <div className="grid h-10 w-10 place-items-center rounded-full bg-muted text-muted-foreground"><EyeOff className="h-5 w-5" /></div>
@@ -135,8 +136,11 @@ export const PostCard = memo(function PostCard({
           <div className="flex items-center gap-2">
             {author ? (
               <>
-                <Link to="/u/$username" params={{ username: author.name }} className="font-semibold hover:underline">{author.name}</Link>
+                <Link to="/u/$username" params={{ username: author.name }} className="font-semibold hover:underline">
+                  <CosmeticName userId={author.id} name={author.name} />
+                </Link>
                 <NameEmojiBadge user={author} />
+                <RankChip level={author.level} compact />
               </>
             ) : (
               <span className="font-semibold text-muted-foreground">Anonymous</span>
@@ -229,10 +233,12 @@ export const PostCard = memo(function PostCard({
             const cAuthor = profiles[c.author_id];
             return (
               <div key={c.id} className="flex gap-2">
-                {cAuthor && <Avatar user={cAuthor} size={28} />}
+                {cAuthor && <FrameAvatar user={cAuthor} size={28} />}
                 <div className="min-w-0 flex-1 rounded-2xl bg-accent/50 px-3 py-2">
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="font-semibold">{cAuthor?.name ?? "user"}</span>
+                    <span className="font-semibold">
+                      {cAuthor ? <CosmeticName userId={cAuthor.id} name={cAuthor.name} /> : "user"}
+                    </span>
                     <span className="text-muted-foreground">{timeAgo(c.created_at)}</span>
                   </div>
                   <p className="text-sm">{c.text}</p>

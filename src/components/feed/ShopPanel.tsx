@@ -4,6 +4,9 @@ import { Coins, Check, Lock, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { SHOP_BY_CATEGORY, CATEGORY_LABEL, type ShopCategory, type ShopItem } from "@/lib/shop-catalog";
 import { getMyInventory, purchaseItem, equipItem } from "@/lib/rewards.functions";
+import { SHOP_BY_ID } from "@/lib/shop-catalog";
+import { setLocalEquip } from "@/lib/cosmetics-store";
+import { useAuth } from "@/lib/auth-store";
 
 const CATS: ShopCategory[] = ["frame", "username_effect", "theme", "emoji_pack"];
 
@@ -13,6 +16,7 @@ export function ShopPanel({ onBack }: { onBack: () => void }) {
   const fetchInv = useServerFn(getMyInventory);
   const buy = useServerFn(purchaseItem);
   const equip = useServerFn(equipItem);
+  const { user: authUser } = useAuth();
   const [coins, setCoins] = useState(0);
   const [inv, setInv] = useState<InventoryRow[]>([]);
   const [cat, setCat] = useState<ShopCategory>("frame");
@@ -45,6 +49,16 @@ export function ShopPanel({ onBack }: { onBack: () => void }) {
     setBusy(item.id);
     try {
       await equip({ data: { itemId: item.id, equipped } });
+      // Optimistic: update local cosmetic cache so UI reflects instantly.
+      if (authUser?.id) {
+        // Unequip any other item in same category locally first.
+        if (equipped) {
+          const prevId = equippedByCat[item.category];
+          const prev = prevId ? SHOP_BY_ID[prevId] : undefined;
+          if (prev) setLocalEquip(authUser.id, prev, false);
+        }
+        setLocalEquip(authUser.id, item, equipped);
+      }
       toast.success(equipped ? `${item.name} equipped` : `${item.name} unequipped`);
       await refresh();
     } catch (e) {

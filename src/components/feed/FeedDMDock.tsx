@@ -3,6 +3,7 @@ import { MessageCircle, X, ChevronLeft, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
+import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
 import type { User } from "@/lib/chat-types";
@@ -102,8 +103,10 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
             <button onClick={() => setView("list")} className="grid h-8 w-8 place-items-center rounded-full hover:bg-accent" aria-label="Back">
               <ChevronLeft className="h-4 w-4" />
             </button>
-            {activePeer && <Avatar user={activePeer} size={28} />}
-            <div className="min-w-0 flex-1 truncate text-sm font-semibold">{activePeer?.name ?? "Direct message"}</div>
+            {activePeer && <FrameAvatar user={activePeer} size={28} />}
+            <div className="min-w-0 flex-1 truncate text-sm font-semibold">
+              {activePeer ? <CosmeticName userId={activePeer.id} name={activePeer.name} /> : "Direct message"}
+            </div>
           </>
         ) : (
           <>
@@ -140,10 +143,10 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
                 onClick={() => { startDM(u.id); setView("chat"); }}
                 className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left hover:bg-accent"
               >
-                <Avatar user={u} size={32} />
+                <FrameAvatar user={u} size={32} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="truncate text-sm font-medium">{u.name}</span>
+                    <span className="truncate text-sm font-medium"><CosmeticName userId={u.id} name={u.name} /></span>
                     {isDmUnread(u.id) && (
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" title="Unread" />
                     )}

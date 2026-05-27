@@ -7,6 +7,7 @@ import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar } from "./Avatar";
+import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { UserMenu } from "./UserMenu";
 import { NameEmojiBadge } from "@/lib/name-emoji";
 import {
@@ -194,8 +195,8 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                     onSelect={(e) => { e.preventDefault(); setActive(dmChannelFor(uid)); }}
                     className="gap-2"
                   >
-                    <Avatar user={u} size={24} />
-                    <span className="truncate">{u.name}</span>
+                    <FrameAvatar user={u} size={24} />
+                    <span className="truncate"><CosmeticName userId={u.id} name={u.name} /></span>
                     {isDmUnread(uid) && (
                       <span className="ml-1 h-1.5 w-1.5 rounded-full bg-primary" title="Unread" />
                     )}
@@ -451,7 +452,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
       <div className="group flex w-full items-center gap-2 rounded-xl px-2 py-1 transition-colors hover:bg-white/5">
         <UserMenu userId={u.id} username={u.name}>
           <div className="relative">
-            <Avatar user={u} size={32} />
+            <FrameAvatar user={u} size={32} />
             {muted && (
               <span
                 title="Muted in lobby"
@@ -465,13 +466,14 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         <UserMenu userId={u.id} username={u.name}>
           <div className="min-w-0 flex-1 leading-tight">
             <div className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground/90 hover:text-primary">
-              {u.name}
+              <CosmeticName userId={u.id} name={u.name} />
               <NameEmojiBadge user={u} />
               {ICONS[role]}
               {muted && <VolumeX className="h-3 w-3 text-destructive" />}
             </div>
-            <div className="truncate text-[10px] text-muted-foreground">
-              {muted ? "Muted" : u.isBot ? "Bot" : u.isGuest ? "Guest" : isOnline(u.id) ? "Online" : "Offline"}
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              {!u.isBot && !u.isGuest && <RankChip level={u.level} compact />}
+              <span className="truncate">{muted ? "Muted" : u.isBot ? "Bot" : u.isGuest ? "Guest" : isOnline(u.id) ? "Online" : "Offline"}</span>
             </div>
 
 

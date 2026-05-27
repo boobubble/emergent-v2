@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Trophy, Flame, Coins } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
+import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import { BADGE_MAP } from "@/lib/achievements";
 import { rankFor } from "@/lib/ranks";
 
@@ -57,14 +58,14 @@ export function LeaderboardPanel() {
             className="flex items-center gap-3 border-b border-border/50 p-3 last:border-b-0 hover:bg-muted/30"
           >
             <div className="w-6 text-center font-bold text-muted-foreground">{i + 1}</div>
-            <Avatar user={u} size={36} />
+            <FrameAvatar user={u} size={36} />
             <div className="min-w-0 flex-1">
               <Link
                 to="/u/$username"
                 params={{ username: u.name }}
                 className="flex items-center gap-1 truncate text-sm font-medium hover:underline"
               >
-                {u.name}
+                <CosmeticName userId={u.id} name={u.name} />
                 {(u.badges || []).slice(0, 3).map((bid) => {
                   const b = BADGE_MAP[bid];
                   if (!b) return null;
