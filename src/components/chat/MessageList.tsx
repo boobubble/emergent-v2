@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
+import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { UserMenu } from "./UserMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
 import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
