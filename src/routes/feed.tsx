@@ -57,6 +57,7 @@ function normalizePost(row: Partial<FeedPost>): FeedPost {
   return {
     id: row.id ?? "",
     author_id: row.author_id ?? "",
+    owner_id: row.owner_id ?? row.author_id ?? "",
     kind: row.kind ?? "text",
     text: row.text ?? "",
     slug: row.slug ?? row.id ?? "post",
