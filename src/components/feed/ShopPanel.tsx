@@ -16,6 +16,7 @@ export function ShopPanel({ onBack }: { onBack: () => void }) {
   const fetchInv = useServerFn(getMyInventory);
   const buy = useServerFn(purchaseItem);
   const equip = useServerFn(equipItem);
+  const { user: authUser } = useAuth();
   const [coins, setCoins] = useState(0);
   const [inv, setInv] = useState<InventoryRow[]>([]);
   const [cat, setCat] = useState<ShopCategory>("frame");
