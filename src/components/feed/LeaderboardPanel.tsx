@@ -40,7 +40,13 @@ export function LeaderboardPanel() {
           onClick={() => setTab("streak")}
           className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold ${tab === "streak" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
         >
-          <Flame className="mr-1 inline h-3 w-3" /> Top Streaks
+          <Flame className="mr-1 inline h-3 w-3" /> Streaks
+        </button>
+        <button
+          onClick={() => setTab("coins")}
+          className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold ${tab === "coins" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
+        >
+          <Coins className="mr-1 inline h-3 w-3" /> Coins
         </button>
       </div>
 
