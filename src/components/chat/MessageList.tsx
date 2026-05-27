@@ -208,12 +208,12 @@ export function MessageList({ channelId }: { channelId: string }) {
 
           return (
             <div key={gi} className="group flex gap-3">
-              <Avatar user={author} size={36} />
+              <FrameAvatar user={author} size={36} />
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
                   <UserMenu userId={author.id} username={author.name}>
                     <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
-                      {author.name}
+                      <CosmeticName userId={author.id} name={author.name} />
                       <NameEmojiBadge user={author} />
                     </span>
                   </UserMenu>
@@ -222,6 +222,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                       Bot
                     </span>
                   )}
+                  {!author.isBot && <RankChip level={author.level} compact />}
                   <Time ts={g[0].ts} />
                 </div>
                 <div className="flex flex-col gap-1">
