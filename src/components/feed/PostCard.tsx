@@ -233,10 +233,12 @@ export const PostCard = memo(function PostCard({
             const cAuthor = profiles[c.author_id];
             return (
               <div key={c.id} className="flex gap-2">
-                {cAuthor && <Avatar user={cAuthor} size={28} />}
+                {cAuthor && <FrameAvatar user={cAuthor} size={28} />}
                 <div className="min-w-0 flex-1 rounded-2xl bg-accent/50 px-3 py-2">
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="font-semibold">{cAuthor?.name ?? "user"}</span>
+                    <span className="font-semibold">
+                      {cAuthor ? <CosmeticName userId={cAuthor.id} name={cAuthor.name} /> : "user"}
+                    </span>
                     <span className="text-muted-foreground">{timeAgo(c.created_at)}</span>
                   </div>
                   <p className="text-sm">{c.text}</p>
