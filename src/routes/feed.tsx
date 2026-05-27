@@ -186,11 +186,11 @@ function FeedPage() {
     } else if (effective === "latest" || tab === "latest") {
       list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
     } else if (tab === "friends") {
-      list = list.filter((p) => friendIds.has(p.author_id) || p.author_id === meId);
+      list = list.filter((p) => friendIds.has(p.owner_id) || p.owner_id === meId);
     } else {
       list.sort((a, b) => {
-        const af = friendIds.has(a.author_id) ? 1 : 0;
-        const bf = friendIds.has(b.author_id) ? 1 : 0;
+        const af = friendIds.has(a.owner_id) ? 1 : 0;
+        const bf = friendIds.has(b.owner_id) ? 1 : 0;
         if (af !== bf) return bf - af;
         return +new Date(b.created_at) - +new Date(a.created_at);
       });
