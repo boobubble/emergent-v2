@@ -47,7 +47,7 @@ export const Route = createFileRoute("/feed")({
 });
 
 type Tab = "foryou" | "trending" | "latest" | "friends" | "saved" | "notifications";
-type View = "feed" | "account" | "profile" | "settings" | "achievements" | "leaderboard" | "findFriends";
+type View = "feed" | "account" | "profile" | "settings" | "achievements" | "leaderboard" | "findFriends" | "dailyChest" | "spin" | "shop";
 
 function isVisibleFeedTab(tab: string): tab is Tab {
   return ["foryou", "trending", "latest", "friends", "saved", "notifications"].includes(tab);
