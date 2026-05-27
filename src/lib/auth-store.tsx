@@ -73,6 +73,7 @@ async function publishWelcomePost(userId: string, email?: string) {
     const media = prof.avatar_url ? [prof.avatar_url] : [];
     const { error } = await supabase.from("posts").insert({
       author_id: userId,
+      owner_id: userId,
       kind: "text",
       text,
       slug: `welcome-${prof.username}`.toLowerCase(),
