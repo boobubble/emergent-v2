@@ -282,9 +282,20 @@ function FeedPage() {
               <SideItem onClick={() => setView("findFriends")} active={view === "findFriends"} icon={Users} label="Find Friends" />
               <SideItem onClick={() => setView("achievements")} active={view === "achievements"} icon={Award} label="Achievements" />
               <SideItem onClick={() => setView("leaderboard")} active={view === "leaderboard"} icon={Trophy} label="Leaderboard" />
+              <SideItem onClick={() => setView("dailyChest")} active={view === "dailyChest"} icon={Gift} label="Daily Chest" />
+              <SideItem onClick={() => setView("spin")} active={view === "spin"} icon={Sparkles} label="Daily Spin" />
+              <SideItem onClick={() => setView("shop")} active={view === "shop"} icon={Coins} label="Shop" />
 
               <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
             </nav>
+            <Suspense fallback={null}>
+              <RewardsWidget
+                meId={meId}
+                onOpenChest={() => setView("dailyChest")}
+                onOpenSpin={() => setView("spin")}
+                onOpenShop={() => setView("shop")}
+              />
+            </Suspense>
             <FriendsListCard
               friendIds={friendIds}
               profiles={profiles}
