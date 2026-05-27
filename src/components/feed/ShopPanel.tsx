@@ -49,6 +49,16 @@ export function ShopPanel({ onBack }: { onBack: () => void }) {
     setBusy(item.id);
     try {
       await equip({ data: { itemId: item.id, equipped } });
+      // Optimistic: update local cosmetic cache so UI reflects instantly.
+      if (authUser?.id) {
+        // Unequip any other item in same category locally first.
+        if (equipped) {
+          const prevId = equippedByCat[item.category];
+          const prev = prevId ? SHOP_BY_ID[prevId] : undefined;
+          if (prev) setLocalEquip(authUser.id, prev, false);
+        }
+        setLocalEquip(authUser.id, item, equipped);
+      }
       toast.success(equipped ? `${item.name} equipped` : `${item.name} unequipped`);
       await refresh();
     } catch (e) {
