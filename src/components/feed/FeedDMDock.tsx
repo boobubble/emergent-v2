@@ -3,6 +3,7 @@ import { MessageCircle, X, ChevronLeft, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
+import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
 import type { User } from "@/lib/chat-types";
