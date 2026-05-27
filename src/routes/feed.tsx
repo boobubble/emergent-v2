@@ -24,6 +24,10 @@ const FeedSettingsPanel = lazy(() => import("@/components/feed/FeedSettingsPanel
 const AchievementsPanel = lazy(() => import("@/components/feed/AchievementsPanel").then(m => ({ default: m.AchievementsPanel })));
 const LeaderboardPanel = lazy(() => import("@/components/feed/LeaderboardPanel").then(m => ({ default: m.LeaderboardPanel })));
 const FindFriendsPanel = lazy(() => import("@/components/feed/FindFriendsPanel").then(m => ({ default: m.FindFriendsPanel })));
+const DailyChestPanel = lazy(() => import("@/components/feed/DailyChestPanel").then(m => ({ default: m.DailyChestPanel })));
+const SpinWheelPanel = lazy(() => import("@/components/feed/SpinWheelPanel").then(m => ({ default: m.SpinWheelPanel })));
+const ShopPanel = lazy(() => import("@/components/feed/ShopPanel").then(m => ({ default: m.ShopPanel })));
+const RewardsWidget = lazy(() => import("@/components/feed/RewardsWidget").then(m => ({ default: m.RewardsWidget })));
 const FeedDMDock = lazy(() => import("@/components/feed/FeedDMDock").then(m => ({ default: m.FeedDMDock })));
 
 const PanelFallback = () => (
