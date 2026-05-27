@@ -75,12 +75,15 @@ export function LeaderboardPanel() {
                   );
                 })}
               </Link>
-              <div className="text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${rankFor(u.level).chip}`}>{rankFor(u.level).title}</span>
                 Lv {u.level} · 🔥 {u.streak ?? 0}
               </div>
             </div>
             {tab === "xp" ? (
               <div className="font-mono text-sm text-primary">{u.xp} XP</div>
+            ) : tab === "coins" ? (
+              <div className="font-mono text-sm text-amber-500">{u.coins ?? 0} 🪙</div>
             ) : (
               <div className="font-mono text-sm text-orange-400">{u.streak ?? 0}d</div>
             )}
@@ -88,7 +91,7 @@ export function LeaderboardPanel() {
         ))}
       </div>
       <p className="mt-3 text-center text-[10px] text-muted-foreground">
-        Streaks rise by signing in on consecutive days.
+        Earn XP and coins through posts, games, and daily activity.
       </p>
     </div>
   );
