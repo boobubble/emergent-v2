@@ -151,7 +151,7 @@ export const PostCard = memo(function PostCard({
             <Link to="/feed/$slug" params={{ slug: postSlug(post) }} className="hover:underline">{timeAgo(post.created_at)}</Link> · <span className="capitalize">{post.privacy}</span>
           </div>
         </div>
-        {post.author_id === meId && (
+        {post.owner_id === meId && (
           <button onClick={del} className="rounded-full p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label="Delete">
             <Trash2 className="h-4 w-4" />
           </button>

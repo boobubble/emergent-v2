@@ -6,6 +6,7 @@ export type FriendshipStatus = "pending" | "accepted" | "blocked";
 export interface FeedPost {
   id: string;
   author_id: string;
+  owner_id: string;
   kind: PostKind;
   text: string;
   slug: string;

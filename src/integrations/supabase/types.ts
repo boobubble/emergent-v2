@@ -391,7 +391,7 @@ export type Database = {
       }
       posts: {
         Row: {
-          author_id: string
+          author_id: string | null
           comment_count: number
           created_at: string
           hashtags: string[]
@@ -399,6 +399,7 @@ export type Database = {
           is_anonymous: boolean
           kind: Database["public"]["Enums"]["post_kind"]
           media_urls: string[]
+          owner_id: string
           poll: Json | null
           privacy: Database["public"]["Enums"]["post_privacy"]
           reaction_count: number
@@ -408,7 +409,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          author_id: string
+          author_id?: string | null
           comment_count?: number
           created_at?: string
           hashtags?: string[]
@@ -416,6 +417,7 @@ export type Database = {
           is_anonymous?: boolean
           kind?: Database["public"]["Enums"]["post_kind"]
           media_urls?: string[]
+          owner_id: string
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"]
           reaction_count?: number
@@ -425,7 +427,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          author_id?: string
+          author_id?: string | null
           comment_count?: number
           created_at?: string
           hashtags?: string[]
@@ -433,6 +435,7 @@ export type Database = {
           is_anonymous?: boolean
           kind?: Database["public"]["Enums"]["post_kind"]
           media_urls?: string[]
+          owner_id?: string
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"]
           reaction_count?: number
@@ -566,6 +569,10 @@ export type Database = {
     }
     Functions: {
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
+      is_dm_channel_allowed: {
+        Args: { _channel: string; _user: string }
+        Returns: boolean
+      }
       slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
