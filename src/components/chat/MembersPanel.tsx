@@ -7,6 +7,7 @@ import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar } from "./Avatar";
+import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { UserMenu } from "./UserMenu";
 import { NameEmojiBadge } from "@/lib/name-emoji";
 import {
