@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Trophy, Flame, Coins } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
+import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import { BADGE_MAP } from "@/lib/achievements";
 import { rankFor } from "@/lib/ranks";
 
