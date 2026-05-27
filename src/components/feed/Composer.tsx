@@ -55,6 +55,7 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
       const hashtags = extractHashtags(text);
       const { error } = await supabase.from("posts").insert({
         author_id: authorId,
+        owner_id: authorId,
         kind,
         text: text.trim(),
         slug: slugify(text.trim() || kind),
