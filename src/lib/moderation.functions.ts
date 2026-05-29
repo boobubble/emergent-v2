@@ -145,7 +145,7 @@ export const listBans = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) throw new Error(error.message);
-    return data ?? [];
+    return (data ?? []).map((b) => ({ ...b, ip_address: b.ip_address ? String(b.ip_address) : null }));
   });
 
 export const muteUser = createServerFn({ method: "POST" })
