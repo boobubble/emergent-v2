@@ -1,0 +1,5 @@
+
+ALTER TABLE public.custom_pages
+  ADD COLUMN IF NOT EXISTS layout TEXT NOT NULL DEFAULT 'boxed',
+  ADD COLUMN IF NOT EXISTS sidebar_left TEXT NOT NULL DEFAULT 'none',
+  ADD COLUMN IF NOT EXISTS sidebar_right TEXT NOT NULL DEFAULT 'none';

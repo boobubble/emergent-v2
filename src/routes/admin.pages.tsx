@@ -42,7 +42,16 @@ type PageRow = PageRecord & {
   published_at: string | null;
 };
 
-const CATEGORIES = ["landing", "seo", "room", "blog", "info", "category"];
+const LAYOUTS: { value: "boxed" | "full"; label: string; hint: string }[] = [
+  { value: "boxed", label: "Boxed container", hint: "Centered max-width article (classic blog/landing)" },
+  { value: "full", label: "Full width", hint: "Edge-to-edge layout for custom designs" },
+];
+
+const SIDEBAR_OPTIONS: { value: "none" | "ads" | "feed"; label: string }[] = [
+  { value: "none", label: "None" },
+  { value: "ads", label: "Ads slot" },
+  { value: "feed", label: "Feed menu" },
+];
 
 function emptyPage(): PageRow {
   return {
@@ -51,10 +60,12 @@ function emptyPage(): PageRow {
     title: "",
     content: "",
     excerpt: "",
-    category: "info",
     tags: [],
     status: "draft",
     featured: false,
+    layout: "boxed",
+    sidebar_left: "none",
+    sidebar_right: "none",
     meta_title: "",
     meta_description: "",
     meta_keywords: "",
@@ -160,7 +171,7 @@ function PageListRow({ page, onEdit, onChanged }: { page: PageRow; onEdit: () =>
             <span className="truncate text-sm font-medium">{page.title || "(untitled)"}</span>
             {page.featured && <Star className="h-3.5 w-3.5 text-yellow-500" />}
             <Badge variant={page.status === "published" ? "default" : "outline"} className="text-[10px]">{page.status}</Badge>
-            {page.category && <Badge variant="outline" className="text-[10px]">{page.category}</Badge>}
+            <Badge variant="outline" className="text-[10px]">{page.layout === "full" ? "full" : "boxed"}</Badge>
           </div>
           <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
             <span className="font-mono">/{page.slug}</span>
@@ -219,7 +230,9 @@ function PageEditorDialog({ page, onClose, onSaved }: { page: PageRow | null; on
         title: row.title,
         content: row.content,
         excerpt: row.excerpt || null,
-        category: row.category || null,
+        layout: row.layout,
+        sidebar_left: row.sidebar_left,
+        sidebar_right: row.sidebar_right,
         tags: row.tags ?? [],
         status: row.status,
         featured: row.featured,
@@ -284,7 +297,7 @@ function PageEditorDialog({ page, onClose, onSaved }: { page: PageRow | null; on
             <TabsList className="flex w-full flex-wrap">
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="seo">SEO</TabsTrigger>
-              <TabsTrigger value="meta">Categories & status</TabsTrigger>
+              <TabsTrigger value="meta">Layout & status</TabsTrigger>
             </TabsList>
 
             <TabsContent value="content" className="space-y-3 pt-3">
@@ -331,11 +344,36 @@ function PageEditorDialog({ page, onClose, onSaved }: { page: PageRow | null; on
             </TabsContent>
 
             <TabsContent value="meta" className="grid gap-3 pt-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Label className="text-xs">Page layout</Label>
+                <Select value={row.layout} onValueChange={(v) => update("layout", v as "full" | "boxed")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {LAYOUTS.map((l) => (
+                      <SelectItem key={l.value} value={l.value}>
+                        <span className="font-medium">{l.label}</span>
+                        <span className="ml-2 text-[10px] text-muted-foreground">{l.hint}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
-                <Label className="text-xs">Category</Label>
-                <Select value={row.category ?? ""} onValueChange={(v) => update("category", v)}>
-                  <SelectTrigger><SelectValue placeholder="Pick category" /></SelectTrigger>
-                  <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                <Label className="text-xs">Left sidebar</Label>
+                <Select value={row.sidebar_left} onValueChange={(v) => update("sidebar_left", v as "none" | "ads" | "feed")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SIDEBAR_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Right sidebar</Label>
+                <Select value={row.sidebar_right} onValueChange={(v) => update("sidebar_right", v as "none" | "ads" | "feed")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SIDEBAR_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </div>
               <div>

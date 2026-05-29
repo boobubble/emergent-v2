@@ -1,15 +1,20 @@
 // Lightweight import/export helpers for the Custom Pages CMS.
 // Supports JSON, XML, HTML, Markdown, and TXT.
 
+export type PageLayout = "full" | "boxed";
+export type SidebarMode = "none" | "ads" | "feed";
+
 export interface PageRecord {
   slug: string;
   title: string;
   content: string;
   excerpt?: string | null;
-  category?: string | null;
   tags?: string[];
   status?: "draft" | "published";
   featured?: boolean;
+  layout?: PageLayout;
+  sidebar_left?: SidebarMode;
+  sidebar_right?: SidebarMode;
   meta_title?: string | null;
   meta_description?: string | null;
   meta_keywords?: string | null;
@@ -42,7 +47,7 @@ export function exportAs(format: ExportFormat, pages: PageRecord[]): { name: str
         `  <page>`,
         `    <slug>${esc(p.slug)}</slug>`,
         `    <title>${esc(p.title)}</title>`,
-        `    <category>${esc(p.category ?? "")}</category>`,
+        `    <layout>${esc(p.layout ?? "boxed")}</layout>`,
         `    <status>${esc(p.status ?? "draft")}</status>`,
         `    <meta_description>${esc(p.meta_description ?? "")}</meta_description>`,
         `    <content><![CDATA[${p.content ?? ""}]]></content>`,
@@ -62,7 +67,7 @@ export function exportAs(format: ExportFormat, pages: PageRecord[]): { name: str
         `---`,
         `slug: ${p.slug}`,
         `title: ${JSON.stringify(p.title)}`,
-        p.category ? `category: ${p.category}` : null,
+        p.layout ? `layout: ${p.layout}` : null,
         p.tags?.length ? `tags: [${p.tags.map((t) => JSON.stringify(t)).join(", ")}]` : null,
         `status: ${p.status ?? "draft"}`,
         `---`,
@@ -89,7 +94,7 @@ export function parseImport(format: ExportFormat, raw: string): PageRecord[] {
       pages.push(normalize({
         slug: pick(b, "slug"),
         title: pick(b, "title"),
-        category: pick(b, "category") || null,
+        layout: (pick(b, "layout") as PageLayout) || "boxed",
         status: (pick(b, "status") as "draft" | "published") || "draft",
         meta_description: pick(b, "meta_description") || null,
         content: pickCdata(b, "content") || "",
@@ -111,7 +116,7 @@ export function parseImport(format: ExportFormat, raw: string): PageRecord[] {
       return normalize({
         slug: meta.slug || "page",
         title: (meta.title || "Page").replace(/^"|"$/g, ""),
-        category: meta.category || null,
+        layout: (meta.layout as PageLayout) || "boxed",
         status: (meta.status as "draft" | "published") || "draft",
         content: markdownToHtml(body),
       });
@@ -143,7 +148,9 @@ function normalize(p: Partial<PageRecord>): PageRecord {
     title: String(p.title ?? "Untitled"),
     content: String(p.content ?? ""),
     excerpt: p.excerpt ?? null,
-    category: p.category ?? null,
+    layout: p.layout ?? "boxed",
+    sidebar_left: p.sidebar_left ?? "none",
+    sidebar_right: p.sidebar_right ?? "none",
     tags: Array.isArray(p.tags) ? p.tags.slice(0, 20).map(String) : [],
     status: p.status === "published" ? "published" : "draft",
     featured: !!p.featured,

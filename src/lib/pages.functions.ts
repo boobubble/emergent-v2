@@ -25,16 +25,21 @@ export function slugify(input: string): string {
     .slice(0, 80) || "page";
 }
 
+const LAYOUTS = ["full", "boxed"] as const;
+const SIDEBARS = ["none", "ads", "feed"] as const;
+
 const pageSchema = z.object({
   id: z.string().uuid().optional(),
   slug: z.string().min(1).max(120),
   title: z.string().min(1).max(200),
   content: z.string().max(200_000).default(""),
   excerpt: z.string().max(500).nullable().optional(),
-  category: z.string().max(64).nullable().optional(),
   tags: z.array(z.string().max(40)).max(20).default([]),
   status: z.enum(["draft", "published"]).default("draft"),
   featured: z.boolean().default(false),
+  layout: z.enum(LAYOUTS).default("boxed"),
+  sidebar_left: z.enum(SIDEBARS).default("none"),
+  sidebar_right: z.enum(SIDEBARS).default("none"),
   meta_title: z.string().max(200).nullable().optional(),
   meta_description: z.string().max(400).nullable().optional(),
   meta_keywords: z.string().max(500).nullable().optional(),
@@ -95,10 +100,12 @@ export const savePage = createServerFn({ method: "POST" })
       title: data.title,
       content: data.content,
       excerpt: data.excerpt ?? null,
-      category: data.category ?? null,
       tags: data.tags ?? [],
       status: data.status,
       featured: data.featured,
+      layout: data.layout,
+      sidebar_left: data.sidebar_left,
+      sidebar_right: data.sidebar_right,
       meta_title: data.meta_title ?? null,
       meta_description: data.meta_description ?? null,
       meta_keywords: data.meta_keywords ?? null,
@@ -193,7 +200,7 @@ export const getPublishedPage = createServerFn({ method: "GET" })
     const finalSlug = redir?.to_slug ?? slug;
     const { data: row } = await supabaseAdmin
       .from("custom_pages")
-      .select("slug,title,content,excerpt,category,tags,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,noindex,nofollow,views,published_at")
+      .select("slug,title,content,excerpt,tags,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,noindex,nofollow,views,published_at")
       .eq("slug", finalSlug)
       .eq("status", "published")
       .maybeSingle();
@@ -205,18 +212,16 @@ export const getPublishedPage = createServerFn({ method: "GET" })
 
 export const listPublishedPages = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({
-    category: z.string().max(64).optional(),
     featured: z.boolean().optional(),
     limit: z.number().min(1).max(50).default(20),
   }).parse(input ?? {}))
   .handler(async ({ data }) => {
     let q = supabaseAdmin
       .from("custom_pages")
-      .select("slug,title,excerpt,category,tags,og_image,views,published_at")
+      .select("slug,title,excerpt,tags,og_image,views,published_at")
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .limit(data.limit);
-    if (data.category) q = q.eq("category", data.category);
     if (data.featured) q = q.eq("featured", true);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
