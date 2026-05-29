@@ -29,7 +29,9 @@ import { Route as AdminModulesRouteImport } from './routes/admin.modules'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
+import { Route as AdminFakeActivityRouteImport } from './routes/admin.fake-activity'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
+import { Route as AdminBotsRouteImport } from './routes/admin.bots'
 import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAiSettingsRouteImport } from './routes/admin.ai-settings'
@@ -135,9 +137,19 @@ const AdminGamesRoute = AdminGamesRouteImport.update({
   path: '/games',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFakeActivityRoute = AdminFakeActivityRouteImport.update({
+  id: '/fake-activity',
+  path: '/fake-activity',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminEconomyRoute = AdminEconomyRouteImport.update({
   id: '/economy',
   path: '/economy',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBotsRoute = AdminBotsRouteImport.update({
+  id: '/bots',
+  path: '/bots',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAppearanceRoute = AdminAppearanceRouteImport.update({
@@ -174,7 +186,9 @@ export interface FileRoutesByFullPath {
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/bots': typeof AdminBotsRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/fake-activity': typeof AdminFakeActivityRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/moderation': typeof AdminModerationRoute
@@ -200,7 +214,9 @@ export interface FileRoutesByTo {
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/bots': typeof AdminBotsRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/fake-activity': typeof AdminFakeActivityRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/moderation': typeof AdminModerationRoute
@@ -228,7 +244,9 @@ export interface FileRoutesById {
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/bots': typeof AdminBotsRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/fake-activity': typeof AdminFakeActivityRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/moderation': typeof AdminModerationRoute
@@ -257,7 +275,9 @@ export interface FileRouteTypes {
     | '/admin/ai-settings'
     | '/admin/analytics'
     | '/admin/appearance'
+    | '/admin/bots'
     | '/admin/economy'
+    | '/admin/fake-activity'
     | '/admin/games'
     | '/admin/general'
     | '/admin/moderation'
@@ -283,7 +303,9 @@ export interface FileRouteTypes {
     | '/admin/ai-settings'
     | '/admin/analytics'
     | '/admin/appearance'
+    | '/admin/bots'
     | '/admin/economy'
+    | '/admin/fake-activity'
     | '/admin/games'
     | '/admin/general'
     | '/admin/moderation'
@@ -310,7 +332,9 @@ export interface FileRouteTypes {
     | '/admin/ai-settings'
     | '/admin/analytics'
     | '/admin/appearance'
+    | '/admin/bots'
     | '/admin/economy'
+    | '/admin/fake-activity'
     | '/admin/games'
     | '/admin/general'
     | '/admin/moderation'
@@ -481,11 +505,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGamesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/fake-activity': {
+      id: '/admin/fake-activity'
+      path: '/fake-activity'
+      fullPath: '/admin/fake-activity'
+      preLoaderRoute: typeof AdminFakeActivityRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/economy': {
       id: '/admin/economy'
       path: '/economy'
       fullPath: '/admin/economy'
       preLoaderRoute: typeof AdminEconomyRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bots': {
+      id: '/admin/bots'
+      path: '/bots'
+      fullPath: '/admin/bots'
+      preLoaderRoute: typeof AdminBotsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/appearance': {
@@ -523,7 +561,9 @@ interface AdminRouteChildren {
   AdminAiSettingsRoute: typeof AdminAiSettingsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAppearanceRoute: typeof AdminAppearanceRoute
+  AdminBotsRoute: typeof AdminBotsRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
+  AdminFakeActivityRoute: typeof AdminFakeActivityRoute
   AdminGamesRoute: typeof AdminGamesRoute
   AdminGeneralRoute: typeof AdminGeneralRoute
   AdminModerationRoute: typeof AdminModerationRoute
@@ -539,7 +579,9 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAiSettingsRoute: AdminAiSettingsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAppearanceRoute: AdminAppearanceRoute,
+  AdminBotsRoute: AdminBotsRoute,
   AdminEconomyRoute: AdminEconomyRoute,
+  AdminFakeActivityRoute: AdminFakeActivityRoute,
   AdminGamesRoute: AdminGamesRoute,
   AdminGeneralRoute: AdminGeneralRoute,
   AdminModerationRoute: AdminModerationRoute,
