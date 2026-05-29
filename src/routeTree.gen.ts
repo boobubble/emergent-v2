@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ReelsRouteImport } from './routes/reels'
+import { Route as PagesRouteImport } from './routes/pages'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedRouteImport } from './routes/feed'
@@ -47,9 +50,24 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReelsRoute = ReelsRouteImport.update({
+  id: '/reels',
+  path: '/reels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagesRoute = PagesRouteImport.update({
+  id: '/pages',
+  path: '/pages',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsRoute = GroupsRouteImport.update({
+  id: '/groups',
+  path: '/groups',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GamesRoute = GamesRouteImport.update({
@@ -212,7 +230,10 @@ export interface FileRoutesByFullPath {
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
+  '/groups': typeof GroupsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/pages': typeof PagesRoute
+  '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -245,7 +266,10 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
+  '/groups': typeof GroupsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/pages': typeof PagesRoute
+  '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -280,7 +304,10 @@ export interface FileRoutesById {
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
+  '/groups': typeof GroupsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/pages': typeof PagesRoute
+  '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -316,7 +343,10 @@ export interface FileRouteTypes {
     | '/feed'
     | '/find-friends'
     | '/games'
+    | '/groups'
     | '/leaderboard'
+    | '/pages'
+    | '/reels'
     | '/reset-password'
     | '/admin/ai-settings'
     | '/admin/analytics'
@@ -349,7 +379,10 @@ export interface FileRouteTypes {
     | '/feed'
     | '/find-friends'
     | '/games'
+    | '/groups'
     | '/leaderboard'
+    | '/pages'
+    | '/reels'
     | '/reset-password'
     | '/admin/ai-settings'
     | '/admin/analytics'
@@ -383,7 +416,10 @@ export interface FileRouteTypes {
     | '/feed'
     | '/find-friends'
     | '/games'
+    | '/groups'
     | '/leaderboard'
+    | '/pages'
+    | '/reels'
     | '/reset-password'
     | '/admin/ai-settings'
     | '/admin/analytics'
@@ -418,7 +454,10 @@ export interface RootRouteChildren {
   FeedRoute: typeof FeedRouteWithChildren
   FindFriendsRoute: typeof FindFriendsRoute
   GamesRoute: typeof GamesRoute
+  GroupsRoute: typeof GroupsRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  PagesRoute: typeof PagesRoute
+  ReelsRoute: typeof ReelsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   PSlugRoute: typeof PSlugRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -434,11 +473,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reels': {
+      id: '/reels'
+      path: '/reels'
+      fullPath: '/reels'
+      preLoaderRoute: typeof ReelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pages': {
+      id: '/pages'
+      path: '/pages'
+      fullPath: '/pages'
+      preLoaderRoute: typeof PagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leaderboard': {
       id: '/leaderboard'
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups': {
+      id: '/groups'
+      path: '/groups'
+      fullPath: '/groups'
+      preLoaderRoute: typeof GroupsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/games': {
@@ -717,7 +777,10 @@ const rootRouteChildren: RootRouteChildren = {
   FeedRoute: FeedRouteWithChildren,
   FindFriendsRoute: FindFriendsRoute,
   GamesRoute: GamesRoute,
+  GroupsRoute: GroupsRoute,
   LeaderboardRoute: LeaderboardRoute,
+  PagesRoute: PagesRoute,
+  ReelsRoute: ReelsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   PSlugRoute: PSlugRoute,
   UUsernameRoute: UUsernameRoute,
