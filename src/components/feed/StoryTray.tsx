@@ -77,10 +77,11 @@ export function StoryTray() {
 
   return (
     <>
-      <div className="mb-3 rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border p-3">
+      <div id="story-tray" className="mb-3 rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border p-3">
         <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Add / my story */}
           <button
+            data-story-add
             onClick={() => (myStory ? setViewing(myStory) : fileRef.current?.click())}
             className="relative shrink-0 w-20 h-28 rounded-2xl border border-border overflow-hidden bg-muted group"
             aria-label={myStory ? "View your story" : "Add story"}
