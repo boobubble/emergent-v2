@@ -46,9 +46,9 @@ export const getMyRoles = createServerFn({ method: "GET" })
 export const getAllSettings = createServerFn({ method: "GET" }).handler(async () => {
   const { data, error } = await supabaseAdmin.from("app_settings").select("*");
   if (error) throw new Error(error.message);
-  const map: Record<string, unknown> = {};
+  const map: Record<string, any> = {};
   for (const row of data ?? []) map[row.key] = row.value;
-  return map;
+  return map as Record<string, any>;
 });
 
 export const updateSetting = createServerFn({ method: "POST" })
