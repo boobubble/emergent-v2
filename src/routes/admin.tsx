@@ -1,7 +1,7 @@
 import { Link, Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { Suspense, lazy, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth-store";
 import { getMyRoles } from "@/lib/admin.functions";
 import { ADMIN_NAV } from "@/components/admin/AdminNav";
