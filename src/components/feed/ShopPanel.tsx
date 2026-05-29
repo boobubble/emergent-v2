@@ -113,8 +113,12 @@ export function ShopPanel({ onBack }: { onBack: () => void }) {
           return (
             <div key={item.id} className="rounded-2xl border border-border bg-card p-3">
               <div className="flex items-start gap-3">
-                <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-2xl ${item.frameRing ?? ""}`}>
-                  {item.preview}
+                <div className={`grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-2xl ${item.frameRing ?? ""}`}>
+                  {item.previewCp ? (
+                    <img src={stickerGifUrl(item.previewCp)} alt={item.name} loading="lazy" className="h-10 w-10 object-contain" />
+                  ) : (
+                    item.preview
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className={`text-sm font-bold ${item.usernameClass ?? ""}`}>{item.name}</div>
