@@ -8,6 +8,7 @@ import { useChat } from "@/lib/chat-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useFeedPrefs } from "@/lib/feed-prefs";
 import { Composer } from "@/components/feed/Composer";
+import { StoryTray } from "@/components/feed/StoryTray";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
 import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
