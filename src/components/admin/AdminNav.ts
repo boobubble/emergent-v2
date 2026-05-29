@@ -13,6 +13,7 @@ export interface AdminNavItem {
 
 export const ADMIN_NAV: AdminNavItem[] = [
   { to: "/admin",              label: "Dashboard",     icon: LayoutDashboard, group: "Overview" },
+  { to: "/admin/analytics",    label: "Analytics",     icon: BarChart3,       group: "Overview" },
   { to: "/admin/general",      label: "General",       icon: Settings,        group: "Configuration" },
   { to: "/admin/appearance",   label: "Appearance",    icon: Palette,         group: "Configuration" },
   { to: "/admin/social-layout",label: "Social Layout", icon: LayoutGrid,      group: "Configuration" },
