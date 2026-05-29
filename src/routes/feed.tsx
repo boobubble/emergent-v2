@@ -340,6 +340,7 @@ function FeedPage() {
                 </Suspense>
                 <DailyChallengesWidget meId={meId} />
               </div>
+              <StoryTray />
               <div className="rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border">
                 <Composer authorId={meId} onPosted={loadPosts} />
               </div>
