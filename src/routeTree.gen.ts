@@ -20,11 +20,13 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
 import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
+import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminModulesRouteImport } from './routes/admin.modules'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
@@ -92,6 +94,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PSlugRoute = PSlugRouteImport.update({
+  id: '/p/$slug',
+  path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FeedSlugRoute = FeedSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -115,6 +122,11 @@ const AdminSecurityRoute = AdminSecurityRouteImport.update({
 const AdminRolesRoute = AdminRolesRouteImport.update({
   id: '/roles',
   path: '/roles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPagesRoute = AdminPagesRouteImport.update({
+  id: '/pages',
+  path: '/pages',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminModulesRoute = AdminModulesRouteImport.update({
@@ -193,11 +205,13 @@ export interface FileRoutesByFullPath {
   '/admin/general': typeof AdminGeneralRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
+  '/admin/pages': typeof AdminPagesRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/p/$slug': typeof PSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
@@ -221,11 +235,13 @@ export interface FileRoutesByTo {
   '/admin/general': typeof AdminGeneralRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
+  '/admin/pages': typeof AdminPagesRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/p/$slug': typeof PSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
@@ -251,11 +267,13 @@ export interface FileRoutesById {
   '/admin/general': typeof AdminGeneralRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
+  '/admin/pages': typeof AdminPagesRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/p/$slug': typeof PSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
@@ -282,11 +300,13 @@ export interface FileRouteTypes {
     | '/admin/general'
     | '/admin/moderation'
     | '/admin/modules'
+    | '/admin/pages'
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
     | '/admin/social-layout'
     | '/feed/$slug'
+    | '/p/$slug'
     | '/u/$username'
     | '/admin/'
     | '/api/public/guest-cleanup'
@@ -310,11 +330,13 @@ export interface FileRouteTypes {
     | '/admin/general'
     | '/admin/moderation'
     | '/admin/modules'
+    | '/admin/pages'
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
     | '/admin/social-layout'
     | '/feed/$slug'
+    | '/p/$slug'
     | '/u/$username'
     | '/admin'
     | '/api/public/guest-cleanup'
@@ -339,11 +361,13 @@ export interface FileRouteTypes {
     | '/admin/general'
     | '/admin/moderation'
     | '/admin/modules'
+    | '/admin/pages'
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
     | '/admin/social-layout'
     | '/feed/$slug'
+    | '/p/$slug'
     | '/u/$username'
     | '/admin/'
     | '/api/public/guest-cleanup'
@@ -359,6 +383,7 @@ export interface RootRouteChildren {
   GamesRoute: typeof GamesRoute
   LeaderboardRoute: typeof LeaderboardRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  PSlugRoute: typeof PSlugRoute
   UUsernameRoute: typeof UUsernameRoute
   ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
 }
@@ -442,6 +467,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/p/$slug': {
+      id: '/p/$slug'
+      path: '/p/$slug'
+      fullPath: '/p/$slug'
+      preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/feed/$slug': {
       id: '/feed/$slug'
       path: '/$slug'
@@ -475,6 +507,13 @@ declare module '@tanstack/react-router' {
       path: '/roles'
       fullPath: '/admin/roles'
       preLoaderRoute: typeof AdminRolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pages': {
+      id: '/admin/pages'
+      path: '/pages'
+      fullPath: '/admin/pages'
+      preLoaderRoute: typeof AdminPagesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/modules': {
@@ -568,6 +607,7 @@ interface AdminRouteChildren {
   AdminGeneralRoute: typeof AdminGeneralRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminModulesRoute: typeof AdminModulesRoute
+  AdminPagesRoute: typeof AdminPagesRoute
   AdminRolesRoute: typeof AdminRolesRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSeoRoute: typeof AdminSeoRoute
@@ -586,6 +626,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGeneralRoute: AdminGeneralRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminModulesRoute: AdminModulesRoute,
+  AdminPagesRoute: AdminPagesRoute,
   AdminRolesRoute: AdminRolesRoute,
   AdminSecurityRoute: AdminSecurityRoute,
   AdminSeoRoute: AdminSeoRoute,
@@ -615,9 +656,20 @@ const rootRouteChildren: RootRouteChildren = {
   GamesRoute: GamesRoute,
   LeaderboardRoute: LeaderboardRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  PSlugRoute: PSlugRoute,
   UUsernameRoute: UUsernameRoute,
   ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
