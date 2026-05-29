@@ -1,5 +1,11 @@
 export type ShopCategory = "frame" | "username_effect" | "theme" | "emoji_pack" | "badge" | "background";
 
+export interface StickerDef {
+  cp: string;   // Noto Animated Emoji codepoint (e.g. "1f600" or "2764_fe0f")
+  name: string;
+  label: string;
+}
+
 export interface ShopItem {
   id: string;
   category: ShopCategory;
@@ -11,9 +17,14 @@ export interface ShopItem {
   frameRing?: string;          // tailwind ring/border classes
   usernameClass?: string;      // tailwind class for username text
   themeAccent?: string;        // oklch color
-  emojis?: string[];
+  stickers?: StickerDef[];     // animated sticker pack contents
+  previewCp?: string;          // codepoint for animated preview (sticker packs)
   badgeIcon?: string;          // emoji shown next to name
   backgroundClass?: string;    // tailwind gradient for profile header
+}
+
+export function stickerGifUrl(cp: string) {
+  return `https://fonts.gstatic.com/s/e/notoemoji/latest/${cp}/512.gif`;
 }
 
 export const SHOP_ITEMS: ShopItem[] = [
