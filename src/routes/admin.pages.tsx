@@ -171,7 +171,7 @@ function PageListRow({ page, onEdit, onChanged }: { page: PageRow; onEdit: () =>
             <span className="truncate text-sm font-medium">{page.title || "(untitled)"}</span>
             {page.featured && <Star className="h-3.5 w-3.5 text-yellow-500" />}
             <Badge variant={page.status === "published" ? "default" : "outline"} className="text-[10px]">{page.status}</Badge>
-            {page.category && <Badge variant="outline" className="text-[10px]">{page.category}</Badge>}
+            <Badge variant="outline" className="text-[10px]">{page.layout === "full" ? "full" : "boxed"}</Badge>
           </div>
           <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
             <span className="font-mono">/{page.slug}</span>
