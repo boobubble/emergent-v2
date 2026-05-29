@@ -94,6 +94,15 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: "pack_nature",     category: "emoji_pack", name: "Nature Pack",     description: "🌸🌺🌻🌷🍀 floral & lucky.",            price: 400,  preview: "🌸", emojis: ["🌸","🌺","🌻","🌷","🍀"] },
   { id: "pack_magic",      category: "emoji_pack", name: "Magic Pack",      description: "🔮✨🧙🪄🌟 mystical reactions.",         price: 600,  preview: "🔮", emojis: ["🔮","✨","🧙","🪄","🌟"] },
   { id: "pack_legend",     category: "emoji_pack", name: "Legendary Pack",  description: "💎👑🏆⚜️🎖️ elite reactions.",          price: 1500, preview: "💎", emojis: ["💎","👑","🏆","⚜️","🎖️"] },
+  { id: "pack_hearts",     category: "emoji_pack", name: "Hearts Pack",     description: "❤️🧡💛💚💙💜 love in every color.",     price: 350,  preview: "💖", emojis: ["❤️","🧡","💛","💚","💙","💜"] },
+  { id: "pack_weather",    category: "emoji_pack", name: "Weather Pack",    description: "☀️🌤️🌧️⛈️🌈❄️ moody skies.",          price: 320,  preview: "🌈", emojis: ["☀️","🌤️","🌧️","⛈️","🌈","❄️"] },
+  { id: "pack_gaming",     category: "emoji_pack", name: "Gamer Pack",      description: "🎮🕹️👾🎯🏅 game-on reactions.",         price: 400,  preview: "🎮", emojis: ["🎮","🕹️","👾","🎯","🏅"] },
+  { id: "pack_meme",       category: "emoji_pack", name: "Meme Pack",       description: "😂🤣💀🗿👀🔥 chronically online.",       price: 500,  preview: "💀", emojis: ["😂","🤣","💀","🗿","👀","🔥"] },
+  { id: "pack_drinks",     category: "emoji_pack", name: "Drinks Pack",     description: "🍻🍷🍹🥤☕🧋 cheers!",                   price: 300,  preview: "🍻", emojis: ["🍻","🍷","🍹","🥤","☕","🧋"] },
+  { id: "pack_music",      category: "emoji_pack", name: "Music Pack",      description: "🎵🎶🎸🎹🎤🥁 turn it up.",              price: 380,  preview: "🎵", emojis: ["🎵","🎶","🎸","🎹","🎤","🥁"] },
+  { id: "pack_zodiac",     category: "emoji_pack", name: "Zodiac Pack",     description: "♈♉♊♋♌♍ astro reactions.",              price: 550,  preview: "♈", emojis: ["♈","♉","♊","♋","♌","♍"] },
+  { id: "pack_travel",     category: "emoji_pack", name: "Travel Pack",     description: "✈️🏖️🗺️🎒🚆🏝️ wanderlust set.",       price: 450,  preview: "✈️", emojis: ["✈️","🏖️","🗺️","🎒","🚆","🏝️"] },
+  { id: "pack_horror",     category: "emoji_pack", name: "Spooky Pack",     description: "🎃👻🧛🧟🦇🕷️ scary reactions.",         price: 500,  preview: "🎃", emojis: ["🎃","👻","🧛","🧟","🦇","🕷️"] },
 
   // ============= Badges (8) — shown next to your name =============
   { id: "badge_verified",  category: "badge", name: "Verified Badge",  description: "Blue check next to your name.",                price: 800,  preview: "✅", badgeIcon: "✅" },
