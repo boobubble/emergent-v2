@@ -75,6 +75,15 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: "theme_mint",      category: "theme", name: "Mint Theme",      description: "Fresh mint accent.",                           price: 700,  preview: "🍃", themeAccent: "oklch(0.78 0.12 165)" },
   { id: "theme_midnight",  category: "theme", name: "Midnight Theme",  description: "Deep indigo accent.",                          price: 800,  preview: "🌃", themeAccent: "oklch(0.45 0.18 270)" },
   { id: "theme_gold",      category: "theme", name: "Gold Theme",      description: "Luxurious gold accent.",                       price: 1000, preview: "🏆", themeAccent: "oklch(0.75 0.15 85)" },
+  { id: "theme_cherry",    category: "theme", name: "Cherry Theme",    description: "Sweet cherry pink accent.",                    price: 650,  preview: "🍒", themeAccent: "oklch(0.65 0.2 15)" },
+  { id: "theme_cyber",     category: "theme", name: "Cyber Theme",     description: "Electric cyber-cyan accent.",                  price: 750,  preview: "🤖", themeAccent: "oklch(0.72 0.18 200)" },
+  { id: "theme_emerald",   category: "theme", name: "Emerald Theme",   description: "Vivid emerald green accent.",                  price: 700,  preview: "🟢", themeAccent: "oklch(0.65 0.18 145)" },
+  { id: "theme_crimson",   category: "theme", name: "Crimson Theme",   description: "Bold crimson red accent.",                     price: 750,  preview: "🔴", themeAccent: "oklch(0.58 0.22 25)" },
+  { id: "theme_amber",     category: "theme", name: "Amber Theme",     description: "Warm amber glow accent.",                      price: 700,  preview: "🟠", themeAccent: "oklch(0.72 0.17 65)" },
+  { id: "theme_grape",     category: "theme", name: "Grape Theme",     description: "Juicy grape purple accent.",                   price: 700,  preview: "🍇", themeAccent: "oklch(0.55 0.2 305)" },
+  { id: "theme_neon",      category: "theme", name: "Neon Theme",      description: "Hot neon pink accent.",                        price: 850,  preview: "💖", themeAccent: "oklch(0.7 0.25 350)" },
+  { id: "theme_aqua",      category: "theme", name: "Aqua Theme",      description: "Crystal aqua blue accent.",                    price: 700,  preview: "💧", themeAccent: "oklch(0.75 0.13 210)" },
+  { id: "theme_void",      category: "theme", name: "Void Theme",      description: "Deep void violet accent.",                     price: 1100, preview: "🕳️", themeAccent: "oklch(0.4 0.22 290)" },
 
   // ============= Emoji packs (8) =============
   { id: "pack_party",      category: "emoji_pack", name: "Party Pack",      description: "🎉🥳🎊🪅🎁 extra reaction emojis.",     price: 300,  preview: "🎉", emojis: ["🎉","🥳","🎊","🪅","🎁"] },
