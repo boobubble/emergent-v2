@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Settings, Palette, LayoutGrid, Puzzle, Shield,
-  Lock, Search, Coins, Gavel, Gamepad2, Sparkles,
+  Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3,
 } from "lucide-react";
 
 export interface AdminNavItem {
