@@ -116,7 +116,7 @@ export function parseImport(format: ExportFormat, raw: string): PageRecord[] {
       return normalize({
         slug: meta.slug || "page",
         title: (meta.title || "Page").replace(/^"|"$/g, ""),
-        category: meta.category || null,
+        layout: (meta.layout as PageLayout) || "boxed",
         status: (meta.status as "draft" | "published") || "draft",
         content: markdownToHtml(body),
       });
