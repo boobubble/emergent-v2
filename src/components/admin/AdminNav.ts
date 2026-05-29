@@ -8,38 +8,30 @@ export interface AdminNavItem {
   to: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  group: "Overview" | "Platform" | "Chatrooms" | "Social Feed" | "Advanced";
+  group: "Overview" | "Configuration" | "Advanced";
   badge?: string;
-  /** Short description shown on hub landing pages. */
   description?: string;
 }
 
 export const ADMIN_NAV: AdminNavItem[] = [
-  // Overview
-  { to: "/admin",               label: "Dashboard",      icon: LayoutDashboard, group: "Overview" },
-  { to: "/admin/analytics",     label: "Analytics",      icon: BarChart3,       group: "Overview" },
+  { to: "/admin",               label: "Dashboard",     icon: LayoutDashboard, group: "Overview" },
+  { to: "/admin/analytics",     label: "Analytics",     icon: BarChart3,       group: "Overview" },
+  { to: "/admin/chatrooms",     label: "Chatrooms",     icon: MessageSquare,   group: "Overview", description: "All chatroom & platform settings." },
+  { to: "/admin/social-feed",   label: "Social Feed",   icon: Newspaper,       group: "Overview", description: "Social feed settings (coming soon)." },
 
-  // Hubs (Chatrooms & Social Feed landing pages)
-  { to: "/admin/chatrooms",     label: "Chatrooms",      icon: MessageSquare,   group: "Overview", description: "Rooms, bots, games and chat moderation." },
-  { to: "/admin/social-feed",   label: "Social Feed",    icon: Newspaper,       group: "Overview", description: "Posts feed, layout, pages and rewards." },
+  { to: "/admin/general",       label: "General",       icon: Settings,        group: "Configuration", description: "App name, defaults and basics." },
+  { to: "/admin/appearance",    label: "Appearance",    icon: Palette,         group: "Configuration", description: "Theme, colors and branding." },
+  { to: "/admin/social-layout", label: "Social Layout", icon: LayoutGrid,      group: "Configuration", description: "Feed layout and widget controls." },
+  { to: "/admin/modules",       label: "Modules",       icon: Puzzle,          group: "Configuration", description: "Enable or disable platform modules." },
+  { to: "/admin/roles",         label: "Roles",         icon: Shield,          group: "Configuration", description: "Admin and moderator roles." },
 
-  // Platform (shared across both)
-  { to: "/admin/general",       label: "General",        icon: Settings,        group: "Platform" },
-  { to: "/admin/appearance",    label: "Appearance",     icon: Palette,         group: "Platform" },
-  { to: "/admin/modules",       label: "Modules",        icon: Puzzle,          group: "Platform" },
-  { to: "/admin/roles",         label: "Roles",          icon: Shield,          group: "Platform" },
-  { to: "/admin/security",      label: "Security",       icon: Lock,            group: "Platform", badge: "Soon" },
-  { to: "/admin/seo",           label: "SEO",            icon: Search,          group: "Platform" },
-  { to: "/admin/ai-settings",   label: "AI Settings",    icon: Sparkles,        group: "Platform", badge: "Soon" },
-
-  // Chatrooms section
-  { to: "/admin/moderation",    label: "Moderation",     icon: Gavel,           group: "Chatrooms", description: "Bans, mutes, reports and word filters." },
-  { to: "/admin/games",         label: "Games",          icon: Gamepad2,        group: "Chatrooms", description: "Enable, configure and monitor in-room games." },
-  { to: "/admin/bots",          label: "Bots",           icon: Bot,             group: "Chatrooms", description: "Chat bots, names, intervals and messages." },
-  { to: "/admin/fake-activity", label: "Fake Activity",  icon: Users2,          group: "Chatrooms", description: "Simulated users, auto joins and reactions." },
-
-  // Social Feed section
-  { to: "/admin/social-layout", label: "Social Layout",  icon: LayoutGrid,      group: "Social Feed", description: "Feed layout, widgets and composer." },
-  { to: "/admin/pages",         label: "Custom Pages",   icon: FileText,        group: "Social Feed", description: "SEO-friendly landing pages and redirects." },
-  { to: "/admin/economy",       label: "Economy",        icon: Coins,           group: "Social Feed", description: "XP, coins, shop pricing and rewards." },
+  { to: "/admin/security",      label: "Security",      icon: Lock,            group: "Advanced", badge: "Soon", description: "Authentication and protection." },
+  { to: "/admin/seo",           label: "SEO",           icon: Search,          group: "Advanced", description: "Sitemap, meta defaults and indexing." },
+  { to: "/admin/pages",         label: "Custom Pages",  icon: FileText,        group: "Advanced", description: "SEO-friendly landing pages CMS." },
+  { to: "/admin/economy",       label: "Economy",       icon: Coins,           group: "Advanced", description: "XP, coins, shop pricing and rewards." },
+  { to: "/admin/moderation",    label: "Moderation",    icon: Gavel,           group: "Advanced", description: "Bans, reports and word filters." },
+  { to: "/admin/games",         label: "Games",         icon: Gamepad2,        group: "Advanced", description: "Enable and configure in-room games." },
+  { to: "/admin/bots",          label: "Bots",          icon: Bot,             group: "Advanced", description: "Chat bots, names and messages." },
+  { to: "/admin/fake-activity", label: "Fake Activity", icon: Users2,          group: "Advanced", description: "Simulated users, auto joins and reactions." },
+  { to: "/admin/ai-settings",   label: "AI Settings",   icon: Sparkles,        group: "Advanced", badge: "Soon", description: "AI provider and prompts." },
 ];
