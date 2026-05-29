@@ -9,7 +9,7 @@ import { useAppSettings, type ModulesFlags } from "@/lib/app-settings";
 import { updateSetting } from "@/lib/admin.functions";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_admin/modules")({
+export const Route = createFileRoute("/admin/modules")({
   component: ModulesPage,
 });
 

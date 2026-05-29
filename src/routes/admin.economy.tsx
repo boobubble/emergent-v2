@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminPageHeader, ComingSoonPanel } from "@/components/admin/AdminPageHeader";
 
-export const Route = createFileRoute("/_admin/economy")({ component: () => (
+export const Route = createFileRoute("/admin/economy")({ component: () => (
   <div>
     <AdminPageHeader title="Economy" description="Coins, rewards, shop pricing, and payouts." />
     <ComingSoonPanel title="Economy controls" points={[

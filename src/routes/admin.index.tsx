@@ -5,7 +5,7 @@ import { ADMIN_NAV } from "@/components/admin/AdminNav";
 import { ROLE_REGISTRY } from "@/lib/admin-roles";
 import { MODULE_REGISTRY } from "@/lib/admin-modules";
 
-export const Route = createFileRoute("/_admin/")({
+export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
 });
 

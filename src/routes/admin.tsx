@@ -13,7 +13,7 @@ import { Menu, ArrowLeft, Sun, Moon, Monitor, ShieldCheck } from "lucide-react";
 import { useThemeMode, type ThemeMode } from "@/lib/use-theme-mode";
 import { AppSettingsProvider } from "@/lib/app-settings";
 
-export const Route = createFileRoute("/_admin")({
+export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 

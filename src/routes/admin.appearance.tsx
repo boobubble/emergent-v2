@@ -7,7 +7,7 @@ import { ACCENTS, useAccent } from "@/lib/use-accent";
 import { useThemeMode, type ThemeMode } from "@/lib/use-theme-mode";
 import { Sun, Moon, Monitor, Upload, Image as ImageIcon } from "lucide-react";
 
-export const Route = createFileRoute("/_admin/appearance")({
+export const Route = createFileRoute("/admin/appearance")({
   component: Appearance,
 });
 

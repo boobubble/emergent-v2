@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ROLE_REGISTRY } from "@/lib/admin-roles";
 import { Shield } from "lucide-react";
 
-export const Route = createFileRoute("/_admin/roles")({
+export const Route = createFileRoute("/admin/roles")({
   component: RolesPage,
 });
 

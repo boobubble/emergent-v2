@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { getAllSettings, updateSetting } from "@/lib/admin.functions";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_admin/general")({
+export const Route = createFileRoute("/admin/general")({
   component: GeneralSettings,
 });
 

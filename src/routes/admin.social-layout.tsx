@@ -10,7 +10,7 @@ import { updateSetting } from "@/lib/admin.functions";
 import { MessageSquare, Newspaper, Smartphone, Sidebar } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_admin/social-layout")({
+export const Route = createFileRoute("/admin/social-layout")({
   component: SocialLayout,
 });
 
