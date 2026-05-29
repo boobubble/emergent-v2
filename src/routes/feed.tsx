@@ -485,6 +485,18 @@ function SideLink({ to, iconSrc, label }: { to: string; iconSrc: string; label: 
   );
 }
 
+function SideNavLink({ to, icon: Icon, label, badge }: { to: string; icon: typeof Home; label: string; badge?: string }) {
+  return (
+    <Link
+      to={to}
+      className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
+    >
+      <Icon className="h-4 w-4 text-muted-foreground" />
+      <span className="truncate">{label}</span>
+      {badge && <span className="ml-auto rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-primary">{badge}</span>}
+    </Link>
+  );
+
 
 function NavLink({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active?: boolean }) {
   return (
