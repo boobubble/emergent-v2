@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Coins, Check, Lock, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { SHOP_BY_CATEGORY, CATEGORY_LABEL, type ShopCategory, type ShopItem } from "@/lib/shop-catalog";
+import { SHOP_BY_CATEGORY, CATEGORY_LABEL, stickerGifUrl, type ShopCategory, type ShopItem } from "@/lib/shop-catalog";
 import { getMyInventory, purchaseItem, equipItem } from "@/lib/rewards.functions";
 import { SHOP_BY_ID } from "@/lib/shop-catalog";
 import { setLocalEquip } from "@/lib/cosmetics-store";
