@@ -120,6 +120,7 @@ export type Database = {
           excerpt: string | null
           featured: boolean
           id: string
+          layout: string
           meta_description: string | null
           meta_keywords: string | null
           meta_title: string | null
@@ -130,6 +131,8 @@ export type Database = {
           og_title: string | null
           published_at: string | null
           schema_jsonld: Json | null
+          sidebar_left: string
+          sidebar_right: string
           slug: string
           status: string
           tags: string[]
@@ -146,6 +149,7 @@ export type Database = {
           excerpt?: string | null
           featured?: boolean
           id?: string
+          layout?: string
           meta_description?: string | null
           meta_keywords?: string | null
           meta_title?: string | null
@@ -156,6 +160,8 @@ export type Database = {
           og_title?: string | null
           published_at?: string | null
           schema_jsonld?: Json | null
+          sidebar_left?: string
+          sidebar_right?: string
           slug: string
           status?: string
           tags?: string[]
@@ -172,6 +178,7 @@ export type Database = {
           excerpt?: string | null
           featured?: boolean
           id?: string
+          layout?: string
           meta_description?: string | null
           meta_keywords?: string | null
           meta_title?: string | null
@@ -182,6 +189,8 @@ export type Database = {
           og_title?: string | null
           published_at?: string | null
           schema_jsonld?: Json | null
+          sidebar_left?: string
+          sidebar_right?: string
           slug?: string
           status?: string
           tags?: string[]
