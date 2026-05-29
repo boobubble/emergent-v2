@@ -1,5 +1,11 @@
 export type ShopCategory = "frame" | "username_effect" | "theme" | "emoji_pack" | "badge" | "background";
 
+export interface StickerDef {
+  cp: string;   // Noto Animated Emoji codepoint (e.g. "1f600" or "2764_fe0f")
+  name: string;
+  label: string;
+}
+
 export interface ShopItem {
   id: string;
   category: ShopCategory;
@@ -11,9 +17,14 @@ export interface ShopItem {
   frameRing?: string;          // tailwind ring/border classes
   usernameClass?: string;      // tailwind class for username text
   themeAccent?: string;        // oklch color
-  emojis?: string[];
+  stickers?: StickerDef[];     // animated sticker pack contents
+  previewCp?: string;          // codepoint for animated preview (sticker packs)
   badgeIcon?: string;          // emoji shown next to name
   backgroundClass?: string;    // tailwind gradient for profile header
+}
+
+export function stickerGifUrl(cp: string) {
+  return `https://fonts.gstatic.com/s/e/notoemoji/latest/${cp}/512.gif`;
 }
 
 export const SHOP_ITEMS: ShopItem[] = [
@@ -86,23 +97,132 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: "theme_void",      category: "theme", name: "Void Theme",      description: "Deep void violet accent.",                     price: 1100, preview: "🕳️", themeAccent: "oklch(0.4 0.22 290)" },
 
   // ============= Emoji packs (8) =============
-  { id: "pack_party",      category: "emoji_pack", name: "Party Pack",      description: "🎉🥳🎊🪅🎁 extra reaction emojis.",     price: 300,  preview: "🎉", emojis: ["🎉","🥳","🎊","🪅","🎁"] },
-  { id: "pack_animals",    category: "emoji_pack", name: "Critters Pack",   description: "🐱🐶🐻🦊🐼 cute reactions.",            price: 300,  preview: "🐱", emojis: ["🐱","🐶","🐻","🦊","🐼"] },
-  { id: "pack_space",      category: "emoji_pack", name: "Cosmic Pack",     description: "🚀🌌👽🪐🌠 out-of-this-world.",        price: 450,  preview: "🚀", emojis: ["🚀","🌌","👽","🪐","🌠"] },
-  { id: "pack_food",       category: "emoji_pack", name: "Foodie Pack",     description: "🍕🍔🍣🍩🌮 yummy reactions.",            price: 350,  preview: "🍕", emojis: ["🍕","🍔","🍣","🍩","🌮"] },
-  { id: "pack_sports",     category: "emoji_pack", name: "Sports Pack",     description: "⚽🏀🏈⚾🎾 athletic vibes.",             price: 300,  preview: "⚽", emojis: ["⚽","🏀","🏈","⚾","🎾"] },
-  { id: "pack_nature",     category: "emoji_pack", name: "Nature Pack",     description: "🌸🌺🌻🌷🍀 floral & lucky.",            price: 400,  preview: "🌸", emojis: ["🌸","🌺","🌻","🌷","🍀"] },
-  { id: "pack_magic",      category: "emoji_pack", name: "Magic Pack",      description: "🔮✨🧙🪄🌟 mystical reactions.",         price: 600,  preview: "🔮", emojis: ["🔮","✨","🧙","🪄","🌟"] },
-  { id: "pack_legend",     category: "emoji_pack", name: "Legendary Pack",  description: "💎👑🏆⚜️🎖️ elite reactions.",          price: 1500, preview: "💎", emojis: ["💎","👑","🏆","⚜️","🎖️"] },
-  { id: "pack_hearts",     category: "emoji_pack", name: "Hearts Pack",     description: "❤️🧡💛💚💙💜 love in every color.",     price: 350,  preview: "💖", emojis: ["❤️","🧡","💛","💚","💙","💜"] },
-  { id: "pack_weather",    category: "emoji_pack", name: "Weather Pack",    description: "☀️🌤️🌧️⛈️🌈❄️ moody skies.",          price: 320,  preview: "🌈", emojis: ["☀️","🌤️","🌧️","⛈️","🌈","❄️"] },
-  { id: "pack_gaming",     category: "emoji_pack", name: "Gamer Pack",      description: "🎮🕹️👾🎯🏅 game-on reactions.",         price: 400,  preview: "🎮", emojis: ["🎮","🕹️","👾","🎯","🏅"] },
-  { id: "pack_meme",       category: "emoji_pack", name: "Meme Pack",       description: "😂🤣💀🗿👀🔥 chronically online.",       price: 500,  preview: "💀", emojis: ["😂","🤣","💀","🗿","👀","🔥"] },
-  { id: "pack_drinks",     category: "emoji_pack", name: "Drinks Pack",     description: "🍻🍷🍹🥤☕🧋 cheers!",                   price: 300,  preview: "🍻", emojis: ["🍻","🍷","🍹","🥤","☕","🧋"] },
-  { id: "pack_music",      category: "emoji_pack", name: "Music Pack",      description: "🎵🎶🎸🎹🎤🥁 turn it up.",              price: 380,  preview: "🎵", emojis: ["🎵","🎶","🎸","🎹","🎤","🥁"] },
-  { id: "pack_zodiac",     category: "emoji_pack", name: "Zodiac Pack",     description: "♈♉♊♋♌♍ astro reactions.",              price: 550,  preview: "♈", emojis: ["♈","♉","♊","♋","♌","♍"] },
-  { id: "pack_travel",     category: "emoji_pack", name: "Travel Pack",     description: "✈️🏖️🗺️🎒🚆🏝️ wanderlust set.",       price: 450,  preview: "✈️", emojis: ["✈️","🏖️","🗺️","🎒","🚆","🏝️"] },
-  { id: "pack_horror",     category: "emoji_pack", name: "Spooky Pack",     description: "🎃👻🧛🧟🦇🕷️ scary reactions.",         price: 500,  preview: "🎃", emojis: ["🎃","👻","🧛","🧟","🦇","🕷️"] },
+  // ============= Animated Sticker Packs (17) — unlock animated stickers in chat =============
+  { id: "pack_party", category: "emoji_pack", name: "Party Pack", description: "Animated party stickers for chatrooms.", price: 300, preview: "🎉", previewCp: "1f389", stickers: [
+    { cp: "1f389", name: "party", label: "Party" },
+    { cp: "1f973", name: "partyface", label: "Party Face" },
+    { cp: "1f38a", name: "confetti", label: "Confetti" },
+    { cp: "1f381", name: "gift", label: "Gift" },
+    { cp: "1f382", name: "cake", label: "Cake" },
+  ] },
+  { id: "pack_animals", category: "emoji_pack", name: "Critters Pack", description: "Animated cute animal stickers.", price: 300, preview: "🐱", previewCp: "1f431", stickers: [
+    { cp: "1f431", name: "cat", label: "Cat" },
+    { cp: "1f436", name: "dog", label: "Dog" },
+    { cp: "1f43b", name: "bear", label: "Bear" },
+    { cp: "1f98a", name: "fox", label: "Fox" },
+    { cp: "1f43c", name: "panda", label: "Panda" },
+    { cp: "1f430", name: "rabbit", label: "Rabbit" },
+  ] },
+  { id: "pack_space", category: "emoji_pack", name: "Cosmic Pack", description: "Out-of-this-world animated stickers.", price: 450, preview: "🚀", previewCp: "1f680", stickers: [
+    { cp: "1f680", name: "rocket", label: "Rocket" },
+    { cp: "1f30c", name: "milkyway", label: "Milky Way" },
+    { cp: "1f47d", name: "alien", label: "Alien" },
+    { cp: "1fa90", name: "saturn", label: "Saturn" },
+    { cp: "1f320", name: "shootingstar", label: "Shooting Star" },
+    { cp: "2b50", name: "star", label: "Star" },
+  ] },
+  { id: "pack_food", category: "emoji_pack", name: "Foodie Pack", description: "Yummy animated food stickers.", price: 350, preview: "🍕", previewCp: "1f355", stickers: [
+    { cp: "1f355", name: "pizza", label: "Pizza" },
+    { cp: "1f354", name: "burger", label: "Burger" },
+    { cp: "1f369", name: "donut", label: "Donut" },
+    { cp: "1f32e", name: "taco", label: "Taco" },
+    { cp: "1f366", name: "icecream", label: "Ice Cream" },
+  ] },
+  { id: "pack_sports", category: "emoji_pack", name: "Sports Pack", description: "Athletic animated stickers.", price: 300, preview: "⚽", previewCp: "26bd", stickers: [
+    { cp: "26bd", name: "soccer", label: "Soccer" },
+    { cp: "1f3c0", name: "basketball", label: "Basketball" },
+    { cp: "1f3c8", name: "football", label: "Football" },
+    { cp: "26be", name: "baseball", label: "Baseball" },
+    { cp: "1f3be", name: "tennis", label: "Tennis" },
+    { cp: "1f3c6", name: "trophy", label: "Trophy" },
+  ] },
+  { id: "pack_nature", category: "emoji_pack", name: "Nature Pack", description: "Floral & lucky animated stickers.", price: 400, preview: "🌸", previewCp: "1f338", stickers: [
+    { cp: "1f338", name: "blossom", label: "Cherry Blossom" },
+    { cp: "1f33b", name: "sunflower", label: "Sunflower" },
+    { cp: "1f337", name: "tulip", label: "Tulip" },
+    { cp: "1f340", name: "clover", label: "Clover" },
+    { cp: "1f339", name: "rose", label: "Rose" },
+  ] },
+  { id: "pack_magic", category: "emoji_pack", name: "Magic Pack", description: "Mystical animated stickers.", price: 600, preview: "🔮", previewCp: "2728", stickers: [
+    { cp: "2728", name: "sparkles", label: "Sparkles" },
+    { cp: "1f52e", name: "crystal", label: "Crystal Ball" },
+    { cp: "1fa84", name: "wand", label: "Magic Wand" },
+    { cp: "1f31f", name: "glowstar", label: "Glow Star" },
+    { cp: "1f4ab", name: "dizzy", label: "Dizzy" },
+  ] },
+  { id: "pack_legend", category: "emoji_pack", name: "Legendary Pack", description: "Elite animated stickers.", price: 1500, preview: "💎", previewCp: "1f48e", stickers: [
+    { cp: "1f48e", name: "gem", label: "Gem" },
+    { cp: "1f451", name: "crown", label: "Crown" },
+    { cp: "1f3c6", name: "trophy", label: "Trophy" },
+    { cp: "1f3c5", name: "medal", label: "Medal" },
+    { cp: "1f947", name: "gold", label: "Gold" },
+  ] },
+  { id: "pack_hearts", category: "emoji_pack", name: "Hearts Pack", description: "Animated love stickers.", price: 350, preview: "💖", previewCp: "2764_fe0f", stickers: [
+    { cp: "2764_fe0f", name: "heart", label: "Heart" },
+    { cp: "1f496", name: "sparkleheart", label: "Sparkle Heart" },
+    { cp: "1f498", name: "cupid", label: "Cupid" },
+    { cp: "1f49d", name: "heartribbon", label: "Heart Ribbon" },
+    { cp: "1f495", name: "twohearts", label: "Two Hearts" },
+    { cp: "1f494", name: "brokenheart", label: "Broken Heart" },
+  ] },
+  { id: "pack_weather", category: "emoji_pack", name: "Weather Pack", description: "Moody sky animated stickers.", price: 320, preview: "🌈", previewCp: "1f308", stickers: [
+    { cp: "2600_fe0f", name: "sun", label: "Sun" },
+    { cp: "1f308", name: "rainbow", label: "Rainbow" },
+    { cp: "26c8_fe0f", name: "storm", label: "Storm" },
+    { cp: "2744_fe0f", name: "snow", label: "Snowflake" },
+    { cp: "1f327_fe0f", name: "rain", label: "Rain" },
+  ] },
+  { id: "pack_gaming", category: "emoji_pack", name: "Gamer Pack", description: "Game-on animated stickers.", price: 400, preview: "🎮", previewCp: "1f3ae", stickers: [
+    { cp: "1f3ae", name: "gamepad", label: "Gamepad" },
+    { cp: "1f579_fe0f", name: "joystick", label: "Joystick" },
+    { cp: "1f47e", name: "invader", label: "Invader" },
+    { cp: "1f3af", name: "bullseye", label: "Bullseye" },
+    { cp: "1f3c5", name: "medal", label: "Medal" },
+  ] },
+  { id: "pack_meme", category: "emoji_pack", name: "Meme Pack", description: "Chronically online animated stickers.", price: 500, preview: "💀", previewCp: "1f480", stickers: [
+    { cp: "1f602", name: "joy", label: "Joy" },
+    { cp: "1f923", name: "rofl", label: "ROFL" },
+    { cp: "1f480", name: "skull", label: "Skull" },
+    { cp: "1f440", name: "eyes", label: "Eyes" },
+    { cp: "1f525", name: "fire", label: "Fire" },
+  ] },
+  { id: "pack_drinks", category: "emoji_pack", name: "Drinks Pack", description: "Cheers! Animated drink stickers.", price: 300, preview: "🍻", previewCp: "1f37b", stickers: [
+    { cp: "1f37b", name: "beers", label: "Beers" },
+    { cp: "1f377", name: "wine", label: "Wine" },
+    { cp: "1f379", name: "cocktail", label: "Cocktail" },
+    { cp: "2615", name: "coffee", label: "Coffee" },
+    { cp: "1f9cb", name: "bubbletea", label: "Bubble Tea" },
+  ] },
+  { id: "pack_music", category: "emoji_pack", name: "Music Pack", description: "Turn it up — animated music stickers.", price: 380, preview: "🎵", previewCp: "1f3b5", stickers: [
+    { cp: "1f3b5", name: "note", label: "Music Note" },
+    { cp: "1f3b6", name: "notes", label: "Music Notes" },
+    { cp: "1f3b8", name: "guitar", label: "Guitar" },
+    { cp: "1f3b9", name: "piano", label: "Piano" },
+    { cp: "1f3a4", name: "mic", label: "Mic" },
+    { cp: "1f941", name: "drum", label: "Drum" },
+  ] },
+  { id: "pack_zodiac", category: "emoji_pack", name: "Zodiac Pack", description: "Astro animated stickers.", price: 550, preview: "♈", previewCp: "2728", stickers: [
+    { cp: "2728", name: "sparkles", label: "Sparkles" },
+    { cp: "1f31f", name: "glowstar", label: "Glow Star" },
+    { cp: "1f319", name: "moon", label: "Moon" },
+    { cp: "2600_fe0f", name: "sun", label: "Sun" },
+    { cp: "1f320", name: "shootingstar", label: "Shooting Star" },
+  ] },
+  { id: "pack_travel", category: "emoji_pack", name: "Travel Pack", description: "Wanderlust animated stickers.", price: 450, preview: "✈️", previewCp: "2708_fe0f", stickers: [
+    { cp: "2708_fe0f", name: "plane", label: "Plane" },
+    { cp: "1f3d6_fe0f", name: "beach", label: "Beach" },
+    { cp: "1f686", name: "train", label: "Train" },
+    { cp: "1f3dd_fe0f", name: "island", label: "Island" },
+    { cp: "1f5fa_fe0f", name: "map", label: "Map" },
+  ] },
+  { id: "pack_horror", category: "emoji_pack", name: "Spooky Pack", description: "Scary animated stickers.", price: 500, preview: "🎃", previewCp: "1f383", stickers: [
+    { cp: "1f383", name: "pumpkin", label: "Pumpkin" },
+    { cp: "1f47b", name: "ghost", label: "Ghost" },
+    { cp: "1f9db", name: "vampire", label: "Vampire" },
+    { cp: "1f9df", name: "zombie", label: "Zombie" },
+    { cp: "1f987", name: "bat", label: "Bat" },
+    { cp: "1f577_fe0f", name: "spider", label: "Spider" },
+  ] },
 
   // ============= Badges (8) — shown next to your name =============
   { id: "badge_verified",  category: "badge", name: "Verified Badge",  description: "Blue check next to your name.",                price: 800,  preview: "✅", badgeIcon: "✅" },
