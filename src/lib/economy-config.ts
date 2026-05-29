@@ -27,31 +27,43 @@ export const SPEND = {
 } as const;
 
 /** Room loyalty progression. Level up by accumulating messages in a room. */
-export const ROOM_LOYALTY_LEVELS = [
+export interface RoomLoyaltyLevel {
+  level: number;
+  name: string;
+  minMsgs: number;
+  chip: string;
+}
+export const ROOM_LOYALTY_LEVELS: RoomLoyaltyLevel[] = [
   { level: 1, name: "Newcomer",  minMsgs: 0,    chip: "bg-slate-500/15 text-slate-600 dark:text-slate-300" },
   { level: 2, name: "Regular",   minMsgs: 50,   chip: "bg-sky-500/15 text-sky-600 dark:text-sky-300" },
   { level: 3, name: "Local",     minMsgs: 200,  chip: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300" },
   { level: 4, name: "Veteran",   minMsgs: 500,  chip: "bg-amber-500/15 text-amber-600 dark:text-amber-300" },
   { level: 5, name: "Legend",    minMsgs: 1500, chip: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300" },
-] as const;
+];
 
-export function roomLoyaltyFor(totalMessages: number) {
+export function roomLoyaltyFor(totalMessages: number): RoomLoyaltyLevel {
   let r = ROOM_LOYALTY_LEVELS[0];
   for (const l of ROOM_LOYALTY_LEVELS) if (totalMessages >= l.minMsgs) r = l;
   return r;
 }
 
 /** Creator ranks — based on rolling 7-day engagement score. */
-export const CREATOR_RANKS = [
+export interface CreatorRank {
+  title: string;
+  minScore: number;
+  chip: string;
+  color: string;
+}
+export const CREATOR_RANKS: CreatorRank[] = [
   { title: "Newcomer",         minScore: 0,    chip: "bg-slate-500/15 text-slate-600 dark:text-slate-300",  color: "text-slate-500" },
   { title: "Rising Creator",   minScore: 25,   chip: "bg-sky-500/15 text-sky-600 dark:text-sky-300",        color: "text-sky-500" },
   { title: "Trending Creator", minScore: 100,  chip: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300", color: "text-emerald-500" },
   { title: "Viral Creator",    minScore: 300,  chip: "bg-amber-500/15 text-amber-600 dark:text-amber-300",  color: "text-amber-500" },
   { title: "Elite Poster",     minScore: 800,  chip: "bg-orange-500/15 text-orange-600 dark:text-orange-300", color: "text-orange-500" },
   { title: "Legendary",        minScore: 2000, chip: "bg-gradient-to-r from-fuchsia-500/20 to-violet-500/20 text-fuchsia-600 dark:text-fuchsia-300", color: "text-fuchsia-500" },
-] as const;
+];
 
-export function creatorRankFor(score: number) {
+export function creatorRankFor(score: number): CreatorRank {
   let r = CREATOR_RANKS[0];
   for (const x of CREATOR_RANKS) if (score >= x.minScore) r = x;
   return r;
