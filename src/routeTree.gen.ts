@@ -31,6 +31,7 @@ import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
 import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAiSettingsRouteImport } from './routes/admin.ai-settings'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
 
@@ -144,6 +145,11 @@ const AdminAppearanceRoute = AdminAppearanceRouteImport.update({
   path: '/appearance',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAiSettingsRoute = AdminAiSettingsRouteImport.update({
   id: '/ai-settings',
   path: '/ai-settings',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof LeaderboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/appearance': typeof AdminAppearanceRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/games': typeof AdminGamesRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/appearance': typeof AdminAppearanceRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/games': typeof AdminGamesRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/leaderboard': typeof LeaderboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/appearance': typeof AdminAppearanceRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/games': typeof AdminGamesRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/reset-password'
     | '/admin/ai-settings'
+    | '/admin/analytics'
     | '/admin/appearance'
     | '/admin/economy'
     | '/admin/games'
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/reset-password'
     | '/admin/ai-settings'
+    | '/admin/analytics'
     | '/admin/appearance'
     | '/admin/economy'
     | '/admin/games'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/reset-password'
     | '/admin/ai-settings'
+    | '/admin/analytics'
     | '/admin/appearance'
     | '/admin/economy'
     | '/admin/games'
@@ -483,6 +495,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppearanceRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/ai-settings': {
       id: '/admin/ai-settings'
       path: '/ai-settings'
@@ -502,6 +521,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAiSettingsRoute: typeof AdminAiSettingsRoute
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAppearanceRoute: typeof AdminAppearanceRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
   AdminGamesRoute: typeof AdminGamesRoute
@@ -517,6 +537,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAiSettingsRoute: AdminAiSettingsRoute,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAppearanceRoute: AdminAppearanceRoute,
   AdminEconomyRoute: AdminEconomyRoute,
   AdminGamesRoute: AdminGamesRoute,
