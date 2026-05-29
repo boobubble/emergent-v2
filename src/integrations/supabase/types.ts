@@ -110,6 +110,87 @@ export type Database = {
           },
         ]
       }
+      custom_pages: {
+        Row: {
+          canonical_url: string | null
+          category: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          excerpt: string | null
+          featured: boolean
+          id: string
+          meta_description: string | null
+          meta_keywords: string | null
+          meta_title: string | null
+          nofollow: boolean
+          noindex: boolean
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
+          published_at: string | null
+          schema_jsonld: Json | null
+          slug: string
+          status: string
+          tags: string[]
+          title: string
+          updated_at: string
+          views: number
+        }
+        Insert: {
+          canonical_url?: string | null
+          category?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          featured?: boolean
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
+          nofollow?: boolean
+          noindex?: boolean
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          published_at?: string | null
+          schema_jsonld?: Json | null
+          slug: string
+          status?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          views?: number
+        }
+        Update: {
+          canonical_url?: string | null
+          category?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          featured?: boolean
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
+          nofollow?: boolean
+          noindex?: boolean
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          published_at?: string | null
+          schema_jsonld?: Json | null
+          slug?: string
+          status?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          views?: number
+        }
+        Relationships: []
+      }
       dm_reads: {
         Row: {
           channel_id: string
@@ -464,6 +545,27 @@ export type Database = {
           target_id?: string | null
           target_type?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      page_redirects: {
+        Row: {
+          created_at: string
+          from_slug: string
+          id: string
+          to_slug: string
+        }
+        Insert: {
+          created_at?: string
+          from_slug: string
+          id?: string
+          to_slug: string
+        }
+        Update: {
+          created_at?: string
+          from_slug?: string
+          id?: string
+          to_slug?: string
         }
         Relationships: []
       }
@@ -919,6 +1021,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bump_page_view: { Args: { _slug: string }; Returns: undefined }
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
       has_role: {
         Args: {
