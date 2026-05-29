@@ -42,7 +42,16 @@ type PageRow = PageRecord & {
   published_at: string | null;
 };
 
-const CATEGORIES = ["landing", "seo", "room", "blog", "info", "category"];
+const LAYOUTS: { value: "boxed" | "full"; label: string; hint: string }[] = [
+  { value: "boxed", label: "Boxed container", hint: "Centered max-width article (classic blog/landing)" },
+  { value: "full", label: "Full width", hint: "Edge-to-edge layout for custom designs" },
+];
+
+const SIDEBAR_OPTIONS: { value: "none" | "ads" | "feed"; label: string }[] = [
+  { value: "none", label: "None" },
+  { value: "ads", label: "Ads slot" },
+  { value: "feed", label: "Feed menu" },
+];
 
 function emptyPage(): PageRow {
   return {
@@ -51,10 +60,12 @@ function emptyPage(): PageRow {
     title: "",
     content: "",
     excerpt: "",
-    category: "info",
     tags: [],
     status: "draft",
     featured: false,
+    layout: "boxed",
+    sidebar_left: "none",
+    sidebar_right: "none",
     meta_title: "",
     meta_description: "",
     meta_keywords: "",
