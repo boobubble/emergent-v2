@@ -159,6 +159,8 @@ export const importPages = createServerFn({ method: "POST" })
     let imported = 0, skipped = 0, overwritten = 0;
     for (const p of data.pages) {
       const slug = slugify(p.slug);
+      if (isReservedSlug(slug)) { skipped++; continue; }
+
       const { data: existing } = await supabaseAdmin
         .from("custom_pages").select("id").eq("slug", slug).maybeSingle();
       const row = {
