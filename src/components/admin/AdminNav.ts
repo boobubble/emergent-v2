@@ -22,6 +22,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { to: "/admin/roles",         label: "Roles",         icon: Shield,          group: "Configuration" },
   { to: "/admin/security",      label: "Security",      icon: Lock,            group: "Advanced", badge: "Soon" },
   { to: "/admin/seo",           label: "SEO",           icon: Search,          group: "Advanced" },
+  { to: "/admin/pages",         label: "Custom Pages",  icon: FileText,        group: "Advanced" },
   { to: "/admin/economy",       label: "Economy",       icon: Coins,           group: "Advanced" },
   { to: "/admin/moderation",    label: "Moderation",    icon: Gavel,           group: "Advanced" },
   { to: "/admin/games",         label: "Games",         icon: Gamepad2,        group: "Advanced" },
