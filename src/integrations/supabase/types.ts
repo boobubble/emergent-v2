@@ -374,6 +374,63 @@ export type Database = {
         }
         Relationships: []
       }
+      mod_logs: {
+        Row: {
+          action: Database["public"]["Enums"]["mod_action"]
+          actor_id: string
+          created_at: string
+          id: string
+          payload: Json | null
+          target_id: string | null
+          target_type: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["mod_action"]
+          actor_id: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          target_id?: string | null
+          target_type?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["mod_action"]
+          actor_id?: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          target_id?: string | null
+          target_type?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
+      mod_notes: {
+        Row: {
+          author_id: string
+          created_at: string
+          id: string
+          note: string
+          user_id: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          id?: string
+          note: string
+          user_id: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string | null
@@ -557,6 +614,84 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target"]
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target"]
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id?: string
+          target_type?: Database["public"]["Enums"]["report_target"]
+        }
+        Relationships: []
+      }
+      room_moderators: {
+        Row: {
+          can_delete: boolean
+          can_kick: boolean
+          can_mute: boolean
+          can_pin: boolean
+          channel_id: string
+          created_at: string
+          created_by: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          can_delete?: boolean
+          can_kick?: boolean
+          can_mute?: boolean
+          can_pin?: boolean
+          channel_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          can_delete?: boolean
+          can_kick?: boolean
+          can_mute?: boolean
+          can_pin?: boolean
+          channel_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       seo_settings: {
         Row: {
           description: string | null
@@ -596,6 +731,72 @@ export type Database = {
         }
         Relationships: []
       }
+      url_rules: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          domain: string
+          id: string
+          kind: Database["public"]["Enums"]["url_rule_kind"]
+          reason: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          domain: string
+          id?: string
+          kind: Database["public"]["Enums"]["url_rule_kind"]
+          reason?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          domain?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["url_rule_kind"]
+          reason?: string | null
+        }
+        Relationships: []
+      }
+      user_bans: {
+        Row: {
+          active: boolean
+          ban_type: Database["public"]["Enums"]["ban_type"]
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          ip_address: unknown
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          ban_type?: Database["public"]["Enums"]["ban_type"]
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          ban_type?: Database["public"]["Enums"]["ban_type"]
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown
+          reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_inventory: {
         Row: {
           acquired_at: string
@@ -623,6 +824,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_mutes: {
+        Row: {
+          active: boolean
+          channel_id: string | null
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          reason: string | null
+          scope: Database["public"]["Enums"]["mute_scope"]
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          channel_id?: string | null
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          reason?: string | null
+          scope?: Database["public"]["Enums"]["mute_scope"]
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          channel_id?: string | null
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          reason?: string | null
+          scope?: Database["public"]["Enums"]["mute_scope"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -644,6 +881,39 @@ export type Database = {
         }
         Relationships: []
       }
+      word_filters: {
+        Row: {
+          action: Database["public"]["Enums"]["word_filter_action"]
+          active: boolean
+          created_at: string
+          created_by: string
+          id: string
+          match_mode: string
+          pattern: string
+          severity: number
+        }
+        Insert: {
+          action?: Database["public"]["Enums"]["word_filter_action"]
+          active?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          match_mode?: string
+          pattern: string
+          severity?: number
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["word_filter_action"]
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          match_mode?: string
+          pattern?: string
+          severity?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -662,10 +932,17 @@ export type Database = {
         Args: { _channel: string; _user: string }
         Returns: boolean
       }
+      is_moderator: { Args: { _user_id: string }; Returns: boolean }
+      is_user_banned: { Args: { _user_id: string }; Returns: boolean }
+      is_user_muted: {
+        Args: { _channel: string; _user_id: string }
+        Returns: boolean
+      }
       slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "moderator" | "user"
+      ban_type: "ban" | "temp_ban" | "shadow_ban" | "ip_ban"
       friendship_status: "pending" | "accepted" | "blocked"
       game_invite_status:
         | "pending"
@@ -677,9 +954,35 @@ export type Database = {
       game_status: "waiting" | "active" | "finished" | "cancelled"
       game_type: "ludo_1v1" | "ludo_4p"
       game_visibility: "public" | "private"
+      mod_action:
+        | "ban"
+        | "unban"
+        | "temp_ban"
+        | "shadow_ban"
+        | "ip_ban"
+        | "mute"
+        | "unmute"
+        | "kick"
+        | "warn"
+        | "delete_message"
+        | "delete_post"
+        | "pin_message"
+        | "unpin_message"
+        | "resolve_report"
+        | "dismiss_report"
+        | "note"
+        | "add_word_filter"
+        | "remove_word_filter"
+        | "add_url_rule"
+        | "remove_url_rule"
+      mute_scope: "global" | "room"
       post_kind: "text" | "image" | "gif" | "poll"
       post_privacy: "public" | "friends" | "private"
       reaction_type: "like" | "love" | "haha" | "angry" | "fire"
+      report_status: "open" | "reviewing" | "resolved" | "dismissed"
+      report_target: "message" | "post" | "user" | "room"
+      url_rule_kind: "whitelist" | "block"
+      word_filter_action: "delete" | "warn" | "mute" | "ban"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -808,6 +1111,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "admin", "moderator", "user"],
+      ban_type: ["ban", "temp_ban", "shadow_ban", "ip_ban"],
       friendship_status: ["pending", "accepted", "blocked"],
       game_invite_status: [
         "pending",
@@ -820,9 +1124,36 @@ export const Constants = {
       game_status: ["waiting", "active", "finished", "cancelled"],
       game_type: ["ludo_1v1", "ludo_4p"],
       game_visibility: ["public", "private"],
+      mod_action: [
+        "ban",
+        "unban",
+        "temp_ban",
+        "shadow_ban",
+        "ip_ban",
+        "mute",
+        "unmute",
+        "kick",
+        "warn",
+        "delete_message",
+        "delete_post",
+        "pin_message",
+        "unpin_message",
+        "resolve_report",
+        "dismiss_report",
+        "note",
+        "add_word_filter",
+        "remove_word_filter",
+        "add_url_rule",
+        "remove_url_rule",
+      ],
+      mute_scope: ["global", "room"],
       post_kind: ["text", "image", "gif", "poll"],
       post_privacy: ["public", "friends", "private"],
       reaction_type: ["like", "love", "haha", "angry", "fire"],
+      report_status: ["open", "reviewing", "resolved", "dismissed"],
+      report_target: ["message", "post", "user", "room"],
+      url_rule_kind: ["whitelist", "block"],
+      word_filter_action: ["delete", "warn", "mute", "ban"],
     },
   },
 } as const
