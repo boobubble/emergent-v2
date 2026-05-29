@@ -1,15 +1,20 @@
 // Lightweight import/export helpers for the Custom Pages CMS.
 // Supports JSON, XML, HTML, Markdown, and TXT.
 
+export type PageLayout = "full" | "boxed";
+export type SidebarMode = "none" | "ads" | "feed";
+
 export interface PageRecord {
   slug: string;
   title: string;
   content: string;
   excerpt?: string | null;
-  category?: string | null;
   tags?: string[];
   status?: "draft" | "published";
   featured?: boolean;
+  layout?: PageLayout;
+  sidebar_left?: SidebarMode;
+  sidebar_right?: SidebarMode;
   meta_title?: string | null;
   meta_description?: string | null;
   meta_keywords?: string | null;
