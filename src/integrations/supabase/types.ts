@@ -200,6 +200,33 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_missions: {
+        Row: {
+          claimed: string[]
+          day: string
+          id: string
+          progress: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          claimed?: string[]
+          day: string
+          id?: string
+          progress?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          claimed?: string[]
+          day?: string
+          id?: string
+          progress?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dm_reads: {
         Row: {
           channel_id: string
@@ -431,6 +458,33 @@ export type Database = {
         }
         Relationships: []
       }
+      message_highlights: {
+        Row: {
+          buyer_id: string
+          channel_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          message_id: string
+        }
+        Insert: {
+          buyer_id: string
+          channel_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          message_id: string
+        }
+        Update: {
+          buyer_id?: string
+          channel_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          message_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachment: Json | null
@@ -575,6 +629,33 @@ export type Database = {
           from_slug?: string
           id?: string
           to_slug?: string
+        }
+        Relationships: []
+      }
+      post_boosts: {
+        Row: {
+          booster_id: string
+          coins_spent: number
+          created_at: string
+          id: string
+          post_id: string
+          score_delta: number
+        }
+        Insert: {
+          booster_id: string
+          coins_spent: number
+          created_at?: string
+          id?: string
+          post_id: string
+          score_delta?: number
+        }
+        Update: {
+          booster_id?: string
+          coins_spent?: number
+          created_at?: string
+          id?: string
+          post_id?: string
+          score_delta?: number
         }
         Relationships: []
       }
@@ -764,6 +845,45 @@ export type Database = {
           status?: Database["public"]["Enums"]["report_status"]
           target_id?: string
           target_type?: Database["public"]["Enums"]["report_target"]
+        }
+        Relationships: []
+      }
+      room_loyalty: {
+        Row: {
+          channel_id: string
+          id: string
+          last_active_day: string | null
+          loyalty_level: number
+          streak_days: number
+          total_messages: number
+          updated_at: string
+          user_id: string
+          week_start: string | null
+          weekly_messages: number
+        }
+        Insert: {
+          channel_id: string
+          id?: string
+          last_active_day?: string | null
+          loyalty_level?: number
+          streak_days?: number
+          total_messages?: number
+          updated_at?: string
+          user_id: string
+          week_start?: string | null
+          weekly_messages?: number
+        }
+        Update: {
+          channel_id?: string
+          id?: string
+          last_active_day?: string | null
+          loyalty_level?: number
+          streak_days?: number
+          total_messages?: number
+          updated_at?: string
+          user_id?: string
+          week_start?: string | null
+          weekly_messages?: number
         }
         Relationships: []
       }

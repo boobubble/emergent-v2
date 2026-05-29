@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
 import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
 import { AnimatedEmojiPicker, gifUrlForSticker } from "./AnimatedEmojiPicker";
+import { earnChatMessage } from "@/lib/economy.functions";
 import type { Attachment } from "@/lib/chat-types";
 
 const COMMANDS = [
@@ -103,9 +105,15 @@ export function MessageInput() {
     return () => window.removeEventListener("palrgo:mention", onMention);
   }, []);
 
+  const earnChat = useServerFn(earnChatMessage);
+
   function submit() {
     if (!text.trim() && !attachment) return;
     send(text, { attachment: attachment || undefined, replyToId: replyingTo?.id });
+    // Fire-and-forget earn call — server enforces cooldown + daily cap.
+    if (me) {
+      earnChat({ data: { channelId: state.activeChannel, isReply: !!replyingTo } }).catch(() => {});
+    }
     setText("");
     setAttachment(null);
     setAttachError("");
