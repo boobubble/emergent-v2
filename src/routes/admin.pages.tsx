@@ -344,11 +344,36 @@ function PageEditorDialog({ page, onClose, onSaved }: { page: PageRow | null; on
             </TabsContent>
 
             <TabsContent value="meta" className="grid gap-3 pt-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Label className="text-xs">Page layout</Label>
+                <Select value={row.layout} onValueChange={(v) => update("layout", v as "full" | "boxed")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {LAYOUTS.map((l) => (
+                      <SelectItem key={l.value} value={l.value}>
+                        <span className="font-medium">{l.label}</span>
+                        <span className="ml-2 text-[10px] text-muted-foreground">{l.hint}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
-                <Label className="text-xs">Category</Label>
-                <Select value={row.category ?? ""} onValueChange={(v) => update("category", v)}>
-                  <SelectTrigger><SelectValue placeholder="Pick category" /></SelectTrigger>
-                  <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                <Label className="text-xs">Left sidebar</Label>
+                <Select value={row.sidebar_left} onValueChange={(v) => update("sidebar_left", v as "none" | "ads" | "feed")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SIDEBAR_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Right sidebar</Label>
+                <Select value={row.sidebar_right} onValueChange={(v) => update("sidebar_right", v as "none" | "ads" | "feed")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SIDEBAR_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </div>
               <div>
