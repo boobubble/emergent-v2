@@ -297,7 +297,7 @@ function PageEditorDialog({ page, onClose, onSaved }: { page: PageRow | null; on
             <TabsList className="flex w-full flex-wrap">
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="seo">SEO</TabsTrigger>
-              <TabsTrigger value="meta">Categories & status</TabsTrigger>
+              <TabsTrigger value="meta">Layout & status</TabsTrigger>
             </TabsList>
 
             <TabsContent value="content" className="space-y-3 pt-3">
