@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2 } from "lucide-react";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -281,6 +281,9 @@ function FeedPage() {
               />
               <div className="my-1 h-px bg-border/60" />
               <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
+              <SideNavLink to="/reels" icon={Film} label="Reels" badge="Soon" />
+              <SideNavLink to="/pages" icon={FileText} label="Pages" badge="Soon" />
+              <SideNavLink to="/groups" icon={Users2} label="Groups" badge="Soon" />
               <SideItem onClick={() => setView("findFriends")} active={view === "findFriends"} icon={Users} label="Find Friends" />
               <SideItem onClick={() => setView("achievements")} active={view === "achievements"} icon={Award} label="Achievements" />
               <SideItem onClick={() => setView("leaderboard")} active={view === "leaderboard"} icon={Trophy} label="Leaderboard" />
@@ -481,6 +484,21 @@ function SideLink({ to, iconSrc, label }: { to: string; iconSrc: string; label: 
     </Link>
   );
 }
+
+function SideNavLink({ to, icon: Icon, label, badge }: { to: string; icon: typeof Home; label: string; badge?: string }) {
+  return (
+    <Link
+      to={to}
+      className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
+    >
+      <Icon className="h-4 w-4 text-muted-foreground" />
+      <span className="truncate">{label}</span>
+      {badge && <span className="ml-auto rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-primary">{badge}</span>}
+    </Link>
+  );
+}
+
+
 
 
 function NavLink({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active?: boolean }) {
