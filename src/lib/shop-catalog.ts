@@ -113,6 +113,17 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: "badge_diamond",   category: "badge", name: "Diamond Badge",   description: "Premium member.",                              price: 1500, preview: "💎", badgeIcon: "💎" },
   { id: "badge_fire",      category: "badge", name: "Fire Badge",      description: "On a hot streak.",                             price: 600,  preview: "🔥", badgeIcon: "🔥" },
   { id: "badge_trophy",    category: "badge", name: "Trophy Badge",    description: "Champion of the feed.",                        price: 2000, preview: "🏆", badgeIcon: "🏆" },
+  { id: "badge_lightning", category: "badge", name: "Lightning Badge", description: "Lightning-fast responder.",                    price: 450,  preview: "⚡", badgeIcon: "⚡" },
+  { id: "badge_moon",      category: "badge", name: "Moon Badge",      description: "Night owl member.",                            price: 350,  preview: "🌙", badgeIcon: "🌙" },
+  { id: "badge_sun",       category: "badge", name: "Sun Badge",       description: "Daily streak hero.",                           price: 500,  preview: "☀️", badgeIcon: "☀️" },
+  { id: "badge_unicorn",   category: "badge", name: "Unicorn Badge",   description: "Rare and magical.",                            price: 1300, preview: "🦄", badgeIcon: "🦄" },
+  { id: "badge_ghost",     category: "badge", name: "Ghost Badge",     description: "Stealthy lurker.",                             price: 400,  preview: "👻", badgeIcon: "👻" },
+  { id: "badge_robot",     category: "badge", name: "Robot Badge",     description: "Beep boop, tech enthusiast.",                  price: 550,  preview: "🤖", badgeIcon: "🤖" },
+  { id: "badge_alien",     category: "badge", name: "Alien Badge",     description: "Out of this world.",                           price: 700,  preview: "👽", badgeIcon: "👽" },
+  { id: "badge_ninja",     category: "badge", name: "Ninja Badge",     description: "Silent and deadly.",                           price: 800,  preview: "🥷", badgeIcon: "🥷" },
+  { id: "badge_dragon",    category: "badge", name: "Dragon Badge",    description: "Mythical guardian.",                           price: 1800, preview: "🐉", badgeIcon: "🐉" },
+  { id: "badge_pheonix",   category: "badge", name: "Phoenix Badge",   description: "Reborn from fire.",                            price: 2200, preview: "🦅", badgeIcon: "🦅" },
+  { id: "badge_skull",     category: "badge", name: "Skull Badge",     description: "Hardcore vibes.",                              price: 650,  preview: "💀", badgeIcon: "💀" },
 
   // ============= Profile backgrounds (6) =============
   { id: "bg_aurora",       category: "background", name: "Aurora",        description: "Northern lights gradient header.",          price: 800,  preview: "🌌", backgroundClass: "bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" },
