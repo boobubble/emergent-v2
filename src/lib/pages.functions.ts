@@ -243,6 +243,10 @@ export const saveRedirect = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const from = slugify(data.from_slug);
     const to = slugify(data.to_slug);
+    if (isReservedSlug(from) || isReservedSlug(to)) {
+      throw new Error("Reserved slug cannot be used in redirects.");
+    }
+
     if (from === to) throw new Error("from and to slugs must differ");
     const { error } = await supabaseAdmin.from("page_redirects").upsert(
       { from_slug: from, to_slug: to },
