@@ -8,7 +8,7 @@ import { SHOP_BY_ID } from "@/lib/shop-catalog";
 import { setLocalEquip } from "@/lib/cosmetics-store";
 import { useAuth } from "@/lib/auth-store";
 
-const CATS: ShopCategory[] = ["frame", "username_effect", "theme", "emoji_pack"];
+const CATS: ShopCategory[] = ["frame", "username_effect", "theme", "emoji_pack", "badge", "background"];
 
 interface InventoryRow { item_id: string; category: string; equipped: boolean; acquired_at: string }
 
@@ -88,7 +88,7 @@ export function ShopPanel({ onBack }: { onBack: () => void }) {
             onClick={() => setCat(c)}
             className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${cat === c ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
           >
-            {CATEGORY_LABEL[c]}
+            {CATEGORY_LABEL[c]} <span className="ml-1 opacity-70">({SHOP_BY_CATEGORY[c].length})</span>
           </button>
         ))}
       </div>
