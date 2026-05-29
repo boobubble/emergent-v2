@@ -76,7 +76,10 @@ export const savePage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const slug = slugify(data.slug);
-    // Check duplicate slug if creating or renaming
+    if (isReservedSlug(slug)) {
+      throw new Error(`Slug "${slug}" is reserved by the platform. Choose another.`);
+    }
+
     const { data: existing } = await supabaseAdmin
       .from("custom_pages").select("id").eq("slug", slug).maybeSingle();
     if (existing && existing.id !== data.id) {
