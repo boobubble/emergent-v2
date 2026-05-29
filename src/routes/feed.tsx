@@ -496,6 +496,9 @@ function SideNavLink({ to, icon: Icon, label, badge }: { to: string; icon: typeo
       {badge && <span className="ml-auto rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-primary">{badge}</span>}
     </Link>
   );
+}
+
+
 
 
 function NavLink({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active?: boolean }) {
