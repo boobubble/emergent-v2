@@ -140,12 +140,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (identifier: string, password: string) => {
     const id = identifier.trim();
-    let email = id;
-    if (!id.includes("@")) {
-      const res = await resolveLoginEmail({ data: { identifier: id } });
-      email = res.email;
-    }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const res = await loginWithIdentifier({ data: { identifier: id, password } });
+    const { error } = await supabase.auth.setSession({
+      access_token: res.access_token,
+      refresh_token: res.refresh_token,
+    });
     if (error) throw new Error(error.message);
   }, []);
 
