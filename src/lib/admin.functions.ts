@@ -161,6 +161,73 @@ export const getAnalytics = createServerFn({ method: "GET" })
     };
   });
 
+// -------- Lightweight realtime overview (cheap, frequent polling) --------
+export const getRealtimeOverview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const since5m = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const since10m = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const since1m = new Date(Date.now() - 60 * 1000).toISOString();
+    const [online, recentMsgs, activeGames, recentPosts] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).gte("last_seen", since5m),
+      supabaseAdmin.from("messages").select("channel_id").gte("created_at", since10m).limit(500),
+      supabaseAdmin.from("games").select("id", { count: "exact", head: true }).in("status", ["waiting", "active"]),
+      supabaseAdmin.from("posts").select("id", { count: "exact", head: true }).gte("created_at", since1m),
+    ]);
+    const rooms = new Set<string>();
+    for (const r of recentMsgs.data ?? []) {
+      const cid = (r as { channel_id: string }).channel_id;
+      if (cid && !cid.startsWith("dm:")) rooms.add(cid);
+    }
+    return {
+      onlineUsers: online.count ?? 0,
+      activeRooms: rooms.size,
+      activeGames: activeGames.count ?? 0,
+      postsLastMinute: recentPosts.count ?? 0,
+      timestamp: Date.now(),
+    };
+  });
+
+// -------- Top users (engagement) --------
+export const getTopUsers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id, username, avatar_url, avatar_color, xp, level")
+      .order("xp", { ascending: false })
+      .limit(8);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+// -------- Dynamic SEO targets (rooms/profiles/posts/games) --------
+export const getSeoTargetsSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const [rooms, profiles, posts, games] = await Promise.all([
+      supabaseAdmin.from("messages").select("channel_id").limit(2000),
+      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("posts").select("id", { count: "exact", head: true }).eq("privacy", "public"),
+      supabaseAdmin.from("games").select("id", { count: "exact", head: true }),
+    ]);
+    const roomSet = new Set<string>();
+    for (const r of rooms.data ?? []) {
+      const cid = (r as { channel_id: string }).channel_id;
+      if (cid && !cid.startsWith("dm:")) roomSet.add(cid);
+    }
+    return {
+      rooms: roomSet.size,
+      profiles: profiles.count ?? 0,
+      publicPosts: posts.count ?? 0,
+      games: games.count ?? 0,
+    };
+  });
+
+
 // -------- Users + role mgmt --------
 export const listUsersWithRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
