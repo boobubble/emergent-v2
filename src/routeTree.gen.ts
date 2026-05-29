@@ -24,6 +24,7 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
+import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
 import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
@@ -34,6 +35,7 @@ import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
 import { Route as AdminFakeActivityRouteImport } from './routes/admin.fake-activity'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
+import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
 import { Route as AdminBotsRouteImport } from './routes/admin.bots'
 import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
@@ -115,6 +117,11 @@ const AdminSocialLayoutRoute = AdminSocialLayoutRouteImport.update({
   path: '/social-layout',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSocialFeedRoute = AdminSocialFeedRouteImport.update({
+  id: '/social-feed',
+  path: '/social-feed',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSeoRoute = AdminSeoRouteImport.update({
   id: '/seo',
   path: '/seo',
@@ -165,6 +172,11 @@ const AdminEconomyRoute = AdminEconomyRouteImport.update({
   path: '/economy',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminChatroomsRoute = AdminChatroomsRouteImport.update({
+  id: '/chatrooms',
+  path: '/chatrooms',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBotsRoute = AdminBotsRouteImport.update({
   id: '/bots',
   path: '/bots',
@@ -206,6 +218,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/appearance': typeof AdminAppearanceRoute
   '/admin/bots': typeof AdminBotsRoute
+  '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/fake-activity': typeof AdminFakeActivityRoute
   '/admin/games': typeof AdminGamesRoute
@@ -216,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
+  '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
@@ -237,6 +251,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/appearance': typeof AdminAppearanceRoute
   '/admin/bots': typeof AdminBotsRoute
+  '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/fake-activity': typeof AdminFakeActivityRoute
   '/admin/games': typeof AdminGamesRoute
@@ -247,6 +262,7 @@ export interface FileRoutesByTo {
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
+  '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
@@ -270,6 +286,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/appearance': typeof AdminAppearanceRoute
   '/admin/bots': typeof AdminBotsRoute
+  '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/fake-activity': typeof AdminFakeActivityRoute
   '/admin/games': typeof AdminGamesRoute
@@ -280,6 +297,7 @@ export interface FileRoutesById {
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
+  '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
@@ -304,6 +322,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/appearance'
     | '/admin/bots'
+    | '/admin/chatrooms'
     | '/admin/economy'
     | '/admin/fake-activity'
     | '/admin/games'
@@ -314,6 +333,7 @@ export interface FileRouteTypes {
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
+    | '/admin/social-feed'
     | '/admin/social-layout'
     | '/feed/$slug'
     | '/p/$slug'
@@ -335,6 +355,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/appearance'
     | '/admin/bots'
+    | '/admin/chatrooms'
     | '/admin/economy'
     | '/admin/fake-activity'
     | '/admin/games'
@@ -345,6 +366,7 @@ export interface FileRouteTypes {
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
+    | '/admin/social-feed'
     | '/admin/social-layout'
     | '/feed/$slug'
     | '/p/$slug'
@@ -367,6 +389,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/appearance'
     | '/admin/bots'
+    | '/admin/chatrooms'
     | '/admin/economy'
     | '/admin/fake-activity'
     | '/admin/games'
@@ -377,6 +400,7 @@ export interface FileRouteTypes {
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
+    | '/admin/social-feed'
     | '/admin/social-layout'
     | '/feed/$slug'
     | '/p/$slug'
@@ -508,6 +532,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSocialLayoutRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/social-feed': {
+      id: '/admin/social-feed'
+      path: '/social-feed'
+      fullPath: '/admin/social-feed'
+      preLoaderRoute: typeof AdminSocialFeedRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/seo': {
       id: '/admin/seo'
       path: '/seo'
@@ -578,6 +609,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEconomyRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/chatrooms': {
+      id: '/admin/chatrooms'
+      path: '/chatrooms'
+      fullPath: '/admin/chatrooms'
+      preLoaderRoute: typeof AdminChatroomsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/bots': {
       id: '/admin/bots'
       path: '/bots'
@@ -621,6 +659,7 @@ interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAppearanceRoute: typeof AdminAppearanceRoute
   AdminBotsRoute: typeof AdminBotsRoute
+  AdminChatroomsRoute: typeof AdminChatroomsRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
   AdminFakeActivityRoute: typeof AdminFakeActivityRoute
   AdminGamesRoute: typeof AdminGamesRoute
@@ -631,6 +670,7 @@ interface AdminRouteChildren {
   AdminRolesRoute: typeof AdminRolesRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSeoRoute: typeof AdminSeoRoute
+  AdminSocialFeedRoute: typeof AdminSocialFeedRoute
   AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -640,6 +680,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAppearanceRoute: AdminAppearanceRoute,
   AdminBotsRoute: AdminBotsRoute,
+  AdminChatroomsRoute: AdminChatroomsRoute,
   AdminEconomyRoute: AdminEconomyRoute,
   AdminFakeActivityRoute: AdminFakeActivityRoute,
   AdminGamesRoute: AdminGamesRoute,
@@ -650,6 +691,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRolesRoute: AdminRolesRoute,
   AdminSecurityRoute: AdminSecurityRoute,
   AdminSeoRoute: AdminSeoRoute,
+  AdminSocialFeedRoute: AdminSocialFeedRoute,
   AdminSocialLayoutRoute: AdminSocialLayoutRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
