@@ -47,7 +47,7 @@ export function exportAs(format: ExportFormat, pages: PageRecord[]): { name: str
         `  <page>`,
         `    <slug>${esc(p.slug)}</slug>`,
         `    <title>${esc(p.title)}</title>`,
-        `    <category>${esc(p.category ?? "")}</category>`,
+        `    <layout>${esc(p.layout ?? "boxed")}</layout>`,
         `    <status>${esc(p.status ?? "draft")}</status>`,
         `    <meta_description>${esc(p.meta_description ?? "")}</meta_description>`,
         `    <content><![CDATA[${p.content ?? ""}]]></content>`,
