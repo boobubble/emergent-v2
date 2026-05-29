@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2 } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus } from "lucide-react";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -269,6 +269,31 @@ function FeedPage() {
           <div className="sticky top-20 space-y-3">
             <nav className="rounded-2xl bg-card p-1.5 shadow-sm border border-border">
               <SideItem active={view === "feed" && tab === "foryou"} onClick={() => { setView("feed"); setTab("foryou"); }} icon={Newspaper} label="Feed" />
+              <SideItem
+                onClick={() => {
+                  setView("feed");
+                  setTimeout(() => {
+                    const el = document.getElementById("story-tray");
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    const addBtn = document.querySelector<HTMLButtonElement>("[data-story-add]");
+                    addBtn?.click();
+                  }, 50);
+                }}
+                icon={CirclePlus}
+                label="Add Story"
+              />
+              <SideItem
+                onClick={() => {
+                  setView("feed");
+                  setTimeout(() => {
+                    const el = document.getElementById("story-tray");
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }, 50);
+                }}
+                icon={Sparkles}
+                label="Stories"
+              />
+
               <SideItem active={view === "feed" && tab === "friends"} onClick={() => { setView("feed"); setTab("friends"); }} icon={Users} label="Friends" />
               <SideItem active={view === "feed" && tab === "trending"} onClick={() => { setView("feed"); setTab("trending"); }} icon={Flame} label="Trending" />
               <SideItem active={view === "feed" && tab === "saved"} onClick={() => { setView("feed"); setTab("saved"); }} icon={Bookmark} label="Saved Posts" />
