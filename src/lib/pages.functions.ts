@@ -200,7 +200,7 @@ export const getPublishedPage = createServerFn({ method: "GET" })
     const finalSlug = redir?.to_slug ?? slug;
     const { data: row } = await supabaseAdmin
       .from("custom_pages")
-      .select("slug,title,content,excerpt,category,tags,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,noindex,nofollow,views,published_at")
+      .select("slug,title,content,excerpt,tags,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,noindex,nofollow,views,published_at")
       .eq("slug", finalSlug)
       .eq("status", "published")
       .maybeSingle();
@@ -212,18 +212,16 @@ export const getPublishedPage = createServerFn({ method: "GET" })
 
 export const listPublishedPages = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({
-    category: z.string().max(64).optional(),
     featured: z.boolean().optional(),
     limit: z.number().min(1).max(50).default(20),
   }).parse(input ?? {}))
   .handler(async ({ data }) => {
     let q = supabaseAdmin
       .from("custom_pages")
-      .select("slug,title,excerpt,category,tags,og_image,views,published_at")
+      .select("slug,title,excerpt,tags,og_image,views,published_at")
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .limit(data.limit);
-    if (data.category) q = q.eq("category", data.category);
     if (data.featured) q = q.eq("featured", true);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
