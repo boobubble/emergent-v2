@@ -25,16 +25,21 @@ export function slugify(input: string): string {
     .slice(0, 80) || "page";
 }
 
+const LAYOUTS = ["full", "boxed"] as const;
+const SIDEBARS = ["none", "ads", "feed"] as const;
+
 const pageSchema = z.object({
   id: z.string().uuid().optional(),
   slug: z.string().min(1).max(120),
   title: z.string().min(1).max(200),
   content: z.string().max(200_000).default(""),
   excerpt: z.string().max(500).nullable().optional(),
-  category: z.string().max(64).nullable().optional(),
   tags: z.array(z.string().max(40)).max(20).default([]),
   status: z.enum(["draft", "published"]).default("draft"),
   featured: z.boolean().default(false),
+  layout: z.enum(LAYOUTS).default("boxed"),
+  sidebar_left: z.enum(SIDEBARS).default("none"),
+  sidebar_right: z.enum(SIDEBARS).default("none"),
   meta_title: z.string().max(200).nullable().optional(),
   meta_description: z.string().max(400).nullable().optional(),
   meta_keywords: z.string().max(500).nullable().optional(),
