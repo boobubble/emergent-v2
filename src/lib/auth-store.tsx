@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { resolveLoginEmail, deleteGuestAccount } from "@/lib/auth.functions";
+import { loginWithIdentifier, deleteGuestAccount } from "@/lib/auth.functions";
 import { lovable } from "@/integrations/lovable/index";
 import type { Session } from "@supabase/supabase-js";
 
@@ -140,12 +140,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (identifier: string, password: string) => {
     const id = identifier.trim();
-    let email = id;
-    if (!id.includes("@")) {
-      const res = await resolveLoginEmail({ data: { identifier: id } });
-      email = res.email;
-    }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const res = await loginWithIdentifier({ data: { identifier: id, password } });
+    const { error } = await supabase.auth.setSession({
+      access_token: res.access_token,
+      refresh_token: res.refresh_token,
+    });
     if (error) throw new Error(error.message);
   }, []);
 

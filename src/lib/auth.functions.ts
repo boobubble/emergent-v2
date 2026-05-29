@@ -30,29 +30,55 @@ export const checkUsernameAvailable = createServerFn({ method: "POST" })
 
 
 
-export const resolveLoginEmail = createServerFn({ method: "POST" })
-  .inputValidator((input: { identifier: string }) => {
-    if (!input || typeof input.identifier !== "string") throw new Error("Invalid identifier");
-    const v = input.identifier.trim();
-    if (v.length < 2 || v.length > 255) throw new Error("Invalid identifier");
-    return { identifier: v };
+/**
+ * Sign in with a username OR email + password, server-side.
+ *
+ * Replaces the previous `resolveLoginEmail` flow, which returned the email
+ * for any public username and allowed unauthenticated email harvesting.
+ * The email is now resolved and consumed entirely on the server; only the
+ * resulting session tokens are returned to the client.
+ */
+export const loginWithIdentifier = createServerFn({ method: "POST" })
+  .inputValidator((input: { identifier: string; password: string }) => {
+    if (!input || typeof input.identifier !== "string" || typeof input.password !== "string") {
+      throw new Error("Invalid credentials");
+    }
+    const identifier = input.identifier.trim();
+    const password = input.password;
+    if (identifier.length < 2 || identifier.length > 255) throw new Error("Invalid credentials");
+    if (password.length < 1 || password.length > 256) throw new Error("Invalid credentials");
+    return { identifier, password };
   })
   .handler(async ({ data }) => {
-    if (data.identifier.includes("@")) return { email: data.identifier };
+    let email = data.identifier;
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!email.includes("@")) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .ilike("username", data.identifier)
+        .maybeSingle();
+      // Use a uniform error to avoid leaking whether the username exists.
+      if (!profile?.id) throw new Error("Invalid login credentials");
+      const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+      if (!userRes?.user?.email) throw new Error("Invalid login credentials");
+      email = userRes.user.email;
+    }
 
-    const { data: profile, error: pErr } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .ilike("username", data.identifier)
-      .maybeSingle();
-    if (pErr) throw new Error(pErr.message);
-    if (!profile?.id) throw new Error("No account found for that username");
+    // Use an anon-key client server-side to perform the actual password sign-in.
+    // The resolved email never leaves the server.
+    const { createClient } = await import("@supabase/supabase-js");
+    const url = process.env.SUPABASE_URL!;
+    const anonKey = process.env.SUPABASE_PUBLISHABLE_KEY!;
+    const authClient = createClient(url, anonKey, { auth: { persistSession: false } });
+    const { data: signIn, error } = await authClient.auth.signInWithPassword({ email, password: data.password });
+    if (error || !signIn.session) throw new Error("Invalid login credentials");
 
-    const { data: userRes, error: uErr } = await supabaseAdmin.auth.admin.getUserById(profile.id);
-    if (uErr || !userRes?.user?.email) throw new Error("Unable to resolve account email");
-    return { email: userRes.user.email };
+    return {
+      access_token: signIn.session.access_token,
+      refresh_token: signIn.session.refresh_token,
+    };
   });
 
 // Delete the current guest (anonymous) user: profile + auth user.
