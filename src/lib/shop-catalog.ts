@@ -132,6 +132,15 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: "bg_forest",       category: "background", name: "Forest Mist",   description: "Lush green gradient header.",               price: 700,  preview: "🌲", backgroundClass: "bg-gradient-to-br from-emerald-400 via-teal-500 to-green-700" },
   { id: "bg_cherry",       category: "background", name: "Cherry Bloom",  description: "Soft sakura pink header.",                  price: 600,  preview: "🌸", backgroundClass: "bg-gradient-to-br from-pink-300 via-rose-400 to-pink-500" },
   { id: "bg_galaxy",       category: "background", name: "Galaxy",        description: "Deep space gradient header.",               price: 1200, preview: "✨", backgroundClass: "bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900" },
+  { id: "bg_lava",         category: "background", name: "Lava Flow",     description: "Molten red-orange header.",                 price: 900,  preview: "🌋", backgroundClass: "bg-gradient-to-br from-red-700 via-orange-500 to-yellow-400" },
+  { id: "bg_arctic",       category: "background", name: "Arctic",        description: "Icy blue-white header.",                    price: 750,  preview: "🧊", backgroundClass: "bg-gradient-to-br from-sky-200 via-cyan-300 to-blue-400" },
+  { id: "bg_neon",         category: "background", name: "Neon City",     description: "Cyberpunk magenta-cyan.",                   price: 1100, preview: "🏙️", backgroundClass: "bg-gradient-to-br from-fuchsia-600 via-purple-600 to-cyan-500" },
+  { id: "bg_desert",       category: "background", name: "Desert Dunes",  description: "Warm sandstone header.",                    price: 650,  preview: "🏜️", backgroundClass: "bg-gradient-to-br from-amber-300 via-orange-400 to-rose-500" },
+  { id: "bg_jungle",       category: "background", name: "Jungle",        description: "Lush deep-green header.",                   price: 700,  preview: "🌴", backgroundClass: "bg-gradient-to-br from-lime-500 via-green-600 to-emerald-800" },
+  { id: "bg_midnight",     category: "background", name: "Midnight",      description: "Deep indigo night sky.",                    price: 850,  preview: "🌃", backgroundClass: "bg-gradient-to-br from-indigo-900 via-blue-950 to-slate-900" },
+  { id: "bg_candy",        category: "background", name: "Cotton Candy",  description: "Pastel pink-blue dream.",                   price: 700,  preview: "🍭", backgroundClass: "bg-gradient-to-br from-pink-300 via-fuchsia-300 to-sky-300" },
+  { id: "bg_emerald",      category: "background", name: "Emerald Mine",  description: "Rich emerald-teal header.",                 price: 800,  preview: "💎", backgroundClass: "bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700" },
+  { id: "bg_royal",        category: "background", name: "Royal",         description: "Regal purple-gold header.",                 price: 1400, preview: "👑", backgroundClass: "bg-gradient-to-br from-purple-700 via-violet-600 to-amber-400" },
 ];
 
 export const SHOP_BY_ID: Record<string, ShopItem> = Object.fromEntries(SHOP_ITEMS.map(i => [i.id, i]));
