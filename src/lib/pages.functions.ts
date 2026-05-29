@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { isReservedSlug } from "@/lib/reserved-routes";
+
 
 async function assertAdmin(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -74,7 +76,10 @@ export const savePage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const slug = slugify(data.slug);
-    // Check duplicate slug if creating or renaming
+    if (isReservedSlug(slug)) {
+      throw new Error(`Slug "${slug}" is reserved by the platform. Choose another.`);
+    }
+
     const { data: existing } = await supabaseAdmin
       .from("custom_pages").select("id").eq("slug", slug).maybeSingle();
     if (existing && existing.id !== data.id) {
@@ -154,6 +159,8 @@ export const importPages = createServerFn({ method: "POST" })
     let imported = 0, skipped = 0, overwritten = 0;
     for (const p of data.pages) {
       const slug = slugify(p.slug);
+      if (isReservedSlug(slug)) { skipped++; continue; }
+
       const { data: existing } = await supabaseAdmin
         .from("custom_pages").select("id").eq("slug", slug).maybeSingle();
       const row = {
@@ -236,6 +243,10 @@ export const saveRedirect = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const from = slugify(data.from_slug);
     const to = slugify(data.to_slug);
+    if (isReservedSlug(from) || isReservedSlug(to)) {
+      throw new Error("Reserved slug cannot be used in redirects.");
+    }
+
     if (from === to) throw new Error("from and to slugs must differ");
     const { error } = await supabaseAdmin.from("page_redirects").upsert(
       { from_slug: from, to_slug: to },

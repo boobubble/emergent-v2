@@ -170,7 +170,7 @@ function PageListRow({ page, onEdit, onChanged }: { page: PageRow; onEdit: () =>
         </div>
         <div className="flex items-center gap-1">
           {page.status === "published" && (
-            <a href={`/p/${page.slug}`} target="_blank" rel="noreferrer">
+            <a href={`/${page.slug}`} target="_blank" rel="noreferrer">
               <Button size="icon" variant="ghost" title="Open"><ExternalLink className="h-4 w-4" /></Button>
             </a>
           )}
