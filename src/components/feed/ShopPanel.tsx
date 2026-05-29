@@ -38,7 +38,19 @@ export function ShopPanel({ onBack }: { onBack: () => void }) {
     setBusy(item.id);
     try {
       await buy({ data: { itemId: item.id } });
-      toast.success(`Purchased ${item.name}!`);
+      // Auto-equip if nothing else is equipped in this category.
+      const nothingEquipped = !equippedByCat[item.category];
+      if (nothingEquipped) {
+        try {
+          await equip({ data: { itemId: item.id, equipped: true } });
+          if (authUser?.id) setLocalEquip(authUser.id, item, true);
+          toast.success(`${item.name} purchased & equipped!`);
+        } catch {
+          toast.success(`Purchased ${item.name}!`);
+        }
+      } else {
+        toast.success(`Purchased ${item.name}!`);
+      }
       await refresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Purchase failed");
