@@ -67,7 +67,7 @@ export function exportAs(format: ExportFormat, pages: PageRecord[]): { name: str
         `---`,
         `slug: ${p.slug}`,
         `title: ${JSON.stringify(p.title)}`,
-        p.category ? `category: ${p.category}` : null,
+        p.layout ? `layout: ${p.layout}` : null,
         p.tags?.length ? `tags: [${p.tags.map((t) => JSON.stringify(t)).join(", ")}]` : null,
         `status: ${p.status ?? "draft"}`,
         `---`,
