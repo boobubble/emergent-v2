@@ -14,7 +14,14 @@ async function assertMod(userId: string) {
   return data.map((r) => r.role as string);
 }
 
-async function logAction(actor_id: string, action: string, extra: Record<string, unknown> = {}) {
+type ModActionName =
+  | "ban" | "unban" | "temp_ban" | "shadow_ban" | "ip_ban"
+  | "mute" | "unmute" | "kick" | "warn"
+  | "delete_message" | "delete_post" | "pin_message" | "unpin_message"
+  | "resolve_report" | "dismiss_report" | "note"
+  | "add_word_filter" | "remove_word_filter" | "add_url_rule" | "remove_url_rule";
+
+async function logAction(actor_id: string, action: ModActionName, extra: Record<string, unknown> = {}) {
   await supabaseAdmin.from("mod_logs").insert({ actor_id, action, ...extra });
 }
 
