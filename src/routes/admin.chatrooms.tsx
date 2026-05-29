@@ -20,7 +20,7 @@ function ChatroomsHub() {
       <section className="mb-6">
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Chatroom settings</h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            {list.map((i) => {
+            {items.map((i) => {
               const Icon = i.icon;
               return (
                 <Link key={i.to} to={i.to} className="group">
@@ -46,7 +46,6 @@ function ChatroomsHub() {
             })}
           </div>
         </section>
-      ))}
     </div>
   );
 }
