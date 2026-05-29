@@ -94,7 +94,7 @@ export function parseImport(format: ExportFormat, raw: string): PageRecord[] {
       pages.push(normalize({
         slug: pick(b, "slug"),
         title: pick(b, "title"),
-        category: pick(b, "category") || null,
+        layout: (pick(b, "layout") as PageLayout) || "boxed",
         status: (pick(b, "status") as "draft" | "published") || "draft",
         meta_description: pick(b, "meta_description") || null,
         content: pickCdata(b, "content") || "",
