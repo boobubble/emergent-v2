@@ -14,11 +14,24 @@ import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedRouteImport } from './routes/feed'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
+import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
+import { Route as AdminSeoRouteImport } from './routes/admin.seo'
+import { Route as AdminSecurityRouteImport } from './routes/admin.security'
+import { Route as AdminRolesRouteImport } from './routes/admin.roles'
+import { Route as AdminModulesRouteImport } from './routes/admin.modules'
+import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
+import { Route as AdminGeneralRouteImport } from './routes/admin.general'
+import { Route as AdminGamesRouteImport } from './routes/admin.games'
+import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
+import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
+import { Route as AdminAiSettingsRouteImport } from './routes/admin.ai-settings'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -46,6 +59,11 @@ const FeedRoute = FeedRouteImport.update({
   path: '/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AchievementsRoute = AchievementsRouteImport.update({
   id: '/achievements',
   path: '/achievements',
@@ -61,6 +79,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -70,6 +93,61 @@ const FeedSlugRoute = FeedSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => FeedRoute,
+} as any)
+const AdminSocialLayoutRoute = AdminSocialLayoutRouteImport.update({
+  id: '/social-layout',
+  path: '/social-layout',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSeoRoute = AdminSeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSecurityRoute = AdminSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRolesRoute = AdminRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminModulesRoute = AdminModulesRouteImport.update({
+  id: '/modules',
+  path: '/modules',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminModerationRoute = AdminModerationRouteImport.update({
+  id: '/moderation',
+  path: '/moderation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGeneralRoute = AdminGeneralRouteImport.update({
+  id: '/general',
+  path: '/general',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGamesRoute = AdminGamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEconomyRoute = AdminEconomyRouteImport.update({
+  id: '/economy',
+  path: '/economy',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAppearanceRoute = AdminAppearanceRouteImport.update({
+  id: '/appearance',
+  path: '/appearance',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAiSettingsRoute = AdminAiSettingsRouteImport.update({
+  id: '/ai-settings',
+  path: '/ai-settings',
+  getParentRoute: () => AdminRoute,
 } as any)
 const ApiPublicGuestCleanupRoute = ApiPublicGuestCleanupRouteImport.update({
   id: '/api/public/guest-cleanup',
@@ -81,13 +159,26 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
+  '/admin': typeof AdminRouteWithChildren
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/ai-settings': typeof AdminAiSettingsRoute
+  '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/economy': typeof AdminEconomyRoute
+  '/admin/games': typeof AdminGamesRoute
+  '/admin/general': typeof AdminGeneralRoute
+  '/admin/moderation': typeof AdminModerationRoute
+  '/admin/modules': typeof AdminModulesRoute
+  '/admin/roles': typeof AdminRolesRoute
+  '/admin/security': typeof AdminSecurityRoute
+  '/admin/seo': typeof AdminSeoRoute
+  '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRoutesByTo {
@@ -99,8 +190,20 @@ export interface FileRoutesByTo {
   '/games': typeof GamesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/ai-settings': typeof AdminAiSettingsRoute
+  '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/economy': typeof AdminEconomyRoute
+  '/admin/games': typeof AdminGamesRoute
+  '/admin/general': typeof AdminGeneralRoute
+  '/admin/moderation': typeof AdminModerationRoute
+  '/admin/modules': typeof AdminModulesRoute
+  '/admin/roles': typeof AdminRolesRoute
+  '/admin/security': typeof AdminSecurityRoute
+  '/admin/seo': typeof AdminSeoRoute
+  '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
+  '/admin': typeof AdminIndexRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRoutesById {
@@ -108,13 +211,26 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
+  '/admin': typeof AdminRouteWithChildren
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/ai-settings': typeof AdminAiSettingsRoute
+  '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/economy': typeof AdminEconomyRoute
+  '/admin/games': typeof AdminGamesRoute
+  '/admin/general': typeof AdminGeneralRoute
+  '/admin/moderation': typeof AdminModerationRoute
+  '/admin/modules': typeof AdminModulesRoute
+  '/admin/roles': typeof AdminRolesRoute
+  '/admin/security': typeof AdminSecurityRoute
+  '/admin/seo': typeof AdminSeoRoute
+  '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/u/$username': typeof UUsernameRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRouteTypes {
@@ -123,13 +239,26 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/achievements'
+    | '/admin'
     | '/feed'
     | '/find-friends'
     | '/games'
     | '/leaderboard'
     | '/reset-password'
+    | '/admin/ai-settings'
+    | '/admin/appearance'
+    | '/admin/economy'
+    | '/admin/games'
+    | '/admin/general'
+    | '/admin/moderation'
+    | '/admin/modules'
+    | '/admin/roles'
+    | '/admin/security'
+    | '/admin/seo'
+    | '/admin/social-layout'
     | '/feed/$slug'
     | '/u/$username'
+    | '/admin/'
     | '/api/public/guest-cleanup'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -141,21 +270,46 @@ export interface FileRouteTypes {
     | '/games'
     | '/leaderboard'
     | '/reset-password'
+    | '/admin/ai-settings'
+    | '/admin/appearance'
+    | '/admin/economy'
+    | '/admin/games'
+    | '/admin/general'
+    | '/admin/moderation'
+    | '/admin/modules'
+    | '/admin/roles'
+    | '/admin/security'
+    | '/admin/seo'
+    | '/admin/social-layout'
     | '/feed/$slug'
     | '/u/$username'
+    | '/admin'
     | '/api/public/guest-cleanup'
   id:
     | '__root__'
     | '/'
     | '/account'
     | '/achievements'
+    | '/admin'
     | '/feed'
     | '/find-friends'
     | '/games'
     | '/leaderboard'
     | '/reset-password'
+    | '/admin/ai-settings'
+    | '/admin/appearance'
+    | '/admin/economy'
+    | '/admin/games'
+    | '/admin/general'
+    | '/admin/moderation'
+    | '/admin/modules'
+    | '/admin/roles'
+    | '/admin/security'
+    | '/admin/seo'
+    | '/admin/social-layout'
     | '/feed/$slug'
     | '/u/$username'
+    | '/admin/'
     | '/api/public/guest-cleanup'
   fileRoutesById: FileRoutesById
 }
@@ -163,6 +317,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AchievementsRoute: typeof AchievementsRoute
+  AdminRoute: typeof AdminRouteWithChildren
   FeedRoute: typeof FeedRouteWithChildren
   FindFriendsRoute: typeof FindFriendsRoute
   GamesRoute: typeof GamesRoute
@@ -209,6 +364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/achievements': {
       id: '/achievements'
       path: '/achievements'
@@ -230,6 +392,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/u/$username': {
       id: '/u/$username'
       path: '/u/$username'
@@ -244,6 +413,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedSlugRouteImport
       parentRoute: typeof FeedRoute
     }
+    '/admin/social-layout': {
+      id: '/admin/social-layout'
+      path: '/social-layout'
+      fullPath: '/admin/social-layout'
+      preLoaderRoute: typeof AdminSocialLayoutRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/seo': {
+      id: '/admin/seo'
+      path: '/seo'
+      fullPath: '/admin/seo'
+      preLoaderRoute: typeof AdminSeoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/security': {
+      id: '/admin/security'
+      path: '/security'
+      fullPath: '/admin/security'
+      preLoaderRoute: typeof AdminSecurityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/roles': {
+      id: '/admin/roles'
+      path: '/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof AdminRolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/modules': {
+      id: '/admin/modules'
+      path: '/modules'
+      fullPath: '/admin/modules'
+      preLoaderRoute: typeof AdminModulesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/moderation': {
+      id: '/admin/moderation'
+      path: '/moderation'
+      fullPath: '/admin/moderation'
+      preLoaderRoute: typeof AdminModerationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/general': {
+      id: '/admin/general'
+      path: '/general'
+      fullPath: '/admin/general'
+      preLoaderRoute: typeof AdminGeneralRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/games': {
+      id: '/admin/games'
+      path: '/games'
+      fullPath: '/admin/games'
+      preLoaderRoute: typeof AdminGamesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/economy': {
+      id: '/admin/economy'
+      path: '/economy'
+      fullPath: '/admin/economy'
+      preLoaderRoute: typeof AdminEconomyRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/appearance': {
+      id: '/admin/appearance'
+      path: '/appearance'
+      fullPath: '/admin/appearance'
+      preLoaderRoute: typeof AdminAppearanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ai-settings': {
+      id: '/admin/ai-settings'
+      path: '/ai-settings'
+      fullPath: '/admin/ai-settings'
+      preLoaderRoute: typeof AdminAiSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/public/guest-cleanup': {
       id: '/api/public/guest-cleanup'
       path: '/api/public/guest-cleanup'
@@ -253,6 +499,38 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminRouteChildren {
+  AdminAiSettingsRoute: typeof AdminAiSettingsRoute
+  AdminAppearanceRoute: typeof AdminAppearanceRoute
+  AdminEconomyRoute: typeof AdminEconomyRoute
+  AdminGamesRoute: typeof AdminGamesRoute
+  AdminGeneralRoute: typeof AdminGeneralRoute
+  AdminModerationRoute: typeof AdminModerationRoute
+  AdminModulesRoute: typeof AdminModulesRoute
+  AdminRolesRoute: typeof AdminRolesRoute
+  AdminSecurityRoute: typeof AdminSecurityRoute
+  AdminSeoRoute: typeof AdminSeoRoute
+  AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAiSettingsRoute: AdminAiSettingsRoute,
+  AdminAppearanceRoute: AdminAppearanceRoute,
+  AdminEconomyRoute: AdminEconomyRoute,
+  AdminGamesRoute: AdminGamesRoute,
+  AdminGeneralRoute: AdminGeneralRoute,
+  AdminModerationRoute: AdminModerationRoute,
+  AdminModulesRoute: AdminModulesRoute,
+  AdminRolesRoute: AdminRolesRoute,
+  AdminSecurityRoute: AdminSecurityRoute,
+  AdminSeoRoute: AdminSeoRoute,
+  AdminSocialLayoutRoute: AdminSocialLayoutRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface FeedRouteChildren {
   FeedSlugRoute: typeof FeedSlugRoute
@@ -268,6 +546,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AchievementsRoute: AchievementsRoute,
+  AdminRoute: AdminRouteWithChildren,
   FeedRoute: FeedRouteWithChildren,
   FindFriendsRoute: FindFriendsRoute,
   GamesRoute: GamesRoute,
