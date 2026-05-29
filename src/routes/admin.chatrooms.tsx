@@ -7,23 +7,18 @@ import { ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/admin/chatrooms")({ component: ChatroomsHub });
 
-const HUB_SLUGS = new Set(["/admin", "/admin/chatrooms", "/admin/social-feed"]);
-
 function ChatroomsHub() {
-  // All existing admin settings live here, grouped exactly like the sidebar.
-  const items = ADMIN_NAV.filter((i) => !HUB_SLUGS.has(i.to));
-  const groups: Record<string, typeof items> = {};
-  for (const it of items) (groups[it.group] ||= []).push(it);
+  // Only chatroom-scoped settings. Feed / games / economy live in their own hubs.
+  const items = ADMIN_NAV.filter((i) => i.group === "Chatrooms");
 
   return (
     <div>
       <AdminPageHeader
         title="Chatrooms"
-        description="Central hub for all platform settings — configuration, moderation, economy, games and more."
+        description="All chatroom-only settings — moderation, bots and simulated activity. Feed, games and economy live in their own sections."
       />
-      {Object.entries(groups).map(([group, list]) => (
-        <section key={group} className="mb-6">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group}</h2>
+      <section className="mb-6">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Chatroom settings</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {list.map((i) => {
               const Icon = i.icon;
