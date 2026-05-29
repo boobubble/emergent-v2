@@ -105,9 +105,15 @@ export function MessageInput() {
     return () => window.removeEventListener("palrgo:mention", onMention);
   }, []);
 
+  const earnChat = useServerFn(earnChatMessage);
+
   function submit() {
     if (!text.trim() && !attachment) return;
     send(text, { attachment: attachment || undefined, replyToId: replyingTo?.id });
+    // Fire-and-forget earn call — server enforces cooldown + daily cap.
+    if (me) {
+      earnChat({ data: { channelId: state.activeChannel, isReply: !!replyingTo } }).catch(() => {});
+    }
     setText("");
     setAttachment(null);
     setAttachError("");
