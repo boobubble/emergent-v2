@@ -47,6 +47,7 @@ import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
 import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
+import { Route as AdminDjRouteImport } from './routes/admin.dj'
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
 import { Route as AdminBotsRouteImport } from './routes/admin.bots'
 import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
@@ -248,6 +249,11 @@ const AdminEconomyRoute = AdminEconomyRouteImport.update({
   path: '/economy',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDjRoute = AdminDjRouteImport.update({
+  id: '/dj',
+  path: '/dj',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminChatroomsRoute = AdminChatroomsRouteImport.update({
   id: '/chatrooms',
   path: '/chatrooms',
@@ -321,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
@@ -370,6 +377,7 @@ export interface FileRoutesByTo {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
@@ -421,6 +429,7 @@ export interface FileRoutesById {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
@@ -473,6 +482,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
+    | '/admin/dj'
     | '/admin/economy'
     | '/admin/filters'
     | '/admin/games'
@@ -522,6 +532,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
+    | '/admin/dj'
     | '/admin/economy'
     | '/admin/filters'
     | '/admin/games'
@@ -572,6 +583,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
+    | '/admin/dj'
     | '/admin/economy'
     | '/admin/filters'
     | '/admin/games'
@@ -888,6 +900,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEconomyRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/dj': {
+      id: '/admin/dj'
+      path: '/dj'
+      fullPath: '/admin/dj'
+      preLoaderRoute: typeof AdminDjRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/chatrooms': {
       id: '/admin/chatrooms'
       path: '/chatrooms'
@@ -982,6 +1001,7 @@ interface AdminRouteChildren {
   AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBotsRoute: typeof AdminBotsRoute
   AdminChatroomsRoute: typeof AdminChatroomsRoute
+  AdminDjRoute: typeof AdminDjRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
   AdminFiltersRoute: typeof AdminFiltersRoute
   AdminGamesRoute: typeof AdminGamesRoute
@@ -1015,6 +1035,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAutomationRoute: AdminAutomationRoute,
   AdminBotsRoute: AdminBotsRoute,
   AdminChatroomsRoute: AdminChatroomsRoute,
+  AdminDjRoute: AdminDjRoute,
   AdminEconomyRoute: AdminEconomyRoute,
   AdminFiltersRoute: AdminFiltersRoute,
   AdminGamesRoute: AdminGamesRoute,
