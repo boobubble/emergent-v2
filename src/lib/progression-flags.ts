@@ -6,7 +6,7 @@
 
 import { useMemo } from "react";
 import { useAppSettings } from "@/lib/app-settings";
-import { useAuth } from "@/lib/auth-store";
+import { useChat } from "@/lib/chat-store";
 import {
   PROGRESSION_DEFAULTS,
   canUseUnlock,
