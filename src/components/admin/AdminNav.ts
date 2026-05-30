@@ -2,21 +2,13 @@ import {
   LayoutDashboard, Settings, Palette, LayoutGrid, Puzzle, Shield,
   Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3, Bot, Users2,
   FileText, MessageSquare, Newspaper, Zap, Flag,
-  Filter, Server, KeyRound, Activity,
+  Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench,
 } from "lucide-react";
 
-export type AdminGroup =
-  | "Community"
-  | "Engagement"
-  | "Moderation"
-  | "Appearance"
-  | "Advanced";
-
-export interface AdminNavItem {
+export interface AdminLeaf {
   to: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  group: AdminGroup;
+  icon?: React.ComponentType<{ className?: string }>;
   badge?: string;
   description?: string;
   /** When true, only shown when admin is in "advanced" mode (and is super admin). */
@@ -27,93 +19,90 @@ export interface AdminNavItem {
   keywords?: string[];
 }
 
-// Top-level structure inspired by Discord / modern SaaS: a few clean buckets,
-// not 20 sidebar groups. Each entry belongs to ONE bucket.
-export const ADMIN_NAV: AdminNavItem[] = [
-  // ---- Community (the daily basics) ----
-  { to: "/admin",               label: "Dashboard",      icon: LayoutDashboard, group: "Community",
-    description: "Overview, quick toggles and presets.",
-    keywords: ["home", "overview", "quick", "presets"] },
-  { to: "/admin/analytics",     label: "Analytics",      icon: BarChart3,       group: "Community",
-    description: "DAU, retention and traffic charts.",
-    keywords: ["stats", "metrics", "dau", "traffic", "retention"] },
-  { to: "/admin/chatrooms",     label: "Chatrooms",      icon: MessageSquare,   group: "Community",
-    description: "Realtime rooms, bots and limits.",
-    keywords: ["chat", "rooms", "realtime", "messages"] },
-  { to: "/admin/social-feed",   label: "Feed",           icon: Newspaper,       group: "Community",
-    description: "Posts, comments and timeline.",
-    keywords: ["feed", "posts", "social", "timeline"] },
-  { to: "/admin/games",         label: "Games",          icon: Gamepad2,        group: "Community",
-    description: "Mini-games, rewards and matchmaking.",
-    keywords: ["games", "play", "matchmaking", "minigames"] },
-  { to: "/admin/pages",         label: "Custom Pages",   icon: FileText,        group: "Community",
-    description: "SEO-friendly landing page CMS.",
-    keywords: ["cms", "pages", "landing", "marketing"] },
+export interface AdminGroup {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  /** If set, the group acts as a direct link (no children dropdown). */
+  to?: string;
+  children?: AdminLeaf[];
+  superOnly?: boolean;
+  advanced?: boolean;
+  badge?: string;
+}
 
-  // ---- Engagement (growth loops) ----
-  { to: "/admin/economy",       label: "Rewards",        icon: Coins,           group: "Engagement",
-    description: "XP, coins, shop and streaks.",
-    keywords: ["economy", "coins", "xp", "shop", "rewards", "streaks", "missions"] },
-  { to: "/admin/automation",    label: "Automation",     icon: Zap,             group: "Engagement",
-    description: "Smart automation level and rules.",
-    keywords: ["automation", "rules", "schedule", "ai", "auto"] },
-  { to: "/admin/ai-settings",   label: "AI Settings",    icon: Sparkles,        group: "Engagement", badge: "Soon",
-    description: "AI providers, prompts and limits.",
-    keywords: ["ai", "openai", "gemini", "prompt"] },
-  { to: "/admin/bots",          label: "Chat Bots",      icon: Bot,             group: "Engagement",
-    description: "Fish, wine, dig, trivia and AI bots.",
-    keywords: ["bots", "fish", "trivia", "commands"] },
+// WoWonder-style: a small set of top-level groups, each expandable into a few
+// focused settings. Direct links (no `children`) are top-level items.
+export const ADMIN_NAV: AdminGroup[] = [
+  { label: "Dashboard", icon: LayoutDashboard, to: "/admin" },
 
-  // ---- Moderation & users ----
-  { to: "/admin/users",         label: "Users",          icon: Users2,          group: "Moderation",
-    description: "Search, manage and message users.",
-    keywords: ["users", "members", "accounts"] },
-  { to: "/admin/roles",         label: "Roles",          icon: Shield,          group: "Moderation",
-    description: "Admins, moderators and badges.",
-    keywords: ["roles", "permissions", "admin", "moderator"] },
-  { to: "/admin/moderation",    label: "Moderation",     icon: Gavel,           group: "Moderation",
-    description: "Bans, mutes, word filters and reports.",
-    keywords: ["bans", "mutes", "filters", "reports", "abuse"] },
-  { to: "/admin/reports",       label: "Reports",        icon: Flag,            group: "Moderation",
-    description: "User-submitted reports queue.",
-    keywords: ["reports", "queue", "abuse"] },
-  { to: "/admin/filters",       label: "Filters",        icon: Filter,          group: "Moderation",
-    description: "Word filters and content rules.",
-    keywords: ["filters", "blocklist", "words", "content"] },
+  {
+    label: "Settings", icon: Settings, children: [
+      { to: "/admin/general",       label: "General",     icon: SlidersHorizontal, keywords: ["site name", "tagline", "basics"] },
+      { to: "/admin/appearance",    label: "Themes",      icon: Palette,           keywords: ["theme", "colors", "logo", "favicon"] },
+      { to: "/admin/social-layout", label: "Layout",      icon: LayoutGrid,        keywords: ["layout", "sidebar", "widgets"] },
+      { to: "/admin/seo",           label: "SEO",         icon: Search,            keywords: ["seo", "meta", "sitemap"] },
+    ],
+  },
 
-  // ---- Appearance ----
-  { to: "/admin/general",       label: "General",        icon: Settings,        group: "Appearance",
-    description: "Site name, tagline and basics.",
-    keywords: ["general", "name", "tagline", "site"] },
-  { to: "/admin/appearance",    label: "Themes",         icon: Palette,         group: "Appearance",
-    description: "Theme, colors, logo and favicon.",
-    keywords: ["theme", "colors", "logo", "favicon", "branding"] },
-  { to: "/admin/social-layout", label: "Layout",         icon: LayoutGrid,      group: "Appearance",
-    description: "Feed widgets, sidebars and layout.",
-    keywords: ["layout", "widgets", "sidebar"] },
-  { to: "/admin/seo",           label: "SEO",            icon: Search,          group: "Appearance",
-    description: "Sitemap, robots and meta defaults.",
-    keywords: ["seo", "sitemap", "robots", "meta", "og"] },
+  {
+    label: "Manage Features", icon: Puzzle, children: [
+      { to: "/admin/modules",     label: "Modules",     icon: Puzzle,    keywords: ["features", "toggles"] },
+      { to: "/admin/economy",     label: "Rewards",     icon: Coins,     keywords: ["xp", "coins", "shop", "missions", "streaks"] },
+      { to: "/admin/automation",  label: "Automation",  icon: Zap,       keywords: ["rules", "auto"] },
+      { to: "/admin/ai-settings", label: "AI Settings", icon: Sparkles,  badge: "Soon", keywords: ["ai"] },
+      { to: "/admin/bots",        label: "Chat Bots",   icon: Bot,       keywords: ["fish", "trivia", "commands"] },
+    ],
+  },
 
-  // ---- Advanced (super admin + advanced mode only) ----
-  { to: "/admin/modules",       label: "Modules",        icon: Puzzle,          group: "Advanced",
-    advanced: true,
-    description: "Enable or disable platform modules.",
-    keywords: ["modules", "features", "toggles"] },
-  { to: "/admin/security",      label: "Security",       icon: Lock,            group: "Advanced", badge: "Soon",
-    advanced: true,
-    description: "Captcha, rate limits, sessions.",
-    keywords: ["security", "captcha", "rate", "sessions"] },
-  { to: "/admin/system",        label: "System",         icon: Server,          group: "Advanced",
-    advanced: true, superOnly: true,
-    description: "Database, jobs and websocket settings.",
-    keywords: ["system", "database", "jobs", "websocket"] },
-  { to: "/admin/api",           label: "API & Webhooks", icon: KeyRound,        group: "Advanced",
-    advanced: true, superOnly: true,
-    description: "API keys and outbound webhooks.",
-    keywords: ["api", "keys", "webhooks", "tokens"] },
-  { to: "/admin/performance",   label: "Performance",    icon: Activity,        group: "Advanced",
-    advanced: true,
-    description: "Caching, prefetch and CDN tuning.",
-    keywords: ["performance", "cache", "cdn", "prefetch"] },
+  {
+    label: "Community", icon: MessageSquare, children: [
+      { to: "/admin/chatrooms",   label: "Chatrooms",    icon: MessageSquare, keywords: ["chat", "rooms"] },
+      { to: "/admin/social-feed", label: "Feed",         icon: Newspaper,     keywords: ["posts", "social"] },
+      { to: "/admin/games",       label: "Games",        icon: Gamepad2,      keywords: ["mini-games"] },
+      { to: "/admin/pages",       label: "Custom Pages", icon: FileText,      keywords: ["cms", "landing"] },
+    ],
+  },
+
+  {
+    label: "Users", icon: Users2, children: [
+      { to: "/admin/users", label: "All Users", icon: Users2,  keywords: ["members", "accounts"] },
+      { to: "/admin/roles", label: "Roles",     icon: Shield,  keywords: ["permissions", "admin", "moderator"] },
+    ],
+  },
+
+  {
+    label: "Moderation", icon: Gavel, children: [
+      { to: "/admin/moderation", label: "Bans & Mutes", icon: Gavel,   keywords: ["bans", "mutes"] },
+      { to: "/admin/reports",    label: "Reports",      icon: Flag,    keywords: ["queue", "abuse"] },
+      { to: "/admin/filters",    label: "Word Filters", icon: Filter,  keywords: ["blocklist", "words"] },
+    ],
+  },
+
+  { label: "Reports",  icon: BarChart3, to: "/admin/analytics" },
+
+  {
+    label: "Tools", icon: Wrench, advanced: true, children: [
+      { to: "/admin/security",    label: "Security",    icon: Lock,     badge: "Soon", advanced: true,                   keywords: ["captcha", "rate", "sessions"] },
+      { to: "/admin/performance", label: "Performance", icon: Activity, advanced: true,                                  keywords: ["cache", "cdn"] },
+      { to: "/admin/system",      label: "System",      icon: Server,   advanced: true, superOnly: true,                 keywords: ["database", "jobs"] },
+      { to: "/admin/api",         label: "API & Webhooks", icon: KeyRound, advanced: true, superOnly: true,              keywords: ["api", "keys", "webhooks"] },
+    ],
+  },
 ];
+
+// Flat list (for search + matching current path → group)
+export interface FlatAdminItem extends AdminLeaf {
+  groupLabel: string;
+}
+export function flattenAdminNav(nav: AdminGroup[] = ADMIN_NAV): FlatAdminItem[] {
+  const out: FlatAdminItem[] = [];
+  for (const g of nav) {
+    if (g.to && !g.children) {
+      out.push({ to: g.to, label: g.label, icon: g.icon, groupLabel: g.label, advanced: g.advanced, superOnly: g.superOnly, badge: g.badge });
+    }
+    for (const c of g.children ?? []) {
+      out.push({ ...c, groupLabel: g.label, advanced: c.advanced ?? g.advanced, superOnly: c.superOnly ?? g.superOnly });
+    }
+  }
+  return out;
+}
