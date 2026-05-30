@@ -102,6 +102,7 @@ function ChatApp() {
           <ChatHeader />
           <MessageList channelId={state.activeChannel} />
           <MessageInput />
+          <DjFooter />
         </main>
         {!isDM(state.activeChannel) && <MembersPanel roomId={state.activeChannel} />}
         <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
