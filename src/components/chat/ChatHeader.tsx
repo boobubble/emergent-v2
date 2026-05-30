@@ -83,3 +83,6 @@ export function ChatHeader() {
           </span>
         </button>
       </div>
+    </header>
+  );
+}
