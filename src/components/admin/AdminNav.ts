@@ -50,6 +50,7 @@ export const ADMIN_NAV: AdminGroup[] = [
     label: "Manage Features", icon: Puzzle, children: [
       { to: "/admin/modules",     label: "Modules",     icon: Puzzle,    keywords: ["features", "toggles"] },
       { to: "/admin/economy",     label: "Rewards",     icon: Coins,     keywords: ["xp", "coins", "shop", "missions", "streaks"] },
+      { to: "/admin/retention",   label: "Retention",   icon: Flame,     keywords: ["streaks", "momentum", "loyalty", "energy", "decay", "engagement"] },
       { to: "/admin/automation",  label: "Automation",  icon: Zap,       keywords: ["rules", "auto"] },
       { to: "/admin/ai-settings", label: "AI Settings", icon: Sparkles,  badge: "Soon", keywords: ["ai"] },
       { to: "/admin/bots",        label: "Chat Bots",   icon: Bot,       keywords: ["fish", "trivia", "commands"] },
