@@ -1,8 +1,8 @@
 import {
   LayoutDashboard, Settings, Palette, LayoutGrid, Puzzle, Shield,
   Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3, Bot, Users2,
-  FileText, MessageSquare, Newspaper, Zap, Trophy, Calendar, Flag,
-  Filter, Layers, Server, KeyRound, Activity,
+  FileText, MessageSquare, Newspaper, Zap, Flag,
+  Filter, Server, KeyRound, Activity,
 } from "lucide-react";
 
 export type AdminGroup =
