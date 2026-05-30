@@ -3,6 +3,7 @@ import {
   Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3, Bot, Users2,
   FileText, MessageSquare, Newspaper, Zap, Flag,
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
+  Rocket,
 } from "lucide-react";
 
 export interface AdminLeaf {
@@ -80,6 +81,7 @@ export const ADMIN_NAV: AdminGroup[] = [
   },
 
   { label: "Reports",  icon: BarChart3, to: "/admin/analytics" },
+  { label: "Upcoming", icon: Rocket,    to: "/admin/upcoming", badge: "Soon" },
 
   {
     label: "Tools", icon: Wrench, advanced: true, children: [

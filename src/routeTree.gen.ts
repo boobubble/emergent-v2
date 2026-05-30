@@ -27,6 +27,7 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminUpcomingRouteImport } from './routes/admin.upcoming'
 import { Route as AdminSystemRouteImport } from './routes/admin.system'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
 import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
@@ -51,6 +52,7 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAiSettingsRouteImport } from './routes/admin.ai-settings'
 import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
+import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -140,6 +142,11 @@ const FeedSlugRoute = FeedSlugRouteImport.update({
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUpcomingRoute = AdminUpcomingRouteImport.update({
+  id: '/upcoming',
+  path: '/upcoming',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSystemRoute = AdminSystemRouteImport.update({
@@ -262,6 +269,11 @@ const ApiPublicGuestCleanupRoute = ApiPublicGuestCleanupRouteImport.update({
   path: '/api/public/guest-cleanup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
+  id: '/$key',
+  path: '/$key',
+  getParentRoute: () => AdminUpcomingRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -300,11 +312,13 @@ export interface FileRoutesByFullPath {
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/system': typeof AdminSystemRoute
+  '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRoutesByTo {
@@ -343,11 +357,13 @@ export interface FileRoutesByTo {
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/system': typeof AdminSystemRoute
+  '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRoutesById {
@@ -388,11 +404,13 @@ export interface FileRoutesById {
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/system': typeof AdminSystemRoute
+  '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRouteTypes {
@@ -434,11 +452,13 @@ export interface FileRouteTypes {
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/system'
+    | '/admin/upcoming'
     | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
     | '/u/$username'
     | '/admin/'
+    | '/admin/upcoming/$key'
     | '/api/public/guest-cleanup'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -477,11 +497,13 @@ export interface FileRouteTypes {
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/system'
+    | '/admin/upcoming'
     | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
     | '/u/$username'
     | '/admin'
+    | '/admin/upcoming/$key'
     | '/api/public/guest-cleanup'
   id:
     | '__root__'
@@ -521,11 +543,13 @@ export interface FileRouteTypes {
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/system'
+    | '/admin/upcoming'
     | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
     | '/u/$username'
     | '/admin/'
+    | '/admin/upcoming/$key'
     | '/api/public/guest-cleanup'
   fileRoutesById: FileRoutesById
 }
@@ -674,6 +698,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/upcoming': {
+      id: '/admin/upcoming'
+      path: '/upcoming'
+      fullPath: '/admin/upcoming'
+      preLoaderRoute: typeof AdminUpcomingRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/system': {
@@ -844,8 +875,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicGuestCleanupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/upcoming/$key': {
+      id: '/admin/upcoming/$key'
+      path: '/$key'
+      fullPath: '/admin/upcoming/$key'
+      preLoaderRoute: typeof AdminUpcomingKeyRouteImport
+      parentRoute: typeof AdminUpcomingRoute
+    }
   }
 }
+
+interface AdminUpcomingRouteChildren {
+  AdminUpcomingKeyRoute: typeof AdminUpcomingKeyRoute
+}
+
+const AdminUpcomingRouteChildren: AdminUpcomingRouteChildren = {
+  AdminUpcomingKeyRoute: AdminUpcomingKeyRoute,
+}
+
+const AdminUpcomingRouteWithChildren = AdminUpcomingRoute._addFileChildren(
+  AdminUpcomingRouteChildren,
+)
 
 interface AdminRouteChildren {
   AdminAdsScriptsRoute: typeof AdminAdsScriptsRoute
@@ -871,6 +921,7 @@ interface AdminRouteChildren {
   AdminSocialFeedRoute: typeof AdminSocialFeedRoute
   AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
   AdminSystemRoute: typeof AdminSystemRoute
+  AdminUpcomingRoute: typeof AdminUpcomingRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -899,6 +950,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSocialFeedRoute: AdminSocialFeedRoute,
   AdminSocialLayoutRoute: AdminSocialLayoutRoute,
   AdminSystemRoute: AdminSystemRoute,
+  AdminUpcomingRoute: AdminUpcomingRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
