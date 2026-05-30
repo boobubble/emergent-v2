@@ -43,7 +43,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/social-layout", label: "Layout",        icon: LayoutGrid,        keywords: ["layout", "sidebar", "widgets"] },
       { to: "/admin/seo",           label: "SEO",           icon: Search,            keywords: ["seo", "meta", "sitemap"] },
       { to: "/admin/ads-scripts",   label: "Ads & Scripts", icon: Megaphone,         keywords: ["ads", "adsense", "scripts", "header", "footer", "tracking", "analytics", "pixel"] },
-      { to: "/admin/media-apis",    label: "Media APIs",    icon: Megaphone,         keywords: ["youtube", "giphy", "gif", "video", "embed", "api keys"] },
+      { to: "/admin/media-apis",    label: "Media APIs",    icon: Youtube,           keywords: ["youtube", "giphy", "gif", "video", "embed", "api keys"] },
     ],
   },
 
