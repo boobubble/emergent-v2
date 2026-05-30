@@ -321,10 +321,28 @@ export function MessageInput() {
           <Sparkles className="h-5 w-5" />
         </button>
         <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help or @mention"} className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
-        <button onClick={() => { setShowStickers(s => !s); setShowEmoji(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Animated stickers">
+        <button onClick={() => { setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Animated stickers">
           <Sticker className="h-5 w-5" />
         </button>
-        <button onClick={() => { setShowEmoji(s => !s); setShowStickers(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground" title="Emoji">
+        {media.giphy.enabled && (
+          <button
+            onClick={() => { setShowGiphy(s => !s); setShowEmoji(false); setShowStickers(false); setShowYoutube(false); }}
+            className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-fuchsia-400"
+            title="Share a GIF"
+          >
+            <ImagePlay className="h-5 w-5" />
+          </button>
+        )}
+        {media.youtube.enabled && (
+          <button
+            onClick={() => { setShowYoutube(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); }}
+            className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-red-500"
+            title="Share a YouTube video"
+          >
+            <Youtube className="h-5 w-5" />
+          </button>
+        )}
+        <button onClick={() => { setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground" title="Emoji">
           <Smile className="h-5 w-5" />
         </button>
         <button onClick={submit} disabled={!text.trim() && !attachment} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100">
