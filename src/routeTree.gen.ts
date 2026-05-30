@@ -37,6 +37,7 @@ import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminRetentionRouteImport } from './routes/admin.retention'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminRealtimeRouteImport } from './routes/admin.realtime'
+import { Route as AdminProgressionRouteImport } from './routes/admin.progression'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminModulesRouteImport } from './routes/admin.modules'
@@ -196,6 +197,11 @@ const AdminRealtimeRoute = AdminRealtimeRouteImport.update({
   path: '/realtime',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminProgressionRoute = AdminProgressionRouteImport.update({
+  id: '/progression',
+  path: '/progression',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
   id: '/performance',
   path: '/performance',
@@ -317,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/retention': typeof AdminRetentionRoute
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/retention': typeof AdminRetentionRoute
@@ -413,6 +421,7 @@ export interface FileRoutesById {
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/retention': typeof AdminRetentionRoute
@@ -463,6 +472,7 @@ export interface FileRouteTypes {
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
+    | '/admin/progression'
     | '/admin/realtime'
     | '/admin/reports'
     | '/admin/retention'
@@ -510,6 +520,7 @@ export interface FileRouteTypes {
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
+    | '/admin/progression'
     | '/admin/realtime'
     | '/admin/reports'
     | '/admin/retention'
@@ -558,6 +569,7 @@ export interface FileRouteTypes {
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
+    | '/admin/progression'
     | '/admin/realtime'
     | '/admin/reports'
     | '/admin/retention'
@@ -794,6 +806,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRealtimeRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/progression': {
+      id: '/admin/progression'
+      path: '/progression'
+      fullPath: '/admin/progression'
+      preLoaderRoute: typeof AdminProgressionRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/performance': {
       id: '/admin/performance'
       path: '/performance'
@@ -952,6 +971,7 @@ interface AdminRouteChildren {
   AdminModulesRoute: typeof AdminModulesRoute
   AdminPagesRoute: typeof AdminPagesRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
+  AdminProgressionRoute: typeof AdminProgressionRoute
   AdminRealtimeRoute: typeof AdminRealtimeRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminRetentionRoute: typeof AdminRetentionRoute
@@ -983,6 +1003,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminModulesRoute: AdminModulesRoute,
   AdminPagesRoute: AdminPagesRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
+  AdminProgressionRoute: AdminProgressionRoute,
   AdminRealtimeRoute: AdminRealtimeRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminRetentionRoute: AdminRetentionRoute,
