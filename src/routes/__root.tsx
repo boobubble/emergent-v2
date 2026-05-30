@@ -153,13 +153,15 @@ function AuthGate() {
   return (
     <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
       <FeedPrefsProvider>
-        <HeadFootScripts />
-        <AdsAutoLoader />
-        <SessionConflictBanner />
-        <FaviconSwitcher />
-        <Outlet />
-        <Sonner />
-        <RealtimeDebugOverlay />
+        <IgnoreProvider>
+          <HeadFootScripts />
+          <AdsAutoLoader />
+          <SessionConflictBanner />
+          <FaviconSwitcher />
+          <Outlet />
+          <Sonner />
+          <RealtimeDebugOverlay />
+        </IgnoreProvider>
       </FeedPrefsProvider>
     </ChatProvider>
   );
