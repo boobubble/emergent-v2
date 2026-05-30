@@ -284,8 +284,7 @@ function DjMediaSink({
         key={youtubeSrc}
         src={youtubeSrc}
         title="DJ player"
-        allow="autoplay; encrypted-media"
-        sandbox="allow-same-origin allow-scripts allow-presentation"
+        allow="autoplay; encrypted-media; picture-in-picture"
         className="absolute h-0 w-0 border-0 opacity-0 pointer-events-none"
         aria-hidden
       />
