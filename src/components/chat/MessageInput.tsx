@@ -27,6 +27,10 @@ export function MessageInput() {
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [showStickers, setShowStickers] = useState(false);
+  const [showGiphy, setShowGiphy] = useState(false);
+  const [showYoutube, setShowYoutube] = useState(false);
+  const { raw: appRaw } = useAppSettings();
+  const media = mergeMediaConfig((appRaw as any).media);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
   const [caret, setCaret] = useState(0);
