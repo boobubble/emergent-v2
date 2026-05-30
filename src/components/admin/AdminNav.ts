@@ -3,7 +3,7 @@ import {
   Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3, Bot, Users2,
   FileText, MessageSquare, Newspaper, Zap, Flag,
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
-  Rocket, Flame, Radio, Trophy,
+  Rocket, Flame, Radio, Trophy, Youtube,
 } from "lucide-react";
 
 export interface AdminLeaf {
@@ -43,6 +43,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/social-layout", label: "Layout",        icon: LayoutGrid,        keywords: ["layout", "sidebar", "widgets"] },
       { to: "/admin/seo",           label: "SEO",           icon: Search,            keywords: ["seo", "meta", "sitemap"] },
       { to: "/admin/ads-scripts",   label: "Ads & Scripts", icon: Megaphone,         keywords: ["ads", "adsense", "scripts", "header", "footer", "tracking", "analytics", "pixel"] },
+      { to: "/admin/media-apis",    label: "Media APIs",    icon: Youtube,           keywords: ["youtube", "giphy", "gif", "video", "embed", "api keys"] },
     ],
   },
 

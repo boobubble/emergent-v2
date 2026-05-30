@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
-import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker } from "lucide-react";
+import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker, Youtube, ImagePlay } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
 import { AnimatedEmojiPicker, gifUrlForSticker } from "./AnimatedEmojiPicker";
+import { GiphyPicker } from "./GiphyPicker";
+import { YoutubePicker } from "./YoutubePicker";
+import { useAppSettings } from "@/lib/app-settings";
+import { mergeMediaConfig } from "@/lib/media-providers-config";
 import { earnChatMessage } from "@/lib/economy.functions";
 import type { Attachment } from "@/lib/chat-types";
 
@@ -23,6 +27,10 @@ export function MessageInput() {
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [showStickers, setShowStickers] = useState(false);
+  const [showGiphy, setShowGiphy] = useState(false);
+  const [showYoutube, setShowYoutube] = useState(false);
+  const { raw: appRaw } = useAppSettings();
+  const media = mergeMediaConfig((appRaw as any).media);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
   const [caret, setCaret] = useState(0);
@@ -247,6 +255,26 @@ export function MessageInput() {
           />
         </div>
       )}
+      {showGiphy && (
+        <div className="mb-2">
+          <GiphyPicker
+            onPick={(g) => {
+              send(g.pageUrl, { replyToId: replyingTo?.id });
+              setShowGiphy(false);
+            }}
+          />
+        </div>
+      )}
+      {showYoutube && (
+        <div className="mb-2">
+          <YoutubePicker
+            onPick={(url) => {
+              send(url, { replyToId: replyingTo?.id });
+              setShowYoutube(false);
+            }}
+          />
+        </div>
+      )}
       {attachment && (
         <div className="mb-2 flex items-center gap-2 rounded-2xl border border-border bg-white/5 px-3 py-2">
           {attachment.kind === "image" ? (
@@ -293,10 +321,28 @@ export function MessageInput() {
           <Sparkles className="h-5 w-5" />
         </button>
         <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help or @mention"} className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
-        <button onClick={() => { setShowStickers(s => !s); setShowEmoji(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Animated stickers">
+        <button onClick={() => { setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Animated stickers">
           <Sticker className="h-5 w-5" />
         </button>
-        <button onClick={() => { setShowEmoji(s => !s); setShowStickers(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground" title="Emoji">
+        {media.giphy.enabled && (
+          <button
+            onClick={() => { setShowGiphy(s => !s); setShowEmoji(false); setShowStickers(false); setShowYoutube(false); }}
+            className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-fuchsia-400"
+            title="Share a GIF"
+          >
+            <ImagePlay className="h-5 w-5" />
+          </button>
+        )}
+        {media.youtube.enabled && (
+          <button
+            onClick={() => { setShowYoutube(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); }}
+            className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-red-500"
+            title="Share a YouTube video"
+          >
+            <Youtube className="h-5 w-5" />
+          </button>
+        )}
+        <button onClick={() => { setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground" title="Emoji">
           <Smile className="h-5 w-5" />
         </button>
         <button onClick={submit} disabled={!text.trim() && !attachment} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100">
