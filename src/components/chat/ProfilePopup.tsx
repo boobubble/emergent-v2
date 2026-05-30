@@ -3,8 +3,9 @@ import { Link } from "@tanstack/react-router";
 import {
   MessageCircle, UserPlus, UserMinus, Ban, ShieldCheck, ExternalLink,
   Crown, Shield, ShieldHalf, Flame, Coins, Trophy, Calendar, Eye, Globe,
-  Heart, Activity as ActivityIcon, Award, Sparkles, X, AtSign,
+  Heart, Activity as ActivityIcon, Award, Sparkles, X, AtSign, BellOff, Bell,
 } from "lucide-react";
+import { useIgnore } from "@/lib/ignore-store";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
@@ -43,6 +44,7 @@ export function ProfilePopup({
   onOpenChange: (v: boolean) => void;
 }) {
   const { state, startDM, addFriend, removeFriend, blockUser, unblockUser, isFriend, isBlocked } = useChat();
+  const { isIgnored, toggleIgnoreUser } = useIgnore();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [tab, setTab] = useState<Tab>("info");
@@ -296,6 +298,15 @@ export function ProfilePopup({
             ) : (
               <button onClick={() => addFriend(userId)} className="inline-flex h-10 w-[110px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 text-xs font-semibold text-primary hover:bg-primary/20">
                 <UserPlus className="h-4 w-4 shrink-0" /> Add
+              </button>
+            ))}
+            {!isMe && (isIgnored(userId, user.isBot) ? (
+              <button onClick={() => toggleIgnoreUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unignore (show messages)">
+                <Bell className="h-4 w-4 shrink-0" />
+              </button>
+            ) : (
+              <button onClick={() => toggleIgnoreUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card text-muted-foreground hover:bg-white/5 hover:text-foreground" title="Ignore (hide messages in chat)">
+                <BellOff className="h-4 w-4 shrink-0" />
               </button>
             ))}
             {!user.isBot && (blocked ? (

@@ -1,10 +1,12 @@
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle, X, Bot, BotOff } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
 import { LoyaltyChip } from "./LoyaltyChip";
 
 export function ChatHeader() {
   const { state, isDM, dmUser, channelLabel, closeDM } = useChat();
+  const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
   const id = state.activeChannel;
 
   if (isDM(id)) {
@@ -58,17 +60,29 @@ export function ChatHeader() {
           <div className="truncate text-[11px] text-muted-foreground">{room.topic}</div>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={() => window.dispatchEvent(new Event("open-members-panel"))}
-        className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 transition hover:bg-white/10 lg:pointer-events-none lg:hover:bg-white/5"
-        aria-label="Show members"
-      >
-        <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary-glow)]" />
-        <span className="text-xs font-semibold text-muted-foreground">
-          {room.members.length} online
-        </span>
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setIgnoreAllBots(!ignoreAllBots)}
+          title={ignoreAllBots ? "Show bot messages" : "Hide all bot messages"}
+          aria-pressed={ignoreAllBots}
+          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${ignoreAllBots ? "bg-destructive/15 text-destructive hover:bg-destructive/20" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}
+        >
+          {ignoreAllBots ? <BotOff className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
+          <span className="hidden sm:inline">{ignoreAllBots ? "Bots hidden" : "Bots on"}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("open-members-panel"))}
+          className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 transition hover:bg-white/10 lg:pointer-events-none lg:hover:bg-white/5"
+          aria-label="Show members"
+        >
+          <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary-glow)]" />
+          <span className="text-xs font-semibold text-muted-foreground">
+            {room.members.length} online
+          </span>
+        </button>
+      </div>
     </header>
   );
 }
