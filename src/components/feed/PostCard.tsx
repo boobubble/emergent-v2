@@ -47,7 +47,12 @@ export const PostCard = memo(function PostCard({
   const [sending, setSending] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState<SharePayload | null>(null);
+  const [boosting, setBoosting] = useState(false);
 
+  const earnReaction = useServerFn(earnFeedReaction);
+  const earnComment = useServerFn(earnFeedComment);
+  const earnShare = useServerFn(earnFeedShare);
+  const doBoost = useServerFn(boostPost);
 
   const author = post.is_anonymous ? null : profiles[post.author_id];
   const mediaUrls = Array.isArray(post.media_urls) ? post.media_urls : [];
