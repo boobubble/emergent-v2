@@ -89,7 +89,16 @@ function ReplyPreview({ message, align = "left" }: { message: Message; align?: "
 
 export function MessageList({ channelId }: { channelId: string }) {
   const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt } = useChat();
-  const msgs = channelMessages(channelId);
+  const { isIgnored } = useIgnore();
+  const allMsgs = channelMessages(channelId);
+  const msgs = useMemo(
+    () => allMsgs.filter(m => {
+      const u = state.users[m.authorId];
+      if (!u || m.authorId === "me") return true;
+      return !isIgnored(m.authorId, u.isBot);
+    }),
+    [allMsgs, state.users, isIgnored],
+  );
   const peerReadAt = isDM(channelId) ? dmPeerReadAt(channelId) : 0;
   const lastSeenMeId = useMemo(() => {
     let lastMeIdx = -1;
