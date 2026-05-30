@@ -28,6 +28,7 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const earnPost = useServerFn(earnFeedPost);
 
   function updateText(v: string) {
     setText(v);
