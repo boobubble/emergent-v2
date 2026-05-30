@@ -4,14 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 import { Suspense, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth-store";
 import { getMyRoles } from "@/lib/admin.functions";
-import { ADMIN_NAV } from "@/components/admin/AdminNav";
+import { ADMIN_NAV, type AdminNavItem } from "@/components/admin/AdminNav";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Menu, ArrowLeft, Sun, Moon, Monitor, ShieldCheck } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Menu, ArrowLeft, Sun, Moon, Monitor, ShieldCheck, Search as SearchIcon, Sparkles } from "lucide-react";
 import { useThemeMode, type ThemeMode } from "@/lib/use-theme-mode";
 import { AppSettingsProvider } from "@/lib/app-settings";
+import { useAdminMode } from "@/lib/admin-mode";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
