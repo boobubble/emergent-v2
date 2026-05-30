@@ -7,6 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ADMIN_NAV } from "@/components/admin/AdminNav";
 import { getRealtimeOverview } from "@/lib/admin.functions";
 import { Wifi, Hash, Gamepad2, FileText, BarChart3 } from "lucide-react";
+import { QuickToggles } from "@/components/admin/QuickToggles";
+import { CommunityPresets } from "@/components/admin/CommunityPresets";
+import { RecommendedBadge } from "@/components/admin/RecommendedBadge";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
@@ -16,7 +19,10 @@ function AdminDashboard() {
   const fetchLive = useServerFn(getRealtimeOverview);
   const live = useQuery({ queryKey: ["admin", "live"], queryFn: () => fetchLive({}), refetchInterval: 15_000 });
 
-  const quick = ADMIN_NAV.filter((n) => n.to !== "/admin").slice(0, 6);
+  // Curated quick links — surface the most common admin destinations, not every page.
+  const quickLinks = ADMIN_NAV.filter((n) =>
+    ["/admin/chatrooms", "/admin/social-feed", "/admin/games", "/admin/economy", "/admin/moderation", "/admin/appearance"].includes(n.to)
+  );
 
   return (
     <div className="space-y-6">
@@ -39,11 +45,21 @@ function AdminDashboard() {
         <LiveCard icon={FileText} label="Posts / min" value={live.data?.postsLastMinute} loading={live.isLoading} />
       </div>
 
+      <QuickToggles />
+
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 px-1">
+          <h2 className="text-sm font-semibold">Get started fast</h2>
+          <RecommendedBadge variant="new-communities" />
+        </div>
+        <CommunityPresets />
+      </div>
+
       <Card>
-        <CardHeader><CardTitle className="text-base">Quick actions</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Jump to</CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {quick.map((item) => {
+            {quickLinks.map((item) => {
               const Icon = item.icon;
               return (
                 <Link key={item.to} to={item.to} className="group flex items-center gap-3 rounded-lg border border-border/60 bg-background p-3 transition hover:border-primary/40 hover:bg-muted/40">
