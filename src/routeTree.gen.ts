@@ -36,6 +36,7 @@ import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminRetentionRouteImport } from './routes/admin.retention'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminRealtimeRouteImport } from './routes/admin.realtime'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminModulesRouteImport } from './routes/admin.modules'
@@ -190,6 +191,11 @@ const AdminReportsRoute = AdminReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRealtimeRoute = AdminRealtimeRouteImport.update({
+  id: '/realtime',
+  path: '/realtime',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
   id: '/performance',
   path: '/performance',
@@ -311,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/retention': typeof AdminRetentionRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -357,6 +364,7 @@ export interface FileRoutesByTo {
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/retention': typeof AdminRetentionRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -405,6 +413,7 @@ export interface FileRoutesById {
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/retention': typeof AdminRetentionRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -454,6 +463,7 @@ export interface FileRouteTypes {
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
+    | '/admin/realtime'
     | '/admin/reports'
     | '/admin/retention'
     | '/admin/roles'
@@ -500,6 +510,7 @@ export interface FileRouteTypes {
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
+    | '/admin/realtime'
     | '/admin/reports'
     | '/admin/retention'
     | '/admin/roles'
@@ -547,6 +558,7 @@ export interface FileRouteTypes {
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
+    | '/admin/realtime'
     | '/admin/reports'
     | '/admin/retention'
     | '/admin/roles'
@@ -775,6 +787,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReportsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/realtime': {
+      id: '/admin/realtime'
+      path: '/realtime'
+      fullPath: '/admin/realtime'
+      preLoaderRoute: typeof AdminRealtimeRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/performance': {
       id: '/admin/performance'
       path: '/performance'
@@ -933,6 +952,7 @@ interface AdminRouteChildren {
   AdminModulesRoute: typeof AdminModulesRoute
   AdminPagesRoute: typeof AdminPagesRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
+  AdminRealtimeRoute: typeof AdminRealtimeRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminRetentionRoute: typeof AdminRetentionRoute
   AdminRolesRoute: typeof AdminRolesRoute
@@ -963,6 +983,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminModulesRoute: AdminModulesRoute,
   AdminPagesRoute: AdminPagesRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
+  AdminRealtimeRoute: AdminRealtimeRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminRetentionRoute: AdminRetentionRoute,
   AdminRolesRoute: AdminRolesRoute,
