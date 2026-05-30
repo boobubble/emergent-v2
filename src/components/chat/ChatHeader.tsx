@@ -1,6 +1,7 @@
 import { MessageCircle, X } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
+import { LoyaltyChip } from "./LoyaltyChip";
 
 export function ChatHeader() {
   const { state, isDM, dmUser, channelLabel, closeDM } = useChat();
@@ -50,7 +51,10 @@ export function ChatHeader() {
           #
         </div>
         <div className="min-w-0">
-          <div className="truncate font-bold text-foreground">{channelLabel(id)}</div>
+          <div className="flex items-center gap-2">
+            <span className="truncate font-bold text-foreground">{channelLabel(id)}</span>
+            <LoyaltyChip channelId={id} />
+          </div>
           <div className="truncate text-[11px] text-muted-foreground">{room.topic}</div>
         </div>
       </div>

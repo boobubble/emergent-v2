@@ -7,6 +7,7 @@ import type { Message, Attachment } from "@/lib/chat-types";
 import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
 import { NameEmojiBadge } from "@/lib/name-emoji";
 import { EmojiEffectLayer } from "./EmojiEffectLayer";
+import { HighlightButton } from "./HighlightButton";
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.kind === "image") {
@@ -250,6 +251,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                           >
                             <Reply className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
+                          <HighlightButton messageId={m.id} channelId={state.activeChannel} />
                         </div>
                       </div>
                     );

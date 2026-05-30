@@ -12,6 +12,7 @@ import { StoryTray } from "@/components/feed/StoryTray";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
 import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
+import { MissionsPanel } from "@/components/feed/MissionsPanel";
 import { FeedNotifications } from "@/components/feed/FeedNotifications";
 import { Avatar } from "@/components/chat/Avatar";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
@@ -435,6 +436,7 @@ function FeedPage() {
         {/* Right rail */}
         <aside className="hidden space-y-4 lg:block">
           <div className="sticky top-20 space-y-4">
+            <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
             <ChatroomOnlineWidget />
             <FriendsWidget meId={meId} profiles={profiles} />

@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { awardXp } from "@/lib/gamification.functions";
+import { earnFeedPost } from "@/lib/economy.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { extractHashtags } from "@/lib/feed-types";
 import { slugify } from "@/lib/post-slug";
 import { EmojiPicker } from "@/components/chat/EmojiPicker";
@@ -26,6 +28,7 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const earnPost = useServerFn(earnFeedPost);
 
   function updateText(v: string) {
     setText(v);
@@ -68,6 +71,7 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
       if (error) throw new Error(error.message);
       // bump XP (server-side; gamification trigger blocks client writes)
       try { await awardXp({ data: { action: "post" } }); } catch (e) { console.error("xp award failed", e); }
+      earnPost().catch(() => {});
       setText(""); setFiles([]); setAnonymous(false);
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       onPosted?.();

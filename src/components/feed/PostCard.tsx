@@ -1,8 +1,8 @@
 import { memo, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile } from "lucide-react";
+import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { Avatar } from "@/components/chat/Avatar";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type FeedReaction, type ReactionType } from "@/lib/feed-types";
 import { postSlug } from "@/lib/post-slug";
@@ -12,6 +12,8 @@ import { NameEmojiBadge } from "@/lib/name-emoji";
 import { useFeedPrefs } from "@/lib/feed-prefs";
 import { EmojiPicker } from "@/components/chat/EmojiPicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { earnFeedReaction, earnFeedComment, earnFeedShare, boostPost } from "@/lib/economy.functions";
+import { SPEND } from "@/lib/economy-config";
 
 
 function timeAgo(iso: string) {
@@ -45,7 +47,12 @@ export const PostCard = memo(function PostCard({
   const [sending, setSending] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState<SharePayload | null>(null);
+  const [boosting, setBoosting] = useState(false);
 
+  const earnReaction = useServerFn(earnFeedReaction);
+  const earnComment = useServerFn(earnFeedComment);
+  const earnShare = useServerFn(earnFeedShare);
+  const doBoost = useServerFn(boostPost);
 
   const author = post.is_anonymous ? null : profiles[post.author_id];
   const mediaUrls = Array.isArray(post.media_urls) ? post.media_urls : [];
@@ -97,15 +104,34 @@ export const PostCard = memo(function PostCard({
     const { data } = await supabase.from("reactions")
       .insert({ user_id: meId, target_type: "post", target_id: post.id, type })
       .select().single();
-    if (data) setReactions((p) => [...p, data as FeedReaction]);
+    if (data) {
+      setReactions((p) => [...p, data as FeedReaction]);
+      earnReaction({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
+    }
   }
 
   async function addComment() {
     if (!commentText.trim()) return;
     setSending(true);
-    await supabase.from("comments").insert({ post_id: post.id, author_id: meId, text: commentText.trim() });
+    const { error } = await supabase.from("comments").insert({ post_id: post.id, author_id: meId, text: commentText.trim() });
+    if (!error) {
+      earnComment({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
+    }
     setCommentText("");
     setSending(false);
+  }
+
+  async function boost() {
+    if (boosting) return;
+    if (!confirm(`Boost this post for ${SPEND.boost_post.coins} coins?`)) return;
+    setBoosting(true);
+    try {
+      await doBoost({ data: { postId: post.id } });
+    } catch (e) {
+      alert((e as Error).message ?? "Couldn't boost");
+    } finally {
+      setBoosting(false);
+    }
   }
 
   async function del() {
@@ -190,6 +216,17 @@ export const PostCard = memo(function PostCard({
         <button onClick={() => setShowComments(!showComments)} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
           <MessageCircle className="h-4 w-4" /> {hideCounts ? "Comment" : (commentCount || "Comment")}
         </button>
+        {post.owner_id !== meId && (
+          <button
+            onClick={boost}
+            disabled={boosting}
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500 disabled:opacity-50"
+            title={`Boost (${SPEND.boost_post.coins} coins)`}
+          >
+            {boosting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+            <span className="hidden sm:inline">Boost</span>
+          </button>
+        )}
         <button
           onClick={async () => {
             const url = `${window.location.origin}/feed/${postSlug(post)}`;
@@ -199,6 +236,7 @@ export const PostCard = memo(function PostCard({
               : `${authorName} on Palrgo`;
             const shareText = post.text ? post.text : `Check out this post by ${authorName}`;
             const payload: SharePayload = { title, text: shareText, url };
+            earnShare({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
             // Try native Web Share API first (best on mobile)
             if (typeof navigator !== "undefined" && navigator.share) {
               try {
