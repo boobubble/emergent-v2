@@ -1,5 +1,6 @@
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle, X, Bot, BotOff } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
 import { LoyaltyChip } from "./LoyaltyChip";
 
