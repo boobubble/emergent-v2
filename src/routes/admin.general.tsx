@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import { AdminToggle } from "@/components/admin/AdminToggle";
 import { getAllSettings, updateSetting } from "@/lib/admin.functions";
 import { toast } from "sonner";
 
@@ -93,7 +93,7 @@ function ToggleRow({ label, desc, value, onChange }: { label: string; desc: stri
         <div className="text-sm font-medium">{label}</div>
         <div className="text-xs text-muted-foreground">{desc}</div>
       </div>
-      <Switch checked={value} onCheckedChange={onChange} />
+      <AdminToggle checked={value} onCheckedChange={onChange} />
     </label>
   );
 }

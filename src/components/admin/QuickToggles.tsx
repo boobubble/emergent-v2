@@ -1,7 +1,7 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+import { AdminToggle } from "@/components/admin/AdminToggle";
 import { useAppSettings, type ModulesFlags } from "@/lib/app-settings";
 import { updateSetting } from "@/lib/admin.functions";
 import { toast } from "sonner";
@@ -63,7 +63,7 @@ export function QuickToggles() {
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1 text-sm font-medium">{item.label}</div>
-                <Switch checked={!!on} onCheckedChange={(v) => toggle(item, v)} disabled={mut.isPending} />
+                <AdminToggle checked={!!on} onCheckedChange={(v) => toggle(item, v)} disabled={mut.isPending} />
               </label>
             );
           })}

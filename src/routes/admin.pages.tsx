@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
+import { AdminToggle } from "@/components/admin/AdminToggle";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -338,8 +338,8 @@ function PageEditorDialog({ page, onClose, onSaved }: { page: PageRow | null; on
                 <Input value={row.canonical_url ?? ""} maxLength={500} onChange={(e) => update("canonical_url", e.target.value)} placeholder="https://example.com/page" />
               </div>
               <div className="flex flex-wrap items-center gap-4 pt-5">
-                <label className="inline-flex items-center gap-2 text-xs"><Switch checked={row.noindex} onCheckedChange={(v) => update("noindex", v)} />Noindex</label>
-                <label className="inline-flex items-center gap-2 text-xs"><Switch checked={row.nofollow} onCheckedChange={(v) => update("nofollow", v)} />Nofollow</label>
+                <label className="inline-flex items-center gap-2 text-xs"><AdminToggle checked={row.noindex} onCheckedChange={(v) => update("noindex", v)} />Noindex</label>
+                <label className="inline-flex items-center gap-2 text-xs"><AdminToggle checked={row.nofollow} onCheckedChange={(v) => update("nofollow", v)} />Nofollow</label>
               </div>
             </TabsContent>
 
@@ -395,7 +395,7 @@ function PageEditorDialog({ page, onClose, onSaved }: { page: PageRow | null; on
                 </Select>
               </div>
               <div className="flex items-center gap-2 pt-6">
-                <Switch checked={row.featured} onCheckedChange={(v) => update("featured", v)} />
+                <AdminToggle checked={row.featured} onCheckedChange={(v) => update("featured", v)} />
                 <Label className="text-xs">Featured page</Label>
               </div>
             </TabsContent>
