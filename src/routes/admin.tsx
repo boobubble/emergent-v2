@@ -84,11 +84,33 @@ function AdminShell({ isSuper }: { isSuper: boolean }) {
 
 function SidebarContent({ isSuper, onNavigate }: { isSuper: boolean; onNavigate?: () => void }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const { mode, setMode, isAdvanced } = useAdminMode();
+  const [query, setQuery] = useState("");
+
+  // Visibility rules: hide super-only from non-supers; hide advanced unless in advanced mode (super only).
+  const visible = useMemo<AdminNavItem[]>(() => {
+    return ADMIN_NAV.filter((i) => {
+      if (i.superOnly && !isSuper) return false;
+      if (i.advanced && !(isSuper && isAdvanced)) return false;
+      return true;
+    });
+  }, [isSuper, isAdvanced]);
+
+  // Search across label / description / keywords (Discord-style settings search).
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return visible;
+    return visible.filter((i) => {
+      const hay = [i.label, i.description ?? "", ...(i.keywords ?? [])].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }, [visible, query]);
+
   const grouped = useMemo(() => {
-    const g: Record<string, typeof ADMIN_NAV> = {};
-    for (const item of ADMIN_NAV) (g[item.group] ||= []).push(item);
+    const g: Record<string, AdminNavItem[]> = {};
+    for (const item of filtered) (g[item.group] ||= []).push(item);
     return g;
-  }, []);
+  }, [filtered]);
 
   return (
     <div className="flex h-full flex-col">
@@ -99,7 +121,41 @@ function SidebarContent({ isSuper, onNavigate }: { isSuper: boolean; onNavigate?
           <div className="truncate text-[11px] text-muted-foreground">{isSuper ? "Super Admin" : "Admin"}</div>
         </div>
       </div>
+
+      <div className="border-b p-3 space-y-2">
+        <div className="relative">
+          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search settings…"
+            className="h-8 pl-7 text-xs"
+          />
+        </div>
+        {isSuper && (
+          <div className="flex items-center gap-1 rounded-md border bg-muted/30 p-0.5 text-[11px]">
+            <button
+              type="button"
+              onClick={() => setMode("basic")}
+              className={`flex-1 rounded px-2 py-1 transition ${mode === "basic" ? "bg-background font-medium shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Basic
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("advanced")}
+              className={`flex-1 rounded px-2 py-1 transition inline-flex items-center justify-center gap-1 ${mode === "advanced" ? "bg-background font-medium shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              <Sparkles className="h-3 w-3" />Advanced
+            </button>
+          </div>
+        )}
+      </div>
+
       <ScrollArea className="flex-1 px-2 py-3">
+        {Object.keys(grouped).length === 0 && (
+          <div className="px-3 py-6 text-center text-xs text-muted-foreground">No settings match “{query}”.</div>
+        )}
         {Object.entries(grouped).map(([group, items]) => (
           <div key={group} className="mb-4">
             <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{group}</div>
