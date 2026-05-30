@@ -106,3 +106,44 @@ export const VIRAL_JACKPOT = {
   xp: 100,
   minScore: 50, // post must be at least somewhat trending
 } as const;
+
+// ============================================================
+// Centralized economy rules engine config (foundation only).
+// Read by the admin Economy page and future server fns as the
+// single source of truth. Persisted under app_settings.economy.
+// Does NOT replace the constants above (EARN/SPEND/etc.) which
+// remain authoritative for current XP/coin/streak systems.
+// ============================================================
+
+export interface EconomyConfig {
+  modules: {
+    chatXp: boolean;
+    feedXp: boolean;
+    coinRewards: boolean;
+    streakRewards: boolean;
+    creatorRewards: boolean;
+    loyaltyRewards: boolean;
+    dailyMissions: boolean;
+  };
+  chatXp:  { perMessage: number; dailyCap: number; cooldownSec: number };
+  feedXp:  { perPost: number; perComment: number; perReactionReceived: number; dailyCap: number };
+  coins:   { perLevel: number; perDailyLogin: number; perFriendInvite: number };
+  streaks: { dailyLoginBonusCoins: number; milestoneBonusCoins: Record<string, number> };
+  creator: { tipMinCoins: number; tipMaxCoins: number; platformCutPct: number };
+  loyalty: { perDayActiveCoins: number; weeklyBonusCoins: number };
+  missions:{ enabledCount: number; refreshHours: number };
+}
+
+export const ECONOMY_DEFAULTS: EconomyConfig = {
+  modules: {
+    chatXp: true, feedXp: true, coinRewards: true, streakRewards: true,
+    creatorRewards: false, loyaltyRewards: false, dailyMissions: false,
+  },
+  chatXp:   { perMessage: 1, dailyCap: 200, cooldownSec: 5 },
+  feedXp:   { perPost: 10, perComment: 3, perReactionReceived: 1, dailyCap: 300 },
+  coins:    { perLevel: 50, perDailyLogin: 10, perFriendInvite: 25 },
+  streaks:  { dailyLoginBonusCoins: 5, milestoneBonusCoins: { "7": 50, "14": 120, "30": 300, "100": 1500 } },
+  creator:  { tipMinCoins: 10, tipMaxCoins: 10000, platformCutPct: 10 },
+  loyalty:  { perDayActiveCoins: 2, weeklyBonusCoins: 25 },
+  missions: { enabledCount: 3, refreshHours: 24 },
+};
