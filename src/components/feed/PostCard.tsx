@@ -216,6 +216,17 @@ export const PostCard = memo(function PostCard({
         <button onClick={() => setShowComments(!showComments)} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
           <MessageCircle className="h-4 w-4" /> {hideCounts ? "Comment" : (commentCount || "Comment")}
         </button>
+        {post.owner_id !== meId && (
+          <button
+            onClick={boost}
+            disabled={boosting}
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500 disabled:opacity-50"
+            title={`Boost (${SPEND.boost_post.coins} coins)`}
+          >
+            {boosting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+            <span className="hidden sm:inline">Boost</span>
+          </button>
+        )}
         <button
           onClick={async () => {
             const url = `${window.location.origin}/feed/${postSlug(post)}`;
@@ -225,6 +236,7 @@ export const PostCard = memo(function PostCard({
               : `${authorName} on Palrgo`;
             const shareText = post.text ? post.text : `Check out this post by ${authorName}`;
             const payload: SharePayload = { title, text: shareText, url };
+            earnShare({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
             // Try native Web Share API first (best on mobile)
             if (typeof navigator !== "undefined" && navigator.share) {
               try {
