@@ -64,6 +64,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/chatrooms",   label: "Chatrooms",    icon: MessageSquare, keywords: ["chat", "rooms"] },
       { to: "/admin/social-feed", label: "Feed",         icon: Newspaper,     keywords: ["posts", "social"] },
       { to: "/admin/games",       label: "Games",        icon: Gamepad2,      keywords: ["mini-games"] },
+      { to: "/admin/dj",          label: "Live DJ / RJ", icon: Disc3,         keywords: ["music", "dj", "rj", "player", "radio", "live", "audio", "stream", "youtube"] },
       { to: "/admin/pages",       label: "Custom Pages", icon: FileText,      keywords: ["cms", "landing"] },
     ],
   },
