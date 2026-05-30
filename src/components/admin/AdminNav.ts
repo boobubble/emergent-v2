@@ -81,6 +81,7 @@ export const ADMIN_NAV: AdminGroup[] = [
   },
 
   { label: "Reports",  icon: BarChart3, to: "/admin/analytics" },
+  { label: "Upcoming", icon: Rocket,    to: "/admin/upcoming", badge: "Soon" },
 
   {
     label: "Tools", icon: Wrench, advanced: true, children: [
