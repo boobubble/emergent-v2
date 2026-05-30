@@ -6,6 +6,7 @@ import { LoyaltyChip } from "./LoyaltyChip";
 
 export function ChatHeader() {
   const { state, isDM, dmUser, channelLabel, closeDM } = useChat();
+  const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
   const id = state.activeChannel;
 
   if (isDM(id)) {
