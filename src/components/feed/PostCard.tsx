@@ -1,8 +1,8 @@
 import { memo, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile } from "lucide-react";
+import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { Avatar } from "@/components/chat/Avatar";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type FeedReaction, type ReactionType } from "@/lib/feed-types";
 import { postSlug } from "@/lib/post-slug";
@@ -12,6 +12,8 @@ import { NameEmojiBadge } from "@/lib/name-emoji";
 import { useFeedPrefs } from "@/lib/feed-prefs";
 import { EmojiPicker } from "@/components/chat/EmojiPicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { earnFeedReaction, earnFeedComment, earnFeedShare, boostPost } from "@/lib/economy.functions";
+import { SPEND } from "@/lib/economy-config";
 
 
 function timeAgo(iso: string) {
