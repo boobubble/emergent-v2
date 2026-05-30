@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+import { AdminToggle } from "@/components/admin/AdminToggle";
 import { MODULE_REGISTRY } from "@/lib/admin-modules";
 import { useAppSettings, type ModulesFlags } from "@/lib/app-settings";
 import { updateSetting } from "@/lib/admin.functions";
@@ -50,7 +50,7 @@ function ModulesPage() {
                       <div className="text-sm font-medium">{m.label}</div>
                       <div className="truncate text-xs text-muted-foreground">{m.description}</div>
                     </div>
-                    <Switch checked={on} onCheckedChange={(v) => toggle(m.key, v)} disabled={mut.isPending} />
+                    <AdminToggle checked={on} onCheckedChange={(v) => toggle(m.key, v)} disabled={mut.isPending} />
                   </div>
                 );
               })}

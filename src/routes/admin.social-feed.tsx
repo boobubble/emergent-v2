@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import { AdminToggle } from "@/components/admin/AdminToggle";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -503,7 +503,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
   return (
     <label className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background p-3">
       <div className="min-w-0 text-sm font-medium">{label}</div>
-      <Switch checked={value} onCheckedChange={onChange} />
+      <AdminToggle checked={value} onCheckedChange={onChange} />
     </label>
   );
 }

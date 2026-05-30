@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
+import { AdminToggle } from "@/components/admin/AdminToggle";
 import { toast } from "sonner";
 import {
   getModerationOverview, listReports, resolveReport,
@@ -336,7 +336,7 @@ function WordsTab() {
                 <Badge>{w.action}</Badge>
                 <span className="font-mono text-xs">{w.pattern}</span>
                 <div className="ml-auto flex items-center gap-2">
-                  <Switch checked={w.active} onCheckedChange={async (v) => { await toggle({ data: { id: w.id, active: v }}); qc.invalidateQueries({ queryKey: ["mod"] }); }} />
+                  <AdminToggle checked={w.active} onCheckedChange={async (v) => { await toggle({ data: { id: w.id, active: v }}); qc.invalidateQueries({ queryKey: ["mod"] }); }} />
                   <Button size="icon" variant="ghost" onClick={async () => { await remove({ data: { id: w.id }}); qc.invalidateQueries({ queryKey: ["mod"] }); }}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
               </div>

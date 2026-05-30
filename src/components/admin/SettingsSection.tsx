@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { AdminToggle } from "@/components/admin/AdminToggle";
 
 export function SettingsCard({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
@@ -36,14 +36,39 @@ export function NumberField({ label, value, onChange, min = 0, max, step = 1, hi
   );
 }
 
-export function ToggleRow({ label, desc, value, onChange }: { label: string; desc?: string; value: boolean; onChange: (v: boolean) => void }) {
+/**
+ * WoWonder-style settings row: label + description on the left,
+ * big ON/OFF pill on the right. Use everywhere in the admin panel.
+ */
+export function ToggleRow({ label, desc, value, onChange, disabled }: {
+  label: string; desc?: string; value: boolean; onChange: (v: boolean) => void; disabled?: boolean;
+}) {
   return (
-    <label className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-background p-3">
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-border/60 bg-background px-4 py-3">
       <div className="min-w-0">
         <div className="text-sm font-medium">{label}</div>
-        {desc && <div className="text-xs text-muted-foreground">{desc}</div>}
+        {desc && <div className="mt-0.5 text-xs text-muted-foreground">{desc}</div>}
       </div>
-      <Switch checked={value} onCheckedChange={onChange} />
-    </label>
+      <AdminToggle checked={value} onCheckedChange={onChange} disabled={disabled} ariaLabel={label} />
+    </div>
+  );
+}
+
+/**
+ * Compact divided list of toggle rows (use inside a Card with `divide-y p-0`).
+ */
+export function ToggleListRow({ label, desc, value, onChange, disabled, icon }: {
+  label: string; desc?: string; value: boolean; onChange: (v: boolean) => void;
+  disabled?: boolean; icon?: ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      {icon}
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-medium">{label}</div>
+        {desc && <div className="truncate text-xs text-muted-foreground">{desc}</div>}
+      </div>
+      <AdminToggle checked={value} onCheckedChange={onChange} disabled={disabled} ariaLabel={label} />
+    </div>
   );
 }
