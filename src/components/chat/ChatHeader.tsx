@@ -1,6 +1,7 @@
 import { MessageCircle, X } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
+import { LoyaltyChip } from "./LoyaltyChip";
 
 export function ChatHeader() {
   const { state, isDM, dmUser, channelLabel, closeDM } = useChat();
