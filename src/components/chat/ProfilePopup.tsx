@@ -300,6 +300,15 @@ export function ProfilePopup({
                 <UserPlus className="h-4 w-4 shrink-0" /> Add
               </button>
             ))}
+            {!isMe && (isIgnored(userId, user.isBot) ? (
+              <button onClick={() => toggleIgnoreUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unignore (show messages)">
+                <Bell className="h-4 w-4 shrink-0" />
+              </button>
+            ) : (
+              <button onClick={() => toggleIgnoreUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card text-muted-foreground hover:bg-white/5 hover:text-foreground" title="Ignore (hide messages in chat)">
+                <BellOff className="h-4 w-4 shrink-0" />
+              </button>
+            ))}
             {!user.isBot && (blocked ? (
               <button onClick={() => unblockUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unblock">
                 <ShieldCheck className="h-4 w-4 shrink-0" />
