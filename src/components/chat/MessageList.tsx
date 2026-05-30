@@ -8,6 +8,7 @@ import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
 import { NameEmojiBadge } from "@/lib/name-emoji";
 import { EmojiEffectLayer } from "./EmojiEffectLayer";
 import { HighlightButton } from "./HighlightButton";
+import { useIgnore } from "@/lib/ignore-store";
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.kind === "image") {
