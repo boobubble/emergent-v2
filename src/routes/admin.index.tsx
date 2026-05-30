@@ -1,98 +1,120 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ADMIN_NAV } from "@/components/admin/AdminNav";
-import { getRealtimeOverview } from "@/lib/admin.functions";
-import { Wifi, Hash, Gamepad2, FileText, BarChart3 } from "lucide-react";
+import { getAnalytics, getRealtimeOverview } from "@/lib/admin.functions";
+import { useAuth } from "@/lib/auth-store";
+import { Users2, FileText, MessageSquare, Gamepad2, Wifi, Newspaper, BarChart3 } from "lucide-react";
 import { QuickToggles } from "@/components/admin/QuickToggles";
-import { CommunityPresets } from "@/components/admin/CommunityPresets";
-import { RecommendedBadge } from "@/components/admin/RecommendedBadge";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
 });
 
 function AdminDashboard() {
+  const { user } = useAuth();
+  const fetchAnalytics = useServerFn(getAnalytics);
   const fetchLive = useServerFn(getRealtimeOverview);
+  const analytics = useQuery({ queryKey: ["admin", "analytics"], queryFn: () => fetchAnalytics({}), staleTime: 60_000 });
   const live = useQuery({ queryKey: ["admin", "live"], queryFn: () => fetchLive({}), refetchInterval: 15_000 });
 
-  // Curated quick links — surface the most common admin destinations, not every page.
-  const quickLinks = ADMIN_NAV.filter((n) =>
-    ["/admin/chatrooms", "/admin/social-feed", "/admin/games", "/admin/economy", "/admin/moderation", "/admin/appearance"].includes(n.to)
-  );
+  const stats = [
+    { key: "users",    label: "Total Users",    icon: Users2,        tint: "bg-sky-100 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",       value: analytics.data?.totalUsers,  href: "/admin/users" },
+    { key: "posts",    label: "Total Posts",    icon: Newspaper,     tint: "bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300", value: analytics.data?.postsTotal,  href: "/admin/social-feed" },
+    { key: "pages",    label: "Total Pages",    icon: FileText,      tint: "bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",  value: undefined,                   href: "/admin/pages" },
+    { key: "online",   label: "Online Users",   icon: Wifi,          tint: "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300", value: live.data?.onlineUsers,     href: "/admin/users" },
+    { key: "comments", label: "Total Comments", icon: MessageSquare, tint: "bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",     value: analytics.data?.messages24,  href: "/admin/chatrooms" },
+    { key: "games",    label: "Total Games",    icon: Gamepad2,      tint: "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300", value: analytics.data?.games24,    href: "/admin/games" },
+  ];
+
+  const series = analytics.data?.newUsersByDay ?? [];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-          <p className="text-sm text-muted-foreground">Realtime activity at a glance. Open Analytics for deeper trends.</p>
-        </div>
-        <Link to="/admin/analytics">
-          <Badge variant="outline" className="gap-1.5">
-            <BarChart3 className="h-3.5 w-3.5" />Open analytics
-          </Badge>
-        </Link>
+      {/* Welcome header */}
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight">
+          Welcome back{user?.username ? `, ${user.username}` : ""}
+        </h1>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <LiveCard icon={Wifi} label="Online now" value={live.data?.onlineUsers} loading={live.isLoading} tone="ok" />
-        <LiveCard icon={Hash} label="Active rooms" value={live.data?.activeRooms} loading={live.isLoading} />
-        <LiveCard icon={Gamepad2} label="Active games" value={live.data?.activeGames} loading={live.isLoading} />
-        <LiveCard icon={FileText} label="Posts / min" value={live.data?.postsLastMinute} loading={live.isLoading} />
-      </div>
-
-      <QuickToggles />
-
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 px-1">
-          <h2 className="text-sm font-semibold">Get started fast</h2>
-          <RecommendedBadge variant="new-communities" />
-        </div>
-        <CommunityPresets />
-      </div>
-
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Jump to</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {quickLinks.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.to} to={item.to} className="group flex items-center gap-3 rounded-lg border border-border/60 bg-background p-3 transition hover:border-primary/40 hover:bg-muted/40">
-                  <div className="grid h-9 w-9 place-items-center rounded-md bg-primary/10 text-primary"><Icon className="h-4 w-4" /></div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="truncate text-sm font-medium">{item.label}</div>
-                      {item.badge && <Badge variant="outline" className="h-5 px-1.5 text-[10px]">{item.badge}</Badge>}
-                    </div>
-                    <div className="truncate text-xs text-muted-foreground">{item.group}</div>
+      {/* Stat cards (WoWonder-style) */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {stats.map((s) => (
+          <Link key={s.key} to={s.href} className="group">
+            <Card className="border-border/60 transition hover:border-primary/40 hover:shadow-sm">
+              <CardContent className="space-y-3 p-4">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</div>
+                <div className="flex items-center gap-3">
+                  <div className={`grid h-10 w-10 place-items-center rounded-full ${s.tint}`}>
+                    <s.icon className="h-4.5 w-4.5" />
                   </div>
-                </Link>
-              );
-            })}
+                  {analytics.isLoading || live.isLoading ? (
+                    <Skeleton className="h-7 w-16" />
+                  ) : (
+                    <div className="text-2xl font-semibold tabular-nums">{(s.value ?? 0).toLocaleString()}</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+
+      {/* Statistics chart */}
+      <Card>
+        <CardContent className="space-y-4 p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold uppercase tracking-wider">Statistics</h2>
+            </div>
+            <Link to="/admin/analytics" className="text-xs text-primary hover:underline">View analytics</Link>
           </div>
+          {analytics.isLoading ? (
+            <Skeleton className="h-48 w-full" />
+          ) : (
+            <MiniBarChart data={series} />
+          )}
         </CardContent>
       </Card>
+
+      {/* Quick toggles — preserved from the previous dashboard */}
+      <QuickToggles />
     </div>
   );
 }
 
-function LiveCard({ icon: Icon, label, value, loading, tone }: { icon: React.ComponentType<{ className?: string }>; label: string; value?: number; loading?: boolean; tone?: "ok" }) {
+function MiniBarChart({ data }: { data: { day: string; count: number }[] }) {
+  const max = Math.max(1, ...data.map((d) => d.count));
+  const labelFor = (d: string) => {
+    const date = new Date(d);
+    return date.toLocaleDateString(undefined, { weekday: "short" });
+  };
   return (
-    <Card className="border-border/60">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <Icon className="h-3.5 w-3.5" />{label}
-        </div>
-        <div className="mt-1 flex items-baseline gap-2">
-          {loading ? <Skeleton className="h-7 w-12" /> : <div className="text-2xl font-semibold tabular-nums">{value ?? 0}</div>}
-          {tone === "ok" && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
-        </div>
-      </CardContent>
-    </Card>
+    <div>
+      <div className="flex h-48 items-end gap-2 sm:gap-4">
+        {data.map((d) => {
+          const h = Math.max(4, Math.round((d.count / max) * 100));
+          return (
+            <div key={d.day} className="flex flex-1 flex-col items-center gap-2">
+              <div className="relative flex h-full w-full items-end">
+                <div
+                  className="w-full rounded-t-md bg-gradient-to-t from-primary/60 to-primary transition-all"
+                  style={{ height: `${h}%` }}
+                  title={`${d.count} new users`}
+                />
+              </div>
+              <div className="text-[10px] text-muted-foreground">{labelFor(d.day)}</div>
+            </div>
+          );
+        })}
+        {data.length === 0 && (
+          <div className="grid h-full w-full place-items-center text-xs text-muted-foreground">No data yet.</div>
+        )}
+      </div>
+      <div className="mt-3 text-[11px] text-muted-foreground">New users · last 7 days</div>
+    </div>
   );
 }
