@@ -436,6 +436,7 @@ function FeedPage() {
         {/* Right rail */}
         <aside className="hidden space-y-4 lg:block">
           <div className="sticky top-20 space-y-4">
+            <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
             <ChatroomOnlineWidget />
             <FriendsWidget meId={meId} profiles={profiles} />
