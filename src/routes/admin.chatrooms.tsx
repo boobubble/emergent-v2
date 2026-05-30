@@ -9,7 +9,9 @@ export const Route = createFileRoute("/admin/chatrooms")({ component: ChatroomsH
 
 function ChatroomsHub() {
   // Only chatroom-scoped settings. Feed / games / economy live in their own hubs.
-  const items = ADMIN_NAV.filter((i) => i.group === "Chatrooms");
+  const items = ADMIN_NAV.filter((i) =>
+    ["/admin/moderation", "/admin/bots", "/admin/filters"].includes(i.to)
+  );
 
   return (
     <div>
