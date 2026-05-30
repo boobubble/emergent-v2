@@ -251,6 +251,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                           >
                             <Reply className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
+                          <HighlightButton messageId={m.id} channelId={state.activeChannel} />
                         </div>
                       </div>
                     );
