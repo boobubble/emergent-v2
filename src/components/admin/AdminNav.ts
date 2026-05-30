@@ -88,6 +88,7 @@ export const ADMIN_NAV: AdminGroup[] = [
     label: "Tools", icon: Wrench, advanced: true, children: [
       { to: "/admin/security",    label: "Security",    icon: Lock,     badge: "Soon", advanced: true,                   keywords: ["captcha", "rate", "sessions"] },
       { to: "/admin/performance", label: "Performance", icon: Activity, advanced: true,                                  keywords: ["cache", "cdn"] },
+      { to: "/admin/realtime",    label: "Realtime",    icon: Radio,    advanced: true,                                  keywords: ["websocket", "presence", "live"] },
       { to: "/admin/system",      label: "System",      icon: Server,   advanced: true, superOnly: true,                 keywords: ["database", "jobs"] },
       { to: "/admin/api",         label: "API & Webhooks", icon: KeyRound, advanced: true, superOnly: true,              keywords: ["api", "keys", "webhooks"] },
     ],
