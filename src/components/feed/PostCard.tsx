@@ -104,15 +104,34 @@ export const PostCard = memo(function PostCard({
     const { data } = await supabase.from("reactions")
       .insert({ user_id: meId, target_type: "post", target_id: post.id, type })
       .select().single();
-    if (data) setReactions((p) => [...p, data as FeedReaction]);
+    if (data) {
+      setReactions((p) => [...p, data as FeedReaction]);
+      earnReaction({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
+    }
   }
 
   async function addComment() {
     if (!commentText.trim()) return;
     setSending(true);
-    await supabase.from("comments").insert({ post_id: post.id, author_id: meId, text: commentText.trim() });
+    const { error } = await supabase.from("comments").insert({ post_id: post.id, author_id: meId, text: commentText.trim() });
+    if (!error) {
+      earnComment({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
+    }
     setCommentText("");
     setSending(false);
+  }
+
+  async function boost() {
+    if (boosting) return;
+    if (!confirm(`Boost this post for ${SPEND.boost_post.coins} coins?`)) return;
+    setBoosting(true);
+    try {
+      await doBoost({ data: { postId: post.id } });
+    } catch (e) {
+      alert((e as Error).message ?? "Couldn't boost");
+    } finally {
+      setBoosting(false);
+    }
   }
 
   async function del() {
