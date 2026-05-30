@@ -14,6 +14,8 @@
  */
 
 export { coinGiftingService, type CoinGiftingService } from "./coin-gifting.service";
+export { activityService, type ActivityService, type StreakSummary } from "./activity.service";
+export { loyaltyService, type LoyaltyService, type LoyaltyState } from "./loyalty.service";
 export { coinBombsService, type CoinBombsService } from "./coin-bombs.service";
 export { creatorTippingService, type CreatorTippingService } from "./creator-tipping.service";
 export { momentumService, type MomentumService } from "./momentum.service";
