@@ -599,24 +599,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     syncRef.current?.postMessage({ type: "state", state });
   }, [state, storageReady, username]);
 
-  // Ambient bot chatter
-  useEffect(() => {
-    const t = setInterval(() => {
-      setState(s => {
-        const room = s.rooms[s.activeChannel];
-        if (!room) return s;
-        if (room.id === "games") return s;
-        const botMembers = room.members.filter(id => s.users[id]?.isBot && s.users[id]?.status === "online" && id !== "bot-gamebot");
-        if (!botMembers.length) return s;
-        if (Math.random() > 0.35) return s;
-        const author = botMembers[Math.floor(Math.random() * botMembers.length)];
-        const text = pickBotReply("");
-        const msg: Message = { id: uid(), channelId: room.id, authorId: author, text, ts: Date.now() };
-        return { ...s, messages: { ...s.messages, [room.id]: [...(s.messages[room.id] || []), msg] } };
-      });
-    }, 12000);
-    return () => clearInterval(t);
-  }, []);
+  // Ambient bot chatter (disabled — bots only respond to user commands now)
 
   // Merge remote profiles into the users map (skips our own auth uuid; we render as "me")
   useEffect(() => {
