@@ -37,7 +37,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   // 2. Chatroom-only settings
   { to: "/admin/moderation",    label: "Chat Moderation", icon: Gavel,         group: "Chatrooms",   description: "Bans, mutes, word filters and reports." },
   { to: "/admin/bots",          label: "Chat Bots",     icon: Bot,             group: "Chatrooms",   description: "Fish, wine, dig, trivia and AI bots." },
-  { to: "/admin/fake-activity", label: "Fake Activity", icon: Users2,          group: "Chatrooms",   description: "Simulated joins and reactions for rooms." },
+  
 
   // 3. Social feed-only settings
   { to: "/admin/social-layout", label: "Feed Layout",   icon: LayoutGrid,      group: "Social Feed", description: "Feed widgets, sidebars and layout." },
