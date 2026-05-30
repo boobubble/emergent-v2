@@ -44,6 +44,7 @@ export function ProfilePopup({
   onOpenChange: (v: boolean) => void;
 }) {
   const { state, startDM, addFriend, removeFriend, blockUser, unblockUser, isFriend, isBlocked } = useChat();
+  const { isIgnored, toggleIgnoreUser } = useIgnore();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [tab, setTab] = useState<Tab>("info");
