@@ -7,6 +7,7 @@ import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { MembersPanel } from "@/components/chat/MembersPanel";
+import { DjFooter } from "@/components/chat/DjFooter";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
 import { BADGE_MAP } from "@/lib/achievements";
 
