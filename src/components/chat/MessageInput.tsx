@@ -255,6 +255,26 @@ export function MessageInput() {
           />
         </div>
       )}
+      {showGiphy && (
+        <div className="mb-2">
+          <GiphyPicker
+            onPick={(g) => {
+              send(g.pageUrl, { replyToId: replyingTo?.id });
+              setShowGiphy(false);
+            }}
+          />
+        </div>
+      )}
+      {showYoutube && (
+        <div className="mb-2">
+          <YoutubePicker
+            onPick={(url) => {
+              send(url, { replyToId: replyingTo?.id });
+              setShowYoutube(false);
+            }}
+          />
+        </div>
+      )}
       {attachment && (
         <div className="mb-2 flex items-center gap-2 rounded-2xl border border-border bg-white/5 px-3 py-2">
           {attachment.kind === "image" ? (
