@@ -42,8 +42,8 @@ export function useProgressionConfig(): ProgressionConfig {
 /** Returns whether the current user can use the given unlock right now. */
 export function useUnlock(key: UnlockKey): { allowed: boolean; requiredLevel: number; userLevel: number } {
   const cfg = useProgressionConfig();
-  const { profile } = useAuth();
-  const userLevel = profile?.level ?? 1;
+  const { state } = useChat();
+  const userLevel = state.me?.level ?? 1;
   const { level: requiredLevel } = resolveUnlock(key, cfg);
   return { allowed: canUseUnlock(userLevel, key, cfg), requiredLevel, userLevel };
 }
