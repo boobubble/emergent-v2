@@ -253,6 +253,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                             }
                           >
                             <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                            {m.text && <MediaEmbed text={m.text} />}
                             {m.attachment && <AttachmentView a={m.attachment} />}
                           </div>
                           <button
