@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { awardXp } from "@/lib/gamification.functions";
+import { earnFeedPost } from "@/lib/economy.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { extractHashtags } from "@/lib/feed-types";
 import { slugify } from "@/lib/post-slug";
 import { EmojiPicker } from "@/components/chat/EmojiPicker";
