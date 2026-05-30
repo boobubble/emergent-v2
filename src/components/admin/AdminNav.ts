@@ -1,21 +1,16 @@
 import {
   LayoutDashboard, Settings, Palette, LayoutGrid, Puzzle, Shield,
   Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3, Bot, Users2,
-  FileText, MessageSquare, Newspaper,
+  FileText, MessageSquare, Newspaper, Zap, Trophy, Calendar, Flag,
+  Filter, Layers, Server, KeyRound, Activity,
 } from "lucide-react";
 
 export type AdminGroup =
-  | "Overview"
-  | "Chatrooms"
-  | "Social Feed"
-  | "Pages"
-  | "Users"
-  | "Games"
-  | "Economy"
-  | "AI"
+  | "Community"
+  | "Engagement"
+  | "Moderation"
   | "Appearance"
-  | "Security"
-  | "Modules";
+  | "Advanced";
 
 export interface AdminNavItem {
   to: string;
@@ -24,47 +19,101 @@ export interface AdminNavItem {
   group: AdminGroup;
   badge?: string;
   description?: string;
+  /** When true, only shown when admin is in "advanced" mode (and is super admin). */
+  advanced?: boolean;
+  /** When true, only super admins ever see this entry. */
+  superOnly?: boolean;
+  /** Extra search terms for the settings search box. */
+  keywords?: string[];
 }
 
-// Order here drives both the sidebar section order and the hub pages.
+// Top-level structure inspired by Discord / modern SaaS: a few clean buckets,
+// not 20 sidebar groups. Each entry belongs to ONE bucket.
 export const ADMIN_NAV: AdminNavItem[] = [
-  // 1. Overview / Dashboard
-  { to: "/admin",               label: "Dashboard",     icon: LayoutDashboard, group: "Overview", description: "Platform-wide stats and realtime activity." },
-  { to: "/admin/analytics",     label: "Analytics",     icon: BarChart3,       group: "Overview", description: "DAU, retention and traffic charts." },
-  { to: "/admin/chatrooms",     label: "Chatrooms",     icon: MessageSquare,   group: "Overview", description: "Hub for all chatroom-only settings." },
-  { to: "/admin/social-feed",   label: "Social Feed",   icon: Newspaper,       group: "Overview", description: "Hub for all social feed settings." },
+  // ---- Community (the daily basics) ----
+  { to: "/admin",               label: "Dashboard",      icon: LayoutDashboard, group: "Community",
+    description: "Overview, quick toggles and presets.",
+    keywords: ["home", "overview", "quick", "presets"] },
+  { to: "/admin/analytics",     label: "Analytics",      icon: BarChart3,       group: "Community",
+    description: "DAU, retention and traffic charts.",
+    keywords: ["stats", "metrics", "dau", "traffic", "retention"] },
+  { to: "/admin/chatrooms",     label: "Chatrooms",      icon: MessageSquare,   group: "Community",
+    description: "Realtime rooms, bots and limits.",
+    keywords: ["chat", "rooms", "realtime", "messages"] },
+  { to: "/admin/social-feed",   label: "Feed",           icon: Newspaper,       group: "Community",
+    description: "Posts, comments and timeline.",
+    keywords: ["feed", "posts", "social", "timeline"] },
+  { to: "/admin/games",         label: "Games",          icon: Gamepad2,        group: "Community",
+    description: "Mini-games, rewards and matchmaking.",
+    keywords: ["games", "play", "matchmaking", "minigames"] },
+  { to: "/admin/pages",         label: "Custom Pages",   icon: FileText,        group: "Community",
+    description: "SEO-friendly landing page CMS.",
+    keywords: ["cms", "pages", "landing", "marketing"] },
 
-  // 2. Chatroom-only settings
-  { to: "/admin/moderation",    label: "Chat Moderation", icon: Gavel,         group: "Chatrooms",   description: "Bans, mutes, word filters and reports." },
-  { to: "/admin/bots",          label: "Chat Bots",     icon: Bot,             group: "Chatrooms",   description: "Fish, wine, dig, trivia and AI bots." },
-  
+  // ---- Engagement (growth loops) ----
+  { to: "/admin/economy",       label: "Rewards",        icon: Coins,           group: "Engagement",
+    description: "XP, coins, shop and streaks.",
+    keywords: ["economy", "coins", "xp", "shop", "rewards", "streaks", "missions"] },
+  { to: "/admin/automation",    label: "Automation",     icon: Zap,             group: "Engagement",
+    description: "Smart automation level and rules.",
+    keywords: ["automation", "rules", "schedule", "ai", "auto"] },
+  { to: "/admin/ai-settings",   label: "AI Settings",    icon: Sparkles,        group: "Engagement", badge: "Soon",
+    description: "AI providers, prompts and limits.",
+    keywords: ["ai", "openai", "gemini", "prompt"] },
+  { to: "/admin/bots",          label: "Chat Bots",      icon: Bot,             group: "Engagement",
+    description: "Fish, wine, dig, trivia and AI bots.",
+    keywords: ["bots", "fish", "trivia", "commands"] },
 
-  // 3. Social feed-only settings
-  { to: "/admin/social-layout", label: "Feed Layout",   icon: LayoutGrid,      group: "Social Feed", description: "Feed widgets, sidebars and layout." },
+  // ---- Moderation & users ----
+  { to: "/admin/users",         label: "Users",          icon: Users2,          group: "Moderation",
+    description: "Search, manage and message users.",
+    keywords: ["users", "members", "accounts"] },
+  { to: "/admin/roles",         label: "Roles",          icon: Shield,          group: "Moderation",
+    description: "Admins, moderators and badges.",
+    keywords: ["roles", "permissions", "admin", "moderator"] },
+  { to: "/admin/moderation",    label: "Moderation",     icon: Gavel,           group: "Moderation",
+    description: "Bans, mutes, word filters and reports.",
+    keywords: ["bans", "mutes", "filters", "reports", "abuse"] },
+  { to: "/admin/reports",       label: "Reports",        icon: Flag,            group: "Moderation",
+    description: "User-submitted reports queue.",
+    keywords: ["reports", "queue", "abuse"] },
+  { to: "/admin/filters",       label: "Filters",        icon: Filter,          group: "Moderation",
+    description: "Word filters and content rules.",
+    keywords: ["filters", "blocklist", "words", "content"] },
 
-  // 4. Custom pages CMS
-  { to: "/admin/pages",         label: "Custom Pages",  icon: FileText,        group: "Pages",       description: "SEO-friendly landing page CMS." },
+  // ---- Appearance ----
+  { to: "/admin/general",       label: "General",        icon: Settings,        group: "Appearance",
+    description: "Site name, tagline and basics.",
+    keywords: ["general", "name", "tagline", "site"] },
+  { to: "/admin/appearance",    label: "Themes",         icon: Palette,         group: "Appearance",
+    description: "Theme, colors, logo and favicon.",
+    keywords: ["theme", "colors", "logo", "favicon", "branding"] },
+  { to: "/admin/social-layout", label: "Layout",         icon: LayoutGrid,      group: "Appearance",
+    description: "Feed widgets, sidebars and layout.",
+    keywords: ["layout", "widgets", "sidebar"] },
+  { to: "/admin/seo",           label: "SEO",            icon: Search,          group: "Appearance",
+    description: "Sitemap, robots and meta defaults.",
+    keywords: ["seo", "sitemap", "robots", "meta", "og"] },
 
-  // 5. Users & permissions
-  { to: "/admin/roles",         label: "Roles",         icon: Shield,          group: "Users",       description: "Admins, moderators and badges." },
-
-  // 6. Games
-  { to: "/admin/games",         label: "Games",         icon: Gamepad2,        group: "Games",       description: "Enable games, rewards and matchmaking." },
-
-  // 7. Economy & rewards
-  { to: "/admin/economy",       label: "Economy",       icon: Coins,           group: "Economy",     description: "XP, coins, shop and streaks." },
-
-  // 9. AI settings
-  { to: "/admin/ai-settings",   label: "AI Settings",   icon: Sparkles,        group: "AI",          badge: "Soon", description: "AI providers, prompts and limits." },
-
-  // 10. Theme & appearance + general site
-  { to: "/admin/general",       label: "General",       icon: Settings,        group: "Appearance",  description: "Site name, tagline and basics." },
-  { to: "/admin/appearance",    label: "Appearance",    icon: Palette,         group: "Appearance",  description: "Theme, colors, logo and favicon." },
-
-  // 11. Security & global SEO
-  { to: "/admin/security",      label: "Security",      icon: Lock,            group: "Security",    badge: "Soon", description: "Captcha, rate limits, sessions." },
-  { to: "/admin/seo",           label: "Global SEO",    icon: Search,          group: "Security",    description: "Sitemap, robots and meta defaults." },
-
-  // 12. Modules toggle
-  { to: "/admin/modules",       label: "Modules",       icon: Puzzle,          group: "Modules",     description: "Enable or disable platform modules." },
+  // ---- Advanced (super admin + advanced mode only) ----
+  { to: "/admin/modules",       label: "Modules",        icon: Puzzle,          group: "Advanced",
+    advanced: true,
+    description: "Enable or disable platform modules.",
+    keywords: ["modules", "features", "toggles"] },
+  { to: "/admin/security",      label: "Security",       icon: Lock,            group: "Advanced", badge: "Soon",
+    advanced: true,
+    description: "Captcha, rate limits, sessions.",
+    keywords: ["security", "captcha", "rate", "sessions"] },
+  { to: "/admin/system",        label: "System",         icon: Server,          group: "Advanced",
+    advanced: true, superOnly: true,
+    description: "Database, jobs and websocket settings.",
+    keywords: ["system", "database", "jobs", "websocket"] },
+  { to: "/admin/api",           label: "API & Webhooks", icon: KeyRound,        group: "Advanced",
+    advanced: true, superOnly: true,
+    description: "API keys and outbound webhooks.",
+    keywords: ["api", "keys", "webhooks", "tokens"] },
+  { to: "/admin/performance",   label: "Performance",    icon: Activity,        group: "Advanced",
+    advanced: true,
+    description: "Caching, prefetch and CDN tuning.",
+    keywords: ["performance", "cache", "cdn", "prefetch"] },
 ];
