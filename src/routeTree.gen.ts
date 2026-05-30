@@ -26,20 +26,27 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminSystemRouteImport } from './routes/admin.system'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
 import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
 import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminModulesRouteImport } from './routes/admin.modules'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
+import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
 import { Route as AdminBotsRouteImport } from './routes/admin.bots'
+import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
 import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
+import { Route as AdminApiRouteImport } from './routes/admin.api'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAiSettingsRouteImport } from './routes/admin.ai-settings'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
@@ -129,6 +136,16 @@ const FeedSlugRoute = FeedSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => FeedRoute,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSystemRoute = AdminSystemRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSocialLayoutRoute = AdminSocialLayoutRouteImport.update({
   id: '/social-layout',
   path: '/social-layout',
@@ -152,6 +169,16 @@ const AdminSecurityRoute = AdminSecurityRouteImport.update({
 const AdminRolesRoute = AdminRolesRouteImport.update({
   id: '/roles',
   path: '/roles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPagesRoute = AdminPagesRouteImport.update({
@@ -179,6 +206,11 @@ const AdminGamesRoute = AdminGamesRouteImport.update({
   path: '/games',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFiltersRoute = AdminFiltersRouteImport.update({
+  id: '/filters',
+  path: '/filters',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminEconomyRoute = AdminEconomyRouteImport.update({
   id: '/economy',
   path: '/economy',
@@ -194,9 +226,19 @@ const AdminBotsRoute = AdminBotsRouteImport.update({
   path: '/bots',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAutomationRoute = AdminAutomationRouteImport.update({
+  id: '/automation',
+  path: '/automation',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAppearanceRoute = AdminAppearanceRouteImport.update({
   id: '/appearance',
   path: '/appearance',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminApiRoute = AdminApiRouteImport.update({
+  id: '/api',
+  path: '/api',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
@@ -231,20 +273,27 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
+  '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
+  '/admin/system': typeof AdminSystemRoute
+  '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/u/$username': typeof UUsernameRoute
@@ -266,20 +315,27 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
+  '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
+  '/admin/system': typeof AdminSystemRoute
+  '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/u/$username': typeof UUsernameRoute
@@ -303,20 +359,27 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
+  '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
+  '/admin/system': typeof AdminSystemRoute
+  '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/u/$username': typeof UUsernameRoute
@@ -341,20 +404,27 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin/ai-settings'
     | '/admin/analytics'
+    | '/admin/api'
     | '/admin/appearance'
+    | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
     | '/admin/economy'
+    | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
+    | '/admin/performance'
+    | '/admin/reports'
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
     | '/admin/social-feed'
     | '/admin/social-layout'
+    | '/admin/system'
+    | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
     | '/u/$username'
@@ -376,20 +446,27 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin/ai-settings'
     | '/admin/analytics'
+    | '/admin/api'
     | '/admin/appearance'
+    | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
     | '/admin/economy'
+    | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
+    | '/admin/performance'
+    | '/admin/reports'
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
     | '/admin/social-feed'
     | '/admin/social-layout'
+    | '/admin/system'
+    | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
     | '/u/$username'
@@ -412,20 +489,27 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin/ai-settings'
     | '/admin/analytics'
+    | '/admin/api'
     | '/admin/appearance'
+    | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
     | '/admin/economy'
+    | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
+    | '/admin/performance'
+    | '/admin/reports'
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
     | '/admin/social-feed'
     | '/admin/social-layout'
+    | '/admin/system'
+    | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
     | '/u/$username'
@@ -573,6 +657,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedSlugRouteImport
       parentRoute: typeof FeedRoute
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/system': {
+      id: '/admin/system'
+      path: '/system'
+      fullPath: '/admin/system'
+      preLoaderRoute: typeof AdminSystemRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/social-layout': {
       id: '/admin/social-layout'
       path: '/social-layout'
@@ -606,6 +704,20 @@ declare module '@tanstack/react-router' {
       path: '/roles'
       fullPath: '/admin/roles'
       preLoaderRoute: typeof AdminRolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/performance': {
+      id: '/admin/performance'
+      path: '/performance'
+      fullPath: '/admin/performance'
+      preLoaderRoute: typeof AdminPerformanceRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/pages': {
@@ -643,6 +755,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGamesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/filters': {
+      id: '/admin/filters'
+      path: '/filters'
+      fullPath: '/admin/filters'
+      preLoaderRoute: typeof AdminFiltersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/economy': {
       id: '/admin/economy'
       path: '/economy'
@@ -664,11 +783,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBotsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/automation': {
+      id: '/admin/automation'
+      path: '/automation'
+      fullPath: '/admin/automation'
+      preLoaderRoute: typeof AdminAutomationRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/appearance': {
       id: '/admin/appearance'
       path: '/appearance'
       fullPath: '/admin/appearance'
       preLoaderRoute: typeof AdminAppearanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/api': {
+      id: '/admin/api'
+      path: '/api'
+      fullPath: '/admin/api'
+      preLoaderRoute: typeof AdminApiRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/analytics': {
@@ -698,40 +831,54 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAiSettingsRoute: typeof AdminAiSettingsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminApiRoute: typeof AdminApiRoute
   AdminAppearanceRoute: typeof AdminAppearanceRoute
+  AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBotsRoute: typeof AdminBotsRoute
   AdminChatroomsRoute: typeof AdminChatroomsRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
+  AdminFiltersRoute: typeof AdminFiltersRoute
   AdminGamesRoute: typeof AdminGamesRoute
   AdminGeneralRoute: typeof AdminGeneralRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminModulesRoute: typeof AdminModulesRoute
   AdminPagesRoute: typeof AdminPagesRoute
+  AdminPerformanceRoute: typeof AdminPerformanceRoute
+  AdminReportsRoute: typeof AdminReportsRoute
   AdminRolesRoute: typeof AdminRolesRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSeoRoute: typeof AdminSeoRoute
   AdminSocialFeedRoute: typeof AdminSocialFeedRoute
   AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
+  AdminSystemRoute: typeof AdminSystemRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAiSettingsRoute: AdminAiSettingsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminApiRoute: AdminApiRoute,
   AdminAppearanceRoute: AdminAppearanceRoute,
+  AdminAutomationRoute: AdminAutomationRoute,
   AdminBotsRoute: AdminBotsRoute,
   AdminChatroomsRoute: AdminChatroomsRoute,
   AdminEconomyRoute: AdminEconomyRoute,
+  AdminFiltersRoute: AdminFiltersRoute,
   AdminGamesRoute: AdminGamesRoute,
   AdminGeneralRoute: AdminGeneralRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminModulesRoute: AdminModulesRoute,
   AdminPagesRoute: AdminPagesRoute,
+  AdminPerformanceRoute: AdminPerformanceRoute,
+  AdminReportsRoute: AdminReportsRoute,
   AdminRolesRoute: AdminRolesRoute,
   AdminSecurityRoute: AdminSecurityRoute,
   AdminSeoRoute: AdminSeoRoute,
   AdminSocialFeedRoute: AdminSocialFeedRoute,
   AdminSocialLayoutRoute: AdminSocialLayoutRoute,
+  AdminSystemRoute: AdminSystemRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
