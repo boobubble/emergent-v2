@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Settings, Palette, LayoutGrid, Puzzle, Shield,
   Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3, Bot, Users2,
   FileText, MessageSquare, Newspaper, Zap, Flag,
-  Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench,
+  Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
 } from "lucide-react";
 
 export interface AdminLeaf {
@@ -37,10 +37,11 @@ export const ADMIN_NAV: AdminGroup[] = [
 
   {
     label: "Settings", icon: Settings, children: [
-      { to: "/admin/general",       label: "General",     icon: SlidersHorizontal, keywords: ["site name", "tagline", "basics"] },
-      { to: "/admin/appearance",    label: "Themes",      icon: Palette,           keywords: ["theme", "colors", "logo", "favicon"] },
-      { to: "/admin/social-layout", label: "Layout",      icon: LayoutGrid,        keywords: ["layout", "sidebar", "widgets"] },
-      { to: "/admin/seo",           label: "SEO",         icon: Search,            keywords: ["seo", "meta", "sitemap"] },
+      { to: "/admin/general",       label: "General",       icon: SlidersHorizontal, keywords: ["site name", "tagline", "basics"] },
+      { to: "/admin/appearance",    label: "Themes",        icon: Palette,           keywords: ["theme", "colors", "logo", "favicon"] },
+      { to: "/admin/social-layout", label: "Layout",        icon: LayoutGrid,        keywords: ["layout", "sidebar", "widgets"] },
+      { to: "/admin/seo",           label: "SEO",           icon: Search,            keywords: ["seo", "meta", "sitemap"] },
+      { to: "/admin/ads-scripts",   label: "Ads & Scripts", icon: Megaphone,         keywords: ["ads", "adsense", "scripts", "header", "footer", "tracking", "analytics", "pixel"] },
     ],
   },
 
