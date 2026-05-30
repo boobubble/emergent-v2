@@ -7,6 +7,7 @@ import type { Message, Attachment } from "@/lib/chat-types";
 import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
 import { NameEmojiBadge } from "@/lib/name-emoji";
 import { EmojiEffectLayer } from "./EmojiEffectLayer";
+import { HighlightButton } from "./HighlightButton";
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.kind === "image") {
