@@ -33,13 +33,5 @@ export { premiumService, type PremiumService } from "./premium.service";
 export { roomBoostsService, type RoomBoostsService } from "./room-boosts.service";
 export { creatorSupportService, type CreatorSupportService } from "./creator-support.service";
 export { aiFeaturesService, type AiFeaturesService } from "./ai-features.service";
-export {
-  aiProviders,
-  type AIProviderService,
-  type AIMessage,
-  type AICompleteOptions,
-  type AICompleteResult,
-  type AIModerationResult,
-} from "./ai-providers.service";
 
 export { notImplemented } from "./_shared";

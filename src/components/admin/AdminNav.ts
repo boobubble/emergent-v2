@@ -57,7 +57,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/progression", label: "Progression", icon: Trophy,    keywords: ["levels", "unlocks", "permissions", "reputation", "creator", "ranks", "tiers", "gifting"] },
       { to: "/admin/retention",   label: "Retention",   icon: Flame,     keywords: ["streaks", "momentum", "loyalty", "energy", "decay", "engagement"] },
       { to: "/admin/automation",  label: "Automation",  icon: Zap,       keywords: ["rules", "auto"] },
-      { to: "/admin/ai-settings", label: "AI Settings", icon: Sparkles,  keywords: ["ai", "openai", "gemini", "anthropic", "openrouter", "deepseek", "providers", "api keys", "moderation"] },
+      
       { to: "/admin/bots",        label: "Chat Bots",   icon: Bot,       keywords: ["fish", "trivia", "commands"] },
     ],
   },
