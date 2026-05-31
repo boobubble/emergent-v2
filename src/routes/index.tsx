@@ -8,6 +8,7 @@ import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { MembersPanel } from "@/components/chat/MembersPanel";
 import { DjFooter } from "@/components/chat/DjFooter";
+import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
 import { BADGE_MAP } from "@/lib/achievements";
 
@@ -101,6 +102,7 @@ function ChatApp() {
           )}
           <ChatHeader />
           <MessageList channelId={state.activeChannel} />
+          <PollDiscoveryWidget />
           <MessageInput />
           <DjFooter />
         </main>

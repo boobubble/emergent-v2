@@ -39,6 +39,7 @@ import { Route as AdminRetentionRouteImport } from './routes/admin.retention'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminRealtimeRouteImport } from './routes/admin.realtime'
 import { Route as AdminProgressionRouteImport } from './routes/admin.progression'
+import { Route as AdminPollWidgetRouteImport } from './routes/admin.poll-widget'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminModulesRouteImport } from './routes/admin.modules'
@@ -213,6 +214,11 @@ const AdminProgressionRoute = AdminProgressionRouteImport.update({
   path: '/progression',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPollWidgetRoute = AdminPollWidgetRouteImport.update({
+  id: '/poll-widget',
+  path: '/poll-widget',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
   id: '/performance',
   path: '/performance',
@@ -365,6 +371,7 @@ export interface FileRoutesByFullPath {
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -419,6 +426,7 @@ export interface FileRoutesByTo {
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -475,6 +483,7 @@ export interface FileRoutesById {
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -532,6 +541,7 @@ export interface FileRouteTypes {
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
+    | '/admin/poll-widget'
     | '/admin/progression'
     | '/admin/realtime'
     | '/admin/reports'
@@ -586,6 +596,7 @@ export interface FileRouteTypes {
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
+    | '/admin/poll-widget'
     | '/admin/progression'
     | '/admin/realtime'
     | '/admin/reports'
@@ -641,6 +652,7 @@ export interface FileRouteTypes {
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
+    | '/admin/poll-widget'
     | '/admin/progression'
     | '/admin/realtime'
     | '/admin/reports'
@@ -893,6 +905,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProgressionRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/poll-widget': {
+      id: '/admin/poll-widget'
+      path: '/poll-widget'
+      fullPath: '/admin/poll-widget'
+      preLoaderRoute: typeof AdminPollWidgetRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/performance': {
       id: '/admin/performance'
       path: '/performance'
@@ -1091,6 +1110,7 @@ interface AdminRouteChildren {
   AdminModulesRoute: typeof AdminModulesRoute
   AdminPagesRoute: typeof AdminPagesRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
+  AdminPollWidgetRoute: typeof AdminPollWidgetRoute
   AdminProgressionRoute: typeof AdminProgressionRoute
   AdminRealtimeRoute: typeof AdminRealtimeRoute
   AdminReportsRoute: typeof AdminReportsRoute
@@ -1128,6 +1148,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminModulesRoute: AdminModulesRoute,
   AdminPagesRoute: AdminPagesRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
+  AdminPollWidgetRoute: AdminPollWidgetRoute,
   AdminProgressionRoute: AdminProgressionRoute,
   AdminRealtimeRoute: AdminRealtimeRoute,
   AdminReportsRoute: AdminReportsRoute,

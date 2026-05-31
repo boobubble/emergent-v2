@@ -3,7 +3,7 @@ import {
   Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3, Bot, Users2,
   FileText, MessageSquare, Newspaper, Zap, Flag,
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
-  Rocket, Flame, Radio, Trophy, Youtube, Disc3, UserCircle2, MessageSquareHeart,
+  Rocket, Flame, Radio, Trophy, Youtube, Disc3, UserCircle2, MessageSquareHeart, Vote,
 } from "lucide-react";
 
 export interface AdminLeaf {
@@ -64,6 +64,7 @@ export const ADMIN_NAV: AdminGroup[] = [
     label: "Community", icon: MessageSquare, children: [
       { to: "/admin/chatrooms",   label: "Chatrooms",    icon: MessageSquare, keywords: ["chat", "rooms"] },
       { to: "/admin/social-feed", label: "Feed",         icon: Newspaper,     keywords: ["posts", "social"] },
+      { to: "/admin/poll-widget", label: "Poll Widget",   icon: Vote,          keywords: ["poll", "polls", "vote", "voting", "chatroom widget", "discovery", "trending poll", "poll of the day"] },
       { to: "/admin/games",       label: "Games",        icon: Gamepad2,      keywords: ["mini-games"] },
       { to: "/admin/confessions", label: "Confessions",  icon: MessageSquareHeart, keywords: ["confess", "anonymous", "secrets", "community"] },
       { to: "/admin/dj",          label: "Live DJ / RJ", icon: Disc3,         keywords: ["music", "dj", "rj", "player", "radio", "live", "audio", "stream", "youtube"] },
