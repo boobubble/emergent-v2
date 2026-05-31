@@ -399,6 +399,14 @@ function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }
             </div>
           </div>
         )}
+        {cfg.allowAnonymous && (
+          <label className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 p-2.5 text-sm cursor-pointer">
+            <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(!!v)} />
+            <EyeOff className="h-4 w-4 text-muted-foreground" />
+            <span className="flex-1">Submit anonymously</span>
+            <span className="text-xs text-muted-foreground">Your name will be hidden</span>
+          </label>
+        )}
       </div>
       <DialogFooter>
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
