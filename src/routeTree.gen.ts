@@ -57,6 +57,7 @@ import { Route as AdminApiRouteImport } from './routes/admin.api'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAiSettingsRouteImport } from './routes/admin.ai-settings'
 import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
+import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 
@@ -300,6 +301,11 @@ const AdminAdsScriptsRoute = AdminAdsScriptsRouteImport.update({
   path: '/ads-scripts',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdPlacementsRoute = AdminAdPlacementsRouteImport.update({
+  id: '/ad-placements',
+  path: '/ad-placements',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ApiPublicGuestCleanupRoute = ApiPublicGuestCleanupRouteImport.update({
   id: '/api/public/guest-cleanup',
   path: '/api/public/guest-cleanup',
@@ -325,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/pages': typeof PagesRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -376,6 +383,7 @@ export interface FileRoutesByTo {
   '/pages': typeof PagesRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -429,6 +437,7 @@ export interface FileRoutesById {
   '/pages': typeof PagesRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -483,6 +492,7 @@ export interface FileRouteTypes {
     | '/pages'
     | '/reels'
     | '/reset-password'
+    | '/admin/ad-placements'
     | '/admin/ads-scripts'
     | '/admin/ai-settings'
     | '/admin/analytics'
@@ -534,6 +544,7 @@ export interface FileRouteTypes {
     | '/pages'
     | '/reels'
     | '/reset-password'
+    | '/admin/ad-placements'
     | '/admin/ads-scripts'
     | '/admin/ai-settings'
     | '/admin/analytics'
@@ -586,6 +597,7 @@ export interface FileRouteTypes {
     | '/pages'
     | '/reels'
     | '/reset-password'
+    | '/admin/ad-placements'
     | '/admin/ads-scripts'
     | '/admin/ai-settings'
     | '/admin/analytics'
@@ -982,6 +994,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdsScriptsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/ad-placements': {
+      id: '/admin/ad-placements'
+      path: '/ad-placements'
+      fullPath: '/admin/ad-placements'
+      preLoaderRoute: typeof AdminAdPlacementsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/public/guest-cleanup': {
       id: '/api/public/guest-cleanup'
       path: '/api/public/guest-cleanup'
@@ -1012,6 +1031,7 @@ const AdminUpcomingRouteWithChildren = AdminUpcomingRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAdPlacementsRoute: typeof AdminAdPlacementsRoute
   AdminAdsScriptsRoute: typeof AdminAdsScriptsRoute
   AdminAiSettingsRoute: typeof AdminAiSettingsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
@@ -1047,6 +1067,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAdPlacementsRoute: AdminAdPlacementsRoute,
   AdminAdsScriptsRoute: AdminAdsScriptsRoute,
   AdminAiSettingsRoute: AdminAiSettingsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
