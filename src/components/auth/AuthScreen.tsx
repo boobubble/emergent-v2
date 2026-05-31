@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
+import { LiveCommunityBackground } from "@/components/auth/LiveCommunityBackground";
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
   if (status.state === "idle") return null;
@@ -57,9 +58,12 @@ export function AuthScreen() {
   }, [cfgReady, guestCfg.enabled, guestCfg.autoLogin, loginAsGuest]);
 
   return (
-    <div className="grid min-h-screen place-items-center bg-background p-4 text-foreground">
+    <LiveCommunityBackground>
       <div className="w-full max-w-sm space-y-6">
-        <div className="rounded-3xl border border-border bg-card p-8 text-center shadow-2xl" style={{ boxShadow: "var(--shadow-panel)" }}>
+        <div
+          className="rounded-3xl border border-white/10 bg-card/80 p-8 text-center shadow-2xl supports-[backdrop-filter]:bg-card/60 supports-[backdrop-filter]:backdrop-blur-[var(--auth-card-blur,24px)]"
+          style={{ boxShadow: "var(--shadow-panel)" }}
+        >
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-3xl font-bold text-primary-foreground" style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}>P</div>
         <h1 className="mt-4 text-2xl font-bold">Welcome to Palrgo</h1>
         <p className="mt-1 text-xs text-muted-foreground">Chat, post, and play with friends.</p>
@@ -111,7 +115,7 @@ export function AuthScreen() {
         onOpenChange={(v) => setPopup(v ? "forgot" : null)}
         onBack={() => setPopup("signin")}
       />
-    </div>
+    </LiveCommunityBackground>
   );
 }
 
