@@ -53,8 +53,8 @@ export const listFeedback = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
     let q = supabaseAdmin.from("feedback_reports").select("*").limit(data.limit);
-    if (data.category && data.category !== "all") q = q.eq("category", data.category);
-    if (data.status && data.status !== "all") q = q.eq("status", data.status);
+    if (data.category && data.category !== "all") q = q.eq("category", data.category as never);
+    if (data.status && data.status !== "all") q = q.eq("status", data.status as never);
     if (data.search) q = q.ilike("title", `%${data.search}%`);
 
     if (data.sort === "top") q = q.order("upvote_count", { ascending: false });
