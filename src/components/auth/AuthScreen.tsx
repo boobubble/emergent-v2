@@ -76,12 +76,14 @@ export function AuthScreen() {
           >
             Create account
           </button>
-          <button
-            onClick={() => setPopup("guest")}
-            className="w-full rounded-full border border-dashed border-border bg-background px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            👤 Continue as guest
-          </button>
+          {guestCfg.enabled && (
+            <button
+              onClick={() => setPopup("guest")}
+              className="w-full rounded-full border border-dashed border-border bg-background px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
+              👤 Continue as guest
+            </button>
+          )}
         </div>
       </div>
 
