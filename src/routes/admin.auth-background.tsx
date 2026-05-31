@@ -14,6 +14,30 @@ export const Route = createFileRoute("/admin/auth-background")({
   component: AuthBackgroundPage,
 });
 
+function Row({
+  label,
+  description,
+  checked,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  description: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex-1">
+        <p className="text-sm font-semibold">{label}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+      <AdminToggle checked={checked} disabled={disabled} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
 function AuthBackgroundPage() {
   const { values, set, save, saving } = useAdminSetting<AuthBackgroundConfig>(
     AUTH_BG_SETTINGS_KEY,
@@ -43,16 +67,17 @@ function AuthBackgroundPage() {
               </div>
             </div>
           </div>
-          <AdminToggle
+          <Row
             label="Enable Live Community Background"
             description="Show animated public chat and feed snippets behind the auth card."
             checked={values.enabled}
             onChange={(v) => set("enabled", v)}
           />
-          <AdminToggle
+          <Row
             label="Enable Background Blur"
             description="Apply frosted-glass blur to the login/signup card."
             checked={values.blur}
+            disabled={!values.enabled}
             onChange={(v) => set("blur", v)}
           />
         </CardContent>
@@ -61,22 +86,25 @@ function AuthBackgroundPage() {
       <Card>
         <CardContent className="space-y-4 p-5">
           <div className="text-sm font-semibold">What to show</div>
-          <AdminToggle
+          <Row
             label="Show Community Statistics"
             description="Online members, total members, posts today, active rooms."
             checked={values.showStats}
+            disabled={!values.enabled}
             onChange={(v) => set("showStats", v)}
           />
-          <AdminToggle
+          <Row
             label="Show Public Feed Preview"
             description="Scrolling preview of recent public posts."
             checked={values.showFeed}
+            disabled={!values.enabled}
             onChange={(v) => set("showFeed", v)}
           />
-          <AdminToggle
+          <Row
             label="Show Public Chatroom Preview"
             description="Scrolling preview of recent lobby messages."
             checked={values.showChat}
+            disabled={!values.enabled}
             onChange={(v) => set("showChat", v)}
           />
         </CardContent>
