@@ -64,6 +64,7 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAiSettingsRouteImport } from './routes/admin.ai-settings'
 import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
+import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
@@ -344,6 +345,11 @@ const AdminAdPlacementsRoute = AdminAdPlacementsRouteImport.update({
   path: '/ad-placements',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicLandingRoute = ApiPublicLandingRouteImport.update({
+  id: '/api/public/landing',
+  path: '/api/public/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicGuestCleanupRoute = ApiPublicGuestCleanupRouteImport.update({
   id: '/api/public/guest-cleanup',
   path: '/api/public/guest-cleanup',
@@ -426,6 +432,7 @@ export interface FileRoutesByFullPath {
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
+  '/api/public/landing': typeof ApiPublicLandingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -486,6 +493,7 @@ export interface FileRoutesByTo {
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
+  '/api/public/landing': typeof ApiPublicLandingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -548,6 +556,7 @@ export interface FileRoutesById {
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
+  '/api/public/landing': typeof ApiPublicLandingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -611,6 +620,7 @@ export interface FileRouteTypes {
     | '/api/public/community-bg'
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
+    | '/api/public/landing'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -671,6 +681,7 @@ export interface FileRouteTypes {
     | '/api/public/community-bg'
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
+    | '/api/public/landing'
   id:
     | '__root__'
     | '/'
@@ -732,6 +743,7 @@ export interface FileRouteTypes {
     | '/api/public/community-bg'
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
+    | '/api/public/landing'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -755,6 +767,7 @@ export interface RootRouteChildren {
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
   ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
+  ApiPublicLandingRoute: typeof ApiPublicLandingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1144,6 +1157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdPlacementsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/landing': {
+      id: '/api/public/landing'
+      path: '/api/public/landing'
+      fullPath: '/api/public/landing'
+      preLoaderRoute: typeof ApiPublicLandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/guest-cleanup': {
       id: '/api/public/guest-cleanup'
       path: '/api/public/guest-cleanup'
@@ -1300,17 +1320,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
   ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,
+  ApiPublicLandingRoute: ApiPublicLandingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
