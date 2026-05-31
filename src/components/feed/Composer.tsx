@@ -28,8 +28,33 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
   const [anonymous, setAnonymous] = useState(false);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [focused, setFocused] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const earnPost = useServerFn(earnFeedPost);
+  const { config: focusConfig } = useFocusComposerConfig();
+  const hasDraft = text.trim().length > 0 || files.length > 0;
+
+  // ESC closes the spotlight overlay.
+  useEffect(() => {
+    if (!focused) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFocused(false); };
+    window.addEventListener("keydown", onKey);
+    // Lock body scroll while spotlight is open.
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [focused]);
+
+  function openFocus() {
+    if (!focusConfig.enabled) return;
+    setFocused(true);
+    // Defer to let the overlay mount before focusing the textarea.
+    setTimeout(() => textareaRef.current?.focus(), 30);
+  }
 
   function updateText(v: string) {
     setText(v);
