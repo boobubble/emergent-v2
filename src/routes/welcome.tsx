@@ -59,9 +59,9 @@ const fmt = (n: number) =>
   : n >= 1_000   ? `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1).replace(/\.0$/, "")}K`
   : n.toLocaleString();
 
-function Card({ className = "", children }: { className?: string; children: React.ReactNode }) {
+function Card({ className = "", children, style }: { className?: string; children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div className={`rounded-2xl border border-white/[0.07] bg-[#10101f]/80 backdrop-blur-xl ${className}`}>
+    <div className={`rounded-2xl border border-white/[0.07] bg-[#10101f]/80 backdrop-blur-xl ${className}`} style={style}>
       {children}
     </div>
   );
