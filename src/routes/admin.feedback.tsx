@@ -56,6 +56,13 @@ function AdminFeedback() {
   );
 }
 
+type FeedbackRow = {
+  id: string; title: string; description: string;
+  category: string; status: string; priority: string;
+  is_pinned: boolean; upvote_count: number; comment_count: number;
+  admin_note: string | null;
+};
+
 // ============== QUEUE ==============
 function QueueTab() {
   const list = useServerFn(listFeedback);
@@ -65,7 +72,7 @@ function QueueTab() {
     queryKey: ["admin-feedback", status, category],
     queryFn: () => list({ data: { status, category, sort: "recent", limit: 200 } }),
   });
-  const [editing, setEditing] = useState<typeof data extends Array<infer R> ? R | null : null>(null);
+  const [editing, setEditing] = useState<FeedbackRow | null>(null);
 
   return (
     <div className="mt-4 space-y-3">

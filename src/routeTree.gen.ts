@@ -16,6 +16,7 @@ import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
+import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -49,6 +50,7 @@ import { Route as AdminGuestAccessRouteImport } from './routes/admin.guest-acces
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
 import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
+import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
 import { Route as AdminDjRouteImport } from './routes/admin.dj'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
@@ -97,6 +99,11 @@ const GamesRoute = GamesRouteImport.update({
 const FindFriendsRoute = FindFriendsRouteImport.update({
   id: '/find-friends',
   path: '/find-friends',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackRoute = FeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedRoute = FeedRouteImport.update({
@@ -264,6 +271,11 @@ const AdminFiltersRoute = AdminFiltersRouteImport.update({
   path: '/filters',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminEconomyRoute = AdminEconomyRouteImport.update({
   id: '/economy',
   path: '/economy',
@@ -343,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
+  '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
@@ -362,6 +375,7 @@ export interface FileRoutesByFullPath {
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
@@ -398,6 +412,7 @@ export interface FileRoutesByTo {
   '/achievements': typeof AchievementsRoute
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
+  '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
@@ -417,6 +432,7 @@ export interface FileRoutesByTo {
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
@@ -455,6 +471,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
+  '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
@@ -474,6 +491,7 @@ export interface FileRoutesById {
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
@@ -513,6 +531,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/confessions'
     | '/feed'
+    | '/feedback'
     | '/find-friends'
     | '/games'
     | '/groups'
@@ -532,6 +551,7 @@ export interface FileRouteTypes {
     | '/admin/confessions'
     | '/admin/dj'
     | '/admin/economy'
+    | '/admin/feedback'
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
@@ -568,6 +588,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/confessions'
     | '/feed'
+    | '/feedback'
     | '/find-friends'
     | '/games'
     | '/groups'
@@ -587,6 +608,7 @@ export interface FileRouteTypes {
     | '/admin/confessions'
     | '/admin/dj'
     | '/admin/economy'
+    | '/admin/feedback'
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
@@ -624,6 +646,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/confessions'
     | '/feed'
+    | '/feedback'
     | '/find-friends'
     | '/games'
     | '/groups'
@@ -643,6 +666,7 @@ export interface FileRouteTypes {
     | '/admin/confessions'
     | '/admin/dj'
     | '/admin/economy'
+    | '/admin/feedback'
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
@@ -681,6 +705,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   ConfessionsRoute: typeof ConfessionsRoute
   FeedRoute: typeof FeedRouteWithChildren
+  FeedbackRoute: typeof FeedbackRoute
   FindFriendsRoute: typeof FindFriendsRoute
   GamesRoute: typeof GamesRoute
   GroupsRoute: typeof GroupsRoute
@@ -742,6 +767,13 @@ declare module '@tanstack/react-router' {
       path: '/find-friends'
       fullPath: '/find-friends'
       preLoaderRoute: typeof FindFriendsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback': {
+      id: '/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof FeedbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed': {
@@ -975,6 +1007,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFiltersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/feedback': {
+      id: '/admin/feedback'
+      path: '/feedback'
+      fullPath: '/admin/feedback'
+      preLoaderRoute: typeof AdminFeedbackRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/economy': {
       id: '/admin/economy'
       path: '/economy'
@@ -1101,6 +1140,7 @@ interface AdminRouteChildren {
   AdminConfessionsRoute: typeof AdminConfessionsRoute
   AdminDjRoute: typeof AdminDjRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
+  AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminFiltersRoute: typeof AdminFiltersRoute
   AdminGamesRoute: typeof AdminGamesRoute
   AdminGeneralRoute: typeof AdminGeneralRoute
@@ -1139,6 +1179,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminConfessionsRoute: AdminConfessionsRoute,
   AdminDjRoute: AdminDjRoute,
   AdminEconomyRoute: AdminEconomyRoute,
+  AdminFeedbackRoute: AdminFeedbackRoute,
   AdminFiltersRoute: AdminFiltersRoute,
   AdminGamesRoute: AdminGamesRoute,
   AdminGeneralRoute: AdminGeneralRoute,
@@ -1184,6 +1225,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   ConfessionsRoute: ConfessionsRoute,
   FeedRoute: FeedRouteWithChildren,
+  FeedbackRoute: FeedbackRoute,
   FindFriendsRoute: FindFriendsRoute,
   GamesRoute: GamesRoute,
   GroupsRoute: GroupsRoute,
