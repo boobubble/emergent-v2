@@ -358,6 +358,36 @@ function SettingsTab() {
       </div>
       <div className="rounded-xl border border-border bg-card p-4">
         <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+          <Star className="h-4 w-4 fill-amber-400 text-amber-400" /> Showcase
+        </h3>
+        <p className="mb-2 text-xs text-muted-foreground">
+          Pick individual reports in the Queue tab — toggle “Showcase on home / signup”. They appear publicly in the surfaces enabled below.
+        </p>
+        <Toggle label="Show on home page" checked={values.showcaseOnHome} onChange={(b) => set("showcaseOnHome", b)} />
+        <Toggle label="Show on signup / sign-in page" checked={values.showcaseOnSignup} onChange={(b) => set("showcaseOnSignup", b)} />
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <div>
+            <Label className="text-xs">Section title</Label>
+            <Input
+              value={values.showcaseTitle}
+              maxLength={80}
+              onChange={(e) => set("showcaseTitle", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Max items shown</Label>
+            <Input
+              type="number"
+              min={1}
+              max={24}
+              value={values.showcaseLimit}
+              onChange={(e) => set("showcaseLimit", Math.max(1, Math.min(24, Number(e.target.value) || 6)))}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
           <Coins className="h-4 w-4 text-primary" /> Rewards
         </h3>
         <div className="grid grid-cols-2 gap-3">
