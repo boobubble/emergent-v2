@@ -100,6 +100,28 @@ function LandingPage() {
     return () => { cancel = true; };
   }, []);
 
+  // Keep meta tags in sync with admin-edited SEO config
+  useEffect(() => {
+    const cfg = data?.config;
+    if (!cfg || typeof document === "undefined") return;
+    if (cfg.seoTitle) document.title = cfg.seoTitle;
+    const setMeta = (selector: string, attr: "name" | "property", key: string, content: string) => {
+      if (!content) return;
+      let el = document.head.querySelector<HTMLMetaElement>(selector);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+    setMeta('meta[name="description"]', "name", "description", cfg.seoDescription);
+    setMeta('meta[name="keywords"]', "name", "keywords", cfg.seoKeywords);
+    setMeta('meta[property="og:title"]', "property", "og:title", cfg.seoTitle);
+    setMeta('meta[property="og:description"]', "property", "og:description", cfg.seoDescription);
+  }, [data?.config]);
+
+
   const cfg: LandingConfig = data?.config ?? LANDING_DEFAULTS;
   const stats: LandingStats = data?.stats ?? {
     members: cfg.demoStats.members, online: cfg.demoStats.online, activeRooms: cfg.demoStats.activeRooms,
