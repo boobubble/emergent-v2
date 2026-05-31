@@ -55,25 +55,25 @@ function PollWidgetAdminPage() {
             label="Show Trending Polls"
             hint="Highest trending score across the feed."
             checked={values.showTrending}
-            onCheckedChange={(v: boolean) => set("showTrending", v)}
+            onChange={(v: boolean) => set("showTrending", v)}
           />
           <ToggleRow
             label="Show Poll of the Day"
             hint="Best-performing poll posted in the last 24 hours."
             checked={values.showPollOfDay}
-            onCheckedChange={(v: boolean) => set("showPollOfDay", v)}
+            onChange={(v: boolean) => set("showPollOfDay", v)}
           />
           <ToggleRow
             label="Show Creator Polls"
             hint="Top non-anonymous poll from a feed creator."
             checked={values.showCreatorPolls}
-            onCheckedChange={(v: boolean) => set("showCreatorPolls", v)}
+            onChange={(v: boolean) => set("showCreatorPolls", v)}
           />
           <ToggleRow
             label="Show Weekly Community Vote"
             hint="Most-voted poll in the past 7 days."
             checked={values.showWeeklyVote}
-            onCheckedChange={(v: boolean) => set("showWeeklyVote", v)}
+            onChange={(v: boolean) => set("showWeeklyVote", v)}
           />
         </CardContent>
       </Card>
@@ -86,13 +86,13 @@ function PollWidgetAdminPage() {
             label="Show vote counts"
             hint="Display aggregate vote totals on each preview card."
             checked={values.showVoteCounts}
-            onCheckedChange={(v: boolean) => set("showVoteCounts", v)}
+            onChange={(v: boolean) => set("showVoteCounts", v)}
           />
           <ToggleRow
             label="Redirect to Feed for voting"
             hint="Show the “Vote Now” button that links to the poll's page on the feed."
             checked={values.redirectToFeed}
-            onCheckedChange={(v: boolean) => set("redirectToFeed", v)}
+            onChange={(v: boolean) => set("redirectToFeed", v)}
           />
 
           <div className="grid gap-2 pt-3 sm:max-w-xs">
