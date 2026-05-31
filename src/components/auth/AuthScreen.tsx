@@ -86,7 +86,9 @@ export function AuthScreen() {
               👤 Continue as guest
             </button>
           )}
+          </div>
         </div>
+        <FeedbackShowcase surface="signup" />
       </div>
 
       <SignInDialog
