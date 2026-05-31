@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-store";
 import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-config";
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
   if (status.state === "idle") return null;
@@ -15,6 +16,44 @@ type Popup = null | "signin" | "signup" | "guest" | "forgot";
 
 export function AuthScreen() {
   const [popup, setPopup] = useState<Popup>(null);
+  const { loginAsGuest } = useAuth();
+  const [guestCfg, setGuestCfg] = useState<GuestAccessConfig>(GUEST_ACCESS_DEFAULTS);
+  const [cfgReady, setCfgReady] = useState(false);
+  const autoTriedRef = useRef(false);
+
+  // Load guest-access config directly from app_settings — AuthScreen runs
+  // outside AppSettingsProvider (which is mounted after login).
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("app_settings")
+          .select("value")
+          .eq("key", "guest_access")
+          .maybeSingle();
+        if (cancel) return;
+        const persisted = (data?.value as Partial<GuestAccessConfig> | null) ?? {};
+        setGuestCfg({
+          ...GUEST_ACCESS_DEFAULTS,
+          ...persisted,
+          permissions: { ...GUEST_ACCESS_DEFAULTS.permissions, ...(persisted.permissions ?? {}) },
+        });
+      } catch { /* keep defaults */ }
+      finally { if (!cancel) setCfgReady(true); }
+    })();
+    return () => { cancel = true; };
+  }, []);
+
+  // Auto Guest Login — opt-in via admin settings.
+  useEffect(() => {
+    if (!cfgReady || autoTriedRef.current) return;
+    if (!guestCfg.enabled || !guestCfg.autoLogin) return;
+    // Honor an explicit opt-out (e.g. after a guest logs out and wants the choice screen).
+    try { if (sessionStorage.getItem("guest-auto-skip") === "1") return; } catch { /* ignore */ }
+    autoTriedRef.current = true;
+    loginAsGuest().catch(() => { /* fall back to the manual screen */ });
+  }, [cfgReady, guestCfg.enabled, guestCfg.autoLogin, loginAsGuest]);
 
   return (
     <div className="grid min-h-screen place-items-center bg-background p-4 text-foreground">
@@ -37,12 +76,14 @@ export function AuthScreen() {
           >
             Create account
           </button>
-          <button
-            onClick={() => setPopup("guest")}
-            className="w-full rounded-full border border-dashed border-border bg-background px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            👤 Continue as guest
-          </button>
+          {guestCfg.enabled && (
+            <button
+              onClick={() => setPopup("guest")}
+              className="w-full rounded-full border border-dashed border-border bg-background px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
+              👤 Continue as guest
+            </button>
+          )}
         </div>
       </div>
 

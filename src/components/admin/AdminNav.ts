@@ -3,7 +3,7 @@ import {
   Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3, Bot, Users2,
   FileText, MessageSquare, Newspaper, Zap, Flag,
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
-  Rocket, Flame, Radio, Trophy, Youtube, Disc3,
+  Rocket, Flame, Radio, Trophy, Youtube, Disc3, UserCircle2,
 } from "lucide-react";
 
 export interface AdminLeaf {
@@ -71,8 +71,9 @@ export const ADMIN_NAV: AdminGroup[] = [
 
   {
     label: "Users", icon: Users2, children: [
-      { to: "/admin/users", label: "All Users", icon: Users2,  keywords: ["members", "accounts"] },
-      { to: "/admin/roles", label: "Roles",     icon: Shield,  keywords: ["permissions", "admin", "moderator"] },
+      { to: "/admin/users",        label: "All Users",    icon: Users2,       keywords: ["members", "accounts"] },
+      { to: "/admin/roles",        label: "Roles",        icon: Shield,       keywords: ["permissions", "admin", "moderator"] },
+      { to: "/admin/guest-access", label: "Guest Access", icon: UserCircle2,  keywords: ["guest", "anonymous", "auto login", "visitor", "permissions"] },
     ],
   },
 
