@@ -128,7 +128,7 @@ export function usePollPreviews(config: PollWidgetConfig): {
         voteCount: sumVotes(row.poll.votes),
         creatorName,
         isAnonymous: row.is_anonymous,
-        createdAt: row.createdAt ?? row.created_at,
+        createdAt: row.created_at,
         expiresAt,
         status: now >= expiresAt ? "closed" : "open",
         category,
