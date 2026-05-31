@@ -289,7 +289,11 @@ export const moderateConfession = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       return { ok: true };
     }
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      status?: "pending" | "approved" | "rejected";
+      is_pinned?: boolean;
+      is_featured?: boolean;
+    } = {};
     if (data.action === "approve") patch.status = "approved";
     if (data.action === "reject")  patch.status = "rejected";
     if (data.action === "pin")     patch.is_pinned = true;
