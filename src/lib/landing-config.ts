@@ -135,6 +135,9 @@ export interface LandingConfig {
   // Final CTA
   finalCtaTitle: string;
   finalCtaSubtitle: string;
+  /** Optional illustration shown inside the "Ready to Join the Fun?" card. Admin-editable. */
+  finalCtaImageUrl: string;
+  finalCtaImageAlt: string;
 
   // Footer
   brandTagline: string;
