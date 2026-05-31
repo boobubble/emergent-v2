@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  ChevronLeft, Plus, ChevronUp, MessageCircle, Pin, Loader2, Send, Search, ImagePlus, X,
+  ChevronLeft, Plus, ChevronUp, MessageCircle, Pin, Loader2, Send, Search, ImagePlus, X, EyeOff, AlertTriangle,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
