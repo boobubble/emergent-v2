@@ -76,6 +76,22 @@ function FeedbackPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Realtime: refresh list/detail when reports, votes or comments change
+  useEffect(() => {
+    if (!cfg.enabled) return;
+    const ch = supabase
+      .channel("feedback-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "feedback_reports" },
+        () => qc.invalidateQueries({ queryKey: ["feedback"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "feedback_votes" },
+        () => qc.invalidateQueries({ queryKey: ["feedback"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "feedback_comments" },
+        () => qc.invalidateQueries({ queryKey: ["feedback"] }))
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [cfg.enabled, qc]);
+
+
   if (!cfg.enabled) {
     return (
       <div className="mx-auto grid min-h-[60vh] max-w-md place-items-center p-6 text-center">
