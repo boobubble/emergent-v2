@@ -183,19 +183,21 @@ function AuthGate() {
   }
 
   return (
-    <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
-      <FeedPrefsProvider>
-        <IgnoreProvider>
-          <HeadFootScripts />
-          <AdsAutoLoader />
-          <SessionConflictBanner />
-          <FaviconSwitcher />
-          <Outlet />
-          <Sonner />
-          <RealtimeDebugOverlay />
-        </IgnoreProvider>
-      </FeedPrefsProvider>
-    </ChatProvider>
+    <AppSettingsProvider>
+      <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
+        <FeedPrefsProvider>
+          <IgnoreProvider>
+            <HeadFootScripts />
+            <AdsAutoLoader />
+            <SessionConflictBanner />
+            <FaviconSwitcher />
+            <Outlet />
+            <Sonner />
+            <RealtimeDebugOverlay />
+          </IgnoreProvider>
+        </FeedPrefsProvider>
+      </ChatProvider>
+    </AppSettingsProvider>
   );
 }
 
