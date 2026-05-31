@@ -3,10 +3,11 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { LANDING_DEFAULTS, LANDING_SETTINGS_KEY, type LandingConfig } from "@/lib/landing-config";
 
 /**
- * Public landing-page payload: live community stats, sample public posts,
- * a sample public poll, a sample approved confession, and top leaderboard
- * users. All sourced from already-public surfaces; no PII beyond username
- * + avatar. Existing app data is read-only.
+ * Public landing-page payload. When `useDemoData` is enabled in the admin
+ * homepage settings the response is fully composed from the config (no PII,
+ * no DB reads beyond the settings row). When disabled it merges live public
+ * data from chatrooms / feed / confessions / leaderboard, falling back to
+ * the demo config whenever a real value is empty.
  */
 export const Route = createFileRoute("/api/public/landing")({
   server: {
@@ -17,185 +18,147 @@ export const Route = createFileRoute("/api/public/landing")({
           .select("value")
           .eq("key", LANDING_SETTINGS_KEY)
           .maybeSingle();
+
         const cfg: LandingConfig = {
           ...LANDING_DEFAULTS,
           ...((cfgRow?.value as Partial<LandingConfig>) ?? {}),
+          demoStats: {
+            ...LANDING_DEFAULTS.demoStats,
+            ...(((cfgRow?.value as Partial<LandingConfig>)?.demoStats) ?? {}),
+          },
         };
 
-        const day = new Date();
-        day.setUTCHours(0, 0, 0, 0);
+        // ── DEMO MODE ────────────────────────────────────────────────
+        if (cfg.useDemoData) {
+          return Response.json(
+            {
+              config: cfg,
+              source: "demo" as const,
+              stats: {
+                members:      cfg.demoStats.members,
+                online:       cfg.demoStats.online,
+                activeRooms:  cfg.demoStats.activeRooms,
+                messagesSent: cfg.demoStats.messagesSent,
+                feedPosts:    cfg.demoStats.feedPosts,
+                gamesPlayed:  cfg.demoStats.gamesPlayed,
+              },
+              chatrooms:  cfg.demoChatrooms,
+              topMembers: cfg.demoTopMembers,
+              feedPost:   cfg.demoFeedPost,
+              poll:       cfg.demoPoll,
+              confession: cfg.demoConfession,
+            },
+            { headers: { "Cache-Control": "public, max-age=30" } },
+          );
+        }
+
+        // ── LIVE MODE ────────────────────────────────────────────────
+        const day = new Date(); day.setUTCHours(0, 0, 0, 0);
         const onlineSince = new Date(Date.now() - 1000 * 60 * 10).toISOString();
         const last24h = new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString();
 
         const [
-          posts,
-          messages,
-          pollPost,
-          confession,
-          topUsers,
-          totalMembers,
-          onlineMembers,
-          postsToday,
-          activeRooms,
+          totalMembers, onlineMembers, postsToday, activeRooms, totalPosts,
+          topRooms, topUsers, latestPost, latestPoll, latestConfession,
         ] = await Promise.all([
-          supabaseAdmin
-            .from("posts")
-            .select("id, text, created_at, owner_id, is_anonymous, reaction_count, comment_count, media_urls, kind")
-            .eq("privacy", "public")
-            .order("created_at", { ascending: false })
-            .limit(6),
-          supabaseAdmin
-            .from("messages")
-            .select("id, text, created_at, author_id")
-            .eq("channel_id", "lobby")
-            .eq("kind", "text")
-            .order("created_at", { ascending: false })
-            .limit(8),
-          supabaseAdmin
-            .from("posts")
-            .select("id, text, poll, owner_id, is_anonymous, reaction_count")
-            .eq("privacy", "public")
-            .not("poll", "is", null)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-          supabaseAdmin
-            .from("confessions")
-            .select("id, text, alias, avatar_emoji, like_count, reply_count, category")
-            .eq("status", "approved")
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-          supabaseAdmin
-            .from("profiles")
-            .select("id, username, avatar_url, avatar_color, level, xp, streak")
-            .order("xp", { ascending: false })
-            .limit(5),
           supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
-          supabaseAdmin
-            .from("profiles")
-            .select("id", { count: "exact", head: true })
-            .gte("last_seen", onlineSince),
-          supabaseAdmin
-            .from("posts")
-            .select("id", { count: "exact", head: true })
-            .eq("privacy", "public")
-            .gte("created_at", day.toISOString()),
-          supabaseAdmin
-            .from("room_loyalty")
-            .select("channel_id", { count: "exact", head: true })
-            .gte("updated_at", last24h),
+          supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).gte("last_seen", onlineSince),
+          supabaseAdmin.from("posts").select("id", { count: "exact", head: true }).eq("privacy", "public").gte("created_at", day.toISOString()),
+          supabaseAdmin.from("room_loyalty").select("channel_id", { count: "exact", head: true }).gte("updated_at", last24h),
+          supabaseAdmin.from("posts").select("id", { count: "exact", head: true }).eq("privacy", "public"),
+          supabaseAdmin.from("room_loyalty").select("channel_id").gte("updated_at", last24h).limit(50),
+          supabaseAdmin.from("profiles").select("id, username, xp").order("xp", { ascending: false }).limit(3),
+          supabaseAdmin.from("posts").select("id, text, created_at, owner_id, is_anonymous, reaction_count, comment_count")
+            .eq("privacy", "public").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+          supabaseAdmin.from("posts").select("id, text, poll, created_at")
+            .eq("privacy", "public").not("poll", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+          supabaseAdmin.from("confessions").select("id, text, alias, avatar_emoji, created_at")
+            .eq("status", "approved").order("created_at", { ascending: false }).limit(1).maybeSingle(),
         ]);
 
-        const ids = new Set<string>();
-        (posts.data ?? []).forEach((p) => {
-          if (p.owner_id && !p.is_anonymous) ids.add(p.owner_id as string);
-        });
-        (messages.data ?? []).forEach((m) => {
-          if (m.author_id) ids.add(m.author_id as string);
-        });
-        if (pollPost?.data?.owner_id && !pollPost.data.is_anonymous) {
-          ids.add(pollPost.data.owner_id as string);
-        }
-
-        const profMap = new Map<string, { username: string; avatar_url: string | null; avatar_color: string | null }>();
-        if (ids.size) {
-          const { data: profs } = await supabaseAdmin
-            .from("profiles")
-            .select("id, username, avatar_url, avatar_color")
-            .in("id", Array.from(ids));
-          (profs ?? []).forEach((p) =>
-            profMap.set(p.id, {
-              username: p.username ?? "user",
-              avatar_url: p.avatar_url ?? null,
-              avatar_color: p.avatar_color ?? null,
-            }),
-          );
-        }
-
-        const authorFor = (id: string | null | undefined, anonymous = false) => {
-          if (anonymous || !id) {
-            return { username: "Anonymous", avatar_url: null, avatar_color: null, anonymous: true };
-          }
-          const p = profMap.get(id);
-          return {
-            username: p?.username ?? "user",
-            avatar_url: p?.avatar_url ?? null,
-            avatar_color: p?.avatar_color ?? null,
-            anonymous: false,
-          };
+        const ago = (iso: string | null) => {
+          if (!iso) return "just now";
+          const m = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+          if (m < 60)  return `${m} min ago`;
+          if (m < 1440) return `${Math.round(m / 60)} hours ago`;
+          return `${Math.round(m / 1440)} days ago`;
         };
 
-        const postItems = (posts.data ?? []).map((p) => ({
-          id: p.id as string,
-          text: ((p.text as string) ?? "").slice(0, 240),
-          kind: p.kind as string,
-          reaction_count: p.reaction_count as number,
-          comment_count: p.comment_count as number,
-          has_media: Array.isArray(p.media_urls) && (p.media_urls as string[]).length > 0,
-          author: authorFor(p.owner_id as string | null, p.is_anonymous as boolean),
-        }));
+        // Live chatrooms aggregated from room_loyalty channel activity.
+        const roomCounts = new Map<string, number>();
+        (topRooms.data ?? []).forEach((r) => {
+          const k = r.channel_id as string;
+          roomCounts.set(k, (roomCounts.get(k) ?? 0) + 1);
+        });
+        const liveChatrooms = Array.from(roomCounts.entries())
+          .sort((a, b) => b[1] - a[1]).slice(0, 5)
+          .map(([name, online]) => ({ emoji: "💬", name: `#${name}`, online, topic: "Active now" }));
 
-        const messageItems = (messages.data ?? []).reverse().map((m) => ({
-          id: m.id as string,
-          text: ((m.text as string) ?? "").slice(0, 160),
-          author: authorFor(m.author_id as string | null),
-        }));
-
-        type PollShape = { question?: string; options?: Array<{ label?: string; votes?: number }> };
-        const pollPayload = (() => {
-          const raw = pollPost?.data;
-          if (!raw?.poll) return null;
-          const p = raw.poll as PollShape;
-          if (!p.question || !Array.isArray(p.options) || p.options.length < 2) return null;
-          const opts = p.options.slice(0, 4).map((o) => ({
-            label: (o.label ?? "Option").slice(0, 60),
-            votes: typeof o.votes === "number" ? o.votes : 0,
-          }));
-          return {
-            id: raw.id as string,
-            question: p.question.slice(0, 160),
-            options: opts,
-            author: authorFor(raw.owner_id as string | null, raw.is_anonymous as boolean),
-          };
-        })();
-
-        const confessionPayload = confession?.data
-          ? {
-              id: confession.data.id as string,
-              text: ((confession.data.text as string) ?? "").slice(0, 220),
-              alias: (confession.data.alias as string) || "Anonymous",
-              avatar_emoji: (confession.data.avatar_emoji as string) || "🎭",
-              like_count: confession.data.like_count as number,
-              reply_count: confession.data.reply_count as number,
-              category: confession.data.category as string,
-            }
-          : null;
-
-        const leaderboard = (topUsers.data ?? []).map((u) => ({
-          id: u.id as string,
+        const liveTopMembers = (topUsers.data ?? []).map((u) => ({
           username: (u.username as string) ?? "user",
-          avatar_url: u.avatar_url as string | null,
-          avatar_color: u.avatar_color as string | null,
-          level: u.level as number,
-          xp: u.xp as number,
-          streak: u.streak as number,
+          xp: (u.xp as number) ?? 0,
         }));
+
+        let feedPost = cfg.demoFeedPost;
+        if (latestPost?.data) {
+          const r = latestPost.data;
+          let username = "Anonymous";
+          if (!r.is_anonymous && r.owner_id) {
+            const { data: p } = await supabaseAdmin.from("profiles").select("username").eq("id", r.owner_id).maybeSingle();
+            username = (p?.username as string) ?? "user";
+          }
+          feedPost = {
+            username,
+            ago: ago(r.created_at as string),
+            text: ((r.text as string) ?? "").slice(0, 220),
+            likes: (r.reaction_count as number) ?? 0,
+            comments: (r.comment_count as number) ?? 0,
+            coins: 0,
+          };
+        }
+
+        let poll = cfg.demoPoll;
+        if (latestPoll?.data?.poll) {
+          const p = latestPoll.data.poll as { question?: string; options?: Array<{ label?: string; votes?: number }> };
+          if (p.question && Array.isArray(p.options) && p.options.length >= 2) {
+            poll = {
+              question: p.question.slice(0, 160),
+              ago: ago(latestPoll.data.created_at as string),
+              options: p.options.slice(0, 4).map((o) => ({
+                label: (o.label ?? "Option").slice(0, 60),
+                votes: typeof o.votes === "number" ? o.votes : 0,
+              })),
+              daysLeft: 0,
+            };
+          }
+        }
+
+        const confession = latestConfession?.data
+          ? {
+              alias: (latestConfession.data.alias as string) || "Anonymous",
+              ago: ago(latestConfession.data.created_at as string),
+              text: ((latestConfession.data.text as string) ?? "").slice(0, 220),
+              emoji: (latestConfession.data.avatar_emoji as string) || "🎭",
+            }
+          : cfg.demoConfession;
 
         return Response.json(
           {
             config: cfg,
+            source: "live" as const,
             stats: {
-              members: totalMembers.count ?? 0,
-              online: onlineMembers.count ?? 0,
-              postsToday: postsToday.count ?? 0,
-              activeRooms: activeRooms.count ?? 0,
+              members:      totalMembers.count  ?? cfg.demoStats.members,
+              online:       onlineMembers.count ?? cfg.demoStats.online,
+              activeRooms:  activeRooms.count   ?? cfg.demoStats.activeRooms,
+              messagesSent: cfg.demoStats.messagesSent,
+              feedPosts:    totalPosts.count    ?? cfg.demoStats.feedPosts,
+              gamesPlayed:  cfg.demoStats.gamesPlayed,
             },
-            posts: postItems,
-            messages: messageItems,
-            poll: pollPayload,
-            confession: confessionPayload,
-            leaderboard,
+            chatrooms:  liveChatrooms.length  ? liveChatrooms  : cfg.demoChatrooms,
+            topMembers: liveTopMembers.length ? liveTopMembers : cfg.demoTopMembers,
+            feedPost,
+            poll,
+            confession,
           },
           { headers: { "Cache-Control": "public, max-age=30" } },
         );

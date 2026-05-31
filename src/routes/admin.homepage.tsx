@@ -77,6 +77,46 @@ function HomepagePage() {
             </div>
           </div>
           <Row label="Enable landing page" description="Master toggle for the public homepage." checked={values.enabled} onChange={(v) => set("enabled", v)} />
+          <Row
+            label="Use demo data on home page"
+            description="When ON the homepage shows the curated demo content below. When OFF it pulls live chatrooms, posts, polls and top members from your community."
+            checked={values.useDemoData}
+            onChange={(v) => set("useDemoData", v)}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Demo stats */}
+      <Card>
+        <CardContent className="space-y-3 p-5">
+          <div className="text-sm font-semibold">Demo stat values</div>
+          <p className="text-xs text-muted-foreground">Shown on the stat strip in demo mode, and as fallbacks for the messages-sent / games-played counters in live mode.</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Field label="Members">
+              <Input type="number" min={0} value={values.demoStats.members}
+                     onChange={(e) => patch({ demoStats: { ...values.demoStats, members: Math.max(0, Number(e.target.value) || 0) } })} />
+            </Field>
+            <Field label="Online now">
+              <Input type="number" min={0} value={values.demoStats.online}
+                     onChange={(e) => patch({ demoStats: { ...values.demoStats, online: Math.max(0, Number(e.target.value) || 0) } })} />
+            </Field>
+            <Field label="Active chatrooms">
+              <Input type="number" min={0} value={values.demoStats.activeRooms}
+                     onChange={(e) => patch({ demoStats: { ...values.demoStats, activeRooms: Math.max(0, Number(e.target.value) || 0) } })} />
+            </Field>
+            <Field label="Messages sent">
+              <Input type="number" min={0} value={values.demoStats.messagesSent}
+                     onChange={(e) => patch({ demoStats: { ...values.demoStats, messagesSent: Math.max(0, Number(e.target.value) || 0) } })} />
+            </Field>
+            <Field label="Feed posts">
+              <Input type="number" min={0} value={values.demoStats.feedPosts}
+                     onChange={(e) => patch({ demoStats: { ...values.demoStats, feedPosts: Math.max(0, Number(e.target.value) || 0) } })} />
+            </Field>
+            <Field label="Games played">
+              <Input type="number" min={0} value={values.demoStats.gamesPlayed}
+                     onChange={(e) => patch({ demoStats: { ...values.demoStats, gamesPlayed: Math.max(0, Number(e.target.value) || 0) } })} />
+            </Field>
+          </div>
         </CardContent>
       </Card>
 
