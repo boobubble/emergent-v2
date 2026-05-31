@@ -381,6 +381,144 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_comments: {
+        Row: {
+          author_id: string
+          created_at: string
+          id: string
+          is_admin_response: boolean
+          report_id: string
+          text: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          id?: string
+          is_admin_response?: boolean
+          report_id: string
+          text: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          id?: string
+          is_admin_response?: boolean
+          report_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_comments_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_reports: {
+        Row: {
+          admin_note: string | null
+          author_id: string
+          category: Database["public"]["Enums"]["feedback_category"]
+          comment_count: number
+          created_at: string
+          description: string
+          device_info: Json | null
+          duplicate_of: string | null
+          id: string
+          is_pinned: boolean
+          priority: Database["public"]["Enums"]["feedback_priority"]
+          resolved_at: string | null
+          resolved_by: string | null
+          screenshots: string[]
+          status: Database["public"]["Enums"]["feedback_status"]
+          title: string
+          updated_at: string
+          upvote_count: number
+          url: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          author_id: string
+          category?: Database["public"]["Enums"]["feedback_category"]
+          comment_count?: number
+          created_at?: string
+          description?: string
+          device_info?: Json | null
+          duplicate_of?: string | null
+          id?: string
+          is_pinned?: boolean
+          priority?: Database["public"]["Enums"]["feedback_priority"]
+          resolved_at?: string | null
+          resolved_by?: string | null
+          screenshots?: string[]
+          status?: Database["public"]["Enums"]["feedback_status"]
+          title: string
+          updated_at?: string
+          upvote_count?: number
+          url?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          author_id?: string
+          category?: Database["public"]["Enums"]["feedback_category"]
+          comment_count?: number
+          created_at?: string
+          description?: string
+          device_info?: Json | null
+          duplicate_of?: string | null
+          id?: string
+          is_pinned?: boolean
+          priority?: Database["public"]["Enums"]["feedback_priority"]
+          resolved_at?: string | null
+          resolved_by?: string | null
+          screenshots?: string[]
+          status?: Database["public"]["Enums"]["feedback_status"]
+          title?: string
+          updated_at?: string
+          upvote_count?: number
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_reports_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "feedback_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_votes: {
+        Row: {
+          created_at: string
+          id: string
+          report_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          report_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          report_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_votes_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friendships: {
         Row: {
           created_at: string
@@ -1325,6 +1463,22 @@ export type Database = {
         | "hot"
         | "love"
       confession_status: "pending" | "approved" | "rejected"
+      feedback_category:
+        | "bug"
+        | "feature"
+        | "ui"
+        | "performance"
+        | "security"
+        | "other"
+      feedback_priority: "low" | "normal" | "high" | "critical"
+      feedback_status:
+        | "open"
+        | "investigating"
+        | "planned"
+        | "in_progress"
+        | "fixed"
+        | "closed"
+        | "rejected"
       friendship_status: "pending" | "accepted" | "blocked"
       game_invite_status:
         | "pending"
@@ -1510,6 +1664,24 @@ export const Constants = {
         "love",
       ],
       confession_status: ["pending", "approved", "rejected"],
+      feedback_category: [
+        "bug",
+        "feature",
+        "ui",
+        "performance",
+        "security",
+        "other",
+      ],
+      feedback_priority: ["low", "normal", "high", "critical"],
+      feedback_status: [
+        "open",
+        "investigating",
+        "planned",
+        "in_progress",
+        "fixed",
+        "closed",
+        "rejected",
+      ],
       friendship_status: ["pending", "accepted", "blocked"],
       game_invite_status: [
         "pending",
