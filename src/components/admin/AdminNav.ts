@@ -79,6 +79,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/users",        label: "All Users",    icon: Users2,       keywords: ["members", "accounts"] },
       { to: "/admin/roles",        label: "Roles",        icon: Shield,       keywords: ["permissions", "admin", "moderator"] },
       { to: "/admin/guest-access", label: "Guest Access", icon: UserCircle2,  keywords: ["guest", "anonymous", "auto login", "visitor", "permissions"] },
+      { to: "/admin/auth-background", label: "Login Background", icon: Sparkles, keywords: ["auth", "authentication", "login", "signup", "background", "live community", "blur", "glassmorphism", "stats"] },
     ],
   },
 
