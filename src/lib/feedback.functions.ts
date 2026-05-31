@@ -214,6 +214,7 @@ export const adminUpdateFeedback = createServerFn({ method: "POST" })
       status: z.enum(["open","investigating","planned","in_progress","fixed","closed","rejected"]).optional(),
       priority: z.enum(["low","normal","high","critical"]).optional(),
       is_pinned: z.boolean().optional(),
+      is_showcased: z.boolean().optional(),
       admin_note: z.string().max(2000).optional(),
       duplicate_of: z.string().uuid().nullable().optional(),
       reward: z.object({ xp: z.number().int().min(0).max(1000), coins: z.number().int().min(0).max(1000) }).optional(),
