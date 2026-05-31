@@ -478,6 +478,11 @@ function DetailDialog({ id, open, onClose, cfg }: { id: string; open: boolean; o
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${St.tone}`}>
                         {St.label}
                       </span>
+                      {data.report.is_anonymous && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          <EyeOff className="h-3 w-3" /> Anonymous
+                        </span>
+                      )}
                     </>
                   );
                 })()}
