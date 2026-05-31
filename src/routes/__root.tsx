@@ -13,7 +13,7 @@ import { AuthProvider, useAuth } from "@/lib/auth-store";
 import { ChatProvider } from "@/lib/chat-store";
 import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { IgnoreProvider } from "@/lib/ignore-store";
-import { AuthScreen } from "@/components/auth/AuthScreen";
+
 import { useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
