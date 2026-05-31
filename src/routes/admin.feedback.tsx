@@ -343,6 +343,8 @@ function SettingsTab() {
         <Toggle label="Allow comments" checked={values.allowComments} onChange={(b) => set("allowComments", b)} />
         <Toggle label="Allow upvotes" checked={values.allowUpvotes} onChange={(b) => set("allowUpvotes", b)} />
         <Toggle label="Allow screenshots" checked={values.allowScreenshots} onChange={(b) => set("allowScreenshots", b)} />
+        <Toggle label="Allow anonymous submissions" checked={values.allowAnonymous} onChange={(b) => set("allowAnonymous", b)} />
+        <Toggle label="Duplicate suggestion detection" checked={values.duplicateDetection} onChange={(b) => set("duplicateDetection", b)} />
         <Toggle label="Notify author on status change" checked={values.notifyOnStatusChange} onChange={(b) => set("notifyOnStatusChange", b)} />
       </div>
       <div className="rounded-xl border border-border bg-card p-4">
