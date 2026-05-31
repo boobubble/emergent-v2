@@ -4,6 +4,8 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
+  Navigate,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -13,7 +15,6 @@ import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { IgnoreProvider } from "@/lib/ignore-store";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { useEffect } from "react";
-import { useLocation, useRouter, Navigate } from "@tanstack/react-router";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
 import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
