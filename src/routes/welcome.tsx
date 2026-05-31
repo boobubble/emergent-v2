@@ -232,7 +232,7 @@ function LandingPage() {
               ))}
             </nav>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <Link to="/" className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm font-semibold">Login</Link>
+              <Link to="/login" className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm font-semibold">Login</Link>
               <Link
                 to="/login"
                 className="rounded-full px-4 py-2.5 text-center text-sm font-bold text-white"
