@@ -4,6 +4,7 @@ import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check"
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-config";
+import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
   if (status.state === "idle") return null;
@@ -57,7 +58,8 @@ export function AuthScreen() {
 
   return (
     <div className="grid min-h-screen place-items-center bg-background p-4 text-foreground">
-      <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-8 text-center shadow-2xl" style={{ boxShadow: "var(--shadow-panel)" }}>
+      <div className="w-full max-w-sm space-y-6">
+        <div className="rounded-3xl border border-border bg-card p-8 text-center shadow-2xl" style={{ boxShadow: "var(--shadow-panel)" }}>
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-3xl font-bold text-primary-foreground" style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}>P</div>
         <h1 className="mt-4 text-2xl font-bold">Welcome to Palrgo</h1>
         <p className="mt-1 text-xs text-muted-foreground">Chat, post, and play with friends.</p>
