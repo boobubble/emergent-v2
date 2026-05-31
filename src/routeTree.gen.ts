@@ -17,6 +17,7 @@ import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedRouteImport } from './routes/feed'
+import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
@@ -49,6 +50,7 @@ import { Route as AdminGamesRouteImport } from './routes/admin.games'
 import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
 import { Route as AdminDjRouteImport } from './routes/admin.dj'
+import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
 import { Route as AdminBotsRouteImport } from './routes/admin.bots'
 import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
@@ -99,6 +101,11 @@ const FindFriendsRoute = FindFriendsRouteImport.update({
 const FeedRoute = FeedRouteImport.update({
   id: '/feed',
   path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfessionsRoute = ConfessionsRouteImport.update({
+  id: '/confessions',
+  path: '/confessions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -261,6 +268,11 @@ const AdminDjRoute = AdminDjRouteImport.update({
   path: '/dj',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminConfessionsRoute = AdminConfessionsRouteImport.update({
+  id: '/confessions',
+  path: '/confessions',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminChatroomsRoute = AdminChatroomsRouteImport.update({
   id: '/chatrooms',
   path: '/chatrooms',
@@ -323,6 +335,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
+  '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
@@ -340,6 +353,7 @@ export interface FileRoutesByFullPath {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/filters': typeof AdminFiltersRoute
@@ -375,6 +389,7 @@ export interface FileRoutesByTo {
   '/$slug': typeof SlugRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
+  '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
@@ -392,6 +407,7 @@ export interface FileRoutesByTo {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/filters': typeof AdminFiltersRoute
@@ -429,6 +445,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
+  '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
@@ -446,6 +463,7 @@ export interface FileRoutesById {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/filters': typeof AdminFiltersRoute
@@ -484,6 +502,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/achievements'
     | '/admin'
+    | '/confessions'
     | '/feed'
     | '/find-friends'
     | '/games'
@@ -501,6 +520,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
+    | '/admin/confessions'
     | '/admin/dj'
     | '/admin/economy'
     | '/admin/filters'
@@ -536,6 +556,7 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/account'
     | '/achievements'
+    | '/confessions'
     | '/feed'
     | '/find-friends'
     | '/games'
@@ -553,6 +574,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
+    | '/admin/confessions'
     | '/admin/dj'
     | '/admin/economy'
     | '/admin/filters'
@@ -589,6 +611,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/achievements'
     | '/admin'
+    | '/confessions'
     | '/feed'
     | '/find-friends'
     | '/games'
@@ -606,6 +629,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
+    | '/admin/confessions'
     | '/admin/dj'
     | '/admin/economy'
     | '/admin/filters'
@@ -643,6 +667,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AchievementsRoute: typeof AchievementsRoute
   AdminRoute: typeof AdminRouteWithChildren
+  ConfessionsRoute: typeof ConfessionsRoute
   FeedRoute: typeof FeedRouteWithChildren
   FindFriendsRoute: typeof FindFriendsRoute
   GamesRoute: typeof GamesRoute
@@ -712,6 +737,13 @@ declare module '@tanstack/react-router' {
       path: '/feed'
       fullPath: '/feed'
       preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confessions': {
+      id: '/confessions'
+      path: '/confessions'
+      fullPath: '/confessions'
+      preLoaderRoute: typeof ConfessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -938,6 +970,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDjRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/confessions': {
+      id: '/admin/confessions'
+      path: '/confessions'
+      fullPath: '/admin/confessions'
+      preLoaderRoute: typeof AdminConfessionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/chatrooms': {
       id: '/admin/chatrooms'
       path: '/chatrooms'
@@ -1040,6 +1079,7 @@ interface AdminRouteChildren {
   AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBotsRoute: typeof AdminBotsRoute
   AdminChatroomsRoute: typeof AdminChatroomsRoute
+  AdminConfessionsRoute: typeof AdminConfessionsRoute
   AdminDjRoute: typeof AdminDjRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
   AdminFiltersRoute: typeof AdminFiltersRoute
@@ -1076,6 +1116,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAutomationRoute: AdminAutomationRoute,
   AdminBotsRoute: AdminBotsRoute,
   AdminChatroomsRoute: AdminChatroomsRoute,
+  AdminConfessionsRoute: AdminConfessionsRoute,
   AdminDjRoute: AdminDjRoute,
   AdminEconomyRoute: AdminEconomyRoute,
   AdminFiltersRoute: AdminFiltersRoute,
@@ -1120,6 +1161,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AchievementsRoute: AchievementsRoute,
   AdminRoute: AdminRouteWithChildren,
+  ConfessionsRoute: ConfessionsRoute,
   FeedRoute: FeedRouteWithChildren,
   FindFriendsRoute: FindFriendsRoute,
   GamesRoute: GamesRoute,

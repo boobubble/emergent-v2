@@ -110,6 +110,142 @@ export type Database = {
           },
         ]
       }
+      confession_reactions: {
+        Row: {
+          confession_id: string
+          created_at: string
+          id: string
+          type: Database["public"]["Enums"]["confession_reaction_type"]
+          user_id: string
+        }
+        Insert: {
+          confession_id: string
+          created_at?: string
+          id?: string
+          type: Database["public"]["Enums"]["confession_reaction_type"]
+          user_id: string
+        }
+        Update: {
+          confession_id?: string
+          created_at?: string
+          id?: string
+          type?: Database["public"]["Enums"]["confession_reaction_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "confession_reactions_confession_id_fkey"
+            columns: ["confession_id"]
+            isOneToOne: false
+            referencedRelation: "confessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      confession_replies: {
+        Row: {
+          alias: string | null
+          author_id: string
+          avatar_emoji: string | null
+          confession_id: string
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          text: string
+        }
+        Insert: {
+          alias?: string | null
+          author_id: string
+          avatar_emoji?: string | null
+          confession_id: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          text?: string
+        }
+        Update: {
+          alias?: string | null
+          author_id?: string
+          avatar_emoji?: string | null
+          confession_id?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "confession_replies_confession_id_fkey"
+            columns: ["confession_id"]
+            isOneToOne: false
+            referencedRelation: "confessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      confessions: {
+        Row: {
+          alias: string | null
+          author_id: string
+          avatar_emoji: string | null
+          category: string
+          created_at: string
+          display_mode: Database["public"]["Enums"]["confession_display_mode"]
+          expires_at: string | null
+          id: string
+          image_url: string | null
+          is_featured: boolean
+          is_pinned: boolean
+          kind: Database["public"]["Enums"]["confession_kind"]
+          like_count: number
+          poll: Json | null
+          reply_count: number
+          status: Database["public"]["Enums"]["confession_status"]
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          alias?: string | null
+          author_id: string
+          avatar_emoji?: string | null
+          category?: string
+          created_at?: string
+          display_mode?: Database["public"]["Enums"]["confession_display_mode"]
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean
+          is_pinned?: boolean
+          kind?: Database["public"]["Enums"]["confession_kind"]
+          like_count?: number
+          poll?: Json | null
+          reply_count?: number
+          status?: Database["public"]["Enums"]["confession_status"]
+          text?: string
+          updated_at?: string
+        }
+        Update: {
+          alias?: string | null
+          author_id?: string
+          avatar_emoji?: string | null
+          category?: string
+          created_at?: string
+          display_mode?: Database["public"]["Enums"]["confession_display_mode"]
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean
+          is_pinned?: boolean
+          kind?: Database["public"]["Enums"]["confession_kind"]
+          like_count?: number
+          poll?: Json | null
+          reply_count?: number
+          status?: Database["public"]["Enums"]["confession_status"]
+          text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       custom_pages: {
         Row: {
           canonical_url: string | null
@@ -1175,6 +1311,20 @@ export type Database = {
     Enums: {
       app_role: "super_admin" | "admin" | "moderator" | "user"
       ban_type: "ban" | "temp_ban" | "shadow_ban" | "ip_ban"
+      confession_display_mode:
+        | "fully_anonymous"
+        | "random_id"
+        | "random_avatar"
+        | "username"
+      confession_kind: "text" | "poll" | "image" | "question" | "advice"
+      confession_reaction_type:
+        | "like"
+        | "funny"
+        | "shock"
+        | "sad"
+        | "hot"
+        | "love"
+      confession_status: "pending" | "approved" | "rejected"
       friendship_status: "pending" | "accepted" | "blocked"
       game_invite_status:
         | "pending"
@@ -1344,6 +1494,22 @@ export const Constants = {
     Enums: {
       app_role: ["super_admin", "admin", "moderator", "user"],
       ban_type: ["ban", "temp_ban", "shadow_ban", "ip_ban"],
+      confession_display_mode: [
+        "fully_anonymous",
+        "random_id",
+        "random_avatar",
+        "username",
+      ],
+      confession_kind: ["text", "poll", "image", "question", "advice"],
+      confession_reaction_type: [
+        "like",
+        "funny",
+        "shock",
+        "sad",
+        "hot",
+        "love",
+      ],
+      confession_status: ["pending", "approved", "rejected"],
       friendship_status: ["pending", "accepted", "blocked"],
       game_invite_status: [
         "pending",
