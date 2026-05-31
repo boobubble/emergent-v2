@@ -108,15 +108,42 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
     }
   }
 
-  const PrivacyIcon = PRIVACY.find((p) => p.id === privacy)!.icon;
+  const spotlight = focused && focusConfig.enabled;
+  const useAnim = focusConfig.animations;
+  const PrivacyIconEl = PrivacyIcon;
 
-  return (
-    <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+  const card = (
+    <div
+      className={[
+        "relative rounded-3xl border bg-card p-4 transition-[box-shadow,border-color,transform] duration-200",
+        spotlight
+          ? "border-primary/60 shadow-2xl ring-2 ring-primary/30 sm:scale-[1.01]"
+          : "border-border shadow-sm",
+        spotlight && useAnim ? "animate-scale-in" : "",
+      ].join(" ")}
+    >
+      {spotlight && (
+        <div className="mb-2 flex items-center justify-between">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary">
+            <Sparkles className="h-3 w-3" /> Focus mode
+          </span>
+          <button
+            onClick={() => setFocused(false)}
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+            aria-label="Close focus composer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       <textarea
+        ref={textareaRef}
         value={text}
         onChange={(e) => updateText(e.target.value)}
-        rows={3}
-        placeholder="What's happening? Use #hashtags and @mentions…"
+        onFocus={openFocus}
+        onClick={openFocus}
+        rows={spotlight ? 6 : 3}
+        placeholder="What's on your mind? Use #hashtags and @mentions…"
         className="w-full resize-none rounded-2xl border border-transparent bg-transparent px-2 py-1 text-base placeholder:text-muted-foreground focus:outline-none"
       />
       {files.length > 0 && (
@@ -124,7 +151,7 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           {files.map((f, i) => (
             <div key={i} className="relative h-20 w-20 overflow-hidden rounded-xl border border-border">
               <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
-              <button onClick={() => setFiles(files.filter((_, j) => j !== i))} className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white">
+              <button onClick={() => setFiles(files.filter((_, j) => j !== i))} className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white" aria-label="Remove file">
                 <X className="h-3 w-3" />
               </button>
             </div>
@@ -136,7 +163,7 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
         <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
           <ImageIcon className="h-4 w-4" /> Photo
         </button>
-        <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => setFiles([...files, ...Array.from(e.target.files ?? [])])} />
+        <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e) => setFiles([...files, ...Array.from(e.target.files ?? [])])} />
         <Popover>
           <PopoverTrigger asChild>
             <button className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
@@ -151,18 +178,24 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
         <button onClick={() => updateText(text + " #")} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
           <Hash className="h-4 w-4" /> Tag
         </button>
+        {spotlight && (
+          <span className="hidden text-[11px] text-muted-foreground sm:inline">
+            {hasDraft ? "Draft auto-saved" : "Draft empty"}
+          </span>
+        )}
         <div className="ml-auto flex items-center gap-2">
           <select
             value={privacy}
             onChange={(e) => setPrivacy(e.target.value as PostPrivacy)}
             className="rounded-full border border-border bg-background px-3 py-1.5 text-xs"
+            aria-label="Post audience"
           >
             {PRIVACY.map((p) => (<option key={p.id} value={p.id}>{p.label}</option>))}
           </select>
           <button onClick={() => setAnonymous(!anonymous)} className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs ${anonymous ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}>
             <EyeOff className="h-3 w-3" /> Anon
           </button>
-          <PrivacyIcon className="h-3.5 w-3.5 text-muted-foreground" />
+          <PrivacyIconEl className="h-3.5 w-3.5 text-muted-foreground" />
           <button
             onClick={submit}
             disabled={posting || (!text.trim() && !files.length)}
@@ -174,5 +207,39 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
         </div>
       </div>
     </div>
+  );
+
+  if (!spotlight) return card;
+
+  return (
+    <>
+      {/* Inline placeholder keeps layout stable while the spotlight is open */}
+      <div className="rounded-3xl border border-dashed border-border bg-card/40 p-4 text-sm text-muted-foreground">
+        Composer open in focus mode — press <kbd className="rounded bg-muted px-1.5 py-0.5 text-[11px]">Esc</kbd> to close.
+      </div>
+
+      {/* Spotlight overlay */}
+      <div
+        className={[
+          "fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto px-0 py-0 sm:items-center sm:px-4 sm:py-8",
+          useAnim ? "animate-fade-in" : "",
+        ].join(" ")}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Create a post"
+      >
+        <button
+          aria-label="Dismiss focus composer"
+          onClick={() => setFocused(false)}
+          className={[
+            "absolute inset-0 bg-background/70",
+            focusConfig.blur ? "backdrop-blur-md" : "",
+          ].join(" ")}
+        />
+        <div className="relative z-10 flex min-h-full w-full max-w-2xl flex-col justify-center sm:min-h-0">
+          {card}
+        </div>
+      </div>
+    </>
   );
 }
