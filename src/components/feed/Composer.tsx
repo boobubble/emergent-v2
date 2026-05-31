@@ -108,9 +108,9 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
     }
   }
 
+  const PrivacyIconEl = PRIVACY.find((p) => p.id === privacy)!.icon;
   const spotlight = focused && focusConfig.enabled;
   const useAnim = focusConfig.animations;
-  const PrivacyIconEl = PrivacyIcon;
 
   const card = (
     <div
