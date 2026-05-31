@@ -4,6 +4,7 @@ import {
   FileText, MessageSquare, Newspaper, Zap, Flag,
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
   Rocket, Flame, Radio, Trophy, Youtube, Disc3, UserCircle2, MessageSquareHeart, Vote,
+  Bug,
 } from "lucide-react";
 
 export interface AdminLeaf {
@@ -69,6 +70,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/confessions", label: "Confessions",  icon: MessageSquareHeart, keywords: ["confess", "anonymous", "secrets", "community"] },
       { to: "/admin/dj",          label: "Live DJ / RJ", icon: Disc3,         keywords: ["music", "dj", "rj", "player", "radio", "live", "audio", "stream", "youtube"] },
       { to: "/admin/pages",       label: "Custom Pages", icon: FileText,      keywords: ["cms", "landing"] },
+      { to: "/admin/feedback",    label: "Feedback",     icon: Bug,           keywords: ["bug", "bugs", "feedback", "feature request", "ui issue", "performance", "security", "reports"] },
     ],
   },
 
