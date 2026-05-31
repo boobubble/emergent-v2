@@ -98,7 +98,7 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
       // bump XP (server-side; gamification trigger blocks client writes)
       try { await awardXp({ data: { action: "post" } }); } catch (e) { console.error("xp award failed", e); }
       earnPost().catch(() => {});
-      setText(""); setFiles([]); setAnonymous(false);
+      setText(""); setFiles([]); setAnonymous(false); setFocused(false);
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       onPosted?.();
     } catch (e) {
