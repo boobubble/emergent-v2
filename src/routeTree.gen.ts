@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as PagesRouteImport } from './routes/pages'
@@ -46,6 +47,7 @@ import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminModulesRouteImport } from './routes/admin.modules'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminMediaApisRouteImport } from './routes/admin.media-apis'
+import { Route as AdminHomepageRouteImport } from './routes/admin.homepage'
 import { Route as AdminGuestAccessRouteImport } from './routes/admin.guest-access'
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
@@ -70,6 +72,11 @@ import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/publ
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -255,6 +262,11 @@ const AdminMediaApisRoute = AdminMediaApisRouteImport.update({
   path: '/media-apis',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminHomepageRoute = AdminHomepageRouteImport.update({
+  id: '/homepage',
+  path: '/homepage',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminGuestAccessRoute = AdminGuestAccessRouteImport.update({
   id: '/guest-access',
   path: '/guest-access',
@@ -388,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/pages': typeof PagesRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/welcome': typeof WelcomeRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
@@ -406,6 +419,7 @@ export interface FileRoutesByFullPath {
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
+  '/admin/homepage': typeof AdminHomepageRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
@@ -449,6 +463,7 @@ export interface FileRoutesByTo {
   '/pages': typeof PagesRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/welcome': typeof WelcomeRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
@@ -467,6 +482,7 @@ export interface FileRoutesByTo {
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
+  '/admin/homepage': typeof AdminHomepageRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
@@ -512,6 +528,7 @@ export interface FileRoutesById {
   '/pages': typeof PagesRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/welcome': typeof WelcomeRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
   '/admin/ai-settings': typeof AdminAiSettingsRoute
@@ -530,6 +547,7 @@ export interface FileRoutesById {
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
+  '/admin/homepage': typeof AdminHomepageRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
@@ -576,6 +594,7 @@ export interface FileRouteTypes {
     | '/pages'
     | '/reels'
     | '/reset-password'
+    | '/welcome'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
     | '/admin/ai-settings'
@@ -594,6 +613,7 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
+    | '/admin/homepage'
     | '/admin/media-apis'
     | '/admin/moderation'
     | '/admin/modules'
@@ -637,6 +657,7 @@ export interface FileRouteTypes {
     | '/pages'
     | '/reels'
     | '/reset-password'
+    | '/welcome'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
     | '/admin/ai-settings'
@@ -655,6 +676,7 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
+    | '/admin/homepage'
     | '/admin/media-apis'
     | '/admin/moderation'
     | '/admin/modules'
@@ -699,6 +721,7 @@ export interface FileRouteTypes {
     | '/pages'
     | '/reels'
     | '/reset-password'
+    | '/welcome'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
     | '/admin/ai-settings'
@@ -717,6 +740,7 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
+    | '/admin/homepage'
     | '/admin/media-apis'
     | '/admin/moderation'
     | '/admin/modules'
@@ -762,6 +786,7 @@ export interface RootRouteChildren {
   PagesRoute: typeof PagesRoute
   ReelsRoute: typeof ReelsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  WelcomeRoute: typeof WelcomeRoute
   PSlugRoute: typeof PSlugRoute
   UUsernameRoute: typeof UUsernameRoute
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
@@ -772,6 +797,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -1031,6 +1063,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMediaApisRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/homepage': {
+      id: '/admin/homepage'
+      path: '/homepage'
+      fullPath: '/admin/homepage'
+      preLoaderRoute: typeof AdminHomepageRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/guest-access': {
       id: '/admin/guest-access'
       path: '/guest-access'
@@ -1226,6 +1265,7 @@ interface AdminRouteChildren {
   AdminGamesRoute: typeof AdminGamesRoute
   AdminGeneralRoute: typeof AdminGeneralRoute
   AdminGuestAccessRoute: typeof AdminGuestAccessRoute
+  AdminHomepageRoute: typeof AdminHomepageRoute
   AdminMediaApisRoute: typeof AdminMediaApisRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminModulesRoute: typeof AdminModulesRoute
@@ -1266,6 +1306,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGamesRoute: AdminGamesRoute,
   AdminGeneralRoute: AdminGeneralRoute,
   AdminGuestAccessRoute: AdminGuestAccessRoute,
+  AdminHomepageRoute: AdminHomepageRoute,
   AdminMediaApisRoute: AdminMediaApisRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminModulesRoute: AdminModulesRoute,
@@ -1315,6 +1356,7 @@ const rootRouteChildren: RootRouteChildren = {
   PagesRoute: PagesRoute,
   ReelsRoute: ReelsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  WelcomeRoute: WelcomeRoute,
   PSlugRoute: PSlugRoute,
   UUsernameRoute: UUsernameRoute,
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
