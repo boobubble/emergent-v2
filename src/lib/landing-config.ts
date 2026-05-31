@@ -135,6 +135,9 @@ export interface LandingConfig {
   // Final CTA
   finalCtaTitle: string;
   finalCtaSubtitle: string;
+  /** Optional illustration shown inside the "Ready to Join the Fun?" card. Admin-editable. */
+  finalCtaImageUrl: string;
+  finalCtaImageAlt: string;
 
   // Footer
   brandTagline: string;
@@ -251,6 +254,8 @@ export const LANDING_DEFAULTS: LandingConfig = {
 
   finalCtaTitle: "Ready to Join the Fun?",
   finalCtaSubtitle: "Create your free account now and be part of our amazing community!",
+  finalCtaImageUrl: "",
+  finalCtaImageAlt: "Join the community",
 
   brandTagline: "A place to chat, connect, play and build your social world.",
   footerColumns: [

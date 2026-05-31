@@ -100,6 +100,28 @@ function LandingPage() {
     return () => { cancel = true; };
   }, []);
 
+  // Keep meta tags in sync with admin-edited SEO config
+  useEffect(() => {
+    const cfg = data?.config;
+    if (!cfg || typeof document === "undefined") return;
+    if (cfg.seoTitle) document.title = cfg.seoTitle;
+    const setMeta = (selector: string, attr: "name" | "property", key: string, content: string) => {
+      if (!content) return;
+      let el = document.head.querySelector<HTMLMetaElement>(selector);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+    setMeta('meta[name="description"]', "name", "description", cfg.seoDescription);
+    setMeta('meta[name="keywords"]', "name", "keywords", cfg.seoKeywords);
+    setMeta('meta[property="og:title"]', "property", "og:title", cfg.seoTitle);
+    setMeta('meta[property="og:description"]', "property", "og:description", cfg.seoDescription);
+  }, [data?.config]);
+
+
   const cfg: LandingConfig = data?.config ?? LANDING_DEFAULTS;
   const stats: LandingStats = data?.stats ?? {
     members: cfg.demoStats.members, online: cfg.demoStats.online, activeRooms: cfg.demoStats.activeRooms,
@@ -492,15 +514,26 @@ function LandingPage() {
           <Card className="relative overflow-hidden p-6 sm:p-8"
                 style={{ background: "linear-gradient(135deg,rgba(168,85,247,0.35),rgba(236,72,153,0.25) 60%,rgba(59,130,246,0.2))" }}>
             <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full opacity-30 blur-3xl" style={{ background: "radial-gradient(closest-side,#ec4899,transparent)" }} />
-            <div className="relative max-w-md">
-              <h3 className="text-2xl font-black sm:text-3xl">{cfg.finalCtaTitle}</h3>
-              <p className="mt-2 text-sm text-white/80">{cfg.finalCtaSubtitle}</p>
-              <Link to="/login"
-                    className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#1a0b2e] shadow-lg hover:scale-[1.03] transition-transform">
-                Create Free Account <ArrowRight className="h-4 w-4" />
-              </Link>
+            <div className="relative grid items-center gap-5 sm:grid-cols-[1fr_auto]">
+              <div className="max-w-md">
+                <h3 className="text-2xl font-black sm:text-3xl">{cfg.finalCtaTitle}</h3>
+                <p className="mt-2 text-sm text-white/80">{cfg.finalCtaSubtitle}</p>
+                <Link to="/login"
+                      className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#1a0b2e] shadow-lg hover:scale-[1.03] transition-transform">
+                  Create Free Account <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              {cfg.finalCtaImageUrl && (
+                <img
+                  src={cfg.finalCtaImageUrl}
+                  alt={cfg.finalCtaImageAlt || "Join the community"}
+                  loading="lazy"
+                  className="hidden h-40 w-40 rounded-2xl object-cover ring-1 ring-white/10 shadow-xl sm:block sm:h-44 sm:w-44"
+                />
+              )}
             </div>
           </Card>
+
 
           <Card className="relative overflow-hidden p-6"
                 style={{ background: "linear-gradient(135deg,rgba(139,92,246,0.4),rgba(59,130,246,0.3))" }}>
