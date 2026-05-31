@@ -214,6 +214,7 @@ export const adminUpdateFeedback = createServerFn({ method: "POST" })
       status: z.enum(["open","investigating","planned","in_progress","fixed","closed","rejected"]).optional(),
       priority: z.enum(["low","normal","high","critical"]).optional(),
       is_pinned: z.boolean().optional(),
+      is_showcased: z.boolean().optional(),
       admin_note: z.string().max(2000).optional(),
       duplicate_of: z.string().uuid().nullable().optional(),
       reward: z.object({ xp: z.number().int().min(0).max(1000), coins: z.number().int().min(0).max(1000) }).optional(),
@@ -232,6 +233,7 @@ export const adminUpdateFeedback = createServerFn({ method: "POST" })
     if (data.status) patch.status = data.status;
     if (data.priority) patch.priority = data.priority;
     if (typeof data.is_pinned === "boolean") patch.is_pinned = data.is_pinned;
+    if (typeof data.is_showcased === "boolean") patch.is_showcased = data.is_showcased;
     if (typeof data.admin_note === "string") patch.admin_note = data.admin_note;
     if (data.duplicate_of !== undefined) patch.duplicate_of = data.duplicate_of;
     if (data.status === "fixed" || data.status === "closed" || data.status === "rejected") {

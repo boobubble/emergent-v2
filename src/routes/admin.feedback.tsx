@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
-  ChevronUp, Pin, PinOff, Loader2, Trash2, Coins, Sparkles, Save, BarChart3, MessageCircle,
+  ChevronUp, Pin, PinOff, Loader2, Trash2, Coins, Sparkles, Save, BarChart3, MessageCircle, Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,7 +59,7 @@ function AdminFeedback() {
 type FeedbackRow = {
   id: string; title: string; description: string;
   category: string; status: string; priority: string;
-  is_pinned: boolean; upvote_count: number; comment_count: number;
+  is_pinned: boolean; is_showcased?: boolean; upvote_count: number; comment_count: number;
   admin_note: string | null;
 };
 
@@ -115,6 +115,7 @@ function QueueTab() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     {r.is_pinned && <Pin className="h-3 w-3 text-primary" />}
+                    {r.is_showcased && <Star className="h-3 w-3 fill-amber-400 text-amber-400" />}
                     <h4 className="truncate text-sm font-medium">{r.title}</h4>
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -140,7 +141,7 @@ function QueueTab() {
   );
 }
 
-function EditDialog({ row, onClose }: { row: { id: string; title: string; status: string; priority: string; is_pinned: boolean; admin_note: string | null }; onClose: () => void }) {
+function EditDialog({ row, onClose }: { row: { id: string; title: string; status: string; priority: string; is_pinned: boolean; is_showcased?: boolean; admin_note: string | null }; onClose: () => void }) {
   const qc = useQueryClient();
   const update = useServerFn(adminUpdateFeedback);
   const remove = useServerFn(adminDeleteFeedback);
@@ -148,6 +149,7 @@ function EditDialog({ row, onClose }: { row: { id: string; title: string; status
   const [status, setStatus] = useState<FeedbackStatus>(row.status as FeedbackStatus);
   const [priority, setPriority] = useState<FeedbackPriority>(row.priority as FeedbackPriority);
   const [pinned, setPinned] = useState(row.is_pinned);
+  const [showcased, setShowcased] = useState(!!row.is_showcased);
   const [note, setNote] = useState(row.admin_note ?? "");
   const [xp, setXp] = useState(0);
   const [coins, setCoins] = useState(0);
@@ -155,7 +157,7 @@ function EditDialog({ row, onClose }: { row: { id: string; title: string; status
   const save = useMutation({
     mutationFn: () => update({
       data: {
-        id: row.id, status, priority, is_pinned: pinned, admin_note: note,
+        id: row.id, status, priority, is_pinned: pinned, is_showcased: showcased, admin_note: note,
         reward: xp > 0 || coins > 0 ? { xp, coins } : undefined,
       },
     }),
@@ -215,6 +217,13 @@ function EditDialog({ row, onClose }: { row: { id: string; title: string; status
               Pin to top
             </span>
             <Switch checked={pinned} onCheckedChange={setPinned} />
+          </label>
+          <label className="flex items-center justify-between rounded-md border border-border p-2">
+            <span className="text-sm flex items-center gap-2">
+              <Star className={`h-4 w-4 ${showcased ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
+              Showcase on home / signup
+            </span>
+            <Switch checked={showcased} onCheckedChange={setShowcased} />
           </label>
           <div className="space-y-1">
             <Label className="text-xs">Admin note (visible to user)</Label>
@@ -346,6 +355,36 @@ function SettingsTab() {
         <Toggle label="Allow anonymous submissions" checked={values.allowAnonymous} onChange={(b) => set("allowAnonymous", b)} />
         <Toggle label="Duplicate suggestion detection" checked={values.duplicateDetection} onChange={(b) => set("duplicateDetection", b)} />
         <Toggle label="Notify author on status change" checked={values.notifyOnStatusChange} onChange={(b) => set("notifyOnStatusChange", b)} />
+      </div>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+          <Star className="h-4 w-4 fill-amber-400 text-amber-400" /> Showcase
+        </h3>
+        <p className="mb-2 text-xs text-muted-foreground">
+          Pick individual reports in the Queue tab — toggle “Showcase on home / signup”. They appear publicly in the surfaces enabled below.
+        </p>
+        <Toggle label="Show on home page" checked={values.showcaseOnHome} onChange={(b) => set("showcaseOnHome", b)} />
+        <Toggle label="Show on signup / sign-in page" checked={values.showcaseOnSignup} onChange={(b) => set("showcaseOnSignup", b)} />
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <div>
+            <Label className="text-xs">Section title</Label>
+            <Input
+              value={values.showcaseTitle}
+              maxLength={80}
+              onChange={(e) => set("showcaseTitle", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Max items shown</Label>
+            <Input
+              type="number"
+              min={1}
+              max={24}
+              value={values.showcaseLimit}
+              onChange={(e) => set("showcaseLimit", Math.max(1, Math.min(24, Number(e.target.value) || 6)))}
+            />
+          </div>
+        </div>
       </div>
       <div className="rounded-xl border border-border bg-card p-4">
         <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">

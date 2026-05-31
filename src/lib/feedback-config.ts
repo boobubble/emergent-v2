@@ -43,6 +43,10 @@ export interface FeedbackConfig {
   rewardOnSubmit: { xp: number; coins: number };
   rewardOnFixed:  { xp: number; coins: number };
   notifyOnStatusChange: boolean;
+  showcaseOnHome: boolean;
+  showcaseOnSignup: boolean;
+  showcaseLimit: number;
+  showcaseTitle: string;
 }
 
 export const FEEDBACK_DEFAULTS: FeedbackConfig = {
@@ -56,6 +60,10 @@ export const FEEDBACK_DEFAULTS: FeedbackConfig = {
   rewardOnSubmit: { xp: 5, coins: 2 },
   rewardOnFixed:  { xp: 25, coins: 15 },
   notifyOnStatusChange: true,
+  showcaseOnHome: true,
+  showcaseOnSignup: true,
+  showcaseLimit: 6,
+  showcaseTitle: "What our community is saying",
 };
 
 export const FEEDBACK_CATEGORIES: FeedbackCategory[] =

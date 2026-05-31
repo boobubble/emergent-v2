@@ -429,6 +429,7 @@ export type Database = {
           id: string
           is_anonymous: boolean
           is_pinned: boolean
+          is_showcased: boolean
           priority: Database["public"]["Enums"]["feedback_priority"]
           resolved_at: string | null
           resolved_by: string | null
@@ -451,6 +452,7 @@ export type Database = {
           id?: string
           is_anonymous?: boolean
           is_pinned?: boolean
+          is_showcased?: boolean
           priority?: Database["public"]["Enums"]["feedback_priority"]
           resolved_at?: string | null
           resolved_by?: string | null
@@ -473,6 +475,7 @@ export type Database = {
           id?: string
           is_anonymous?: boolean
           is_pinned?: boolean
+          is_showcased?: boolean
           priority?: Database["public"]["Enums"]["feedback_priority"]
           resolved_at?: string | null
           resolved_by?: string | null
