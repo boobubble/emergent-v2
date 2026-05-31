@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from "@/lib/auth-store";
 import { ChatProvider } from "@/lib/chat-store";
 import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { IgnoreProvider } from "@/lib/ignore-store";
+import { AppSettingsProvider } from "@/lib/app-settings";
 
 import { useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
@@ -182,19 +183,21 @@ function AuthGate() {
   }
 
   return (
-    <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
-      <FeedPrefsProvider>
-        <IgnoreProvider>
-          <HeadFootScripts />
-          <AdsAutoLoader />
-          <SessionConflictBanner />
-          <FaviconSwitcher />
-          <Outlet />
-          <Sonner />
-          <RealtimeDebugOverlay />
-        </IgnoreProvider>
-      </FeedPrefsProvider>
-    </ChatProvider>
+    <AppSettingsProvider>
+      <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
+        <FeedPrefsProvider>
+          <IgnoreProvider>
+            <HeadFootScripts />
+            <AdsAutoLoader />
+            <SessionConflictBanner />
+            <FaviconSwitcher />
+            <Outlet />
+            <Sonner />
+            <RealtimeDebugOverlay />
+          </IgnoreProvider>
+        </FeedPrefsProvider>
+      </ChatProvider>
+    </AppSettingsProvider>
   );
 }
 
