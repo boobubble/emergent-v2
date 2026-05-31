@@ -233,6 +233,7 @@ export const adminUpdateFeedback = createServerFn({ method: "POST" })
     if (data.status) patch.status = data.status;
     if (data.priority) patch.priority = data.priority;
     if (typeof data.is_pinned === "boolean") patch.is_pinned = data.is_pinned;
+    if (typeof data.is_showcased === "boolean") patch.is_showcased = data.is_showcased;
     if (typeof data.admin_note === "string") patch.admin_note = data.admin_note;
     if (data.duplicate_of !== undefined) patch.duplicate_of = data.duplicate_of;
     if (data.status === "fixed" || data.status === "closed" || data.status === "rejected") {
