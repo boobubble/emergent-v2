@@ -196,11 +196,11 @@ function LandingPage() {
           </nav>
 
           <div className="hidden items-center gap-2 sm:flex">
-            <Link to="/" className="rounded-full px-4 py-2 text-sm font-semibold text-white/80 hover:text-white">
+            <Link to="/login" className="rounded-full px-4 py-2 text-sm font-semibold text-white/80 hover:text-white">
               Login
             </Link>
             <Link
-              to="/"
+              to="/login"
               className="rounded-full px-4 py-2 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
               style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 8px 24px -8px rgba(139,92,246,0.7)" }}
             >
@@ -232,9 +232,9 @@ function LandingPage() {
               ))}
             </nav>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <Link to="/" className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm font-semibold">Login</Link>
+              <Link to="/login" className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm font-semibold">Login</Link>
               <Link
-                to="/"
+                to="/login"
                 className="rounded-full px-4 py-2.5 text-center text-sm font-bold text-white"
                 style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}
               >
@@ -734,7 +734,7 @@ function LandingPage() {
             <p className="mx-auto mt-3 max-w-xl text-sm text-white/70 sm:text-base">{cfg.finalCtaSubtitle}</p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link
-                to="/"
+                to="/login"
                 className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold text-white shadow-lg"
                 style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 12px 32px -8px rgba(139,92,246,0.7)" }}
               >

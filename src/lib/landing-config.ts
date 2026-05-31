@@ -97,9 +97,9 @@ export const LANDING_DEFAULTS: LandingConfig = {
     "Chat in real-time, share posts, play games, earn rewards and make new friends.",
   heroBadges: ["💬 Chatrooms", "📱 Social Feed", "🎮 Games", "🏆 Rewards"],
   primaryCtaLabel: "Start Chatting",
-  primaryCtaHref: "/",
+  primaryCtaHref: "/login",
   secondaryCtaLabel: "Create Account",
-  secondaryCtaHref: "/",
+  secondaryCtaHref: "/login",
 
   showStats: true,
   showMessageCount: true,

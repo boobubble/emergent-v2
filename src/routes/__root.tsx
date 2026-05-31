@@ -4,6 +4,8 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
+  Navigate,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -11,7 +13,7 @@ import { AuthProvider, useAuth } from "@/lib/auth-store";
 import { ChatProvider } from "@/lib/chat-store";
 import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { IgnoreProvider } from "@/lib/ignore-store";
-import { AuthScreen } from "@/components/auth/AuthScreen";
+
 import { useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
@@ -144,12 +146,41 @@ function RootComponent() {
   );
 }
 
+// Paths an unauthenticated visitor can reach directly (no AuthScreen takeover).
+const PUBLIC_PATH_PREFIXES = ["/welcome", "/login", "/reset-password", "/p/", "/api/"];
+const PUBLIC_EXACT = new Set(["/welcome", "/login", "/reset-password"]);
+
+function isPublicPath(pathname: string) {
+  if (PUBLIC_EXACT.has(pathname)) return true;
+  return PUBLIC_PATH_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
 function AuthGate() {
   const { user, ready } = useAuth();
+  const location = useLocation();
   usePresenceHeartbeat();
   useSessionChangeDetector();
   if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
-  if (!user) return (<><HeadFootScripts /><AdsAutoLoader /><SessionConflictBanner /><AuthScreen /><Sonner /><RealtimeDebugOverlay /></>);
+
+  if (!user) {
+    const path = location.pathname;
+    // Public, self-contained routes (landing, login, password reset, public post pages) render normally.
+    if (isPublicPath(path)) {
+      return (
+        <>
+          <HeadFootScripts />
+          <AdsAutoLoader />
+          <SessionConflictBanner />
+          <Outlet />
+          <Sonner />
+          <RealtimeDebugOverlay />
+        </>
+      );
+    }
+    // Everything else → send guests to the landing page first.
+    return <Navigate to="/welcome" replace />;
+  }
+
   return (
     <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
       <FeedPrefsProvider>
@@ -166,3 +197,4 @@ function AuthGate() {
     </ChatProvider>
   );
 }
+

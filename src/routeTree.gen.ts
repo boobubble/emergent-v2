@@ -13,6 +13,7 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as PagesRouteImport } from './routes/pages'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as GamesRouteImport } from './routes/games'
@@ -90,6 +91,11 @@ const ReelsRoute = ReelsRouteImport.update({
 const PagesRoute = PagesRouteImport.update({
   id: '/pages',
   path: '/pages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
@@ -397,6 +403,7 @@ export interface FileRoutesByFullPath {
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -460,6 +467,7 @@ export interface FileRoutesByTo {
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -525,6 +533,7 @@ export interface FileRoutesById {
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -591,6 +600,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/groups'
     | '/leaderboard'
+    | '/login'
     | '/pages'
     | '/reels'
     | '/reset-password'
@@ -654,6 +664,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/groups'
     | '/leaderboard'
+    | '/login'
     | '/pages'
     | '/reels'
     | '/reset-password'
@@ -718,6 +729,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/groups'
     | '/leaderboard'
+    | '/login'
     | '/pages'
     | '/reels'
     | '/reset-password'
@@ -783,6 +795,7 @@ export interface RootRouteChildren {
   GamesRoute: typeof GamesRoute
   GroupsRoute: typeof GroupsRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  LoginRoute: typeof LoginRoute
   PagesRoute: typeof PagesRoute
   ReelsRoute: typeof ReelsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -823,6 +836,13 @@ declare module '@tanstack/react-router' {
       path: '/pages'
       fullPath: '/pages'
       preLoaderRoute: typeof PagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leaderboard': {
@@ -1353,6 +1373,7 @@ const rootRouteChildren: RootRouteChildren = {
   GamesRoute: GamesRoute,
   GroupsRoute: GroupsRoute,
   LeaderboardRoute: LeaderboardRoute,
+  LoginRoute: LoginRoute,
   PagesRoute: PagesRoute,
   ReelsRoute: ReelsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
