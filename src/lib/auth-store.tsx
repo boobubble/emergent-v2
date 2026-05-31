@@ -167,8 +167,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginWithGoogle = useCallback(async () => {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) throw new Error(result.error.message || "Google sign-in failed");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) throw new Error(error.message || "Google sign-in failed");
   }, []);
 
   const loginAsGuest = useCallback(async (username?: string) => {
