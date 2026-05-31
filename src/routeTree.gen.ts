@@ -57,6 +57,7 @@ import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
 import { Route as AdminBotsRouteImport } from './routes/admin.bots'
 import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
+import { Route as AdminAuthBackgroundRouteImport } from './routes/admin.auth-background'
 import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
 import { Route as AdminApiRouteImport } from './routes/admin.api'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
@@ -65,6 +66,7 @@ import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
+import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -307,6 +309,11 @@ const AdminAutomationRoute = AdminAutomationRouteImport.update({
   path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAuthBackgroundRoute = AdminAuthBackgroundRouteImport.update({
+  id: '/auth-background',
+  path: '/auth-background',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAppearanceRoute = AdminAppearanceRouteImport.update({
   id: '/appearance',
   path: '/appearance',
@@ -348,6 +355,11 @@ const ApiPublicFeedbackShowcaseRoute =
     path: '/api/public/feedback-showcase',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCommunityBgRoute = ApiPublicCommunityBgRouteImport.update({
+  id: '/api/public/community-bg',
+  path: '/api/public/community-bg',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   id: '/$key',
   path: '/$key',
@@ -376,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
@@ -410,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
@@ -434,6 +448,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
@@ -468,6 +483,7 @@ export interface FileRoutesByTo {
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
@@ -494,6 +510,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
@@ -528,6 +545,7 @@ export interface FileRoutesById {
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
@@ -555,6 +573,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/api'
     | '/admin/appearance'
+    | '/admin/auth-background'
     | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
@@ -589,6 +608,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin/'
     | '/admin/upcoming/$key'
+    | '/api/public/community-bg'
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
   fileRoutesByTo: FileRoutesByTo
@@ -613,6 +633,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/api'
     | '/admin/appearance'
+    | '/admin/auth-background'
     | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
@@ -647,6 +668,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin'
     | '/admin/upcoming/$key'
+    | '/api/public/community-bg'
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
   id:
@@ -672,6 +694,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/api'
     | '/admin/appearance'
+    | '/admin/auth-background'
     | '/admin/automation'
     | '/admin/bots'
     | '/admin/chatrooms'
@@ -706,6 +729,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin/'
     | '/admin/upcoming/$key'
+    | '/api/public/community-bg'
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
   fileRoutesById: FileRoutesById
@@ -728,6 +752,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   PSlugRoute: typeof PSlugRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
   ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
 }
@@ -1070,6 +1095,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/auth-background': {
+      id: '/admin/auth-background'
+      path: '/auth-background'
+      fullPath: '/admin/auth-background'
+      preLoaderRoute: typeof AdminAuthBackgroundRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/appearance': {
       id: '/admin/appearance'
       path: '/appearance'
@@ -1126,6 +1158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFeedbackShowcaseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/community-bg': {
+      id: '/api/public/community-bg'
+      path: '/api/public/community-bg'
+      fullPath: '/api/public/community-bg'
+      preLoaderRoute: typeof ApiPublicCommunityBgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/upcoming/$key': {
       id: '/admin/upcoming/$key'
       path: '/$key'
@@ -1155,6 +1194,7 @@ interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminApiRoute: typeof AdminApiRoute
   AdminAppearanceRoute: typeof AdminAppearanceRoute
+  AdminAuthBackgroundRoute: typeof AdminAuthBackgroundRoute
   AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBotsRoute: typeof AdminBotsRoute
   AdminChatroomsRoute: typeof AdminChatroomsRoute
@@ -1194,6 +1234,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminApiRoute: AdminApiRoute,
   AdminAppearanceRoute: AdminAppearanceRoute,
+  AdminAuthBackgroundRoute: AdminAuthBackgroundRoute,
   AdminAutomationRoute: AdminAutomationRoute,
   AdminBotsRoute: AdminBotsRoute,
   AdminChatroomsRoute: AdminChatroomsRoute,
@@ -1256,6 +1297,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   PSlugRoute: PSlugRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
   ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,
 }
