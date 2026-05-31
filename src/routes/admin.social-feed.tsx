@@ -331,6 +331,7 @@ function SocialFeedSettings() {
               <NumRow label="Post character limit" value={v.post_char_limit} onChange={(n) => set("post_char_limit", n)} min={100} max={10000} />
             </Grid2>
           </SectionCard>
+          <FocusComposerCard />
         </TabsContent>
 
         <TabsContent value="comments">
