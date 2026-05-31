@@ -43,6 +43,7 @@ import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminModulesRouteImport } from './routes/admin.modules'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminMediaApisRouteImport } from './routes/admin.media-apis'
+import { Route as AdminGuestAccessRouteImport } from './routes/admin.guest-access'
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
 import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
@@ -229,6 +230,11 @@ const AdminMediaApisRoute = AdminMediaApisRouteImport.update({
   path: '/media-apis',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminGuestAccessRoute = AdminGuestAccessRouteImport.update({
+  id: '/guest-access',
+  path: '/guest-access',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminGeneralRoute = AdminGeneralRouteImport.update({
   id: '/general',
   path: '/general',
@@ -332,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
+  '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
@@ -382,6 +389,7 @@ export interface FileRoutesByTo {
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
+  '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
@@ -434,6 +442,7 @@ export interface FileRoutesById {
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
+  '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
@@ -487,6 +496,7 @@ export interface FileRouteTypes {
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
+    | '/admin/guest-access'
     | '/admin/media-apis'
     | '/admin/moderation'
     | '/admin/modules'
@@ -537,6 +547,7 @@ export interface FileRouteTypes {
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
+    | '/admin/guest-access'
     | '/admin/media-apis'
     | '/admin/moderation'
     | '/admin/modules'
@@ -588,6 +599,7 @@ export interface FileRouteTypes {
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
+    | '/admin/guest-access'
     | '/admin/media-apis'
     | '/admin/moderation'
     | '/admin/modules'
@@ -872,6 +884,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMediaApisRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/guest-access': {
+      id: '/admin/guest-access'
+      path: '/guest-access'
+      fullPath: '/admin/guest-access'
+      preLoaderRoute: typeof AdminGuestAccessRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/general': {
       id: '/admin/general'
       path: '/general'
@@ -1006,6 +1025,7 @@ interface AdminRouteChildren {
   AdminFiltersRoute: typeof AdminFiltersRoute
   AdminGamesRoute: typeof AdminGamesRoute
   AdminGeneralRoute: typeof AdminGeneralRoute
+  AdminGuestAccessRoute: typeof AdminGuestAccessRoute
   AdminMediaApisRoute: typeof AdminMediaApisRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminModulesRoute: typeof AdminModulesRoute
@@ -1040,6 +1060,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFiltersRoute: AdminFiltersRoute,
   AdminGamesRoute: AdminGamesRoute,
   AdminGeneralRoute: AdminGeneralRoute,
+  AdminGuestAccessRoute: AdminGuestAccessRoute,
   AdminMediaApisRoute: AdminMediaApisRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminModulesRoute: AdminModulesRoute,
@@ -1093,13 +1114,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
