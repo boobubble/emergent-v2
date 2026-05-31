@@ -42,7 +42,7 @@ function PollWidgetAdminPage() {
                 Turn the chatroom poll discovery widget on or off across all rooms.
               </p>
             </div>
-            <AdminToggle checked={values.enabled} onChange={(v) => set("enabled", v)} />
+            <AdminToggle checked={values.enabled} onCheckedChange={(v: boolean) => set("enabled", v)} />
           </div>
         </CardContent>
       </Card>
@@ -55,25 +55,25 @@ function PollWidgetAdminPage() {
             label="Show Trending Polls"
             hint="Highest trending score across the feed."
             checked={values.showTrending}
-            onChange={(v) => set("showTrending", v)}
+            onCheckedChange={(v: boolean) => set("showTrending", v)}
           />
           <ToggleRow
             label="Show Poll of the Day"
             hint="Best-performing poll posted in the last 24 hours."
             checked={values.showPollOfDay}
-            onChange={(v) => set("showPollOfDay", v)}
+            onCheckedChange={(v: boolean) => set("showPollOfDay", v)}
           />
           <ToggleRow
             label="Show Creator Polls"
             hint="Top non-anonymous poll from a feed creator."
             checked={values.showCreatorPolls}
-            onChange={(v) => set("showCreatorPolls", v)}
+            onCheckedChange={(v: boolean) => set("showCreatorPolls", v)}
           />
           <ToggleRow
             label="Show Weekly Community Vote"
             hint="Most-voted poll in the past 7 days."
             checked={values.showWeeklyVote}
-            onChange={(v) => set("showWeeklyVote", v)}
+            onCheckedChange={(v: boolean) => set("showWeeklyVote", v)}
           />
         </CardContent>
       </Card>
@@ -86,13 +86,13 @@ function PollWidgetAdminPage() {
             label="Show vote counts"
             hint="Display aggregate vote totals on each preview card."
             checked={values.showVoteCounts}
-            onChange={(v) => set("showVoteCounts", v)}
+            onCheckedChange={(v: boolean) => set("showVoteCounts", v)}
           />
           <ToggleRow
             label="Redirect to Feed for voting"
             hint="Show the “Vote Now” button that links to the poll's page on the feed."
             checked={values.redirectToFeed}
-            onChange={(v) => set("redirectToFeed", v)}
+            onCheckedChange={(v: boolean) => set("redirectToFeed", v)}
           />
 
           <div className="grid gap-2 pt-3 sm:max-w-xs">
@@ -145,7 +145,7 @@ function ToggleRow({
         <p className="text-sm font-medium">{label}</p>
         <p className="text-xs text-muted-foreground">{hint}</p>
       </div>
-      <AdminToggle checked={checked} onChange={onChange} />
+      <AdminToggle checked={checked} onCheckedChange={onChange} />
     </div>
   );
 }
