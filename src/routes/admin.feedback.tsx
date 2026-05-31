@@ -218,6 +218,13 @@ function EditDialog({ row, onClose }: { row: { id: string; title: string; status
             </span>
             <Switch checked={pinned} onCheckedChange={setPinned} />
           </label>
+          <label className="flex items-center justify-between rounded-md border border-border p-2">
+            <span className="text-sm flex items-center gap-2">
+              <Star className={`h-4 w-4 ${showcased ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
+              Showcase on home / signup
+            </span>
+            <Switch checked={showcased} onCheckedChange={setShowcased} />
+          </label>
           <div className="space-y-1">
             <Label className="text-xs">Admin note (visible to user)</Label>
             <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} maxLength={2000} />
