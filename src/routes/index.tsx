@@ -102,6 +102,7 @@ function ChatApp() {
           )}
           <ChatHeader />
           <MessageList channelId={state.activeChannel} />
+          <PollDiscoveryWidget />
           <MessageInput />
           <DjFooter />
         </main>
