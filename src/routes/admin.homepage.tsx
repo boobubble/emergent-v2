@@ -211,6 +211,25 @@ function HomepagePage() {
           <div className="text-sm font-semibold">Final CTA & footer</div>
           <Field label="Final CTA title"><Input value={values.finalCtaTitle} maxLength={80} onChange={(e) => set("finalCtaTitle", e.target.value)} /></Field>
           <Field label="Final CTA subtitle"><Textarea value={values.finalCtaSubtitle} maxLength={240} rows={2} onChange={(e) => set("finalCtaSubtitle", e.target.value)} /></Field>
+          <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+            <Field label="Final CTA image URL (optional)">
+              <Input
+                value={values.finalCtaImageUrl}
+                maxLength={500}
+                placeholder="https://… (leave blank to hide)"
+                onChange={(e) => set("finalCtaImageUrl", e.target.value)}
+              />
+            </Field>
+            <Field label="Image alt text">
+              <Input value={values.finalCtaImageAlt} maxLength={120} onChange={(e) => set("finalCtaImageAlt", e.target.value)} />
+            </Field>
+          </div>
+          {values.finalCtaImageUrl && (
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <p className="mb-2 text-xs text-muted-foreground">Preview</p>
+              <img src={values.finalCtaImageUrl} alt={values.finalCtaImageAlt || ""} className="h-32 w-32 rounded-xl object-cover" />
+            </div>
+          )}
           <Field label="Brand tagline"><Textarea value={values.brandTagline} maxLength={240} rows={2} onChange={(e) => set("brandTagline", e.target.value)} /></Field>
           <Field label="Copyright owner"><Input value={values.copyrightOwner} maxLength={60} onChange={(e) => set("copyrightOwner", e.target.value)} /></Field>
         </CardContent>
