@@ -241,12 +241,26 @@ function FeedbackPage() {
 function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }) {
   const qc = useQueryClient();
   const create = useServerFn(createFeedback);
+  const findSimilar = useServerFn(findSimilarFeedback);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<FeedbackCategory>("bug");
   const [priority, setPriority] = useState<FeedbackPriority>("normal");
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [anonymous, setAnonymous] = useState(false);
+  const [debouncedTitle, setDebouncedTitle] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedTitle(title.trim()), 350);
+    return () => clearTimeout(t);
+  }, [title]);
+
+  const { data: similar } = useQuery({
+    queryKey: ["feedback-similar", debouncedTitle],
+    queryFn: () => findSimilar({ data: { title: debouncedTitle } }),
+    enabled: cfg.duplicateDetection && debouncedTitle.length >= 4,
+  });
 
   const mut = useMutation({
     mutationFn: () =>
@@ -257,6 +271,7 @@ function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }
           category,
           priority,
           screenshots,
+          is_anonymous: anonymous,
           url: typeof window !== "undefined" ? window.location.href : undefined,
           device_info: typeof navigator !== "undefined"
             ? { ua: navigator.userAgent, lang: navigator.language }
