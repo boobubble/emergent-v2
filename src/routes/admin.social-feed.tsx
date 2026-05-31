@@ -12,6 +12,9 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getAllSettings, updateSetting } from "@/lib/admin.functions";
+import { useAdminSetting } from "@/lib/use-admin-setting";
+import { FOCUS_COMPOSER_DEFAULTS, type FocusComposerConfig } from "@/lib/focus-composer-config";
+import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/social-feed")({ component: SocialFeedSettings });
