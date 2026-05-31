@@ -125,7 +125,7 @@ export const createFeedback = createServerFn({ method: "POST" })
         priority: data.priority,
         screenshots: data.screenshots,
         url: data.url ?? null,
-        device_info: data.device_info ?? null,
+        device_info: (data.device_info as never) ?? null,
       })
       .select("*").single();
     if (error) throw new Error(error.message);
@@ -217,7 +217,7 @@ export const adminUpdateFeedback = createServerFn({ method: "POST" })
       patch.resolved_by = context.userId;
     }
 
-    const { error } = await supabaseAdmin.from("feedback_reports").update(patch).eq("id", data.id);
+    const { error } = await supabaseAdmin.from("feedback_reports").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
 
     // Reward author when marked fixed
