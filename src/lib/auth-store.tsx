@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { loginWithIdentifier, deleteGuestAccount } from "@/lib/auth.functions";
-import { lovable } from "@/integrations/lovable/index";
+
 import type { Session } from "@supabase/supabase-js";
 
 export interface AuthUser {

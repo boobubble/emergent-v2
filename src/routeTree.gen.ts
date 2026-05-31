@@ -64,7 +64,6 @@ import { Route as AdminAuthBackgroundRouteImport } from './routes/admin.auth-bac
 import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
 import { Route as AdminApiRouteImport } from './routes/admin.api'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
-import { Route as AdminAiSettingsRouteImport } from './routes/admin.ai-settings'
 import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
@@ -348,11 +347,6 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAiSettingsRoute = AdminAiSettingsRouteImport.update({
-  id: '/ai-settings',
-  path: '/ai-settings',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminAdsScriptsRoute = AdminAdsScriptsRouteImport.update({
   id: '/ads-scripts',
   path: '/ads-scripts',
@@ -410,7 +404,6 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
-  '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
@@ -474,7 +467,6 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
-  '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
@@ -540,7 +532,6 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
-  '/admin/ai-settings': typeof AdminAiSettingsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
@@ -607,7 +598,6 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
-    | '/admin/ai-settings'
     | '/admin/analytics'
     | '/admin/api'
     | '/admin/appearance'
@@ -671,7 +661,6 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
-    | '/admin/ai-settings'
     | '/admin/analytics'
     | '/admin/api'
     | '/admin/appearance'
@@ -736,7 +725,6 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
-    | '/admin/ai-settings'
     | '/admin/analytics'
     | '/admin/api'
     | '/admin/appearance'
@@ -1195,13 +1183,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/ai-settings': {
-      id: '/admin/ai-settings'
-      path: '/ai-settings'
-      fullPath: '/admin/ai-settings'
-      preLoaderRoute: typeof AdminAiSettingsRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/ads-scripts': {
       id: '/admin/ads-scripts'
       path: '/ads-scripts'
@@ -1269,7 +1250,6 @@ const AdminUpcomingRouteWithChildren = AdminUpcomingRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminAdPlacementsRoute: typeof AdminAdPlacementsRoute
   AdminAdsScriptsRoute: typeof AdminAdsScriptsRoute
-  AdminAiSettingsRoute: typeof AdminAiSettingsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminApiRoute: typeof AdminApiRoute
   AdminAppearanceRoute: typeof AdminAppearanceRoute
@@ -1310,7 +1290,6 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAdPlacementsRoute: AdminAdPlacementsRoute,
   AdminAdsScriptsRoute: AdminAdsScriptsRoute,
-  AdminAiSettingsRoute: AdminAiSettingsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminApiRoute: AdminApiRoute,
   AdminAppearanceRoute: AdminAppearanceRoute,
