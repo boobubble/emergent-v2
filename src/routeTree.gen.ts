@@ -64,6 +64,7 @@ import { Route as AdminAiSettingsRouteImport } from './routes/admin.ai-settings'
 import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
+import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -341,6 +342,12 @@ const ApiPublicGuestCleanupRoute = ApiPublicGuestCleanupRouteImport.update({
   path: '/api/public/guest-cleanup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicFeedbackShowcaseRoute =
+  ApiPublicFeedbackShowcaseRouteImport.update({
+    id: '/api/public/feedback-showcase',
+    path: '/api/public/feedback-showcase',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   id: '/$key',
   path: '/$key',
@@ -403,6 +410,7 @@ export interface FileRoutesByFullPath {
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRoutesByTo {
@@ -460,6 +468,7 @@ export interface FileRoutesByTo {
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRoutesById {
@@ -519,6 +528,7 @@ export interface FileRoutesById {
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
 }
 export interface FileRouteTypes {
@@ -579,6 +589,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin/'
     | '/admin/upcoming/$key'
+    | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -636,6 +647,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin'
     | '/admin/upcoming/$key'
+    | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
   id:
     | '__root__'
@@ -694,6 +706,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin/'
     | '/admin/upcoming/$key'
+    | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
   fileRoutesById: FileRoutesById
 }
@@ -715,6 +728,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   PSlugRoute: typeof PSlugRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
   ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
 }
 
@@ -1105,6 +1119,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicGuestCleanupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/feedback-showcase': {
+      id: '/api/public/feedback-showcase'
+      path: '/api/public/feedback-showcase'
+      fullPath: '/api/public/feedback-showcase'
+      preLoaderRoute: typeof ApiPublicFeedbackShowcaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/upcoming/$key': {
       id: '/admin/upcoming/$key'
       path: '/$key'
@@ -1235,6 +1256,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   PSlugRoute: PSlugRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
   ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,
 }
 export const routeTree = rootRouteImport
