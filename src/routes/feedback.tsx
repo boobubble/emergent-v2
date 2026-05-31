@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { getAllSettings } from "@/lib/admin.functions";
 import {
-  listFeedback, createFeedback, toggleVote, getFeedback, postComment,
+  listFeedback, createFeedback, toggleVote, getFeedback, postComment, findSimilarFeedback,
 } from "@/lib/feedback.functions";
 import {
   FEEDBACK_DEFAULTS, FEEDBACK_CATEGORIES, FEEDBACK_STATUSES,
