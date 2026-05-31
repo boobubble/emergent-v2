@@ -427,6 +427,7 @@ export type Database = {
           device_info: Json | null
           duplicate_of: string | null
           id: string
+          is_anonymous: boolean
           is_pinned: boolean
           priority: Database["public"]["Enums"]["feedback_priority"]
           resolved_at: string | null
@@ -448,6 +449,7 @@ export type Database = {
           device_info?: Json | null
           duplicate_of?: string | null
           id?: string
+          is_anonymous?: boolean
           is_pinned?: boolean
           priority?: Database["public"]["Enums"]["feedback_priority"]
           resolved_at?: string | null
@@ -469,6 +471,7 @@ export type Database = {
           device_info?: Json | null
           duplicate_of?: string | null
           id?: string
+          is_anonymous?: boolean
           is_pinned?: boolean
           priority?: Database["public"]["Enums"]["feedback_priority"]
           resolved_at?: string | null
@@ -1470,6 +1473,7 @@ export type Database = {
         | "performance"
         | "security"
         | "other"
+        | "improvement"
       feedback_priority: "low" | "normal" | "high" | "critical"
       feedback_status:
         | "open"
@@ -1671,6 +1675,7 @@ export const Constants = {
         "performance",
         "security",
         "other",
+        "improvement",
       ],
       feedback_priority: ["low", "normal", "high", "critical"],
       feedback_status: [

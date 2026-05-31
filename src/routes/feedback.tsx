@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  ChevronLeft, Plus, ChevronUp, MessageCircle, Pin, Loader2, Send, Search, ImagePlus, X,
+  ChevronLeft, Plus, ChevronUp, MessageCircle, Pin, Loader2, Send, Search, ImagePlus, X, EyeOff, AlertTriangle,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { getAllSettings } from "@/lib/admin.functions";
 import {
-  listFeedback, createFeedback, toggleVote, getFeedback, postComment,
+  listFeedback, createFeedback, toggleVote, getFeedback, postComment, findSimilarFeedback,
 } from "@/lib/feedback.functions";
 import {
   FEEDBACK_DEFAULTS, FEEDBACK_CATEGORIES, FEEDBACK_STATUSES,
@@ -74,6 +75,22 @@ function FeedbackPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["feedback"] }),
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // Realtime: refresh list/detail when reports, votes or comments change
+  useEffect(() => {
+    if (!cfg.enabled) return;
+    const ch = supabase
+      .channel("feedback-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "feedback_reports" },
+        () => qc.invalidateQueries({ queryKey: ["feedback"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "feedback_votes" },
+        () => qc.invalidateQueries({ queryKey: ["feedback"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "feedback_comments" },
+        () => qc.invalidateQueries({ queryKey: ["feedback"] }))
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [cfg.enabled, qc]);
+
 
   if (!cfg.enabled) {
     return (
@@ -224,12 +241,26 @@ function FeedbackPage() {
 function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }) {
   const qc = useQueryClient();
   const create = useServerFn(createFeedback);
+  const findSimilar = useServerFn(findSimilarFeedback);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<FeedbackCategory>("bug");
   const [priority, setPriority] = useState<FeedbackPriority>("normal");
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [anonymous, setAnonymous] = useState(false);
+  const [debouncedTitle, setDebouncedTitle] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedTitle(title.trim()), 350);
+    return () => clearTimeout(t);
+  }, [title]);
+
+  const { data: similar } = useQuery({
+    queryKey: ["feedback-similar", debouncedTitle],
+    queryFn: () => findSimilar({ data: { title: debouncedTitle } }),
+    enabled: cfg.duplicateDetection && debouncedTitle.length >= 4,
+  });
 
   const mut = useMutation({
     mutationFn: () =>
@@ -240,6 +271,7 @@ function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }
           category,
           priority,
           screenshots,
+          is_anonymous: anonymous,
           url: typeof window !== "undefined" ? window.location.href : undefined,
           device_info: typeof navigator !== "undefined"
             ? { ua: navigator.userAgent, lang: navigator.language }
@@ -311,6 +343,24 @@ function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }
             maxLength={140}
             placeholder="Short, descriptive summary"
           />
+          {cfg.duplicateDetection && (similar?.length ?? 0) > 0 && (
+            <div className="mt-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                Similar reports already exist — consider upvoting instead:
+              </div>
+              <ul className="mt-1.5 space-y-1">
+                {(similar ?? []).map((s) => (
+                  <li key={s.id} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="line-clamp-1">{s.title}</span>
+                    <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                      ▲ {s.upvote_count}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Description</Label>
@@ -348,6 +398,14 @@ function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }
               </label>
             </div>
           </div>
+        )}
+        {cfg.allowAnonymous && (
+          <label className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 p-2.5 text-sm cursor-pointer">
+            <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(!!v)} />
+            <EyeOff className="h-4 w-4 text-muted-foreground" />
+            <span className="flex-1">Submit anonymously</span>
+            <span className="text-xs text-muted-foreground">Your name will be hidden</span>
+          </label>
         )}
       </div>
       <DialogFooter>
@@ -420,6 +478,11 @@ function DetailDialog({ id, open, onClose, cfg }: { id: string; open: boolean; o
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${St.tone}`}>
                         {St.label}
                       </span>
+                      {data.report.is_anonymous && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          <EyeOff className="h-3 w-3" /> Anonymous
+                        </span>
+                      )}
                     </>
                   );
                 })()}
