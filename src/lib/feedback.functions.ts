@@ -103,17 +103,19 @@ export const createFeedback = createServerFn({ method: "POST" })
     z.object({
       title: z.string().trim().min(4).max(140),
       description: z.string().trim().max(8000).default(""),
-      category: z.enum(["bug", "feature", "ui", "performance", "security", "other"]),
+      category: z.enum(["bug", "feature", "improvement", "ui", "performance", "security", "other"]),
       priority: z.enum(["low", "normal", "high", "critical"]).default("normal"),
       screenshots: z.array(z.string().url()).max(6).default([]),
       url: z.string().max(500).optional(),
       device_info: z.record(z.string(), z.unknown()).optional(),
+      is_anonymous: z.boolean().default(false),
     }).parse(d),
   )
   .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
     const cfg = await getConfig();
     if (!cfg.enabled) throw new Error("Feedback module is disabled.");
+    const anon = data.is_anonymous && cfg.allowAnonymous;
 
     const { data: row, error } = await supabaseAdmin
       .from("feedback_reports")
@@ -126,7 +128,8 @@ export const createFeedback = createServerFn({ method: "POST" })
         screenshots: data.screenshots,
         url: data.url ?? null,
         device_info: (data.device_info as never) ?? null,
-      })
+        is_anonymous: anon,
+      } as never)
       .select("*").single();
     if (error) throw new Error(error.message);
 
@@ -137,6 +140,25 @@ export const createFeedback = createServerFn({ method: "POST" })
     );
 
     return row;
+  });
+
+// ============== DUPLICATE DETECTION ==============
+export const findSimilarFeedback = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) =>
+    z.object({ title: z.string().trim().min(3).max(140) }).parse(d),
+  )
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data }) => {
+    const words = data.title.toLowerCase().split(/\s+/).filter((w) => w.length >= 4).slice(0, 4);
+    if (words.length === 0) return [];
+    const pattern = `%${words.join("%")}%`;
+    const { data: rows } = await supabaseAdmin
+      .from("feedback_reports")
+      .select("id, title, status, upvote_count, category")
+      .ilike("title", pattern)
+      .order("upvote_count", { ascending: false })
+      .limit(5);
+    return rows ?? [];
   });
 
 // ============== VOTE ==============
