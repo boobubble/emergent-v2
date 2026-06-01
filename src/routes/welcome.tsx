@@ -343,19 +343,31 @@ function LandingPage() {
             <Card className="p-5">
               <SectionTitle icon="🔥" title="Trending Chatrooms" href="/" />
               <div className="mt-3 space-y-2.5">
-                {chatrooms.slice(0, 5).map((r) => (
-                  <div key={r.name} className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-2.5">
-                    <div className="grid h-11 w-11 place-items-center rounded-lg text-xl" style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>
-                      {r.emoji}
+                {chatrooms.slice(0, 5).map((r, i) => {
+                  const thumbs = [
+                    "linear-gradient(135deg,#f59e0b,#dc2626)",
+                    "linear-gradient(135deg,#3b82f6,#1e3a8a)",
+                    "linear-gradient(135deg,#10b981,#065f46)",
+                    "linear-gradient(135deg,#f97316,#7c2d12)",
+                    "linear-gradient(135deg,#ec4899,#831843)",
+                  ];
+                  return (
+                    <div key={r.name} className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-2.5">
+                      <div className="relative grid h-11 w-14 place-items-center overflow-hidden rounded-lg text-xl ring-1 ring-white/10"
+                           style={{ background: thumbs[i % thumbs.length] }}>
+                        <span className="drop-shadow">{r.emoji}</span>
+                        <span className="absolute inset-0 bg-black/20" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-bold">#{r.name.replace(/^#/, "")}</div>
+                        <div className="text-[11px] text-white/50">{fmt(r.online)} Online</div>
+                      </div>
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]" />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-bold">#{r.name.replace(/^#/, "")}</div>
-                      <div className="text-[11px] text-white/50">{fmt(r.online)} Online</div>
-                    </div>
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]" />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+
             </Card>
 
             <Card className="p-5">
