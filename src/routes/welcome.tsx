@@ -310,18 +310,29 @@ function LandingPage() {
       {/* ───────── Features ───────── */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {cfg.featureCards.map((f) => (
-            <Card key={f.title} className="p-5 text-center transition-transform hover:-translate-y-0.5">
-              <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl text-2xl"
-                   style={{ background: "linear-gradient(135deg,rgba(139,92,246,0.25),rgba(59,130,246,0.25))" }}>
-                {f.emoji}
-              </div>
-              <h3 className="mt-3 text-sm font-bold">{f.title}</h3>
-              <p className="mt-1 text-[11px] leading-snug text-white/55">{f.description}</p>
-            </Card>
-          ))}
+          {cfg.featureCards.map((f, i) => {
+            const palettes = [
+              "linear-gradient(135deg,#8b5cf6,#6d28d9)", // purple
+              "linear-gradient(135deg,#3b82f6,#1d4ed8)", // blue
+              "linear-gradient(135deg,#f97316,#ea580c)", // orange
+              "linear-gradient(135deg,#10b981,#059669)", // green
+              "linear-gradient(135deg,#ef4444,#b91c1c)", // red
+              "linear-gradient(135deg,#a855f7,#7c3aed)", // violet
+            ];
+            return (
+              <Card key={f.title} className="p-5 text-center transition-transform hover:-translate-y-0.5">
+                <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl text-2xl shadow-lg"
+                     style={{ background: palettes[i % palettes.length], boxShadow: `0 10px 24px -10px ${["#8b5cf6","#3b82f6","#f97316","#10b981","#ef4444","#a855f7"][i % 6]}99` }}>
+                  {f.emoji}
+                </div>
+                <h3 className="mt-3 text-sm font-bold">{f.title}</h3>
+                <p className="mt-1 text-[11px] leading-snug text-white/55">{f.description}</p>
+              </Card>
+            );
+          })}
         </div>
       </section>
+
 
       {/* ───────── 3-column live community ───────── */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
