@@ -172,22 +172,34 @@ function LandingPage() {
         .welcome-light .bg-\\[\\#10101f\\]\\/80 { background-color: rgba(255,255,255,0.92) !important; }
         .welcome-light .text-white { color: #0b0b1a !important; }
         .welcome-light .text-white\\/90 { color: rgba(11,11,26,0.9) !important; }
-        .welcome-light .text-white\\/80 { color: rgba(11,11,26,0.8) !important; }
-        .welcome-light .text-white\\/70 { color: rgba(11,11,26,0.7) !important; }
-        .welcome-light .text-white\\/65 { color: rgba(11,11,26,0.65) !important; }
-        .welcome-light .text-white\\/60 { color: rgba(11,11,26,0.6) !important; }
-        .welcome-light .text-white\\/50 { color: rgba(11,11,26,0.55) !important; }
-        .welcome-light .text-white\\/40 { color: rgba(11,11,26,0.5) !important; }
+        .welcome-light .text-white\\/85 { color: rgba(11,11,26,0.86) !important; }
+        .welcome-light .text-white\\/80 { color: rgba(11,11,26,0.82) !important; }
+        .welcome-light .text-white\\/70 { color: rgba(11,11,26,0.74) !important; }
+        .welcome-light .text-white\\/65 { color: rgba(11,11,26,0.7) !important; }
+        .welcome-light .text-white\\/60 { color: rgba(11,11,26,0.66) !important; }
+        .welcome-light .text-white\\/55 { color: rgba(11,11,26,0.62) !important; }
+        .welcome-light .text-white\\/50 { color: rgba(11,11,26,0.6) !important; }
+        .welcome-light .text-white\\/45 { color: rgba(11,11,26,0.58) !important; }
+        .welcome-light .text-white\\/40 { color: rgba(11,11,26,0.55) !important; }
+        .welcome-light .text-white\\/30 { color: rgba(11,11,26,0.5) !important; }
         .welcome-light .border-white\\/5 { border-color: rgba(11,11,26,0.08) !important; }
         .welcome-light .border-white\\/10 { border-color: rgba(11,11,26,0.12) !important; }
         .welcome-light .border-white\\/15 { border-color: rgba(11,11,26,0.16) !important; }
-        .welcome-light [class*="border-white/\\[0.07\\]"] { border-color: rgba(11,11,26,0.08) !important; }
+        .welcome-light .border-white\\/\\[0\\.07\\] { border-color: rgba(11,11,26,0.08) !important; }
         .welcome-light .bg-white\\/5,
+        .welcome-light .bg-white\\/10,
+        .welcome-light .bg-white\\/15,
+        .welcome-light .bg-white\\/\\[0\\.03\\],
         .welcome-light .bg-white\\/\\[0\\.04\\],
-        .welcome-light .bg-white\\/\\[0\\.08\\],
-        .welcome-light .bg-white\\/10 { background-color: rgba(11,11,26,0.05) !important; }
+        .welcome-light .bg-white\\/\\[0\\.06\\],
+        .welcome-light .bg-white\\/\\[0\\.08\\] { background-color: rgba(11,11,26,0.05) !important; }
         .welcome-light .hover\\:bg-white\\/5:hover,
+        .welcome-light .hover\\:bg-white\\/10:hover,
         .welcome-light .hover\\:bg-white\\/\\[0\\.08\\]:hover { background-color: rgba(11,11,26,0.08) !important; }
+        .welcome-light .hover\\:text-white:hover { color: #0b0b1a !important; }
+        .welcome-light .text-purple-300 { color: #6d28d9 !important; }
+        .welcome-light .text-purple-200 { color: #5b21b6 !important; }
+        .welcome-light .hover\\:text-purple-200:hover { color: #4c1d95 !important; }
       `}</style>
 
       {/* Ambient background */}
