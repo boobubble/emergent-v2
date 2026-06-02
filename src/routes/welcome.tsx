@@ -4,7 +4,7 @@ import {
   Search, Menu, X, ArrowRight, Flame, Heart, MessageSquare, Coins,
   Users, Activity, MessageCircle, Newspaper, Gamepad2, Trophy,
   CheckCircle2, Circle, ChevronRight, Twitter, Instagram, Youtube, Send,
-  Crown, Star, Rocket, Gift,
+  Crown, Star, Rocket, Gift, Sun, Moon,
 } from "lucide-react";
 import { LANDING_DEFAULTS, type LandingConfig, type LandingChatroom, type LandingTopMember, type LandingDemoFeedPost, type LandingDemoPoll, type LandingDemoConfession } from "@/lib/landing-config";
 
@@ -86,6 +86,22 @@ function LandingPage() {
   const [data, setData] = useState<LandingPayload | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pollChoice, setPollChoice] = useState<number | null>(null);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("palrgo-welcome-theme") as "dark" | "light" | null;
+      if (saved === "light" || saved === "dark") setTheme(saved);
+    } catch { /* ignore */ }
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme((t) => {
+      const next = t === "dark" ? "light" : "dark";
+      try { localStorage.setItem("palrgo-welcome-theme", next); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   useEffect(() => {
     let cancel = false;
@@ -145,7 +161,33 @@ function LandingPage() {
   const pollTotal = poll.options.reduce((s, o) => s + (o.votes || 0), 0) || 1;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#070713] text-white antialiased">
+    <div className={`welcome-root ${theme === "light" ? "welcome-light" : "welcome-dark"} relative min-h-screen overflow-x-hidden bg-[#070713] text-white antialiased`}>
+      <style>{`
+        .welcome-light { background: #f5f6fb !important; color: #0b0b1a !important; }
+        .welcome-light .bg-\\[\\#070713\\],
+        .welcome-light .bg-\\[\\#070713\\]\\/80,
+        .welcome-light .bg-\\[\\#070713\\]\\/95 { background-color: rgba(245,246,251,0.9) !important; }
+        .welcome-light .bg-\\[\\#10101f\\]\\/80 { background-color: rgba(255,255,255,0.85) !important; }
+        .welcome-light .text-white { color: #0b0b1a !important; }
+        .welcome-light .text-white\\/90 { color: rgba(11,11,26,0.9) !important; }
+        .welcome-light .text-white\\/80 { color: rgba(11,11,26,0.8) !important; }
+        .welcome-light .text-white\\/70 { color: rgba(11,11,26,0.7) !important; }
+        .welcome-light .text-white\\/65 { color: rgba(11,11,26,0.65) !important; }
+        .welcome-light .text-white\\/60 { color: rgba(11,11,26,0.6) !important; }
+        .welcome-light .text-white\\/50 { color: rgba(11,11,26,0.55) !important; }
+        .welcome-light .text-white\\/40 { color: rgba(11,11,26,0.5) !important; }
+        .welcome-light .border-white\\/5 { border-color: rgba(11,11,26,0.08) !important; }
+        .welcome-light .border-white\\/10 { border-color: rgba(11,11,26,0.12) !important; }
+        .welcome-light .border-white\\/15 { border-color: rgba(11,11,26,0.16) !important; }
+        .welcome-light [class*="border-white/\\[0.07\\]"] { border-color: rgba(11,11,26,0.08) !important; }
+        .welcome-light .bg-white\\/5,
+        .welcome-light .bg-white\\/\\[0\\.04\\],
+        .welcome-light .bg-white\\/\\[0\\.08\\],
+        .welcome-light .bg-white\\/10 { background-color: rgba(11,11,26,0.05) !important; }
+        .welcome-light .hover\\:bg-white\\/5:hover,
+        .welcome-light .hover\\:bg-white\\/\\[0\\.08\\]:hover { background-color: rgba(11,11,26,0.08) !important; }
+      `}</style>
+
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10 select-none" aria-hidden>
         <div className="absolute -left-32 top-[-10%] h-[520px] w-[520px] rounded-full opacity-50 blur-3xl" style={{ background: "radial-gradient(closest-side,#8b5cf6,transparent 70%)" }} />
@@ -175,6 +217,14 @@ function LandingPage() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white/70 hover:text-white"
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              title={theme === "dark" ? "Light mode" : "Dark mode"}
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             <button className="hidden grid h-9 w-9 sm:grid place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white/70 hover:text-white" aria-label="Search">
               <Search className="h-4 w-4" />
             </button>
