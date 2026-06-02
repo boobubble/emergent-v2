@@ -161,7 +161,33 @@ function LandingPage() {
   const pollTotal = poll.options.reduce((s, o) => s + (o.votes || 0), 0) || 1;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#070713] text-white antialiased">
+    <div className={`welcome-root ${theme === "light" ? "welcome-light" : "welcome-dark"} relative min-h-screen overflow-x-hidden bg-[#070713] text-white antialiased`}>
+      <style>{`
+        .welcome-light { background: #f5f6fb !important; color: #0b0b1a !important; }
+        .welcome-light .bg-\\[\\#070713\\],
+        .welcome-light .bg-\\[\\#070713\\]\\/80,
+        .welcome-light .bg-\\[\\#070713\\]\\/95 { background-color: rgba(245,246,251,0.9) !important; }
+        .welcome-light .bg-\\[\\#10101f\\]\\/80 { background-color: rgba(255,255,255,0.85) !important; }
+        .welcome-light .text-white { color: #0b0b1a !important; }
+        .welcome-light .text-white\\/90 { color: rgba(11,11,26,0.9) !important; }
+        .welcome-light .text-white\\/80 { color: rgba(11,11,26,0.8) !important; }
+        .welcome-light .text-white\\/70 { color: rgba(11,11,26,0.7) !important; }
+        .welcome-light .text-white\\/65 { color: rgba(11,11,26,0.65) !important; }
+        .welcome-light .text-white\\/60 { color: rgba(11,11,26,0.6) !important; }
+        .welcome-light .text-white\\/50 { color: rgba(11,11,26,0.55) !important; }
+        .welcome-light .text-white\\/40 { color: rgba(11,11,26,0.5) !important; }
+        .welcome-light .border-white\\/5 { border-color: rgba(11,11,26,0.08) !important; }
+        .welcome-light .border-white\\/10 { border-color: rgba(11,11,26,0.12) !important; }
+        .welcome-light .border-white\\/15 { border-color: rgba(11,11,26,0.16) !important; }
+        .welcome-light [class*="border-white/\\[0.07\\]"] { border-color: rgba(11,11,26,0.08) !important; }
+        .welcome-light .bg-white\\/5,
+        .welcome-light .bg-white\\/\\[0\\.04\\],
+        .welcome-light .bg-white\\/\\[0\\.08\\],
+        .welcome-light .bg-white\\/10 { background-color: rgba(11,11,26,0.05) !important; }
+        .welcome-light .hover\\:bg-white\\/5:hover,
+        .welcome-light .hover\\:bg-white\\/\\[0\\.08\\]:hover { background-color: rgba(11,11,26,0.08) !important; }
+      `}</style>
+
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10 select-none" aria-hidden>
         <div className="absolute -left-32 top-[-10%] h-[520px] w-[520px] rounded-full opacity-50 blur-3xl" style={{ background: "radial-gradient(closest-side,#8b5cf6,transparent 70%)" }} />
