@@ -86,6 +86,22 @@ function LandingPage() {
   const [data, setData] = useState<LandingPayload | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pollChoice, setPollChoice] = useState<number | null>(null);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("palrgo-welcome-theme") as "dark" | "light" | null;
+      if (saved === "light" || saved === "dark") setTheme(saved);
+    } catch { /* ignore */ }
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme((t) => {
+      const next = t === "dark" ? "light" : "dark";
+      try { localStorage.setItem("palrgo-welcome-theme", next); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   useEffect(() => {
     let cancel = false;
