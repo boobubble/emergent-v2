@@ -166,8 +166,10 @@ function LandingPage() {
         .welcome-light { background: #f5f6fb !important; color: #0b0b1a !important; }
         .welcome-light .bg-\\[\\#070713\\],
         .welcome-light .bg-\\[\\#070713\\]\\/80,
-        .welcome-light .bg-\\[\\#070713\\]\\/95 { background-color: rgba(245,246,251,0.9) !important; }
-        .welcome-light .bg-\\[\\#10101f\\]\\/80 { background-color: rgba(255,255,255,0.85) !important; }
+        .welcome-light .bg-\\[\\#070713\\]\\/95,
+        .welcome-light .bg-\\[\\#06060f\\] { background-color: rgba(245,246,251,0.95) !important; }
+        .welcome-light .bg-\\[\\#10101f\\],
+        .welcome-light .bg-\\[\\#10101f\\]\\/80 { background-color: rgba(255,255,255,0.92) !important; }
         .welcome-light .text-white { color: #0b0b1a !important; }
         .welcome-light .text-white\\/90 { color: rgba(11,11,26,0.9) !important; }
         .welcome-light .text-white\\/80 { color: rgba(11,11,26,0.8) !important; }
