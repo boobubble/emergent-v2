@@ -4,7 +4,7 @@ import {
   Search, Menu, X, ArrowRight, Flame, Heart, MessageSquare, Coins,
   Users, Activity, MessageCircle, Newspaper, Gamepad2, Trophy,
   CheckCircle2, Circle, ChevronRight, Twitter, Instagram, Youtube, Send,
-  Crown, Star, Rocket, Gift,
+  Crown, Star, Rocket, Gift, Sun, Moon,
 } from "lucide-react";
 import { LANDING_DEFAULTS, type LandingConfig, type LandingChatroom, type LandingTopMember, type LandingDemoFeedPost, type LandingDemoPoll, type LandingDemoConfession } from "@/lib/landing-config";
 
