@@ -808,21 +808,22 @@ function StatCell({ icon: Icon, label, value, tint = "#a78bfa", pulse = false }:
 }) {
   return (
     <div
-      className="group relative flex min-w-0 items-center gap-2 p-2.5 transition-colors hover:bg-white/[0.04] sm:gap-3 sm:rounded-2xl sm:p-4 lg:p-5
+      className="stat-cell group relative flex min-w-0 items-center gap-2 p-2.5 transition-colors hover:bg-white/[0.04] sm:gap-3 sm:rounded-2xl sm:p-4 lg:p-5
                  [&:not(:last-child)]:after:absolute [&:not(:last-child)]:after:right-0 [&:not(:last-child)]:after:top-1/2
                  [&:not(:last-child)]:after:hidden [&:not(:last-child)]:after:h-8 [&:not(:last-child)]:after:w-px
                  [&:not(:last-child)]:after:-translate-y-1/2 [&:not(:last-child)]:after:bg-white/10 sm:[&:not(:last-child)]:after:h-10 lg:[&:not(:last-child)]:after:block
                  [&:not(:nth-child(2n))]:after:block sm:[&:not(:nth-child(2n))]:after:hidden
                  sm:[&:not(:nth-child(3n))]:after:block"
+      style={{ ['--stat-tint' as string]: tint }}
     >
       <div
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg ring-1 ring-white/10 backdrop-blur-md sm:h-11 sm:w-11 sm:rounded-xl"
+        className="stat-tile grid h-9 w-9 shrink-0 place-items-center rounded-lg ring-1 ring-white/10 backdrop-blur-md sm:h-11 sm:w-11 sm:rounded-xl"
         style={{
           background: `linear-gradient(135deg, color-mix(in oklab, ${tint} 28%, transparent), color-mix(in oklab, ${tint} 10%, transparent))`,
           boxShadow: `0 8px 24px -10px ${tint}90, inset 0 1px 0 rgba(255,255,255,0.08)`,
         }}
       >
-        <Icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: tint }} />
+        <Icon className="stat-icon h-4 w-4 sm:h-5 sm:w-5" style={{ color: tint }} />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 text-lg font-black leading-none tracking-tight sm:text-2xl lg:text-[26px]">
