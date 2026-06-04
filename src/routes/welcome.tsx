@@ -6,7 +6,13 @@ import {
   CheckCircle2, Circle, ChevronRight, Twitter, Instagram, Youtube, Send,
   Crown, Star, Rocket, Gift, Sun, Moon,
 } from "lucide-react";
-import { LANDING_DEFAULTS, type LandingConfig, type LandingChatroom, type LandingTopMember, type LandingDemoFeedPost, type LandingDemoPoll, type LandingDemoConfession } from "@/lib/landing-config";
+import {
+  LANDING_DEFAULTS, type LandingConfig,
+  type LandingChatroom, type LandingTopMember,
+  type LandingDemoFeedPost, type LandingDemoPoll, type LandingDemoConfession,
+  type LandingTrendingPost, type LandingDiscussion, type LandingFeaturedMember,
+  type LandingConfessionItem, type LandingBlogPost, type LandingActivity,
+} from "@/lib/landing-config";
 
 interface LandingStats {
   members: number; online: number; activeRooms: number;
@@ -21,6 +27,12 @@ interface LandingPayload {
   feedPost: LandingDemoFeedPost;
   poll: LandingDemoPoll;
   confession: LandingDemoConfession;
+  trendingPosts: LandingTrendingPost[];
+  discussions: LandingDiscussion[];
+  featuredMembers: LandingFeaturedMember[];
+  recentConfessions: LandingConfessionItem[];
+  blogPosts: LandingBlogPost[];
+  activities: LandingActivity[];
 }
 
 const HOST = "https://holo-chat-quest.lovable.app";
