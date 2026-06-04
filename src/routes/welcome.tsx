@@ -249,6 +249,7 @@ function LandingPage() {
           <Link to="/welcome" className="flex items-center gap-2.5 shrink-0">
             <BrandMark
               slot="logo"
+              forceTheme="dark"
               alt={cfg.copyrightOwner}
               fallback={
                 <>
