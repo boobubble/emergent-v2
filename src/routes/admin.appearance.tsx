@@ -24,7 +24,12 @@ const BRAND_DEFAULTS: BrandingMap = {
   favicon_light: "", favicon_dark: "",
   feed_light: "", feed_dark: "",
   chat_light: "", chat_dark: "",
-  sizes: { logo: 40, favicon: 32, feed: 36, chat: 32 },
+  sizes: {
+    logo: { w: 160, h: 48 },
+    favicon: { w: 32, h: 32 },
+    feed: { w: 140, h: 40 },
+    chat: { w: 120, h: 36 },
+  },
   rooms: {},
 };
 
