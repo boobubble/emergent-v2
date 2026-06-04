@@ -47,10 +47,17 @@ export const Route = createFileRoute("/api/public/landing")({
               feedPost:   cfg.demoFeedPost,
               poll:       cfg.demoPoll,
               confession: cfg.demoConfession,
+              trendingPosts:     cfg.trendingPosts,
+              discussions:       cfg.discussions,
+              featuredMembers:   cfg.featuredMembers,
+              recentConfessions: cfg.recentConfessions,
+              blogPosts:         cfg.blogPosts,
+              activities:        cfg.activities,
             },
             { headers: { "Cache-Control": "public, max-age=30" } },
           );
         }
+
 
         // ── LIVE MODE ────────────────────────────────────────────────
         const day = new Date(); day.setUTCHours(0, 0, 0, 0);
