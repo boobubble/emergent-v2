@@ -148,6 +148,20 @@ export interface LandingConfig {
   demoPoll: LandingDemoPoll;
   demoConfession: LandingDemoConfession;
 
+  // ── Extra landing sections (admin curated, with per-section live toggle) ──
+  trendingPosts: LandingTrendingPost[];
+  trendingPostsUseLive: boolean;
+  discussions: LandingDiscussion[];
+  discussionsUseLive: boolean;
+  featuredMembers: LandingFeaturedMember[];
+  featuredMembersUseLive: boolean;
+  recentConfessions: LandingConfessionItem[];
+  recentConfessionsUseLive: boolean;
+  blogPosts: LandingBlogPost[];
+  blogPostsUseLive: boolean;
+  activities: LandingActivity[];
+  activitiesUseLive: boolean;
+
   // Referral
   referralHeadline: string;
   referralDescription: string;
