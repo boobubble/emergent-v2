@@ -200,6 +200,8 @@ function LandingPage() {
         .welcome-light .text-purple-300 { color: #6d28d9 !important; }
         .welcome-light .text-purple-200 { color: #5b21b6 !important; }
         .welcome-light .hover\\:text-purple-200:hover { color: #4c1d95 !important; }
+        @keyframes welcome-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .animate-bounce-slow { animation: welcome-float 4s ease-in-out infinite; }
       `}</style>
 
       {/* Ambient background */}
