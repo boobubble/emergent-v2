@@ -126,16 +126,22 @@ function BrandAssetsCard() {
   );
   const [selectedRoom, setSelectedRoom] = useState<string>("");
 
-  function getWH(key: keyof BrandSizes): { w?: number; h?: number } {
+  function getCfg(key: keyof BrandSizes): { w?: number; h?: number; fit?: BrandFit } {
     const v = sizes[key];
     if (v == null) return {};
     if (typeof v === "number") return { w: v, h: v };
     return v;
   }
   function setWH(key: keyof BrandSizes, axis: "w" | "h", n: number) {
-    const cur = getWH(key);
+    const cur = getCfg(key);
     patch({ sizes: { ...sizes, [key]: { ...cur, [axis]: n || undefined } } });
   }
+  function setFit(key: keyof BrandSizes, fit: BrandFit) {
+    const cur = getCfg(key);
+    patch({ sizes: { ...sizes, [key]: { ...cur, fit } } });
+  }
+  // Backward-compat shim for any in-file refs
+  const getWH = getCfg;
 
   function setRoom(roomId: string, partial: Partial<RoomBranding>) {
     const next = { ...(rooms[roomId] ?? {}), ...partial };
