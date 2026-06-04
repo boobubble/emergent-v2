@@ -315,40 +315,135 @@ function LandingPage() {
             </div>
           </div>
 
-          {/* Visual mockup */}
-          <div className="relative hidden lg:block">
-            <Card className="p-4">
-              <div className="flex items-center gap-2 border-b border-white/5 pb-3">
-                <span className="grid h-8 w-8 place-items-center rounded-lg text-base" style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>🇮🇳</span>
-                <div>
-                  <div className="text-xs font-bold">India Chat</div>
-                  <div className="text-[10px] text-white/50">128 online · live</div>
-                </div>
-                <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> LIVE
+          {/* Visual mockup composition */}
+          <div className="relative hidden lg:block min-h-[560px]">
+            {/* Glow halos */}
+            <div className="pointer-events-none absolute inset-0 -z-10">
+              <div className="absolute right-0 top-10 h-[420px] w-[420px] rounded-full opacity-60 blur-3xl"
+                   style={{ background: "radial-gradient(closest-side,#8b5cf6,transparent 70%)" }} />
+              <div className="absolute bottom-0 left-0 h-[320px] w-[320px] rounded-full opacity-50 blur-3xl"
+                   style={{ background: "radial-gradient(closest-side,#3b82f6,transparent 70%)" }} />
+            </div>
+
+            {/* Desktop chatroom window */}
+            <div className="absolute right-0 top-4 w-[480px] rotate-[-2deg] rounded-2xl border border-white/15 bg-[#0e0e22]/90 shadow-[0_30px_80px_-20px_rgba(139,92,246,0.55)] backdrop-blur-xl">
+              {/* Title bar */}
+              <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2.5">
+                <span className="grid h-6 w-6 place-items-center rounded-md text-[11px] font-black text-white"
+                      style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>💬</span>
+                <span className="text-[11px] font-bold text-white/85">ChitChat</span>
+                <span className="ml-auto flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+                  <X className="h-3 w-3 text-white/40" />
                 </span>
               </div>
-              <div className="mt-3 space-y-2.5">
-                {[
-                  { n: "Amit Sharma", t: "Hello everyone! 👋", ts: "10:30 AM" },
-                  { n: "Pooja Singh", t: "Good morning all ☀️", ts: "10:31 AM" },
-                  { n: "Rahul Verma", t: "Anyone up for a game?", ts: "10:32 AM" },
-                  { n: "Neha Patel",  t: "Hey! How's it going?", ts: "10:33 AM" },
-                  { n: "Vikram",      t: "Let's play Ludo! 🎲", ts: "10:34 AM" },
-                ].map((m, i) => (
-                  <div key={i} className="flex items-start gap-2.5">
-                    <PillAvatar name={m.n} size={28} />
-                    <div className="min-w-0 flex-1 rounded-2xl bg-white/[0.04] px-3 py-1.5">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[11px] font-bold">{m.n}</span>
-                        <span className="text-[9px] text-white/40">{m.ts}</span>
-                      </div>
-                      <div className="text-[12px] text-white/80">{m.t}</div>
+              {/* Chat content: room + messages + users */}
+              <div className="grid grid-cols-[1fr_120px] gap-0">
+                <div className="border-r border-white/10 p-3">
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="grid h-7 w-7 place-items-center rounded-lg text-sm" style={{ background: "linear-gradient(135deg,#f59e0b,#dc2626)" }}>🇮🇳</span>
+                    <div>
+                      <div className="text-[11px] font-bold text-white">India Chat</div>
+                      <div className="text-[9px] text-white/50">128 online</div>
                     </div>
                   </div>
-                ))}
+                  <div className="space-y-2">
+                    {[
+                      { n: "Amit Sharma", t: "Hello everyone! 👋", ts: "10:30" },
+                      { n: "Pooja Singh", t: "Good morning all ☀️", ts: "10:31" },
+                      { n: "Rahul Verma", t: "Anyone up for a game?", ts: "10:32" },
+                      { n: "Neha Patel",  t: "Hey! How's it going?", ts: "10:33" },
+                      { n: "Vikram",      t: "Let's play Ludo! 🎲", ts: "10:34" },
+                    ].map((m, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <PillAvatar name={m.n} size={22} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-[10px] font-bold text-white/90">{m.n}</span>
+                            <span className="text-[8px] text-white/35">{m.ts} AM</span>
+                          </div>
+                          <div className="text-[10px] leading-snug text-white/70">{m.t}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[9px] text-white/40">
+                    Type a message...
+                    <span className="ml-auto">😊</span><span>📎</span>
+                  </div>
+                </div>
+                <div className="p-2.5">
+                  <div className="mb-2 text-[9px] font-bold uppercase tracking-wider text-white/50">Online · 128</div>
+                  <div className="space-y-1.5">
+                    {["Amit Sharma","Pooja Singh","Rahul Verma","Neha Patel","Vikram","Aditya","Kavya"].map((n) => (
+                      <div key={n} className="flex items-center gap-1.5">
+                        <PillAvatar name={n} size={16} />
+                        <span className="truncate text-[9px] text-white/70">{n.split(" ")[0]}</span>
+                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 rounded-lg bg-white/[0.04] p-2">
+                    <div className="text-[8px] font-bold text-white/60">Room Info</div>
+                    <div className="mt-1 text-[9px] font-bold text-white">India Chat</div>
+                    <div className="text-[8px] text-white/45">Public Room</div>
+                  </div>
+                </div>
               </div>
-            </Card>
+            </div>
+
+            {/* Mobile mockup overlap */}
+            <div className="absolute left-[-10px] bottom-0 w-[200px] rotate-[-6deg] rounded-[28px] border border-white/15 bg-[#0a0a1a] p-1.5 shadow-[0_30px_60px_-15px_rgba(59,130,246,0.6)]">
+              <div className="relative overflow-hidden rounded-[22px] bg-[#10101f]">
+                {/* notch */}
+                <div className="absolute left-1/2 top-1.5 z-10 h-3 w-16 -translate-x-1/2 rounded-full bg-black" />
+                <div className="px-2.5 pb-2 pt-5">
+                  <div className="flex items-center justify-between text-[8px] text-white/60">
+                    <span>9:41</span>
+                    <span>📶 📡 🔋</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <PillAvatar name="Tara" size={20} />
+                    <div className="text-[9px] font-bold text-white">Tara Sparks</div>
+                  </div>
+                  <div className="mt-1.5 rounded-lg bg-white/[0.05] p-1.5 text-[8px] text-white/70">Going strong! 🚀</div>
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <PillAvatar name="Pooja" size={20} />
+                    <div className="text-[9px] font-bold text-white">Pooja Singh</div>
+                  </div>
+                  <div className="mt-1.5 rounded-lg bg-white/[0.05] p-1.5 text-[8px] text-white/70">Good morning all ☀️</div>
+                  {/* sticker grid */}
+                  <div className="mt-2 grid grid-cols-4 gap-1">
+                    {["🐼","🦊","🐻","🐰","🦁","🐯","🐨","🐶"].map((e, i) => (
+                      <div key={i} className="grid aspect-square place-items-center rounded-md bg-white/[0.06] text-[14px]">{e}</div>
+                    ))}
+                  </div>
+                  <div className="mt-2 flex justify-around border-t border-white/5 pt-1.5 text-[10px]">
+                    <span>🏠</span><span>🔍</span><span>💬</span><span>🎮</span><span>👤</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating sunglasses emoji */}
+            <div className="absolute -right-2 top-1 grid h-14 w-14 animate-bounce-slow place-items-center rounded-full text-3xl shadow-[0_10px_30px_-5px_rgba(168,85,247,0.7)]"
+                 style={{ background: "linear-gradient(135deg,#a855f7,#6366f1)" }}>
+              😎
+            </div>
+            {/* Floating chat bubble */}
+            <div className="absolute right-8 top-[260px] grid h-12 w-12 place-items-center rounded-2xl text-xl shadow-[0_10px_30px_-5px_rgba(59,130,246,0.7)]"
+                 style={{ background: "linear-gradient(135deg,#3b82f6,#8b5cf6)" }}>
+              💬
+            </div>
+            {/* Floating online users chip */}
+            <div className="absolute right-4 bottom-8 rounded-2xl border border-white/15 bg-[#0e0e22]/90 px-3 py-2 backdrop-blur-xl shadow-xl">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                <span className="text-[10px] font-bold text-white">Connected</span>
+                <span className="text-[10px] text-white/55">128 Online</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
