@@ -6,7 +6,13 @@ import {
   CheckCircle2, Circle, ChevronRight, Twitter, Instagram, Youtube, Send,
   Crown, Star, Rocket, Gift, Sun, Moon,
 } from "lucide-react";
-import { LANDING_DEFAULTS, type LandingConfig, type LandingChatroom, type LandingTopMember, type LandingDemoFeedPost, type LandingDemoPoll, type LandingDemoConfession } from "@/lib/landing-config";
+import {
+  LANDING_DEFAULTS, type LandingConfig,
+  type LandingChatroom, type LandingTopMember,
+  type LandingDemoFeedPost, type LandingDemoPoll, type LandingDemoConfession,
+  type LandingTrendingPost, type LandingDiscussion, type LandingFeaturedMember,
+  type LandingConfessionItem, type LandingBlogPost, type LandingActivity,
+} from "@/lib/landing-config";
 
 interface LandingStats {
   members: number; online: number; activeRooms: number;
@@ -21,6 +27,12 @@ interface LandingPayload {
   feedPost: LandingDemoFeedPost;
   poll: LandingDemoPoll;
   confession: LandingDemoConfession;
+  trendingPosts: LandingTrendingPost[];
+  discussions: LandingDiscussion[];
+  featuredMembers: LandingFeaturedMember[];
+  recentConfessions: LandingConfessionItem[];
+  blogPosts: LandingBlogPost[];
+  activities: LandingActivity[];
 }
 
 const HOST = "https://holo-chat-quest.lovable.app";
@@ -148,6 +160,12 @@ function LandingPage() {
   const feedPost   = data?.feedPost   ?? cfg.demoFeedPost;
   const poll       = data?.poll       ?? cfg.demoPoll;
   const confession = data?.confession ?? cfg.demoConfession;
+  const trendingPosts     = data?.trendingPosts     ?? cfg.trendingPosts;
+  const discussions       = data?.discussions       ?? cfg.discussions;
+  const featuredMembers   = data?.featuredMembers   ?? cfg.featuredMembers;
+  const recentConfessions = data?.recentConfessions ?? cfg.recentConfessions;
+  const blogPosts         = data?.blogPosts         ?? cfg.blogPosts;
+  const activities        = data?.activities        ?? cfg.activities;
 
   const navLinks = useMemo(() => [
     { label: "Home",        to: "/welcome"     },
@@ -722,14 +740,7 @@ function LandingPage() {
         <Card className="p-5 sm:p-6">
           <SectionTitle icon="🔥" title="Trending Posts" suffix="(Hot right now)" href="/feed" />
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { user: "Priya Kapoor", ago: "12 min ago", text: "Just unlocked the Legendary badge! 🏆 Took me 3 months of daily grind.", likes: 842, comments: 156, tag: "#achievement" },
-              { user: "Rohan Mehta", ago: "34 min ago", text: "Hot take: voice rooms > text chat. Change my mind 🎙️", likes: 612, comments: 289, tag: "#discussion" },
-              { user: "Sneha Iyer", ago: "1 hr ago", text: "Made some new friends from the Mumbai chat today. This community is wholesome ❤️", likes: 524, comments: 92, tag: "#community" },
-              { user: "Arjun Das", ago: "2 hr ago", text: "Beat the Ludo champion 5 times in a row 🎲 who's next?", likes: 438, comments: 76, tag: "#gaming" },
-              { user: "Neha Reddy", ago: "3 hr ago", text: "Daily streak: 30 days 🔥 The grind is real!", likes: 389, comments: 54, tag: "#streak" },
-              { user: "Vikram Joshi", ago: "4 hr ago", text: "Anyone else loving the new emoji effects? 🎉✨", likes: 312, comments: 48, tag: "#feature" },
-            ].map((p, i) => (
+            {trendingPosts.map((p, i) => (
               <article key={i} className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 transition-all hover:-translate-y-0.5 hover:border-purple-400/30">
                 <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-0 blur-2xl transition-opacity group-hover:opacity-60" style={{ background: "radial-gradient(closest-side,#a855f7,transparent)" }} />
                 <header className="relative flex items-center gap-2.5">
@@ -759,14 +770,8 @@ function LandingPage() {
         <Card className="p-5 sm:p-6">
           <SectionTitle icon="💬" title="Latest Public Discussions" href="/" />
           <div className="mt-4 divide-y divide-white/[0.05]">
-            {[
-              { topic: "Best strategies for the new Fish Game?", room: "Gaming Lounge", author: "Karan", replies: 47, last: "2 min ago", hot: true },
-              { topic: "Weekend Mumbai meetup — who's in?", room: "Mumbai Chat", author: "Aisha", replies: 89, last: "18 min ago", hot: true },
-              { topic: "Tips for keeping a 100-day streak alive 🔥", room: "General", author: "Devansh", replies: 32, last: "1 hr ago" },
-              { topic: "Drop your favorite playlist below 🎵", room: "Music Room", author: "Tanya", replies: 124, last: "2 hr ago" },
-              { topic: "Coding bootcamp — share your roadmap!", room: "College Chat", author: "Riya", replies: 56, last: "3 hr ago" },
-            ].map((d, i) => (
-              <Link key={i} to="/" className="flex items-center gap-3 py-3 transition-colors hover:bg-white/[0.02] sm:gap-4">
+            {discussions.map((d, i) => (
+              <Link key={i} to="/discussions" className="flex items-center gap-3 py-3 transition-colors hover:bg-white/[0.02] sm:gap-4">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-base ring-1 ring-white/10">
                   💬
                 </div>
@@ -794,12 +799,7 @@ function LandingPage() {
         <Card className="p-5 sm:p-6">
           <SectionTitle icon="⭐" title="Featured Members" suffix="(Stars of the week)" href="/leaderboard" />
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { name: "Aanya Sharma", role: "Top Creator", xp: 4820, badges: ["👑", "🔥", "🏆"], gradient: "from-purple-500/30 to-pink-500/20" },
-              { name: "Kabir Singh", role: "Mod Hero", xp: 4210, badges: ["🛡️", "⭐", "💎"], gradient: "from-blue-500/30 to-cyan-500/20" },
-              { name: "Meera Nair", role: "Game Champion", xp: 3890, badges: ["🎮", "🏆", "🔥"], gradient: "from-amber-500/30 to-orange-500/20" },
-              { name: "Yash Patel", role: "Streak Master", xp: 3650, badges: ["🔥", "⚡", "🌟"], gradient: "from-emerald-500/30 to-teal-500/20" },
-            ].map((m) => (
+            {featuredMembers.map((m) => (
               <div key={m.name} className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${m.gradient} p-4 ring-1 ring-white/10`}>
                 <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-2xl" />
                 <div className="relative flex flex-col items-center text-center">
@@ -810,7 +810,7 @@ function LandingPage() {
                   <div className="mt-2.5 text-sm font-bold">{m.name}</div>
                   <div className="text-[11px] text-white/70">{m.role}</div>
                   <div className="mt-2 flex items-center gap-1 text-base">
-                    {m.badges.map((b, i) => <span key={i}>{b}</span>)}
+                    {m.badges.split(/\s+/).filter(Boolean).map((b, i) => <span key={i}>{b}</span>)}
                   </div>
                   <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 text-[11px] font-bold text-amber-200">
                     <Star className="h-3 w-3" /> {m.xp.toLocaleString()} XP
@@ -827,15 +827,7 @@ function LandingPage() {
         <Card className="p-5 sm:p-6">
           <SectionTitle icon="🤫" title="Recent Confessions" suffix="(Anonymous)" href="/confessions" />
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { alias: "Kitten #07",  emoji: "🐱", ago: "8 min ago",  text: "That cute boy from the Mumbai chat asked for my number… I'm not okay 😳💕", reacts: 482 },
-              { alias: "Bunny #21",   emoji: "🐰", ago: "22 min ago", text: "Online crush update: he replied with TWO heart emojis tonight 🫠❤️", reacts: 367 },
-              { alias: "Fox #71",     emoji: "🦊", ago: "45 min ago", text: "I keep refreshing his profile like a maniac. Help. 🦊💘", reacts: 298 },
-              { alias: "Butterfly #14", emoji: "🦋", ago: "1 hr ago", text: "We've been DMing till 4am every night this week. I might be in trouble 😈", reacts: 521 },
-              { alias: "Panda #23",   emoji: "🐼", ago: "2 hr ago",  text: "He called me 'cutie' in the lobby and I screamed into my pillow 🥹🔥", reacts: 412 },
-              { alias: "Cherry #88",  emoji: "🍒", ago: "3 hr ago",  text: "Voice room with him last night >>> any date I've ever been on 🎙️💋", reacts: 634 },
-
-            ].map((c, i) => (
+            {recentConfessions.map((c, i) => (
               <div key={i} className="relative overflow-hidden rounded-xl border border-white/[0.07] bg-gradient-to-br from-pink-500/[0.08] via-purple-500/[0.05] to-transparent p-4">
                 <div className="absolute right-3 top-3 text-[10px] font-bold uppercase tracking-wider text-pink-300/70">Anon</div>
                 <header className="flex items-center gap-2.5">
@@ -861,13 +853,9 @@ function LandingPage() {
       {/* ───────── Community Blog ───────── */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <Card className="p-5 sm:p-6">
-          <SectionTitle icon="📰" title="Community Blog" suffix="(Stories & guides)" href="/pages" />
+          <SectionTitle icon="📰" title="Community Blog" suffix="(Stories & guides)" href="/blog" />
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            {[
-              { tag: "Guide", read: "5 min read", title: "How to Build a 100-Day Streak Without Burning Out", excerpt: "Practical habits and tools our top members use to stay consistent every single day.", author: "Editorial Team", date: "Jun 2", gradient: "from-purple-600/40 to-blue-600/30", emoji: "🔥" },
-              { tag: "Spotlight", read: "8 min read", title: "Meet the Mods: The People Behind Our Best Chatrooms", excerpt: "An inside look at the volunteers keeping our community safe, fun, and welcoming.", author: "Sneha Iyer", date: "May 30", gradient: "from-pink-600/40 to-amber-600/30", emoji: "🛡️" },
-              { tag: "Update", read: "3 min read", title: "What's New This Month: Voice Rooms, Emoji Effects & More", excerpt: "A full roundup of the features we shipped in May plus a sneak peek at what's coming next.", author: "Product Team", date: "May 28", gradient: "from-emerald-600/40 to-teal-600/30", emoji: "🚀" },
-            ].map((b, i) => (
+            {blogPosts.map((b, i) => (
               <article key={i} className="group overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.02] transition-all hover:-translate-y-0.5 hover:border-white/15">
                 <div className={`relative h-32 bg-gradient-to-br ${b.gradient}`}>
                   <div className="absolute inset-0 grid place-items-center text-5xl opacity-90">{b.emoji}</div>

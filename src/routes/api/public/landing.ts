@@ -47,10 +47,17 @@ export const Route = createFileRoute("/api/public/landing")({
               feedPost:   cfg.demoFeedPost,
               poll:       cfg.demoPoll,
               confession: cfg.demoConfession,
+              trendingPosts:     cfg.trendingPosts,
+              discussions:       cfg.discussions,
+              featuredMembers:   cfg.featuredMembers,
+              recentConfessions: cfg.recentConfessions,
+              blogPosts:         cfg.blogPosts,
+              activities:        cfg.activities,
             },
             { headers: { "Cache-Control": "public, max-age=30" } },
           );
         }
+
 
         // ── LIVE MODE ────────────────────────────────────────────────
         const day = new Date(); day.setUTCHours(0, 0, 0, 0);
@@ -142,6 +149,147 @@ export const Route = createFileRoute("/api/public/landing")({
             }
           : cfg.demoConfession;
 
+        // ── Per-section live fetches (only when admin opted in) ──
+        let trendingPosts = cfg.trendingPosts;
+        if (cfg.trendingPostsUseLive) {
+          const { data } = await supabaseAdmin
+            .from("posts")
+            .select("id, text, created_at, owner_id, is_anonymous, reaction_count, comment_count, hashtags")
+            .eq("privacy", "public").order("reaction_count", { ascending: false }).limit(6);
+          if (data && data.length) {
+            const ownerIds = Array.from(new Set(data.map((r) => r.owner_id).filter(Boolean) as string[]));
+            const profMap = new Map<string, string>();
+            if (ownerIds.length) {
+              const { data: profs } = await supabaseAdmin.from("profiles").select("id, username").in("id", ownerIds);
+              (profs ?? []).forEach((p) => profMap.set(p.id as string, (p.username as string) ?? "user"));
+            }
+            trendingPosts = data.map((r) => ({
+              user: r.is_anonymous ? "Anonymous" : (profMap.get(r.owner_id as string) ?? "user"),
+              ago: ago(r.created_at as string),
+              text: ((r.text as string) ?? "").slice(0, 220),
+              likes: (r.reaction_count as number) ?? 0,
+              comments: (r.comment_count as number) ?? 0,
+              tag: Array.isArray(r.hashtags) && r.hashtags[0] ? `#${r.hashtags[0]}` : "#trending",
+            }));
+          }
+        }
+
+        let discussions = cfg.discussions;
+        if (cfg.discussionsUseLive) {
+          const { data } = await supabaseAdmin
+            .from("posts")
+            .select("id, text, created_at, owner_id, is_anonymous, comment_count, updated_at")
+            .eq("privacy", "public").order("comment_count", { ascending: false }).limit(5);
+          if (data && data.length) {
+            const ownerIds = Array.from(new Set(data.map((r) => r.owner_id).filter(Boolean) as string[]));
+            const profMap = new Map<string, string>();
+            if (ownerIds.length) {
+              const { data: profs } = await supabaseAdmin.from("profiles").select("id, username").in("id", ownerIds);
+              (profs ?? []).forEach((p) => profMap.set(p.id as string, (p.username as string) ?? "user"));
+            }
+            discussions = data.map((r, i) => ({
+              topic: ((r.text as string) ?? "Discussion").slice(0, 110),
+              room: "Community",
+              author: r.is_anonymous ? "Anonymous" : (profMap.get(r.owner_id as string) ?? "user"),
+              replies: (r.comment_count as number) ?? 0,
+              last: ago((r.updated_at as string) ?? (r.created_at as string)),
+              hot: i < 2,
+            }));
+          }
+        }
+
+        let featuredMembers = cfg.featuredMembers;
+        if (cfg.featuredMembersUseLive) {
+          const { data } = await supabaseAdmin
+            .from("profiles").select("username, xp, level, streak")
+            .order("xp", { ascending: false }).limit(4);
+          if (data && data.length) {
+            const grads = [
+              "from-purple-500/30 to-pink-500/20",
+              "from-blue-500/30 to-cyan-500/20",
+              "from-amber-500/30 to-orange-500/20",
+              "from-emerald-500/30 to-teal-500/20",
+            ];
+            featuredMembers = data.map((u, i) => ({
+              name: (u.username as string) ?? "user",
+              role: i === 0 ? "Top Creator" : i === 1 ? "Rising Star" : i === 2 ? "Streak Master" : "Active Member",
+              xp: (u.xp as number) ?? 0,
+              badges: "👑 🔥 🏆",
+              gradient: grads[i % grads.length],
+            }));
+          }
+        }
+
+        let recentConfessions = cfg.recentConfessions;
+        if (cfg.recentConfessionsUseLive) {
+          const { data } = await supabaseAdmin
+            .from("confessions").select("alias, avatar_emoji, text, created_at, like_count")
+            .eq("status", "approved").order("created_at", { ascending: false }).limit(6);
+          if (data && data.length) {
+            recentConfessions = data.map((c) => ({
+              alias: (c.alias as string) || "Anonymous",
+              emoji: (c.avatar_emoji as string) || "🎭",
+              ago: ago(c.created_at as string),
+              text: ((c.text as string) ?? "").slice(0, 200),
+              reacts: (c.like_count as number) ?? 0,
+            }));
+          }
+        }
+
+        let blogPosts = cfg.blogPosts;
+        if (cfg.blogPostsUseLive) {
+          const { data } = await supabaseAdmin
+            .from("custom_pages")
+            .select("slug, title, excerpt, category, published_at, og_image")
+            .eq("status", "published").order("published_at", { ascending: false, nullsFirst: false }).limit(3);
+          if (data && data.length) {
+            const grads = ["from-purple-600/40 to-blue-600/30", "from-pink-600/40 to-amber-600/30", "from-emerald-600/40 to-teal-600/30"];
+            const emojis = ["📰", "✨", "🚀"];
+            blogPosts = data.map((p, i) => ({
+              title: (p.title as string) ?? "Untitled",
+              excerpt: ((p.excerpt as string) ?? "").slice(0, 180),
+              tag: ((p.category as string) ?? "Post"),
+              read: "5 min read",
+              author: "Editorial",
+              date: p.published_at ? new Date(p.published_at as string).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
+              emoji: emojis[i % emojis.length],
+              gradient: grads[i % grads.length],
+              href: `/${(p.slug as string) ?? ""}`,
+            }));
+          }
+        }
+
+        let activities = cfg.activities;
+        if (cfg.activitiesUseLive) {
+          const [{ data: newProfiles }, { data: newPosts }, { data: newConf }] = await Promise.all([
+            supabaseAdmin.from("profiles").select("username, created_at").order("created_at", { ascending: false }).limit(4),
+            supabaseAdmin.from("posts").select("text, created_at, owner_id, is_anonymous").eq("privacy", "public").order("created_at", { ascending: false }).limit(3),
+            supabaseAdmin.from("confessions").select("alias, created_at").eq("status", "approved").order("created_at", { ascending: false }).limit(2),
+          ]);
+          const live: typeof cfg.activities = [];
+          const ownerIds = Array.from(new Set((newPosts ?? []).map((p) => p.owner_id).filter(Boolean) as string[]));
+          const profMap = new Map<string, string>();
+          if (ownerIds.length) {
+            const { data: profs } = await supabaseAdmin.from("profiles").select("id, username").in("id", ownerIds);
+            (profs ?? []).forEach((p) => profMap.set(p.id as string, (p.username as string) ?? "user"));
+          }
+          (newProfiles ?? []).forEach((p) => live.push({
+            who: (p.username as string) ?? "Someone", action: "joined", target: "the community", ago: ago(p.created_at as string),
+            emoji: "👋", tint: "from-blue-500/30 to-cyan-500/20", accent: "text-cyan-200", href: "/",
+          }));
+          (newPosts ?? []).forEach((p) => live.push({
+            who: p.is_anonymous ? "Anonymous" : (profMap.get(p.owner_id as string) ?? "user"),
+            action: "posted", target: ((p.text as string) ?? "a new update").slice(0, 40),
+            ago: ago(p.created_at as string), emoji: "📝",
+            tint: "from-purple-500/30 to-pink-500/20", accent: "text-pink-200", href: "/feed",
+          }));
+          (newConf ?? []).forEach((c) => live.push({
+            who: (c.alias as string) || "Anon", action: "shared", target: "a confession", ago: ago(c.created_at as string),
+            emoji: "🤫", tint: "from-rose-500/30 to-fuchsia-500/20", accent: "text-rose-200", href: "/confessions",
+          }));
+          if (live.length) activities = live.slice(0, 8);
+        }
+
         return Response.json(
           {
             config: cfg,
@@ -159,9 +307,16 @@ export const Route = createFileRoute("/api/public/landing")({
             feedPost,
             poll,
             confession,
+            trendingPosts,
+            discussions,
+            featuredMembers,
+            recentConfessions,
+            blogPosts,
+            activities,
           },
           { headers: { "Cache-Control": "public, max-age=30" } },
         );
+
       },
     },
   },
