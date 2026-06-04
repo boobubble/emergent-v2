@@ -165,21 +165,32 @@ function BrandAssetsCard() {
 
         {/* Global section sizes */}
         <div className="rounded-xl border border-border bg-background/40 p-4">
-          <div className="mb-3 text-sm font-semibold">Section sizes (px)</div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {GLOBAL_GROUPS.map((g) => (
-              <div key={g.key} className="space-y-1">
-                <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{g.title}</Label>
-                <Input
-                  type="number"
-                  min={16}
-                  max={256}
-                  value={sizes[g.key] ?? ""}
-                  placeholder="auto"
-                  onChange={(e) => setSize(g.key, Number(e.target.value) || 0)}
-                />
-              </div>
-            ))}
+          <div className="mb-1 text-sm font-semibold">Section sizes (px)</div>
+          <div className="mb-3 text-xs text-muted-foreground">Set width × height for each slot. Leave width blank to keep the natural aspect ratio.</div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {GLOBAL_GROUPS.map((g) => {
+              const wh = getWH(g.key);
+              return (
+                <div key={g.key} className="space-y-1.5">
+                  <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{g.title}</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number" min={8} max={1024}
+                      value={wh.w ?? ""}
+                      placeholder="W"
+                      onChange={(e) => setWH(g.key, "w", Number(e.target.value))}
+                    />
+                    <span className="text-xs text-muted-foreground">×</span>
+                    <Input
+                      type="number" min={8} max={1024}
+                      value={wh.h ?? ""}
+                      placeholder="H"
+                      onChange={(e) => setWH(g.key, "h", Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
