@@ -17,6 +17,7 @@ import { FeedNotifications } from "@/components/feed/FeedNotifications";
 import { Avatar } from "@/components/chat/Avatar";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
 import { pingDailyStreak } from "@/lib/gamification.functions";
+import { BrandMark } from "@/components/BrandMark";
 
 // Lazy-loaded panels — only fetched when the user navigates to them, keeping
 // the initial feed bundle small for faster first paint.
