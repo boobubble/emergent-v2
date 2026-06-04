@@ -770,14 +770,8 @@ function LandingPage() {
         <Card className="p-5 sm:p-6">
           <SectionTitle icon="💬" title="Latest Public Discussions" href="/" />
           <div className="mt-4 divide-y divide-white/[0.05]">
-            {[
-              { topic: "Best strategies for the new Fish Game?", room: "Gaming Lounge", author: "Karan", replies: 47, last: "2 min ago", hot: true },
-              { topic: "Weekend Mumbai meetup — who's in?", room: "Mumbai Chat", author: "Aisha", replies: 89, last: "18 min ago", hot: true },
-              { topic: "Tips for keeping a 100-day streak alive 🔥", room: "General", author: "Devansh", replies: 32, last: "1 hr ago" },
-              { topic: "Drop your favorite playlist below 🎵", room: "Music Room", author: "Tanya", replies: 124, last: "2 hr ago" },
-              { topic: "Coding bootcamp — share your roadmap!", room: "College Chat", author: "Riya", replies: 56, last: "3 hr ago" },
-            ].map((d, i) => (
-              <Link key={i} to="/" className="flex items-center gap-3 py-3 transition-colors hover:bg-white/[0.02] sm:gap-4">
+            {discussions.map((d, i) => (
+              <Link key={i} to="/discussions" className="flex items-center gap-3 py-3 transition-colors hover:bg-white/[0.02] sm:gap-4">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-base ring-1 ring-white/10">
                   💬
                 </div>
