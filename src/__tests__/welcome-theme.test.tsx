@@ -13,7 +13,7 @@ import { resolve } from "node:path";
  */
 describe("welcome page theme guards", () => {
   const source = readFileSync(
-    resolve(__dirname, "../welcome.tsx"),
+    resolve(__dirname, "../routes/welcome.tsx"),
     "utf8",
   );
 
