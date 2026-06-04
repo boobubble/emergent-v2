@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminSetting } from "@/lib/use-admin-setting";
 import { useChat } from "@/lib/chat-store";
 import { toast } from "sonner";
-import type { BrandingMap, RoomBranding, BrandSizes } from "@/components/BrandMark";
+import type { BrandingMap, RoomBranding, BrandSizes, BrandFit } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/admin/appearance")({
   component: Appearance,
@@ -126,16 +126,22 @@ function BrandAssetsCard() {
   );
   const [selectedRoom, setSelectedRoom] = useState<string>("");
 
-  function getWH(key: keyof BrandSizes): { w?: number; h?: number } {
+  function getCfg(key: keyof BrandSizes): { w?: number; h?: number; fit?: BrandFit } {
     const v = sizes[key];
     if (v == null) return {};
     if (typeof v === "number") return { w: v, h: v };
     return v;
   }
   function setWH(key: keyof BrandSizes, axis: "w" | "h", n: number) {
-    const cur = getWH(key);
+    const cur = getCfg(key);
     patch({ sizes: { ...sizes, [key]: { ...cur, [axis]: n || undefined } } });
   }
+  function setFit(key: keyof BrandSizes, fit: BrandFit) {
+    const cur = getCfg(key);
+    patch({ sizes: { ...sizes, [key]: { ...cur, fit } } });
+  }
+  // Backward-compat shim for any in-file refs
+  const getWH = getCfg;
 
   function setRoom(roomId: string, partial: Partial<RoomBranding>) {
     const next = { ...(rooms[roomId] ?? {}), ...partial };
@@ -169,24 +175,32 @@ function BrandAssetsCard() {
           <div className="mb-3 text-xs text-muted-foreground">Set width × height for each slot. Leave width blank to keep the natural aspect ratio.</div>
           <div className="grid gap-3 sm:grid-cols-2">
             {GLOBAL_GROUPS.map((g) => {
-              const wh = getWH(g.key);
+              const cfg = getCfg(g.key);
               return (
                 <div key={g.key} className="space-y-1.5">
                   <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{g.title}</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number" min={8} max={1024}
-                      value={wh.w ?? ""}
+                      value={cfg.w ?? ""}
                       placeholder="W"
                       onChange={(e) => setWH(g.key, "w", Number(e.target.value))}
                     />
                     <span className="text-xs text-muted-foreground">×</span>
                     <Input
                       type="number" min={8} max={1024}
-                      value={wh.h ?? ""}
+                      value={cfg.h ?? ""}
                       placeholder="H"
                       onChange={(e) => setWH(g.key, "h", Number(e.target.value))}
                     />
+                    <Select value={cfg.fit ?? "contain"} onValueChange={(v) => setFit(g.key, v as BrandFit)}>
+                      <SelectTrigger className="h-9 w-[110px] text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="contain">Contain</SelectItem>
+                        <SelectItem value="cover">Cover (crop)</SelectItem>
+                        <SelectItem value="fill">Stretch</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               );

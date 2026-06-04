@@ -12,7 +12,8 @@ export interface RoomBranding {
   feed_dark?: string;
 }
 
-export interface BrandSizeValue { w?: number; h?: number }
+export type BrandFit = "contain" | "cover" | "fill";
+export interface BrandSizeValue { w?: number; h?: number; fit?: BrandFit }
 export interface BrandSizes {
   logo?: number | BrandSizeValue;
   favicon?: number | BrandSizeValue;
@@ -91,8 +92,9 @@ interface Props {
 export function BrandMark({ slot, roomId, alt = "Logo", className, fallback }: Props) {
   const url = useBrandAsset(slot, roomId);
   const size = useBrandSize(slot);
+  const fit: BrandFit = size?.fit ?? "contain";
   const style: React.CSSProperties | undefined = size
-    ? { width: size.w, height: size.h, objectFit: "contain" }
+    ? { width: size.w, height: size.h, objectFit: fit, objectPosition: "center" }
     : undefined;
   if (!url) {
     if (!fallback) return null;
