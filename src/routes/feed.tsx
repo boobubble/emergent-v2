@@ -233,7 +233,12 @@ function FeedPage() {
       <header className="sticky top-0 z-20 border-b border-border bg-card">
         <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-4 py-2.5">
           <Link to="/" className="flex items-center gap-2 text-primary">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground font-bold">P</div>
+            <BrandMark
+              slot="feed"
+              alt="Logo"
+              className="h-9 w-9 rounded-xl object-contain"
+              fallback={<div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground font-bold">P</div>}
+            />
             <span className="hidden text-lg font-semibold sm:inline">Palrgo</span>
           </Link>
           <div className="mx-auto hidden w-full max-w-md md:block">
