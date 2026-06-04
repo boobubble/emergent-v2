@@ -24,12 +24,19 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-card">
       <div className="flex items-center gap-3 p-5">
-        <div
-          className="grid h-10 w-10 place-items-center rounded-xl text-xl font-bold text-primary-foreground"
-          style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}
-        >
-          P
-        </div>
+        <BrandMark
+          slot="chat"
+          alt="Logo"
+          className="h-10 w-10 rounded-xl object-contain"
+          fallback={
+            <div
+              className="grid h-10 w-10 place-items-center rounded-xl text-xl font-bold text-primary-foreground"
+              style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}
+            >
+              P
+            </div>
+          }
+        />
         <div className="min-w-0 flex-1 leading-tight">
           <div className="font-bold text-foreground">Palrgo</div>
           <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
