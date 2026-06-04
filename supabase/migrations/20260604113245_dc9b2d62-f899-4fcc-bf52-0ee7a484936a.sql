@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Brand assets are readable by everyone" ON storage.objects;
