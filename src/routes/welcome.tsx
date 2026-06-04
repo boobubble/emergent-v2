@@ -797,23 +797,37 @@ function LandingPage() {
   );
 }
 
-function StatCell({ icon: Icon, label, value, color = "text-purple-300", pulse = false }: {
-  icon: typeof Users; label: string; value: string; color?: string; pulse?: boolean;
+function StatCell({ icon: Icon, label, value, tint = "#a78bfa", pulse = false }: {
+  icon: typeof Users; label: string; value: string; tint?: string; pulse?: boolean;
 }) {
   return (
-    <div className="bg-[#10101f] p-4 sm:p-5">
-      <div className="flex items-center gap-2">
-        <Icon className={`h-4 w-4 ${color}`} />
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55">{label}</div>
+    <div className="group relative flex items-center gap-3 rounded-2xl p-4 sm:p-5 transition-colors hover:bg-white/[0.04]
+                    [&:not(:last-child)]:after:absolute [&:not(:last-child)]:after:right-0 [&:not(:last-child)]:after:top-1/2
+                    [&:not(:last-child)]:after:hidden [&:not(:last-child)]:after:h-10 [&:not(:last-child)]:after:w-px
+                    [&:not(:last-child)]:after:-translate-y-1/2 [&:not(:last-child)]:after:bg-white/10 lg:[&:not(:last-child)]:after:block">
+      <div
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-xl ring-1 ring-white/10 backdrop-blur-md"
+        style={{
+          background: `linear-gradient(135deg, color-mix(in oklab, ${tint} 28%, transparent), color-mix(in oklab, ${tint} 10%, transparent))`,
+          boxShadow: `0 8px 24px -10px ${tint}90, inset 0 1px 0 rgba(255,255,255,0.08)`,
+        }}
+      >
+        <Icon className="h-5 w-5" style={{ color: tint }} />
       </div>
-      <div className="mt-1.5 flex items-center gap-2 text-2xl font-black tracking-tight sm:text-[26px]">
-        {value}
-        {pulse && (
-          <span className="relative grid h-2 w-2 place-items-center">
-            <span className="absolute h-2 w-2 animate-ping rounded-full bg-emerald-400/70" />
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 text-2xl font-black tracking-tight sm:text-[26px] leading-none">
+          <span className="bg-clip-text text-transparent"
+                style={{ backgroundImage: `linear-gradient(135deg,#ffffff, color-mix(in oklab, ${tint} 60%, #ffffff))` }}>
+            {value}
           </span>
-        )}
+          {pulse && (
+            <span className="relative grid h-2 w-2 place-items-center">
+              <span className="absolute h-2 w-2 animate-ping rounded-full bg-emerald-400/70" />
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            </span>
+          )}
+        </div>
+        <div className="mt-1 truncate text-[11px] font-semibold uppercase tracking-wider text-white/60">{label}</div>
       </div>
     </div>
   );
