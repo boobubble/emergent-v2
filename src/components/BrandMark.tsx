@@ -92,10 +92,12 @@ interface Props {
   alt?: string;
   className?: string;
   fallback?: React.ReactNode;
+  forceTheme?: "light" | "dark";
 }
 
-export function BrandMark({ slot, roomId, alt = "Logo", className, fallback }: Props) {
-  const url = useBrandAsset(slot, roomId);
+export function BrandMark({ slot, roomId, alt = "Logo", className, fallback, forceTheme }: Props) {
+  const url = useBrandAsset(slot, roomId, forceTheme);
+
   const size = useBrandSize(slot);
   const fit: BrandFit = size?.fit ?? "contain";
   const style: React.CSSProperties | undefined = size
