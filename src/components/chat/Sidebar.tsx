@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
+import { BrandMark } from "@/components/BrandMark";
 
 interface Props {
   onOpenProfile: () => void;
