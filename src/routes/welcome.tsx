@@ -160,6 +160,12 @@ function LandingPage() {
   const feedPost   = data?.feedPost   ?? cfg.demoFeedPost;
   const poll       = data?.poll       ?? cfg.demoPoll;
   const confession = data?.confession ?? cfg.demoConfession;
+  const trendingPosts     = data?.trendingPosts     ?? cfg.trendingPosts;
+  const discussions       = data?.discussions       ?? cfg.discussions;
+  const featuredMembers   = data?.featuredMembers   ?? cfg.featuredMembers;
+  const recentConfessions = data?.recentConfessions ?? cfg.recentConfessions;
+  const blogPosts         = data?.blogPosts         ?? cfg.blogPosts;
+  const activities        = data?.activities        ?? cfg.activities;
 
   const navLinks = useMemo(() => [
     { label: "Home",        to: "/welcome"     },
