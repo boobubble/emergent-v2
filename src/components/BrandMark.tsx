@@ -12,11 +12,12 @@ export interface RoomBranding {
   feed_dark?: string;
 }
 
+export interface BrandSizeValue { w?: number; h?: number }
 export interface BrandSizes {
-  logo?: number;
-  favicon?: number;
-  feed?: number;
-  chat?: number;
+  logo?: number | BrandSizeValue;
+  favicon?: number | BrandSizeValue;
+  feed?: number | BrandSizeValue;
+  chat?: number | BrandSizeValue;
 }
 
 export interface BrandingMap {
