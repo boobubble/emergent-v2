@@ -3,6 +3,7 @@ import { useChat } from "@/lib/chat-store";
 import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
 import { LoyaltyChip } from "./LoyaltyChip";
+import { BrandMark } from "@/components/BrandMark";
 
 export function ChatHeader() {
   const { state, isDM, dmUser, channelLabel, closeDM } = useChat();
