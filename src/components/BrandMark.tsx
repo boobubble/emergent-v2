@@ -52,8 +52,12 @@ function useResolvedTheme(): "light" | "dark" {
 }
 
 export function useBrandingMap(): BrandingMap {
-  const { raw } = useAppSettings();
-  return (raw.branding as BrandingMap) || {};
+  try {
+    const { raw } = useAppSettings();
+    return (raw.branding as BrandingMap) || {};
+  } catch {
+    return {};
+  }
 }
 
 export function useBrandAsset(slot: BrandSlot, roomId?: string): string | undefined {
