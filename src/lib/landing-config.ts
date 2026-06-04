@@ -283,6 +283,63 @@ export const LANDING_DEFAULTS: LandingConfig = {
     emoji: "🐼",
   },
 
+  trendingPosts: [
+    { user: "Priya Kapoor",  ago: "12 min ago", text: "Just unlocked the Legendary badge! 🏆 Took me 3 months of daily grind.", likes: 842, comments: 156, tag: "#achievement" },
+    { user: "Rohan Mehta",   ago: "34 min ago", text: "Hot take: voice rooms > text chat. Change my mind 🎙️", likes: 612, comments: 289, tag: "#discussion" },
+    { user: "Sneha Iyer",    ago: "1 hr ago",   text: "Made some new friends from the Mumbai chat today. This community is wholesome ❤️", likes: 524, comments: 92, tag: "#community" },
+    { user: "Arjun Das",     ago: "2 hr ago",   text: "Beat the Ludo champion 5 times in a row 🎲 who's next?", likes: 438, comments: 76, tag: "#gaming" },
+    { user: "Neha Reddy",    ago: "3 hr ago",   text: "Daily streak: 30 days 🔥 The grind is real!", likes: 389, comments: 54, tag: "#streak" },
+    { user: "Vikram Joshi",  ago: "4 hr ago",   text: "Anyone else loving the new emoji effects? 🎉✨", likes: 312, comments: 48, tag: "#feature" },
+  ],
+  trendingPostsUseLive: false,
+
+  discussions: [
+    { topic: "Best strategies for the new Fish Game?", room: "Gaming Lounge", author: "Karan",  replies: 47,  last: "2 min ago",  hot: true },
+    { topic: "Weekend Mumbai meetup — who's in?",      room: "Mumbai Chat",   author: "Aisha",  replies: 89,  last: "18 min ago", hot: true },
+    { topic: "Tips for keeping a 100-day streak alive 🔥", room: "General",   author: "Devansh", replies: 32, last: "1 hr ago" },
+    { topic: "Drop your favorite playlist below 🎵",   room: "Music Room",    author: "Tanya",  replies: 124, last: "2 hr ago" },
+    { topic: "Coding bootcamp — share your roadmap!",  room: "College Chat",  author: "Riya",   replies: 56,  last: "3 hr ago" },
+  ],
+  discussionsUseLive: false,
+
+  featuredMembers: [
+    { name: "Aanya Sharma", role: "Top Creator",    xp: 4820, badges: "👑 🔥 🏆", gradient: "from-purple-500/30 to-pink-500/20" },
+    { name: "Kabir Singh",  role: "Mod Hero",       xp: 4210, badges: "🛡️ ⭐ 💎", gradient: "from-blue-500/30 to-cyan-500/20" },
+    { name: "Meera Nair",   role: "Game Champion",  xp: 3890, badges: "🎮 🏆 🔥", gradient: "from-amber-500/30 to-orange-500/20" },
+    { name: "Yash Patel",   role: "Streak Master",  xp: 3650, badges: "🔥 ⚡ 🌟", gradient: "from-emerald-500/30 to-teal-500/20" },
+  ],
+  featuredMembersUseLive: false,
+
+  recentConfessions: [
+    { alias: "Kitten #07",    emoji: "🐱", ago: "8 min ago",  text: "That cute boy from the Mumbai chat asked for my number… I'm not okay 😳💕", reacts: 482 },
+    { alias: "Bunny #21",     emoji: "🐰", ago: "22 min ago", text: "Online crush update: he replied with TWO heart emojis tonight 🫠❤️", reacts: 367 },
+    { alias: "Fox #71",       emoji: "🦊", ago: "45 min ago", text: "I keep refreshing his profile like a maniac. Help. 🦊💘", reacts: 298 },
+    { alias: "Butterfly #14", emoji: "🦋", ago: "1 hr ago",   text: "We've been DMing till 4am every night this week. I might be in trouble 😈", reacts: 521 },
+    { alias: "Panda #23",     emoji: "🐼", ago: "2 hr ago",   text: "He called me 'cutie' in the lobby and I screamed into my pillow 🥹🔥", reacts: 412 },
+    { alias: "Cherry #88",    emoji: "🍒", ago: "3 hr ago",   text: "Voice room with him last night >>> any date I've ever been on 🎙️💋", reacts: 634 },
+  ],
+  recentConfessionsUseLive: false,
+
+  blogPosts: [
+    { tag: "Guide",     read: "5 min read", title: "How to Build a 100-Day Streak Without Burning Out", excerpt: "Practical habits and tools our top members use to stay consistent every single day.", author: "Editorial Team", date: "Jun 2",  gradient: "from-purple-600/40 to-blue-600/30",  emoji: "🔥", href: "/blog" },
+    { tag: "Spotlight", read: "8 min read", title: "Meet the Mods: The People Behind Our Best Chatrooms", excerpt: "An inside look at the volunteers keeping our community safe, fun, and welcoming.",     author: "Sneha Iyer",    date: "May 30", gradient: "from-pink-600/40 to-amber-600/30",   emoji: "🛡️", href: "/blog" },
+    { tag: "Update",    read: "3 min read", title: "What's New This Month: Voice Rooms, Emoji Effects & More",      excerpt: "A full roundup of the features we shipped in May plus a sneak peek at what's coming next.",        author: "Product Team",  date: "May 28", gradient: "from-emerald-600/40 to-teal-600/30", emoji: "🚀", href: "/blog" },
+  ],
+  blogPostsUseLive: false,
+
+  activities: [
+    { who: "Amit",  action: "joined",            target: "India Chat",       ago: "just now", emoji: "💬", tint: "from-blue-500/30 to-cyan-500/20",     accent: "text-cyan-200",    href: "/" },
+    { who: "Pooja", action: "earned",            target: "Gold Badge",       ago: "2m ago",   emoji: "🏆", tint: "from-amber-500/35 to-yellow-500/20",  accent: "text-amber-200",   href: "/achievements" },
+    { who: "Rahul", action: "posted",            target: "a new discussion", ago: "5m ago",   emoji: "📝", tint: "from-purple-500/30 to-pink-500/20",   accent: "text-pink-200",    href: "/discussions" },
+    { who: "Sneha", action: "started a DM with", target: "Aanya",            ago: "8m ago",   emoji: "💌", tint: "from-rose-500/30 to-fuchsia-500/20",  accent: "text-rose-200",    href: "/feed" },
+    { who: "Kabir", action: "won",               target: "a Ludo match",     ago: "12m ago",  emoji: "🎲", tint: "from-emerald-500/30 to-teal-500/20",  accent: "text-emerald-200", href: "/games" },
+    { who: "Meera", action: "hit a",             target: "7-day streak 🔥",  ago: "18m ago",  emoji: "🔥", tint: "from-orange-500/35 to-red-500/20",    accent: "text-orange-200",  href: "/achievements" },
+    { who: "Yash",  action: "created room",      target: "Late Night Vibes", ago: "25m ago",  emoji: "🌙", tint: "from-indigo-500/30 to-violet-500/20", accent: "text-indigo-200",  href: "/" },
+    { who: "Riya",  action: "leveled up to",     target: "Level 12",         ago: "32m ago",  emoji: "⭐", tint: "from-yellow-500/30 to-amber-500/20",  accent: "text-yellow-200",  href: "/leaderboard" },
+  ],
+  activitiesUseLive: false,
+
+
   referralHeadline: "Invite Friends & Earn",
   referralDescription: "Invite your friends and earn 100 Coins for each sign up!",
   referralCoinReward: 100,
