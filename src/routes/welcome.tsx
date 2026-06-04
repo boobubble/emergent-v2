@@ -810,7 +810,7 @@ function LandingPage() {
                   <div className="mt-2.5 text-sm font-bold">{m.name}</div>
                   <div className="text-[11px] text-white/70">{m.role}</div>
                   <div className="mt-2 flex items-center gap-1 text-base">
-                    {m.badges.map((b, i) => <span key={i}>{b}</span>)}
+                    {m.badges.split(/\s+/).filter(Boolean).map((b, i) => <span key={i}>{b}</span>)}
                   </div>
                   <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 text-[11px] font-bold text-amber-200">
                     <Star className="h-3 w-3" /> {m.xp.toLocaleString()} XP
