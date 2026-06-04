@@ -1,39 +1,47 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ACCENTS, useAccent } from "@/lib/use-accent";
 import { useThemeMode, type ThemeMode } from "@/lib/use-theme-mode";
-import { Sun, Moon, Monitor, Upload, Image as ImageIcon, Trash2, Loader2 } from "lucide-react";
+import { Sun, Moon, Monitor, Upload, Image as ImageIcon, Trash2, Loader2, Plus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminSetting } from "@/lib/use-admin-setting";
+import { useChat } from "@/lib/chat-store";
 import { toast } from "sonner";
+import type { BrandingMap, RoomBranding, BrandSizes } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/admin/appearance")({
   component: Appearance,
 });
 
-interface BrandingValues {
-  logo_light: string;
-  logo_dark: string;
-  favicon_light: string;
-  favicon_dark: string;
-  feed_light: string;
-  feed_dark: string;
-  chat_light: string;
-  chat_dark: string;
-}
-
-const BRAND_DEFAULTS: BrandingValues = {
+const BRAND_DEFAULTS: BrandingMap = {
   logo_light: "", logo_dark: "",
   favicon_light: "", favicon_dark: "",
   feed_light: "", feed_dark: "",
   chat_light: "", chat_dark: "",
+  sizes: { logo: 40, favicon: 32, feed: 36, chat: 32 },
+  rooms: {},
 };
 
-const SIGNED_TTL = 60 * 60 * 24 * 365 * 10; // 10 years
+const SIGNED_TTL = 60 * 60 * 24 * 365 * 10;
+
+const GLOBAL_GROUPS = [
+  { title: "Main Logo", description: "Shown across header and auth screens.", key: "logo" as const, hint: "SVG or PNG, up to 2MB" },
+  { title: "Favicon", description: "Browser tab icon (fallback when no room favicon).", key: "favicon" as const, hint: "32×32 PNG or ICO" },
+  { title: "Feed Page Logo", description: "Top bar of the Feed.", key: "feed" as const, hint: "Square PNG/SVG" },
+  { title: "Chatroom Logo", description: "Sidebar logo (fallback when room has none).", key: "chat" as const, hint: "Square PNG/SVG" },
+];
+
+const ROOM_GROUPS = [
+  { title: "Chat Logo", key: "chat" as const, hint: "Shown in this room's header" },
+  { title: "Favicon", key: "favicon" as const, hint: "Browser tab icon while in this room" },
+  { title: "Feed Banner", key: "feed" as const, hint: "Optional per-room feed branding" },
+];
 
 function Appearance() {
   const { accent, setAccent } = useAccent();
@@ -47,7 +55,7 @@ function Appearance() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHeader title="Appearance" description="Theme mode, accent color, and brand assets." />
+      <AdminPageHeader title="Appearance" description="Theme mode, accent color, brand assets, and per-room branding." />
 
       <Card>
         <CardContent className="space-y-4 p-5">
@@ -102,14 +110,33 @@ function Appearance() {
 }
 
 function BrandAssetsCard() {
-  const { values, patch, save, saving } = useAdminSetting<BrandingValues>("branding", BRAND_DEFAULTS);
+  const { values, patch, save, saving } = useAdminSetting<BrandingMap>("branding", BRAND_DEFAULTS);
+  const sizes: BrandSizes = values.sizes ?? {};
+  const rooms = values.rooms ?? {};
 
-  const groups: { title: string; description: string; key: keyof BrandingValues extends string ? "logo" | "favicon" | "feed" | "chat" : never; hint: string }[] = [
-    { title: "Main Logo", description: "Shown across header and auth screens.", key: "logo", hint: "SVG or PNG, up to 2MB" },
-    { title: "Favicon", description: "Shown in the browser tab.", key: "favicon", hint: "32×32 PNG or ICO" },
-    { title: "Feed Page Logo", description: "Shown in the top bar of the Feed.", key: "feed", hint: "Square PNG/SVG works best" },
-    { title: "Chatroom Logo", description: "Shown in the chat sidebar.", key: "chat", hint: "Square PNG/SVG works best" },
-  ];
+  const { state } = useChat();
+  const availableRooms = useMemo(
+    () => Object.values(state.rooms || {}).map((r) => ({ id: r.id, name: r.name })),
+    [state.rooms]
+  );
+  const [selectedRoom, setSelectedRoom] = useState<string>("");
+
+  function setSize(key: keyof BrandSizes, n: number) {
+    patch({ sizes: { ...sizes, [key]: n } });
+  }
+
+  function setRoom(roomId: string, partial: Partial<RoomBranding>) {
+    const next = { ...(rooms[roomId] ?? {}), ...partial };
+    patch({ rooms: { ...rooms, [roomId]: next } });
+  }
+
+  function removeRoom(roomId: string) {
+    const next = { ...rooms };
+    delete next[roomId];
+    patch({ rooms: next });
+  }
+
+  const configuredRoomIds = Object.keys(rooms);
 
   return (
     <Card>
@@ -121,11 +148,32 @@ function BrandAssetsCard() {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Upload separate variants for light and dark themes. The right variant is chosen automatically based on the active theme.
+          Upload light/dark variants for each section. The correct variant is chosen automatically based on the active theme. Sizes apply uniformly to every place that section renders.
         </p>
 
-        <div className="space-y-4">
-          {groups.map((g) => (
+        {/* Global section sizes */}
+        <div className="rounded-xl border border-border bg-background/40 p-4">
+          <div className="mb-3 text-sm font-semibold">Section sizes (px)</div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {GLOBAL_GROUPS.map((g) => (
+              <div key={g.key} className="space-y-1">
+                <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{g.title}</Label>
+                <Input
+                  type="number"
+                  min={16}
+                  max={256}
+                  value={sizes[g.key] ?? ""}
+                  placeholder="auto"
+                  onChange={(e) => setSize(g.key, Number(e.target.value) || 0)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Global brand assets */}
+        <div className="space-y-3">
+          {GLOBAL_GROUPS.map((g) => (
             <div key={g.key} className="rounded-xl border border-border bg-background/40 p-4">
               <div className="mb-3">
                 <div className="text-sm font-semibold">{g.title}</div>
@@ -134,29 +182,111 @@ function BrandAssetsCard() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <UploadSlot
                   theme="light"
+                  scope="global"
                   slotKey={g.key}
-                  value={values[`${g.key}_light` as keyof BrandingValues]}
+                  value={(values[`${g.key}_light` as keyof BrandingMap] as string) || ""}
                   hint={g.hint}
-                  onChange={(url) => patch({ [`${g.key}_light`]: url } as Partial<BrandingValues>)}
+                  onChange={(url) => patch({ [`${g.key}_light`]: url } as Partial<BrandingMap>)}
                 />
                 <UploadSlot
                   theme="dark"
+                  scope="global"
                   slotKey={g.key}
-                  value={values[`${g.key}_dark` as keyof BrandingValues]}
+                  value={(values[`${g.key}_dark` as keyof BrandingMap] as string) || ""}
                   hint={g.hint}
-                  onChange={(url) => patch({ [`${g.key}_dark`]: url } as Partial<BrandingValues>)}
+                  onChange={(url) => patch({ [`${g.key}_dark`]: url } as Partial<BrandingMap>)}
                 />
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Per-room branding */}
+        <div className="rounded-xl border border-border bg-background/40 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold">Per-room branding</div>
+              <div className="text-xs text-muted-foreground">Override logos and favicon per chat room (space).</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+                <SelectTrigger className="h-9 w-44 text-xs"><SelectValue placeholder="Select room…" /></SelectTrigger>
+                <SelectContent>
+                  {availableRooms.length === 0 && (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">No rooms loaded.</div>
+                  )}
+                  {availableRooms.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>#{r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!selectedRoom || !!rooms[selectedRoom]}
+                onClick={() => { if (selectedRoom && !rooms[selectedRoom]) setRoom(selectedRoom, {}); }}
+                className="gap-1"
+              >
+                <Plus className="h-3.5 w-3.5" />Add
+              </Button>
+            </div>
+          </div>
+
+          {configuredRoomIds.length === 0 ? (
+            <div className="rounded-md border border-dashed border-border bg-muted/20 p-4 text-center text-xs text-muted-foreground">
+              No room overrides yet. Pick a room above and click Add.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {configuredRoomIds.map((rid) => {
+                const meta = availableRooms.find((r) => r.id === rid);
+                return (
+                  <div key={rid} className="rounded-lg border border-border bg-background p-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold">#{meta?.name ?? rid}</div>
+                        <div className="truncate text-[10px] text-muted-foreground">{rid}</div>
+                      </div>
+                      <Button size="icon" variant="ghost" onClick={() => removeRoom(rid)} title="Remove room overrides">
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    {ROOM_GROUPS.map((rg) => (
+                      <div key={rg.key} className="mt-2">
+                        <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{rg.title}</div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <UploadSlot
+                            theme="light"
+                            scope={`room/${rid}`}
+                            slotKey={rg.key}
+                            value={rooms[rid]?.[`${rg.key}_light` as keyof RoomBranding] || ""}
+                            hint={rg.hint}
+                            onChange={(url) => setRoom(rid, { [`${rg.key}_light`]: url } as Partial<RoomBranding>)}
+                          />
+                          <UploadSlot
+                            theme="dark"
+                            scope={`room/${rid}`}
+                            slotKey={rg.key}
+                            value={rooms[rid]?.[`${rg.key}_dark` as keyof RoomBranding] || ""}
+                            hint={rg.hint}
+                            onChange={(url) => setRoom(rid, { [`${rg.key}_dark`]: url } as Partial<RoomBranding>)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function UploadSlot({ theme, slotKey, value, hint, onChange }:
-  { theme: "light" | "dark"; slotKey: string; value: string; hint: string; onChange: (url: string) => void }) {
+function UploadSlot({ theme, scope, slotKey, value, hint, onChange }:
+  { theme: "light" | "dark"; scope: string; slotKey: string; value: string; hint: string; onChange: (url: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
 
@@ -169,7 +299,8 @@ function UploadSlot({ theme, slotKey, value, hint, onChange }:
     setBusy(true);
     try {
       const ext = file.name.split(".").pop() || "png";
-      const path = `${slotKey}/${theme}-${Date.now()}.${ext}`;
+      const safeScope = scope.replace(/[^a-zA-Z0-9/_-]/g, "_");
+      const path = `${safeScope}/${slotKey}/${theme}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("brand-assets")
         .upload(path, file, { upsert: true, contentType: file.type });
