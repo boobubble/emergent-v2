@@ -43,14 +43,14 @@ For each item, toggle the site between light and dark themes and confirm:
 
 ## Automated guard (lint test)
 
-A Vitest check lives at `src/routes/__tests__/welcome-theme.test.tsx` that
-asserts the welcome page keeps the `hero-dark-preview` class on the hero
-preview and the connected badge. If you remove or rename that class, the
-test will fail and remind you to also update the `.welcome-light
-.hero-dark-preview` overrides in `src/styles.css`.
+A Vitest check lives at `src/__tests__/welcome-theme.test.tsx` that
+asserts the welcome page keeps the `hero-dark-preview` class on the
+hero preview and the connected badge, and that the matching
+`.welcome-light .hero-dark-preview` overrides still exist. If either
+is removed or renamed, the test fails.
 
 Run with:
 
 ```bash
-bunx vitest run src/routes/__tests__/welcome-theme.test.tsx
+bunx vitest run src/__tests__/welcome-theme.test.tsx
 ```
