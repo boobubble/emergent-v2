@@ -12,7 +12,8 @@ export interface RoomBranding {
   feed_dark?: string;
 }
 
-export interface BrandSizeValue { w?: number; h?: number }
+export type BrandFit = "contain" | "cover" | "fill";
+export interface BrandSizeValue { w?: number; h?: number; fit?: BrandFit }
 export interface BrandSizes {
   logo?: number | BrandSizeValue;
   favicon?: number | BrandSizeValue;
