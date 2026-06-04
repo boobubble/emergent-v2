@@ -853,13 +853,9 @@ function LandingPage() {
       {/* ───────── Community Blog ───────── */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <Card className="p-5 sm:p-6">
-          <SectionTitle icon="📰" title="Community Blog" suffix="(Stories & guides)" href="/pages" />
+          <SectionTitle icon="📰" title="Community Blog" suffix="(Stories & guides)" href="/blog" />
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            {[
-              { tag: "Guide", read: "5 min read", title: "How to Build a 100-Day Streak Without Burning Out", excerpt: "Practical habits and tools our top members use to stay consistent every single day.", author: "Editorial Team", date: "Jun 2", gradient: "from-purple-600/40 to-blue-600/30", emoji: "🔥" },
-              { tag: "Spotlight", read: "8 min read", title: "Meet the Mods: The People Behind Our Best Chatrooms", excerpt: "An inside look at the volunteers keeping our community safe, fun, and welcoming.", author: "Sneha Iyer", date: "May 30", gradient: "from-pink-600/40 to-amber-600/30", emoji: "🛡️" },
-              { tag: "Update", read: "3 min read", title: "What's New This Month: Voice Rooms, Emoji Effects & More", excerpt: "A full roundup of the features we shipped in May plus a sneak peek at what's coming next.", author: "Product Team", date: "May 28", gradient: "from-emerald-600/40 to-teal-600/30", emoji: "🚀" },
-            ].map((b, i) => (
+            {blogPosts.map((b, i) => (
               <article key={i} className="group overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.02] transition-all hover:-translate-y-0.5 hover:border-white/15">
                 <div className={`relative h-32 bg-gradient-to-br ${b.gradient}`}>
                   <div className="absolute inset-0 grid place-items-center text-5xl opacity-90">{b.emoji}</div>
