@@ -60,9 +60,10 @@ export function useBrandingMap(): BrandingMap {
   }
 }
 
-export function useBrandAsset(slot: BrandSlot, roomId?: string): string | undefined {
+export function useBrandAsset(slot: BrandSlot, roomId?: string, forceTheme?: "light" | "dark"): string | undefined {
   const b = useBrandingMap();
-  const theme = useResolvedTheme();
+  const resolved = useResolvedTheme();
+  const theme = forceTheme ?? resolved;
   if (roomId && b.rooms?.[roomId]) {
     const r = b.rooms[roomId];
     const rk = `${slot}_${theme}` as keyof RoomBranding;
@@ -73,9 +74,9 @@ export function useBrandAsset(slot: BrandSlot, roomId?: string): string | undefi
   }
   const key = `${slot}_${theme}` as keyof BrandingMap;
   return (b[key] as string | undefined)
-    || (b[`${slot}_light` as keyof BrandingMap] as string | undefined)
-    || (b[`${slot}_dark` as keyof BrandingMap] as string | undefined);
+    || (b[`${slot}_${theme === "dark" ? "light" : "dark"}` as keyof BrandingMap] as string | undefined);
 }
+
 
 export function useBrandSize(slot: BrandSlot): BrandSizeValue | undefined {
   const b = useBrandingMap();
@@ -91,10 +92,12 @@ interface Props {
   alt?: string;
   className?: string;
   fallback?: React.ReactNode;
+  forceTheme?: "light" | "dark";
 }
 
-export function BrandMark({ slot, roomId, alt = "Logo", className, fallback }: Props) {
-  const url = useBrandAsset(slot, roomId);
+export function BrandMark({ slot, roomId, alt = "Logo", className, fallback, forceTheme }: Props) {
+  const url = useBrandAsset(slot, roomId, forceTheme);
+
   const size = useBrandSize(slot);
   const fit: BrandFit = size?.fit ?? "contain";
   const style: React.CSSProperties | undefined = size
