@@ -717,6 +717,187 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* ───────── Trending Posts ───────── */}
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+        <Card className="p-5 sm:p-6">
+          <SectionTitle icon="🔥" title="Trending Posts" suffix="(Hot right now)" href="/feed" />
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { user: "Priya Kapoor", ago: "12 min ago", text: "Just unlocked the Legendary badge! 🏆 Took me 3 months of daily grind.", likes: 842, comments: 156, tag: "#achievement" },
+              { user: "Rohan Mehta", ago: "34 min ago", text: "Hot take: voice rooms > text chat. Change my mind 🎙️", likes: 612, comments: 289, tag: "#discussion" },
+              { user: "Sneha Iyer", ago: "1 hr ago", text: "Made some new friends from the Mumbai chat today. This community is wholesome ❤️", likes: 524, comments: 92, tag: "#community" },
+              { user: "Arjun Das", ago: "2 hr ago", text: "Beat the Ludo champion 5 times in a row 🎲 who's next?", likes: 438, comments: 76, tag: "#gaming" },
+              { user: "Neha Reddy", ago: "3 hr ago", text: "Daily streak: 30 days 🔥 The grind is real!", likes: 389, comments: 54, tag: "#streak" },
+              { user: "Vikram Joshi", ago: "4 hr ago", text: "Anyone else loving the new emoji effects? 🎉✨", likes: 312, comments: 48, tag: "#feature" },
+            ].map((p, i) => (
+              <article key={i} className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 transition-all hover:-translate-y-0.5 hover:border-purple-400/30">
+                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-0 blur-2xl transition-opacity group-hover:opacity-60" style={{ background: "radial-gradient(closest-side,#a855f7,transparent)" }} />
+                <header className="relative flex items-center gap-2.5">
+                  <PillAvatar name={p.user} size={36} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-bold">{p.user}</div>
+                    <div className="text-[11px] text-white/50">{p.ago}</div>
+                  </div>
+                  <Flame className="h-4 w-4 text-orange-400" />
+                </header>
+                <p className="relative mt-2.5 line-clamp-3 text-[13px] leading-snug text-white/85">{p.text}</p>
+                <footer className="relative mt-3 flex items-center justify-between text-[11px] text-white/60">
+                  <span className="rounded-full bg-purple-500/15 px-2 py-0.5 text-[10px] font-bold text-purple-200">{p.tag}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex items-center gap-1"><Heart className="h-3.5 w-3.5 text-pink-400" /> {p.likes}</span>
+                    <span className="inline-flex items-center gap-1"><MessageSquare className="h-3.5 w-3.5" /> {p.comments}</span>
+                  </div>
+                </footer>
+              </article>
+            ))}
+          </div>
+        </Card>
+      </section>
+
+      {/* ───────── Latest Public Discussions ───────── */}
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+        <Card className="p-5 sm:p-6">
+          <SectionTitle icon="💬" title="Latest Public Discussions" href="/" />
+          <div className="mt-4 divide-y divide-white/[0.05]">
+            {[
+              { topic: "Best strategies for the new Fish Game?", room: "Gaming Lounge", author: "Karan", replies: 47, last: "2 min ago", hot: true },
+              { topic: "Weekend Mumbai meetup — who's in?", room: "Mumbai Chat", author: "Aisha", replies: 89, last: "18 min ago", hot: true },
+              { topic: "Tips for keeping a 100-day streak alive 🔥", room: "General", author: "Devansh", replies: 32, last: "1 hr ago" },
+              { topic: "Drop your favorite playlist below 🎵", room: "Music Room", author: "Tanya", replies: 124, last: "2 hr ago" },
+              { topic: "Coding bootcamp — share your roadmap!", room: "College Chat", author: "Riya", replies: 56, last: "3 hr ago" },
+            ].map((d, i) => (
+              <Link key={i} to="/" className="flex items-center gap-3 py-3 transition-colors hover:bg-white/[0.02] sm:gap-4">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-base ring-1 ring-white/10">
+                  💬
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-semibold text-white/90">{d.topic}</p>
+                    {d.hot && <span className="hidden shrink-0 rounded-full bg-orange-500/20 px-1.5 py-0.5 text-[9px] font-bold text-orange-300 sm:inline-flex">HOT</span>}
+                  </div>
+                  <div className="mt-0.5 truncate text-[11px] text-white/55">
+                    in <span className="text-purple-300">{d.room}</span> · by {d.author} · last reply {d.last}
+                  </div>
+                </div>
+                <div className="hidden shrink-0 items-center gap-1 text-[11px] text-white/60 sm:flex">
+                  <MessageCircle className="h-3.5 w-3.5" /> {d.replies}
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
+              </Link>
+            ))}
+          </div>
+        </Card>
+      </section>
+
+      {/* ───────── Featured Members ───────── */}
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+        <Card className="p-5 sm:p-6">
+          <SectionTitle icon="⭐" title="Featured Members" suffix="(Stars of the week)" href="/leaderboard" />
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { name: "Aanya Sharma", role: "Top Creator", xp: 4820, badges: ["👑", "🔥", "🏆"], gradient: "from-purple-500/30 to-pink-500/20" },
+              { name: "Kabir Singh", role: "Mod Hero", xp: 4210, badges: ["🛡️", "⭐", "💎"], gradient: "from-blue-500/30 to-cyan-500/20" },
+              { name: "Meera Nair", role: "Game Champion", xp: 3890, badges: ["🎮", "🏆", "🔥"], gradient: "from-amber-500/30 to-orange-500/20" },
+              { name: "Yash Patel", role: "Streak Master", xp: 3650, badges: ["🔥", "⚡", "🌟"], gradient: "from-emerald-500/30 to-teal-500/20" },
+            ].map((m) => (
+              <div key={m.name} className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${m.gradient} p-4 ring-1 ring-white/10`}>
+                <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-2xl" />
+                <div className="relative flex flex-col items-center text-center">
+                  <div className="relative">
+                    <PillAvatar name={m.name} size={64} />
+                    <Crown className="absolute -top-1 -right-1 h-5 w-5 text-amber-300 drop-shadow" />
+                  </div>
+                  <div className="mt-2.5 text-sm font-bold">{m.name}</div>
+                  <div className="text-[11px] text-white/70">{m.role}</div>
+                  <div className="mt-2 flex items-center gap-1 text-base">
+                    {m.badges.map((b, i) => <span key={i}>{b}</span>)}
+                  </div>
+                  <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 text-[11px] font-bold text-amber-200">
+                    <Star className="h-3 w-3" /> {m.xp.toLocaleString()} XP
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </section>
+
+      {/* ───────── Recent Confessions ───────── */}
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+        <Card className="p-5 sm:p-6">
+          <SectionTitle icon="🤫" title="Recent Confessions" suffix="(Anonymous)" href="/confessions" />
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { alias: "Panda #23", emoji: "🐼", ago: "12 min ago", text: "I pretend to understand crypto in every conversation 😅", reacts: 142 },
+              { alias: "Fox #71",   emoji: "🦊", ago: "45 min ago", text: "Been crushing on someone in the Mumbai chat for weeks 💕", reacts: 287 },
+              { alias: "Owl #08",   emoji: "🦉", ago: "1 hr ago",  text: "I genuinely think pineapple belongs on pizza. Fight me 🍕", reacts: 198 },
+              { alias: "Cat #44",   emoji: "🐱", ago: "2 hr ago",  text: "I joined for the games and stayed for the friends 🥹", reacts: 412 },
+              { alias: "Bear #19",  emoji: "🐻", ago: "3 hr ago",  text: "My streak broke at 89 days and I cried for an hour 😭", reacts: 356 },
+              { alias: "Wolf #62",  emoji: "🐺", ago: "5 hr ago",  text: "Lurker for 6 months. Finally posting. Hi everyone 👋", reacts: 521 },
+            ].map((c, i) => (
+              <div key={i} className="relative overflow-hidden rounded-xl border border-white/[0.07] bg-gradient-to-br from-pink-500/[0.08] via-purple-500/[0.05] to-transparent p-4">
+                <div className="absolute right-3 top-3 text-[10px] font-bold uppercase tracking-wider text-pink-300/70">Anon</div>
+                <header className="flex items-center gap-2.5">
+                  <span className="grid h-10 w-10 place-items-center rounded-full text-xl ring-1 ring-white/15" style={{ background: "linear-gradient(135deg,#ec4899,#8b5cf6)" }}>
+                    {c.emoji}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-bold">{c.alias}</div>
+                    <div className="text-[11px] text-white/50">{c.ago}</div>
+                  </div>
+                </header>
+                <p className="mt-3 text-[13px] leading-snug text-white/85">"{c.text}"</p>
+                <footer className="mt-3 flex items-center justify-between border-t border-white/[0.06] pt-2.5 text-[11px] text-white/60">
+                  <span className="inline-flex items-center gap-1"><Heart className="h-3.5 w-3.5 text-pink-400" /> {c.reacts} reactions</span>
+                  <Link to="/confessions" className="font-bold text-pink-300 hover:text-pink-200">Read →</Link>
+                </footer>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </section>
+
+      {/* ───────── Community Blog ───────── */}
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+        <Card className="p-5 sm:p-6">
+          <SectionTitle icon="📰" title="Community Blog" suffix="(Stories & guides)" href="/pages" />
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            {[
+              { tag: "Guide", read: "5 min read", title: "How to Build a 100-Day Streak Without Burning Out", excerpt: "Practical habits and tools our top members use to stay consistent every single day.", author: "Editorial Team", date: "Jun 2", gradient: "from-purple-600/40 to-blue-600/30", emoji: "🔥" },
+              { tag: "Spotlight", read: "8 min read", title: "Meet the Mods: The People Behind Our Best Chatrooms", excerpt: "An inside look at the volunteers keeping our community safe, fun, and welcoming.", author: "Sneha Iyer", date: "May 30", gradient: "from-pink-600/40 to-amber-600/30", emoji: "🛡️" },
+              { tag: "Update", read: "3 min read", title: "What's New This Month: Voice Rooms, Emoji Effects & More", excerpt: "A full roundup of the features we shipped in May plus a sneak peek at what's coming next.", author: "Product Team", date: "May 28", gradient: "from-emerald-600/40 to-teal-600/30", emoji: "🚀" },
+            ].map((b, i) => (
+              <article key={i} className="group overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.02] transition-all hover:-translate-y-0.5 hover:border-white/15">
+                <div className={`relative h-32 bg-gradient-to-br ${b.gradient}`}>
+                  <div className="absolute inset-0 grid place-items-center text-5xl opacity-90">{b.emoji}</div>
+                  <div className="absolute left-3 top-3 rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur">
+                    {b.tag}
+                  </div>
+                  <div className="absolute right-3 top-3 rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-semibold text-white/85 backdrop-blur">
+                    {b.read}
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="text-base font-black leading-snug text-white group-hover:text-purple-200">{b.title}</h3>
+                  <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-white/65">{b.excerpt}</p>
+                  <footer className="mt-3 flex items-center justify-between border-t border-white/[0.06] pt-3 text-[11px] text-white/55">
+                    <span>By <span className="text-white/80">{b.author}</span> · {b.date}</span>
+                    <Link to="/pages" className="inline-flex items-center gap-1 font-bold text-purple-300 hover:text-purple-200">
+                      Read <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </footer>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="mt-5 flex justify-center">
+            <Link to="/pages" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-5 py-2.5 text-sm font-bold text-white/85 hover:bg-white/[0.07]">
+              Visit Blog <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </Card>
+      </section>
+
       {/* ───────── CTA double card ───────── */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
