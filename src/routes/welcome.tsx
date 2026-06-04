@@ -740,14 +740,7 @@ function LandingPage() {
         <Card className="p-5 sm:p-6">
           <SectionTitle icon="🔥" title="Trending Posts" suffix="(Hot right now)" href="/feed" />
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { user: "Priya Kapoor", ago: "12 min ago", text: "Just unlocked the Legendary badge! 🏆 Took me 3 months of daily grind.", likes: 842, comments: 156, tag: "#achievement" },
-              { user: "Rohan Mehta", ago: "34 min ago", text: "Hot take: voice rooms > text chat. Change my mind 🎙️", likes: 612, comments: 289, tag: "#discussion" },
-              { user: "Sneha Iyer", ago: "1 hr ago", text: "Made some new friends from the Mumbai chat today. This community is wholesome ❤️", likes: 524, comments: 92, tag: "#community" },
-              { user: "Arjun Das", ago: "2 hr ago", text: "Beat the Ludo champion 5 times in a row 🎲 who's next?", likes: 438, comments: 76, tag: "#gaming" },
-              { user: "Neha Reddy", ago: "3 hr ago", text: "Daily streak: 30 days 🔥 The grind is real!", likes: 389, comments: 54, tag: "#streak" },
-              { user: "Vikram Joshi", ago: "4 hr ago", text: "Anyone else loving the new emoji effects? 🎉✨", likes: 312, comments: 48, tag: "#feature" },
-            ].map((p, i) => (
+            {trendingPosts.map((p, i) => (
               <article key={i} className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 transition-all hover:-translate-y-0.5 hover:border-purple-400/30">
                 <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-0 blur-2xl transition-opacity group-hover:opacity-60" style={{ background: "radial-gradient(closest-side,#a855f7,transparent)" }} />
                 <header className="relative flex items-center gap-2.5">
