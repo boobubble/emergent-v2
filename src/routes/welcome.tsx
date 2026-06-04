@@ -799,12 +799,7 @@ function LandingPage() {
         <Card className="p-5 sm:p-6">
           <SectionTitle icon="⭐" title="Featured Members" suffix="(Stars of the week)" href="/leaderboard" />
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { name: "Aanya Sharma", role: "Top Creator", xp: 4820, badges: ["👑", "🔥", "🏆"], gradient: "from-purple-500/30 to-pink-500/20" },
-              { name: "Kabir Singh", role: "Mod Hero", xp: 4210, badges: ["🛡️", "⭐", "💎"], gradient: "from-blue-500/30 to-cyan-500/20" },
-              { name: "Meera Nair", role: "Game Champion", xp: 3890, badges: ["🎮", "🏆", "🔥"], gradient: "from-amber-500/30 to-orange-500/20" },
-              { name: "Yash Patel", role: "Streak Master", xp: 3650, badges: ["🔥", "⚡", "🌟"], gradient: "from-emerald-500/30 to-teal-500/20" },
-            ].map((m) => (
+            {featuredMembers.map((m) => (
               <div key={m.name} className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${m.gradient} p-4 ring-1 ring-white/10`}>
                 <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-2xl" />
                 <div className="relative flex flex-col items-center text-center">
