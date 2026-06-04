@@ -205,7 +205,14 @@ function LandingPage() {
           -webkit-text-fill-color: #0b0b1a !important;
           color: #0b0b1a !important;
         }
-        .welcome-light .stat-divider { background-color: rgba(11,11,26,0.12) !important; }
+        .welcome-light .stat-tile {
+          background: linear-gradient(135deg, color-mix(in oklab, var(--stat-tint) 30%, #ffffff), color-mix(in oklab, var(--stat-tint) 14%, #ffffff)) !important;
+          box-shadow: 0 8px 20px -10px color-mix(in oklab, var(--stat-tint) 65%, transparent), inset 0 1px 0 rgba(255,255,255,0.6) !important;
+          --tw-ring-color: color-mix(in oklab, var(--stat-tint) 35%, transparent) !important;
+        }
+        .welcome-light .stat-icon { color: color-mix(in oklab, var(--stat-tint) 75%, #0b0b1a) !important; }
+        .welcome-light .stat-cell::after { background-color: rgba(11,11,26,0.14) !important; }
+        .welcome-light .stat-cell:hover { background-color: rgba(11,11,26,0.04) !important; }
         @keyframes welcome-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .animate-bounce-slow { animation: welcome-float 4s ease-in-out infinite; }
       `}</style>
