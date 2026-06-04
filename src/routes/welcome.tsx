@@ -453,18 +453,30 @@ function LandingPage() {
       {/* ───────── Stats strip ───────── */}
       {cfg.showStats && (
         <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-          <Card className="grid grid-cols-2 gap-px overflow-hidden bg-white/[0.04] sm:grid-cols-3 lg:grid-cols-6">
-            <StatCell icon={Users}        color="text-purple-300" label="Members"          value={fmt(stats.members)} />
-            <StatCell icon={Activity}     color="text-emerald-300" label="Online Now"      value={fmt(stats.online)} pulse />
-            <StatCell icon={MessageCircle} color="text-blue-300"  label="Active Chatrooms" value={fmt(stats.activeRooms)} />
-            {cfg.showMessageCount && (
-              <StatCell icon={MessageSquare} color="text-cyan-300" label="Messages Sent" value={fmt(stats.messagesSent)} />
-            )}
-            <StatCell icon={Newspaper} color="text-pink-300" label="Feed Posts" value={fmt(stats.feedPosts)} />
-            {cfg.showGameCount && (
-              <StatCell icon={Gamepad2} color="text-amber-300" label="Games Played" value={fmt(stats.gamesPlayed)} />
-            )}
-          </Card>
+          <div
+            className="relative overflow-hidden rounded-3xl border border-white/10 p-2 sm:p-3 backdrop-blur-2xl shadow-[0_30px_80px_-30px_rgba(139,92,246,0.45)]"
+            style={{
+              background:
+                "linear-gradient(135deg,rgba(139,92,246,0.10),rgba(59,130,246,0.06) 50%,rgba(236,72,153,0.08))",
+            }}
+          >
+            <div className="pointer-events-none absolute -left-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full opacity-40 blur-3xl"
+                 style={{ background: "radial-gradient(closest-side,#8b5cf6,transparent 70%)" }} />
+            <div className="pointer-events-none absolute -right-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full opacity-40 blur-3xl"
+                 style={{ background: "radial-gradient(closest-side,#3b82f6,transparent 70%)" }} />
+            <div className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+              <StatCell icon={Users}         tint="#a78bfa" label="Members"          value={fmt(stats.members)} />
+              <StatCell icon={Activity}      tint="#34d399" label="Online Now"       value={fmt(stats.online)} pulse />
+              <StatCell icon={MessageCircle} tint="#60a5fa" label="Active Chatrooms" value={fmt(stats.activeRooms)} />
+              {cfg.showMessageCount && (
+                <StatCell icon={MessageSquare} tint="#22d3ee" label="Messages Sent" value={fmt(stats.messagesSent)} />
+              )}
+              <StatCell icon={Newspaper} tint="#f472b6" label="Feed Posts" value={fmt(stats.feedPosts)} />
+              {cfg.showGameCount && (
+                <StatCell icon={Gamepad2} tint="#fbbf24" label="Games Played" value={fmt(stats.gamesPlayed)} />
+              )}
+            </div>
+          </div>
         </section>
       )}
 
