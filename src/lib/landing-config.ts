@@ -84,6 +84,28 @@ export interface LandingDemoStats {
   gamesPlayed: number;
 }
 
+export interface LandingTrendingPost {
+  user: string; ago: string; text: string; likes: number; comments: number; tag: string;
+}
+export interface LandingDiscussion {
+  topic: string; room: string; author: string; replies: number; last: string; hot?: boolean;
+}
+export interface LandingFeaturedMember {
+  name: string; role: string; xp: number; badges: string; // space-separated emojis
+  gradient?: string;
+}
+export interface LandingConfessionItem {
+  alias: string; emoji: string; ago: string; text: string; reacts: number;
+}
+export interface LandingBlogPost {
+  title: string; excerpt: string; tag: string; read: string; author: string; date: string;
+  emoji: string; gradient?: string; href?: string;
+}
+export interface LandingActivity {
+  who: string; action: string; target: string; ago: string; emoji: string;
+  tint?: string; accent?: string; href?: string;
+}
+
 export interface LandingConfig {
   enabled: boolean;
 
