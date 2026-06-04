@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminSetting } from "@/lib/use-admin-setting";
 import { useChat } from "@/lib/chat-store";
 import { toast } from "sonner";
-import type { BrandingMap, RoomBranding, BrandSizes } from "@/components/BrandMark";
+import type { BrandingMap, RoomBranding, BrandSizes, BrandFit } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/admin/appearance")({
   component: Appearance,
