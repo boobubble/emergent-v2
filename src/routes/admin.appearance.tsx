@@ -126,8 +126,15 @@ function BrandAssetsCard() {
   );
   const [selectedRoom, setSelectedRoom] = useState<string>("");
 
-  function setSize(key: keyof BrandSizes, n: number) {
-    patch({ sizes: { ...sizes, [key]: n } });
+  function getWH(key: keyof BrandSizes): { w?: number; h?: number } {
+    const v = sizes[key];
+    if (v == null) return {};
+    if (typeof v === "number") return { w: v, h: v };
+    return v;
+  }
+  function setWH(key: keyof BrandSizes, axis: "w" | "h", n: number) {
+    const cur = getWH(key);
+    patch({ sizes: { ...sizes, [key]: { ...cur, [axis]: n || undefined } } });
   }
 
   function setRoom(roomId: string, partial: Partial<RoomBranding>) {
