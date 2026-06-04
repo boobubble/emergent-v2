@@ -24,7 +24,12 @@ const BRAND_DEFAULTS: BrandingMap = {
   favicon_light: "", favicon_dark: "",
   feed_light: "", feed_dark: "",
   chat_light: "", chat_dark: "",
-  sizes: { logo: 40, favicon: 32, feed: 36, chat: 32 },
+  sizes: {
+    logo: { w: 160, h: 48 },
+    favicon: { w: 32, h: 32 },
+    feed: { w: 140, h: 40 },
+    chat: { w: 120, h: 36 },
+  },
   rooms: {},
 };
 
@@ -121,8 +126,15 @@ function BrandAssetsCard() {
   );
   const [selectedRoom, setSelectedRoom] = useState<string>("");
 
-  function setSize(key: keyof BrandSizes, n: number) {
-    patch({ sizes: { ...sizes, [key]: n } });
+  function getWH(key: keyof BrandSizes): { w?: number; h?: number } {
+    const v = sizes[key];
+    if (v == null) return {};
+    if (typeof v === "number") return { w: v, h: v };
+    return v;
+  }
+  function setWH(key: keyof BrandSizes, axis: "w" | "h", n: number) {
+    const cur = getWH(key);
+    patch({ sizes: { ...sizes, [key]: { ...cur, [axis]: n || undefined } } });
   }
 
   function setRoom(roomId: string, partial: Partial<RoomBranding>) {
@@ -153,21 +165,32 @@ function BrandAssetsCard() {
 
         {/* Global section sizes */}
         <div className="rounded-xl border border-border bg-background/40 p-4">
-          <div className="mb-3 text-sm font-semibold">Section sizes (px)</div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {GLOBAL_GROUPS.map((g) => (
-              <div key={g.key} className="space-y-1">
-                <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{g.title}</Label>
-                <Input
-                  type="number"
-                  min={16}
-                  max={256}
-                  value={sizes[g.key] ?? ""}
-                  placeholder="auto"
-                  onChange={(e) => setSize(g.key, Number(e.target.value) || 0)}
-                />
-              </div>
-            ))}
+          <div className="mb-1 text-sm font-semibold">Section sizes (px)</div>
+          <div className="mb-3 text-xs text-muted-foreground">Set width × height for each slot. Leave width blank to keep the natural aspect ratio.</div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {GLOBAL_GROUPS.map((g) => {
+              const wh = getWH(g.key);
+              return (
+                <div key={g.key} className="space-y-1.5">
+                  <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{g.title}</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number" min={8} max={1024}
+                      value={wh.w ?? ""}
+                      placeholder="W"
+                      onChange={(e) => setWH(g.key, "w", Number(e.target.value))}
+                    />
+                    <span className="text-xs text-muted-foreground">×</span>
+                    <Input
+                      type="number" min={8} max={1024}
+                      value={wh.h ?? ""}
+                      placeholder="H"
+                      onChange={(e) => setWH(g.key, "h", Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
