@@ -50,9 +50,15 @@ export function ChatHeader() {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/80 px-6 pl-14 backdrop-blur-md">
       <div className="flex items-center gap-3">
-        <div className="grid h-8 w-8 place-items-center rounded-lg bg-white/5 font-bold text-primary">
-          #
-        </div>
+        <BrandMark
+          slot="chat"
+          roomId={id}
+          alt="Room logo"
+          className="h-8 w-8 rounded-lg object-contain"
+          fallback={
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-white/5 font-bold text-primary">#</div>
+          }
+        />
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="truncate font-bold text-foreground">{channelLabel(id)}</span>
