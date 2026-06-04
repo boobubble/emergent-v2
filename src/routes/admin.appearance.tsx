@@ -175,24 +175,32 @@ function BrandAssetsCard() {
           <div className="mb-3 text-xs text-muted-foreground">Set width × height for each slot. Leave width blank to keep the natural aspect ratio.</div>
           <div className="grid gap-3 sm:grid-cols-2">
             {GLOBAL_GROUPS.map((g) => {
-              const wh = getWH(g.key);
+              const cfg = getCfg(g.key);
               return (
                 <div key={g.key} className="space-y-1.5">
                   <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{g.title}</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number" min={8} max={1024}
-                      value={wh.w ?? ""}
+                      value={cfg.w ?? ""}
                       placeholder="W"
                       onChange={(e) => setWH(g.key, "w", Number(e.target.value))}
                     />
                     <span className="text-xs text-muted-foreground">×</span>
                     <Input
                       type="number" min={8} max={1024}
-                      value={wh.h ?? ""}
+                      value={cfg.h ?? ""}
                       placeholder="H"
                       onChange={(e) => setWH(g.key, "h", Number(e.target.value))}
                     />
+                    <Select value={cfg.fit ?? "contain"} onValueChange={(v) => setFit(g.key, v as BrandFit)}>
+                      <SelectTrigger className="h-9 w-[110px] text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="contain">Contain</SelectItem>
+                        <SelectItem value="cover">Cover (crop)</SelectItem>
+                        <SelectItem value="fill">Stretch</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               );
