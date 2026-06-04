@@ -16,20 +16,26 @@ function setFavicon(href: string) {
 }
 
 export function FaviconSwitcher() {
-  const { dmUnreadCount } = useChat();
+  const { dmUnreadCount, state } = useChat();
   const branding = useBrandingMap();
+  const activeId = state.activeChannel;
 
   useEffect(() => {
     const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-    const themedFavicon = (isDark ? branding.favicon_dark : branding.favicon_light)
+    const roomFav = activeId && branding.rooms?.[activeId]
+      ? (isDark ? branding.rooms[activeId].favicon_dark : branding.rooms[activeId].favicon_light)
+        || branding.rooms[activeId].favicon_light
+        || branding.rooms[activeId].favicon_dark
+      : undefined;
+    const globalFav = (isDark ? branding.favicon_dark : branding.favicon_light)
       || branding.favicon_light
       || branding.favicon_dark;
     if (dmUnreadCount > 0) {
       setFavicon(DEFAULT_RED);
     } else {
-      setFavicon(themedFavicon || DEFAULT_BLUE);
+      setFavicon(roomFav || globalFav || DEFAULT_BLUE);
     }
-  }, [dmUnreadCount, branding.favicon_light, branding.favicon_dark]);
+  }, [dmUnreadCount, activeId, branding]);
 
   return null;
 }
