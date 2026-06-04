@@ -246,11 +246,19 @@ function LandingPage() {
       <header className="sticky top-0 z-40 border-b border-white/5 bg-[#070713]/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <Link to="/welcome" className="flex items-center gap-2.5 shrink-0">
-            <span className="grid h-9 w-9 place-items-center rounded-xl text-base font-black text-white shadow-lg"
-                  style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 8px 24px -8px rgba(139,92,246,0.6)" }}>
-              💬
-            </span>
-            <span className="text-lg font-extrabold tracking-tight">{cfg.copyrightOwner}</span>
+            <BrandMark
+              slot="logo"
+              alt={cfg.copyrightOwner}
+              fallback={
+                <>
+                  <span className="grid h-9 w-9 place-items-center rounded-xl text-base font-black text-white shadow-lg"
+                        style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 8px 24px -8px rgba(139,92,246,0.6)" }}>
+                    💬
+                  </span>
+                  <span className="text-lg font-extrabold tracking-tight">{cfg.copyrightOwner}</span>
+                </>
+              }
+            />
           </Link>
 
           <nav className="ml-6 hidden items-center gap-1 lg:flex">
