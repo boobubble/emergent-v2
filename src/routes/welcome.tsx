@@ -232,6 +232,21 @@ function LandingPage() {
         .welcome-light .stat-icon { color: color-mix(in oklab, var(--stat-tint) 75%, #0b0b1a) !important; }
         .welcome-light .stat-cell::after { background-color: rgba(11,11,26,0.14) !important; }
         .welcome-light .stat-cell:hover { background-color: rgba(11,11,26,0.04) !important; }
+        .welcome-light .hero-dark-preview .text-white { color: #ffffff !important; }
+        .welcome-light .hero-dark-preview .text-white\/90 { color: rgba(255,255,255,0.9) !important; }
+        .welcome-light .hero-dark-preview .text-white\/85 { color: rgba(255,255,255,0.86) !important; }
+        .welcome-light .hero-dark-preview .text-white\/80 { color: rgba(255,255,255,0.82) !important; }
+        .welcome-light .hero-dark-preview .text-white\/70 { color: rgba(255,255,255,0.72) !important; }
+        .welcome-light .hero-dark-preview .text-white\/60 { color: rgba(255,255,255,0.62) !important; }
+        .welcome-light .hero-dark-preview .text-white\/55 { color: rgba(255,255,255,0.56) !important; }
+        .welcome-light .hero-dark-preview .text-white\/50 { color: rgba(255,255,255,0.52) !important; }
+        .welcome-light .hero-dark-preview .text-white\/45 { color: rgba(255,255,255,0.46) !important; }
+        .welcome-light .hero-dark-preview .text-white\/40 { color: rgba(255,255,255,0.42) !important; }
+        .welcome-light .hero-dark-preview .text-white\/35 { color: rgba(255,255,255,0.38) !important; }
+        .welcome-light .hero-dark-preview .border-white\/10 { border-color: rgba(255,255,255,0.1) !important; }
+        .welcome-light .hero-dark-preview .border-white\/15 { border-color: rgba(255,255,255,0.15) !important; }
+        .welcome-light .hero-dark-preview .bg-white\/15 { background-color: rgba(255,255,255,0.15) !important; }
+        .welcome-light .hero-dark-preview .bg-white\/\[0\.04\] { background-color: rgba(255,255,255,0.04) !important; }
         @keyframes welcome-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .animate-bounce-slow { animation: welcome-float 4s ease-in-out infinite; }
       `}</style>
@@ -369,7 +384,7 @@ function LandingPage() {
             </div>
 
             {/* Desktop chatroom window */}
-            <div className="absolute right-0 top-4 w-[480px] rotate-[-2deg] rounded-2xl border border-white/15 bg-[#0e0e22]/90 shadow-[0_30px_80px_-20px_rgba(139,92,246,0.55)] backdrop-blur-xl">
+            <div className="hero-dark-preview absolute right-0 top-4 w-[480px] rotate-[-2deg] rounded-2xl border border-white/15 bg-[#0e0e22]/90 shadow-[0_30px_80px_-20px_rgba(139,92,246,0.55)] backdrop-blur-xl">
               {/* Title bar */}
               <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2.5">
                 <span className="grid h-6 w-6 place-items-center rounded-md text-[11px] font-black text-white"
@@ -480,7 +495,7 @@ function LandingPage() {
               💬
             </div>
             {/* Floating online users chip */}
-            <div className="absolute right-4 bottom-8 rounded-2xl border border-white/15 bg-[#0e0e22]/90 px-3 py-2 backdrop-blur-xl shadow-xl">
+            <div className="hero-dark-preview absolute right-4 bottom-8 rounded-2xl border border-white/15 bg-[#0e0e22]/90 px-3 py-2 backdrop-blur-xl shadow-xl">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                 <span className="text-[10px] font-bold text-white">Connected</span>
