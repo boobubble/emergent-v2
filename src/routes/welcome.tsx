@@ -850,6 +850,37 @@ function LandingPage() {
         </Card>
       </section>
 
+      {/* ───────── Latest Community Activity ───────── */}
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+        <Card className="p-5 sm:p-6">
+          <SectionTitle icon="⚡" title="Latest Community Activity" suffix="(Live feed)" href="/feed" />
+          <ul className="mt-4 divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-white/[0.02]">
+            {[
+              { who: "Amit",   action: "joined",        target: "India Chat",          ago: "just now",  emoji: "💬", tint: "from-blue-500/30 to-cyan-500/20",     accent: "text-cyan-200",    href: "/" },
+              { who: "Pooja",  action: "earned",        target: "Gold Badge",          ago: "2m ago",    emoji: "🏆", tint: "from-amber-500/35 to-yellow-500/20",  accent: "text-amber-200",   href: "/achievements" },
+              { who: "Rahul",  action: "posted",        target: "a new discussion",    ago: "5m ago",    emoji: "📝", tint: "from-purple-500/30 to-pink-500/20",   accent: "text-pink-200",    href: "/feed" },
+              { who: "Sneha",  action: "started a DM with", target: "Aanya",           ago: "8m ago",    emoji: "💌", tint: "from-rose-500/30 to-fuchsia-500/20",  accent: "text-rose-200",    href: "/feed" },
+              { who: "Kabir",  action: "won",           target: "a Ludo match",        ago: "12m ago",   emoji: "🎲", tint: "from-emerald-500/30 to-teal-500/20",  accent: "text-emerald-200", href: "/games" },
+              { who: "Meera",  action: "hit a",         target: "7-day streak 🔥",     ago: "18m ago",   emoji: "🔥", tint: "from-orange-500/35 to-red-500/20",    accent: "text-orange-200",  href: "/achievements" },
+              { who: "Yash",   action: "created room",  target: "Late Night Vibes",    ago: "25m ago",   emoji: "🌙", tint: "from-indigo-500/30 to-violet-500/20", accent: "text-indigo-200",  href: "/" },
+              { who: "Riya",   action: "leveled up to", target: "Level 12",            ago: "32m ago",   emoji: "⭐", tint: "from-yellow-500/30 to-amber-500/20",  accent: "text-yellow-200",  href: "/leaderboard" },
+            ].map((a, i) => (
+              <li key={i} className="flex items-center gap-3 px-3 py-3 transition-colors hover:bg-white/[0.04] sm:px-4">
+                <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${a.tint} text-base ring-1 ring-white/10`}>
+                  {a.emoji}
+                </div>
+                <div className="min-w-0 flex-1 text-sm leading-snug text-white/85">
+                  <span className="font-bold text-white">{a.who}</span>{" "}
+                  <span className="text-white/65">{a.action}</span>{" "}
+                  <Link to={a.href} className={`font-semibold ${a.accent} hover:underline`}>{a.target}</Link>
+                </div>
+                <span className="shrink-0 text-[11px] font-medium text-white/45">{a.ago}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </section>
+
       {/* ───────── Community Blog ───────── */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <Card className="p-5 sm:p-6">
@@ -884,37 +915,6 @@ function LandingPage() {
               Visit Blog <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-        </Card>
-      </section>
-
-      {/* ───────── Latest Community Activity ───────── */}
-      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-        <Card className="p-5 sm:p-6">
-          <SectionTitle icon="⚡" title="Latest Community Activity" suffix="(Live feed)" href="/feed" />
-          <ul className="mt-4 divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-white/[0.02]">
-            {[
-              { who: "Amit",   action: "joined",        target: "India Chat",          ago: "just now",  emoji: "💬", tint: "from-blue-500/30 to-cyan-500/20",     accent: "text-cyan-200",    href: "/" },
-              { who: "Pooja",  action: "earned",        target: "Gold Badge",          ago: "2m ago",    emoji: "🏆", tint: "from-amber-500/35 to-yellow-500/20",  accent: "text-amber-200",   href: "/achievements" },
-              { who: "Rahul",  action: "posted",        target: "a new discussion",    ago: "5m ago",    emoji: "📝", tint: "from-purple-500/30 to-pink-500/20",   accent: "text-pink-200",    href: "/feed" },
-              { who: "Sneha",  action: "started a DM with", target: "Aanya",           ago: "8m ago",    emoji: "💌", tint: "from-rose-500/30 to-fuchsia-500/20",  accent: "text-rose-200",    href: "/feed" },
-              { who: "Kabir",  action: "won",           target: "a Ludo match",        ago: "12m ago",   emoji: "🎲", tint: "from-emerald-500/30 to-teal-500/20",  accent: "text-emerald-200", href: "/games" },
-              { who: "Meera",  action: "hit a",         target: "7-day streak 🔥",     ago: "18m ago",   emoji: "🔥", tint: "from-orange-500/35 to-red-500/20",    accent: "text-orange-200",  href: "/achievements" },
-              { who: "Yash",   action: "created room",  target: "Late Night Vibes",    ago: "25m ago",   emoji: "🌙", tint: "from-indigo-500/30 to-violet-500/20", accent: "text-indigo-200",  href: "/" },
-              { who: "Riya",   action: "leveled up to", target: "Level 12",            ago: "32m ago",   emoji: "⭐", tint: "from-yellow-500/30 to-amber-500/20",  accent: "text-yellow-200",  href: "/leaderboard" },
-            ].map((a, i) => (
-              <li key={i} className="flex items-center gap-3 px-3 py-3 transition-colors hover:bg-white/[0.04] sm:px-4">
-                <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${a.tint} text-base ring-1 ring-white/10`}>
-                  {a.emoji}
-                </div>
-                <div className="min-w-0 flex-1 text-sm leading-snug text-white/85">
-                  <span className="font-bold text-white">{a.who}</span>{" "}
-                  <span className="text-white/65">{a.action}</span>{" "}
-                  <Link to={a.href} className={`font-semibold ${a.accent} hover:underline`}>{a.target}</Link>
-                </div>
-                <span className="shrink-0 text-[11px] font-medium text-white/45">{a.ago}</span>
-              </li>
-            ))}
-          </ul>
         </Card>
       </section>
 
