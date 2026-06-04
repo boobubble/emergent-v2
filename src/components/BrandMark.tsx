@@ -72,9 +72,12 @@ export function useBrandAsset(slot: BrandSlot, roomId?: string): string | undefi
     || (b[`${slot}_dark` as keyof BrandingMap] as string | undefined);
 }
 
-export function useBrandSize(slot: BrandSlot): number | undefined {
+export function useBrandSize(slot: BrandSlot): BrandSizeValue | undefined {
   const b = useBrandingMap();
-  return b.sizes?.[slot];
+  const v = b.sizes?.[slot];
+  if (v == null) return undefined;
+  if (typeof v === "number") return { w: v, h: v };
+  return v;
 }
 
 interface Props {
@@ -88,7 +91,9 @@ interface Props {
 export function BrandMark({ slot, roomId, alt = "Logo", className, fallback }: Props) {
   const url = useBrandAsset(slot, roomId);
   const size = useBrandSize(slot);
-  const style = size ? { width: size, height: size } : undefined;
+  const style: React.CSSProperties | undefined = size
+    ? { width: size.w, height: size.h, objectFit: "contain" }
+    : undefined;
   if (!url) {
     if (!fallback) return null;
     if (!size) return <>{fallback}</>;
