@@ -828,12 +828,13 @@ function LandingPage() {
           <SectionTitle icon="🤫" title="Recent Confessions" suffix="(Anonymous)" href="/confessions" />
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { alias: "Panda #23", emoji: "🐼", ago: "12 min ago", text: "I pretend to understand crypto in every conversation 😅", reacts: 142 },
-              { alias: "Fox #71",   emoji: "🦊", ago: "45 min ago", text: "Been crushing on someone in the Mumbai chat for weeks 💕", reacts: 287 },
-              { alias: "Owl #08",   emoji: "🦉", ago: "1 hr ago",  text: "I genuinely think pineapple belongs on pizza. Fight me 🍕", reacts: 198 },
-              { alias: "Cat #44",   emoji: "🐱", ago: "2 hr ago",  text: "I joined for the games and stayed for the friends 🥹", reacts: 412 },
-              { alias: "Bear #19",  emoji: "🐻", ago: "3 hr ago",  text: "My streak broke at 89 days and I cried for an hour 😭", reacts: 356 },
-              { alias: "Wolf #62",  emoji: "🐺", ago: "5 hr ago",  text: "Lurker for 6 months. Finally posting. Hi everyone 👋", reacts: 521 },
+              { alias: "Kitten #07",  emoji: "🐱", ago: "8 min ago",  text: "That cute boy from the Mumbai chat asked for my number… I'm not okay 😳💕", reacts: 482 },
+              { alias: "Bunny #21",   emoji: "🐰", ago: "22 min ago", text: "Online crush update: he replied with TWO heart emojis tonight 🫠❤️", reacts: 367 },
+              { alias: "Fox #71",     emoji: "🦊", ago: "45 min ago", text: "I keep refreshing his profile like a maniac. Help. 🦊💘", reacts: 298 },
+              { alias: "Butterfly #14", emoji: "🦋", ago: "1 hr ago", text: "We've been DMing till 4am every night this week. I might be in trouble 😈", reacts: 521 },
+              { alias: "Panda #23",   emoji: "🐼", ago: "2 hr ago",  text: "He called me 'cutie' in the lobby and I screamed into my pillow 🥹🔥", reacts: 412 },
+              { alias: "Cherry #88",  emoji: "🍒", ago: "3 hr ago",  text: "Voice room with him last night >>> any date I've ever been on 🎙️💋", reacts: 634 },
+
             ].map((c, i) => (
               <div key={i} className="relative overflow-hidden rounded-xl border border-white/[0.07] bg-gradient-to-br from-pink-500/[0.08] via-purple-500/[0.05] to-transparent p-4">
                 <div className="absolute right-3 top-3 text-[10px] font-bold uppercase tracking-wider text-pink-300/70">Anon</div>
