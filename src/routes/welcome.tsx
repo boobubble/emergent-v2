@@ -827,7 +827,7 @@ function StatCell({ icon: Icon, label, value, tint = "#a78bfa", pulse = false }:
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 text-lg font-black leading-none tracking-tight sm:text-2xl lg:text-[26px]">
           <span
-            className="truncate bg-clip-text text-transparent"
+            className="stat-value truncate bg-clip-text text-transparent"
             style={{ backgroundImage: `linear-gradient(135deg,#ffffff, color-mix(in oklab, ${tint} 60%, #ffffff))` }}
           >
             {value}
