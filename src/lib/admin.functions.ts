@@ -288,19 +288,26 @@ export const deleteUser = createServerFn({ method: "POST" })
 // -------- Users + role mgmt --------
 export const listUsersWithRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ q: z.string().max(64).optional() }).parse(input ?? {}))
+  .inputValidator((input) =>
+    z.object({
+      q: z.string().max(64).optional(),
+      filter: z.enum(["all", "members", "guests", "banned", "staff"]).optional(),
+    }).parse(input ?? {}),
+  )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     let query = supabaseAdmin
       .from("profiles")
       .select("id, username, avatar_url, created_at, last_seen, xp, level")
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(200);
     if (data.q) query = query.ilike("username", `%${data.q}%`);
+    if (data.filter === "guests") query = query.ilike("username", "guest-%");
+    if (data.filter === "members") query = query.not("username", "ilike", "guest-%");
     const [{ data: profiles, error: pErr }, { data: roles, error: rErr }, { data: bans, error: bErr }] = await Promise.all([
       query,
       supabaseAdmin.from("user_roles").select("user_id, role"),
-      supabaseAdmin.from("user_bans").select("user_id").eq("active", true),
+      supabaseAdmin.from("user_bans").select("user_id, reason, expires_at, created_at").eq("active", true),
     ]);
     if (pErr) throw new Error(pErr.message);
     if (rErr) throw new Error(rErr.message);
@@ -310,12 +317,26 @@ export const listUsersWithRoles = createServerFn({ method: "GET" })
       const row = r as { user_id: string; role: string };
       (roleMap[row.user_id] ??= []).push(row.role);
     }
-    const bannedSet = new Set<string>();
+    const banMap: Record<string, { reason: string | null; expires_at: string | null }> = {};
+    const now = Date.now();
     for (const b of bans ?? []) {
-      const row = b as { user_id: string | null };
-      if (row.user_id) bannedSet.add(row.user_id);
+      const row = b as { user_id: string | null; reason: string | null; expires_at: string | null };
+      if (!row.user_id) continue;
+      // Skip expired bans (auto-unban view-side)
+      if (row.expires_at && new Date(row.expires_at).getTime() <= now) continue;
+      banMap[row.user_id] = { reason: row.reason, expires_at: row.expires_at };
     }
-    return (profiles ?? []).map((p) => ({ ...p, roles: roleMap[p.id] ?? [], banned: bannedSet.has(p.id) }));
+    let rows = (profiles ?? []).map((p) => ({
+      ...p,
+      roles: roleMap[p.id] ?? [],
+      banned: !!banMap[p.id],
+      ban_reason: banMap[p.id]?.reason ?? null,
+      ban_expires_at: banMap[p.id]?.expires_at ?? null,
+      is_guest: !!p.username && p.username.toLowerCase().startsWith("guest-"),
+    }));
+    if (data.filter === "banned") rows = rows.filter((r) => r.banned);
+    if (data.filter === "staff") rows = rows.filter((r) => r.roles.length > 0);
+    return rows;
   });
 
 export const setUserRole = createServerFn({ method: "POST" })
