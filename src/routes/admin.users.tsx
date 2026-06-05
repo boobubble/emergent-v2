@@ -47,13 +47,36 @@ function UsersPage() {
     queryFn: () => listFn({ data: { q: search || undefined } }),
   });
 
+  const banFn = useServerFn(banUser);
+  const unbanFn = useServerFn(unbanUser);
+  const deleteFn = useServerFn(deleteUser);
+  const [confirm, setConfirm] = useState<{ kind: "ban" | "unban" | "delete"; user_id: string; username: string } | null>(null);
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-users"] });
+
   const mutation = useMutation({
     mutationFn: (vars: { user_id: string; role: ManagedRole; grant: boolean }) =>
       setRoleFn({ data: vars }),
     onSuccess: (_d, vars) => {
       toast.success(`${vars.grant ? "Granted" : "Revoked"} ${ROLE_META[vars.role].label}`);
-      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      invalidate();
     },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const banMut = useMutation({
+    mutationFn: (user_id: string) => banFn({ data: { user_id } }),
+    onSuccess: () => { toast.success("User banned"); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const unbanMut = useMutation({
+    mutationFn: (user_id: string) => unbanFn({ data: { user_id } }),
+    onSuccess: () => { toast.success("Ban lifted"); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const delMut = useMutation({
+    mutationFn: (user_id: string) => deleteFn({ data: { user_id } }),
+    onSuccess: () => { toast.success("User deleted"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
