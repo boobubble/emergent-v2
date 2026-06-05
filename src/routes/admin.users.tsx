@@ -280,13 +280,3 @@ function UsersPage() {
     </div>
   );
 }
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
