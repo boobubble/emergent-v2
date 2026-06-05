@@ -363,6 +363,54 @@ export type Database = {
         }
         Relationships: []
       }
+      dj_broadcast_credentials: {
+        Row: {
+          dj_name: string | null
+          host: string | null
+          id: boolean
+          listen_url: string | null
+          mount: string | null
+          notes: string | null
+          port: number | null
+          provider: string
+          source_password: string | null
+          source_username: string | null
+          station_shortcode: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          dj_name?: string | null
+          host?: string | null
+          id?: boolean
+          listen_url?: string | null
+          mount?: string | null
+          notes?: string | null
+          port?: number | null
+          provider?: string
+          source_password?: string | null
+          source_username?: string | null
+          station_shortcode?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          dj_name?: string | null
+          host?: string | null
+          id?: boolean
+          listen_url?: string | null
+          mount?: string | null
+          notes?: string | null
+          port?: number | null
+          provider?: string
+          source_password?: string | null
+          source_username?: string | null
+          station_shortcode?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       dm_reads: {
         Row: {
           channel_id: string
