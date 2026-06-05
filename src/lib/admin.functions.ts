@@ -228,6 +228,56 @@ export const getSeoTargetsSummary = createServerFn({ method: "GET" })
   });
 
 
+// -------- Ban / Unban --------
+export const banUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      user_id: z.string().uuid(),
+      reason: z.string().max(500).optional(),
+      expires_at: z.string().datetime().nullable().optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin.from("user_bans").insert({
+      user_id: data.user_id,
+      reason: data.reason ?? null,
+      expires_at: data.expires_at ?? null,
+      created_by: context.userId,
+      active: true,
+      ban_type: "ban",
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const unbanUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ user_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("user_bans")
+      .update({ active: false })
+      .eq("user_id", data.user_id)
+      .eq("active", true);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// -------- Delete user (super admin only) --------
+export const deleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ user_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.userId);
+    if (data.user_id === context.userId) throw new Error("Cannot delete your own account");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // -------- Users + role mgmt --------
 export const listUsersWithRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -240,18 +290,25 @@ export const listUsersWithRoles = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(100);
     if (data.q) query = query.ilike("username", `%${data.q}%`);
-    const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
+    const [{ data: profiles, error: pErr }, { data: roles, error: rErr }, { data: bans, error: bErr }] = await Promise.all([
       query,
       supabaseAdmin.from("user_roles").select("user_id, role"),
+      supabaseAdmin.from("user_bans").select("user_id").eq("active", true),
     ]);
     if (pErr) throw new Error(pErr.message);
     if (rErr) throw new Error(rErr.message);
+    if (bErr) throw new Error(bErr.message);
     const roleMap: Record<string, string[]> = {};
     for (const r of roles ?? []) {
       const row = r as { user_id: string; role: string };
       (roleMap[row.user_id] ??= []).push(row.role);
     }
-    return (profiles ?? []).map((p) => ({ ...p, roles: roleMap[p.id] ?? [] }));
+    const bannedSet = new Set<string>();
+    for (const b of bans ?? []) {
+      const row = b as { user_id: string | null };
+      if (row.user_id) bannedSet.add(row.user_id);
+    }
+    return (profiles ?? []).map((p) => ({ ...p, roles: roleMap[p.id] ?? [], banned: bannedSet.has(p.id) }));
   });
 
 export const setUserRole = createServerFn({ method: "POST" })

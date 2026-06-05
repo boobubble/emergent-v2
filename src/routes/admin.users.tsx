@@ -10,9 +10,16 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Search, ShieldCheck, Shield, Hammer } from "lucide-react";
-import { getMyRoles, listUsersWithRoles, setUserRole } from "@/lib/admin.functions";
+import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff } from "lucide-react";
+import {
+  getMyRoles, listUsersWithRoles, setUserRole,
+  banUser, unbanUser, deleteUser,
+} from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/users")({ component: UsersPage });
 
@@ -40,13 +47,36 @@ function UsersPage() {
     queryFn: () => listFn({ data: { q: search || undefined } }),
   });
 
+  const banFn = useServerFn(banUser);
+  const unbanFn = useServerFn(unbanUser);
+  const deleteFn = useServerFn(deleteUser);
+  const [confirm, setConfirm] = useState<{ kind: "ban" | "unban" | "delete"; user_id: string; username: string } | null>(null);
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-users"] });
+
   const mutation = useMutation({
     mutationFn: (vars: { user_id: string; role: ManagedRole; grant: boolean }) =>
       setRoleFn({ data: vars }),
     onSuccess: (_d, vars) => {
       toast.success(`${vars.grant ? "Granted" : "Revoked"} ${ROLE_META[vars.role].label}`);
-      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      invalidate();
     },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const banMut = useMutation({
+    mutationFn: (user_id: string) => banFn({ data: { user_id } }),
+    onSuccess: () => { toast.success("User banned"); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const unbanMut = useMutation({
+    mutationFn: (user_id: string) => unbanFn({ data: { user_id } }),
+    onSuccess: () => { toast.success("Ban lifted"); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const delMut = useMutation({
+    mutationFn: (user_id: string) => deleteFn({ data: { user_id } }),
+    onSuccess: () => { toast.success("User deleted"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -117,20 +147,21 @@ function UsersPage() {
                   <th className="py-2 pr-3 font-medium">User</th>
                   <th className="py-2 pr-3 font-medium">Level</th>
                   <th className="py-2 pr-3 font-medium">Roles</th>
-                  <th className="py-2 pr-3 font-medium">Super Admin</th>
+                  <th className="py-2 pr-3 font-medium">Super</th>
                   <th className="py-2 pr-3 font-medium">Admin</th>
-                  <th className="py-2 pr-3 font-medium">Moderator</th>
+                  <th className="py-2 pr-3 font-medium">Mod</th>
+                  <th className="py-2 pr-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {usersQ.isLoading &&
                   Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i} className="border-b">
-                      <td colSpan={6} className="py-2"><Skeleton className="h-8 w-full" /></td>
+                      <td colSpan={7} className="py-2"><Skeleton className="h-8 w-full" /></td>
                     </tr>
                   ))}
                 {!usersQ.isLoading && users.length === 0 && (
-                  <tr><td colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No users found.</td></tr>
+                  <tr><td colSpan={7} className="py-8 text-center text-sm text-muted-foreground">No users found.</td></tr>
                 )}
                 {users.map((u) => (
                   <tr key={u.id} className="border-b hover:bg-muted/30">
@@ -141,7 +172,10 @@ function UsersPage() {
                           <AvatarFallback>{u.username?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <div className="truncate font-medium">{u.username ?? "—"}</div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="truncate font-medium">{u.username ?? "—"}</span>
+                            {u.banned && <Badge variant="destructive" className="h-4 px-1 text-[9px]">banned</Badge>}
+                          </div>
                           <div className="truncate font-mono text-[10px] text-muted-foreground">{u.id.slice(0, 8)}</div>
                         </div>
                       </div>
@@ -172,6 +206,36 @@ function UsersPage() {
                         </td>
                       );
                     })}
+                    <td className="py-2 pr-3">
+                      <div className="flex items-center justify-end gap-1">
+                        {u.banned ? (
+                          <Button
+                            size="sm" variant="outline"
+                            disabled={unbanMut.isPending}
+                            onClick={() => setConfirm({ kind: "unban", user_id: u.id, username: u.username ?? u.id })}
+                          >
+                            <ShieldOff className="mr-1 h-3.5 w-3.5" /> Unban
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm" variant="outline"
+                            disabled={banMut.isPending}
+                            onClick={() => setConfirm({ kind: "ban", user_id: u.id, username: u.username ?? u.id })}
+                          >
+                            <Ban className="mr-1 h-3.5 w-3.5" /> Ban
+                          </Button>
+                        )}
+                        {isSuperAdmin && (
+                          <Button
+                            size="sm" variant="destructive"
+                            disabled={delMut.isPending}
+                            onClick={() => setConfirm({ kind: "delete", user_id: u.id, username: u.username ?? u.id })}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -179,6 +243,40 @@ function UsersPage() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirm?.kind === "delete" && `Delete @${confirm.username}?`}
+              {confirm?.kind === "ban" && `Ban @${confirm?.username}?`}
+              {confirm?.kind === "unban" && `Lift ban on @${confirm?.username}?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirm?.kind === "delete" &&
+                "This permanently removes the account and authentication record. This cannot be undone."}
+              {confirm?.kind === "ban" &&
+                "The user will be blocked from posting, messaging, and signing in until unbanned."}
+              {confirm?.kind === "unban" && "The user will regain access immediately."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirm?.kind === "delete" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+              onClick={() => {
+                if (!confirm) return;
+                if (confirm.kind === "ban") banMut.mutate(confirm.user_id);
+                if (confirm.kind === "unban") unbanMut.mutate(confirm.user_id);
+                if (confirm.kind === "delete") delMut.mutate(confirm.user_id);
+                setConfirm(null);
+              }}
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
