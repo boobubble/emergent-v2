@@ -37,13 +37,7 @@ function AIChatbotsPage() {
   const { data: settings } = useQuery({ queryKey: ["ai-chatbots-settings"], queryFn: () => getSettings({}) });
 
   const [cfg, setCfg] = useState({ enabled: false, openrouter_api_key: "", model: "openrouter/auto" });
-  // hydrate cfg once settings load
-  if (settings && cfg.openrouter_api_key === "" && !cfg.enabled && cfg.model === "openrouter/auto") {
-    if (settings.enabled !== cfg.enabled || settings.openrouter_api_key !== cfg.openrouter_api_key || settings.model !== cfg.model) {
-      // only set if different (no infinite render)
-      queueMicrotask(() => setCfg(settings));
-    }
-  }
+  useEffect(() => { if (settings) setCfg(settings); }, [settings]);
 
   const saveCfg = useMutation({
     mutationFn: () => saveSettings({ data: cfg }),
