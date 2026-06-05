@@ -10,9 +10,16 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Search, ShieldCheck, Shield, Hammer } from "lucide-react";
-import { getMyRoles, listUsersWithRoles, setUserRole } from "@/lib/admin.functions";
+import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff } from "lucide-react";
+import {
+  getMyRoles, listUsersWithRoles, setUserRole,
+  banUser, unbanUser, deleteUser,
+} from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/users")({ component: UsersPage });
 
