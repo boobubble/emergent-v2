@@ -225,6 +225,10 @@ function DjAdminPage() {
         </CardContent>
       </Card>
 
+      <AzuraCastCard onUseListenUrl={goLiveWithUrl} />
+
+
+
       <div className="sticky bottom-3 flex justify-end gap-2">
         <Button variant="outline" onClick={() => setDraft(DJ_DEFAULTS)} disabled={mut.isPending}>
           Reset to defaults
