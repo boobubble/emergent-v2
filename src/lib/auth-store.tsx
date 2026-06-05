@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { loginWithIdentifier, deleteGuestAccount } from "@/lib/auth.functions";
+import { checkDeviceBan, recordDevice } from "@/lib/device.functions";
+import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 
 import type { Session } from "@supabase/supabase-js";
 
@@ -104,6 +106,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const email = session.user.email ?? undefined;
         void flushPendingAvatar(session.user.id, email).then(() => publishWelcomePost(session.user.id, email));
       }
+      // Record this device for ban-evasion tracking (best effort).
+      void (async () => {
+        try {
+          const fp = await getDeviceFingerprint();
+          if (fp) await recordDevice({ data: { fingerprint: fp, user_agent: navigator.userAgent.slice(0, 500) } });
+        } catch (e) { console.warn("device record failed", e); }
+      })();
       const username = await fetchUsername(session.user.id, session.user.email ?? undefined);
       if (cancelled) return;
       setUser({ id: session.user.id, email: session.user.email ?? "", username, isGuest });
@@ -140,6 +149,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (identifier: string, password: string) => {
     const id = identifier.trim();
+    // Refuse login from a banned device.
+    try {
+      const fp = await getDeviceFingerprint();
+      if (fp) {
+        const check = await checkDeviceBan({ data: { fingerprint: fp } });
+        if (check.banned) {
+          throw new Error(check.reason
+            ? `This device has been banned: ${check.reason}`
+            : "This device has been banned from the platform.");
+        }
+      }
+    } catch (e) { if (e instanceof Error && e.message.startsWith("This device")) throw e; }
     const res = await loginWithIdentifier({ data: { identifier: id, password } });
     const { error } = await supabase.auth.setSession({
       access_token: res.access_token,
@@ -155,6 +176,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (letterCount < 2 || letterCount > 10) throw new Error("Username must contain 2 to 10 letters.");
     if (password.length < 4) throw new Error("Password must be at least 4 characters");
     if (!["male", "female", "other"].includes(gender)) throw new Error("Please select a gender");
+    // Refuse signup from a banned device.
+    try {
+      const fp = await getDeviceFingerprint();
+      if (fp) {
+        const check = await checkDeviceBan({ data: { fingerprint: fp } });
+        if (check.banned) {
+          throw new Error(check.reason
+            ? `This device has been banned: ${check.reason}`
+            : "This device has been banned from the platform.");
+        }
+      }
+    } catch (e) { if (e instanceof Error && e.message.startsWith("This device")) throw e; }
     const { error } = await supabase.auth.signUp({
       email,
       password,

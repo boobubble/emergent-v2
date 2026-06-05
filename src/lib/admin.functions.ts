@@ -255,15 +255,45 @@ export const banUser = createServerFn({ method: "POST" })
       ban_type: "ban",
     });
     if (error) throw new Error(error.message);
+
+    // Device-level ban: copy every known device of this user into banned_devices
+    // when device security is enabled.
+    const { data: secSetting } = await supabaseAdmin
+      .from("app_settings").select("value").eq("key", "device_security").maybeSingle();
+    const deviceBanEnabled = (secSetting?.value as { enabled?: boolean } | null)?.enabled ?? false;
+    let bannedDeviceCount = 0;
+    if (deviceBanEnabled) {
+      const { data: devices } = await supabaseAdmin
+        .from("user_devices")
+        .select("fingerprint")
+        .eq("user_id", data.user_id);
+      const rows = (devices ?? []).map((d) => ({
+        fingerprint: d.fingerprint,
+        source_user_id: data.user_id,
+        reason: data.reason,
+        created_by: context.userId,
+      }));
+      if (rows.length) {
+        await supabaseAdmin.from("banned_devices").upsert(rows, { onConflict: "fingerprint" });
+        bannedDeviceCount = rows.length;
+      }
+    }
+
     await supabaseAdmin.from("mod_logs").insert({
       actor_id: context.userId,
       action: expires_at ? "temp_ban" : "ban",
       target_user_id: data.user_id,
       target_type: "user",
       target_id: data.user_id,
-      payload: { reason: data.reason, expires_at, duration_minutes: data.duration_minutes },
+      payload: {
+        reason: data.reason,
+        expires_at,
+        duration_minutes: data.duration_minutes,
+        device_ban_enabled: deviceBanEnabled,
+        banned_device_count: bannedDeviceCount,
+      },
     });
-    return { ok: true };
+    return { ok: true, banned_device_count: bannedDeviceCount };
   });
 
 

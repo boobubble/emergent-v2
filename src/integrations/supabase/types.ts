@@ -35,6 +35,30 @@ export type Database = {
         }
         Relationships: []
       }
+      banned_devices: {
+        Row: {
+          created_at: string
+          created_by: string
+          fingerprint: string
+          reason: string | null
+          source_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          fingerprint: string
+          reason?: string | null
+          source_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          fingerprint?: string
+          reason?: string | null
+          source_user_id?: string | null
+        }
+        Relationships: []
+      }
       coin_transactions: {
         Row: {
           amount: number
@@ -1356,6 +1380,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_devices: {
+        Row: {
+          fingerprint: string
+          first_seen: string
+          ip_address: unknown
+          last_seen: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          fingerprint: string
+          first_seen?: string
+          ip_address?: unknown
+          last_seen?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          fingerprint?: string
+          first_seen?: string
+          ip_address?: unknown
+          last_seen?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_inventory: {
         Row: {
           acquired_at: string
@@ -1488,6 +1539,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_device_banned: { Args: { _fp: string }; Returns: boolean }
       is_dm_channel_allowed: {
         Args: { _channel: string; _user: string }
         Returns: boolean
