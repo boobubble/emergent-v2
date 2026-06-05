@@ -221,7 +221,17 @@ function DjAdminPage() {
         </CardContent>
       </Card>
 
-      <AzuraCastCard onUseListenUrl={goLiveWithUrl} />
+      <RadioStationsCard
+        stations={draft.stations}
+        onChange={(stations) => update((d) => { d.stations = stations; })}
+        onGoLive={(s) => goLiveWithUrl(s.url, s.name ? `${s.name} · Live` : "Radio live")}
+        onPersist={(stations) => {
+          const next: DjPlayerState = { ...draft, stations };
+          setDraft(next);
+          mut.mutate(next);
+        }}
+        saving={mut.isPending}
+      />
 
 
 
