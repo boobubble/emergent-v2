@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_chatbots: {
+        Row: {
+          allowed_rooms: string[]
+          cooldown_sec: number
+          created_at: string
+          created_by: string | null
+          description: string
+          enabled: boolean
+          id: string
+          last_reply_at: string | null
+          persona: string
+          reply_chance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allowed_rooms?: string[]
+          cooldown_sec?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          enabled?: boolean
+          id?: string
+          last_reply_at?: string | null
+          persona?: string
+          reply_chance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allowed_rooms?: string[]
+          cooldown_sec?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          enabled?: boolean
+          id?: string
+          last_reply_at?: string | null
+          persona?: string
+          reply_chance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
