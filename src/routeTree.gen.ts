@@ -21,6 +21,7 @@ import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
+import { Route as BannedRouteImport } from './routes/banned'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
@@ -130,6 +131,11 @@ const FeedRoute = FeedRouteImport.update({
 const ConfessionsRoute = ConfessionsRouteImport.update({
   id: '/confessions',
   path: '/confessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BannedRoute = BannedRouteImport.update({
+  id: '/banned',
+  path: '/banned',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -390,6 +396,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
+  '/banned': typeof BannedRoute
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -453,6 +460,7 @@ export interface FileRoutesByTo {
   '/$slug': typeof SlugRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
+  '/banned': typeof BannedRoute
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -518,6 +526,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
+  '/banned': typeof BannedRoute
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -584,6 +593,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/achievements'
     | '/admin'
+    | '/banned'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -647,6 +657,7 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/account'
     | '/achievements'
+    | '/banned'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -711,6 +722,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/achievements'
     | '/admin'
+    | '/banned'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -776,6 +788,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AchievementsRoute: typeof AchievementsRoute
   AdminRoute: typeof AdminRouteWithChildren
+  BannedRoute: typeof BannedRoute
   ConfessionsRoute: typeof ConfessionsRoute
   FeedRoute: typeof FeedRouteWithChildren
   FeedbackRoute: typeof FeedbackRoute
@@ -880,6 +893,13 @@ declare module '@tanstack/react-router' {
       path: '/confessions'
       fullPath: '/confessions'
       preLoaderRoute: typeof ConfessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/banned': {
+      id: '/banned'
+      path: '/banned'
+      fullPath: '/banned'
+      preLoaderRoute: typeof BannedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -1345,6 +1365,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AchievementsRoute: AchievementsRoute,
   AdminRoute: AdminRouteWithChildren,
+  BannedRoute: BannedRoute,
   ConfessionsRoute: ConfessionsRoute,
   FeedRoute: FeedRouteWithChildren,
   FeedbackRoute: FeedbackRoute,
