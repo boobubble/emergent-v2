@@ -1243,6 +1243,15 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
         }))
       ).then(({ error }) => {
         if (error) { console.error("send failed", error); rtLog("error", "send-failed", error.message); }
+        else {
+          // Fire-and-forget AI chatbot reply for chatroom messages
+          for (const out of outgoingRemotes) {
+            if (out.channelId.startsWith("dm:") || out.kind === "system") continue;
+            import("@/lib/ai-chatbots.functions").then(({ aiChatbotReply }) => {
+              aiChatbotReply({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
+            }).catch(() => {});
+          }
+        }
       });
     }
     setReplyingTo(null);
