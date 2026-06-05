@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Save, Disc3, Play, Pause, Radio, Link as LinkIcon, Lock, Eye, EyeOff, Antenna } from "lucide-react";
+import { Save, Disc3, Play, Pause, Radio, Link as LinkIcon, Antenna, Plus, Trash2 } from "lucide-react";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,11 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppSettings } from "@/lib/app-settings";
-import {
-  updateSetting,
-  getDjBroadcastCredentials,
-  saveDjBroadcastCredentials,
-} from "@/lib/admin.functions";
+import { updateSetting } from "@/lib/admin.functions";
 import {
   DJ_DEFAULTS, buildTrackFromUrl, currentPositionSec, mergeDjConfig, type DjPlayerState,
 } from "@/lib/dj-config";
@@ -225,7 +221,17 @@ function DjAdminPage() {
         </CardContent>
       </Card>
 
-      <AzuraCastCard onUseListenUrl={goLiveWithUrl} />
+      <RadioStationsCard
+        stations={draft.stations}
+        onChange={(stations) => update((d) => { d.stations = stations; })}
+        onGoLive={(s) => goLiveWithUrl(s.url, s.name ? `${s.name} · Live` : "Radio live")}
+        onPersist={(stations) => {
+          const next: DjPlayerState = { ...draft, stations };
+          setDraft(next);
+          mut.mutate(next);
+        }}
+        saving={mut.isPending}
+      />
 
 
 
@@ -241,71 +247,37 @@ function DjAdminPage() {
   );
 }
 
-type AzuraCastDraft = {
-  provider: string;
-  host: string;
-  port: number | null;
-  mount: string;
-  station_shortcode: string;
-  source_username: string;
-  source_password: string;
-  listen_url: string;
-  dj_name: string;
-  notes: string;
-};
+import type { RadioStation } from "@/lib/dj-config";
 
-const AZURA_DEFAULTS: AzuraCastDraft = {
-  provider: "azuracast",
-  host: "",
-  port: null,
-  mount: "",
-  station_shortcode: "",
-  source_username: "",
-  source_password: "",
-  listen_url: "",
-  dj_name: "",
-  notes: "",
-};
+function RadioStationsCard({
+  stations, onChange, onGoLive, onPersist, saving,
+}: {
+  stations: RadioStation[];
+  onChange: (next: RadioStation[]) => void;
+  onGoLive: (s: RadioStation) => void;
+  onPersist: (next: RadioStation[]) => void;
+  saving: boolean;
+}) {
+  const [name, setName] = useState("");
+  const [url, setUrl] = useState("");
 
-function AzuraCastCard({ onUseListenUrl }: { onUseListenUrl: (url: string, title: string) => void }) {
-  const fetchCreds = useServerFn(getDjBroadcastCredentials);
-  const saveCreds = useServerFn(saveDjBroadcastCredentials);
-  const qc = useQueryClient();
-  const [showPassword, setShowPassword] = useState(false);
-  const [draft, setDraft] = useState<AzuraCastDraft>(AZURA_DEFAULTS);
+  const add = () => {
+    const n = name.trim();
+    const u = url.trim();
+    if (!n) { toast.error("Enter a radio stream name"); return; }
+    if (!/^https?:\/\//i.test(u)) { toast.error("Enter a valid stream URL"); return; }
+    const next = [...stations, { id: crypto.randomUUID(), name: n.slice(0, 80), url: u.slice(0, 500) }];
+    onChange(next);
+    onPersist(next);
+    setName("");
+    setUrl("");
+  };
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["dj-broadcast-credentials"],
-    queryFn: () => fetchCreds({}),
-  });
-
-  useEffect(() => {
-    if (!data) { setDraft(AZURA_DEFAULTS); return; }
-    setDraft({
-      provider: data.provider ?? "azuracast",
-      host: data.host ?? "",
-      port: data.port ?? null,
-      mount: data.mount ?? "",
-      station_shortcode: data.station_shortcode ?? "",
-      source_username: data.source_username ?? "",
-      source_password: data.source_password ?? "",
-      listen_url: data.listen_url ?? "",
-      dj_name: data.dj_name ?? "",
-      notes: data.notes ?? "",
-    });
-  }, [data]);
-
-  const save = useMutation({
-    mutationFn: () => saveCreds({ data: { ...draft, port: draft.port ?? null } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["dj-broadcast-credentials"] });
-      toast.success("Broadcast credentials saved");
-    },
-    onError: (e: any) => toast.error(e?.message ?? "Failed to save credentials"),
-  });
-
-  const update = <K extends keyof AzuraCastDraft>(k: K, v: AzuraCastDraft[K]) =>
-    setDraft((s) => ({ ...s, [k]: v }));
+  const remove = (id: string) => {
+    const next = stations.filter((s) => s.id !== id);
+    onChange(next);
+    onPersist(next);
+  };
 
   return (
     <Card>
@@ -315,153 +287,79 @@ function AzuraCastCard({ onUseListenUrl }: { onUseListenUrl: (url: string, title
             <Antenna className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              AzuraCast live stream
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                <Lock className="h-3 w-3" /> Admin-only
-              </span>
-            </div>
+            <div className="text-sm font-semibold">Radio stream presets</div>
             <div className="text-xs text-muted-foreground">
-              Hosting credentials your DJ/RJ uses to broadcast to AzuraCast (or any Icecast/Shoutcast source).
-              Stored privately — never exposed to listeners.
+              Save your DJ/RJ broadcaster URLs (AzuraCast, Icecast, Shoutcast, or any direct stream).
+              One click puts a station live on the lobby player.
             </div>
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Provider">
+        <div className="grid gap-3 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
+          <div className="space-y-1">
+            <Label className="text-xs">Radio stream name</Label>
             <Input
-              value={draft.provider}
-              onChange={(e) => update("provider", e.target.value.slice(0, 32))}
-              placeholder="azuracast"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Morning Show"
               className="h-9 text-xs"
+              onKeyDown={(e) => { if (e.key === "Enter") add(); }}
             />
-          </Field>
-          <Field label="DJ / RJ name">
-            <Input
-              value={draft.dj_name}
-              onChange={(e) => update("dj_name", e.target.value.slice(0, 60))}
-              placeholder="e.g. DJ Nova"
-              className="h-9 text-xs"
-            />
-          </Field>
-          <Field label="Server host">
-            <Input
-              value={draft.host}
-              onChange={(e) => update("host", e.target.value.slice(0, 255))}
-              placeholder="radio.example.com"
-              className="h-9 text-xs"
-            />
-          </Field>
-          <Field label="Port">
-            <Input
-              type="number"
-              min={1}
-              max={65535}
-              value={draft.port ?? ""}
-              onChange={(e) => update("port", e.target.value === "" ? null : Number(e.target.value))}
-              placeholder="8000"
-              className="h-9 text-xs"
-            />
-          </Field>
-          <Field label="Mount point">
-            <Input
-              value={draft.mount}
-              onChange={(e) => update("mount", e.target.value.slice(0, 120))}
-              placeholder="/radio.mp3"
-              className="h-9 text-xs"
-            />
-          </Field>
-          <Field label="Station shortcode">
-            <Input
-              value={draft.station_shortcode}
-              onChange={(e) => update("station_shortcode", e.target.value.slice(0, 120))}
-              placeholder="my_station"
-              className="h-9 text-xs"
-            />
-          </Field>
-          <Field label="Source / DJ username">
-            <Input
-              value={draft.source_username}
-              onChange={(e) => update("source_username", e.target.value.slice(0, 120))}
-              placeholder="dj_username"
-              autoComplete="off"
-              className="h-9 text-xs"
-            />
-          </Field>
-          <Field label="Source / DJ password">
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={draft.source_password}
-                onChange={(e) => update("source_password", e.target.value.slice(0, 255))}
-                placeholder="••••••••"
-                autoComplete="new-password"
-                className="h-9 pr-9 text-xs"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-              </button>
-            </div>
-          </Field>
-          <div className="sm:col-span-2">
-            <Field label="Public listen URL">
-              <Input
-                value={draft.listen_url}
-                onChange={(e) => update("listen_url", e.target.value.slice(0, 500))}
-                placeholder="https://radio.example.com/listen/my_station/radio.mp3"
-                className="h-9 text-xs"
-              />
-            </Field>
           </div>
-          <div className="sm:col-span-2">
-            <Field label="Notes (optional)">
-              <Input
-                value={draft.notes}
-                onChange={(e) => update("notes", e.target.value.slice(0, 1000))}
-                placeholder="Handover notes, scheduled shows, etc."
-                className="h-9 text-xs"
-              />
-            </Field>
+          <div className="space-y-1">
+            <Label className="text-xs">Radio stream URL</Label>
+            <Input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://radio.example.com/listen/my_station/radio.mp3"
+              className="h-9 text-xs"
+              onKeyDown={(e) => { if (e.key === "Enter") add(); }}
+            />
           </div>
+          <Button onClick={add} disabled={saving} className="h-9 gap-1">
+            <Plus className="h-3.5 w-3.5" /> Add
+          </Button>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-          <div className="text-[11px] text-muted-foreground">
-            Broadcast from any Icecast-compatible encoder (BUTT, Mixxx, OBS) using the host/port/mount and credentials above.
-            Listeners hear the stream via the public listen URL.
+        {stations.length === 0 ? (
+          <div className="rounded-md border border-dashed bg-muted/20 px-3 py-4 text-center text-xs text-muted-foreground">
+            No stations yet. Add your broadcaster URL above.
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1"
-              disabled={!draft.listen_url || save.isPending}
-              onClick={() => onUseListenUrl(draft.listen_url, draft.dj_name ? `${draft.dj_name} · Live` : "AzuraCast live")}
-            >
-              <Play className="h-3.5 w-3.5" /> Use listen URL on player
-            </Button>
-            <Button size="sm" className="h-8 gap-1" onClick={() => save.mutate()} disabled={save.isPending || isLoading}>
-              <Save className="h-3.5 w-3.5" /> Save credentials
-            </Button>
-          </div>
-        </div>
+        ) : (
+          <ul className="divide-y rounded-md border">
+            {stations.map((s) => (
+              <li key={s.id} className="flex items-center gap-2 px-3 py-2">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-xs font-medium">{s.name}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{s.url}</div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1"
+                  onClick={() => onGoLive(s)}
+                  disabled={saving}
+                >
+                  <Play className="h-3.5 w-3.5" /> Go live
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={() => remove(s.id)}
+                  disabled={saving}
+                  aria-label={`Remove ${s.name}`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
       </CardContent>
     </Card>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <Label className="text-xs">{label}</Label>
-      {children}
-    </div>
   );
 }
 
