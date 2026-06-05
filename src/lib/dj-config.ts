@@ -20,6 +20,12 @@ export interface DjTrack {
   title?: string;
 }
 
+export interface RadioStation {
+  id: string;
+  name: string;
+  url: string;
+}
+
 export interface DjPlayerState {
   /** Master switch. When false the footer player is hidden for everyone. */
   enabled: boolean;
@@ -41,6 +47,8 @@ export interface DjPlayerState {
   djName: string;
   /** Allow listeners to mute their own player. */
   allowListenerMute: boolean;
+  /** Saved radio stations (DJ/RJ broadcaster URLs) admin can quick-go-live with. */
+  stations: RadioStation[];
 }
 
 export const DJ_DEFAULTS: DjPlayerState = {
@@ -52,6 +60,7 @@ export const DJ_DEFAULTS: DjPlayerState = {
   defaultVolume: 70,
   djName: "",
   allowListenerMute: true,
+  stations: [],
 };
 
 export function mergeDjConfig(raw: unknown): DjPlayerState {
@@ -62,6 +71,11 @@ export function mergeDjConfig(raw: unknown): DjPlayerState {
     track: p.track
       ? { kind: p.track.kind, url: p.track.url, videoId: p.track.videoId, title: p.track.title }
       : null,
+    stations: Array.isArray(p.stations)
+      ? p.stations
+          .filter((s): s is RadioStation => !!s && typeof s.url === "string" && typeof s.name === "string")
+          .map((s) => ({ id: String(s.id || crypto.randomUUID()), name: s.name, url: s.url }))
+      : [],
   };
 }
 
