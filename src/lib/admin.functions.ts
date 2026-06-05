@@ -228,6 +228,56 @@ export const getSeoTargetsSummary = createServerFn({ method: "GET" })
   });
 
 
+// -------- Ban / Unban --------
+export const banUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      user_id: z.string().uuid(),
+      reason: z.string().max(500).optional(),
+      expires_at: z.string().datetime().nullable().optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin.from("user_bans").insert({
+      user_id: data.user_id,
+      reason: data.reason ?? null,
+      expires_at: data.expires_at ?? null,
+      created_by: context.userId,
+      active: true,
+      ban_type: "ban",
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const unbanUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ user_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("user_bans")
+      .update({ active: false })
+      .eq("user_id", data.user_id)
+      .eq("active", true);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// -------- Delete user (super admin only) --------
+export const deleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ user_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.userId);
+    if (data.user_id === context.userId) throw new Error("Cannot delete your own account");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // -------- Users + role mgmt --------
 export const listUsersWithRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
