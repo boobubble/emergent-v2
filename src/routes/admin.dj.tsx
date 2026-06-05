@@ -89,6 +89,21 @@ function DjAdminPage() {
     mut.mutate(next);
   };
 
+  const goLiveWithUrl = (url: string, title: string) => {
+    const track = buildTrackFromUrl(url, title);
+    if (!track) { toast.error("Listen URL is missing or invalid"); return; }
+    const next: DjPlayerState = {
+      ...draft,
+      enabled: true,
+      track,
+      playing: true,
+      positionSec: 0,
+      startedAtMs: Date.now(),
+    };
+    setDraft(next);
+    mut.mutate(next);
+  };
+
   return (
     <div className="space-y-5">
       <AdminPageHeader
