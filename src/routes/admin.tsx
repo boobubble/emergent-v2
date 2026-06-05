@@ -15,7 +15,7 @@ import {
   Search as SearchIcon, Sparkles, ChevronDown, ChevronRight, Home,
 } from "lucide-react";
 import { useThemeMode, type ThemeMode } from "@/lib/use-theme-mode";
-import { AppSettingsProvider } from "@/lib/app-settings";
+
 import { useAdminMode } from "@/lib/admin-mode";
 
 export const Route = createFileRoute("/admin")({
@@ -48,11 +48,7 @@ function AdminLayout() {
     );
   }
 
-  return (
-    <AppSettingsProvider>
-      <AdminShell isSuper={data.isSuperAdmin} />
-    </AppSettingsProvider>
-  );
+  return <AdminShell isSuper={data.isSuperAdmin} />;
 }
 
 function AdminShell({ isSuper }: { isSuper: boolean }) {
