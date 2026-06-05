@@ -161,6 +161,7 @@ function AuthGate() {
   const location = useLocation();
   usePresenceHeartbeat();
   useSessionChangeDetector();
+  useBanGuard(user?.id ?? null);
   if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
 
   if (!user) {
