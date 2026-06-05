@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Save, Disc3, Play, Pause, Radio, Link as LinkIcon, Lock, Eye, EyeOff, Antenna } from "lucide-react";
+import { Save, Disc3, Play, Pause, Radio, Link as LinkIcon, Antenna, Plus, Trash2 } from "lucide-react";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,11 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppSettings } from "@/lib/app-settings";
-import {
-  updateSetting,
-  getDjBroadcastCredentials,
-  saveDjBroadcastCredentials,
-} from "@/lib/admin.functions";
+import { updateSetting } from "@/lib/admin.functions";
 import {
   DJ_DEFAULTS, buildTrackFromUrl, currentPositionSec, mergeDjConfig, type DjPlayerState,
 } from "@/lib/dj-config";
