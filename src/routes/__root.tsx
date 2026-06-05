@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
 import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
+import { useBanGuard } from "@/lib/use-ban-guard";
 import { useSessionChangeDetector } from "@/lib/use-session-change-detector";
 import { RealtimeDebugOverlay } from "@/components/RealtimeDebugOverlay";
 import { SessionConflictBanner } from "@/components/SessionConflictBanner";
@@ -161,6 +162,7 @@ function AuthGate() {
   const location = useLocation();
   usePresenceHeartbeat();
   useSessionChangeDetector();
+  useBanGuard(user?.id ?? null);
   if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
 
   if (!user) {
