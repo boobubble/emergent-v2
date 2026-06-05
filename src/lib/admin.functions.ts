@@ -234,16 +234,22 @@ export const banUser = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({
       user_id: z.string().uuid(),
-      reason: z.string().max(500).optional(),
-      expires_at: z.string().datetime().nullable().optional(),
+      reason: z.string().trim().min(3, "Reason is required").max(500),
+      duration_minutes: z.number().int().min(0).max(60 * 24 * 365 * 5).nullable(),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const expires_at = data.duration_minutes && data.duration_minutes > 0
+      ? new Date(Date.now() + data.duration_minutes * 60_000).toISOString()
+      : null;
+    // Lift any prior active bans so we always have one current record
+    await supabaseAdmin.from("user_bans").update({ active: false })
+      .eq("user_id", data.user_id).eq("active", true);
     const { error } = await supabaseAdmin.from("user_bans").insert({
       user_id: data.user_id,
-      reason: data.reason ?? null,
-      expires_at: data.expires_at ?? null,
+      reason: data.reason,
+      expires_at,
       created_by: context.userId,
       active: true,
       ban_type: "ban",
@@ -251,6 +257,7 @@ export const banUser = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 export const unbanUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
