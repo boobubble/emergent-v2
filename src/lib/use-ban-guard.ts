@@ -1,11 +1,34 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+
+const BAN_STORAGE_KEY = "lovable:last-ban";
+
+export type StoredBan = {
+  reason: string | null;
+  expires_at: string | null;
+  signed_out_at: string;
+};
+
+export function readStoredBan(): StoredBan | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(BAN_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as StoredBan;
+  } catch {
+    return null;
+  }
+}
+
+export function clearStoredBan() {
+  if (typeof window === "undefined") return;
+  try { window.localStorage.removeItem(BAN_STORAGE_KEY); } catch { /* noop */ }
+}
 
 /**
- * Signs out and warns the current user if they are actively banned.
- * Runs whenever the auth user id changes. RLS on user_bans permits a user
- * to read their own ban row.
+ * Signs out and routes the user to /banned if they are actively banned.
+ * Ban details are persisted to localStorage so /banned can render them
+ * without an authenticated session.
  */
 export function useBanGuard(userId: string | null | undefined) {
   useEffect(() => {
@@ -22,13 +45,15 @@ export function useBanGuard(userId: string | null | undefined) {
         .maybeSingle();
       if (cancelled || !data) return;
       if (data.expires_at && new Date(data.expires_at).getTime() <= Date.now()) return;
-      const until = data.expires_at
-        ? `until ${new Date(data.expires_at).toLocaleString()}`
-        : "permanently";
-      toast.error(`Account banned ${until}${data.reason ? ` — ${data.reason}` : ""}`, {
-        duration: 8000,
-      });
+
+      const payload: StoredBan = {
+        reason: data.reason ?? null,
+        expires_at: data.expires_at ?? null,
+        signed_out_at: new Date().toISOString(),
+      };
+      try { window.localStorage.setItem(BAN_STORAGE_KEY, JSON.stringify(payload)); } catch { /* noop */ }
       await supabase.auth.signOut();
+      window.location.replace("/banned");
     })();
     return () => { cancelled = true; };
   }, [userId]);

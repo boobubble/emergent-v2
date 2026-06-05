@@ -255,6 +255,14 @@ export const banUser = createServerFn({ method: "POST" })
       ban_type: "ban",
     });
     if (error) throw new Error(error.message);
+    await supabaseAdmin.from("mod_logs").insert({
+      actor_id: context.userId,
+      action: expires_at ? "temp_ban" : "ban",
+      target_user_id: data.user_id,
+      target_type: "user",
+      target_id: data.user_id,
+      payload: { reason: data.reason, expires_at, duration_minutes: data.duration_minutes },
+    });
     return { ok: true };
   });
 
@@ -264,12 +272,28 @@ export const unbanUser = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ user_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const { data: prior } = await supabaseAdmin
+      .from("user_bans")
+      .select("id, reason, expires_at")
+      .eq("user_id", data.user_id)
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
     const { error } = await supabaseAdmin
       .from("user_bans")
       .update({ active: false })
       .eq("user_id", data.user_id)
       .eq("active", true);
     if (error) throw new Error(error.message);
+    await supabaseAdmin.from("mod_logs").insert({
+      actor_id: context.userId,
+      action: "unban",
+      target_user_id: data.user_id,
+      target_type: "user",
+      target_id: data.user_id,
+      payload: { lifted_ban_id: prior?.id ?? null, prior_reason: prior?.reason ?? null, prior_expires_at: prior?.expires_at ?? null },
+    });
     return { ok: true };
   });
 
