@@ -345,7 +345,7 @@ export function ProfilePopup({
             <button
               onClick={async () => {
                 try {
-                  await muteFn({ data: { user_id: realId, scope: "room", channel_id: state.activeChannel, duration_minutes: 60, reason: "Staff mute" } });
+                  await muteFn({ data: { user_id: realId, scope: "room", channel_id: state.activeChannel, expires_in_minutes: 60, reason: "Staff mute" } });
                   toast.success(`Muted ${user.name} for 1h`);
                 } catch (e: unknown) {
                   toast.error(e instanceof Error ? e.message : "Failed to mute");
