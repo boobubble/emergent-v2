@@ -1,9 +1,18 @@
 import { useState } from "react";
 import { RotateCcw, Plus, X } from "lucide-react";
 import { useFeedPrefs, type DefaultTab, type FeedSort, type DefaultPrivacy } from "@/lib/feed-prefs";
+import { useSoundPrefs, setSoundPref, type SoundKind } from "@/lib/sound-prefs";
 
 export function FeedSettingsPanel() {
   const { prefs, setPrefs, reset } = useFeedPrefs();
+  const soundPrefs = useSoundPrefs();
+  const soundItems: { key: SoundKind; label: string }[] = [
+    { key: "public_chat", label: "Public chatroom sounds" },
+    { key: "private_chat", label: "Private message sounds" },
+    { key: "notifications", label: "Notification sounds" },
+    { key: "username_mention", label: "Username mention sound" },
+    { key: "calls", label: "Voice / video call sounds" },
+  ];
   const [kw, setKw] = useState("");
   const [tag, setTag] = useState("");
 
@@ -70,6 +79,17 @@ export function FeedSettingsPanel() {
         <Toggle label="Comments on my posts" checked={prefs.notifyComments} onChange={(b) => setPrefs({ notifyComments: b })} />
         <Toggle label="Reactions on my posts" checked={prefs.notifyReactions} onChange={(b) => setPrefs({ notifyReactions: b })} />
         <Toggle label="Direct messages" checked={prefs.notifyDMs} onChange={(b) => setPrefs({ notifyDMs: b })} />
+      </Section>
+
+      <Section title="Sounds">
+        {soundItems.map((s) => (
+          <Toggle
+            key={s.key}
+            label={s.label}
+            checked={soundPrefs[s.key] !== false}
+            onChange={(b) => setSoundPref(s.key, b)}
+          />
+        ))}
       </Section>
 
       <Section title="Muted keywords">

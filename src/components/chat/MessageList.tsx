@@ -5,7 +5,7 @@ import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/Cosm
 import { UserMenu } from "./UserMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
 import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
-import { NameEmojiBadge } from "@/lib/name-emoji";
+import { NameEmojiBadge, NameAdornments } from "@/lib/name-emoji";
 import { EmojiEffectLayer } from "./EmojiEffectLayer";
 import { HighlightButton } from "./HighlightButton";
 import { useIgnore } from "@/lib/ignore-store";
@@ -172,7 +172,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                     <UserMenu userId={author.id} username={author.name}>
                       <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
                         <CosmeticName userId={author.id} name={author.name} />
-                        <NameEmojiBadge user={author} />
+                        <NameAdornments user={author} />
                       </span>
                     </UserMenu>
                     <RankChip level={author.level} compact />
@@ -227,7 +227,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                   <UserMenu userId={author.id} username={author.name}>
                     <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
                       <CosmeticName userId={author.id} name={author.name} />
-                      <NameEmojiBadge user={author} />
+                      <NameAdornments user={author} />
                     </span>
                   </UserMenu>
                   {author.isBot && (

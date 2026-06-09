@@ -12,6 +12,7 @@ import { StoryTray } from "@/components/feed/StoryTray";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
 import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
+import { BirthdaysWidget } from "@/components/feed/BirthdaysWidget";
 import { MissionsPanel } from "@/components/feed/MissionsPanel";
 import { FeedNotifications } from "@/components/feed/FeedNotifications";
 import { Avatar } from "@/components/chat/Avatar";
@@ -445,6 +446,7 @@ function FeedPage() {
             <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
             <ChatroomOnlineWidget />
+            <BirthdaysWidget />
             <FriendsWidget meId={meId} profiles={profiles} />
             <HashtagsWidget />
           </div>
