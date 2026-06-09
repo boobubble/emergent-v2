@@ -81,6 +81,17 @@ export function FeedSettingsPanel() {
         <Toggle label="Direct messages" checked={prefs.notifyDMs} onChange={(b) => setPrefs({ notifyDMs: b })} />
       </Section>
 
+      <Section title="Sounds">
+        {soundItems.map((s) => (
+          <Toggle
+            key={s.key}
+            label={s.label}
+            checked={soundPrefs[s.key] !== false}
+            onChange={(b) => setSoundPref(s.key, b)}
+          />
+        ))}
+      </Section>
+
       <Section title="Muted keywords">
         <p className="text-xs text-muted-foreground">Hide posts containing these words.</p>
         <ChipInput
