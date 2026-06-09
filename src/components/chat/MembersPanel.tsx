@@ -467,7 +467,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           <div className="min-w-0 flex-1 leading-tight">
             <div className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground/90 hover:text-primary">
               <CosmeticName userId={u.id} name={u.name} />
-              <NameEmojiBadge user={u} />
+              <NameAdornments user={u} />
               {ICONS[role]}
               {muted && <VolumeX className="h-3 w-3 text-destructive" />}
             </div>
