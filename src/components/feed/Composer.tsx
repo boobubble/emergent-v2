@@ -79,9 +79,26 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
     return urls;
   }
 
+  const queryClient = useQueryClient();
+
   async function submit() {
     if (!text.trim() && !files.length) return;
+    const trimmed = text.trim();
+    if (/^\/clearcache\b/i.test(trimmed)) {
+      const ok = await isCurrentUserAdmin();
+      if (!ok) {
+        toast.error("Admins only", { description: "/clearcache is restricted to admins." });
+        return;
+      }
+      toast.loading("Clearing caches…", { id: "clearcache" });
+      const report = await clearCaches({ queryClient });
+      toast.success("Caches cleared", { id: "clearcache", description: formatClearReport(report) });
+      setText("");
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
+      return;
+    }
     setPosting(true); setError(null);
+
     try {
       const media_urls = await uploadFiles();
       const kind = files.length ? "image" : "text";
