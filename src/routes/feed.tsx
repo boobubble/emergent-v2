@@ -100,6 +100,18 @@ function FeedPage() {
   const [dmOpenKey, setDmOpenKey] = useState(0);
   const [defaultTabApplied, setDefaultTabApplied] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const focusComposer = () => {
+    setView("feed");
+    setTimeout(() => {
+      const ta = document.querySelector<HTMLTextAreaElement>('textarea[placeholder^="What\u2019s on your mind"], textarea[placeholder^="What\'s on your mind"]');
+      ta?.focus();
+      ta?.click();
+      ta?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
+  };
+
 
 
   const meId = user?.id ?? "";
