@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff, Sparkles } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { awardXp } from "@/lib/gamification.functions";
 import { earnFeedPost } from "@/lib/economy.functions";
@@ -9,7 +11,9 @@ import { slugify } from "@/lib/post-slug";
 import { EmojiPicker } from "@/components/chat/EmojiPicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useFocusComposerConfig } from "@/lib/focus-composer-config";
+import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
 import type { PostPrivacy } from "@/lib/feed-types";
+
 
 
 
@@ -75,9 +79,26 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
     return urls;
   }
 
+  const queryClient = useQueryClient();
+
   async function submit() {
     if (!text.trim() && !files.length) return;
+    const trimmed = text.trim();
+    if (/^\/clearcache\b/i.test(trimmed)) {
+      const ok = await isCurrentUserAdmin();
+      if (!ok) {
+        toast.error("Admins only", { description: "/clearcache is restricted to admins." });
+        return;
+      }
+      toast.loading("Clearing caches…", { id: "clearcache" });
+      const report = await clearCaches({ queryClient });
+      toast.success("Caches cleared", { id: "clearcache", description: formatClearReport(report) });
+      setText("");
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
+      return;
+    }
     setPosting(true); setError(null);
+
     try {
       const media_urls = await uploadFiles();
       const kind = files.length ? "image" : "text";
