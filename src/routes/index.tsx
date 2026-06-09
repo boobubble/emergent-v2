@@ -10,7 +10,7 @@ import { MembersPanel } from "@/components/chat/MembersPanel";
 import { DjFooter } from "@/components/chat/DjFooter";
 import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
-import { ChatQuickShortcuts } from "@/components/chat/ChatQuickShortcuts";
+
 import { BADGE_MAP } from "@/lib/achievements";
 
 export const Route = createFileRoute("/")({
@@ -111,7 +111,7 @@ function ChatApp() {
         <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
         <LeaderboardModal open={lbOpen} onClose={() => setLbOpen(false)} />
         <AchievementsModal open={achOpen} onClose={() => setAchOpen(false)} />
-        <ChatQuickShortcuts />
+        
       </div>
 
       {toast && (
