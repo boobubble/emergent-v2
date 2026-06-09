@@ -377,7 +377,7 @@ function FeedPage() {
           ) : (
             <>
               <div className="mb-4 space-y-3 lg:hidden">
-                <Suspense fallback={null}>
+                <Suspense fallback={<RewardsWidgetSkeleton />}>
                   <RewardsWidget
                     meId={meId}
                     onOpenChest={() => setView("dailyChest")}
