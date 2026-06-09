@@ -19,7 +19,7 @@ export function ChatHeader() {
       : u.status === "online" && (!u.lastSeen || Date.now() - u.lastSeen <= ONLINE_WINDOW_MS);
     const statusLabel = isOnline ? "online" : "offline";
     return (
-      <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/80 px-6 pl-14 backdrop-blur-md">
+      <header className="chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-3 px-6 pl-14">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar user={u} size={36} />
           <div className="min-w-0 leading-tight">
