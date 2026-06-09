@@ -22,10 +22,10 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2 } from "lucide-react";
+import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X } from "lucide-react";
 import {
   getMyRoles, listUsersWithRoles, setUserRole,
-  banUser, unbanUser, deleteUser,
+  banUser, unbanUser, deleteUser, updateUserUsername,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/users")({ component: UsersPage });
