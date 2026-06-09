@@ -45,9 +45,10 @@ export function ChatQuickShortcuts() {
 
       {open && (
         <div
-          className="fixed z-50 right-4 bottom-24 w-60 rounded-3xl border border-border bg-card/95 backdrop-blur-xl p-3 shadow-2xl animate-scale-in"
+          className="fixed z-50 left-4 bottom-28 w-60 rounded-3xl border border-border bg-card/95 backdrop-blur-xl p-3 shadow-2xl animate-scale-in"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
+
           <div className="px-2 pb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             Quick Shortcuts
           </div>
@@ -78,14 +79,15 @@ export function ChatQuickShortcuts() {
         onClick={() => setOpen(o => !o)}
         aria-label={open ? "Close shortcuts" : "Open quick shortcuts"}
         aria-expanded={open}
-        className="fixed right-4 z-50 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-xl ring-2 ring-primary/30 transition-all hover:scale-105 active:scale-95"
+        className="fixed left-4 z-50 grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-xl ring-2 ring-primary/30 transition-all hover:scale-105 active:scale-95"
         style={{
-          bottom: "calc(1rem + env(safe-area-inset-bottom))",
+          bottom: "calc(5.5rem + env(safe-area-inset-bottom))",
           boxShadow: "var(--shadow-glow, 0 10px 30px -8px hsl(var(--primary) / 0.6))",
         }}
       >
-        {open ? <X className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
+        {open ? <X className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
       </button>
+
     </div>
   );
 }
