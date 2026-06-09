@@ -549,13 +549,26 @@ function LandingPage() {
               "linear-gradient(135deg,#a855f7,#7c3aed)", // violet
             ];
             return (
-              <Card key={f.title} className="p-5 text-center transition-transform hover:-translate-y-0.5">
-                <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl text-2xl shadow-lg"
-                     style={{ background: palettes[i % palettes.length], boxShadow: `0 10px 24px -10px ${["#8b5cf6","#3b82f6","#f97316","#10b981","#ef4444","#a855f7"][i % 6]}99` }}>
-                  {f.emoji}
-                </div>
-                <h3 className="mt-3 text-sm font-bold">{f.title}</h3>
-                <p className="mt-1 text-[11px] leading-snug text-white/55">{f.description}</p>
+              <Card key={`${f.title}-${i}`} className="overflow-hidden p-0 text-center transition-transform hover:-translate-y-0.5">
+                {f.href ? (
+                  <a href={f.href} className="block p-5" target={f.href.startsWith("http") ? "_blank" : undefined} rel={f.href.startsWith("http") ? "noopener noreferrer" : undefined}>
+                    <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl text-2xl shadow-lg"
+                         style={{ background: palettes[i % palettes.length], boxShadow: `0 10px 24px -10px ${["#8b5cf6","#3b82f6","#f97316","#10b981","#ef4444","#a855f7"][i % 6]}99` }}>
+                      {f.emoji}
+                    </div>
+                    <h3 className="mt-3 text-sm font-bold">{f.title}</h3>
+                    <p className="mt-1 text-[11px] leading-snug text-white/55">{f.description}</p>
+                  </a>
+                ) : (
+                  <div className="p-5">
+                    <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl text-2xl shadow-lg"
+                         style={{ background: palettes[i % palettes.length], boxShadow: `0 10px 24px -10px ${["#8b5cf6","#3b82f6","#f97316","#10b981","#ef4444","#a855f7"][i % 6]}99` }}>
+                      {f.emoji}
+                    </div>
+                    <h3 className="mt-3 text-sm font-bold">{f.title}</h3>
+                    <p className="mt-1 text-[11px] leading-snug text-white/55">{f.description}</p>
+                  </div>
+                )}
               </Card>
             );
           })}

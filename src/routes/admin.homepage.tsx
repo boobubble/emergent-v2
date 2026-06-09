@@ -181,11 +181,19 @@ function HomepagePage() {
           </div>
           <div className="space-y-3">
             {values.featureCards.map((f, i) => (
-              <div key={i} className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[80px_1fr_2fr_auto]">
-                <Input value={f.emoji} maxLength={4} onChange={(e) => updateFeature(i, "emoji", e.target.value)} placeholder="Emoji" />
-                <Input value={f.title} maxLength={40} onChange={(e) => updateFeature(i, "title", e.target.value)} placeholder="Title" />
-                <Input value={f.description} maxLength={160} onChange={(e) => updateFeature(i, "description", e.target.value)} placeholder="Description" />
-                <Button size="icon" variant="ghost" onClick={() => removeFeature(i)} aria-label="Remove"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <div key={i} className="space-y-2 rounded-lg border p-3">
+                <div className="grid gap-2 sm:grid-cols-[80px_1fr_2fr_auto]">
+                  <Input value={f.emoji} maxLength={4} onChange={(e) => updateFeature(i, "emoji", e.target.value)} placeholder="Emoji" />
+                  <Input value={f.title} maxLength={40} onChange={(e) => updateFeature(i, "title", e.target.value)} placeholder="Title" />
+                  <Input value={f.description} maxLength={160} onChange={(e) => updateFeature(i, "description", e.target.value)} placeholder="Description" />
+                  <Button size="icon" variant="ghost" onClick={() => removeFeature(i)} aria-label="Remove"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+                <Input
+                  value={f.href ?? ""}
+                  maxLength={200}
+                  onChange={(e) => updateFeature(i, "href", e.target.value)}
+                  placeholder="Optional link (e.g. /feed, /games, https://…)"
+                />
               </div>
             ))}
           </div>

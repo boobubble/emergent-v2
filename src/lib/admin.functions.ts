@@ -420,3 +420,28 @@ export const setUserRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// -------- Admin: change a user's username --------
+export const updateUserUsername = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      user_id: z.string().uuid(),
+      username: z.string().trim().min(2).max(32),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const v = data.username.trim();
+    if (!/^[A-Za-z0-9_ ]+$/.test(v)) throw new Error("Only letters, numbers, spaces, and underscore allowed");
+    const letters = v.replace(/[^A-Za-z]/g, "").length;
+    if (letters < 2 || letters > 10) throw new Error("Username must contain 2–10 letters");
+    if (/^guest-/i.test(v)) throw new Error("Reserved prefix");
+    const { data: existing } = await supabaseAdmin
+      .from("profiles").select("id").ilike("username", v).neq("id", data.user_id).maybeSingle();
+    if (existing) throw new Error("Username already taken");
+    const { error } = await supabaseAdmin.from("profiles").update({ username: v }).eq("id", data.user_id);
+    if (error) throw new Error(error.message);
+    return { ok: true, username: v };
+  });
+
+

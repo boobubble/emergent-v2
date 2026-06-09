@@ -22,10 +22,10 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2 } from "lucide-react";
+import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X } from "lucide-react";
 import {
   getMyRoles, listUsersWithRoles, setUserRole,
-  banUser, unbanUser, deleteUser,
+  banUser, unbanUser, deleteUser, updateUserUsername,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/users")({ component: UsersPage });
@@ -71,6 +71,8 @@ function UsersPage() {
   const banFn = useServerFn(banUser);
   const unbanFn = useServerFn(unbanUser);
   const deleteFn = useServerFn(deleteUser);
+  const renameFn = useServerFn(updateUserUsername);
+  const [editing, setEditing] = useState<{ id: string; value: string } | null>(null);
 
   const myRoles = useQuery({ queryKey: ["my-roles"], queryFn: () => myRolesFn() });
   const isSuperAdmin = myRoles.data?.isSuperAdmin ?? false;
@@ -111,6 +113,11 @@ function UsersPage() {
   const delMut = useMutation({
     mutationFn: (user_id: string) => deleteFn({ data: { user_id } }),
     onSuccess: () => { toast.success("User deleted"); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const renameMut = useMutation({
+    mutationFn: (vars: { user_id: string; username: string }) => renameFn({ data: vars }),
+    onSuccess: () => { toast.success("Username updated"); invalidate(); setEditing(null); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -206,7 +213,7 @@ function UsersPage() {
                   <tr><td colSpan={8} className="py-8 text-center text-sm text-muted-foreground">No users found.</td></tr>
                 )}
                 {users.map((u) => (
-                  <tr key={u.id} className="border-b align-top hover:bg-muted/30">
+                  <tr key={u.id} className="group border-b align-top hover:bg-muted/30">
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-7 w-7">
@@ -214,14 +221,44 @@ function UsersPage() {
                           <AvatarFallback>{u.username?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="truncate font-medium">{u.username ?? "—"}</span>
-                            {u.is_guest && (
-                              <Badge variant="outline" className="h-4 gap-0.5 px-1 text-[9px]">
-                                <UserCircle2 className="h-2.5 w-2.5" /> guest
-                              </Badge>
-                            )}
-                          </div>
+                          {editing?.id === u.id ? (
+                            <form
+                              className="flex items-center gap-1"
+                              onSubmit={(e) => { e.preventDefault(); if (!renameMut.isPending) renameMut.mutate({ user_id: u.id, username: editing.value }); }}
+                            >
+                              <Input
+                                autoFocus
+                                value={editing.value}
+                                onChange={(e) => setEditing({ id: u.id, value: e.target.value })}
+                                className="h-7 w-32 text-xs"
+                                maxLength={32}
+                              />
+                              <Button type="submit" size="icon" variant="ghost" className="h-6 w-6" disabled={renameMut.isPending} aria-label="Save">
+                                <Check className="h-3.5 w-3.5 text-green-500" />
+                              </Button>
+                              <Button type="button" size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditing(null)} aria-label="Cancel">
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </form>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <span className="truncate font-medium">{u.username ?? "—"}</span>
+                              <button
+                                type="button"
+                                onClick={() => setEditing({ id: u.id, value: u.username ?? "" })}
+                                className="opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
+                                title="Edit username"
+                                aria-label="Edit username"
+                              >
+                                <Pencil className="h-3 w-3 text-muted-foreground" />
+                              </button>
+                              {u.is_guest && (
+                                <Badge variant="outline" className="h-4 gap-0.5 px-1 text-[9px]">
+                                  <UserCircle2 className="h-2.5 w-2.5" /> guest
+                                </Badge>
+                              )}
+                            </div>
+                          )}
                           <div className="truncate font-mono text-[10px] text-muted-foreground">{u.id.slice(0, 8)}</div>
                         </div>
                       </div>
