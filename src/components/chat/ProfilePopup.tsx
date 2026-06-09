@@ -65,8 +65,12 @@ export function ProfilePopup({
   const room = state.rooms[state.activeChannel];
   const role: Role = (room?.roles?.[userId] || room?.roles?.[realId] || "member") as Role;
   const currentRoom = room && !state.activeChannel.startsWith("dm:") ? room.name : "N/A";
-  const { isModerator } = useMyRoles();
+  const { isAdmin, isModerator } = useMyRoles();
+  const staffPerms = useStaffPermissions();
   const isStaff = isModerator && !isMe && !user?.isBot;
+  const canKick = isStaff && (isAdmin || staffPerms.mod_can_kick);
+  const canMute = isStaff && (isAdmin || staffPerms.mod_can_mute);
+  const canBan  = isStaff && (isAdmin || staffPerms.mod_can_ban);
   const banFn = useServerFn(banUser);
   const muteFn = useServerFn(muteUser);
 
