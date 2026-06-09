@@ -115,6 +115,11 @@ function UsersPage() {
     onSuccess: () => { toast.success("User deleted"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
+  const renameMut = useMutation({
+    mutationFn: (vars: { user_id: string; username: string }) => renameFn({ data: vars }),
+    onSuccess: () => { toast.success("Username updated"); invalidate(); setEditing(null); },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const users = usersQ.data ?? [];
   const totals = useMemo(() => {
