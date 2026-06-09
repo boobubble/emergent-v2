@@ -115,15 +115,15 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
   const card = (
     <div
       className={[
-        "relative rounded-3xl border bg-card p-4 transition-[box-shadow,border-color,transform] duration-200",
+        "relative rounded-[1.25rem] border bg-card p-5 transition-[box-shadow,border-color,transform] duration-200",
         spotlight
           ? "border-primary/60 shadow-2xl ring-2 ring-primary/30 sm:scale-[1.01]"
-          : "border-border shadow-sm",
+          : "border-border shadow-[0_8px_24px_-16px_oklch(0_0_0/0.5)]",
         spotlight && useAnim ? "animate-scale-in" : "",
       ].join(" ")}
     >
       {spotlight && (
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary">
             <Sparkles className="h-3 w-3" /> Focus mode
           </span>
@@ -136,22 +136,27 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           </button>
         </div>
       )}
-      <textarea
-        ref={textareaRef}
-        value={text}
-        onChange={(e) => updateText(e.target.value)}
-        onFocus={openFocus}
-        onClick={openFocus}
-        rows={spotlight ? 6 : 3}
-        placeholder="What's on your mind? Use #hashtags and @mentions…"
-        className="w-full resize-none rounded-2xl border border-transparent bg-transparent px-2 py-1 text-base placeholder:text-muted-foreground focus:outline-none"
-      />
+      <div className="flex gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground font-bold ring-2 ring-card">
+          {authorId ? authorId.slice(0, 1).toUpperCase() : "?"}
+        </div>
+        <textarea
+          ref={textareaRef}
+          value={text}
+          onChange={(e) => updateText(e.target.value)}
+          onFocus={openFocus}
+          onClick={openFocus}
+          rows={spotlight ? 6 : 2}
+          placeholder="What's on your mind? Use #hashtags and @mentions…"
+          className="w-full resize-none rounded-2xl border border-transparent bg-transparent px-1 py-2 text-[15px] leading-relaxed placeholder:text-muted-foreground focus:outline-none"
+        />
+      </div>
       {files.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           {files.map((f, i) => (
-            <div key={i} className="relative h-20 w-20 overflow-hidden rounded-xl border border-border">
+            <div key={i} className="relative h-24 w-24 overflow-hidden rounded-xl border border-border">
               <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
-              <button onClick={() => setFiles(files.filter((_, j) => j !== i))} className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white" aria-label="Remove file">
+              <button onClick={() => setFiles(files.filter((_, j) => j !== i))} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white" aria-label="Remove file">
                 <X className="h-3 w-3" />
               </button>
             </div>
@@ -159,15 +164,15 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
         </div>
       )}
       {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
-      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
-        <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
-          <ImageIcon className="h-4 w-4" /> Photo
+      <div className="mt-4 flex flex-wrap items-center gap-1 border-t border-border pt-3">
+        <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-emerald-400 hover:bg-emerald-400/10 transition">
+          <ImageIcon className="h-4 w-4" /> <span className="hidden sm:inline">Photo</span>
         </button>
         <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e) => setFiles([...files, ...Array.from(e.target.files ?? [])])} />
         <Popover>
           <PopoverTrigger asChild>
-            <button className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
-              <Smile className="h-4 w-4" /> Emoji
+            <button className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-amber-400 hover:bg-amber-400/10 transition">
+              <Smile className="h-4 w-4" /> <span className="hidden sm:inline">Emoji</span>
             </button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-[320px] p-0">
@@ -175,8 +180,8 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           </PopoverContent>
         </Popover>
 
-        <button onClick={() => updateText(text + " #")} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
-          <Hash className="h-4 w-4" /> Tag
+        <button onClick={() => updateText(text + " #")} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-sky-400 hover:bg-sky-400/10 transition">
+          <Hash className="h-4 w-4" /> <span className="hidden sm:inline">Tag</span>
         </button>
         {spotlight && (
           <span className="hidden text-[11px] text-muted-foreground sm:inline">
@@ -187,19 +192,19 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           <select
             value={privacy}
             onChange={(e) => setPrivacy(e.target.value as PostPrivacy)}
-            className="rounded-full border border-border bg-background px-3 py-1.5 text-xs"
+            className="rounded-full border border-border bg-background/50 px-3 py-1.5 text-xs font-medium"
             aria-label="Post audience"
           >
             {PRIVACY.map((p) => (<option key={p.id} value={p.id}>{p.label}</option>))}
           </select>
-          <button onClick={() => setAnonymous(!anonymous)} className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs ${anonymous ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}>
+          <button onClick={() => setAnonymous(!anonymous)} className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition ${anonymous ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
             <EyeOff className="h-3 w-3" /> Anon
           </button>
           <PrivacyIconEl className="h-3.5 w-3.5 text-muted-foreground" />
           <button
             onClick={submit}
             disabled={posting || (!text.trim() && !files.length)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-primary/80 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_8px_24px_-8px_var(--primary-glow)] hover:scale-[1.03] active:scale-[0.97] transition disabled:opacity-50 disabled:hover:scale-100"
           >
             {posting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             Post
