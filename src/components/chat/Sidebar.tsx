@@ -6,6 +6,7 @@ import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/BrandMark";
+import { ChatExploreMenu } from "./ChatExploreMenu";
 
 interface Props {
   onOpenProfile: () => void;
@@ -130,6 +131,10 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
       </nav>
 
       <div className="border-t border-border p-3">
+        <div className="mb-2">
+          <ChatExploreMenu />
+        </div>
+
         {!user?.isGuest && (
           <a
             href="/feed"
