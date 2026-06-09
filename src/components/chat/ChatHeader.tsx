@@ -49,15 +49,15 @@ export function ChatHeader() {
   if (!room) return null;
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/80 px-6 pl-14 backdrop-blur-md">
+    <header className="chat-glass sticky top-0 z-20 flex h-16 items-center justify-between px-6 pl-14">
       <div className="flex items-center gap-3">
         <BrandMark
           slot="chat"
           roomId={id}
           alt="Room logo"
-          className="h-8 w-8 rounded-lg object-contain"
+          className="h-9 w-9 rounded-xl object-contain ring-1 ring-border"
           fallback={
-            <div className="grid h-8 w-8 place-items-center rounded-lg bg-white/5 font-bold text-primary">#</div>
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 font-bold text-primary ring-1 ring-primary/20">#</div>
           }
         />
         <div className="min-w-0">
@@ -65,30 +65,42 @@ export function ChatHeader() {
             <span className="truncate font-bold text-foreground">{channelLabel(id)}</span>
             <LoyaltyChip channelId={id} />
           </div>
-          <div className="truncate text-[11px] text-muted-foreground">{room.topic}</div>
+          <div className="flex items-center gap-1.5 truncate text-[11px] text-muted-foreground">
+            <span className="chat-online-dot" aria-hidden />
+            <span className="font-semibold text-foreground/80">{room.members.length}</span>
+            <span>online</span>
+            {room.topic && <span className="truncate">· {room.topic}</span>}
+          </div>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => setIgnoreAllBots(!ignoreAllBots)}
           title={ignoreAllBots ? "Show bot messages" : "Hide all bot messages"}
           aria-pressed={ignoreAllBots}
-          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${ignoreAllBots ? "bg-destructive/15 text-destructive hover:bg-destructive/20" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}
+          className={`hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${ignoreAllBots ? "bg-destructive/15 text-destructive hover:bg-destructive/20" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}
         >
           {ignoreAllBots ? <BotOff className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
-          <span className="hidden sm:inline">{ignoreAllBots ? "Bots hidden" : "Bots on"}</span>
+          <span>{ignoreAllBots ? "Bots hidden" : "Bots on"}</span>
+        </button>
+        <button
+          type="button"
+          className="chat-icon-btn"
+          title="Search messages"
+          aria-label="Search messages"
+          onClick={() => window.dispatchEvent(new Event("palrgo:search-open"))}
+        >
+          <Search className="h-4 w-4" />
         </button>
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event("open-members-panel"))}
-          className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 transition hover:bg-white/10 lg:pointer-events-none lg:hover:bg-white/5"
+          className="chat-icon-btn lg:hidden"
           aria-label="Show members"
+          title="Members"
         >
-          <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary-glow)]" />
-          <span className="text-xs font-semibold text-muted-foreground">
-            {room.members.length} online
-          </span>
+          <MoreHorizontal className="h-4 w-4" />
         </button>
       </div>
     </header>
