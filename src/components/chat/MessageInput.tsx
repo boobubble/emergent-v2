@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
 import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker, Youtube, ImagePlay } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useTyping } from "@/lib/use-typing";
@@ -11,7 +13,9 @@ import { YoutubePicker } from "./YoutubePicker";
 import { useAppSettings } from "@/lib/app-settings";
 import { mergeMediaConfig } from "@/lib/media-providers-config";
 import { earnChatMessage } from "@/lib/economy.functions";
+import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
 import type { Attachment } from "@/lib/chat-types";
+
 
 const COMMANDS = [
   "!help", "!roll", "!flip", "!slots", "!fish", "!dig",
