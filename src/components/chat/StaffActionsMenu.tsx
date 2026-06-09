@@ -47,7 +47,7 @@ export function StaffActionsMenu({
   const canKick = isAdmin || perms.mod_can_kick;
   const canMute = isAdmin || perms.mod_can_mute;
   const canBan = isAdmin || perms.mod_can_ban;
-  const canDelete = isAdmin || perms.mod_can_delete_message;
+  const canDelete = isAdmin || perms.mod_can_ban; // delete piggybacks on ban perm
   if (!canKick && !canMute && !canBan && !canDelete) return null;
 
   const channelId = state.activeChannel;
