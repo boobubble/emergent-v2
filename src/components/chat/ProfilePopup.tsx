@@ -4,16 +4,21 @@ import {
   MessageCircle, UserPlus, UserMinus, Ban, ShieldCheck, ExternalLink,
   Crown, Shield, ShieldHalf, Flame, Coins, Trophy, Calendar, Eye, Globe,
   Heart, Activity as ActivityIcon, Award, Sparkles, X, AtSign, BellOff, Bell,
+  Gavel, VolumeX, LogOut,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { useIgnore } from "@/lib/ignore-store";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
+import { useMyRoles } from "@/lib/use-my-role";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "./Avatar";
-import { NameEmojiBadge } from "@/lib/name-emoji";
+import { NameEmojiBadge, CountryFlag, UserKindBadge } from "@/lib/name-emoji";
 import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
+import { banUser, muteUser } from "@/lib/moderation.functions";
 import type { Role } from "@/lib/chat-types";
 
 type Tab = "info" | "about" | "friends" | "activity" | "daily";

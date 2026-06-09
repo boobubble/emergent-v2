@@ -175,11 +175,20 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
+  const [birthday, setBirthday] = useState("");
+  const [hideYear, setHideYear] = useState(false);
+  const [country, setCountry] = useState("");
   const [avatarDataUrl, setAvatarDataUrl] = useState("");
   const [err, setErr] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
   const usernameStatus = useUsernameCheck(open ? username : "");
+
+  // Lazy-load country helper to keep this dialog light.
+  useEffect(() => {
+    if (!open || country) return;
+    void import("@/lib/country-flag").then((m) => setCountry(m.detectCountryCode()));
+  }, [open, country]);
 
   function onPickAvatar(file: File | null) {
     setErr("");
@@ -205,7 +214,11 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
         if (avatarDataUrl) sessionStorage.setItem(`pending-avatar:${k}`, avatarDataUrl);
         sessionStorage.setItem(`pending-welcome:${k}`, "1");
       } catch { /* ignore */ }
-      await signup(email, password, username.trim(), gender);
+      await signup(email, password, username.trim(), gender, {
+        birthday: birthday || undefined,
+        hide_birth_year: hideYear,
+        country_code: country || undefined,
+      });
       setInfo("Account created! You're being signed in…");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Sign up failed");
@@ -252,6 +265,21 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
                   {g}
                 </button>
               ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Birthday</label>
+              <input type="date" value={birthday} onChange={e => setBirthday(e.target.value)} max={new Date().toISOString().slice(0,10)} className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" />
+              <label className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <input type="checkbox" checked={hideYear} onChange={(e) => setHideYear(e.target.checked)} className="h-3 w-3" />
+                Hide year publicly
+              </label>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Country</label>
+              <input value={country} onChange={(e) => setCountry(e.target.value.toUpperCase().slice(0, 2))} maxLength={2} placeholder="US" className="w-full rounded-lg bg-input px-3 py-2 text-sm uppercase outline-none focus:ring-1 focus:ring-ring" />
+              <p className="mt-1 text-[10px] text-muted-foreground">2-letter ISO code, optional.</p>
             </div>
           </div>
           <div>

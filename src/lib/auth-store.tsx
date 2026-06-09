@@ -13,13 +13,19 @@ export interface AuthUser {
   isGuest: boolean;
 }
 
+interface SignupExtras {
+  birthday?: string;        // yyyy-mm-dd
+  hide_birth_year?: boolean;
+  country_code?: string;    // ISO 3166-1 alpha-2
+}
+
 interface Ctx {
   user: AuthUser | null;
   ready: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, username: string, gender: "male" | "female" | "other") => Promise<void>;
+  signup: (email: string, password: string, username: string, gender: "male" | "female" | "other", extras?: SignupExtras) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginAsGuest: (username?: string) => Promise<void>;
+  loginAsGuest: (username?: string, gender?: "male" | "female" | "other") => Promise<void>;
   logout: () => Promise<void>;
   refreshUsername: () => Promise<void>;
 }
@@ -106,6 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const email = session.user.email ?? undefined;
         void flushPendingAvatar(session.user.id, email).then(() => publishWelcomePost(session.user.id, email));
       }
+      // Hydrate sound preferences from this user's profile (best effort).
+      void import("@/lib/sound-prefs").then((m) => m.hydrateSoundPrefsFromServer());
       // Record this device for ban-evasion tracking (best effort).
       void (async () => {
         try {
@@ -169,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error(error.message);
   }, []);
 
-  const signup = useCallback(async (email: string, password: string, username: string, gender: "male" | "female" | "other") => {
+  const signup = useCallback(async (email: string, password: string, username: string, gender: "male" | "female" | "other", extras?: SignupExtras) => {
     email = email.trim();
     username = username.trim();
     const letterCount = username.replace(/[^a-zA-Z]/g, "").length;
@@ -188,12 +196,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (e) { if (e instanceof Error && e.message.startsWith("This device")) throw e; }
+    const meta: Record<string, string | boolean> = { username, gender };
+    if (extras?.birthday) meta.birthday = extras.birthday;
+    if (extras?.hide_birth_year != null) meta.hide_birth_year = extras.hide_birth_year ? "true" : "false";
+    if (extras?.country_code) meta.country_code = extras.country_code.toUpperCase();
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
-        data: { username, gender },
+        data: meta,
       },
     });
     if (error) throw new Error(error.message);
@@ -207,14 +219,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error(error.message || "Google sign-in failed");
   }, []);
 
-  const loginAsGuest = useCallback(async (username?: string) => {
+  const loginAsGuest = useCallback(async (username?: string, gender?: "male" | "female" | "other") => {
     const cleaned = (username ?? "").trim();
     const letterCount = cleaned.replace(/[^a-zA-Z]/g, "").length;
     if (cleaned && (letterCount < 2 || letterCount > 10)) {
       throw new Error("Guest name must contain 2 to 10 letters.");
     }
-    const meta = cleaned ? { username: cleaned, gender: "other" } : undefined;
-    const { error } = await supabase.auth.signInAnonymously(meta ? { options: { data: meta } } : undefined);
+    const g: "male" | "female" | "other" = gender && ["male", "female", "other"].includes(gender) ? gender : "other";
+    const meta: Record<string, string> = { gender: g };
+    if (cleaned) meta.username = cleaned;
+    const { error } = await supabase.auth.signInAnonymously({ options: { data: meta } });
     if (error) throw new Error(error.message);
   }, []);
 
