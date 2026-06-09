@@ -339,7 +339,7 @@ export function ProfilePopup({
             {canKick && (
               <button
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent("palrgo:kick-user", { detail: { userId: realId, channelId: state.activeChannel } }));
+                  staffKick(realId, state.activeChannel, user.name);
                   toast.success(`Kicked ${user.name} from this room`);
                   onOpenChange(false);
                 }}
