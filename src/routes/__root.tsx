@@ -203,6 +203,7 @@ function AuthGate() {
             <SessionConflictBanner />
             <FaviconSwitcher />
             <Outlet />
+            <GlobalThemeToggle />
             <Sonner />
             <RealtimeDebugOverlay />
           </IgnoreProvider>
