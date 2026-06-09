@@ -71,6 +71,8 @@ function UsersPage() {
   const banFn = useServerFn(banUser);
   const unbanFn = useServerFn(unbanUser);
   const deleteFn = useServerFn(deleteUser);
+  const renameFn = useServerFn(updateUserUsername);
+  const [editing, setEditing] = useState<{ id: string; value: string } | null>(null);
 
   const myRoles = useQuery({ queryKey: ["my-roles"], queryFn: () => myRolesFn() });
   const isSuperAdmin = myRoles.data?.isSuperAdmin ?? false;
