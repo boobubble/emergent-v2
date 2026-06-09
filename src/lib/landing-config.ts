@@ -8,6 +8,8 @@ export interface LandingFeatureCard {
   emoji: string;
   title: string;
   description: string;
+  /** Optional link applied to the whole card on the welcome page. */
+  href?: string;
 }
 
 export interface LandingGameCard {
