@@ -107,29 +107,19 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
                   key={id}
                   onClick={() => setActive(id)}
                   className={cn(
-                    "group flex w-full items-center justify-between rounded-full px-3 py-2.5 text-sm transition-all",
-                    active
-                      ? "bg-primary font-semibold text-primary-foreground shadow-lg shadow-primary/20"
-                      : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                    "chat-room-item",
+                    active && "chat-room-item-active",
                   )}
                 >
-                  <span className="flex items-center gap-3 truncate">
-                    <span
-                      className={cn(
-                        active ? "opacity-70" : "opacity-50 group-hover:text-primary",
-                      )}
-                    >
+                  <span className="flex items-center gap-2.5 truncate">
+                    <span className={cn("text-base leading-none", active ? "text-primary" : "opacity-50")}>
                       #
                     </span>
                     <span className="truncate">{r.name}</span>
                   </span>
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-[10px]",
-                      active ? "bg-black/15" : "bg-white/5",
-                    )}
-                  >
-                    {r.members.length}
+                  <span className="flex items-center gap-1.5 text-[10px]">
+                    <span className="chat-online-dot" aria-hidden style={{ width: "0.4rem", height: "0.4rem" }} />
+                    <span className="font-semibold opacity-80">{r.members.length}</span>
                   </span>
                 </button>
               );

@@ -375,3 +375,67 @@
   15%, 85% { opacity: 1; transform: translate(-50%, 0); }
   100% { opacity: 0; transform: translate(-50%, -10px); }
 }
+
+/* ===== Chatroom Premium UI ===== */
+@utility chat-glass {
+  background: color-mix(in oklab, var(--color-card) 70%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border-bottom: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
+}
+@utility chat-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  color: var(--color-muted-foreground);
+  transition: background .15s ease, color .15s ease, transform .15s ease;
+  &:hover { background: color-mix(in oklab, var(--primary) 14%, transparent); color: var(--color-foreground); transform: translateY(-1px); }
+  &:active { transform: translateY(0) scale(.96); }
+}
+@utility chat-room-item {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.85rem;
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground);
+  transition: background .15s ease, color .15s ease, transform .15s ease;
+  &:hover { background: color-mix(in oklab, var(--primary) 10%, transparent); color: var(--color-foreground); }
+}
+@utility chat-room-item-active {
+  color: var(--color-foreground);
+  background: color-mix(in oklab, var(--primary) 18%, transparent);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 40%, transparent);
+}
+.chat-composer-glow:focus-within {
+  border-color: color-mix(in oklab, var(--primary) 55%, var(--color-border)) !important;
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 15%, transparent), 0 10px 30px -12px var(--primary-glow);
+  transform: translateY(-1px);
+}
+
+@keyframes chat-bubble-in {
+  0% { opacity: 0; transform: translateY(6px) scale(.985); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.chat-bubble-in { animation: chat-bubble-in .22s cubic-bezier(.2,.8,.2,1) both; }
+
+@keyframes chat-online-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 55%, transparent); }
+  70% { box-shadow: 0 0 0 6px color-mix(in oklab, var(--success) 0%, transparent); }
+}
+.chat-online-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--success);
+  animation: chat-online-pulse 2.2s ease-out infinite;
+}
+

@@ -312,7 +312,7 @@ export function MessageInput() {
           <span className="flex-1">You're muted in the lobby ({muteLabel} left). You can still DM friends from your friends list.</span>
         </div>
       ) : (
-      <div className="group relative flex items-end gap-1 rounded-3xl border border-border bg-white/5 py-2 pl-4 pr-2 transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/30">
+      <div className="chat-composer-glow group relative flex items-end gap-1 rounded-3xl border border-border bg-card/60 py-2 pl-4 pr-2 shadow-sm backdrop-blur-md transition-all">
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
         <button onClick={() => fileRef.current?.click()} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Attach file">
           <Paperclip className="h-5 w-5" />
@@ -345,7 +345,7 @@ export function MessageInput() {
         <button onClick={() => { setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground" title="Emoji">
           <Smile className="h-5 w-5" />
         </button>
-        <button onClick={submit} disabled={!text.trim() && !attachment} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100">
+        <button onClick={submit} disabled={!text.trim() && !attachment} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-primary-foreground shadow-lg transition-all hover:scale-110 active:scale-90 disabled:opacity-40 disabled:hover:scale-100" style={{ background: "var(--gradient-primary)", boxShadow: "0 8px 24px -8px var(--primary-glow)" }}>
           <Send className="h-4 w-4" />
         </button>
       </div>

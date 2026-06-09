@@ -196,8 +196,8 @@ export function MessageList({ channelId }: { channelId: string }) {
                             <div
                               className={
                                 m.kind === "me"
-                                  ? "rounded-2xl bg-white/5 px-4 py-2.5 text-sm italic text-primary"
-                                  : "rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground"
+                                  ? "rounded-2xl bg-white/5 px-4 py-2.5 text-sm italic text-primary chat-bubble-in"
+                                  : "rounded-2xl rounded-tr-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in"
                               }
                             >
                               <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
@@ -249,8 +249,8 @@ export function MessageList({ channelId }: { channelId: string }) {
                           <div
                             className={
                               m.kind === "me"
-                                ? "rounded-2xl bg-white/5 px-4 py-2.5 text-sm italic text-primary"
-                                : "max-w-[80%] rounded-2xl rounded-tl-sm border border-border bg-white/5 px-4 py-2.5 text-sm leading-relaxed text-foreground/90"
+                                ? "rounded-2xl bg-white/5 px-4 py-2.5 text-sm italic text-primary chat-bubble-in"
+                                : "max-w-[80%] rounded-2xl rounded-tl-md border border-border bg-card/70 backdrop-blur-sm px-4 py-2.5 text-sm leading-relaxed text-foreground/90 shadow-sm chat-bubble-in"
                             }
                           >
                             <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
