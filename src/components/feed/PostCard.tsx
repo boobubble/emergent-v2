@@ -279,35 +279,35 @@ export const PostCard = memo(function PostCard({
 
 
       {showComments && (
-        <div className="mt-3 space-y-2 border-t border-border pt-3">
+        <div className="mt-4 space-y-3 border-t border-border pt-4">
           {comments.map((c) => {
             const cAuthor = profiles[c.author_id];
             return (
-              <div key={c.id} className="flex gap-2">
-                {cAuthor && <FrameAvatar user={cAuthor} size={28} />}
-                <div className="min-w-0 flex-1 rounded-2xl bg-accent/50 px-3 py-2">
+              <div key={c.id} className="flex gap-2.5 animate-fade-in">
+                {cAuthor && <FrameAvatar user={cAuthor} size={32} />}
+                <div className="min-w-0 flex-1 rounded-2xl bg-accent/15 border border-border/60 px-3.5 py-2.5">
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="font-semibold">
+                    <span className="font-semibold text-foreground">
                       {cAuthor ? <CosmeticName userId={cAuthor.id} name={cAuthor.name} /> : "user"}
                     </span>
                     <span className="text-muted-foreground">{timeAgo(c.created_at)}</span>
                   </div>
-                  <p className="text-sm">{c.text}</p>
+                  <p className="mt-0.5 text-[14px] leading-relaxed">{c.text}</p>
                 </div>
               </div>
             );
           })}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pt-1">
             <input
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addComment(); } }}
               placeholder="Write a comment…"
-              className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              className="flex-1 rounded-full border border-border bg-background/60 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
             />
             <Popover>
               <PopoverTrigger asChild>
-                <button type="button" className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Add emoji">
+                <button type="button" className="rounded-full p-2 text-muted-foreground hover:bg-accent/30 hover:text-foreground transition" aria-label="Add emoji">
                   <Smile className="h-4 w-4" />
                 </button>
               </PopoverTrigger>
@@ -315,12 +315,15 @@ export const PostCard = memo(function PostCard({
                 <EmojiPicker onPick={(e) => setCommentText((t) => t + e)} />
               </PopoverContent>
             </Popover>
-            <button onClick={addComment} disabled={sending || !commentText.trim()} className="rounded-full bg-primary p-2 text-primary-foreground disabled:opacity-50">
+            <button onClick={addComment} disabled={sending || !commentText.trim()} className="rounded-full bg-gradient-to-r from-primary to-primary/80 p-2.5 text-primary-foreground shadow-[0_6px_18px_-6px_var(--primary-glow)] hover:scale-105 active:scale-95 transition disabled:opacity-50 disabled:hover:scale-100">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
           </div>
         </div>
       )}
+    </article>
+  );
+});
     </article>
   );
 });
