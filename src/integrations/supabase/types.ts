@@ -1118,16 +1118,22 @@ export type Database = {
           avatar_color: string
           avatar_url: string | null
           bio: string | null
+          birthday: string | null
           coins: number
+          country_code: string | null
           cover_url: string | null
           created_at: string
           gender: string | null
+          hide_birth_year: boolean
           id: string
           is_private: boolean
           last_active_day: string | null
           last_seen: string
           level: number
           longest_streak: number
+          show_country_flag: boolean
+          show_guest_badge: boolean
+          sound_prefs: Json
           status: string
           streak: number
           updated_at: string
@@ -1138,16 +1144,22 @@ export type Database = {
           avatar_color?: string
           avatar_url?: string | null
           bio?: string | null
+          birthday?: string | null
           coins?: number
+          country_code?: string | null
           cover_url?: string | null
           created_at?: string
           gender?: string | null
+          hide_birth_year?: boolean
           id: string
           is_private?: boolean
           last_active_day?: string | null
           last_seen?: string
           level?: number
           longest_streak?: number
+          show_country_flag?: boolean
+          show_guest_badge?: boolean
+          sound_prefs?: Json
           status?: string
           streak?: number
           updated_at?: string
@@ -1158,16 +1170,22 @@ export type Database = {
           avatar_color?: string
           avatar_url?: string | null
           bio?: string | null
+          birthday?: string | null
           coins?: number
+          country_code?: string | null
           cover_url?: string | null
           created_at?: string
           gender?: string | null
+          hide_birth_year?: boolean
           id?: string
           is_private?: boolean
           last_active_day?: string | null
           last_seen?: string
           level?: number
           longest_streak?: number
+          show_country_flag?: boolean
+          show_guest_badge?: boolean
+          sound_prefs?: Json
           status?: string
           streak?: number
           updated_at?: string
