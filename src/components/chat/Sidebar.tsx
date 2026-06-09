@@ -6,7 +6,7 @@ import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/BrandMark";
-import { ChatExploreMenu } from "./ChatExploreMenu";
+
 
 interface Props {
   onOpenProfile: () => void;
