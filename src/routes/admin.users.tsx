@@ -221,14 +221,44 @@ function UsersPage() {
                           <AvatarFallback>{u.username?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="truncate font-medium">{u.username ?? "—"}</span>
-                            {u.is_guest && (
-                              <Badge variant="outline" className="h-4 gap-0.5 px-1 text-[9px]">
-                                <UserCircle2 className="h-2.5 w-2.5" /> guest
-                              </Badge>
-                            )}
-                          </div>
+                          {editing?.id === u.id ? (
+                            <form
+                              className="flex items-center gap-1"
+                              onSubmit={(e) => { e.preventDefault(); if (!renameMut.isPending) renameMut.mutate({ user_id: u.id, username: editing.value }); }}
+                            >
+                              <Input
+                                autoFocus
+                                value={editing.value}
+                                onChange={(e) => setEditing({ id: u.id, value: e.target.value })}
+                                className="h-7 w-32 text-xs"
+                                maxLength={32}
+                              />
+                              <Button type="submit" size="icon" variant="ghost" className="h-6 w-6" disabled={renameMut.isPending} aria-label="Save">
+                                <Check className="h-3.5 w-3.5 text-green-500" />
+                              </Button>
+                              <Button type="button" size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditing(null)} aria-label="Cancel">
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </form>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <span className="truncate font-medium">{u.username ?? "—"}</span>
+                              <button
+                                type="button"
+                                onClick={() => setEditing({ id: u.id, value: u.username ?? "" })}
+                                className="opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
+                                title="Edit username"
+                                aria-label="Edit username"
+                              >
+                                <Pencil className="h-3 w-3 text-muted-foreground" />
+                              </button>
+                              {u.is_guest && (
+                                <Badge variant="outline" className="h-4 gap-0.5 px-1 text-[9px]">
+                                  <UserCircle2 className="h-2.5 w-2.5" /> guest
+                                </Badge>
+                              )}
+                            </div>
+                          )}
                           <div className="truncate font-mono text-[10px] text-muted-foreground">{u.id.slice(0, 8)}</div>
                         </div>
                       </div>
