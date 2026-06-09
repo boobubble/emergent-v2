@@ -149,20 +149,20 @@ export const PostCard = memo(function PostCard({
   }
 
   return (
-    <article className={`rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md ${compact ? "p-3" : "p-4"}`}>
+    <article className={`feed-card feed-card-hover ${compact ? "p-4" : "p-5"}`}>
       <header className="flex items-center gap-3">
         {author ? (
-          <Link to="/u/$username" params={{ username: author.name }}>
-            <FrameAvatar user={author} size={40} />
+          <Link to="/u/$username" params={{ username: author.name }} className="transition hover:scale-[1.04]">
+            <FrameAvatar user={author} size={44} />
           </Link>
         ) : (
-          <div className="grid h-10 w-10 place-items-center rounded-full bg-muted text-muted-foreground"><EyeOff className="h-5 w-5" /></div>
+          <div className="grid h-11 w-11 place-items-center rounded-full bg-muted text-muted-foreground"><EyeOff className="h-5 w-5" /></div>
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             {author ? (
               <>
-                <Link to="/u/$username" params={{ username: author.name }} className="font-semibold hover:underline">
+                <Link to="/u/$username" params={{ username: author.name }} className="font-semibold text-[15px] hover:underline">
                   <CosmeticName userId={author.id} name={author.name} />
                 </Link>
                 <NameEmojiBadge user={author} />
@@ -171,56 +171,78 @@ export const PostCard = memo(function PostCard({
             ) : (
               <span className="font-semibold text-muted-foreground">Anonymous</span>
             )}
-            {trendingScore > 50 && <Flame className="h-3.5 w-3.5 text-orange-500" />}
+            {trendingScore > 50 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-400">
+                <Flame className="h-3 w-3" /> Trending
+              </span>
+            )}
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="mt-0.5 text-xs text-muted-foreground">
             <Link to="/feed/$slug" params={{ slug: postSlug(post) }} className="hover:underline">{timeAgo(post.created_at)}</Link> · <span className="capitalize">{post.privacy}</span>
           </div>
         </div>
         {post.owner_id === meId && (
-          <button onClick={del} className="rounded-full p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label="Delete">
+          <button onClick={del} className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition" aria-label="Delete">
             <Trash2 className="h-4 w-4" />
           </button>
         )}
       </header>
 
-      {post.text && <p className={`mt-3 whitespace-pre-wrap leading-relaxed ${compact ? "text-sm" : "text-[15px]"}`}>{renderText(post.text)}</p>}
+      {post.text && <p className={`mt-4 whitespace-pre-wrap leading-relaxed ${compact ? "text-[14px]" : "text-[15.5px]"}`}>{renderText(post.text)}</p>}
 
       {mediaUrls.length > 0 && (
-        <div className={`mt-3 grid gap-1 overflow-hidden rounded-xl ${mediaUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+        <div className={`mt-4 grid gap-1 overflow-hidden rounded-2xl border border-border ${mediaUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
           {mediaUrls.map((u, i) => (
-            <img key={i} src={u} alt="" loading="lazy" decoding="async" className={`w-full object-cover ${compact ? "max-h-72" : "max-h-96"}`} />
+            <img key={i} src={u} alt="" loading="lazy" decoding="async" className={`w-full object-cover transition hover:scale-[1.01] ${compact ? "max-h-80" : "max-h-[480px]"}`} />
           ))}
         </div>
       )}
 
+      {!hideCounts && (totalReactions > 0 || commentCount > 0) && (
+        <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            {Object.keys(counts).length > 0 ? (
+              <div className="flex -space-x-1">
+                {(Object.entries(counts) as [ReactionType, number][]).slice(0, 3).map(([k]) => (
+                  <span key={k} className="grid h-5 w-5 place-items-center rounded-full bg-card ring-2 ring-card text-[12px]">{REACTION_EMOJI[k]}</span>
+                ))}
+              </div>
+            ) : (
+              totalReactions > 0 && <span className="text-base">👍</span>
+            )}
+            {totalReactions > 0 && <span>{totalReactions}</span>}
+          </div>
+          {commentCount > 0 && <span>{commentCount} {commentCount === 1 ? "comment" : "comments"}</span>}
+        </div>
+      )}
+
       <footer className="mt-3 flex items-center gap-1 border-t border-border pt-2">
-        <div className="relative">
+        <div className="relative flex-1">
           <button
             onClick={() => { ensureReactions(); setPickerOpen(!pickerOpen); }}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${myReaction ? "text-primary" : "text-muted-foreground"} hover:bg-accent hover:text-foreground`}
+            className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition ${myReaction ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-accent/20 hover:text-foreground"}`}
           >
-            <span className="text-base">{myReaction ? REACTION_EMOJI[myReaction.type] : "👍"}</span>
-            <span>{hideCounts ? "React" : (totalReactions || "React")}</span>
+            <span className={`text-lg ${myReaction ? "like-burst" : ""}`}>{myReaction ? REACTION_EMOJI[myReaction.type] : "👍"}</span>
+            <span>{hideCounts ? "React" : (myReaction ? "Reacted" : "Like")}</span>
           </button>
           {pickerOpen && (
-            <div className="absolute bottom-full left-0 z-10 mb-1 flex gap-1 rounded-full border border-border bg-card p-1 shadow-lg">
+            <div className="absolute bottom-full left-0 z-10 mb-2 flex gap-1 rounded-full border border-border bg-card p-1.5 shadow-2xl animate-scale-in">
               {REACTION_ORDER.map((r) => (
-                <button key={r} onClick={() => react(r)} className="rounded-full p-1.5 text-lg transition-transform hover:scale-125">
+                <button key={r} onClick={() => react(r)} className="rounded-full p-1.5 text-xl transition-transform hover:scale-150 hover:-translate-y-1">
                   {REACTION_EMOJI[r]}
                 </button>
               ))}
             </div>
           )}
         </div>
-        <button onClick={() => setShowComments(!showComments)} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
-          <MessageCircle className="h-4 w-4" /> {hideCounts ? "Comment" : (commentCount || "Comment")}
+        <button onClick={() => setShowComments(!showComments)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-accent/20 hover:text-foreground transition">
+          <MessageCircle className="h-4 w-4" /> <span>Comment</span>
         </button>
         {post.owner_id !== meId && (
           <button
             onClick={boost}
             disabled={boosting}
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500 disabled:opacity-50 transition"
             title={`Boost (${SPEND.boost_post.coins} coins)`}
           >
             {boosting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
@@ -237,33 +259,24 @@ export const PostCard = memo(function PostCard({
             const shareText = post.text ? post.text : `Check out this post by ${authorName}`;
             const payload: SharePayload = { title, text: shareText, url };
             earnShare({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
-            // Try native Web Share API first (best on mobile)
             if (typeof navigator !== "undefined" && navigator.share) {
               try {
                 await navigator.share({ title, text: shareText, url });
                 return;
               } catch (e) {
                 if ((e as Error)?.name === "AbortError") return;
-                // fall through to modal
               }
             }
             setShareOpen(payload);
           }}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-accent/20 hover:text-foreground transition"
         >
-          <Share2 className="h-4 w-4" /> Share
+          <Share2 className="h-4 w-4" /> <span>Share</span>
         </button>
       </footer>
       {shareOpen && <ShareModal payload={shareOpen} onClose={() => setShareOpen(null)} />}
 
 
-      {!hideCounts && Object.keys(counts).length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1 text-xs text-muted-foreground">
-          {(Object.entries(counts) as [ReactionType, number][]).map(([k, v]) => (
-            <span key={k} className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5">{REACTION_EMOJI[k]} {v}</span>
-          ))}
-        </div>
-      )}
 
       {showComments && (
         <div className="mt-3 space-y-2 border-t border-border pt-3">
