@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus } from "lucide-react";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -99,6 +99,8 @@ function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [dmOpenKey, setDmOpenKey] = useState(0);
   const [defaultTabApplied, setDefaultTabApplied] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
+
 
   const meId = user?.id ?? "";
 
@@ -478,6 +480,32 @@ function FeedPage() {
         <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
 
+      {/* Mobile quick-actions speed dial (left-bottom, opposite the theme toggle) */}
+      <MobileSpeedDial
+        open={fabOpen}
+        onToggle={() => setFabOpen(o => !o)}
+        onClose={() => setFabOpen(false)}
+        actions={[
+          { label: "Add Story", icon: CirclePlus, color: "from-fuchsia-500 to-pink-500", onClick: () => {
+              setView("feed");
+              setTimeout(() => {
+                document.getElementById("story-tray")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                document.querySelector<HTMLButtonElement>("[data-story-add]")?.click();
+              }, 60);
+            } },
+          { label: "Find Friends", icon: UserPlus, color: "from-teal-500 to-emerald-500", onClick: () => setView("findFriends") },
+          { label: "Messages", icon: MessageCircle, color: "from-sky-500 to-indigo-500", onClick: () => setDmOpenKey(k => k + 1) },
+          { label: "Notifications", icon: Bell, color: "from-rose-500 to-red-500", onClick: () => { setView("feed"); setTab("notifications"); } },
+          { label: "Achievements", icon: Award, color: "from-yellow-500 to-amber-500", onClick: () => setView("achievements") },
+          { label: "Leaderboard", icon: Trophy, color: "from-amber-500 to-orange-500", onClick: () => setView("leaderboard") },
+          { label: "Daily Chest", icon: Gift, color: "from-rose-500 to-fuchsia-500", onClick: () => setView("dailyChest") },
+          { label: "Daily Spin", icon: Sparkles, color: "from-violet-500 to-purple-500", onClick: () => setView("spin") },
+          { label: "Shop", icon: Coins, color: "from-emerald-500 to-green-500", onClick: () => setView("shop") },
+        ]}
+      />
+
+
+
       {dmOpenKey > 0 && (
         <Suspense fallback={null}>
           <FeedDMDock key={dmOpenKey} meId={meId} profiles={profiles} initialOpen={true} />
@@ -570,3 +598,59 @@ function MobileNav({ to, params, icon: Icon, label, active }: { to: string; para
     </Link>
   );
 }
+
+type SpeedDialAction = { label: string; icon: typeof Home; color: string; onClick: () => void };
+
+function MobileSpeedDial({ open, onToggle, onClose, actions }: { open: boolean; onToggle: () => void; onClose: () => void; actions: SpeedDialAction[] }) {
+  return (
+    <div className="lg:hidden">
+      {/* Backdrop */}
+      {open && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          onClick={onClose}
+          className="fixed inset-0 z-[55] bg-background/60 backdrop-blur-sm animate-in fade-in duration-200"
+        />
+      )}
+
+      {/* Action sheet */}
+      <div
+        className={`fixed left-3 z-[58] flex flex-col-reverse items-start gap-2 transition-all duration-200 ${open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-3 pointer-events-none"}`}
+        style={{ bottom: "calc(7.5rem + env(safe-area-inset-bottom))" }}
+      >
+        {actions.map((a, i) => {
+          const Icon = a.icon;
+          return (
+            <button
+              key={a.label}
+              onClick={() => { a.onClick(); onClose(); }}
+              style={{ transitionDelay: open ? `${i * 25}ms` : "0ms" }}
+              className="group flex items-center gap-2.5 rounded-full border border-border bg-card/95 pl-2 pr-4 py-1.5 shadow-lg backdrop-blur transition-all hover:scale-[1.03] active:scale-95"
+            >
+              <span className={`grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br ${a.color} text-white shadow-md`}>
+                <Icon className="h-4.5 w-4.5" strokeWidth={2.25} />
+              </span>
+              <span className="text-sm font-semibold text-foreground whitespace-nowrap">{a.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Trigger FAB */}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={open ? "Close quick menu" : "Open quick menu"}
+        aria-expanded={open}
+        className="fixed left-4 z-[60] grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_10px_24px_-8px_var(--primary-glow)] ring-4 ring-background transition-transform active:scale-90"
+        style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
+      >
+        <span className={`transition-transform duration-200 ${open ? "rotate-90" : ""}`}>
+          {open ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Menu className="h-5 w-5" strokeWidth={2.5} />}
+        </span>
+      </button>
+    </div>
+  );
+}
+
