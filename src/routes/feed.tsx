@@ -423,19 +423,7 @@ function FeedPage() {
                   </div>
                 ) : (<>
                 {loading && Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="feed-card p-5">
-                    <div className="flex items-center gap-3">
-                      <div className="h-11 w-11 rounded-full skeleton-shimmer" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-3 w-1/3 rounded skeleton-shimmer" />
-                        <div className="h-2.5 w-1/4 rounded skeleton-shimmer" />
-                      </div>
-                    </div>
-                    <div className="mt-4 space-y-2">
-                      <div className="h-3 w-full rounded skeleton-shimmer" />
-                      <div className="h-3 w-4/5 rounded skeleton-shimmer" />
-                    </div>
-                  </div>
+                  <PostSkeleton key={i} />
                 ))}
                 {!loading && filtered.length === 0 && (
                   <div className="feed-card p-10 text-center">
