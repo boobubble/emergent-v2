@@ -229,21 +229,22 @@ function FeedPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 md:pb-0">
-      {/* Top bar — minimal, white, Facebook-style */}
-      <header className="sticky top-0 z-20 border-b border-border bg-card">
-        <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-4 py-2.5">
+    <div className="min-h-screen bg-background text-foreground pb-24 lg:pb-0">
+      {/* Top bar */}
+      <header className="sticky top-0 z-30 feed-glass border-b border-border">
+        <div className="mx-auto flex max-w-[1360px] items-center gap-3 px-3 py-2.5 sm:gap-4 sm:px-5">
           <Link to="/" className="flex items-center gap-2 text-primary">
             <BrandMark
               slot="feed"
               alt="Logo"
               className="h-9 w-9 rounded-xl object-contain"
-              fallback={<div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground font-bold">P</div>}
+              fallback={<div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold shadow-[0_4px_14px_-4px_var(--primary-glow)]">P</div>}
             />
-            <span className="hidden text-lg font-semibold sm:inline">Palrgo</span>
+            <span className="hidden text-[17px] font-bold tracking-tight sm:inline">Palrgo</span>
           </Link>
           <div className="mx-auto hidden w-full max-w-md md:block">
-            <div className="flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 rounded-full bg-muted/60 px-4 py-2 text-sm text-muted-foreground ring-1 ring-border focus-within:ring-primary/40 transition">
+              <span>🔎</span>
               <span>Search posts, people, hashtags…</span>
             </div>
           </div>
@@ -251,7 +252,7 @@ function FeedPage() {
             <FeedNotifications meId={meId} profiles={profiles} />
             <button
               onClick={() => setDmOpenKey(k => k + 1)}
-              className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent"
+              className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent/30 transition"
               title="Messages"
               aria-label="Messages"
             >
@@ -259,24 +260,31 @@ function FeedPage() {
             </button>
             <button
               onClick={() => { setProfileUsername(user.username); setView("profile"); }}
-              className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-accent"
+              className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent/30 transition"
               title="My profile"
             >
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-primary text-sm font-semibold">
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-sm font-bold ring-2 ring-card">
                 {user.username.slice(0, 1).toUpperCase()}
               </div>
-              <span className="hidden text-sm font-medium sm:inline">{user.username}</span>
+              <span className="hidden text-sm font-semibold sm:inline">{user.username}</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1200px] gap-3 px-2 py-3 sm:gap-4 sm:px-4 sm:py-4 lg:grid-cols-[240px_minmax(0,640px)_280px] lg:justify-center">
-        {/* Left rail — Sngine-style compact nav */}
+      <div className="mx-auto grid max-w-[1360px] gap-4 px-2 py-4 sm:px-4 lg:grid-cols-[260px_minmax(0,1fr)_320px] lg:gap-6 lg:px-6">
+        {/* Left rail */}
         <aside className="hidden lg:block">
-          <div className="sticky top-20 space-y-3">
-            <nav className="rounded-2xl bg-card p-1.5 shadow-sm border border-border">
-              <SideItem active={view === "feed" && tab === "foryou"} onClick={() => { setView("feed"); setTab("foryou"); }} icon={Newspaper} label="Feed" />
+          <div className="sticky top-[64px] space-y-3 max-h-[calc(100vh-72px)] overflow-y-auto pr-1 feed-scrollbar-hide">
+            <nav className="feed-card p-2">
+              <div className="feed-section-label">Feed</div>
+              <SideItem active={view === "feed" && tab === "foryou"} onClick={() => { setView("feed"); setTab("foryou"); }} icon={Newspaper} label="For You" color="text-sky-400" />
+              <SideItem active={view === "feed" && tab === "trending"} onClick={() => { setView("feed"); setTab("trending"); }} icon={Flame} label="Trending" color="text-orange-400" />
+              <SideItem active={view === "feed" && tab === "friends"} onClick={() => { setView("feed"); setTab("friends"); }} icon={Users} label="Friends" color="text-emerald-400" />
+              <SideItem active={view === "feed" && tab === "saved"} onClick={() => { setView("feed"); setTab("saved"); }} icon={Bookmark} label="Saved" color="text-amber-400" />
+              <SideItem active={view === "feed" && tab === "notifications"} onClick={() => { setView("feed"); setTab("notifications"); }} icon={Bell} label="Notifications" color="text-rose-400" />
+
+              <div className="feed-section-label">Create</div>
               <SideItem
                 onClick={() => {
                   setView("feed");
@@ -289,6 +297,7 @@ function FeedPage() {
                 }}
                 icon={CirclePlus}
                 label="Add Story"
+                color="text-fuchsia-400"
               />
               <SideItem
                 onClick={() => {
@@ -300,31 +309,32 @@ function FeedPage() {
                 }}
                 icon={Sparkles}
                 label="Stories"
+                color="text-violet-400"
               />
 
-              <SideItem active={view === "feed" && tab === "friends"} onClick={() => { setView("feed"); setTab("friends"); }} icon={Users} label="Friends" />
-              <SideItem active={view === "feed" && tab === "trending"} onClick={() => { setView("feed"); setTab("trending"); }} icon={Flame} label="Trending" />
-              <SideItem active={view === "feed" && tab === "saved"} onClick={() => { setView("feed"); setTab("saved"); }} icon={Bookmark} label="Saved Posts" />
-              <SideItem active={view === "feed" && tab === "notifications"} onClick={() => { setView("feed"); setTab("notifications"); }} icon={Bell} label="Notifications" />
+              <div className="feed-section-label">Explore</div>
+              <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
+              <SideNavLink to="/reels" icon={Film} label="Reels" badge="Soon" color="text-pink-400" />
+              <SideNavLink to="/pages" icon={FileText} label="Pages" badge="Soon" color="text-cyan-400" />
+              <SideNavLink to="/groups" icon={Users2} label="Groups" badge="Soon" color="text-indigo-400" />
+              <SideItem onClick={() => setView("findFriends")} active={view === "findFriends"} icon={Users} label="Find Friends" color="text-teal-400" />
+
+              <div className="feed-section-label">Rewards</div>
+              <SideItem onClick={() => setView("achievements")} active={view === "achievements"} icon={Award} label="Achievements" color="text-yellow-400" />
+              <SideItem onClick={() => setView("leaderboard")} active={view === "leaderboard"} icon={Trophy} label="Leaderboard" color="text-amber-400" />
+              <SideItem onClick={() => setView("dailyChest")} active={view === "dailyChest"} icon={Gift} label="Daily Chest" color="text-rose-400" />
+              <SideItem onClick={() => setView("spin")} active={view === "spin"} icon={Sparkles} label="Daily Spin" color="text-violet-400" />
+              <SideItem onClick={() => setView("shop")} active={view === "shop"} icon={Coins} label="Shop" color="text-emerald-400" />
+
+              <div className="feed-section-label">Account</div>
               <SideItem
                 active={view === "profile"}
                 onClick={() => { setProfileUsername(user.username); setView("profile"); }}
                 icon={UserCircle}
                 label="My Profile"
+                color="text-primary"
               />
-              <div className="my-1 h-px bg-border/60" />
-              <SideLink to="/" iconSrc={chatroomIcon} label="Chatrooms" />
-              <SideNavLink to="/reels" icon={Film} label="Reels" badge="Soon" />
-              <SideNavLink to="/pages" icon={FileText} label="Pages" badge="Soon" />
-              <SideNavLink to="/groups" icon={Users2} label="Groups" badge="Soon" />
-              <SideItem onClick={() => setView("findFriends")} active={view === "findFriends"} icon={Users} label="Find Friends" />
-              <SideItem onClick={() => setView("achievements")} active={view === "achievements"} icon={Award} label="Achievements" />
-              <SideItem onClick={() => setView("leaderboard")} active={view === "leaderboard"} icon={Trophy} label="Leaderboard" />
-              <SideItem onClick={() => setView("dailyChest")} active={view === "dailyChest"} icon={Gift} label="Daily Chest" />
-              <SideItem onClick={() => setView("spin")} active={view === "spin"} icon={Sparkles} label="Daily Spin" />
-              <SideItem onClick={() => setView("shop")} active={view === "shop"} icon={Coins} label="Shop" />
-
-              <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Account" />
+              <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Settings" color="text-slate-400" />
             </nav>
             <Suspense fallback={null}>
               <RewardsWidget
@@ -344,28 +354,28 @@ function FeedPage() {
 
 
         {/* Center */}
-        <main className="min-w-0">
+        <main className="min-w-0 mx-auto w-full max-w-[680px]">
           {view === "account" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><AccountPanel /></Suspense></div>
+            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><AccountPanel /></Suspense></div>
           ) : view === "settings" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><FeedSettingsPanel /></Suspense></div>
+            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><FeedSettingsPanel /></Suspense></div>
           ) : view === "achievements" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><AchievementsPanel /></Suspense></div>
+            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><AchievementsPanel /></Suspense></div>
           ) : view === "leaderboard" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><LeaderboardPanel /></Suspense></div>
+            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><LeaderboardPanel /></Suspense></div>
           ) : view === "findFriends" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><FindFriendsPanel /></Suspense></div>
+            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><FindFriendsPanel /></Suspense></div>
           ) : view === "dailyChest" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><DailyChestPanel onBack={() => setView("feed")} /></Suspense></div>
+            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><DailyChestPanel onBack={() => setView("feed")} /></Suspense></div>
           ) : view === "spin" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><SpinWheelPanel onBack={() => setView("feed")} /></Suspense></div>
+            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><SpinWheelPanel onBack={() => setView("feed")} /></Suspense></div>
           ) : view === "shop" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><ShopPanel onBack={() => setView("feed")} /></Suspense></div>
+            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><ShopPanel onBack={() => setView("feed")} /></Suspense></div>
           ) : view === "profile" ? (
-            <div className="rounded-2xl bg-card p-4 shadow-sm border border-border"><Suspense fallback={<PanelFallback />}><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></Suspense></div>
+            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></Suspense></div>
           ) : (
             <>
-              <div className="mb-3 sm:mb-4 space-y-3 lg:hidden">
+              <div className="mb-4 space-y-3 lg:hidden">
                 <Suspense fallback={null}>
                   <RewardsWidget
                     meId={meId}
@@ -377,56 +387,57 @@ function FeedPage() {
                 <DailyChallengesWidget meId={meId} />
               </div>
               <StoryTray />
-              <div className="rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border">
+              <div className="feed-card mt-4">
                 <Composer authorId={meId} onPosted={loadPosts} />
               </div>
 
-              <div className="mt-3 sm:mt-4 flex gap-1 overflow-x-auto rounded-full bg-card p-1 shadow-sm border border-border">
+              <div className="mt-4 flex gap-1 overflow-x-auto rounded-full feed-card p-1.5 feed-scrollbar-hide">
                 {TABS.map((t) => {
                   const Icon = t.icon;
+                  const active = tab === t.id;
                   return (
                     <button
                       key={t.id}
                       onClick={() => setTab(t.id)}
-                      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition-colors ${tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
+                      className={`feed-pill-tab flex-1 ${active ? "feed-pill-tab-active" : ""}`}
                     >
-                      <Icon className="h-3.5 w-3.5" /> {t.label}
+                      <Icon className="h-4 w-4" /> {t.label}
                     </button>
                   );
                 })}
               </div>
 
-              <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
+              <div className="mt-4 space-y-4">
                 {tab === "saved" ? (
-                  <div className="rounded-xl sm:rounded-2xl bg-card p-8 sm:p-12 text-center shadow-sm border border-border">
-                    <Bookmark className="mx-auto h-8 w-8 text-muted-foreground/60" />
-                    <p className="mt-2 text-sm font-medium">No saved posts yet</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Bookmark posts from the feed to find them here later.</p>
+                  <div className="feed-card p-10 text-center">
+                    <Bookmark className="mx-auto h-10 w-10 text-muted-foreground/50" />
+                    <p className="mt-3 text-base font-semibold">No saved posts yet</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Bookmark posts from the feed to find them here later.</p>
                   </div>
                 ) : tab === "notifications" ? (
-                  <div className="rounded-xl sm:rounded-2xl bg-card p-8 sm:p-12 text-center shadow-sm border border-border">
-                    <Bell className="mx-auto h-8 w-8 text-muted-foreground/60" />
-                    <p className="mt-2 text-sm font-medium">Notifications</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Tap the bell in the top bar to view your latest activity.</p>
+                  <div className="feed-card p-10 text-center">
+                    <Bell className="mx-auto h-10 w-10 text-muted-foreground/50" />
+                    <p className="mt-3 text-base font-semibold">Notifications</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Tap the bell in the top bar to view your latest activity.</p>
                   </div>
                 ) : (<>
                 {loading && Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="rounded-xl sm:rounded-2xl bg-card border border-border p-4 shadow-sm">
+                  <div key={i} className="feed-card p-5">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+                      <div className="h-11 w-11 rounded-full skeleton-shimmer" />
                       <div className="flex-1 space-y-2">
-                        <div className="h-3 w-1/3 rounded bg-muted animate-pulse" />
-                        <div className="h-2.5 w-1/4 rounded bg-muted animate-pulse" />
+                        <div className="h-3 w-1/3 rounded skeleton-shimmer" />
+                        <div className="h-2.5 w-1/4 rounded skeleton-shimmer" />
                       </div>
                     </div>
-                    <div className="mt-3 space-y-2">
-                      <div className="h-3 w-full rounded bg-muted animate-pulse" />
-                      <div className="h-3 w-4/5 rounded bg-muted animate-pulse" />
+                    <div className="mt-4 space-y-2">
+                      <div className="h-3 w-full rounded skeleton-shimmer" />
+                      <div className="h-3 w-4/5 rounded skeleton-shimmer" />
                     </div>
                   </div>
                 ))}
                 {!loading && filtered.length === 0 && (
-                  <div className="rounded-xl sm:rounded-2xl bg-card p-8 sm:p-12 text-center shadow-sm border border-border">
+                  <div className="feed-card p-10 text-center">
                     <p className="text-sm text-muted-foreground">No posts yet. Be the first to share something!</p>
                   </div>
                 )}
@@ -441,8 +452,8 @@ function FeedPage() {
         </main>
 
         {/* Right rail */}
-        <aside className="hidden space-y-4 lg:block">
-          <div className="sticky top-20 space-y-4">
+        <aside className="hidden lg:block">
+          <div className="sticky top-[64px] space-y-4 max-h-[calc(100vh-72px)] overflow-y-auto pl-1 feed-scrollbar-hide">
             <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
             <ChatroomOnlineWidget />
@@ -453,13 +464,31 @@ function FeedPage() {
         </aside>
       </div>
 
-      {/* Mobile bottom nav — minimal */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-border bg-card lg:hidden">
-        <button onClick={() => setView("feed")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "feed" ? "text-primary" : "text-muted-foreground"}`}><Sparkles className="h-5 w-5" /> Feed</button>
-        <Link to="/" className="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs text-muted-foreground"><img src={chatroomIcon} alt="Chatrooms" className="h-5 w-5 rounded-full bg-white object-contain p-0.5" /> Chatrooms</Link>
-        <button onClick={() => setView("account")} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "account" ? "text-primary" : "text-muted-foreground"}`}><Settings className="h-5 w-5" /> Account</button>
-        <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
+      {/* Mobile bottom nav */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 flex feed-glass border-t border-border lg:hidden">
+        <button onClick={() => setView("feed")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "feed" ? "text-primary" : "text-muted-foreground"}`}><Sparkles className="h-5 w-5" /> Feed</button>
+        <Link to="/" className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted-foreground"><img src={chatroomIcon} alt="Chatrooms" className="h-5 w-5 rounded-full bg-white object-contain p-0.5" /> Rooms</Link>
+        <div className="w-14" aria-hidden />
+        <button onClick={() => setView("account")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "account" ? "text-primary" : "text-muted-foreground"}`}><Settings className="h-5 w-5" /> Settings</button>
+        <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
+
+      {/* Mobile FAB — opens composer focus mode */}
+      <button
+        onClick={() => {
+          setView("feed");
+          setTimeout(() => {
+            const ta = document.querySelector<HTMLTextAreaElement>('textarea[placeholder^="What\u2019s on your mind"], textarea[placeholder^="What\'s on your mind"]');
+            ta?.focus();
+            ta?.click();
+            ta?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 50);
+        }}
+        className="feed-fab lg:hidden"
+        aria-label="Create post"
+      >
+        <CirclePlus className="h-6 w-6" />
+      </button>
 
       {dmOpenKey > 0 && (
         <Suspense fallback={null}>
@@ -469,6 +498,7 @@ function FeedPage() {
     </div>
   );
 }
+
 
 function FriendsListCard({ friendIds, profiles, onChat }: { friendIds: Set<string>; profiles: Record<string, import("@/lib/chat-types").User>; onChat: () => void }) {
   const { startDM } = useChat();
@@ -497,38 +527,39 @@ function FriendsListCard({ friendIds, profiles, onChat }: { friendIds: Set<strin
   );
 }
 
-function SideItem({ icon: Icon, label, active, onClick }: { icon: typeof Home; label: string; active?: boolean; onClick: () => void }) {
+function SideItem({ icon: Icon, label, active, onClick, color }: { icon: typeof Home; label: string; active?: boolean; onClick: () => void; color?: string }) {
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent"}`}
+      className={`feed-side-item ${active ? "feed-side-item-active" : ""}`}
     >
-      <Icon className="h-4 w-4 shrink-0" /> <span className="truncate">{label}</span>
+      <span className={`feed-icon-chip ${color ?? "text-muted-foreground"}`}>
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="truncate">{label}</span>
     </button>
   );
 }
 
 function SideLink({ to, iconSrc, label }: { to: string; iconSrc: string; label: string }) {
   return (
-    <Link
-      to={to}
-      className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
-    >
-      <img src={iconSrc} alt="" className="h-4 w-4 rounded-full bg-white object-contain p-0.5" />
+    <Link to={to} className="feed-side-item">
+      <span className="feed-icon-chip text-primary">
+        <img src={iconSrc} alt="" className="h-4 w-4 rounded-full bg-white object-contain p-0.5" />
+      </span>
       <span className="truncate">{label}</span>
     </Link>
   );
 }
 
-function SideNavLink({ to, icon: Icon, label, badge }: { to: string; icon: typeof Home; label: string; badge?: string }) {
+function SideNavLink({ to, icon: Icon, label, badge, color }: { to: string; icon: typeof Home; label: string; badge?: string; color?: string }) {
   return (
-    <Link
-      to={to}
-      className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
-    >
-      <Icon className="h-4 w-4 text-muted-foreground" />
+    <Link to={to} className="feed-side-item">
+      <span className={`feed-icon-chip ${color ?? "text-muted-foreground"}`}>
+        <Icon className="h-4 w-4" />
+      </span>
       <span className="truncate">{label}</span>
-      {badge && <span className="ml-auto rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-primary">{badge}</span>}
+      {badge && <span className="ml-auto rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary">{badge}</span>}
     </Link>
   );
 }

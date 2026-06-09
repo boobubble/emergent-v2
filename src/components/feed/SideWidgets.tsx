@@ -186,8 +186,11 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
 
 function Card({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
-      <h3 className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{icon}{title}</h3>
+    <div className="feed-card p-4">
+      <h3 className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_0_3px_var(--primary-glow)]" />
+        {icon}{title}
+      </h3>
       <div className="space-y-0.5">{children}</div>
     </div>
   );
