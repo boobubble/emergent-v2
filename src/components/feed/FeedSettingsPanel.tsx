@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { RotateCcw, Plus, X } from "lucide-react";
 import { useFeedPrefs, type DefaultTab, type FeedSort, type DefaultPrivacy } from "@/lib/feed-prefs";
+import { useSoundPrefs, setSoundPref, type SoundKind } from "@/lib/sound-prefs";
 
 export function FeedSettingsPanel() {
   const { prefs, setPrefs, reset } = useFeedPrefs();
