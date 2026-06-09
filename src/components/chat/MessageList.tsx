@@ -172,7 +172,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                     <UserMenu userId={author.id} username={author.name}>
                       <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
                         <CosmeticName userId={author.id} name={author.name} />
-                        <NameEmojiBadge user={author} />
+                        <NameAdornments user={author} />
                       </span>
                     </UserMenu>
                     <RankChip level={author.level} compact />
