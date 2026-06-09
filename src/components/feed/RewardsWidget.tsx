@@ -33,7 +33,7 @@ export function RewardsWidget({ meId, onOpenChest, onOpenSpin, onOpenShop }: Pro
     if (!meId) return;
     void refresh();
     const ch = supabase
-      .channel(`rewards-w-${meId}`)
+      .channel(`rewards-w-${meId}-${Math.random().toString(36).slice(2, 8)}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${meId}` }, (payload) => {
         const n = payload.new as { coins?: number; xp?: number; streak?: number };
         if (typeof n.coins === "number") setCoins(n.coins);
