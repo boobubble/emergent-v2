@@ -5,6 +5,14 @@ import { useSoundPrefs, setSoundPref, type SoundKind } from "@/lib/sound-prefs";
 
 export function FeedSettingsPanel() {
   const { prefs, setPrefs, reset } = useFeedPrefs();
+  const soundPrefs = useSoundPrefs();
+  const soundItems: { key: SoundKind; label: string }[] = [
+    { key: "public_chat", label: "Public chatroom sounds" },
+    { key: "private_chat", label: "Private message sounds" },
+    { key: "notifications", label: "Notification sounds" },
+    { key: "username_mention", label: "Username mention sound" },
+    { key: "calls", label: "Voice / video call sounds" },
+  ];
   const [kw, setKw] = useState("");
   const [tag, setTag] = useState("");
 
