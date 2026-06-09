@@ -14,6 +14,7 @@ import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useMyRoles } from "@/lib/use-my-role";
+import { useStaffPermissions } from "@/lib/use-staff-permissions";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "./Avatar";
 import { NameEmojiBadge, CountryFlag, UserKindBadge } from "@/lib/name-emoji";
