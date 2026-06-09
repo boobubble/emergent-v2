@@ -17,6 +17,11 @@ export interface RemoteProfile {
   status: string;
   last_seen: string | null;
   gender: string | null;
+  country_code: string | null;
+  show_country_flag: boolean | null;
+  show_guest_badge: boolean | null;
+  birthday: string | null;
+  hide_birth_year: boolean | null;
 }
 
 const ONLINE_WINDOW_MS = 75 * 1000; // 75s — slightly longer than 1 missed 25s heartbeat
@@ -31,8 +36,6 @@ function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User 
   const isPresent = presentIds.has(p.id);
   const lastSeenMs = isPresent ? nowMs : dbLastSeenMs;
   const rawStatus = (p.status as User["status"]) || "offline";
-  // Realtime presence wins: anyone currently subscribed is online instantly.
-  // Otherwise derive from last_seen freshness so stale "online" rows fall off.
   const fresh = lastSeenMs != null && nowMs - lastSeenMs < ONLINE_WINDOW_MS;
   const status: User["status"] = isPresent
     ? "online"
@@ -56,6 +59,11 @@ function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User 
     lastSeen: lastSeenMs,
     isGuest,
     gender,
+    countryCode: p.country_code ?? undefined,
+    showCountryFlag: p.show_country_flag ?? true,
+    showGuestBadge: p.show_guest_badge ?? true,
+    birthday: p.birthday ?? undefined,
+    hideBirthYear: p.hide_birth_year ?? false,
   };
 }
 
@@ -73,7 +81,7 @@ export function useRemoteProfiles() {
     async function load() {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, bio, avatar_url, avatar_color, xp, level, coins, streak, longest_streak, status, last_seen, gender")
+        .select("id, username, bio, avatar_url, avatar_color, xp, level, coins, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year")
         .order("username", { ascending: true });
       if (cancelled) return;
       if (error) { setLoading(false); return; }

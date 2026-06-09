@@ -24,6 +24,12 @@ export interface User {
   friends?: string[];         // user ids
   blocked?: string[];         // user ids
   lastSeen?: number;          // epoch ms of last seen activity
+  // Profile additions
+  countryCode?: string;       // ISO 3166-1 alpha-2 (e.g. "US")
+  showCountryFlag?: boolean;  // owner's preference to display the flag publicly
+  showGuestBadge?: boolean;   // owner's preference to display the "Guest" tag
+  birthday?: string;          // ISO date string (yyyy-mm-dd)
+  hideBirthYear?: boolean;
 }
 
 export interface Attachment {
