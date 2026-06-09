@@ -337,7 +337,7 @@ function FeedPage() {
               />
               <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Settings" color="text-slate-400" />
             </nav>
-            <Suspense fallback={null}>
+            <Suspense fallback={<RewardsWidgetSkeleton />}>
               <RewardsWidget
                 meId={meId}
                 onOpenChest={() => setView("dailyChest")}
