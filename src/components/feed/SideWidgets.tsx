@@ -15,6 +15,7 @@ export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Reco
     async function load() {
       const { data } = await supabase.from("friendships").select("*");
       setFriendships((data ?? []) as FeedFriendship[]);
+      setLoaded(true);
     }
     load();
     const ch = supabase.channel(`fr-${meId}`).on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, () => load()).subscribe();
