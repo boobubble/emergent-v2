@@ -34,6 +34,7 @@ import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminUpcomingRouteImport } from './routes/admin.upcoming'
 import { Route as AdminSystemRouteImport } from './routes/admin.system'
+import { Route as AdminStaffPermissionsRouteImport } from './routes/admin.staff-permissions'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
 import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
 import { Route as AdminSeoRouteImport } from './routes/admin.seo'
@@ -197,6 +198,11 @@ const AdminUpcomingRoute = AdminUpcomingRouteImport.update({
 const AdminSystemRoute = AdminSystemRouteImport.update({
   id: '/system',
   path: '/system',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStaffPermissionsRoute = AdminStaffPermissionsRouteImport.update({
+  id: '/staff-permissions',
+  path: '/staff-permissions',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSocialLayoutRoute = AdminSocialLayoutRouteImport.update({
@@ -449,6 +455,7 @@ export interface FileRoutesByFullPath {
   '/admin/seo': typeof AdminSeoRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
+  '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
@@ -514,6 +521,7 @@ export interface FileRoutesByTo {
   '/admin/seo': typeof AdminSeoRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
+  '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
@@ -581,6 +589,7 @@ export interface FileRoutesById {
   '/admin/seo': typeof AdminSeoRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
+  '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
@@ -649,6 +658,7 @@ export interface FileRouteTypes {
     | '/admin/seo'
     | '/admin/social-feed'
     | '/admin/social-layout'
+    | '/admin/staff-permissions'
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
@@ -714,6 +724,7 @@ export interface FileRouteTypes {
     | '/admin/seo'
     | '/admin/social-feed'
     | '/admin/social-layout'
+    | '/admin/staff-permissions'
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
@@ -780,6 +791,7 @@ export interface FileRouteTypes {
     | '/admin/seo'
     | '/admin/social-feed'
     | '/admin/social-layout'
+    | '/admin/staff-permissions'
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
@@ -996,6 +1008,13 @@ declare module '@tanstack/react-router' {
       path: '/system'
       fullPath: '/admin/system'
       preLoaderRoute: typeof AdminSystemRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/staff-permissions': {
+      id: '/admin/staff-permissions'
+      path: '/staff-permissions'
+      fullPath: '/admin/staff-permissions'
+      preLoaderRoute: typeof AdminStaffPermissionsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/social-layout': {
@@ -1321,6 +1340,7 @@ interface AdminRouteChildren {
   AdminSeoRoute: typeof AdminSeoRoute
   AdminSocialFeedRoute: typeof AdminSocialFeedRoute
   AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
+  AdminStaffPermissionsRoute: typeof AdminStaffPermissionsRoute
   AdminSystemRoute: typeof AdminSystemRoute
   AdminUpcomingRoute: typeof AdminUpcomingRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
@@ -1362,6 +1382,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSeoRoute: AdminSeoRoute,
   AdminSocialFeedRoute: AdminSocialFeedRoute,
   AdminSocialLayoutRoute: AdminSocialLayoutRoute,
+  AdminStaffPermissionsRoute: AdminStaffPermissionsRoute,
   AdminSystemRoute: AdminSystemRoute,
   AdminUpcomingRoute: AdminUpcomingRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,
