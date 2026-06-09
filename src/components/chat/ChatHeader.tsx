@@ -27,9 +27,10 @@ export function ChatHeader() {
               <MessageCircle className="h-3.5 w-3.5 shrink-0 text-primary" />
               <span className="truncate">{u.name}</span>
             </div>
-            <div className="truncate text-[11px] capitalize text-muted-foreground">
-              <span className={isOnline ? "text-primary" : ""}>{statusLabel}</span>
-              {u.bio ? ` · ${u.bio}` : ""}
+            <div className="truncate text-[11px] capitalize text-muted-foreground flex items-center gap-1.5">
+              {isOnline && <span className="chat-online-dot" aria-hidden />}
+              <span className={isOnline ? "text-primary font-semibold" : ""}>{statusLabel}</span>
+              {u.bio ? <span className="truncate">· {u.bio}</span> : null}
             </div>
           </div>
         </div>
