@@ -480,6 +480,32 @@ function FeedPage() {
         <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
 
+      {/* Mobile quick-actions speed dial (left-bottom, opposite the theme toggle) */}
+      <MobileSpeedDial
+        open={fabOpen}
+        onToggle={() => setFabOpen(o => !o)}
+        onClose={() => setFabOpen(false)}
+        actions={[
+          { label: "Add Story", icon: CirclePlus, color: "from-fuchsia-500 to-pink-500", onClick: () => {
+              setView("feed");
+              setTimeout(() => {
+                document.getElementById("story-tray")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                document.querySelector<HTMLButtonElement>("[data-story-add]")?.click();
+              }, 60);
+            } },
+          { label: "Find Friends", icon: UserPlus, color: "from-teal-500 to-emerald-500", onClick: () => setView("findFriends") },
+          { label: "Messages", icon: MessageCircle, color: "from-sky-500 to-indigo-500", onClick: () => setDmOpenKey(k => k + 1) },
+          { label: "Notifications", icon: Bell, color: "from-rose-500 to-red-500", onClick: () => { setView("feed"); setTab("notifications"); } },
+          { label: "Achievements", icon: Award, color: "from-yellow-500 to-amber-500", onClick: () => setView("achievements") },
+          { label: "Leaderboard", icon: Trophy, color: "from-amber-500 to-orange-500", onClick: () => setView("leaderboard") },
+          { label: "Daily Chest", icon: Gift, color: "from-rose-500 to-fuchsia-500", onClick: () => setView("dailyChest") },
+          { label: "Daily Spin", icon: Sparkles, color: "from-violet-500 to-purple-500", onClick: () => setView("spin") },
+          { label: "Shop", icon: Coins, color: "from-emerald-500 to-green-500", onClick: () => setView("shop") },
+        ]}
+      />
+
+
+
       {dmOpenKey > 0 && (
         <Suspense fallback={null}>
           <FeedDMDock key={dmOpenKey} meId={meId} profiles={profiles} initialOpen={true} />
