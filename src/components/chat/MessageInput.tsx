@@ -118,9 +118,27 @@ export function MessageInput() {
   }, []);
 
   const earnChat = useServerFn(earnChatMessage);
+  const queryClient = useQueryClient();
+
+  async function handleClearCache() {
+    const ok = await isCurrentUserAdmin();
+    if (!ok) {
+      toast.error("Admins only", { description: "/clearcache is restricted to admins." });
+      return;
+    }
+    toast.loading("Clearing caches…", { id: "clearcache" });
+    const report = await clearCaches({ queryClient });
+    toast.success("Caches cleared", { id: "clearcache", description: formatClearReport(report) });
+  }
 
   function submit() {
     if (!text.trim() && !attachment) return;
+    const trimmed = text.trim();
+    if (/^\/clearcache\b/i.test(trimmed)) {
+      setText(""); setAttachment(null); setAttachError("");
+      void handleClearCache();
+      return;
+    }
     send(text, { attachment: attachment || undefined, replyToId: replyingTo?.id });
     // Fire-and-forget earn call — server enforces cooldown + daily cap.
     if (me) {
@@ -130,6 +148,7 @@ export function MessageInput() {
     setAttachment(null);
     setAttachError("");
   }
+
 
   function onKey(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (mentionSuggestions.length > 0) {
