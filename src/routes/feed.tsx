@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus } from "lucide-react";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -454,30 +454,29 @@ function FeedPage() {
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex feed-glass border-t border-border lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 flex items-end feed-glass border-t border-border lg:hidden">
         <button onClick={() => setView("feed")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "feed" ? "text-primary" : "text-muted-foreground"}`}><Sparkles className="h-5 w-5" /> Feed</button>
         <Link to="/" className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted-foreground"><img src={chatroomIcon} alt="Chatrooms" className="h-5 w-5 rounded-full bg-white object-contain p-0.5" /> Rooms</Link>
-        <div className="w-14" aria-hidden />
+        <div className="flex flex-1 justify-center">
+          <button
+            onClick={() => {
+              setView("feed");
+              setTimeout(() => {
+                const ta = document.querySelector<HTMLTextAreaElement>('textarea[placeholder^="What\u2019s on your mind"], textarea[placeholder^="What\'s on your mind"]');
+                ta?.focus();
+                ta?.click();
+                ta?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }, 50);
+            }}
+            aria-label="Create post"
+            className="-mt-6 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_10px_24px_-8px_var(--primary-glow,theme(colors.primary.DEFAULT))] ring-4 ring-background transition-transform active:scale-95"
+          >
+            <Plus className="h-7 w-7" strokeWidth={2.5} />
+          </button>
+        </div>
         <button onClick={() => setView("account")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "account" ? "text-primary" : "text-muted-foreground"}`}><Settings className="h-5 w-5" /> Settings</button>
         <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
-
-      {/* Mobile FAB — opens composer focus mode */}
-      <button
-        onClick={() => {
-          setView("feed");
-          setTimeout(() => {
-            const ta = document.querySelector<HTMLTextAreaElement>('textarea[placeholder^="What\u2019s on your mind"], textarea[placeholder^="What\'s on your mind"]');
-            ta?.focus();
-            ta?.click();
-            ta?.scrollIntoView({ behavior: "smooth", block: "center" });
-          }, 50);
-        }}
-        className="feed-fab lg:hidden"
-        aria-label="Create post"
-      >
-        <CirclePlus className="h-6 w-6" />
-      </button>
 
       {dmOpenKey > 0 && (
         <Suspense fallback={null}>
