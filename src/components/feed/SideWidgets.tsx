@@ -90,12 +90,24 @@ export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Reco
 
 export function HashtagsWidget() {
   const [tags, setTags] = useState<{ tag: string; usage_count: number }[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     supabase.from("hashtags").select("tag, usage_count").order("usage_count", { ascending: false }).limit(8)
-      .then(({ data }) => setTags(data ?? []));
+      .then(({ data }) => { setTags(data ?? []); setLoaded(true); });
   }, []);
 
+  if (!loaded) {
+    return (
+      <Card title="Trending tags" icon={<TrendingUp className="h-3.5 w-3.5" />}>
+        <div className="flex flex-wrap gap-1.5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <span key={i} className="h-6 w-16 rounded-full skeleton-shimmer" />
+          ))}
+        </div>
+      </Card>
+    );
+  }
   if (!tags.length) return null;
 
   return (
