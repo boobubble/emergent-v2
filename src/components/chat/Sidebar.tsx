@@ -6,6 +6,7 @@ import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/BrandMark";
+import { ChatExploreMenu } from "./ChatExploreMenu";
 
 
 interface Props {
@@ -131,6 +132,10 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
       </nav>
 
       <div className="border-t border-border p-3">
+        <div className="mb-2 hidden lg:block">
+          <ChatExploreMenu />
+        </div>
+
 
 
         {!user?.isGuest && (

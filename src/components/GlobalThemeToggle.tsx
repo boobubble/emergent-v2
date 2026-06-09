@@ -1,8 +1,12 @@
 import { Moon, Sun } from "lucide-react";
+import { useRouterState } from "@tanstack/react-router";
 import { useThemeMode } from "@/lib/use-theme-mode";
 
 export function GlobalThemeToggle() {
   const { mode, setMode } = useThemeMode();
+  const pathname = useRouterState({ select: s => s.location.pathname });
+  // Hide on the chatroom route — sidebar already has a theme toggle there.
+  if (pathname === "/" ) return null;
   const isDark = mode === "dark";
   const toggle = () => setMode(isDark ? "light" : "dark");
   return (
@@ -17,3 +21,4 @@ export function GlobalThemeToggle() {
     </button>
   );
 }
+
