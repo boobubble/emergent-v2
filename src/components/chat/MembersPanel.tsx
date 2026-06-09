@@ -482,13 +482,16 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         </UserMenu>
 
         {id !== "me" && (
-          <button
-            onClick={onClick}
-            title="Send DM"
-            className="shrink-0 rounded-full p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-          </button>
+          <>
+            <StaffActionsMenu targetUserId={u.id} targetName={u.name} isBot={u.isBot} size="xs" />
+            <button
+              onClick={onClick}
+              title="Send DM"
+              className="shrink-0 rounded-full p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+            </button>
+          </>
         )}
       </div>
     );
