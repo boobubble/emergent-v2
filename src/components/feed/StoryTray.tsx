@@ -77,41 +77,42 @@ export function StoryTray() {
 
   return (
     <>
-      <div id="story-tray" className="mb-3 rounded-xl sm:rounded-2xl bg-card shadow-sm border border-border p-3">
-        <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div id="story-tray" className="feed-card p-3 sm:p-4">
+        <div className="flex gap-3 overflow-x-auto pb-1 feed-scrollbar-hide snap-x snap-mandatory">
           {/* Add / my story */}
           <button
             data-story-add
             onClick={() => (myStory ? setViewing(myStory) : fileRef.current?.click())}
-            className="relative shrink-0 w-20 h-28 rounded-2xl border border-border overflow-hidden bg-muted group"
+            className="relative shrink-0 snap-start w-[112px] h-[176px] rounded-[1.25rem] overflow-hidden bg-gradient-to-b from-primary/20 via-card to-card border border-border group transition hover:-translate-y-1 hover:shadow-[0_16px_30px_-12px_var(--primary-glow)]"
             aria-label={myStory ? "View your story" : "Add story"}
           >
             {myStory ? (
               <img src={myStory.image} alt="Your story" className="h-full w-full object-cover" />
             ) : (
-              <div className="grid h-full w-full place-items-center bg-gradient-to-b from-primary/10 to-card">
-                <div className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground shadow">
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              <div className="grid h-full w-full place-items-center">
+                <div className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_8px_22px_-6px_var(--primary-glow)] ring-4 ring-card">
+                  {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
                 </div>
               </div>
             )}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 py-1 text-[10px] font-medium text-white text-center">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 py-1.5 text-[11px] font-semibold text-white text-center">
               {myStory ? "Your story" : "Add story"}
             </div>
           </button>
 
           {others.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setViewing(s)}
-              className="relative shrink-0 w-20 h-28 rounded-2xl overflow-hidden border-2 border-primary"
-              aria-label={`View ${s.username}'s story`}
-            >
-              <img src={s.image} alt={s.username} className="h-full w-full object-cover" />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 py-1 text-[10px] font-medium text-white truncate text-center">
-                {s.username}
-              </div>
-            </button>
+            <div key={s.id} className="shrink-0 snap-start story-ring transition hover:-translate-y-1">
+              <button
+                onClick={() => setViewing(s)}
+                className="relative block w-[108px] h-[172px] rounded-[1.1rem] overflow-hidden bg-card"
+                aria-label={`View ${s.username}'s story`}
+              >
+                <img src={s.image} alt={s.username} className="h-full w-full object-cover" />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 py-1.5 text-[11px] font-semibold text-white truncate text-center">
+                  {s.username}
+                </div>
+              </button>
+            </div>
           ))}
         </div>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPick} />
