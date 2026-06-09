@@ -96,11 +96,14 @@ export function ChatHeader() {
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event("open-members-panel"))}
-          className="chat-icon-btn lg:hidden"
+          className="chat-icon-btn relative lg:hidden"
           aria-label="Show members"
           title="Members"
         >
-          <MoreHorizontal className="h-4 w-4" />
+          <Users className="h-4 w-4" />
+          <span className="absolute -right-1 -top-1 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+            {room.members.length > 99 ? "99+" : room.members.length}
+          </span>
         </button>
       </div>
     </header>
