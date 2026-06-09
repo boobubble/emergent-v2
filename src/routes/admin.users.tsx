@@ -213,7 +213,7 @@ function UsersPage() {
                   <tr><td colSpan={8} className="py-8 text-center text-sm text-muted-foreground">No users found.</td></tr>
                 )}
                 {users.map((u) => (
-                  <tr key={u.id} className="border-b align-top hover:bg-muted/30">
+                  <tr key={u.id} className="group border-b align-top hover:bg-muted/30">
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-7 w-7">
