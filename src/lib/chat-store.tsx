@@ -1412,6 +1412,42 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     return undefined;
   }, [state.messages]);
 
+  const staffKick = useCallback((targetId: string, channelId: string, targetName: string) => {
+    setState(s => {
+      const chanMod = { ...(s.moderation?.[channelId] || {}) };
+      const prev: ModEntry = chanMod[targetId] || { muteVotes: [], kickVotes: [] };
+      const until = Date.now() + 5 * 60 * 1000;
+      chanMod[targetId] = { ...prev, kickedUntil: until, kickVotes: [] };
+      const sys: Message = {
+        id: uid(), channelId, authorId: "bot-gamebot", kind: "system", ts: Date.now(),
+        text: `🚪 **@${targetName}** was **KICKED** from the room by staff (5 min).`,
+      };
+      return {
+        ...s,
+        moderation: { ...(s.moderation || {}), [channelId]: chanMod },
+        messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), sys] },
+      };
+    });
+  }, []);
+
+  const staffLocalMute = useCallback((targetId: string, channelId: string, minutes: number, targetName: string) => {
+    setState(s => {
+      const chanMod = { ...(s.moderation?.[channelId] || {}) };
+      const prev: ModEntry = chanMod[targetId] || { muteVotes: [], kickVotes: [] };
+      const until = Date.now() + minutes * 60 * 1000;
+      chanMod[targetId] = { ...prev, mutedUntil: until, muteVotes: [] };
+      const sys: Message = {
+        id: uid(), channelId, authorId: "bot-gamebot", kind: "system", ts: Date.now(),
+        text: `🔇 **@${targetName}** was **MUTED** by staff (${minutes} min).`,
+      };
+      return {
+        ...s,
+        moderation: { ...(s.moderation || {}), [channelId]: chanMod },
+        messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), sys] },
+      };
+    });
+  }, []);
+
 
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
