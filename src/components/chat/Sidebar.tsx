@@ -131,9 +131,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
       </nav>
 
       <div className="border-t border-border p-3">
-        <div className="mb-2">
-          <ChatExploreMenu />
-        </div>
+
 
         {!user?.isGuest && (
           <a
