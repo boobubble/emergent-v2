@@ -514,7 +514,13 @@ function FeedPage() {
           { label: "Daily Spin", icon: Sparkles, color: "from-violet-500 to-purple-500", onClick: () => setView("spin") },
           { label: "Shop", icon: Coins, color: "from-emerald-500 to-green-500", onClick: () => setView("shop") },
         ]}
+        extraActions={[
+          { label: "Create Post", icon: Plus, color: "from-primary to-primary/70", onClick: focusComposer },
+          { label: "Public Chat", icon: Users, color: "from-sky-500 to-cyan-500", onClick: () => navigate({ to: "/" }) },
+          { label: "Private Chat", icon: MessageCircle, color: "from-indigo-500 to-violet-500", onClick: () => setDmOpenKey(k => k + 1) },
+        ]}
       />
+
 
 
 
