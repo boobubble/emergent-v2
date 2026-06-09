@@ -527,38 +527,39 @@ function FriendsListCard({ friendIds, profiles, onChat }: { friendIds: Set<strin
   );
 }
 
-function SideItem({ icon: Icon, label, active, onClick }: { icon: typeof Home; label: string; active?: boolean; onClick: () => void }) {
+function SideItem({ icon: Icon, label, active, onClick, color }: { icon: typeof Home; label: string; active?: boolean; onClick: () => void; color?: string }) {
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent"}`}
+      className={`feed-side-item ${active ? "feed-side-item-active" : ""}`}
     >
-      <Icon className="h-4 w-4 shrink-0" /> <span className="truncate">{label}</span>
+      <span className={`feed-icon-chip ${color ?? "text-muted-foreground"}`}>
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="truncate">{label}</span>
     </button>
   );
 }
 
 function SideLink({ to, iconSrc, label }: { to: string; iconSrc: string; label: string }) {
   return (
-    <Link
-      to={to}
-      className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
-    >
-      <img src={iconSrc} alt="" className="h-4 w-4 rounded-full bg-white object-contain p-0.5" />
+    <Link to={to} className="feed-side-item">
+      <span className="feed-icon-chip text-primary">
+        <img src={iconSrc} alt="" className="h-4 w-4 rounded-full bg-white object-contain p-0.5" />
+      </span>
       <span className="truncate">{label}</span>
     </Link>
   );
 }
 
-function SideNavLink({ to, icon: Icon, label, badge }: { to: string; icon: typeof Home; label: string; badge?: string }) {
+function SideNavLink({ to, icon: Icon, label, badge, color }: { to: string; icon: typeof Home; label: string; badge?: string; color?: string }) {
   return (
-    <Link
-      to={to}
-      className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
-    >
-      <Icon className="h-4 w-4 text-muted-foreground" />
+    <Link to={to} className="feed-side-item">
+      <span className={`feed-icon-chip ${color ?? "text-muted-foreground"}`}>
+        <Icon className="h-4 w-4" />
+      </span>
       <span className="truncate">{label}</span>
-      {badge && <span className="ml-auto rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-primary">{badge}</span>}
+      {badge && <span className="ml-auto rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary">{badge}</span>}
     </Link>
   );
 }
