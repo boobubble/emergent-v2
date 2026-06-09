@@ -49,7 +49,7 @@ export function ProfilePopup({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
-  const { state, startDM, addFriend, removeFriend, blockUser, unblockUser, isFriend, isBlocked } = useChat();
+  const { state, startDM, addFriend, removeFriend, blockUser, unblockUser, isFriend, isBlocked, staffKick } = useChat();
   const { isIgnored, toggleIgnoreUser } = useIgnore();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
@@ -339,7 +339,7 @@ export function ProfilePopup({
             {canKick && (
               <button
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent("palrgo:kick-user", { detail: { userId: realId, channelId: state.activeChannel } }));
+                  staffKick(realId, state.activeChannel, user.name);
                   toast.success(`Kicked ${user.name} from this room`);
                   onOpenChange(false);
                 }}

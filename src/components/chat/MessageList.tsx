@@ -3,6 +3,7 @@ import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { UserMenu } from "./UserMenu";
+import { StaffActionsMenu } from "./StaffActionsMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
 import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
 import { NameEmojiBadge, NameAdornments } from "@/lib/name-emoji";
@@ -265,6 +266,8 @@ export function MessageList({ channelId }: { channelId: string }) {
                             <Reply className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
                           <HighlightButton messageId={m.id} channelId={state.activeChannel} />
+                          <StaffActionsMenu targetUserId={author.id} targetName={author.name} isBot={author.isBot} messageId={m.id} size="xs" />
+
                         </div>
                       </div>
                     );
