@@ -4,7 +4,8 @@ import {
   FileText, MessageSquare, Newspaper, Zap, Flag,
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
   Rocket, Flame, Radio, Trophy, Youtube, Disc3, UserCircle2, MessageSquareHeart, Vote,
-  Bug, Home,
+  Bug, Home, Wand2, Database, ScrollText, History, Bell, MousePointerClick, Mail,
+  PowerOff, RefreshCw, Gift, Download,
 } from "lucide-react";
 
 export interface AdminLeaf {
@@ -98,12 +99,33 @@ export const ADMIN_NAV: AdminGroup[] = [
   { label: "Upcoming", icon: Rocket,    to: "/admin/upcoming", badge: "Soon" },
 
   {
+    label: "Communications", icon: Megaphone, children: [
+      { to: "/admin/announcements", label: "Announcements", icon: Bell,                keywords: ["banner", "broadcast", "notice"] },
+      { to: "/admin/popups",        label: "Popups",        icon: MousePointerClick,   keywords: ["modal", "welcome", "cta"] },
+      { to: "/admin/email",         label: "Email & SMTP",  icon: Mail,                keywords: ["smtp", "email", "templates", "notifications"] },
+    ],
+  },
+
+  {
+    label: "Logs", icon: ScrollText, children: [
+      { to: "/admin/audit-logs",    label: "Audit Logs",    icon: ScrollText, keywords: ["admin", "actions", "history", "mod_logs"] },
+      { to: "/admin/activity-logs", label: "User Activity", icon: History,    keywords: ["login", "sessions", "devices", "ip"] },
+    ],
+  },
+
+  {
     label: "Tools", icon: Wrench, advanced: true, children: [
-      { to: "/admin/security",    label: "Security",    icon: Lock,     badge: "Soon", advanced: true,                   keywords: ["captcha", "rate", "sessions"] },
-      { to: "/admin/performance", label: "Performance", icon: Activity, advanced: true,                                  keywords: ["cache", "cdn"] },
-      { to: "/admin/realtime",    label: "Realtime",    icon: Radio,    advanced: true,                                  keywords: ["websocket", "presence", "live"] },
-      { to: "/admin/system",      label: "System",      icon: Server,   advanced: true, superOnly: true,                 keywords: ["database", "jobs"] },
-      { to: "/admin/api",         label: "API & Webhooks", icon: KeyRound, advanced: true, superOnly: true,              keywords: ["api", "keys", "webhooks"] },
+      { to: "/admin/setup-wizard",  label: "Setup Wizard",  icon: Wand2,                                                  keywords: ["onboarding", "first run", "wizard"] },
+      { to: "/admin/demo",          label: "Demo Data",     icon: Database,                                               keywords: ["import", "reset", "seed", "sample"] },
+      { to: "/admin/maintenance",   label: "Maintenance",   icon: PowerOff,                                               keywords: ["offline", "downtime"] },
+      { to: "/admin/cache",         label: "Cache",         icon: RefreshCw,                                              keywords: ["cache", "purge", "clear"] },
+      { to: "/admin/referrals",     label: "Referrals",     icon: Gift,                                                   keywords: ["invite", "referral", "reward"] },
+      { to: "/admin/export",        label: "Export",        icon: Download,                                               keywords: ["csv", "excel", "download"] },
+      { to: "/admin/security",      label: "Security",      icon: Lock,     badge: "Soon", advanced: true,                keywords: ["captcha", "rate", "sessions"] },
+      { to: "/admin/performance",   label: "Performance",   icon: Activity, advanced: true,                               keywords: ["cache", "cdn"] },
+      { to: "/admin/realtime",      label: "Realtime",      icon: Radio,    advanced: true,                               keywords: ["websocket", "presence", "live"] },
+      { to: "/admin/system",        label: "System",        icon: Server,   advanced: true, superOnly: true,              keywords: ["database", "jobs"] },
+      { to: "/admin/api",           label: "API & Webhooks", icon: KeyRound, advanced: true, superOnly: true,             keywords: ["api", "keys", "webhooks"] },
     ],
   },
 ];

@@ -37,38 +37,49 @@ import { Route as AdminSystemRouteImport } from './routes/admin.system'
 import { Route as AdminStaffPermissionsRouteImport } from './routes/admin.staff-permissions'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
 import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
+import { Route as AdminSetupWizardRouteImport } from './routes/admin.setup-wizard'
 import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminRetentionRouteImport } from './routes/admin.retention'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
 import { Route as AdminRealtimeRouteImport } from './routes/admin.realtime'
 import { Route as AdminProgressionRouteImport } from './routes/admin.progression'
+import { Route as AdminPopupsRouteImport } from './routes/admin.popups'
 import { Route as AdminPollWidgetRouteImport } from './routes/admin.poll-widget'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminModulesRouteImport } from './routes/admin.modules'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminMediaApisRouteImport } from './routes/admin.media-apis'
+import { Route as AdminMaintenanceRouteImport } from './routes/admin.maintenance'
 import { Route as AdminHomepageRouteImport } from './routes/admin.homepage'
 import { Route as AdminGuestAccessRouteImport } from './routes/admin.guest-access'
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
 import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
 import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
+import { Route as AdminExportRouteImport } from './routes/admin.export'
+import { Route as AdminEmailRouteImport } from './routes/admin.email'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
 import { Route as AdminDjRouteImport } from './routes/admin.dj'
+import { Route as AdminDemoRouteImport } from './routes/admin.demo'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
+import { Route as AdminCacheRouteImport } from './routes/admin.cache'
 import { Route as AdminBotsRouteImport } from './routes/admin.bots'
 import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
 import { Route as AdminAuthBackgroundRouteImport } from './routes/admin.auth-background'
+import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
 import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
 import { Route as AdminApiRouteImport } from './routes/admin.api'
+import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAiChatbotsRouteImport } from './routes/admin.ai-chatbots'
 import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
+import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
@@ -215,6 +226,11 @@ const AdminSocialFeedRoute = AdminSocialFeedRouteImport.update({
   path: '/social-feed',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSetupWizardRoute = AdminSetupWizardRouteImport.update({
+  id: '/setup-wizard',
+  path: '/setup-wizard',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSeoRoute = AdminSeoRouteImport.update({
   id: '/seo',
   path: '/seo',
@@ -240,6 +256,11 @@ const AdminReportsRoute = AdminReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReferralsRoute = AdminReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminRealtimeRoute = AdminRealtimeRouteImport.update({
   id: '/realtime',
   path: '/realtime',
@@ -248,6 +269,11 @@ const AdminRealtimeRoute = AdminRealtimeRouteImport.update({
 const AdminProgressionRoute = AdminProgressionRouteImport.update({
   id: '/progression',
   path: '/progression',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPopupsRoute = AdminPopupsRouteImport.update({
+  id: '/popups',
+  path: '/popups',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPollWidgetRoute = AdminPollWidgetRouteImport.update({
@@ -280,6 +306,11 @@ const AdminMediaApisRoute = AdminMediaApisRouteImport.update({
   path: '/media-apis',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMaintenanceRoute = AdminMaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminHomepageRoute = AdminHomepageRouteImport.update({
   id: '/homepage',
   path: '/homepage',
@@ -310,6 +341,16 @@ const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
   path: '/feedback',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminExportRoute = AdminExportRouteImport.update({
+  id: '/export',
+  path: '/export',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmailRoute = AdminEmailRouteImport.update({
+  id: '/email',
+  path: '/email',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminEconomyRoute = AdminEconomyRouteImport.update({
   id: '/economy',
   path: '/economy',
@@ -320,6 +361,11 @@ const AdminDjRoute = AdminDjRouteImport.update({
   path: '/dj',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDemoRoute = AdminDemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminConfessionsRoute = AdminConfessionsRouteImport.update({
   id: '/confessions',
   path: '/confessions',
@@ -328,6 +374,11 @@ const AdminConfessionsRoute = AdminConfessionsRouteImport.update({
 const AdminChatroomsRoute = AdminChatroomsRouteImport.update({
   id: '/chatrooms',
   path: '/chatrooms',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCacheRoute = AdminCacheRouteImport.update({
+  id: '/cache',
+  path: '/cache',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminBotsRoute = AdminBotsRouteImport.update({
@@ -345,6 +396,11 @@ const AdminAuthBackgroundRoute = AdminAuthBackgroundRouteImport.update({
   path: '/auth-background',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAppearanceRoute = AdminAppearanceRouteImport.update({
   id: '/appearance',
   path: '/appearance',
@@ -353,6 +409,11 @@ const AdminAppearanceRoute = AdminAppearanceRouteImport.update({
 const AdminApiRoute = AdminApiRouteImport.update({
   id: '/api',
   path: '/api',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
@@ -373,6 +434,11 @@ const AdminAdsScriptsRoute = AdminAdsScriptsRouteImport.update({
 const AdminAdPlacementsRoute = AdminAdPlacementsRouteImport.update({
   id: '/ad-placements',
   path: '/ad-placements',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminActivityLogsRoute = AdminActivityLogsRouteImport.update({
+  id: '/activity-logs',
+  path: '/activity-logs',
   getParentRoute: () => AdminRoute,
 } as any)
 const ApiPublicLandingRoute = ApiPublicLandingRouteImport.update({
@@ -421,38 +487,49 @@ export interface FileRoutesByFullPath {
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
   '/admin/ai-chatbots': typeof AdminAiChatbotsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
+  '/admin/cache': typeof AdminCacheRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
+  '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/email': typeof AdminEmailRoute
+  '/admin/export': typeof AdminExportRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/homepage': typeof AdminHomepageRoute
+  '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
+  '/admin/popups': typeof AdminPopupsRoute
   '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
+  '/admin/referrals': typeof AdminReferralsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/retention': typeof AdminRetentionRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
+  '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -487,38 +564,49 @@ export interface FileRoutesByTo {
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
   '/admin/ai-chatbots': typeof AdminAiChatbotsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
+  '/admin/cache': typeof AdminCacheRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
+  '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/email': typeof AdminEmailRoute
+  '/admin/export': typeof AdminExportRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/homepage': typeof AdminHomepageRoute
+  '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
+  '/admin/popups': typeof AdminPopupsRoute
   '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
+  '/admin/referrals': typeof AdminReferralsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/retention': typeof AdminRetentionRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
+  '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -555,38 +643,49 @@ export interface FileRoutesById {
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
   '/admin/ai-chatbots': typeof AdminAiChatbotsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/bots': typeof AdminBotsRoute
+  '/admin/cache': typeof AdminCacheRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
+  '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/economy': typeof AdminEconomyRoute
+  '/admin/email': typeof AdminEmailRoute
+  '/admin/export': typeof AdminExportRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/homepage': typeof AdminHomepageRoute
+  '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
+  '/admin/popups': typeof AdminPopupsRoute
   '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
+  '/admin/referrals': typeof AdminReferralsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/retention': typeof AdminRetentionRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
+  '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -624,38 +723,49 @@ export interface FileRouteTypes {
     | '/reels'
     | '/reset-password'
     | '/welcome'
+    | '/admin/activity-logs'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
     | '/admin/ai-chatbots'
     | '/admin/analytics'
+    | '/admin/announcements'
     | '/admin/api'
     | '/admin/appearance'
+    | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
     | '/admin/bots'
+    | '/admin/cache'
     | '/admin/chatrooms'
     | '/admin/confessions'
+    | '/admin/demo'
     | '/admin/dj'
     | '/admin/economy'
+    | '/admin/email'
+    | '/admin/export'
     | '/admin/feedback'
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
     | '/admin/homepage'
+    | '/admin/maintenance'
     | '/admin/media-apis'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
     | '/admin/poll-widget'
+    | '/admin/popups'
     | '/admin/progression'
     | '/admin/realtime'
+    | '/admin/referrals'
     | '/admin/reports'
     | '/admin/retention'
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
+    | '/admin/setup-wizard'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -690,38 +800,49 @@ export interface FileRouteTypes {
     | '/reels'
     | '/reset-password'
     | '/welcome'
+    | '/admin/activity-logs'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
     | '/admin/ai-chatbots'
     | '/admin/analytics'
+    | '/admin/announcements'
     | '/admin/api'
     | '/admin/appearance'
+    | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
     | '/admin/bots'
+    | '/admin/cache'
     | '/admin/chatrooms'
     | '/admin/confessions'
+    | '/admin/demo'
     | '/admin/dj'
     | '/admin/economy'
+    | '/admin/email'
+    | '/admin/export'
     | '/admin/feedback'
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
     | '/admin/homepage'
+    | '/admin/maintenance'
     | '/admin/media-apis'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
     | '/admin/poll-widget'
+    | '/admin/popups'
     | '/admin/progression'
     | '/admin/realtime'
+    | '/admin/referrals'
     | '/admin/reports'
     | '/admin/retention'
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
+    | '/admin/setup-wizard'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -757,38 +878,49 @@ export interface FileRouteTypes {
     | '/reels'
     | '/reset-password'
     | '/welcome'
+    | '/admin/activity-logs'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
     | '/admin/ai-chatbots'
     | '/admin/analytics'
+    | '/admin/announcements'
     | '/admin/api'
     | '/admin/appearance'
+    | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
     | '/admin/bots'
+    | '/admin/cache'
     | '/admin/chatrooms'
     | '/admin/confessions'
+    | '/admin/demo'
     | '/admin/dj'
     | '/admin/economy'
+    | '/admin/email'
+    | '/admin/export'
     | '/admin/feedback'
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
     | '/admin/homepage'
+    | '/admin/maintenance'
     | '/admin/media-apis'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
     | '/admin/performance'
     | '/admin/poll-widget'
+    | '/admin/popups'
     | '/admin/progression'
     | '/admin/realtime'
+    | '/admin/referrals'
     | '/admin/reports'
     | '/admin/retention'
     | '/admin/roles'
     | '/admin/security'
     | '/admin/seo'
+    | '/admin/setup-wizard'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -1031,6 +1163,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSocialFeedRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/setup-wizard': {
+      id: '/admin/setup-wizard'
+      path: '/setup-wizard'
+      fullPath: '/admin/setup-wizard'
+      preLoaderRoute: typeof AdminSetupWizardRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/seo': {
       id: '/admin/seo'
       path: '/seo'
@@ -1066,6 +1205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReportsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/referrals': {
+      id: '/admin/referrals'
+      path: '/referrals'
+      fullPath: '/admin/referrals'
+      preLoaderRoute: typeof AdminReferralsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/realtime': {
       id: '/admin/realtime'
       path: '/realtime'
@@ -1078,6 +1224,13 @@ declare module '@tanstack/react-router' {
       path: '/progression'
       fullPath: '/admin/progression'
       preLoaderRoute: typeof AdminProgressionRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/popups': {
+      id: '/admin/popups'
+      path: '/popups'
+      fullPath: '/admin/popups'
+      preLoaderRoute: typeof AdminPopupsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/poll-widget': {
@@ -1122,6 +1275,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMediaApisRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/maintenance': {
+      id: '/admin/maintenance'
+      path: '/maintenance'
+      fullPath: '/admin/maintenance'
+      preLoaderRoute: typeof AdminMaintenanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/homepage': {
       id: '/admin/homepage'
       path: '/homepage'
@@ -1164,6 +1324,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFeedbackRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/export': {
+      id: '/admin/export'
+      path: '/export'
+      fullPath: '/admin/export'
+      preLoaderRoute: typeof AdminExportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/email': {
+      id: '/admin/email'
+      path: '/email'
+      fullPath: '/admin/email'
+      preLoaderRoute: typeof AdminEmailRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/economy': {
       id: '/admin/economy'
       path: '/economy'
@@ -1178,6 +1352,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDjRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/demo': {
+      id: '/admin/demo'
+      path: '/demo'
+      fullPath: '/admin/demo'
+      preLoaderRoute: typeof AdminDemoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/confessions': {
       id: '/admin/confessions'
       path: '/confessions'
@@ -1190,6 +1371,13 @@ declare module '@tanstack/react-router' {
       path: '/chatrooms'
       fullPath: '/admin/chatrooms'
       preLoaderRoute: typeof AdminChatroomsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/cache': {
+      id: '/admin/cache'
+      path: '/cache'
+      fullPath: '/admin/cache'
+      preLoaderRoute: typeof AdminCacheRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/bots': {
@@ -1213,6 +1401,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuthBackgroundRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/audit-logs': {
+      id: '/admin/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/admin/audit-logs'
+      preLoaderRoute: typeof AdminAuditLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/appearance': {
       id: '/admin/appearance'
       path: '/appearance'
@@ -1225,6 +1420,13 @@ declare module '@tanstack/react-router' {
       path: '/api'
       fullPath: '/admin/api'
       preLoaderRoute: typeof AdminApiRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/announcements': {
+      id: '/admin/announcements'
+      path: '/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AdminAnnouncementsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/analytics': {
@@ -1253,6 +1455,13 @@ declare module '@tanstack/react-router' {
       path: '/ad-placements'
       fullPath: '/admin/ad-placements'
       preLoaderRoute: typeof AdminAdPlacementsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/activity-logs': {
+      id: '/admin/activity-logs'
+      path: '/activity-logs'
+      fullPath: '/admin/activity-logs'
+      preLoaderRoute: typeof AdminActivityLogsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/api/public/landing': {
@@ -1306,38 +1515,49 @@ const AdminUpcomingRouteWithChildren = AdminUpcomingRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminActivityLogsRoute: typeof AdminActivityLogsRoute
   AdminAdPlacementsRoute: typeof AdminAdPlacementsRoute
   AdminAdsScriptsRoute: typeof AdminAdsScriptsRoute
   AdminAiChatbotsRoute: typeof AdminAiChatbotsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
   AdminApiRoute: typeof AdminApiRoute
   AdminAppearanceRoute: typeof AdminAppearanceRoute
+  AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminAuthBackgroundRoute: typeof AdminAuthBackgroundRoute
   AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBotsRoute: typeof AdminBotsRoute
+  AdminCacheRoute: typeof AdminCacheRoute
   AdminChatroomsRoute: typeof AdminChatroomsRoute
   AdminConfessionsRoute: typeof AdminConfessionsRoute
+  AdminDemoRoute: typeof AdminDemoRoute
   AdminDjRoute: typeof AdminDjRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
+  AdminEmailRoute: typeof AdminEmailRoute
+  AdminExportRoute: typeof AdminExportRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminFiltersRoute: typeof AdminFiltersRoute
   AdminGamesRoute: typeof AdminGamesRoute
   AdminGeneralRoute: typeof AdminGeneralRoute
   AdminGuestAccessRoute: typeof AdminGuestAccessRoute
   AdminHomepageRoute: typeof AdminHomepageRoute
+  AdminMaintenanceRoute: typeof AdminMaintenanceRoute
   AdminMediaApisRoute: typeof AdminMediaApisRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminModulesRoute: typeof AdminModulesRoute
   AdminPagesRoute: typeof AdminPagesRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPollWidgetRoute: typeof AdminPollWidgetRoute
+  AdminPopupsRoute: typeof AdminPopupsRoute
   AdminProgressionRoute: typeof AdminProgressionRoute
   AdminRealtimeRoute: typeof AdminRealtimeRoute
+  AdminReferralsRoute: typeof AdminReferralsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminRetentionRoute: typeof AdminRetentionRoute
   AdminRolesRoute: typeof AdminRolesRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSeoRoute: typeof AdminSeoRoute
+  AdminSetupWizardRoute: typeof AdminSetupWizardRoute
   AdminSocialFeedRoute: typeof AdminSocialFeedRoute
   AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
   AdminStaffPermissionsRoute: typeof AdminStaffPermissionsRoute
@@ -1348,38 +1568,49 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminActivityLogsRoute: AdminActivityLogsRoute,
   AdminAdPlacementsRoute: AdminAdPlacementsRoute,
   AdminAdsScriptsRoute: AdminAdsScriptsRoute,
   AdminAiChatbotsRoute: AdminAiChatbotsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminAnnouncementsRoute: AdminAnnouncementsRoute,
   AdminApiRoute: AdminApiRoute,
   AdminAppearanceRoute: AdminAppearanceRoute,
+  AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminAuthBackgroundRoute: AdminAuthBackgroundRoute,
   AdminAutomationRoute: AdminAutomationRoute,
   AdminBotsRoute: AdminBotsRoute,
+  AdminCacheRoute: AdminCacheRoute,
   AdminChatroomsRoute: AdminChatroomsRoute,
   AdminConfessionsRoute: AdminConfessionsRoute,
+  AdminDemoRoute: AdminDemoRoute,
   AdminDjRoute: AdminDjRoute,
   AdminEconomyRoute: AdminEconomyRoute,
+  AdminEmailRoute: AdminEmailRoute,
+  AdminExportRoute: AdminExportRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
   AdminFiltersRoute: AdminFiltersRoute,
   AdminGamesRoute: AdminGamesRoute,
   AdminGeneralRoute: AdminGeneralRoute,
   AdminGuestAccessRoute: AdminGuestAccessRoute,
   AdminHomepageRoute: AdminHomepageRoute,
+  AdminMaintenanceRoute: AdminMaintenanceRoute,
   AdminMediaApisRoute: AdminMediaApisRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminModulesRoute: AdminModulesRoute,
   AdminPagesRoute: AdminPagesRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPollWidgetRoute: AdminPollWidgetRoute,
+  AdminPopupsRoute: AdminPopupsRoute,
   AdminProgressionRoute: AdminProgressionRoute,
   AdminRealtimeRoute: AdminRealtimeRoute,
+  AdminReferralsRoute: AdminReferralsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminRetentionRoute: AdminRetentionRoute,
   AdminRolesRoute: AdminRolesRoute,
   AdminSecurityRoute: AdminSecurityRoute,
   AdminSeoRoute: AdminSeoRoute,
+  AdminSetupWizardRoute: AdminSetupWizardRoute,
   AdminSocialFeedRoute: AdminSocialFeedRoute,
   AdminSocialLayoutRoute: AdminSocialLayoutRoute,
   AdminStaffPermissionsRoute: AdminStaffPermissionsRoute,
