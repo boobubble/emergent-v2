@@ -598,3 +598,59 @@ function MobileNav({ to, params, icon: Icon, label, active }: { to: string; para
     </Link>
   );
 }
+
+type SpeedDialAction = { label: string; icon: typeof Home; color: string; onClick: () => void };
+
+function MobileSpeedDial({ open, onToggle, onClose, actions }: { open: boolean; onToggle: () => void; onClose: () => void; actions: SpeedDialAction[] }) {
+  return (
+    <div className="lg:hidden">
+      {/* Backdrop */}
+      {open && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          onClick={onClose}
+          className="fixed inset-0 z-[55] bg-background/60 backdrop-blur-sm animate-in fade-in duration-200"
+        />
+      )}
+
+      {/* Action sheet */}
+      <div
+        className={`fixed left-3 z-[58] flex flex-col-reverse items-start gap-2 transition-all duration-200 ${open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-3 pointer-events-none"}`}
+        style={{ bottom: "calc(7.5rem + env(safe-area-inset-bottom))" }}
+      >
+        {actions.map((a, i) => {
+          const Icon = a.icon;
+          return (
+            <button
+              key={a.label}
+              onClick={() => { a.onClick(); onClose(); }}
+              style={{ transitionDelay: open ? `${i * 25}ms` : "0ms" }}
+              className="group flex items-center gap-2.5 rounded-full border border-border bg-card/95 pl-2 pr-4 py-1.5 shadow-lg backdrop-blur transition-all hover:scale-[1.03] active:scale-95"
+            >
+              <span className={`grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br ${a.color} text-white shadow-md`}>
+                <Icon className="h-4.5 w-4.5" strokeWidth={2.25} />
+              </span>
+              <span className="text-sm font-semibold text-foreground whitespace-nowrap">{a.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Trigger FAB */}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={open ? "Close quick menu" : "Open quick menu"}
+        aria-expanded={open}
+        className="fixed left-4 z-[60] grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_10px_24px_-8px_var(--primary-glow)] ring-4 ring-background transition-transform active:scale-90"
+        style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
+      >
+        <span className={`transition-transform duration-200 ${open ? "rotate-90" : ""}`}>
+          {open ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Menu className="h-5 w-5" strokeWidth={2.5} />}
+        </span>
+      </button>
+    </div>
+  );
+}
+
