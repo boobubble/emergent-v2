@@ -87,9 +87,10 @@ export const ADMIN_NAV: AdminGroup[] = [
 
   {
     label: "Moderation", icon: Gavel, children: [
-      { to: "/admin/moderation", label: "Bans & Mutes", icon: Gavel,   keywords: ["bans", "mutes"] },
-      { to: "/admin/reports",    label: "Reports",      icon: Flag,    keywords: ["queue", "abuse"] },
-      { to: "/admin/filters",    label: "Word Filters", icon: Filter,  keywords: ["blocklist", "words"] },
+      { to: "/admin/moderation",         label: "Bans & Mutes",      icon: Gavel,   keywords: ["bans", "mutes"] },
+      { to: "/admin/staff-permissions",  label: "Staff Permissions", icon: Shield,  keywords: ["moderator", "kick", "mute", "ban", "permissions", "toggle"] },
+      { to: "/admin/reports",            label: "Reports",           icon: Flag,    keywords: ["queue", "abuse"] },
+      { to: "/admin/filters",            label: "Word Filters",      icon: Filter,  keywords: ["blocklist", "words"] },
     ],
   },
 

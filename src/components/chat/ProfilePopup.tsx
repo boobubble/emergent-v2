@@ -14,6 +14,7 @@ import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useMyRoles } from "@/lib/use-my-role";
+import { useStaffPermissions } from "@/lib/use-staff-permissions";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "./Avatar";
 import { NameEmojiBadge, CountryFlag, UserKindBadge } from "@/lib/name-emoji";
@@ -65,8 +66,12 @@ export function ProfilePopup({
   const room = state.rooms[state.activeChannel];
   const role: Role = (room?.roles?.[userId] || room?.roles?.[realId] || "member") as Role;
   const currentRoom = room && !state.activeChannel.startsWith("dm:") ? room.name : "N/A";
-  const { isModerator } = useMyRoles();
+  const { isAdmin, isModerator } = useMyRoles();
+  const staffPerms = useStaffPermissions();
   const isStaff = isModerator && !isMe && !user?.isBot;
+  const canKick = isStaff && (isAdmin || staffPerms.mod_can_kick);
+  const canMute = isStaff && (isAdmin || staffPerms.mod_can_mute);
+  const canBan  = isStaff && (isAdmin || staffPerms.mod_can_ban);
   const banFn = useServerFn(banUser);
   const muteFn = useServerFn(muteUser);
 
@@ -329,49 +334,55 @@ export function ProfilePopup({
             ))}
           </div>
         )}
-        {isStaff && (
+        {isStaff && (canKick || canMute || canBan) && (
           <div className="flex flex-wrap gap-2 border-t border-border bg-card px-4 py-3">
-            <button
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent("palrgo:kick-user", { detail: { userId: realId, channelId: state.activeChannel } }));
-                toast.success(`Kicked ${user.name} from this room`);
-                onOpenChange(false);
-              }}
-              className="inline-flex h-9 flex-1 min-w-[80px] items-center justify-center gap-1.5 rounded-full border border-warning/40 bg-warning/10 px-3 text-xs font-bold text-warning hover:bg-warning/20"
-              title="Kick from this room"
-            >
-              <LogOut className="h-4 w-4" /> Kick
-            </button>
-            <button
-              onClick={async () => {
-                try {
-                  await muteFn({ data: { user_id: realId, scope: "room", channel_id: state.activeChannel, expires_in_minutes: 60, reason: "Staff mute" } });
-                  toast.success(`Muted ${user.name} for 1h`);
-                } catch (e: unknown) {
-                  toast.error(e instanceof Error ? e.message : "Failed to mute");
-                }
-              }}
-              className="inline-flex h-9 flex-1 min-w-[80px] items-center justify-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 text-xs font-bold text-primary hover:bg-primary/20"
-              title="Mute in this room for 1 hour"
-            >
-              <VolumeX className="h-4 w-4" /> Mute
-            </button>
-            <button
-              onClick={async () => {
-                if (!confirm(`Ban ${user.name} for 24 hours?`)) return;
-                try {
-                  await banFn({ data: { user_id: realId, ban_type: "temp_ban", expires_in_hours: 24, reason: "Staff ban" } });
-                  toast.success(`Banned ${user.name} for 24h`);
+            {canKick && (
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("palrgo:kick-user", { detail: { userId: realId, channelId: state.activeChannel } }));
+                  toast.success(`Kicked ${user.name} from this room`);
                   onOpenChange(false);
-                } catch (e: unknown) {
-                  toast.error(e instanceof Error ? e.message : "Failed to ban");
-                }
-              }}
-              className="inline-flex h-9 flex-1 min-w-[80px] items-center justify-center gap-1.5 rounded-full border border-destructive/40 bg-destructive/10 px-3 text-xs font-bold text-destructive hover:bg-destructive/20"
-              title="Ban for 24 hours"
-            >
-              <Gavel className="h-4 w-4" /> Ban
-            </button>
+                }}
+                className="inline-flex h-9 flex-1 min-w-[80px] items-center justify-center gap-1.5 rounded-full border border-warning/40 bg-warning/10 px-3 text-xs font-bold text-warning hover:bg-warning/20"
+                title="Kick from this room"
+              >
+                <LogOut className="h-4 w-4" /> Kick
+              </button>
+            )}
+            {canMute && (
+              <button
+                onClick={async () => {
+                  try {
+                    await muteFn({ data: { user_id: realId, scope: "room", channel_id: state.activeChannel, expires_in_minutes: 60, reason: "Staff mute" } });
+                    toast.success(`Muted ${user.name} for 1h`);
+                  } catch (e: unknown) {
+                    toast.error(e instanceof Error ? e.message : "Failed to mute");
+                  }
+                }}
+                className="inline-flex h-9 flex-1 min-w-[80px] items-center justify-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 text-xs font-bold text-primary hover:bg-primary/20"
+                title="Mute in this room for 1 hour"
+              >
+                <VolumeX className="h-4 w-4" /> Mute
+              </button>
+            )}
+            {canBan && (
+              <button
+                onClick={async () => {
+                  if (!confirm(`Ban ${user.name} for 24 hours?`)) return;
+                  try {
+                    await banFn({ data: { user_id: realId, ban_type: "temp_ban", expires_in_hours: 24, reason: "Staff ban" } });
+                    toast.success(`Banned ${user.name} for 24h`);
+                    onOpenChange(false);
+                  } catch (e: unknown) {
+                    toast.error(e instanceof Error ? e.message : "Failed to ban");
+                  }
+                }}
+                className="inline-flex h-9 flex-1 min-w-[80px] items-center justify-center gap-1.5 rounded-full border border-destructive/40 bg-destructive/10 px-3 text-xs font-bold text-destructive hover:bg-destructive/20"
+                title="Ban for 24 hours"
+              >
+                <Gavel className="h-4 w-4" /> Ban
+              </button>
+            )}
           </div>
         )}
         {isMe && (
