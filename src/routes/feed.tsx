@@ -19,6 +19,7 @@ import { Avatar } from "@/components/chat/Avatar";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
 import { pingDailyStreak } from "@/lib/gamification.functions";
 import { BrandMark } from "@/components/BrandMark";
+import { PostSkeleton, WidgetSkeleton, RewardsWidgetSkeleton } from "@/components/feed/FeedSkeletons";
 
 // Lazy-loaded panels — only fetched when the user navigates to them, keeping
 // the initial feed bundle small for faster first paint.
@@ -336,7 +337,7 @@ function FeedPage() {
               />
               <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Settings" color="text-slate-400" />
             </nav>
-            <Suspense fallback={null}>
+            <Suspense fallback={<RewardsWidgetSkeleton />}>
               <RewardsWidget
                 meId={meId}
                 onOpenChest={() => setView("dailyChest")}
@@ -376,7 +377,7 @@ function FeedPage() {
           ) : (
             <>
               <div className="mb-4 space-y-3 lg:hidden">
-                <Suspense fallback={null}>
+                <Suspense fallback={<RewardsWidgetSkeleton />}>
                   <RewardsWidget
                     meId={meId}
                     onOpenChest={() => setView("dailyChest")}
@@ -422,19 +423,7 @@ function FeedPage() {
                   </div>
                 ) : (<>
                 {loading && Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="feed-card p-5">
-                    <div className="flex items-center gap-3">
-                      <div className="h-11 w-11 rounded-full skeleton-shimmer" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-3 w-1/3 rounded skeleton-shimmer" />
-                        <div className="h-2.5 w-1/4 rounded skeleton-shimmer" />
-                      </div>
-                    </div>
-                    <div className="mt-4 space-y-2">
-                      <div className="h-3 w-full rounded skeleton-shimmer" />
-                      <div className="h-3 w-4/5 rounded skeleton-shimmer" />
-                    </div>
-                  </div>
+                  <PostSkeleton key={i} />
                 ))}
                 {!loading && filtered.length === 0 && (
                   <div className="feed-card p-10 text-center">
