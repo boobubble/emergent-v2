@@ -40,6 +40,8 @@ export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Reco
     await supabase.from("friendships").insert({ sender_id: meId, receiver_id: toId, status: "pending" });
   }
 
+  if (!loaded) return <WidgetSkeleton rows={4} />;
+
   return (
     <div className="space-y-4">
       {pendingIn.length > 0 && (
