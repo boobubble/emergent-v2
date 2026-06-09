@@ -112,6 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const email = session.user.email ?? undefined;
         void flushPendingAvatar(session.user.id, email).then(() => publishWelcomePost(session.user.id, email));
       }
+      // Hydrate sound preferences from this user's profile (best effort).
+      void import("@/lib/sound-prefs").then((m) => m.hydrateSoundPrefsFromServer());
       // Record this device for ban-evasion tracking (best effort).
       void (async () => {
         try {
