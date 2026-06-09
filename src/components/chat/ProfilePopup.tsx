@@ -360,7 +360,7 @@ export function ProfilePopup({
               onClick={async () => {
                 if (!confirm(`Ban ${user.name} for 24 hours?`)) return;
                 try {
-                  await banFn({ data: { user_id: realId, duration_minutes: 60 * 24, reason: "Staff ban" } });
+                  await banFn({ data: { user_id: realId, ban_type: "temp_ban", expires_in_hours: 24, reason: "Staff ban" } });
                   toast.success(`Banned ${user.name} for 24h`);
                   onOpenChange(false);
                 } catch (e: unknown) {
