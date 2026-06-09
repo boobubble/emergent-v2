@@ -619,7 +619,41 @@ function MobileNav({ to, params, icon: Icon, label, active }: { to: string; para
 
 type SpeedDialAction = { label: string; icon: typeof Home; color: string; onClick: () => void };
 
-function MobileSpeedDial({ open, onToggle, onClose, actions }: { open: boolean; onToggle: () => void; onClose: () => void; actions: SpeedDialAction[] }) {
+function MobileSpeedDial({ open, onToggle, onClose, actions, extraActions = [] }: { open: boolean; onToggle: () => void; onClose: () => void; actions: SpeedDialAction[]; extraActions?: SpeedDialAction[] }) {
+  const [mode, setMode] = useState<"primary" | "extra">("primary");
+  const longPressFired = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTimer = () => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+  };
+
+  const startPress = () => {
+    longPressFired.current = false;
+    clearTimer();
+    timerRef.current = setTimeout(() => {
+      longPressFired.current = true;
+      setMode("extra");
+      if (!open) onToggle();
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        try { navigator.vibrate?.(15); } catch { /* ignore */ }
+      }
+    }, 450);
+  };
+
+  const endPress = () => clearTimer();
+
+  const handleClick = () => {
+    if (longPressFired.current) { longPressFired.current = false; return; }
+    if (open && mode === "extra") { setMode("primary"); return; }
+    setMode("primary");
+    onToggle();
+  };
+
+  const closeAll = () => { setMode("primary"); onClose(); };
+  const list = mode === "extra" ? extraActions : actions;
+  const showingExtra = mode === "extra" && open;
+
   return (
     <div className="lg:hidden">
       {/* Backdrop */}
@@ -627,7 +661,7 @@ function MobileSpeedDial({ open, onToggle, onClose, actions }: { open: boolean; 
         <button
           type="button"
           aria-label="Close menu"
-          onClick={onClose}
+          onClick={closeAll}
           className="fixed inset-0 z-[55] bg-background/60 backdrop-blur-sm animate-in fade-in duration-200"
         />
       )}
@@ -637,12 +671,15 @@ function MobileSpeedDial({ open, onToggle, onClose, actions }: { open: boolean; 
         className={`fixed left-3 z-[58] flex flex-col-reverse items-start gap-2 transition-all duration-200 ${open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-3 pointer-events-none"}`}
         style={{ bottom: "calc(7.5rem + env(safe-area-inset-bottom))" }}
       >
-        {actions.map((a, i) => {
+        {showingExtra && (
+          <div className="ml-1 mb-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">Quick Shortcuts</div>
+        )}
+        {list.map((a, i) => {
           const Icon = a.icon;
           return (
             <button
               key={a.label}
-              onClick={() => { a.onClick(); onClose(); }}
+              onClick={() => { a.onClick(); closeAll(); }}
               style={{ transitionDelay: open ? `${i * 25}ms` : "0ms" }}
               className="group flex items-center gap-2.5 rounded-full border border-border bg-card/95 pl-2 pr-4 py-1.5 shadow-lg backdrop-blur transition-all hover:scale-[1.03] active:scale-95"
             >
@@ -655,13 +692,18 @@ function MobileSpeedDial({ open, onToggle, onClose, actions }: { open: boolean; 
         })}
       </div>
 
-      {/* Trigger FAB */}
+      {/* Trigger FAB — tap toggles main menu, long-press opens extra shortcuts */}
       <button
         type="button"
-        onClick={onToggle}
-        aria-label={open ? "Close quick menu" : "Open quick menu"}
+        onClick={handleClick}
+        onPointerDown={startPress}
+        onPointerUp={endPress}
+        onPointerLeave={endPress}
+        onPointerCancel={endPress}
+        onContextMenu={(e) => e.preventDefault()}
+        aria-label={open ? "Close quick menu" : "Open quick menu (long-press for shortcuts)"}
         aria-expanded={open}
-        className="fixed left-4 z-[60] grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_10px_24px_-8px_var(--primary-glow)] ring-4 ring-background transition-transform active:scale-90"
+        className={`fixed left-4 z-[60] grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br ${showingExtra ? "from-fuchsia-500 to-violet-500" : "from-primary to-primary/70"} text-primary-foreground shadow-[0_10px_24px_-8px_var(--primary-glow)] ring-4 ring-background transition-all active:scale-90 select-none touch-none`}
         style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
       >
         <span className={`transition-transform duration-200 ${open ? "rotate-90" : ""}`}>
@@ -671,4 +713,5 @@ function MobileSpeedDial({ open, onToggle, onClose, actions }: { open: boolean; 
     </div>
   );
 }
+
 
