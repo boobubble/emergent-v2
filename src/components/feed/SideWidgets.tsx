@@ -3,11 +3,13 @@ import { Link } from "@tanstack/react-router";
 import { Flame, TrendingUp, Trophy, UserPlus, Check, X, Radio } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
+import { WidgetSkeleton } from "@/components/feed/FeedSkeletons";
 import type { User } from "@/lib/chat-types";
 import type { FeedFriendship } from "@/lib/feed-types";
 
 export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Record<string, User> }) {
   const [friendships, setFriendships] = useState<FeedFriendship[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     async function load() {
