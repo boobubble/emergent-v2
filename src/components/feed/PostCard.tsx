@@ -324,6 +324,3 @@ export const PostCard = memo(function PostCard({
     </article>
   );
 });
-    </article>
-  );
-});
