@@ -183,6 +183,7 @@ function AuthGate() {
           <AdsAutoLoader />
           <SessionConflictBanner />
           <Outlet />
+          <GlobalThemeToggle />
           <Sonner />
           <RealtimeDebugOverlay />
         </>
