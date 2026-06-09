@@ -65,6 +65,10 @@ export function ProfilePopup({
   const room = state.rooms[state.activeChannel];
   const role: Role = (room?.roles?.[userId] || room?.roles?.[realId] || "member") as Role;
   const currentRoom = room && !state.activeChannel.startsWith("dm:") ? room.name : "N/A";
+  const { isModerator } = useMyRoles();
+  const isStaff = isModerator && !isMe && !user?.isBot;
+  const banFn = useServerFn(banUser);
+  const muteFn = useServerFn(muteUser);
 
   useEffect(() => {
     if (!open || !user || user.isBot) return;
