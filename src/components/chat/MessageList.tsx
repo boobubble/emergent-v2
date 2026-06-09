@@ -5,7 +5,7 @@ import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/Cosm
 import { UserMenu } from "./UserMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
 import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
-import { NameEmojiBadge } from "@/lib/name-emoji";
+import { NameEmojiBadge, NameAdornments } from "@/lib/name-emoji";
 import { EmojiEffectLayer } from "./EmojiEffectLayer";
 import { HighlightButton } from "./HighlightButton";
 import { useIgnore } from "@/lib/ignore-store";
