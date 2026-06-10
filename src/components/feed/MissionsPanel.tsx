@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Coins, Sparkles, Trophy, Check, Flame, Gift, Volume2, VolumeX } from "lucide-react";
+import { toast } from "sonner";
 import { getTodayMissions, claimMission } from "@/lib/missions.functions";
 import { getMyCreatorRank } from "@/lib/creator.functions";
 
