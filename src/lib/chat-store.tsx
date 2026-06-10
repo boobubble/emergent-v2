@@ -1451,9 +1451,24 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   }, []);
 
 
+  const pushSystem = useCallback((channelId: string, text: string) => {
+    setState(s => ({
+      ...s,
+      messages: {
+        ...s.messages,
+        [channelId]: [
+          ...(s.messages[channelId] || []),
+          { id: uid(), channelId, authorId: "bot-gamebot", text, ts: Date.now(), kind: "system" } as Message,
+        ],
+      },
+    }));
+  }, []);
+
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
     adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
+    pushSystem,
+
     isFriend: (id) => (state.me.friends ?? []).includes(id),
     isBlocked: (id) => (state.me.blocked ?? []).includes(id),
     reset,
