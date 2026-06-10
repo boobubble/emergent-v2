@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
@@ -87,7 +87,7 @@ function PagesAdmin() {
   const qc = useQueryClient();
 
   const [q, setQ] = useState("");
-  const [editor, setEditor] = useState<PageRow | null>(null);
+  // Editor moved to /admin/pages/edit/:id — opened in a new tab.
 
   const pagesQ = useQuery({
     queryKey: ["admin", "pages", q],
@@ -120,11 +120,14 @@ function PagesAdmin() {
           <Card>
             <CardContent className="flex flex-wrap items-center gap-2 p-3">
               <Input placeholder="Search pages…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
-              <Button size="sm" className="ml-auto" onClick={() => setEditor(emptyPage())}>
-                <Plus className="mr-1 h-4 w-4" />New page
-              </Button>
+              <a href="/admin/pages/edit/new" target="_blank" rel="noreferrer" className="ml-auto">
+                <Button size="sm">
+                  <Plus className="mr-1 h-4 w-4" />New page
+                </Button>
+              </a>
             </CardContent>
           </Card>
+
 
           {pagesQ.isLoading ? (
             <Skeleton className="h-40 w-full" />
@@ -133,9 +136,10 @@ function PagesAdmin() {
           ) : (
             <div className="grid gap-2">
               {(pagesQ.data as PageRow[]).map((p) => (
-                <PageListRow key={p.id} page={p} onEdit={() => setEditor(p)} onChanged={invalidate} />
+                <PageListRow key={p.id} page={p} onChanged={invalidate} />
               ))}
             </div>
+
           )}
         </TabsContent>
 
@@ -152,16 +156,13 @@ function PagesAdmin() {
         </TabsContent>
       </Tabs>
 
-      <PageEditorDialog
-        page={editor}
-        onClose={() => setEditor(null)}
-        onSaved={() => { setEditor(null); invalidate(); }}
-      />
+      {/* Editor opens in a new tab via /admin/pages/edit/:id */}
+
     </div>
   );
 }
 
-function PageListRow({ page, onEdit, onChanged }: { page: PageRow; onEdit: () => void; onChanged: () => void }) {
+function PageListRow({ page, onChanged }: { page: PageRow; onChanged: () => void }) {
   const del = useServerFn(deletePage);
   return (
     <Card>
@@ -185,7 +186,10 @@ function PageListRow({ page, onEdit, onChanged }: { page: PageRow; onEdit: () =>
               <Button size="icon" variant="ghost" title="Open"><ExternalLink className="h-4 w-4" /></Button>
             </a>
           )}
-          <Button size="icon" variant="ghost" onClick={onEdit} title="Edit"><Pencil className="h-4 w-4" /></Button>
+          <a href={`/admin/pages/edit/${page.id}`} target="_blank" rel="noreferrer">
+            <Button size="icon" variant="ghost" title="Edit in new tab"><Pencil className="h-4 w-4" /></Button>
+          </a>
+
           <Button
             size="icon"
             variant="ghost"
@@ -206,208 +210,6 @@ function PageListRow({ page, onEdit, onChanged }: { page: PageRow; onEdit: () =>
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function PageEditorDialog({ page, onClose, onSaved }: { page: PageRow | null; onClose: () => void; onSaved: () => void }) {
-  const save = useServerFn(savePage);
-  const [row, setRow] = useState<PageRow | null>(page);
-  const [autoSlug, setAutoSlug] = useState(!page?.id);
-  const [tab, setTab] = useState("content");
-
-  // Reset when page changes
-  useMemo(() => { setRow(page); setAutoSlug(!page?.id); setTab("content"); }, [page]);
-
-  if (!row) return null;
-  const update = <K extends keyof PageRow>(k: K, v: PageRow[K]) => setRow((r) => (r ? { ...r, [k]: v } : r));
-
-  async function handleSave(overwrite = false) {
-    if (!row) return;
-    try {
-      const payload = {
-        id: row.id || undefined,
-        slug: row.slug || slugify(row.title),
-        title: row.title,
-        content: row.content,
-        excerpt: row.excerpt || null,
-        layout: row.layout,
-        sidebar_left: row.sidebar_left,
-        sidebar_right: row.sidebar_right,
-        tags: row.tags ?? [],
-        status: row.status,
-        featured: row.featured,
-        meta_title: row.meta_title || null,
-        meta_description: row.meta_description || null,
-        meta_keywords: row.meta_keywords || null,
-        og_title: row.og_title || null,
-        og_description: row.og_description || null,
-        og_image: row.og_image || null,
-        canonical_url: row.canonical_url || null,
-        noindex: row.noindex,
-        nofollow: row.nofollow,
-        overwrite,
-      };
-      await save({ data: payload });
-      toast.success(`Page saved · /${payload.slug}`);
-      onSaved();
-    } catch (e: unknown) {
-      const msg = (e as Error)?.message ?? "Save failed";
-      if (msg.toLowerCase().includes("already in use")) {
-        if (confirm(`${msg}\n\nOverwrite the existing page?`)) return handleSave(true);
-      } else {
-        toast.error(msg);
-      }
-    }
-  }
-
-  return (
-    <Dialog open={!!page} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{row.id ? "Edit page" : "New page"}</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-3">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label className="text-xs">Title</Label>
-              <Input
-                value={row.title}
-                maxLength={200}
-                onChange={(e) => {
-                  const t = e.target.value;
-                  setRow((r) => r ? { ...r, title: t, slug: autoSlug ? slugify(t) : r.slug } : r);
-                }}
-                placeholder="Indian Chat Room"
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Slug · /<span className="font-mono text-foreground">{row.slug || "your-slug"}</span></Label>
-              <Input
-                value={row.slug}
-                maxLength={120}
-                onChange={(e) => { update("slug", slugify(e.target.value)); setAutoSlug(false); }}
-                placeholder="indian-chat-room"
-                className="font-mono"
-              />
-            </div>
-          </div>
-
-          <Tabs value={tab} onValueChange={setTab}>
-            <TabsList className="flex w-full flex-wrap">
-              <TabsTrigger value="content">Content</TabsTrigger>
-              <TabsTrigger value="seo">SEO</TabsTrigger>
-              <TabsTrigger value="meta">Layout & status</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="content" className="space-y-3 pt-3">
-              <RichTextEditor value={row.content} onChange={(html) => update("content", html)} />
-              <div>
-                <Label className="text-xs">Excerpt</Label>
-                <Textarea value={row.excerpt ?? ""} maxLength={500} rows={2} onChange={(e) => update("excerpt", e.target.value)} placeholder="Short summary shown in listings" />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="seo" className="grid gap-3 pt-3 sm:grid-cols-2">
-              <div>
-                <Label className="text-xs">Meta title</Label>
-                <Input value={row.meta_title ?? ""} maxLength={200} onChange={(e) => update("meta_title", e.target.value)} placeholder={row.title} />
-              </div>
-              <div>
-                <Label className="text-xs">Keywords</Label>
-                <Input value={row.meta_keywords ?? ""} maxLength={500} onChange={(e) => update("meta_keywords", e.target.value)} placeholder="chat, india, friends" />
-              </div>
-              <div className="sm:col-span-2">
-                <Label className="text-xs">Meta description</Label>
-                <Textarea value={row.meta_description ?? ""} rows={2} maxLength={400} onChange={(e) => update("meta_description", e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">OG title</Label>
-                <Input value={row.og_title ?? ""} maxLength={200} onChange={(e) => update("og_title", e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">OG image URL</Label>
-                <Input value={row.og_image ?? ""} maxLength={500} onChange={(e) => update("og_image", e.target.value)} placeholder="https://…" />
-              </div>
-              <div className="sm:col-span-2">
-                <Label className="text-xs">OG description</Label>
-                <Textarea value={row.og_description ?? ""} rows={2} maxLength={400} onChange={(e) => update("og_description", e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">Canonical URL</Label>
-                <Input value={row.canonical_url ?? ""} maxLength={500} onChange={(e) => update("canonical_url", e.target.value)} placeholder="https://example.com/page" />
-              </div>
-              <div className="flex flex-wrap items-center gap-4 pt-5">
-                <label className="inline-flex items-center gap-2 text-xs"><AdminToggle checked={!!row.noindex} onCheckedChange={(v) => update("noindex", v)} />Noindex</label>
-                <label className="inline-flex items-center gap-2 text-xs"><AdminToggle checked={!!row.nofollow} onCheckedChange={(v) => update("nofollow", v)} />Nofollow</label>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="meta" className="grid gap-3 pt-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <Label className="text-xs">Page layout</Label>
-                <Select value={row.layout} onValueChange={(v) => update("layout", v as "full" | "boxed")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {LAYOUTS.map((l) => (
-                      <SelectItem key={l.value} value={l.value}>
-                        <span className="font-medium">{l.label}</span>
-                        <span className="ml-2 text-[10px] text-muted-foreground">{l.hint}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Left sidebar</Label>
-                <Select value={row.sidebar_left} onValueChange={(v) => update("sidebar_left", v as "none" | "ads" | "feed")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {SIDEBAR_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Right sidebar</Label>
-                <Select value={row.sidebar_right} onValueChange={(v) => update("sidebar_right", v as "none" | "ads" | "feed")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {SIDEBAR_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Tags (comma separated)</Label>
-                <Input
-                  value={(row.tags ?? []).join(", ")}
-                  onChange={(e) => update("tags", e.target.value.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 20))}
-                  placeholder="chat, india, free"
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Status</Label>
-                <Select value={row.status} onValueChange={(v) => update("status", v as "draft" | "published")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2 pt-6">
-                <AdminToggle checked={!!row.featured} onCheckedChange={(v) => update("featured", v)} />
-                <Label className="text-xs">Featured page</Label>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => handleSave(false)}>Save page</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
 
