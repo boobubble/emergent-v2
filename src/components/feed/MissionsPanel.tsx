@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Coins, Sparkles, Trophy, Check, Flame, Gift } from "lucide-react";
+import { Loader2, Coins, Sparkles, Trophy, Check, Flame, Gift, Volume2, VolumeX } from "lucide-react";
 import { getTodayMissions, claimMission } from "@/lib/missions.functions";
 import { getMyCreatorRank } from "@/lib/creator.functions";
 
@@ -17,6 +17,35 @@ type Mission = {
   claimed: boolean;
 };
 
+type Burst = { id: number; missionId: string; coins: number };
+
+const SOUND_KEY = "missions:sound";
+const COLORS = ["#fbbf24", "#f472b6", "#a78bfa", "#34d399", "#60a5fa", "#fb7185"];
+
+function playClaimSound() {
+  try {
+    const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+    const ctx = new Ctx();
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = freq;
+      const start = ctx.currentTime + i * 0.08;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.25, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.25);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.3);
+    });
+    setTimeout(() => ctx.close(), 800);
+  } catch (e) {
+    console.warn("claim sound failed", e);
+  }
+}
+
 export function MissionsPanel() {
   const fetchMissions = useServerFn(getTodayMissions);
   const claim = useServerFn(claimMission);
@@ -26,6 +55,24 @@ export function MissionsPanel() {
   const [rank, setRank] = useState<{ score: number; title: string; chip: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
+  const [bursts, setBursts] = useState<Burst[]>([]);
+  const [soundOn, setSoundOn] = useState(true);
+  const burstId = useRef(0);
+
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(SOUND_KEY);
+      if (v !== null) setSoundOn(v === "1");
+    } catch { /* ignore */ }
+  }, []);
+
+  function toggleSound() {
+    setSoundOn(s => {
+      const next = !s;
+      try { localStorage.setItem(SOUND_KEY, next ? "1" : "0"); } catch { /* ignore */ }
+      return next;
+    });
+  }
 
   async function load() {
     try {
@@ -42,12 +89,27 @@ export function MissionsPanel() {
   useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   async function onClaim(id: string) {
+    const target = missions.find(m => m.id === id);
+    if (!target || target.claimed) return;
     setClaiming(id);
+
+    // Optimistic: mark claimed immediately
+    setMissions(prev => prev.map(m => m.id === id ? { ...m, claimed: true, completed: true } : m));
+
+    // Fire burst + sound
+    const bId = ++burstId.current;
+    setBursts(b => [...b, { id: bId, missionId: id, coins: target.coins }]);
+    if (soundOn) playClaimSound();
+    setTimeout(() => setBursts(b => b.filter(x => x.id !== bId)), 1400);
+
     try {
       await claim({ data: { missionId: id } });
-      await load();
+      // Refresh rank/coins quietly
+      void load();
     } catch (e) {
       console.error("claim failed", e);
+      // Rollback
+      setMissions(prev => prev.map(m => m.id === id ? { ...m, claimed: false } : m));
     } finally {
       setClaiming(null);
     }
@@ -77,12 +139,24 @@ export function MissionsPanel() {
               <p className="text-[10px] font-medium uppercase tracking-wider text-indigo-300/80">Resets in 24h</p>
             </div>
           </div>
-          {rank && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500/20 to-fuchsia-500/20 px-2.5 py-1 text-[10px] font-bold text-amber-200 ring-1 ring-amber-400/30">
-              <Trophy className="h-3 w-3" /> {rank.title}
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            {rank && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500/20 to-fuchsia-500/20 px-2.5 py-1 text-[10px] font-bold text-amber-200 ring-1 ring-amber-400/30">
+                <Trophy className="h-3 w-3" /> {rank.title}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={toggleSound}
+              title={soundOn ? "Mute claim sound" : "Unmute claim sound"}
+              aria-label={soundOn ? "Mute claim sound" : "Unmute claim sound"}
+              className="grid h-7 w-7 place-items-center rounded-full bg-white/5 text-white/70 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white"
+            >
+              {soundOn ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            </button>
+          </div>
         </div>
+
 
         {/* Overall progress */}
         {!loading && total > 0 && (
@@ -124,8 +198,38 @@ export function MissionsPanel() {
                   }`}
                 >
                   {isReady && (
-                    <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_2.5s_ease-in-out_infinite]" style={{ animationName: "shimmer" }} />
+                    <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_2.5s_ease-in-out_infinite]" />
                   )}
+                  {bursts.filter(b => b.missionId === m.id).map(b => (
+                    <div key={b.id} className="pointer-events-none absolute inset-0 z-10">
+                      {/* glow ring */}
+                      <div className="absolute inset-0 rounded-2xl ring-2 ring-amber-300/70 animate-[claim-glow_1.2s_ease-out_forwards] shadow-[0_0_30px_rgba(251,191,36,0.7)]" />
+                      {/* floating +coins */}
+                      <div className="absolute right-3 top-1 text-xs font-extrabold text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.9)] animate-[float-up_1.2s_ease-out_forwards]">
+                        +{b.coins} 🪙
+                      </div>
+                      {/* confetti particles */}
+                      {Array.from({ length: 14 }).map((_, i) => {
+                        const angle = (i / 14) * Math.PI * 2;
+                        const dist = 40 + Math.random() * 30;
+                        const dx = Math.cos(angle) * dist;
+                        const dy = Math.sin(angle) * dist;
+                        const color = COLORS[i % COLORS.length];
+                        return (
+                          <span
+                            key={i}
+                            className="absolute left-6 top-1/2 h-1.5 w-1.5 rounded-sm animate-[confetti_1.1s_ease-out_forwards]"
+                            style={{
+                              backgroundColor: color,
+                              ["--dx" as string]: `${dx}px`,
+                              ["--dy" as string]: `${dy}px`,
+                              animationDelay: `${i * 12}ms`,
+                            } as React.CSSProperties}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
                   <div className="flex items-center gap-3">
                     <div className={`relative grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xl shadow-inner ${
                       isClaimed
@@ -198,6 +302,21 @@ export function MissionsPanel() {
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(200%); }
+        }
+        @keyframes claim-glow {
+          0% { opacity: 0; transform: scale(0.92); }
+          30% { opacity: 1; transform: scale(1.02); }
+          100% { opacity: 0; transform: scale(1.06); }
+        }
+        @keyframes float-up {
+          0% { opacity: 0; transform: translateY(8px) scale(0.8); }
+          25% { opacity: 1; transform: translateY(-2px) scale(1.15); }
+          100% { opacity: 0; transform: translateY(-28px) scale(1); }
+        }
+        @keyframes confetti {
+          0% { opacity: 0; transform: translate(0,0) scale(0.5) rotate(0deg); }
+          15% { opacity: 1; }
+          100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1) rotate(540deg); }
         }
       `}</style>
     </div>
