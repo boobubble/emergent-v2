@@ -113,6 +113,8 @@ function ChatApp() {
         <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
         <LeaderboardModal open={lbOpen} onClose={() => setLbOpen(false)} />
         <AchievementsModal open={achOpen} onClose={() => setAchOpen(false)} />
+        <ScheduledAnnouncementsRunner />
+
         
       </div>
 
