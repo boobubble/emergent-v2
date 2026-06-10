@@ -87,14 +87,37 @@ function PageEditor() {
   const [row, setRow] = useState<PageRow>(emptyPage());
   const [autoSlug, setAutoSlug] = useState(isNew);
   const [saving, setSaving] = useState(false);
+  const [draftStatus, setDraftStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [draftAt, setDraftAt] = useState<number | null>(null);
+  const draftKey = `lovable.pageDraft.${id}`;
+  const hydrated = useRef(false);
+  const skipNextSave = useRef(false);
 
   useEffect(() => {
-    if (isNew) { setRow(emptyPage()); setAutoSlug(true); return; }
-    if (data) {
-      setRow({ ...emptyPage(), ...(data as any) });
-      setAutoSlug(false);
-    }
-  }, [data, isNew]);
+    if (isNew) { setRow(emptyPage()); setAutoSlug(true); }
+    else if (data) { setRow({ ...emptyPage(), ...(data as any) }); setAutoSlug(false); }
+
+    // Restore local draft if newer than server copy
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { row: PageRow; savedAt: number };
+        const serverAt = (data as any)?.updated_at ? new Date((data as any).updated_at).getTime() : 0;
+        if (parsed.savedAt > serverAt) {
+          const ok = window.confirm("An unsaved local draft was found for this page. Restore it?");
+          if (ok) {
+            skipNextSave.current = true;
+            setRow(parsed.row);
+            setAutoSlug(false);
+            setDraftAt(parsed.savedAt);
+          } else {
+            localStorage.removeItem(draftKey);
+          }
+        }
+      }
+    } catch { /* ignore */ }
+    hydrated.current = true;
+  }, [data, isNew, draftKey]);
 
   const update = <K extends keyof PageRow>(k: K, v: PageRow[K]) =>
     setRow((r) => ({ ...r, [k]: v }));
