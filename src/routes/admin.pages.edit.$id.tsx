@@ -313,19 +313,11 @@ function PageEditor() {
             />
           </Collapsible>
 
-          <Collapsible title="SEO" defaultOpen={false}>
+          <Collapsible title="Advanced SEO (social & indexing)" defaultOpen={false}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label className="text-xs">Meta title</Label>
-                <Input value={row.meta_title ?? ""} maxLength={200} onChange={(e) => update("meta_title", e.target.value)} placeholder={row.title} />
-              </div>
-              <div>
+              <div className="sm:col-span-2">
                 <Label className="text-xs">Keywords</Label>
                 <Input value={row.meta_keywords ?? ""} maxLength={500} onChange={(e) => update("meta_keywords", e.target.value)} placeholder="chat, india, friends" />
-              </div>
-              <div className="sm:col-span-2">
-                <Label className="text-xs">Meta description</Label>
-                <Textarea value={row.meta_description ?? ""} rows={2} maxLength={400} onChange={(e) => update("meta_description", e.target.value)} />
               </div>
               <div>
                 <Label className="text-xs">OG title</Label>
