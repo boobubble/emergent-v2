@@ -124,15 +124,25 @@ function PageEditor() {
   const skipNextSave = useRef(false);
 
   useEffect(() => {
-    if (isNew) { setRow(emptyPage()); setAutoSlug(true); }
-    else if (data) { setRow({ ...emptyPage(), ...(data as any) }); setAutoSlug(false); }
+    const serverRow: PageRow = isNew
+      ? emptyPage()
+      : data
+        ? { ...emptyPage(), ...(data as any) }
+        : emptyPage();
+    skipNextSave.current = true;
+    setRow(serverRow);
+    setAutoSlug(isNew);
 
     try {
       const raw = localStorage.getItem(draftKey);
       if (raw) {
         const parsed = JSON.parse(raw) as { row: PageRow; savedAt: number };
         const serverAt = (data as any)?.updated_at ? new Date((data as any).updated_at).getTime() : 0;
-        if (parsed.savedAt > serverAt) {
+        // Only prompt when the draft is newer than the server AND its content
+        // actually differs from what's on the server — otherwise it's stale
+        // residue from the last save and would pop up forever.
+        const differs = !sameDraft(parsed.row, serverRow);
+        if (parsed.savedAt > serverAt && differs) {
           const ok = window.confirm("An unsaved local draft was found for this page. Restore it?");
           if (ok) {
             skipNextSave.current = true;
@@ -142,6 +152,9 @@ function PageEditor() {
           } else {
             localStorage.removeItem(draftKey);
           }
+        } else if (!differs) {
+          // Stale draft matches server — silently clear so it never re-prompts.
+          localStorage.removeItem(draftKey);
         }
       }
     } catch { /* ignore */ }
@@ -211,6 +224,7 @@ function PageEditor() {
       if (saved?.id && saved.id !== row.id) {
         navigate({ to: "/pages-editor/$id", params: { id: saved.id }, replace: true });
       } else {
+        skipNextSave.current = true;
         setRow((r) => ({ ...r, status }));
       }
     } catch (e: any) {
@@ -510,4 +524,25 @@ function TagsInput({ value, onChange }: { value: string[]; onChange: (tags: stri
       placeholder="chat, india, free"
     />
   );
+}
+
+// Compares the fields a user actually edits so a draft that mirrors the
+// freshly-saved server row never re-prompts the "Restore draft?" dialog.
+function sameDraft(a: PageRow, b: PageRow): boolean {
+  const keys: (keyof PageRow)[] = [
+    "slug", "title", "content", "excerpt", "tags", "status", "featured",
+    "layout", "sidebar_left", "sidebar_right",
+    "meta_title", "meta_description", "meta_keywords",
+    "og_title", "og_description", "og_image", "canonical_url",
+    "noindex", "nofollow",
+  ];
+  for (const k of keys) {
+    const av = a?.[k]; const bv = b?.[k];
+    if (Array.isArray(av) || Array.isArray(bv)) {
+      if (JSON.stringify(av ?? []) !== JSON.stringify(bv ?? [])) return false;
+    } else if ((av ?? "") !== (bv ?? "")) {
+      return false;
+    }
+  }
+  return true;
 }
