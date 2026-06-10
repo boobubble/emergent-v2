@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft, Save, ExternalLink, Eye, Settings2, Tag, Star,
-  Image as ImageIcon, Search, Calendar, FileText, Cloud, CloudOff,
+  Image as ImageIcon, Search, Calendar, FileText, Cloud, CloudOff, ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,8 +19,10 @@ import {
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { getPage, savePage, slugify } from "@/lib/pages.functions";
+import { useAuth } from "@/lib/auth-store";
+import { getMyRoles } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/admin/pages/edit/$id")({ component: PageEditor });
+export const Route = createFileRoute("/pages-editor/$id")({ component: PageEditorGate });
 
 type PageRow = {
   id: string;
@@ -69,6 +71,34 @@ const SIDEBARS = [
   { value: "feed", label: "Feed menu" },
 ] as const;
 
+function PageEditorGate() {
+  const { user, ready } = useAuth();
+  const fetchRoles = useServerFn(getMyRoles);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["my-roles", user?.id],
+    queryFn: () => fetchRoles({}),
+    enabled: !!user && ready,
+    staleTime: 30_000,
+  });
+
+  if (!ready || isLoading) {
+    return <div className="grid min-h-screen place-items-center bg-background text-sm text-muted-foreground">Checking access…</div>;
+  }
+  if (isError || !data?.isAdmin) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background px-4">
+        <div className="max-w-sm text-center">
+          <ShieldCheck className="mx-auto h-10 w-10 text-muted-foreground" />
+          <h1 className="mt-4 text-lg font-semibold">Admin access required</h1>
+          <p className="mt-1 text-sm text-muted-foreground">You don't have permission to edit pages.</p>
+          <Link to="/" className="mt-4 inline-flex"><Button variant="outline" size="sm">Back to app</Button></Link>
+        </div>
+      </div>
+    );
+  }
+  return <PageEditor />;
+}
+
 function PageEditor() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -97,7 +127,6 @@ function PageEditor() {
     if (isNew) { setRow(emptyPage()); setAutoSlug(true); }
     else if (data) { setRow({ ...emptyPage(), ...(data as any) }); setAutoSlug(false); }
 
-    // Restore local draft if newer than server copy
     try {
       const raw = localStorage.getItem(draftKey);
       if (raw) {
@@ -122,7 +151,6 @@ function PageEditor() {
   const update = <K extends keyof PageRow>(k: K, v: PageRow[K]) =>
     setRow((r) => ({ ...r, [k]: v }));
 
-  // Autosave to localStorage (debounced)
   useEffect(() => {
     if (!hydrated.current) return;
     if (skipNextSave.current) { skipNextSave.current = false; return; }
@@ -139,7 +167,6 @@ function PageEditor() {
     return () => clearTimeout(t);
   }, [row, draftKey]);
 
-  // Warn before closing tab if there's an unsaved local draft
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (draftStatus === "saving") { e.preventDefault(); e.returnValue = ""; }
@@ -147,7 +174,6 @@ function PageEditor() {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [draftStatus]);
-
 
   async function handleSave(opts: { publish?: boolean; overwrite?: boolean } = {}) {
     if (!row.title.trim()) { toast.error("Add a title first"); return; }
@@ -183,7 +209,7 @@ function PageEditor() {
       setDraftStatus("idle");
       setDraftAt(null);
       if (saved?.id && saved.id !== row.id) {
-        navigate({ to: "/admin/pages/edit/$id", params: { id: saved.id }, replace: true });
+        navigate({ to: "/pages-editor/$id", params: { id: saved.id }, replace: true });
       } else {
         setRow((r) => ({ ...r, status }));
       }
@@ -202,8 +228,7 @@ function PageEditor() {
   const publicUrl = row.slug ? `/${row.slug}` : "";
 
   return (
-    <div className="-m-4 sm:-m-6 min-h-screen bg-muted/30">
-      {/* Top toolbar — WordPress style */}
+    <div className="min-h-screen bg-muted/30">
       <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-3 py-2 backdrop-blur sm:px-5">
         <Link to="/admin/pages">
           <Button variant="ghost" size="icon" title="Back to pages"><ArrowLeft className="h-4 w-4" /></Button>
@@ -229,9 +254,7 @@ function PageEditor() {
         </div>
       </div>
 
-      {/* Main canvas + sidebar */}
       <div className="mx-auto grid w-full max-w-6xl gap-5 px-3 py-5 sm:px-5 lg:grid-cols-[1fr_320px]">
-        {/* Canvas */}
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-background p-4 shadow-sm sm:p-6">
             <Input
@@ -258,7 +281,6 @@ function PageEditor() {
             <RichTextEditor value={row.content} onChange={(html) => update("content", html)} />
           </div>
 
-          {/* Inline SEO snippet — WordPress / Yoast style */}
           <div className="rounded-xl border border-border bg-background p-4 shadow-sm sm:p-5">
             <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <Search className="h-3.5 w-3.5" /> Search appearance
@@ -343,7 +365,6 @@ function PageEditor() {
           </Collapsible>
         </div>
 
-        {/* Sidebar */}
         <aside className="space-y-4">
           <SidebarCard icon={<Calendar className="h-4 w-4" />} title="Publish">
             <div className="space-y-3 text-sm">

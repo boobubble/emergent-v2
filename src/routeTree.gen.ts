@@ -29,6 +29,7 @@ import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -85,7 +86,6 @@ import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/g
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
-import { Route as AdminPagesEditIdRouteImport } from './routes/admin.pages.edit.$id'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -185,6 +185,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagesEditorIdRoute = PagesEditorIdRouteImport.update({
+  id: '/pages-editor/$id',
+  path: '/pages-editor/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PSlugRoute = PSlugRouteImport.update({
@@ -468,11 +473,6 @@ const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   path: '/$key',
   getParentRoute: () => AdminUpcomingRoute,
 } as any)
-const AdminPagesEditIdRoute = AdminPagesEditIdRouteImport.update({
-  id: '/edit/$id',
-  path: '/edit/$id',
-  getParentRoute: () => AdminPagesRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -523,7 +523,7 @@ export interface FileRoutesByFullPath {
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
-  '/admin/pages': typeof AdminPagesRouteWithChildren
+  '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -544,6 +544,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
+  '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
@@ -551,7 +552,6 @@ export interface FileRoutesByFullPath {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/admin/pages/edit/$id': typeof AdminPagesEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -601,7 +601,7 @@ export interface FileRoutesByTo {
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
-  '/admin/pages': typeof AdminPagesRouteWithChildren
+  '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -622,6 +622,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
+  '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
@@ -629,7 +630,6 @@ export interface FileRoutesByTo {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/admin/pages/edit/$id': typeof AdminPagesEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -681,7 +681,7 @@ export interface FileRoutesById {
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
-  '/admin/pages': typeof AdminPagesRouteWithChildren
+  '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -702,6 +702,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
+  '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
@@ -709,7 +710,6 @@ export interface FileRoutesById {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/admin/pages/edit/$id': typeof AdminPagesEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -783,6 +783,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
+    | '/pages-editor/$id'
     | '/u/$username'
     | '/admin/'
     | '/admin/upcoming/$key'
@@ -790,7 +791,6 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
-    | '/admin/pages/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -861,6 +861,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
+    | '/pages-editor/$id'
     | '/u/$username'
     | '/admin'
     | '/admin/upcoming/$key'
@@ -868,7 +869,6 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
-    | '/admin/pages/edit/$id'
   id:
     | '__root__'
     | '/'
@@ -940,6 +940,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
+    | '/pages-editor/$id'
     | '/u/$username'
     | '/admin/'
     | '/admin/upcoming/$key'
@@ -947,7 +948,6 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
-    | '/admin/pages/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -970,6 +970,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   WelcomeRoute: typeof WelcomeRoute
   PSlugRoute: typeof PSlugRoute
+  PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
@@ -1117,6 +1118,13 @@ declare module '@tanstack/react-router' {
       path: '/u/$username'
       fullPath: '/u/$username'
       preLoaderRoute: typeof UUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pages-editor/$id': {
+      id: '/pages-editor/$id'
+      path: '/pages-editor/$id'
+      fullPath: '/pages-editor/$id'
+      preLoaderRoute: typeof PagesEditorIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/p/$slug': {
@@ -1511,27 +1519,8 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUpcomingKeyRouteImport
       parentRoute: typeof AdminUpcomingRoute
     }
-    '/admin/pages/edit/$id': {
-      id: '/admin/pages/edit/$id'
-      path: '/edit/$id'
-      fullPath: '/admin/pages/edit/$id'
-      preLoaderRoute: typeof AdminPagesEditIdRouteImport
-      parentRoute: typeof AdminPagesRoute
-    }
   }
 }
-
-interface AdminPagesRouteChildren {
-  AdminPagesEditIdRoute: typeof AdminPagesEditIdRoute
-}
-
-const AdminPagesRouteChildren: AdminPagesRouteChildren = {
-  AdminPagesEditIdRoute: AdminPagesEditIdRoute,
-}
-
-const AdminPagesRouteWithChildren = AdminPagesRoute._addFileChildren(
-  AdminPagesRouteChildren,
-)
 
 interface AdminUpcomingRouteChildren {
   AdminUpcomingKeyRoute: typeof AdminUpcomingKeyRoute
@@ -1576,7 +1565,7 @@ interface AdminRouteChildren {
   AdminMediaApisRoute: typeof AdminMediaApisRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminModulesRoute: typeof AdminModulesRoute
-  AdminPagesRoute: typeof AdminPagesRouteWithChildren
+  AdminPagesRoute: typeof AdminPagesRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPollWidgetRoute: typeof AdminPollWidgetRoute
   AdminPopupsRoute: typeof AdminPopupsRoute
@@ -1629,7 +1618,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMediaApisRoute: AdminMediaApisRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminModulesRoute: AdminModulesRoute,
-  AdminPagesRoute: AdminPagesRouteWithChildren,
+  AdminPagesRoute: AdminPagesRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPollWidgetRoute: AdminPollWidgetRoute,
   AdminPopupsRoute: AdminPopupsRoute,
@@ -1683,6 +1672,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   WelcomeRoute: WelcomeRoute,
   PSlugRoute: PSlugRoute,
+  PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
