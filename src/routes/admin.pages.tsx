@@ -120,11 +120,14 @@ function PagesAdmin() {
           <Card>
             <CardContent className="flex flex-wrap items-center gap-2 p-3">
               <Input placeholder="Search pages…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
-              <Button size="sm" className="ml-auto" onClick={() => setEditor(emptyPage())}>
-                <Plus className="mr-1 h-4 w-4" />New page
-              </Button>
+              <a href="/admin/pages/edit/new" target="_blank" rel="noreferrer" className="ml-auto">
+                <Button size="sm">
+                  <Plus className="mr-1 h-4 w-4" />New page
+                </Button>
+              </a>
             </CardContent>
           </Card>
+
 
           {pagesQ.isLoading ? (
             <Skeleton className="h-40 w-full" />
