@@ -162,28 +162,48 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
           target={user?.isGuest ? undefined : "_blank"}
           rel={user?.isGuest ? undefined : "noopener noreferrer"}
           onClick={(e) => { if (user?.isGuest) e.preventDefault(); }}
-          className="flex w-full items-center gap-3 rounded-2xl bg-white/5 p-2 text-left transition-colors hover:bg-white/10"
+          className="group relative block w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-amber-500/10 via-white/[0.04] to-fuchsia-500/10 p-2.5 text-left transition-all hover:border-amber-400/30 hover:from-amber-500/15 hover:to-fuchsia-500/15"
           title={user?.isGuest ? "Guest session" : "Open account settings in new tab"}
         >
-          <Avatar user={state.me} size={36} />
-          <div className="min-w-0 flex-1 leading-tight">
-            <div className="truncate text-sm font-bold text-foreground">{state.me.name}</div>
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <div className="pointer-events-none absolute -top-8 -right-8 h-20 w-20 rounded-full bg-amber-400/15 blur-2xl" />
+          <div className="relative flex items-center gap-3">
+            <Avatar user={state.me} size={36} />
+            <div className="min-w-0 flex-1 leading-tight">
+              <div className="truncate text-sm font-bold text-foreground">{state.me.name}</div>
               {user?.isGuest ? (
-                <span className="font-semibold uppercase tracking-wider">Guest</span>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Guest</div>
               ) : (
-                <>
-                  <span>Lv {state.me.level} · {state.me.xp} XP</span>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[10px]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/20 to-fuchsia-500/20 px-1.5 py-0.5 font-bold text-amber-200 ring-1 ring-amber-400/30">
+                    <Zap className="h-2.5 w-2.5" /> Lv {state.me.level}
+                  </span>
                   {(state.me.streak ?? 0) > 0 && (
-                    <span className="flex items-center gap-0.5 text-orange-400">
-                      <Flame className="h-2.5 w-2.5" />{state.me.streak}
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-500/15 px-1.5 py-0.5 font-bold text-rose-300 ring-1 ring-rose-400/30">
+                      <Flame className="h-2.5 w-2.5" />{state.me.streak}d
                     </span>
                   )}
-                </>
+                </div>
               )}
             </div>
+            {!user?.isGuest && <Settings className="h-4 w-4 text-muted-foreground transition group-hover:text-foreground" />}
           </div>
-          {!user?.isGuest && <Settings className="h-4 w-4 text-muted-foreground" />}
+          {!user?.isGuest && (() => {
+            const lp = levelProgress(state.me.xp ?? 0);
+            return (
+              <div className="relative mt-2">
+                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-fuchsia-500 shadow-[0_0_10px_rgba(251,191,36,0.6)] transition-all duration-700"
+                    style={{ width: `${lp.pct}%` }}
+                  />
+                </div>
+                <div className="mt-1 flex items-center justify-between text-[9px] font-semibold text-muted-foreground">
+                  <span>{(state.me.xp ?? 0).toLocaleString()} XP</span>
+                  <span>{lp.intoLevel}/{lp.toNext} → Lv {lp.level + 1}</span>
+                </div>
+              </div>
+            );
+          })()}
         </a>
         <button
           type="button"
