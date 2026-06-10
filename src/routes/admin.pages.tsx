@@ -136,9 +136,10 @@ function PagesAdmin() {
           ) : (
             <div className="grid gap-2">
               {(pagesQ.data as PageRow[]).map((p) => (
-                <PageListRow key={p.id} page={p} onEdit={() => setEditor(p)} onChanged={invalidate} />
+                <PageListRow key={p.id} page={p} onChanged={invalidate} />
               ))}
             </div>
+
           )}
         </TabsContent>
 
