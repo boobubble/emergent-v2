@@ -224,6 +224,7 @@ function PageEditor() {
       if (saved?.id && saved.id !== row.id) {
         navigate({ to: "/pages-editor/$id", params: { id: saved.id }, replace: true });
       } else {
+        skipNextSave.current = true;
         setRow((r) => ({ ...r, status }));
       }
     } catch (e: any) {
