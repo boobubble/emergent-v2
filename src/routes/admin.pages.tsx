@@ -120,7 +120,7 @@ function PagesAdmin() {
           <Card>
             <CardContent className="flex flex-wrap items-center gap-2 p-3">
               <Input placeholder="Search pages…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
-              <a href="/admin/pages/edit/new" target="_blank" rel="noreferrer" className="ml-auto">
+              <a href="/pages-editor/new" target="_blank" rel="noreferrer" className="ml-auto">
                 <Button size="sm">
                   <Plus className="mr-1 h-4 w-4" />New page
                 </Button>
@@ -168,7 +168,7 @@ function PageListRow({ page, onChanged }: { page: PageRow; onChanged: () => void
     <Card className="transition-colors hover:bg-muted/40">
       <CardContent className="flex items-center gap-2 p-3">
         <a
-          href={`/admin/pages/edit/${page.id}`}
+          href={`/pages-editor/${page.id}`}
           target="_blank"
           rel="noreferrer"
           title="Edit in new tab"

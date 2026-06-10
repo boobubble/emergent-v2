@@ -86,7 +86,6 @@ import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/g
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
-import { Route as AdminPagesEditIdRouteImport } from './routes/admin.pages.edit.$id'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -474,11 +473,6 @@ const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   path: '/$key',
   getParentRoute: () => AdminUpcomingRoute,
 } as any)
-const AdminPagesEditIdRoute = AdminPagesEditIdRouteImport.update({
-  id: '/edit/$id',
-  path: '/edit/$id',
-  getParentRoute: () => AdminPagesRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -529,7 +523,7 @@ export interface FileRoutesByFullPath {
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
-  '/admin/pages': typeof AdminPagesRouteWithChildren
+  '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -558,7 +552,6 @@ export interface FileRoutesByFullPath {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/admin/pages/edit/$id': typeof AdminPagesEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -608,7 +601,7 @@ export interface FileRoutesByTo {
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
-  '/admin/pages': typeof AdminPagesRouteWithChildren
+  '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -637,7 +630,6 @@ export interface FileRoutesByTo {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/admin/pages/edit/$id': typeof AdminPagesEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -689,7 +681,7 @@ export interface FileRoutesById {
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
-  '/admin/pages': typeof AdminPagesRouteWithChildren
+  '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -718,7 +710,6 @@ export interface FileRoutesById {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/admin/pages/edit/$id': typeof AdminPagesEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -800,7 +791,6 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
-    | '/admin/pages/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -879,7 +869,6 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
-    | '/admin/pages/edit/$id'
   id:
     | '__root__'
     | '/'
@@ -959,7 +948,6 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
-    | '/admin/pages/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1531,27 +1519,8 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUpcomingKeyRouteImport
       parentRoute: typeof AdminUpcomingRoute
     }
-    '/admin/pages/edit/$id': {
-      id: '/admin/pages/edit/$id'
-      path: '/edit/$id'
-      fullPath: '/admin/pages/edit/$id'
-      preLoaderRoute: typeof AdminPagesEditIdRouteImport
-      parentRoute: typeof AdminPagesRoute
-    }
   }
 }
-
-interface AdminPagesRouteChildren {
-  AdminPagesEditIdRoute: typeof AdminPagesEditIdRoute
-}
-
-const AdminPagesRouteChildren: AdminPagesRouteChildren = {
-  AdminPagesEditIdRoute: AdminPagesEditIdRoute,
-}
-
-const AdminPagesRouteWithChildren = AdminPagesRoute._addFileChildren(
-  AdminPagesRouteChildren,
-)
 
 interface AdminUpcomingRouteChildren {
   AdminUpcomingKeyRoute: typeof AdminUpcomingKeyRoute
@@ -1596,7 +1565,7 @@ interface AdminRouteChildren {
   AdminMediaApisRoute: typeof AdminMediaApisRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminModulesRoute: typeof AdminModulesRoute
-  AdminPagesRoute: typeof AdminPagesRouteWithChildren
+  AdminPagesRoute: typeof AdminPagesRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPollWidgetRoute: typeof AdminPollWidgetRoute
   AdminPopupsRoute: typeof AdminPopupsRoute
@@ -1649,7 +1618,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMediaApisRoute: AdminMediaApisRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminModulesRoute: AdminModulesRoute,
-  AdminPagesRoute: AdminPagesRouteWithChildren,
+  AdminPagesRoute: AdminPagesRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPollWidgetRoute: AdminPollWidgetRoute,
   AdminPopupsRoute: AdminPopupsRoute,
@@ -1713,3 +1682,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
