@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff, Sparkles } from "lucide-react";
+import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff, Sparkles, BarChart3, VenetianMask, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { awardXp } from "@/lib/gamification.functions";
 import { earnFeedPost } from "@/lib/economy.functions";
-import { useServerFn } from "@tanstack/react-start";
+import { createConfession } from "@/lib/confessions.functions";
 import { extractHashtags } from "@/lib/feed-types";
 import { slugify } from "@/lib/post-slug";
 import { EmojiPicker } from "@/components/chat/EmojiPicker";
