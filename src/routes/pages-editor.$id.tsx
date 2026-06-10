@@ -486,3 +486,28 @@ function DraftIndicator({ status, savedAt }: { status: "idle" | "saving" | "save
     </div>
   );
 }
+
+function TagsInput({ value, onChange }: { value: string[]; onChange: (tags: string[]) => void }) {
+  const [text, setText] = useState<string>(value.join(", "));
+  const lastExternal = useRef<string>(value.join(", "));
+  useEffect(() => {
+    const joined = value.join(", ");
+    if (joined !== lastExternal.current) {
+      lastExternal.current = joined;
+      setText(joined);
+    }
+  }, [value]);
+  return (
+    <Input
+      value={text}
+      onChange={(e) => {
+        const v = e.target.value;
+        setText(v);
+        const tags = v.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 20);
+        lastExternal.current = tags.join(", ");
+        onChange(tags);
+      }}
+      placeholder="chat, india, free"
+    />
+  );
+}
