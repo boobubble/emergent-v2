@@ -156,11 +156,8 @@ function PagesAdmin() {
         </TabsContent>
       </Tabs>
 
-      <PageEditorDialog
-        page={editor}
-        onClose={() => setEditor(null)}
-        onSaved={() => { setEditor(null); invalidate(); }}
-      />
+      {/* Editor opens in a new tab via /admin/pages/edit/:id */}
+
     </div>
   );
 }
