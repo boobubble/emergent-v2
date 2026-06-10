@@ -243,6 +243,37 @@ function FeedPage() {
     { id: "friends", label: "Friends", icon: Users },
   ];
 
+  const leftRailRef = useRef<HTMLDivElement | null>(null);
+  const rightRailRef = useRef<HTMLDivElement | null>(null);
+
+  // Sync sidebar scroll positions proportionally with the main window scroll
+  // so left/right rails stay aligned with the center feed as the user scrolls.
+  useEffect(() => {
+    let raf = 0;
+    const sync = () => {
+      raf = 0;
+      const docMax = (document.documentElement.scrollHeight || 0) - window.innerHeight;
+      if (docMax <= 0) return;
+      const ratio = Math.min(1, Math.max(0, window.scrollY / docMax));
+      for (const el of [leftRailRef.current, rightRailRef.current]) {
+        if (!el) continue;
+        const max = el.scrollHeight - el.clientHeight;
+        if (max > 0) el.scrollTop = ratio * max;
+      }
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(sync);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    sync();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [view, tab]);
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 lg:pb-0">
       {/* Top bar */}
@@ -290,7 +321,7 @@ function FeedPage() {
       <div className="mx-auto grid max-w-[1360px] gap-4 px-2 py-4 sm:px-4 lg:grid-cols-[260px_minmax(0,1fr)_320px] lg:gap-6 lg:px-6">
         {/* Left rail */}
         <aside className="hidden lg:block">
-          <div className="space-y-3 pr-1">
+          <div ref={leftRailRef} className="sticky top-[64px] max-h-[calc(100vh-72px)] space-y-3 overflow-y-auto pr-1 feed-scrollbar-hide">
             <nav className="feed-card p-2">
               <div className="feed-section-label">Feed</div>
               <SideItem active={view === "feed" && tab === "foryou"} onClick={() => { setView("feed"); setTab("foryou"); }} icon={Newspaper} label="For You" color="text-sky-400" />
@@ -456,7 +487,7 @@ function FeedPage() {
 
         {/* Right rail */}
         <aside className="hidden lg:block">
-          <div className="space-y-4 pl-1">
+          <div ref={rightRailRef} className="sticky top-[64px] max-h-[calc(100vh-72px)] space-y-4 overflow-y-auto pl-1 feed-scrollbar-hide">
             <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
             <ChatroomOnlineWidget />
