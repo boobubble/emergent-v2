@@ -412,10 +412,9 @@ function PageEditor() {
           </SidebarCard>
 
           <SidebarCard icon={<Tag className="h-4 w-4" />} title="Tags">
-            <Input
-              value={(row.tags ?? []).join(", ")}
-              onChange={(e) => update("tags", e.target.value.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 20))}
-              placeholder="chat, india, free"
+            <TagsInput
+              value={row.tags ?? []}
+              onChange={(tags) => update("tags", tags)}
             />
             <p className="mt-1 text-[11px] text-muted-foreground">Comma separated (max 20).</p>
           </SidebarCard>
@@ -485,5 +484,30 @@ function DraftIndicator({ status, savedAt }: { status: "idle" | "saving" | "save
       <Icon className={`h-3 w-3 ${status === "saving" ? "animate-pulse" : ""}`} />
       <span>{label}</span>
     </div>
+  );
+}
+
+function TagsInput({ value, onChange }: { value: string[]; onChange: (tags: string[]) => void }) {
+  const [text, setText] = useState<string>(value.join(", "));
+  const lastExternal = useRef<string>(value.join(", "));
+  useEffect(() => {
+    const joined = value.join(", ");
+    if (joined !== lastExternal.current) {
+      lastExternal.current = joined;
+      setText(joined);
+    }
+  }, [value]);
+  return (
+    <Input
+      value={text}
+      onChange={(e) => {
+        const v = e.target.value;
+        setText(v);
+        const tags = v.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 20);
+        lastExternal.current = tags.join(", ");
+        onChange(tags);
+      }}
+      placeholder="chat, india, free"
+    />
   );
 }
