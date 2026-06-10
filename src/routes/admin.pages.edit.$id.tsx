@@ -451,3 +451,18 @@ function SidebarCard({ icon, title, children }: { icon: React.ReactNode; title: 
     </div>
   );
 }
+
+function DraftIndicator({ status, savedAt }: { status: "idle" | "saving" | "saved" | "error"; savedAt: number | null }) {
+  if (status === "idle") return null;
+  const label =
+    status === "saving" ? "Saving draft…" :
+    status === "error"  ? "Draft save failed" :
+    savedAt ? `Draft saved · ${new Date(savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Draft saved";
+  const Icon = status === "error" ? CloudOff : Cloud;
+  return (
+    <div className="hidden items-center gap-1 text-[11px] text-muted-foreground sm:flex" title="Autosaved locally in your browser">
+      <Icon className={`h-3 w-3 ${status === "saving" ? "animate-pulse" : ""}`} />
+      <span>{label}</span>
+    </div>
+  );
+}
