@@ -444,4 +444,58 @@ export const updateUserUsername = createServerFn({ method: "POST" })
     return { ok: true, username: v };
   });
 
+// -------- Scheduled announcements (admin or approved moderator) --------
+async function assertAnnouncementsEditor(userId: string) {
+  const { data: roleRows, error: roleErr } = await supabaseAdmin
+    .from("user_roles").select("role").eq("user_id", userId);
+  if (roleErr) throw new Error(roleErr.message);
+  const roles = (roleRows ?? []).map((r) => r.role as string);
+  const isAdmin = roles.includes("super_admin") || roles.includes("admin");
+  if (isAdmin) return { isAdmin: true, isModerator: false };
+  const isModerator = roles.includes("moderator");
+  if (!isModerator) throw new Error("Forbidden: admin or moderator only");
+  const { data: setRow } = await supabaseAdmin
+    .from("app_settings").select("value").eq("key", "staff_permissions").maybeSingle();
+  const perms = (setRow?.value as { mod_can_announce?: boolean } | null) ?? {};
+  if (!perms.mod_can_announce) throw new Error("Forbidden: moderators are not approved to edit announcements");
+  return { isAdmin: false, isModerator: true };
+}
+
+export const canEditAnnouncements = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    try {
+      const r = await assertAnnouncementsEditor(context.userId);
+      return { allowed: true, ...r };
+    } catch {
+      return { allowed: false, isAdmin: false, isModerator: false };
+    }
+  });
+
+const announcementItemSchema = z.object({
+  id: z.string().min(1).max(64),
+  text: z.string().max(500),
+  link: z.string().max(500).optional().default(""),
+  intervalMinutes: z.number().int().min(1).max(10080),
+  enabled: z.boolean(),
+});
+
+const announcementsConfigSchema = z.object({
+  enabled: z.boolean(),
+  items: z.array(announcementItemSchema).min(1).max(20),
+});
+
+export const updateAnnouncementsConfig = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => announcementsConfigSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAnnouncementsEditor(context.userId);
+    const { error } = await supabaseAdmin
+      .from("app_settings")
+      .upsert({ key: "chat_announcements", value: data, updated_at: new Date().toISOString(), updated_by: context.userId });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
 
