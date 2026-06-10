@@ -1,7 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, ShieldAlert } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { useAdminSetting } from "@/lib/use-admin-setting";
+import { getAllSettings, updateAnnouncementsConfig, canEditAnnouncements } from "@/lib/admin.functions";
 import {
   ANNOUNCEMENTS_KEY,
   DEFAULT_ANNOUNCEMENTS,
@@ -20,23 +24,42 @@ const MIN_ITEMS = 4;
 function uid() { return Math.random().toString(36).slice(2, 9); }
 
 function Page() {
-  const { values, patch, save, saving } = useAdminSetting<AnnouncementsConfig>(
-    ANNOUNCEMENTS_KEY,
-    DEFAULT_ANNOUNCEMENTS,
-  );
+  const fetchSettings = useServerFn(getAllSettings);
+  const saveAnnouncements = useServerFn(updateAnnouncementsConfig);
+  const checkPerm = useServerFn(canEditAnnouncements);
+  const qc = useQueryClient();
 
+  const { data: settings } = useQuery({ queryKey: ["admin-settings"], queryFn: () => fetchSettings({}) });
+  const { data: perm } = useQuery({ queryKey: ["can-edit-announcements"], queryFn: () => checkPerm({}), staleTime: 30_000 });
+
+  const [values, setValues] = useState<AnnouncementsConfig>(DEFAULT_ANNOUNCEMENTS);
+
+  useEffect(() => {
+    if (!settings) return;
+    const v = (settings[ANNOUNCEMENTS_KEY] as Partial<AnnouncementsConfig> | undefined) ?? {};
+    setValues({ ...DEFAULT_ANNOUNCEMENTS, ...v, items: v.items ?? DEFAULT_ANNOUNCEMENTS.items });
+  }, [settings]);
+
+  const mut = useMutation({
+    mutationFn: () => saveAnnouncements({ data: values }),
+    onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["admin-settings"] }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed to save"),
+  });
+
+  const canEdit = !!perm?.allowed;
   const items = values.items ?? [];
 
   const updateItem = (id: string, p: Partial<AnnouncementItem>) => {
-    patch({ items: items.map(i => (i.id === id ? { ...i, ...p } : i)) });
+    if (!canEdit) return;
+    setValues(s => ({ ...s, items: s.items.map(i => (i.id === id ? { ...i, ...p } : i)) }));
   };
   const removeItem = (id: string) => {
-    if (items.length <= MIN_ITEMS) return;
-    patch({ items: items.filter(i => i.id !== id) });
+    if (!canEdit || items.length <= MIN_ITEMS) return;
+    setValues(s => ({ ...s, items: s.items.filter(i => i.id !== id) }));
   };
   const addItem = () => {
-    if (items.length >= MAX_ITEMS) return;
-    patch({ items: [...items, { id: uid(), text: "", link: "", intervalMinutes: 30, enabled: true }] });
+    if (!canEdit || items.length >= MAX_ITEMS) return;
+    setValues(s => ({ ...s, items: [...s.items, { id: uid(), text: "", link: "", intervalMinutes: 30, enabled: true }] }));
   };
 
   return (
@@ -46,20 +69,37 @@ function Page() {
         description="Auto-post special messages or links into chatrooms at fixed time intervals."
       />
 
+      {perm && !canEdit && (
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+          <div>
+            <div className="font-semibold">View-only access</div>
+            <div className="text-muted-foreground">
+              Only admins and approved moderators can create or edit announcements. A super admin can grant moderators
+              access from <span className="font-medium">Moderation → Staff Permissions → "Moderators can edit Announcements"</span>.
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-2xl border border-border bg-card p-4">
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="font-semibold">Enable scheduled announcements</div>
             <div className="text-sm text-muted-foreground">When off, no announcements are posted.</div>
           </div>
-          <Switch checked={!!values.enabled} onCheckedChange={(v) => patch({ enabled: v })} />
+          <Switch
+            checked={!!values.enabled}
+            disabled={!canEdit}
+            onCheckedChange={(v) => canEdit && setValues(s => ({ ...s, enabled: v }))}
+          />
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div className="font-semibold">Messages & links ({items.length}/{MAX_ITEMS})</div>
-          <Button size="sm" variant="outline" onClick={addItem} disabled={items.length >= MAX_ITEMS}>
+          <Button size="sm" variant="outline" onClick={addItem} disabled={!canEdit || items.length >= MAX_ITEMS}>
             <Plus className="mr-1 h-4 w-4" /> Add row
           </Button>
         </div>
@@ -78,11 +118,12 @@ function Page() {
               {items.map((it) => (
                 <tr key={it.id} className="border-t border-border">
                   <td className="px-3 py-2 align-top">
-                    <Switch checked={!!it.enabled} onCheckedChange={(v) => updateItem(it.id, { enabled: v })} />
+                    <Switch checked={!!it.enabled} disabled={!canEdit} onCheckedChange={(v) => updateItem(it.id, { enabled: v })} />
                   </td>
                   <td className="px-3 py-2">
                     <Input
                       value={it.text}
+                      readOnly={!canEdit}
                       onChange={(e) => updateItem(it.id, { text: e.target.value })}
                       placeholder="e.g. 🎉 New event live now!"
                     />
@@ -90,14 +131,16 @@ function Page() {
                   <td className="px-3 py-2">
                     <Input
                       value={it.link ?? ""}
+                      readOnly={!canEdit}
                       onChange={(e) => updateItem(it.id, { link: e.target.value })}
                       placeholder="https://…"
                     />
                   </td>
-                  <td className="px-3 py-2 w-32">
+                  <td className="w-32 px-3 py-2">
                     <Input
                       type="number"
                       min={1}
+                      readOnly={!canEdit}
                       value={it.intervalMinutes}
                       onChange={(e) => updateItem(it.id, { intervalMinutes: Math.max(1, Number(e.target.value) || 1) })}
                     />
@@ -107,8 +150,8 @@ function Page() {
                       size="icon"
                       variant="ghost"
                       onClick={() => removeItem(it.id)}
-                      disabled={items.length <= MIN_ITEMS}
-                      title={items.length <= MIN_ITEMS ? `Minimum ${MIN_ITEMS} rows` : "Remove"}
+                      disabled={!canEdit || items.length <= MIN_ITEMS}
+                      title={!canEdit ? "Read-only" : items.length <= MIN_ITEMS ? `Minimum ${MIN_ITEMS} rows` : "Remove"}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -124,8 +167,8 @@ function Page() {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={save} disabled={saving}>
-          <Save className="mr-2 h-4 w-4" /> {saving ? "Saving…" : "Save changes"}
+        <Button onClick={() => mut.mutate()} disabled={!canEdit || mut.isPending}>
+          <Save className="mr-2 h-4 w-4" /> {mut.isPending ? "Saving…" : "Save changes"}
         </Button>
       </div>
     </div>

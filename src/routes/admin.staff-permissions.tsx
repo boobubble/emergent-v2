@@ -15,9 +15,11 @@ function StaffPermissionsPage() {
   const { values, set, save, saving } = useAdminSetting("staff_permissions", DEFAULT_STAFF_PERMISSIONS);
 
   const rows: { key: keyof typeof DEFAULT_STAFF_PERMISSIONS; label: string; desc: string }[] = [
-    { key: "mod_can_kick", label: "Moderators can Kick", desc: "Allow moderators to kick users from chatrooms." },
-    { key: "mod_can_mute", label: "Moderators can Mute", desc: "Allow moderators to mute users in chatrooms." },
-    { key: "mod_can_ban",  label: "Moderators can Ban",  desc: "Allow moderators to ban users from the platform." },
+    { key: "mod_can_kick",     label: "Moderators can Kick",            desc: "Allow moderators to kick users from chatrooms." },
+    { key: "mod_can_mute",     label: "Moderators can Mute",            desc: "Allow moderators to mute users in chatrooms." },
+    { key: "mod_can_ban",      label: "Moderators can Ban",             desc: "Allow moderators to ban users from the platform." },
+    { key: "mod_can_announce", label: "Moderators can edit Announcements", desc: "Allow approved moderators to create or edit scheduled chat announcements." },
+
   ];
 
   return (
