@@ -303,6 +303,21 @@ export function MissionsPanel() {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(200%); }
         }
+        @keyframes claim-glow {
+          0% { opacity: 0; transform: scale(0.92); }
+          30% { opacity: 1; transform: scale(1.02); }
+          100% { opacity: 0; transform: scale(1.06); }
+        }
+        @keyframes float-up {
+          0% { opacity: 0; transform: translateY(8px) scale(0.8); }
+          25% { opacity: 1; transform: translateY(-2px) scale(1.15); }
+          100% { opacity: 0; transform: translateY(-28px) scale(1); }
+        }
+        @keyframes confetti {
+          0% { opacity: 0; transform: translate(0,0) scale(0.5) rotate(0deg); }
+          15% { opacity: 1; }
+          100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1) rotate(540deg); }
+        }
       `}</style>
     </div>
   );
