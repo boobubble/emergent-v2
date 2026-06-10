@@ -377,3 +377,33 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
     </>
   );
 }
+
+function ModeChip({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+  tone,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon?: typeof BarChart3;
+  label: string;
+  tone?: "primary" | "fuchsia";
+}) {
+  const accent =
+    tone === "fuchsia"
+      ? "border-fuchsia-500 bg-fuchsia-500/15 text-fuchsia-500"
+      : "border-primary bg-primary/15 text-primary";
+  return (
+    <button
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+        active ? accent : "border-border text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {Icon && <Icon className="h-3.5 w-3.5" />}
+      {label}
+    </button>
+  );
+}
