@@ -213,6 +213,7 @@ function PageEditor() {
           <span className="truncate text-sm font-semibold">{row.title || (isNew ? "Add New Page" : "Edit Page")}</span>
           <Badge variant={row.status === "published" ? "default" : "outline"} className="text-[10px]">{row.status}</Badge>
         </div>
+        <DraftIndicator status={draftStatus} savedAt={draftAt} />
         <div className="flex items-center gap-2">
           {row.status === "published" && publicUrl && (
             <a href={publicUrl} target="_blank" rel="noreferrer">
