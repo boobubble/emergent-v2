@@ -7,6 +7,7 @@ import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/Cosm
 import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type FeedReaction, type ReactionType } from "@/lib/feed-types";
 import { postSlug } from "@/lib/post-slug";
 import { ShareModal, type SharePayload } from "@/components/feed/ShareModal";
+import { PollBlock } from "@/components/feed/PollBlock";
 import type { User } from "@/lib/chat-types";
 import { NameEmojiBadge } from "@/lib/name-emoji";
 import { useFeedPrefs } from "@/lib/feed-prefs";
@@ -189,6 +190,8 @@ export const PostCard = memo(function PostCard({
       </header>
 
       {post.text && <p className={`mt-4 whitespace-pre-wrap leading-relaxed ${compact ? "text-[14px]" : "text-[15.5px]"}`}>{renderText(post.text)}</p>}
+
+      {post.kind === "poll" && post.poll && <PollBlock post={post} />}
 
       {mediaUrls.length > 0 && (
         <div className={`mt-4 grid gap-1 overflow-hidden rounded-2xl border border-border ${mediaUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>

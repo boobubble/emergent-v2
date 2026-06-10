@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff, Sparkles } from "lucide-react";
+import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff, Sparkles, BarChart3, VenetianMask, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { awardXp } from "@/lib/gamification.functions";
 import { earnFeedPost } from "@/lib/economy.functions";
-import { useServerFn } from "@tanstack/react-start";
+import { createConfession } from "@/lib/confessions.functions";
 import { extractHashtags } from "@/lib/feed-types";
 import { slugify } from "@/lib/post-slug";
 import { EmojiPicker } from "@/components/chat/EmojiPicker";
@@ -25,6 +26,8 @@ const PRIVACY: { id: PostPrivacy; label: string; icon: typeof Globe }[] = [
 
 const DRAFT_KEY = "feed-composer-draft";
 
+type ComposerMode = "post" | "poll" | "confession";
+
 export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: () => void }) {
   const [text, setText] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(DRAFT_KEY) || "" : ""));
   const [files, setFiles] = useState<File[]>([]);
@@ -33,9 +36,13 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
+  const [mode, setMode] = useState<ComposerMode>("post");
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const earnPost = useServerFn(earnFeedPost);
+  const submitConfession = useServerFn(createConfession);
   const { config: focusConfig } = useFocusComposerConfig();
   const hasDraft = text.trim().length > 0 || files.length > 0;
 
@@ -82,9 +89,19 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
   const queryClient = useQueryClient();
 
   async function submit() {
-    if (!text.trim() && !files.length) return;
+    // Mode-specific guards
+    if (mode === "poll") {
+      const cleanOpts = pollOptions.map((o) => o.trim()).filter(Boolean);
+      if (!pollQuestion.trim()) { setError("Add a poll question."); return; }
+      if (cleanOpts.length < 2) { setError("Add at least two poll options."); return; }
+    } else if (mode === "confession") {
+      if (!text.trim()) { setError("Write your confession first."); return; }
+    } else {
+      if (!text.trim() && !files.length) return;
+    }
+
     const trimmed = text.trim();
-    if (/^\/clearcache\b/i.test(trimmed)) {
+    if (mode === "post" && /^\/clearcache\b/i.test(trimmed)) {
       const ok = await isCurrentUserAdmin();
       if (!ok) {
         toast.error("Admins only", { description: "/clearcache is restricted to admins." });
@@ -100,26 +117,57 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
     setPosting(true); setError(null);
 
     try {
-      const media_urls = await uploadFiles();
-      const kind = files.length ? "image" : "text";
-      const hashtags = extractHashtags(text);
-      const { error } = await supabase.from("posts").insert({
-        author_id: authorId,
-        owner_id: authorId,
-        kind,
-        text: text.trim(),
-        slug: slugify(text.trim() || kind),
-        media_urls,
-        privacy,
-        is_anonymous: anonymous,
-        hashtags,
-      });
+      if (mode === "confession") {
+        await submitConfession({ data: {
+          kind: "text",
+          category: "secrets",
+          text: text.trim(),
+          display_mode: "fully_anonymous",
+        } });
+        toast.success("Confession shared anonymously");
+        setText(""); setMode("post"); setFocused(false);
+        try { localStorage.removeItem(DRAFT_KEY); } catch {}
+        return;
+      }
 
-      if (error) throw new Error(error.message);
-      // bump XP (server-side; gamification trigger blocks client writes)
+      const hashtags = extractHashtags(text);
+
+      if (mode === "poll") {
+        const cleanOpts = pollOptions.map((o) => o.trim()).filter(Boolean);
+        const { error } = await supabase.from("posts").insert({
+          author_id: authorId,
+          owner_id: authorId,
+          kind: "poll",
+          text: text.trim(),
+          slug: slugify(pollQuestion.trim() || "poll"),
+          media_urls: [],
+          poll: { question: pollQuestion.trim(), options: cleanOpts, votes: {} },
+          privacy,
+          is_anonymous: anonymous,
+          hashtags,
+        });
+        if (error) throw new Error(error.message);
+      } else {
+        const media_urls = await uploadFiles();
+        const kind = files.length ? "image" : "text";
+        const { error } = await supabase.from("posts").insert({
+          author_id: authorId,
+          owner_id: authorId,
+          kind,
+          text: text.trim(),
+          slug: slugify(text.trim() || kind),
+          media_urls,
+          privacy,
+          is_anonymous: anonymous,
+          hashtags,
+        });
+        if (error) throw new Error(error.message);
+      }
+
       try { await awardXp({ data: { action: "post" } }); } catch (e) { console.error("xp award failed", e); }
       earnPost().catch(() => {});
       setText(""); setFiles([]); setAnonymous(false); setFocused(false);
+      setPollQuestion(""); setPollOptions(["", ""]); setMode("post");
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       onPosted?.();
     } catch (e) {
@@ -168,10 +216,70 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           onFocus={openFocus}
           onClick={openFocus}
           rows={spotlight ? 6 : 2}
-          placeholder="What's on your mind? Use #hashtags and @mentions…"
+          placeholder={
+            mode === "confession"
+              ? "Share something honest — posted anonymously to the confessions board…"
+              : mode === "poll"
+                ? "Optional context for your poll…"
+                : "What's on your mind? Use #hashtags and @mentions…"
+          }
           className="w-full resize-none rounded-2xl border border-transparent bg-transparent px-1 py-2 text-[15px] leading-relaxed placeholder:text-muted-foreground focus:outline-none"
         />
       </div>
+
+      {/* Mode chips */}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <ModeChip active={mode === "post"} onClick={() => setMode("post")} label="Post" />
+        <ModeChip active={mode === "poll"} onClick={() => setMode("poll")} icon={BarChart3} label="Poll" tone="primary" />
+        <ModeChip active={mode === "confession"} onClick={() => setMode("confession")} icon={VenetianMask} label="Confess" tone="fuchsia" />
+        {mode === "confession" && (
+          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-fuchsia-500/10 px-2.5 py-1 text-[11px] font-semibold text-fuchsia-500">
+            <EyeOff className="h-3 w-3" /> Posted anonymously to /confessions
+          </span>
+        )}
+      </div>
+
+      {mode === "poll" && (
+        <div className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 p-3">
+          <input
+            value={pollQuestion}
+            onChange={(e) => setPollQuestion(e.target.value)}
+            placeholder="Ask a question…"
+            maxLength={280}
+            className="mb-2 w-full rounded-xl border border-border bg-background/70 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          <div className="space-y-2">
+            {pollOptions.map((opt, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  value={opt}
+                  onChange={(e) => setPollOptions((p) => p.map((v, j) => (j === i ? e.target.value : v)))}
+                  placeholder={`Option ${i + 1}`}
+                  maxLength={120}
+                  className="flex-1 rounded-xl border border-border bg-background/70 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                {pollOptions.length > 2 && (
+                  <button
+                    onClick={() => setPollOptions((p) => p.filter((_, j) => j !== i))}
+                    className="rounded-full p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    aria-label={`Remove option ${i + 1}`}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          {pollOptions.length < 6 && (
+            <button
+              onClick={() => setPollOptions((p) => [...p, ""])}
+              className="mt-2 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/10"
+            >
+              <Plus className="h-3 w-3" /> Add option
+            </button>
+          )}
+        </div>
+      )}
       {files.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {files.map((f, i) => (
@@ -224,11 +332,16 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           <PrivacyIconEl className="h-3.5 w-3.5 text-muted-foreground" />
           <button
             onClick={submit}
-            disabled={posting || (!text.trim() && !files.length)}
+            disabled={
+              posting ||
+              (mode === "post" && !text.trim() && !files.length) ||
+              (mode === "confession" && !text.trim()) ||
+              (mode === "poll" && (!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2))
+            }
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-primary/80 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_8px_24px_-8px_var(--primary-glow)] hover:scale-[1.03] active:scale-[0.97] transition disabled:opacity-50 disabled:hover:scale-100"
           >
             {posting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            Post
+            {mode === "confession" ? "Confess" : mode === "poll" ? "Publish poll" : "Post"}
           </button>
         </div>
       </div>
@@ -267,5 +380,35 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
         </div>
       </div>
     </>
+  );
+}
+
+function ModeChip({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+  tone,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon?: typeof BarChart3;
+  label: string;
+  tone?: "primary" | "fuchsia";
+}) {
+  const accent =
+    tone === "fuchsia"
+      ? "border-fuchsia-500 bg-fuchsia-500/15 text-fuchsia-500"
+      : "border-primary bg-primary/15 text-primary";
+  return (
+    <button
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+        active ? accent : "border-border text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {Icon && <Icon className="h-3.5 w-3.5" />}
+      {label}
+    </button>
   );
 }

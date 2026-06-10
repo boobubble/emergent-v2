@@ -11,6 +11,7 @@ import { Composer } from "@/components/feed/Composer";
 import { StoryTray } from "@/components/feed/StoryTray";
 import { PostCard } from "@/components/feed/PostCard";
 import { FriendsWidget, HashtagsWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
+import { ConfessionsFeedWidget, ActivePollsWidget } from "@/components/feed/ConfessionsFeedWidget";
 import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
 import { BirthdaysWidget } from "@/components/feed/BirthdaysWidget";
 import { MissionsPanel } from "@/components/feed/MissionsPanel";
@@ -539,6 +540,8 @@ function FeedPage() {
           <div ref={rightRailRef} className="space-y-4 pl-1 will-change-transform">
             <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
+            <ConfessionsFeedWidget />
+            <ActivePollsWidget />
             <ChatroomOnlineWidget />
             <BirthdaysWidget />
             <FriendsWidget meId={meId} profiles={profiles} />
