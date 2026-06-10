@@ -525,3 +525,24 @@ function TagsInput({ value, onChange }: { value: string[]; onChange: (tags: stri
     />
   );
 }
+
+// Compares the fields a user actually edits so a draft that mirrors the
+// freshly-saved server row never re-prompts the "Restore draft?" dialog.
+function sameDraft(a: PageRow, b: PageRow): boolean {
+  const keys: (keyof PageRow)[] = [
+    "slug", "title", "content", "excerpt", "tags", "status", "featured",
+    "layout", "sidebar_left", "sidebar_right",
+    "meta_title", "meta_description", "meta_keywords",
+    "og_title", "og_description", "og_image", "canonical_url",
+    "noindex", "nofollow",
+  ];
+  for (const k of keys) {
+    const av = a?.[k]; const bv = b?.[k];
+    if (Array.isArray(av) || Array.isArray(bv)) {
+      if (JSON.stringify(av ?? []) !== JSON.stringify(bv ?? [])) return false;
+    } else if ((av ?? "") !== (bv ?? "")) {
+      return false;
+    }
+  }
+  return true;
+}
