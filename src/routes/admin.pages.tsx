@@ -162,7 +162,7 @@ function PagesAdmin() {
   );
 }
 
-function PageListRow({ page, onEdit, onChanged }: { page: PageRow; onEdit: () => void; onChanged: () => void }) {
+function PageListRow({ page, onChanged }: { page: PageRow; onChanged: () => void }) {
   const del = useServerFn(deletePage);
   return (
     <Card>
@@ -186,7 +186,10 @@ function PageListRow({ page, onEdit, onChanged }: { page: PageRow; onEdit: () =>
               <Button size="icon" variant="ghost" title="Open"><ExternalLink className="h-4 w-4" /></Button>
             </a>
           )}
-          <Button size="icon" variant="ghost" onClick={onEdit} title="Edit"><Pencil className="h-4 w-4" /></Button>
+          <a href={`/admin/pages/edit/${page.id}`} target="_blank" rel="noreferrer">
+            <Button size="icon" variant="ghost" title="Edit in new tab"><Pencil className="h-4 w-4" /></Button>
+          </a>
+
           <Button
             size="icon"
             variant="ghost"
