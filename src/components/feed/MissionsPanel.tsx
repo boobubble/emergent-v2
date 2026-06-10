@@ -139,12 +139,22 @@ export function MissionsPanel() {
               <p className="text-[10px] font-medium uppercase tracking-wider text-indigo-300/80">Resets in 24h</p>
             </div>
           </div>
-          {rank && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500/20 to-fuchsia-500/20 px-2.5 py-1 text-[10px] font-bold text-amber-200 ring-1 ring-amber-400/30">
-              <Trophy className="h-3 w-3" /> {rank.title}
-            </span>
-          )}
-        </div>
+          <div className="flex items-center gap-1.5">
+            {rank && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500/20 to-fuchsia-500/20 px-2.5 py-1 text-[10px] font-bold text-amber-200 ring-1 ring-amber-400/30">
+                <Trophy className="h-3 w-3" /> {rank.title}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={toggleSound}
+              title={soundOn ? "Mute claim sound" : "Unmute claim sound"}
+              aria-label={soundOn ? "Mute claim sound" : "Unmute claim sound"}
+              className="grid h-7 w-7 place-items-center rounded-full bg-white/5 text-white/70 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white"
+            >
+              {soundOn ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            </button>
+          </div>
 
         {/* Overall progress */}
         {!loading && total > 0 && (
