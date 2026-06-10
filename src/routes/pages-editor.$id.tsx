@@ -412,10 +412,9 @@ function PageEditor() {
           </SidebarCard>
 
           <SidebarCard icon={<Tag className="h-4 w-4" />} title="Tags">
-            <Input
-              value={(row.tags ?? []).join(", ")}
-              onChange={(e) => update("tags", e.target.value.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 20))}
-              placeholder="chat, india, free"
+            <TagsInput
+              value={row.tags ?? []}
+              onChange={(tags) => update("tags", tags)}
             />
             <p className="mt-1 text-[11px] text-muted-foreground">Comma separated (max 20).</p>
           </SidebarCard>
