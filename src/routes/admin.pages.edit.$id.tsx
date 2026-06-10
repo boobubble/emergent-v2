@@ -244,7 +244,7 @@ function PageEditor() {
               placeholder="Add title"
               className="!h-auto border-0 bg-transparent px-0 py-2 text-2xl font-bold shadow-none focus-visible:ring-0 sm:text-3xl"
             />
-            <div className="mb-3 mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="mb-3 mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span>Permalink:</span>
               <span className="font-mono text-foreground">/{row.slug || "your-slug"}</span>
               <Input
@@ -256,6 +256,51 @@ function PageEditor() {
               />
             </div>
             <RichTextEditor value={row.content} onChange={(html) => update("content", html)} />
+          </div>
+
+          {/* Inline SEO snippet — WordPress / Yoast style */}
+          <div className="rounded-xl border border-border bg-background p-4 shadow-sm sm:p-5">
+            <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <Search className="h-3.5 w-3.5" /> Search appearance
+            </div>
+            <div className="mb-4 rounded-lg border border-border bg-muted/40 p-3">
+              <div className="truncate text-xs text-muted-foreground">
+                {typeof window !== "undefined" ? window.location.origin : ""}/{row.slug || "your-slug"}
+              </div>
+              <div className="mt-0.5 truncate text-base text-[#1a0dab] dark:text-blue-400">
+                {(row.meta_title || row.title || "Page title").slice(0, 60)}
+              </div>
+              <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                {(row.meta_description || row.excerpt || "Add a meta description to control how this page is summarized in search results.").slice(0, 160)}
+              </div>
+            </div>
+            <div className="grid gap-3">
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <Label className="text-xs">SEO title</Label>
+                  <span className="text-[10px] text-muted-foreground">{(row.meta_title ?? "").length}/60</span>
+                </div>
+                <Input
+                  value={row.meta_title ?? ""}
+                  maxLength={200}
+                  onChange={(e) => update("meta_title", e.target.value)}
+                  placeholder={row.title || "Defaults to page title"}
+                />
+              </div>
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <Label className="text-xs">Meta description</Label>
+                  <span className="text-[10px] text-muted-foreground">{(row.meta_description ?? "").length}/160</span>
+                </div>
+                <Textarea
+                  value={row.meta_description ?? ""}
+                  rows={2}
+                  maxLength={400}
+                  onChange={(e) => update("meta_description", e.target.value)}
+                  placeholder="A clear summary of this page in 1–2 sentences."
+                />
+              </div>
+            </div>
           </div>
 
           <Collapsible title="Excerpt" defaultOpen={false}>
