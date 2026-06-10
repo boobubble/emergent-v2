@@ -243,6 +243,37 @@ function FeedPage() {
     { id: "friends", label: "Friends", icon: Users },
   ];
 
+  const leftRailRef = useRef<HTMLDivElement | null>(null);
+  const rightRailRef = useRef<HTMLDivElement | null>(null);
+
+  // Sync sidebar scroll positions proportionally with the main window scroll
+  // so left/right rails stay aligned with the center feed as the user scrolls.
+  useEffect(() => {
+    let raf = 0;
+    const sync = () => {
+      raf = 0;
+      const docMax = (document.documentElement.scrollHeight || 0) - window.innerHeight;
+      if (docMax <= 0) return;
+      const ratio = Math.min(1, Math.max(0, window.scrollY / docMax));
+      for (const el of [leftRailRef.current, rightRailRef.current]) {
+        if (!el) continue;
+        const max = el.scrollHeight - el.clientHeight;
+        if (max > 0) el.scrollTop = ratio * max;
+      }
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(sync);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    sync();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [view, tab]);
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 lg:pb-0">
       {/* Top bar */}
