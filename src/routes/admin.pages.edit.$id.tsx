@@ -179,6 +179,9 @@ function PageEditor() {
       };
       const saved: any = await save({ data: payload });
       toast.success(opts.publish ? "Published" : "Saved");
+      try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
+      setDraftStatus("idle");
+      setDraftAt(null);
       if (saved?.id && saved.id !== row.id) {
         navigate({ to: "/admin/pages/edit/$id", params: { id: saved.id }, replace: true });
       } else {
