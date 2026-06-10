@@ -204,7 +204,7 @@ function PageEditor() {
             <RichTextEditor value={row.content} onChange={(html) => update("content", html)} />
           </div>
 
-          <Collapsible title="Excerpt" icon={<FileText className="h-4 w-4" />} defaultOpen={false}>
+          <Collapsible title="Excerpt" defaultOpen={false}>
             <Textarea
               value={row.excerpt ?? ""}
               maxLength={500}
@@ -214,7 +214,7 @@ function PageEditor() {
             />
           </Collapsible>
 
-          <Collapsible title="SEO" icon={<Search className="h-4 w-4" />} defaultOpen={false}>
+          <Collapsible title="SEO" defaultOpen={false}>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label className="text-xs">Meta title</Label>
