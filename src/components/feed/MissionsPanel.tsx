@@ -155,6 +155,8 @@ export function MissionsPanel() {
               {soundOn ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
             </button>
           </div>
+        </div>
+
 
         {/* Overall progress */}
         {!loading && total > 0 && (
