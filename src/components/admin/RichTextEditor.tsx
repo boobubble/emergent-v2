@@ -61,8 +61,11 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
     if (file.size > MAX_UPLOAD_BYTES) { toast.error("Image must be under 8 MB"); return null; }
     setUploading(true);
     try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) { toast.error("You must be signed in to upload"); return null; }
       const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
-      const path = `${uploadFolder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const path = `${uid}/${uploadFolder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error } = await supabase.storage.from("feed-media").upload(path, file, { cacheControl: "3600", upsert: false });
       if (error) throw error;
       const { data } = supabase.storage.from("feed-media").getPublicUrl(path);
