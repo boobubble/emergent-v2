@@ -353,7 +353,19 @@ function PageEditor() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Label className="text-xs">Keywords</Label>
-                <Input value={row.meta_keywords ?? ""} maxLength={500} onChange={(e) => update("meta_keywords", e.target.value)} placeholder="chat, india, friends" />
+                <Input
+                  value={row.meta_keywords ?? ""}
+                  maxLength={500}
+                  onChange={(e) => update("meta_keywords", e.target.value)}
+                  placeholder={row.tags?.length ? row.tags.join(", ") : "chat, india, friends"}
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {row.meta_keywords?.trim()
+                    ? "Custom keywords will be used in the page's <meta name=\"keywords\"> tag."
+                    : row.tags?.length
+                      ? `Leave blank to auto-use tags: ${row.tags.join(", ")}`
+                      : "Leave blank to auto-use the page's tags."}
+                </p>
               </div>
               <div>
                 <Label className="text-xs">OG title</Label>
