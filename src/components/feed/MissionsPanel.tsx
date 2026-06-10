@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Coins, Sparkles, Trophy } from "lucide-react";
+import { Loader2, Coins, Sparkles, Trophy, Check, Flame, Gift } from "lucide-react";
 import { getTodayMissions, claimMission } from "@/lib/missions.functions";
 import { getMyCreatorRank } from "@/lib/creator.functions";
-import { creatorRankFor } from "@/lib/economy-config";
 
 type Mission = {
   id: string;
@@ -54,65 +53,153 @@ export function MissionsPanel() {
     }
   }
 
-  const nextRank = rank ? (() => {
-    const cur = creatorRankFor(rank.score);
-    const idx = ["Newcomer","Rising Creator","Trending Creator","Viral Creator","Elite Poster","Legendary"].indexOf(cur.title);
-    return idx >= 0 && idx < 5 ? null : null;
-  })() : null;
+  const total = missions.length;
+  const done = missions.filter(m => m.claimed).length;
+  const overallPct = total ? Math.round((done / total) * 100) : 0;
+  const totalCoins = missions.reduce((s, m) => s + (m.claimed ? 0 : m.coins), 0);
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          <Sparkles className="h-3.5 w-3.5" /> Daily Missions
-        </h3>
-        {rank && (
-          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${rank.chip}`}>
-            <Trophy className="h-3 w-3" /> {rank.title}
-          </span>
+    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 p-[1px] shadow-[0_20px_60px_-15px_rgba(99,102,241,0.5)]">
+      {/* glow orbs */}
+      <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-fuchsia-500/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-indigo-500/30 blur-3xl" />
+
+      <div className="relative rounded-[calc(1.5rem-1px)] bg-gradient-to-br from-slate-950/90 via-indigo-950/80 to-slate-950/90 p-4 backdrop-blur-xl">
+        {/* Header */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-amber-400 via-fuchsia-500 to-indigo-500 shadow-lg shadow-fuchsia-500/40">
+              <Sparkles className="h-4.5 w-4.5 text-white" />
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-sm font-extrabold tracking-tight text-white">Daily Missions</h3>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-indigo-300/80">Resets in 24h</p>
+            </div>
+          </div>
+          {rank && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500/20 to-fuchsia-500/20 px-2.5 py-1 text-[10px] font-bold text-amber-200 ring-1 ring-amber-400/30">
+              <Trophy className="h-3 w-3" /> {rank.title}
+            </span>
+          )}
+        </div>
+
+        {/* Overall progress */}
+        {!loading && total > 0 && (
+          <div className="mb-4 rounded-2xl bg-white/5 p-3 ring-1 ring-white/10 backdrop-blur">
+            <div className="mb-2 flex items-center justify-between text-[11px]">
+              <span className="font-bold text-white/90">{done}/{total} completed</span>
+              <span className="inline-flex items-center gap-1 font-bold text-amber-300">
+                <Coins className="h-3 w-3" /> {totalCoins} to earn
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-amber-400 via-fuchsia-500 to-indigo-500 shadow-[0_0_10px_rgba(217,70,239,0.6)] transition-all duration-700"
+                style={{ width: `${overallPct}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-indigo-300" />
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {missions.map((m) => {
+              const pct = Math.min(100, Math.round((m.progress / m.target) * 100));
+              const isClaimed = m.claimed;
+              const isReady = m.completed && !m.claimed;
+              return (
+                <li
+                  key={m.id}
+                  className={`group relative overflow-hidden rounded-2xl p-3 ring-1 transition-all ${
+                    isClaimed
+                      ? "bg-emerald-500/5 ring-emerald-500/20"
+                      : isReady
+                      ? "bg-gradient-to-r from-amber-500/15 via-fuchsia-500/10 to-transparent ring-amber-400/40 shadow-lg shadow-amber-500/10"
+                      : "bg-white/5 ring-white/10 hover:bg-white/[0.07] hover:ring-white/20"
+                  }`}
+                >
+                  {isReady && (
+                    <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_2.5s_ease-in-out_infinite]" style={{ animationName: "shimmer" }} />
+                  )}
+                  <div className="flex items-center gap-3">
+                    <div className={`relative grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xl shadow-inner ${
+                      isClaimed
+                        ? "bg-emerald-500/20 ring-1 ring-emerald-400/30"
+                        : isReady
+                        ? "bg-gradient-to-br from-amber-400/30 to-fuchsia-500/30 ring-1 ring-amber-300/40"
+                        : "bg-white/5 ring-1 ring-white/10"
+                    }`}>
+                      <span className={isClaimed ? "grayscale opacity-60" : ""}>{m.icon}</span>
+                      {isReady && (
+                        <span className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-amber-400 ring-2 ring-slate-950">
+                          <Flame className="h-2.5 w-2.5 text-slate-900" />
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className={`truncate text-sm font-bold ${isClaimed ? "text-white/50 line-through" : "text-white"}`}>
+                        {m.title}
+                      </div>
+                      <div className="mt-0.5 flex items-center gap-2">
+                        <span className="truncate text-[11px] text-white/60">{m.description}</span>
+                      </div>
+                    </div>
+                    {isClaimed ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-1 text-[10px] font-bold text-emerald-300 ring-1 ring-emerald-400/30">
+                        <Check className="h-3 w-3" /> Claimed
+                      </span>
+                    ) : isReady ? (
+                      <button
+                        onClick={() => onClaim(m.id)}
+                        disabled={claiming === m.id}
+                        className="group/btn relative inline-flex items-center gap-1 overflow-hidden rounded-full bg-gradient-to-r from-amber-400 via-fuchsia-500 to-indigo-500 px-3 py-1.5 text-[11px] font-extrabold text-white shadow-lg shadow-fuchsia-500/40 ring-1 ring-white/20 transition-all hover:scale-105 hover:shadow-fuchsia-500/60 disabled:opacity-60"
+                      >
+                        {claiming === m.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Gift className="h-3 w-3" />
+                        )}
+                        Claim +{m.coins}
+                      </button>
+                    ) : (
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-300/80">
+                          <Coins className="h-2.5 w-2.5" />+{m.coins}
+                        </span>
+                        <span className="text-[10px] font-semibold text-white/50">{m.progress}/{m.target}</span>
+                      </div>
+                    )}
+                  </div>
+                  {!isClaimed && (
+                    <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-white/5">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          isReady
+                            ? "bg-gradient-to-r from-amber-400 to-fuchsia-500 shadow-[0_0_8px_rgba(251,191,36,0.6)]"
+                            : "bg-gradient-to-r from-indigo-400 to-fuchsia-400"
+                        }`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-4"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
-      ) : (
-        <ul className="space-y-2">
-          {missions.map((m) => {
-            const pct = Math.min(100, Math.round((m.progress / m.target) * 100));
-            return (
-              <li key={m.id} className="rounded-2xl bg-accent/40 p-2.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg leading-none">{m.icon}</span>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold">{m.title}</div>
-                    <div className="truncate text-[11px] text-muted-foreground">{m.description}</div>
-                  </div>
-                  {m.claimed ? (
-                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">Claimed</span>
-                  ) : m.completed ? (
-                    <button
-                      onClick={() => onClaim(m.id)}
-                      disabled={claiming === m.id}
-                      className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
-                    >
-                      {claiming === m.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Coins className="h-3 w-3" />}
-                      +{m.coins}
-                    </button>
-                  ) : (
-                    <span className="text-[11px] font-semibold text-muted-foreground">{m.progress}/{m.target}</span>
-                  )}
-                </div>
-                <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-background">
-                  <div
-                    className={`h-full transition-all ${m.completed ? "bg-emerald-500" : "bg-primary"}`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+      `}</style>
     </div>
   );
 }
