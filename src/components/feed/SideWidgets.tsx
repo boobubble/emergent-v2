@@ -328,7 +328,7 @@ function PremiumCard({
 }) {
   const a = accentMap[accent];
   return (
-    <div className={`group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.04] via-white/[0.02] to-white/[0.04] p-4 backdrop-blur-xl transition ${a.border}`}>
+    <div className={`group relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-card/80 p-4 shadow-sm backdrop-blur-xl transition dark:border-white/[0.06] dark:from-white/[0.04] dark:via-white/[0.02] dark:to-white/[0.04] ${a.border}`}>
       {/* Decorative glow orbs */}
       <div className={`pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full ${a.orb1} blur-2xl`} />
       <div className={`pointer-events-none absolute -bottom-12 -left-10 h-24 w-24 rounded-full ${a.orb2} blur-2xl`} />
@@ -339,7 +339,7 @@ function PremiumCard({
           {icon}
           <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{title}</h3>
           {typeof badge === "number" && (
-            <span className="ml-1 rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-bold text-foreground/80 ring-1 ring-inset ring-white/10">
+            <span className="ml-1 rounded-full bg-foreground/[0.06] px-1.5 py-0.5 text-[10px] font-bold text-foreground/80 ring-1 ring-inset ring-border/60 dark:bg-white/[0.06] dark:ring-white/10">
               {badge}
             </span>
           )}
