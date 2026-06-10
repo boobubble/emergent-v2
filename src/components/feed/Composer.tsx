@@ -216,10 +216,70 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           onFocus={openFocus}
           onClick={openFocus}
           rows={spotlight ? 6 : 2}
-          placeholder="What's on your mind? Use #hashtags and @mentions…"
+          placeholder={
+            mode === "confession"
+              ? "Share something honest — posted anonymously to the confessions board…"
+              : mode === "poll"
+                ? "Optional context for your poll…"
+                : "What's on your mind? Use #hashtags and @mentions…"
+          }
           className="w-full resize-none rounded-2xl border border-transparent bg-transparent px-1 py-2 text-[15px] leading-relaxed placeholder:text-muted-foreground focus:outline-none"
         />
       </div>
+
+      {/* Mode chips */}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <ModeChip active={mode === "post"} onClick={() => setMode("post")} label="Post" />
+        <ModeChip active={mode === "poll"} onClick={() => setMode("poll")} icon={BarChart3} label="Poll" tone="primary" />
+        <ModeChip active={mode === "confession"} onClick={() => setMode("confession")} icon={VenetianMask} label="Confess" tone="fuchsia" />
+        {mode === "confession" && (
+          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-fuchsia-500/10 px-2.5 py-1 text-[11px] font-semibold text-fuchsia-500">
+            <EyeOff className="h-3 w-3" /> Posted anonymously to /confessions
+          </span>
+        )}
+      </div>
+
+      {mode === "poll" && (
+        <div className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 p-3">
+          <input
+            value={pollQuestion}
+            onChange={(e) => setPollQuestion(e.target.value)}
+            placeholder="Ask a question…"
+            maxLength={280}
+            className="mb-2 w-full rounded-xl border border-border bg-background/70 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          <div className="space-y-2">
+            {pollOptions.map((opt, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  value={opt}
+                  onChange={(e) => setPollOptions((p) => p.map((v, j) => (j === i ? e.target.value : v)))}
+                  placeholder={`Option ${i + 1}`}
+                  maxLength={120}
+                  className="flex-1 rounded-xl border border-border bg-background/70 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                {pollOptions.length > 2 && (
+                  <button
+                    onClick={() => setPollOptions((p) => p.filter((_, j) => j !== i))}
+                    className="rounded-full p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    aria-label={`Remove option ${i + 1}`}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          {pollOptions.length < 6 && (
+            <button
+              onClick={() => setPollOptions((p) => [...p, ""])}
+              className="mt-2 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/10"
+            >
+              <Plus className="h-3 w-3" /> Add option
+            </button>
+          )}
+        </div>
+      )}
       {files.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {files.map((f, i) => (
