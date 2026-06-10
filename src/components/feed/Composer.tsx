@@ -332,11 +332,16 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           <PrivacyIconEl className="h-3.5 w-3.5 text-muted-foreground" />
           <button
             onClick={submit}
-            disabled={posting || (!text.trim() && !files.length)}
+            disabled={
+              posting ||
+              (mode === "post" && !text.trim() && !files.length) ||
+              (mode === "confession" && !text.trim()) ||
+              (mode === "poll" && (!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2))
+            }
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-primary/80 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_8px_24px_-8px_var(--primary-glow)] hover:scale-[1.03] active:scale-[0.97] transition disabled:opacity-50 disabled:hover:scale-100"
           >
             {posting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            Post
+            {mode === "confession" ? "Confess" : mode === "poll" ? "Publish poll" : "Post"}
           </button>
         </div>
       </div>
