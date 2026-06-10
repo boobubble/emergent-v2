@@ -31,7 +31,8 @@ export const Route = createFileRoute("/$slug")({
       { property: "og:type", content: "article" },
       { property: "og:url", content: url },
     ];
-    if (p.meta_keywords) meta.push({ name: "keywords", content: p.meta_keywords });
+    const keywords = p.meta_keywords || (p.tags?.length ? p.tags.join(", ") : "");
+    if (keywords) meta.push({ name: "keywords", content: keywords });
     if (ogImage) {
       meta.push({ property: "og:image", content: ogImage });
       meta.push({ name: "twitter:image", content: ogImage });
