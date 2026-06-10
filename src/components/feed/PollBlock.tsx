@@ -41,7 +41,8 @@ export function PollBlock({ post }: { post: FeedPost }) {
         .maybeSingle();
       const current = ((row?.poll as { votes?: Record<string, number> } | null)?.votes) ?? {};
       const merged = { ...current, [String(idx)]: (current[String(idx)] ?? 0) + 1 };
-      const newPoll = { ...(row?.poll ?? poll), votes: merged };
+      const basePoll = (row?.poll as typeof poll) ?? poll;
+      const newPoll = { ...basePoll, votes: merged };
       await supabase.from("posts").update({ poll: newPoll }).eq("id", post.id);
       setVotes(merged);
     } catch {
