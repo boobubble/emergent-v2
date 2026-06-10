@@ -540,6 +540,8 @@ function FeedPage() {
           <div ref={rightRailRef} className="space-y-4 pl-1 will-change-transform">
             <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
+            <ConfessionsFeedWidget />
+            <ActivePollsWidget />
             <ChatroomOnlineWidget />
             <BirthdaysWidget />
             <FriendsWidget meId={meId} profiles={profiles} />
