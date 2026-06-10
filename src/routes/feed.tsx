@@ -246,27 +246,76 @@ function FeedPage() {
   const leftRailRef = useRef<HTMLDivElement | null>(null);
   const rightRailRef = useRef<HTMLDivElement | null>(null);
 
-  // Sync sidebar scroll positions proportionally with the main window scroll
-  // so left/right rails stay aligned with the center feed as the user scrolls.
+  // Smart sticky: rails scroll naturally with the page; when they're taller
+  // than the viewport, the bottom pins on scroll-down and the top pins on
+  // scroll-up (Twitter/Facebook-style behavior).
   useEffect(() => {
+    const HEADER = 64;
+    const GAP = 8;
+    let lastY = window.scrollY;
     let raf = 0;
-    const sync = () => {
+
+    const apply = () => {
       raf = 0;
-      const docMax = (document.documentElement.scrollHeight || 0) - window.innerHeight;
-      if (docMax <= 0) return;
-      const ratio = Math.min(1, Math.max(0, window.scrollY / docMax));
+      const y = window.scrollY;
+      const dir = y > lastY ? "down" : y < lastY ? "up" : null;
+      const vh = window.innerHeight;
+
       for (const el of [leftRailRef.current, rightRailRef.current]) {
         if (!el) continue;
-        const max = el.scrollHeight - el.clientHeight;
-        if (max > 0) el.scrollTop = ratio * max;
+        const parent = el.parentElement; // aside
+        if (!parent) continue;
+        const h = el.offsetHeight;
+        const fits = h + HEADER + GAP <= vh;
+
+        if (fits) {
+          el.style.position = "sticky";
+          el.style.top = `${HEADER + GAP}px`;
+          el.style.transform = "";
+          continue;
+        }
+
+        const parentRect = parent.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        const currentOffset = elRect.top - parentRect.top; // current translate within parent
+
+        if (dir === "down") {
+          // pin bottom of rail to bottom of viewport
+          const desiredTopVp = vh - h - GAP;
+          const targetOffset = desiredTopVp - parentRect.top;
+          const minOffset = HEADER + GAP - parentRect.top; // can't go above header
+          const offset = Math.max(currentOffset, Math.min(targetOffset, parent.offsetHeight - h));
+          // Use sticky if rail bottom is currently flush with viewport bottom
+          if (elRect.bottom <= vh + 0.5) {
+            el.style.position = "sticky";
+            el.style.top = `${vh - h - GAP}px`;
+            el.style.transform = "";
+          } else {
+            el.style.position = "relative";
+            el.style.top = "0";
+            el.style.transform = `translateY(${Math.max(0, Math.min(offset, parent.offsetHeight - h))}px)`;
+            void minOffset;
+          }
+        } else if (dir === "up") {
+          // pin top of rail to top under header
+          if (elRect.top >= HEADER + GAP - 0.5) {
+            el.style.position = "sticky";
+            el.style.top = `${HEADER + GAP}px`;
+            el.style.transform = "";
+          } else {
+            el.style.position = "relative";
+            el.style.top = "0";
+            el.style.transform = `translateY(${Math.max(0, currentOffset)}px)`;
+          }
+        }
       }
+      lastY = y;
     };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(sync);
-    };
+
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(apply); };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
-    sync();
+    apply();
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
