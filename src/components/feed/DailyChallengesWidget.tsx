@@ -245,105 +245,135 @@ export function DailyChallengesWidget({ meId }: { meId: string }) {
   const overallPct = Math.round((completed / challenges.length) * 100);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/5 via-card to-card p-4 shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          <Trophy className="h-3.5 w-3.5 text-yellow-500" /> Daily Challenges
-          <span className="ml-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold text-primary">Lv {level}</span>
-        </h3>
-        <span className="text-[10px] font-medium text-muted-foreground">Resets in {resetIn}</span>
-      </div>
+    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-amber-950 via-rose-950 to-slate-950 p-[1px] shadow-[0_20px_60px_-15px_rgba(244,114,182,0.45)]">
+      {/* glow orbs */}
+      <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-amber-400/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-rose-500/25 blur-3xl" />
 
-      {/* Summary */}
-      <div className="mt-2 flex items-center gap-3">
-        <div className="flex items-baseline gap-1">
-          <span className="text-2xl font-bold text-foreground">{completed}</span>
-          <span className="text-xs text-muted-foreground">/ {challenges.length}</span>
+      <div className="relative rounded-[calc(1.5rem-1px)] bg-gradient-to-br from-slate-950/90 via-rose-950/70 to-slate-950/90 p-4 backdrop-blur-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-500 shadow-lg shadow-rose-500/40">
+              <Trophy className="h-4 w-4 text-white" />
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-amber-300 ring-2 ring-slate-950 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="flex items-center gap-1.5 text-sm font-extrabold tracking-tight text-white">
+                Daily Challenges
+                <span className="rounded-full bg-gradient-to-r from-amber-400/30 to-rose-400/30 px-1.5 py-0.5 text-[9px] font-bold text-amber-200 ring-1 ring-amber-300/30">Lv {level}</span>
+              </h3>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-rose-300/80">Resets in {resetIn}</p>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/20 to-yellow-400/20 px-2.5 py-1 text-[11px] font-extrabold text-amber-200 ring-1 ring-amber-400/30">
+            <Zap className="h-3 w-3" /> {totalXp}
+          </span>
         </div>
-        <div className="flex-1">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+
+        {/* Summary */}
+        <div className="mt-4 rounded-2xl bg-white/5 p-3 ring-1 ring-white/10 backdrop-blur">
+          <div className="mb-2 flex items-center justify-between text-[11px]">
+            <span className="font-bold text-white/90">
+              <span className="text-base font-extrabold text-white">{completed}</span>
+              <span className="text-white/60"> / {challenges.length} complete</span>
+            </span>
+            <span className="inline-flex items-center gap-1 font-bold text-amber-300">
+              <Sparkles className="h-3 w-3" /> {overallPct}%
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-yellow-500 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-500 shadow-[0_0_10px_rgba(244,114,182,0.6)] transition-all duration-700"
               style={{ width: `${overallPct}%` }}
             />
           </div>
         </div>
-        <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[11px] font-bold text-yellow-600 dark:text-yellow-400">
-          <Zap className="h-3 w-3" /> {totalXp}
-        </span>
-      </div>
 
-      {/* List */}
-      <ul className="mt-3 space-y-2">
-        {challenges.map((c) => {
-          const v = Math.min(progress.values[c.id] ?? 0, c.goal);
-          const done = v >= c.goal;
-          const pct = Math.round((v / c.goal) * 100);
-          return (
-            <li
-              key={c.id}
-              className={`group rounded-2xl border p-2.5 transition-all ${
-                done
-                  ? "border-primary/30 bg-primary/5"
-                  : "border-border bg-background/50 hover:border-primary/20"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-base leading-none">{c.emoji}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p
-                      className={`truncate text-[13px] font-medium ${done ? "text-foreground" : "text-foreground/90"}`}
-                    >
-                      {c.title}
-                    </p>
-                    {done ? (
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
-                        <Check className="h-2.5 w-2.5" /> Done
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-semibold text-muted-foreground">
-                        {v}/{c.goal}
+        {/* List */}
+        <ul className="mt-3 space-y-2">
+          {challenges.map((c) => {
+            const v = Math.min(progress.values[c.id] ?? 0, c.goal);
+            const isDone = v >= c.goal;
+            const pct = Math.round((v / c.goal) * 100);
+            return (
+              <li
+                key={c.id}
+                className={`group relative overflow-hidden rounded-2xl p-3 ring-1 transition-all ${
+                  isDone
+                    ? "bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent ring-emerald-400/30"
+                    : "bg-white/5 ring-white/10 hover:bg-white/[0.07] hover:ring-white/20"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`relative grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xl shadow-inner ${
+                    isDone
+                      ? "bg-emerald-500/20 ring-1 ring-emerald-400/30"
+                      : "bg-gradient-to-br from-amber-400/15 to-rose-500/15 ring-1 ring-white/10"
+                  }`}>
+                    <span>{c.emoji}</span>
+                    {isDone && (
+                      <span className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-400 ring-2 ring-slate-950">
+                        <Check className="h-2.5 w-2.5 text-slate-900" />
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 flex items-center gap-2">
-                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${done ? "bg-primary" : "bg-primary/70"}`}
-                        style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
-                      />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className={`truncate text-sm font-bold ${isDone ? "text-white/70" : "text-white"}`}>
+                        {c.title}
+                      </p>
+                      {isDone ? (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 ring-1 ring-emerald-400/30">
+                          <Check className="h-2.5 w-2.5" /> Done
+                        </span>
+                      ) : (
+                        <span className="shrink-0 text-[10px] font-semibold text-white/50">
+                          {v}/{c.goal}
+                        </span>
+                      )}
                     </div>
-                    <span className="text-[10px] font-semibold text-muted-foreground">
-                      {c.reward}
-                    </span>
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/5">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            isDone
+                              ? "bg-gradient-to-r from-emerald-400 to-teal-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"
+                              : "bg-gradient-to-r from-amber-400 to-rose-400"
+                          }`}
+                          style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
+                        />
+                      </div>
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-300/90">
+                        <Zap className="h-2.5 w-2.5" /> {c.reward}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+              </li>
+            );
+          })}
+        </ul>
 
-      {/* Streak hint */}
-      <div className="mt-3 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
-        <Flame className="h-3 w-3 text-orange-500" />
-        Complete all to earn a streak bonus
-      </div>
-
-      {/* Completion animation */}
-      {celebrate && (
-        <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center bg-background/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="flex flex-col items-center gap-1 rounded-2xl bg-card px-5 py-4 shadow-lg border border-primary/30 animate-in zoom-in-95 duration-300">
-            <Sparkles className="h-7 w-7 text-yellow-500 animate-pulse" />
-            <p className="text-sm font-bold">Challenge complete!</p>
-            <p className="text-[11px] text-muted-foreground">
-              +{challenges.find((c) => c.id === celebrate)?.xp ?? 0} XP earned
-            </p>
-          </div>
+        {/* Streak hint */}
+        <div className="mt-3 flex items-center justify-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-[10px] font-semibold text-white/70 ring-1 ring-white/10">
+          <Flame className="h-3 w-3 text-orange-400" />
+          Complete all for a streak bonus
         </div>
-      )}
+
+        {/* Completion animation */}
+        {celebrate && (
+          <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="relative flex flex-col items-center gap-1 rounded-3xl border border-amber-300/40 bg-gradient-to-br from-amber-500/20 via-rose-500/20 to-fuchsia-500/20 px-6 py-5 shadow-[0_0_40px_rgba(251,191,36,0.5)] animate-in zoom-in-95 duration-300">
+              <Sparkles className="h-8 w-8 text-amber-300 animate-pulse drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]" />
+              <p className="text-base font-extrabold text-white">Challenge complete!</p>
+              <p className="text-[11px] font-bold text-amber-200">
+                +{challenges.find((c) => c.id === celebrate)?.xp ?? 0} XP earned
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
