@@ -122,6 +122,33 @@ function PageEditor() {
   const update = <K extends keyof PageRow>(k: K, v: PageRow[K]) =>
     setRow((r) => ({ ...r, [k]: v }));
 
+  // Autosave to localStorage (debounced)
+  useEffect(() => {
+    if (!hydrated.current) return;
+    if (skipNextSave.current) { skipNextSave.current = false; return; }
+    if (!row.title && !row.content) return;
+    setDraftStatus("saving");
+    const t = setTimeout(() => {
+      try {
+        const savedAt = Date.now();
+        localStorage.setItem(draftKey, JSON.stringify({ row, savedAt }));
+        setDraftAt(savedAt);
+        setDraftStatus("saved");
+      } catch { setDraftStatus("error"); }
+    }, 800);
+    return () => clearTimeout(t);
+  }, [row, draftKey]);
+
+  // Warn before closing tab if there's an unsaved local draft
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (draftStatus === "saving") { e.preventDefault(); e.returnValue = ""; }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [draftStatus]);
+
+
   async function handleSave(opts: { publish?: boolean; overwrite?: boolean } = {}) {
     if (!row.title.trim()) { toast.error("Add a title first"); return; }
     setSaving(true);
