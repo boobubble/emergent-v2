@@ -536,7 +536,7 @@ function FeedPage() {
 
         {/* Right rail */}
         <aside className="hidden lg:block">
-          <div ref={rightRailRef} className="sticky top-[64px] max-h-[calc(100vh-72px)] space-y-4 overflow-y-auto pl-1 feed-scrollbar-hide">
+          <div ref={rightRailRef} className="space-y-4 pl-1 will-change-transform">
             <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
             <ChatroomOnlineWidget />
