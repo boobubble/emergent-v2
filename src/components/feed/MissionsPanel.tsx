@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Coins, Sparkles, Trophy, Check, Flame, Gift } from "lucide-react";
+import { Loader2, Coins, Sparkles, Trophy, Check, Flame, Gift, Volume2, VolumeX } from "lucide-react";
 import { getTodayMissions, claimMission } from "@/lib/missions.functions";
 import { getMyCreatorRank } from "@/lib/creator.functions";
 
@@ -17,6 +17,35 @@ type Mission = {
   claimed: boolean;
 };
 
+type Burst = { id: number; missionId: string; coins: number };
+
+const SOUND_KEY = "missions:sound";
+const COLORS = ["#fbbf24", "#f472b6", "#a78bfa", "#34d399", "#60a5fa", "#fb7185"];
+
+function playClaimSound() {
+  try {
+    const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+    const ctx = new Ctx();
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = freq;
+      const start = ctx.currentTime + i * 0.08;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.25, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.25);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.3);
+    });
+    setTimeout(() => ctx.close(), 800);
+  } catch (e) {
+    console.warn("claim sound failed", e);
+  }
+}
+
 export function MissionsPanel() {
   const fetchMissions = useServerFn(getTodayMissions);
   const claim = useServerFn(claimMission);
@@ -26,6 +55,24 @@ export function MissionsPanel() {
   const [rank, setRank] = useState<{ score: number; title: string; chip: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
+  const [bursts, setBursts] = useState<Burst[]>([]);
+  const [soundOn, setSoundOn] = useState(true);
+  const burstId = useRef(0);
+
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(SOUND_KEY);
+      if (v !== null) setSoundOn(v === "1");
+    } catch { /* ignore */ }
+  }, []);
+
+  function toggleSound() {
+    setSoundOn(s => {
+      const next = !s;
+      try { localStorage.setItem(SOUND_KEY, next ? "1" : "0"); } catch { /* ignore */ }
+      return next;
+    });
+  }
 
   async function load() {
     try {
@@ -42,12 +89,27 @@ export function MissionsPanel() {
   useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   async function onClaim(id: string) {
+    const target = missions.find(m => m.id === id);
+    if (!target || target.claimed) return;
     setClaiming(id);
+
+    // Optimistic: mark claimed immediately
+    setMissions(prev => prev.map(m => m.id === id ? { ...m, claimed: true, completed: true } : m));
+
+    // Fire burst + sound
+    const bId = ++burstId.current;
+    setBursts(b => [...b, { id: bId, missionId: id, coins: target.coins }]);
+    if (soundOn) playClaimSound();
+    setTimeout(() => setBursts(b => b.filter(x => x.id !== bId)), 1400);
+
     try {
       await claim({ data: { missionId: id } });
-      await load();
+      // Refresh rank/coins quietly
+      void load();
     } catch (e) {
       console.error("claim failed", e);
+      // Rollback
+      setMissions(prev => prev.map(m => m.id === id ? { ...m, claimed: false } : m));
     } finally {
       setClaiming(null);
     }
