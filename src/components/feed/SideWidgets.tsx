@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Flame, TrendingUp, Trophy, UserPlus, Check, X, Radio } from "lucide-react";
+import { Flame, TrendingUp, Trophy, UserPlus, Check, X, Radio, Sparkles, Users, Mars, Venus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
 import { WidgetSkeleton } from "@/components/feed/FeedSkeletons";
@@ -45,44 +45,85 @@ export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Reco
   return (
     <div className="space-y-4">
       {pendingIn.length > 0 && (
-        <Card title="Friend requests">
+        <PremiumCard title="Friend requests" icon={<UserPlus className="h-3.5 w-3.5 text-fuchsia-400" />} accent="fuchsia" badge={pendingIn.length}>
           {pendingIn.map((f) => {
             const u = profiles[f.sender_id];
             if (!u) return null;
             return (
-              <div key={f.id} className="flex items-center gap-2 py-1.5">
-                <Avatar user={u} size={32} />
-                <Link to="/u/$username" params={{ username: u.name }} className="flex-1 truncate text-sm font-medium hover:underline">{u.name}</Link>
-                <button onClick={() => accept(f)} className="rounded-full bg-primary p-1.5 text-primary-foreground"><Check className="h-3.5 w-3.5" /></button>
-                <button onClick={() => reject(f)} className="rounded-full bg-muted p-1.5"><X className="h-3.5 w-3.5" /></button>
+              <div key={f.id} className="group flex items-center gap-2.5 rounded-xl px-1.5 py-1.5 transition hover:bg-white/[0.04]">
+                <RingAvatar user={u} size={34} ring="fuchsia" />
+                <Link to="/u/$username" params={{ username: u.name }} className="flex-1 truncate text-sm font-semibold hover:underline">{u.name}</Link>
+                <button
+                  onClick={() => accept(f)}
+                  aria-label="Accept"
+                  className="rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 p-1.5 text-white shadow-[0_0_10px_rgba(16,185,129,0.5)] transition hover:scale-105"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => reject(f)}
+                  aria-label="Reject"
+                  className="rounded-full bg-white/[0.06] p-1.5 text-muted-foreground ring-1 ring-inset ring-white/10 transition hover:bg-white/[0.1] hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
               </div>
             );
           })}
-        </Card>
+        </PremiumCard>
       )}
 
-      <Card title={`Friends (${friends.length})`}>
+      <PremiumCard
+        title="Friends"
+        icon={<Users className="h-3.5 w-3.5 text-amber-300" />}
+        accent="amber"
+        badge={friends.length}
+      >
         {friends.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No friends yet.</p>
+          <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-3 py-4 text-center">
+            <Sparkles className="mx-auto h-4 w-4 text-amber-300/70" />
+            <p className="mt-1.5 text-xs text-muted-foreground">No friends yet — send a request below.</p>
+          </div>
         ) : friends.slice(0, 6).map((u) => (
-          <Link key={u.id} to="/u/$username" params={{ username: u.name }} className="flex items-center gap-2 rounded-lg py-1.5 hover:bg-accent">
-            <Avatar user={u} size={28} />
-            <span className="flex-1 truncate text-sm">{u.name}</span>
-            <span className={`h-2 w-2 rounded-full ${u.status === "online" ? "bg-green-500" : "bg-muted-foreground/40"}`} />
+          <Link
+            key={u.id}
+            to="/u/$username"
+            params={{ username: u.name }}
+            className="group flex items-center gap-2.5 rounded-xl px-1.5 py-1.5 transition hover:bg-white/[0.04]"
+          >
+            <RingAvatar user={u} size={30} ring={u.status === "online" ? "emerald" : "muted"} />
+            <span className="flex-1 truncate text-sm font-medium">{u.name}</span>
+            {u.status === "online" ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                </span>
+                Live
+              </span>
+            ) : (
+              <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+            )}
           </Link>
         ))}
-      </Card>
+      </PremiumCard>
 
       {suggestions.length > 0 && (
-        <Card title="Suggested">
+        <PremiumCard title="Suggested for you" icon={<Sparkles className="h-3.5 w-3.5 text-violet-300" />} accent="violet">
           {suggestions.map((u) => (
-            <div key={u.id} className="flex items-center gap-2 py-1.5">
-              <Avatar user={u} size={28} />
-              <Link to="/u/$username" params={{ username: u.name }} className="flex-1 truncate text-sm font-medium hover:underline">{u.name}</Link>
-              <button onClick={() => sendRequest(u.id)} className="rounded-full bg-primary/10 p-1.5 text-primary hover:bg-primary/20"><UserPlus className="h-3.5 w-3.5" /></button>
+            <div key={u.id} className="group flex items-center gap-2.5 rounded-xl px-1.5 py-1.5 transition hover:bg-white/[0.04]">
+              <RingAvatar user={u} size={30} ring="violet" />
+              <Link to="/u/$username" params={{ username: u.name }} className="flex-1 truncate text-sm font-semibold hover:underline">{u.name}</Link>
+              <button
+                onClick={() => sendRequest(u.id)}
+                aria-label={`Add ${u.name}`}
+                className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 px-2.5 py-1 text-[11px] font-bold text-violet-200 ring-1 ring-inset ring-violet-400/30 transition hover:from-violet-500/35 hover:to-fuchsia-500/35 hover:text-white"
+              >
+                <UserPlus className="h-3 w-3" /> Add
+              </button>
             </div>
           ))}
-        </Card>
+        </PremiumCard>
       )}
     </div>
   );
@@ -99,43 +140,55 @@ export function HashtagsWidget() {
 
   if (!loaded) {
     return (
-      <Card title="Trending tags" icon={<TrendingUp className="h-3.5 w-3.5" />}>
+      <PremiumCard title="Trending tags" icon={<TrendingUp className="h-3.5 w-3.5 text-sky-300" />} accent="sky">
         <div className="flex flex-wrap gap-1.5">
           {Array.from({ length: 6 }).map((_, i) => (
             <span key={i} className="h-6 w-16 rounded-full skeleton-shimmer" />
           ))}
         </div>
-      </Card>
+      </PremiumCard>
     );
   }
   if (!tags.length) return null;
 
   return (
-    <Card title="Trending tags" icon={<TrendingUp className="h-3.5 w-3.5" />}>
+    <PremiumCard title="Trending tags" icon={<TrendingUp className="h-3.5 w-3.5 text-sky-300" />} accent="sky">
       <div className="flex flex-wrap gap-1.5">
-        {tags.map((t) => (
-          <span key={t.tag} className="rounded-full bg-accent px-2.5 py-1 text-xs font-medium">
-            #{t.tag} <span className="text-muted-foreground">{t.usage_count}</span>
+        {tags.map((t, i) => (
+          <span
+            key={t.tag}
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset transition hover:scale-105 ${
+              i === 0
+                ? "bg-gradient-to-r from-amber-400/25 to-fuchsia-500/25 text-amber-100 ring-amber-300/40"
+                : "bg-white/[0.05] ring-white/10"
+            }`}
+          >
+            #{t.tag} <span className="ml-0.5 text-muted-foreground">{t.usage_count}</span>
           </span>
         ))}
       </div>
-    </Card>
+    </PremiumCard>
   );
 }
 
 export function LeaderboardWidget({ profiles }: { profiles: Record<string, User> }) {
   const top = Object.values(profiles).sort((a, b) => b.xp - a.xp).slice(0, 5);
   return (
-    <Card title="Top XP" icon={<Trophy className="h-3.5 w-3.5 text-yellow-500" />}>
+    <PremiumCard title="Top XP" icon={<Trophy className="h-3.5 w-3.5 text-yellow-400" />} accent="amber">
       {top.map((u, i) => (
-        <Link key={u.id} to="/u/$username" params={{ username: u.name }} className="flex items-center gap-2 rounded-lg py-1.5 hover:bg-accent">
-          <span className="w-4 text-xs font-bold text-muted-foreground">{i + 1}</span>
+        <Link key={u.id} to="/u/$username" params={{ username: u.name }} className="flex items-center gap-2.5 rounded-xl px-1.5 py-1.5 transition hover:bg-white/[0.04]">
+          <span className={`grid h-5 w-5 place-items-center rounded-full text-[10px] font-black ${
+            i === 0 ? "bg-gradient-to-br from-yellow-300 to-amber-500 text-black" :
+            i === 1 ? "bg-gradient-to-br from-zinc-200 to-zinc-400 text-black" :
+            i === 2 ? "bg-gradient-to-br from-orange-400 to-amber-700 text-white" :
+            "bg-white/[0.06] text-muted-foreground"
+          }`}>{i + 1}</span>
           <Avatar user={u} size={24} />
-          <span className="flex-1 truncate text-sm">{u.name}</span>
-          <span className="text-xs font-semibold text-primary">{u.xp}</span>
+          <span className="flex-1 truncate text-sm font-medium">{u.name}</span>
+          <span className="text-xs font-bold text-amber-300">{u.xp}</span>
         </Link>
       ))}
-    </Card>
+    </PremiumCard>
   );
 }
 
@@ -143,17 +196,20 @@ export function StreakWidget({ profiles }: { profiles: Record<string, User> }) {
   const top = Object.values(profiles).filter((u) => (u.streak ?? 0) > 0).sort((a, b) => (b.streak ?? 0) - (a.streak ?? 0)).slice(0, 5);
   if (!top.length) return null;
   return (
-    <Card title="Streaks" icon={<Flame className="h-3.5 w-3.5 text-orange-500" />}>
+    <PremiumCard title="Streaks" icon={<Flame className="h-3.5 w-3.5 text-orange-400" />} accent="rose">
       {top.map((u) => (
-        <Link key={u.id} to="/u/$username" params={{ username: u.name }} className="flex items-center gap-2 rounded-lg py-1.5 hover:bg-accent">
+        <Link key={u.id} to="/u/$username" params={{ username: u.name }} className="flex items-center gap-2.5 rounded-xl px-1.5 py-1.5 transition hover:bg-white/[0.04]">
           <Avatar user={u} size={24} />
-          <span className="flex-1 truncate text-sm">{u.name}</span>
-          <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-orange-500"><Flame className="h-3 w-3" /> {u.streak}</span>
+          <span className="flex-1 truncate text-sm font-medium">{u.name}</span>
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold text-rose-300 ring-1 ring-inset ring-rose-400/30">
+            <Flame className="h-3 w-3" /> {u.streak}
+          </span>
         </Link>
       ))}
-    </Card>
+    </PremiumCard>
   );
 }
+
 export function ChatroomOnlineWidget() {
   const [counts, setCounts] = useState({ total: 0, male: 0, female: 0, other: 0 });
   const [loaded, setLoaded] = useState(false);
@@ -184,45 +240,113 @@ export function ChatroomOnlineWidget() {
 
   if (!loaded) {
     return (
-      <Card title="Online in chatrooms" icon={<Radio className="h-3.5 w-3.5 text-green-500" />}>
+      <PremiumCard title="Online now" icon={<Radio className="h-3.5 w-3.5 text-emerald-300" />} accent="emerald">
         <div className="grid grid-cols-3 gap-2 pt-1">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-14 rounded-xl skeleton-shimmer" />
+            <div key={i} className="h-16 rounded-xl skeleton-shimmer" />
           ))}
         </div>
-      </Card>
+      </PremiumCard>
     );
   }
 
   return (
-    <Card title={`Online in chatrooms (${counts.total})`} icon={<Radio className="h-3.5 w-3.5 text-green-500" />}>
+    <PremiumCard
+      title="Online now"
+      icon={<Radio className="h-3.5 w-3.5 text-emerald-300" />}
+      accent="emerald"
+      rightSlot={
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          </span>
+          {counts.total} live
+        </span>
+      }
+    >
       <div className="grid grid-cols-3 gap-2 pt-1">
-        <Stat label="Male" value={counts.male} color="text-blue-500" />
-        <Stat label="Female" value={counts.female} color="text-pink-500" />
-        <Stat label="Other" value={counts.other} color="text-muted-foreground" />
+        <GenderStat label="Male" value={counts.male} icon={<Mars className="h-3 w-3" />} from="from-sky-500/20" to="to-blue-600/10" text="text-sky-300" ring="ring-sky-400/30" />
+        <GenderStat label="Female" value={counts.female} icon={<Venus className="h-3 w-3" />} from="from-pink-500/20" to="to-fuchsia-600/10" text="text-pink-300" ring="ring-pink-400/30" />
+        <GenderStat label="Other" value={counts.other} icon={<Sparkles className="h-3 w-3" />} from="from-violet-500/20" to="to-indigo-600/10" text="text-violet-300" ring="ring-violet-400/30" />
       </div>
-    </Card>
+    </PremiumCard>
   );
 }
 
-function Stat({ label, value, color }: { label: string; value: number; color: string }) {
+function GenderStat({ label, value, icon, from, to, text, ring }: { label: string; value: number; icon: React.ReactNode; from: string; to: string; text: string; ring: string }) {
   return (
-    <div className="rounded-xl bg-accent/50 px-2 py-2 text-center">
-      <div className={`text-lg font-bold ${color}`}>{value}</div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    <div className={`group relative overflow-hidden rounded-xl bg-gradient-to-br ${from} ${to} px-2 py-2.5 text-center ring-1 ring-inset ${ring} transition hover:scale-[1.03]`}>
+      <div className={`flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wider ${text}`}>
+        {icon}{label}
+      </div>
+      <div className={`mt-1 text-xl font-black tabular-nums ${text} drop-shadow-[0_0_8px_currentColor]`}>{value}</div>
     </div>
   );
 }
 
-
-function Card({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
+function RingAvatar({ user, size, ring }: { user: User; size: number; ring: "emerald" | "fuchsia" | "violet" | "amber" | "muted" }) {
+  const ringColor = {
+    emerald: "from-emerald-400 to-emerald-600",
+    fuchsia: "from-fuchsia-400 to-pink-600",
+    violet: "from-violet-400 to-indigo-600",
+    amber: "from-amber-300 to-orange-500",
+    muted: "from-white/10 to-white/5",
+  }[ring];
   return (
-    <div className="feed-card p-4">
-      <h3 className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_0_3px_var(--primary-glow)]" />
-        {icon}{title}
-      </h3>
-      <div className="space-y-0.5">{children}</div>
+    <span className={`relative inline-flex shrink-0 rounded-full bg-gradient-to-br ${ringColor} p-[1.5px]`}>
+      <span className="rounded-full bg-background p-[1.5px]">
+        <Avatar user={user} size={size} />
+      </span>
+    </span>
+  );
+}
+
+const accentMap = {
+  amber: { dot: "bg-amber-300 shadow-[0_0_0_3px_rgba(251,191,36,0.25)]", orb1: "bg-amber-500/15", orb2: "bg-fuchsia-500/10", border: "hover:border-amber-400/30" },
+  fuchsia: { dot: "bg-fuchsia-400 shadow-[0_0_0_3px_rgba(232,121,249,0.25)]", orb1: "bg-fuchsia-500/15", orb2: "bg-violet-500/10", border: "hover:border-fuchsia-400/30" },
+  violet: { dot: "bg-violet-400 shadow-[0_0_0_3px_rgba(167,139,250,0.25)]", orb1: "bg-violet-500/15", orb2: "bg-indigo-500/10", border: "hover:border-violet-400/30" },
+  emerald: { dot: "bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.25)]", orb1: "bg-emerald-500/15", orb2: "bg-teal-500/10", border: "hover:border-emerald-400/30" },
+  sky: { dot: "bg-sky-400 shadow-[0_0_0_3px_rgba(56,189,248,0.25)]", orb1: "bg-sky-500/15", orb2: "bg-indigo-500/10", border: "hover:border-sky-400/30" },
+  rose: { dot: "bg-rose-400 shadow-[0_0_0_3px_rgba(251,113,133,0.25)]", orb1: "bg-rose-500/15", orb2: "bg-orange-500/10", border: "hover:border-rose-400/30" },
+} as const;
+
+function PremiumCard({
+  title,
+  icon,
+  children,
+  accent = "amber",
+  badge,
+  rightSlot,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  accent?: keyof typeof accentMap;
+  badge?: number;
+  rightSlot?: React.ReactNode;
+}) {
+  const a = accentMap[accent];
+  return (
+    <div className={`group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.04] via-white/[0.02] to-white/[0.04] p-4 backdrop-blur-xl transition ${a.border}`}>
+      {/* Decorative glow orbs */}
+      <div className={`pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full ${a.orb1} blur-2xl`} />
+      <div className={`pointer-events-none absolute -bottom-12 -left-10 h-24 w-24 rounded-full ${a.orb2} blur-2xl`} />
+
+      <div className="relative">
+        <div className="mb-3 flex items-center gap-2">
+          <span className={`inline-block h-1.5 w-1.5 rounded-full ${a.dot}`} />
+          {icon}
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{title}</h3>
+          {typeof badge === "number" && (
+            <span className="ml-1 rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-bold text-foreground/80 ring-1 ring-inset ring-white/10">
+              {badge}
+            </span>
+          )}
+          {rightSlot && <div className="ml-auto">{rightSlot}</div>}
+        </div>
+        <div className="space-y-0.5">{children}</div>
+      </div>
     </div>
   );
 }
