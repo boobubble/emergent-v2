@@ -29,6 +29,7 @@ import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -185,6 +186,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagesEditorIdRoute = PagesEditorIdRouteImport.update({
+  id: '/pages-editor/$id',
+  path: '/pages-editor/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PSlugRoute = PSlugRouteImport.update({
@@ -544,6 +550,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
+  '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
@@ -622,6 +629,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
+  '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
@@ -702,6 +710,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
+  '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
@@ -783,6 +792,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
+    | '/pages-editor/$id'
     | '/u/$username'
     | '/admin/'
     | '/admin/upcoming/$key'
@@ -861,6 +871,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
+    | '/pages-editor/$id'
     | '/u/$username'
     | '/admin'
     | '/admin/upcoming/$key'
@@ -940,6 +951,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/feed/$slug'
     | '/p/$slug'
+    | '/pages-editor/$id'
     | '/u/$username'
     | '/admin/'
     | '/admin/upcoming/$key'
@@ -970,6 +982,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   WelcomeRoute: typeof WelcomeRoute
   PSlugRoute: typeof PSlugRoute
+  PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
@@ -1117,6 +1130,13 @@ declare module '@tanstack/react-router' {
       path: '/u/$username'
       fullPath: '/u/$username'
       preLoaderRoute: typeof UUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pages-editor/$id': {
+      id: '/pages-editor/$id'
+      path: '/pages-editor/$id'
+      fullPath: '/pages-editor/$id'
+      preLoaderRoute: typeof PagesEditorIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/p/$slug': {
@@ -1683,6 +1703,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   WelcomeRoute: WelcomeRoute,
   PSlugRoute: PSlugRoute,
+  PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
@@ -1692,13 +1713,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
