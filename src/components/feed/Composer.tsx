@@ -26,6 +26,8 @@ const PRIVACY: { id: PostPrivacy; label: string; icon: typeof Globe }[] = [
 
 const DRAFT_KEY = "feed-composer-draft";
 
+type ComposerMode = "post" | "poll" | "confession";
+
 export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: () => void }) {
   const [text, setText] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(DRAFT_KEY) || "" : ""));
   const [files, setFiles] = useState<File[]>([]);
@@ -34,9 +36,13 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
+  const [mode, setMode] = useState<ComposerMode>("post");
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const earnPost = useServerFn(earnFeedPost);
+  const submitConfession = useServerFn(createConfession);
   const { config: focusConfig } = useFocusComposerConfig();
   const hasDraft = text.trim().length > 0 || files.length > 0;
 
