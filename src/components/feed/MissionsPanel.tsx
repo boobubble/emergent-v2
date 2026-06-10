@@ -198,8 +198,38 @@ export function MissionsPanel() {
                   }`}
                 >
                   {isReady && (
-                    <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_2.5s_ease-in-out_infinite]" style={{ animationName: "shimmer" }} />
+                    <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_2.5s_ease-in-out_infinite]" />
                   )}
+                  {bursts.filter(b => b.missionId === m.id).map(b => (
+                    <div key={b.id} className="pointer-events-none absolute inset-0 z-10">
+                      {/* glow ring */}
+                      <div className="absolute inset-0 rounded-2xl ring-2 ring-amber-300/70 animate-[claim-glow_1.2s_ease-out_forwards] shadow-[0_0_30px_rgba(251,191,36,0.7)]" />
+                      {/* floating +coins */}
+                      <div className="absolute right-3 top-1 text-xs font-extrabold text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.9)] animate-[float-up_1.2s_ease-out_forwards]">
+                        +{b.coins} 🪙
+                      </div>
+                      {/* confetti particles */}
+                      {Array.from({ length: 14 }).map((_, i) => {
+                        const angle = (i / 14) * Math.PI * 2;
+                        const dist = 40 + Math.random() * 30;
+                        const dx = Math.cos(angle) * dist;
+                        const dy = Math.sin(angle) * dist;
+                        const color = COLORS[i % COLORS.length];
+                        return (
+                          <span
+                            key={i}
+                            className="absolute left-6 top-1/2 h-1.5 w-1.5 rounded-sm animate-[confetti_1.1s_ease-out_forwards]"
+                            style={{
+                              backgroundColor: color,
+                              ["--dx" as string]: `${dx}px`,
+                              ["--dy" as string]: `${dy}px`,
+                              animationDelay: `${i * 12}ms`,
+                            } as React.CSSProperties}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
                   <div className="flex items-center gap-3">
                     <div className={`relative grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xl shadow-inner ${
                       isClaimed
