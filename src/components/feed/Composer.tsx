@@ -89,9 +89,19 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
   const queryClient = useQueryClient();
 
   async function submit() {
-    if (!text.trim() && !files.length) return;
+    // Mode-specific guards
+    if (mode === "poll") {
+      const cleanOpts = pollOptions.map((o) => o.trim()).filter(Boolean);
+      if (!pollQuestion.trim()) { setError("Add a poll question."); return; }
+      if (cleanOpts.length < 2) { setError("Add at least two poll options."); return; }
+    } else if (mode === "confession") {
+      if (!text.trim()) { setError("Write your confession first."); return; }
+    } else {
+      if (!text.trim() && !files.length) return;
+    }
+
     const trimmed = text.trim();
-    if (/^\/clearcache\b/i.test(trimmed)) {
+    if (mode === "post" && /^\/clearcache\b/i.test(trimmed)) {
       const ok = await isCurrentUserAdmin();
       if (!ok) {
         toast.error("Admins only", { description: "/clearcache is restricted to admins." });
@@ -107,26 +117,57 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
     setPosting(true); setError(null);
 
     try {
-      const media_urls = await uploadFiles();
-      const kind = files.length ? "image" : "text";
-      const hashtags = extractHashtags(text);
-      const { error } = await supabase.from("posts").insert({
-        author_id: authorId,
-        owner_id: authorId,
-        kind,
-        text: text.trim(),
-        slug: slugify(text.trim() || kind),
-        media_urls,
-        privacy,
-        is_anonymous: anonymous,
-        hashtags,
-      });
+      if (mode === "confession") {
+        await submitConfession({ data: {
+          kind: "text",
+          category: "secrets",
+          text: text.trim(),
+          display_mode: "fully_anonymous",
+        } });
+        toast.success("Confession shared anonymously");
+        setText(""); setMode("post"); setFocused(false);
+        try { localStorage.removeItem(DRAFT_KEY); } catch {}
+        return;
+      }
 
-      if (error) throw new Error(error.message);
-      // bump XP (server-side; gamification trigger blocks client writes)
+      const hashtags = extractHashtags(text);
+
+      if (mode === "poll") {
+        const cleanOpts = pollOptions.map((o) => o.trim()).filter(Boolean);
+        const { error } = await supabase.from("posts").insert({
+          author_id: authorId,
+          owner_id: authorId,
+          kind: "poll",
+          text: text.trim(),
+          slug: slugify(pollQuestion.trim() || "poll"),
+          media_urls: [],
+          poll: { question: pollQuestion.trim(), options: cleanOpts, votes: {} },
+          privacy,
+          is_anonymous: anonymous,
+          hashtags,
+        });
+        if (error) throw new Error(error.message);
+      } else {
+        const media_urls = await uploadFiles();
+        const kind = files.length ? "image" : "text";
+        const { error } = await supabase.from("posts").insert({
+          author_id: authorId,
+          owner_id: authorId,
+          kind,
+          text: text.trim(),
+          slug: slugify(text.trim() || kind),
+          media_urls,
+          privacy,
+          is_anonymous: anonymous,
+          hashtags,
+        });
+        if (error) throw new Error(error.message);
+      }
+
       try { await awardXp({ data: { action: "post" } }); } catch (e) { console.error("xp award failed", e); }
       earnPost().catch(() => {});
       setText(""); setFiles([]); setAnonymous(false); setFocused(false);
+      setPollQuestion(""); setPollOptions(["", ""]); setMode("post");
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       onPosted?.();
     } catch (e) {
