@@ -191,6 +191,8 @@ export const PostCard = memo(function PostCard({
 
       {post.text && <p className={`mt-4 whitespace-pre-wrap leading-relaxed ${compact ? "text-[14px]" : "text-[15.5px]"}`}>{renderText(post.text)}</p>}
 
+      {post.kind === "poll" && post.poll && <PollBlock post={post} />}
+
       {mediaUrls.length > 0 && (
         <div className={`mt-4 grid gap-1 overflow-hidden rounded-2xl border border-border ${mediaUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
           {mediaUrls.map((u, i) => (
