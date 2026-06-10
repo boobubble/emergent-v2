@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose } from "lucide-react";
+import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "./Avatar";
@@ -7,6 +7,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/BrandMark";
 import { ChatExploreMenu } from "./ChatExploreMenu";
+import { levelProgress } from "@/lib/ranks";
 
 
 interface Props {
