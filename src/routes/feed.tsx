@@ -290,7 +290,7 @@ function FeedPage() {
       <div className="mx-auto grid max-w-[1360px] gap-4 px-2 py-4 sm:px-4 lg:grid-cols-[260px_minmax(0,1fr)_320px] lg:gap-6 lg:px-6">
         {/* Left rail */}
         <aside className="hidden lg:block">
-          <div className="sticky top-[64px] space-y-3 max-h-[calc(100vh-72px)] overflow-y-auto pr-1 feed-scrollbar-hide">
+          <div className="space-y-3 pr-1">
             <nav className="feed-card p-2">
               <div className="feed-section-label">Feed</div>
               <SideItem active={view === "feed" && tab === "foryou"} onClick={() => { setView("feed"); setTab("foryou"); }} icon={Newspaper} label="For You" color="text-sky-400" />
@@ -456,7 +456,7 @@ function FeedPage() {
 
         {/* Right rail */}
         <aside className="hidden lg:block">
-          <div className="sticky top-[64px] space-y-4 max-h-[calc(100vh-72px)] overflow-y-auto pl-1 feed-scrollbar-hide">
+          <div className="space-y-4 pl-1">
             <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
             <ChatroomOnlineWidget />
