@@ -8,13 +8,16 @@ export interface StaffPermissions {
   mod_can_kick: boolean;
   mod_can_mute: boolean;
   mod_can_ban: boolean;
+  mod_can_announce: boolean;
 }
 
 export const DEFAULT_STAFF_PERMISSIONS: StaffPermissions = {
   mod_can_kick: true,
   mod_can_mute: true,
   mod_can_ban: true,
+  mod_can_announce: false,
 };
+
 
 export function useStaffPermissions(): StaffPermissions {
   const fetchSettings = useServerFn(getAllSettings);
