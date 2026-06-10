@@ -87,7 +87,7 @@ function PagesAdmin() {
   const qc = useQueryClient();
 
   const [q, setQ] = useState("");
-  const [editor, setEditor] = useState<PageRow | null>(null);
+  // Editor moved to /admin/pages/edit/:id — opened in a new tab.
 
   const pagesQ = useQuery({
     queryKey: ["admin", "pages", q],
