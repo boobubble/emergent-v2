@@ -165,49 +165,37 @@ function PagesAdmin() {
 function PageListRow({ page, onChanged }: { page: PageRow; onChanged: () => void }) {
   const del = useServerFn(deletePage);
   return (
-    <Card>
-      <CardContent className="flex flex-wrap items-center gap-3 p-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-medium">{page.title || "(untitled)"}</span>
-            {page.featured && <Star className="h-3.5 w-3.5 text-yellow-500" />}
-            <Badge variant={page.status === "published" ? "default" : "outline"} className="text-[10px]">{page.status}</Badge>
-            <Badge variant="outline" className="text-[10px]">{page.layout === "full" ? "full" : "boxed"}</Badge>
-          </div>
-          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
-            <span className="font-mono">/{page.slug}</span>
-            <span>·</span>
-            <span className="inline-flex items-center gap-1"><Eye className="h-3 w-3" />{page.views}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          {page.status === "published" && (
-            <a href={`/${page.slug}`} target="_blank" rel="noreferrer">
-              <Button size="icon" variant="ghost" title="Open"><ExternalLink className="h-4 w-4" /></Button>
-            </a>
-          )}
-          <a href={`/admin/pages/edit/${page.id}`} target="_blank" rel="noreferrer">
-            <Button size="icon" variant="ghost" title="Edit in new tab"><Pencil className="h-4 w-4" /></Button>
-          </a>
-
-          <Button
-            size="icon"
-            variant="ghost"
-            title="Delete"
-            onClick={async () => {
-              if (!confirm(`Delete page "${page.title}"?`)) return;
-              try {
-                await del({ data: { id: page.id } });
-                toast.success("Page deleted");
-                onChanged();
-              } catch (e: unknown) {
-                toast.error((e as Error)?.message ?? "Delete failed");
-              }
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+    <Card className="transition-colors hover:bg-muted/40">
+      <CardContent className="flex items-center gap-2 p-3">
+        <a
+          href={`/admin/pages/edit/${page.id}`}
+          target="_blank"
+          rel="noreferrer"
+          title="Edit in new tab"
+          className="flex min-w-0 flex-1 items-center gap-2"
+        >
+          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="truncate text-sm font-medium">{page.title || "(untitled)"}</span>
+          {page.featured && <Star className="h-3.5 w-3.5 shrink-0 text-yellow-500" />}
+          <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+        </a>
+        <Button
+          size="icon"
+          variant="ghost"
+          title="Delete"
+          onClick={async () => {
+            if (!confirm(`Delete page "${page.title}"?`)) return;
+            try {
+              await del({ data: { id: page.id } });
+              toast.success("Page deleted");
+              onChanged();
+            } catch (e: unknown) {
+              toast.error((e as Error)?.message ?? "Delete failed");
+            }
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </CardContent>
     </Card>
   );
