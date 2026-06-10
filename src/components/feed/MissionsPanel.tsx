@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Coins, Sparkles, Trophy, Check, Flame, Gift, Volume2, VolumeX } from "lucide-react";
+import { toast } from "sonner";
 import { getTodayMissions, claimMission } from "@/lib/missions.functions";
 import { getMyCreatorRank } from "@/lib/creator.functions";
 
@@ -88,9 +89,24 @@ export function MissionsPanel() {
 
   useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
+  const inFlight = useRef<Set<string>>(new Set());
+
   async function onClaim(id: string) {
+    // Guard: block double-claim from rapid clicks, in-flight requests, or already-claimed state
+    if (inFlight.current.has(id)) return;
+    if (claiming === id) return;
     const target = missions.find(m => m.id === id);
-    if (!target || target.claimed) return;
+    if (!target) return;
+    if (target.claimed) {
+      toast.info("Already claimed");
+      return;
+    }
+    if (!target.completed) {
+      toast.error("Mission not yet complete");
+      return;
+    }
+
+    inFlight.current.add(id);
     setClaiming(id);
 
     // Optimistic: mark claimed immediately
@@ -104,13 +120,18 @@ export function MissionsPanel() {
 
     try {
       await claim({ data: { missionId: id } });
+      toast.success(`Claimed +${target.coins} coins`);
       // Refresh rank/coins quietly
       void load();
     } catch (e) {
       console.error("claim failed", e);
-      // Rollback
+      const msg = e instanceof Error ? e.message : "Couldn't claim reward. Please try again.";
+      toast.error(msg);
+      // Rollback optimistic state + clear burst
       setMissions(prev => prev.map(m => m.id === id ? { ...m, claimed: false } : m));
+      setBursts(b => b.filter(x => x.id !== bId));
     } finally {
+      inFlight.current.delete(id);
       setClaiming(null);
     }
   }
