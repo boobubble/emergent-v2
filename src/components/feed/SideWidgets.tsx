@@ -266,9 +266,9 @@ export function ChatroomOnlineWidget() {
       }
     >
       <div className="grid grid-cols-3 gap-2 pt-1">
-        <GenderStat label="Male" value={counts.male} icon={<Mars className="h-3 w-3" />} from="from-sky-500/20" to="to-blue-600/10" text="text-sky-300" ring="ring-sky-400/30" />
-        <GenderStat label="Female" value={counts.female} icon={<Venus className="h-3 w-3" />} from="from-pink-500/20" to="to-fuchsia-600/10" text="text-pink-300" ring="ring-pink-400/30" />
-        <GenderStat label="Other" value={counts.other} icon={<Sparkles className="h-3 w-3" />} from="from-violet-500/20" to="to-indigo-600/10" text="text-violet-300" ring="ring-violet-400/30" />
+        <GenderStat label="Male" value={counts.male} icon={<Mars className="h-3 w-3" />} from="from-sky-500/25" to="to-blue-600/15" text="text-sky-700 dark:text-sky-300" ring="ring-sky-500/40 dark:ring-sky-400/30" />
+        <GenderStat label="Female" value={counts.female} icon={<Venus className="h-3 w-3" />} from="from-pink-500/25" to="to-fuchsia-600/15" text="text-pink-700 dark:text-pink-300" ring="ring-pink-500/40 dark:ring-pink-400/30" />
+        <GenderStat label="Other" value={counts.other} icon={<Sparkles className="h-3 w-3" />} from="from-violet-500/25" to="to-indigo-600/15" text="text-violet-700 dark:text-violet-300" ring="ring-violet-500/40 dark:ring-violet-400/30" />
       </div>
     </PremiumCard>
   );
@@ -280,7 +280,7 @@ function GenderStat({ label, value, icon, from, to, text, ring }: { label: strin
       <div className={`flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wider ${text}`}>
         {icon}{label}
       </div>
-      <div className={`mt-1 text-xl font-black tabular-nums ${text} drop-shadow-[0_0_8px_currentColor]`}>{value}</div>
+      <div className={`mt-1 text-xl font-black tabular-nums ${text} dark:drop-shadow-[0_0_8px_currentColor]`}>{value}</div>
     </div>
   );
 }
