@@ -376,7 +376,9 @@ interface Ctx {
   dmUnreadCount: number;
   staffKick: (targetId: string, channelId: string, targetName: string) => void;
   staffLocalMute: (targetId: string, channelId: string, minutes: number, targetName: string) => void;
+  pushSystem: (channelId: string, text: string) => void;
 }
+
 
 const ChatCtx = createContext<Ctx | null>(null);
 
