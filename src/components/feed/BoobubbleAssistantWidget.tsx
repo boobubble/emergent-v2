@@ -5,6 +5,7 @@ import { BadgeCheck, Sparkles, Vote, VenetianMask, Newspaper, ArrowRight, BellOf
 import {
   getAssistantFeedRecommendations,
   triggerWelcomeIfNeeded,
+  triggerMissionDigestIfNeeded,
   getBoobubblePublic,
   type AssistantRecommendation,
 } from "@/lib/boobubble.functions";
@@ -16,6 +17,7 @@ export function BoobubbleAssistantWidget() {
   const { user } = useAuth();
   const fetchRecs = useServerFn(getAssistantFeedRecommendations);
   const triggerWelcome = useServerFn(triggerWelcomeIfNeeded);
+  const triggerMissions = useServerFn(triggerMissionDigestIfNeeded);
   const fetchPublic = useServerFn(getBoobubblePublic);
 
   const [items, setItems] = useState<AssistantRecommendation[]>([]);
@@ -23,11 +25,12 @@ export function BoobubbleAssistantWidget() {
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
 
-  // Fire welcome trigger on first authenticated mount
+  // Fire welcome + mission digest triggers on first authenticated mount
   useEffect(() => {
     if (!user?.id || user.isGuest) return;
     triggerWelcome({}).catch(() => {});
-  }, [user?.id, user?.isGuest, triggerWelcome]);
+    triggerMissions({}).catch(() => {});
+  }, [user?.id, user?.isGuest, triggerWelcome, triggerMissions]);
 
   // Local dismissal (per 24h)
   useEffect(() => {
