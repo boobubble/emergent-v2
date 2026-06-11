@@ -18,6 +18,10 @@ const DEFAULTS: BoobubbleSettings = {
   welcome_enabled: true,
   feed_recs_enabled: true,
   ai_personalize_welcome: true,
+  mission_daily_dm_enabled: true,
+  mission_weekly_dm_enabled: true,
+  mission_min_completion_pct: 60,
+  mission_weekly_day: 1,
   bot_user_id: null,
   bot_username: "BooBubble",
   bot_avatar_url: null,
@@ -41,6 +45,10 @@ function AdminBoobubblePage() {
         welcome_enabled: v.welcome_enabled,
         feed_recs_enabled: v.feed_recs_enabled,
         ai_personalize_welcome: v.ai_personalize_welcome,
+        mission_daily_dm_enabled: v.mission_daily_dm_enabled,
+        mission_weekly_dm_enabled: v.mission_weekly_dm_enabled,
+        mission_min_completion_pct: v.mission_min_completion_pct,
+        mission_weekly_day: v.mission_weekly_day,
         bot_username: v.bot_username,
         bot_avatar_url: v.bot_avatar_url,
         bot_bio: v.bot_bio,
@@ -99,6 +107,40 @@ function AdminBoobubblePage() {
         <Row label="Show feed recommendations widget" checked={v.feed_recs_enabled} onChange={(b) => set("feed_recs_enabled", b)} />
         <Row label="Personalize welcome with AI (Lovable AI Gateway)" checked={v.ai_personalize_welcome} onChange={(b) => set("ai_personalize_welcome", b)} />
         <p className="text-[11px] text-muted-foreground">When AI personalization fails, a static welcome template is used as fallback.</p>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold">Mission Assistant DMs</h3>
+        <Row label="Send daily mission progress DM" checked={v.mission_daily_dm_enabled} onChange={(b) => set("mission_daily_dm_enabled", b)} />
+        <Row label="Send weekly mission summary DM" checked={v.mission_weekly_dm_enabled} onChange={(b) => set("mission_weekly_dm_enabled", b)} />
+        <label className="block text-xs">
+          <span className="mb-1 flex items-center justify-between text-muted-foreground">
+            <span>Nudge threshold (under this % completed → reminder, above → celebration)</span>
+            <span className="font-mono text-foreground">{v.mission_min_completion_pct}%</span>
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={v.mission_min_completion_pct}
+            onChange={(e) => set("mission_min_completion_pct", Number(e.target.value))}
+            className="w-full"
+          />
+        </label>
+        <label className="block text-xs">
+          <span className="mb-1 block text-muted-foreground">Weekly summary day (UTC)</span>
+          <select
+            value={v.mission_weekly_day}
+            onChange={(e) => set("mission_weekly_day", Number(e.target.value))}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          >
+            {["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].map((d, i) => (
+              <option key={d} value={i}>{d}</option>
+            ))}
+          </select>
+        </label>
+        <p className="text-[11px] text-muted-foreground">DMs are sent at most once per day / week per user. Users who mute the Assistant or disable promo DMs in their settings are skipped.</p>
       </section>
 
       <section className="space-y-3 rounded-xl border border-border bg-card p-4">
