@@ -436,3 +436,189 @@ export const getAssistantFeedRecommendations = createServerFn({ method: "GET" })
     items.sort((a, b) => b.score - a.score);
     return { items: items.slice(0, 8) };
   });
+
+// ============================================================
+// Mission Assistant — daily & weekly progress DMs (idempotent)
+// ============================================================
+
+import { DAILY_MISSIONS } from "./economy-config";
+
+function todayUtc(): string { return new Date().toISOString().slice(0, 10); }
+function daysAgoUtc(n: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+const WEEKDAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+interface DailyMissionRow { day: string; progress: Record<string, number>; claimed: string[] }
+
+async function fetchMissionRows(userId: string, sinceDay: string): Promise<DailyMissionRow[]> {
+  const { data } = await supabaseAdmin
+    .from("daily_missions")
+    .select("day, progress, claimed")
+    .eq("user_id", userId)
+    .gte("day", sinceDay)
+    .order("day", { ascending: false });
+  return (data ?? []).map((r) => ({
+    day: r.day as string,
+    progress: (r.progress as Record<string, number>) ?? {},
+    claimed: (r.claimed as string[]) ?? [],
+  }));
+}
+
+function summarizeDay(row: DailyMissionRow | undefined) {
+  const total = DAILY_MISSIONS.length;
+  let completed = 0;
+  let claimed = 0;
+  let coinsAvailable = 0;
+  let coinsClaimed = 0;
+  for (const m of DAILY_MISSIONS) {
+    const p = row?.progress[m.id] ?? 0;
+    const done = p >= m.target;
+    const wasClaimed = row?.claimed.includes(m.id) ?? false;
+    if (done) completed++;
+    if (wasClaimed) { claimed++; coinsClaimed += m.coins; }
+    else if (done) coinsAvailable += m.coins;
+  }
+  const pct = total ? Math.round((completed / total) * 100) : 0;
+  return { total, completed, claimed, pct, coinsAvailable, coinsClaimed };
+}
+
+function buildDailyMissionDM(username: string, s: ReturnType<typeof summarizeDay>, minPct: number, settings: BoobubbleSettings): string {
+  const unclaimed = s.completed - s.claimed;
+  const bot = settings.bot_username || "BooBubble";
+  if (s.completed === 0) {
+    return `👋 Hey @${username}, today's **Daily Missions** are wide open!\n\n` +
+      `0/${s.total} completed so far. Knock out a couple to grab easy coins & XP. Tap the Missions panel on your feed to get started. 🎯\n\n— ${bot}`;
+  }
+  if (unclaimed > 0) {
+    return `🎁 @${username}, you have **${unclaimed} mission reward${unclaimed===1?"":"s"} ready to claim** (+${s.coinsAvailable} coins waiting).\n\n` +
+      `Progress today: ${s.completed}/${s.total} (${s.pct}%). Open the Missions panel and tap *Claim*. ✨\n\n— ${bot}`;
+  }
+  if (s.pct >= minPct) {
+    return `🔥 Nice work @${username}! You've completed **${s.completed}/${s.total}** missions today (${s.pct}%) and banked **${s.coinsClaimed} coins**.\n\n` +
+      `${s.completed < s.total ? `Push for ${s.total - s.completed} more to clear the board!` : `Full clear — legend behavior. 🏆`}\n\n— ${bot}`;
+  }
+  return `⏰ Quick nudge @${username} — only **${s.completed}/${s.total}** missions done today (${s.pct}%).\n\n` +
+    `There's still time to clear them and earn coins & XP. Tap the Missions panel and crush a few. 💪\n\n— ${bot}`;
+}
+
+function buildWeeklyMissionDM(username: string, rows: DailyMissionRow[], settings: BoobubbleSettings): string {
+  let totalCompleted = 0;
+  let totalClaimed = 0;
+  let totalCoins = 0;
+  let activeDays = 0;
+  for (const r of rows) {
+    const s = summarizeDay(r);
+    if (s.completed > 0) activeDays++;
+    totalCompleted += s.completed;
+    totalClaimed += s.claimed;
+    totalCoins += s.coinsClaimed;
+  }
+  const bot = settings.bot_username || "BooBubble";
+  return `📊 **Your week in missions, @${username}**\n\n` +
+    `• Active days: **${activeDays}/7**\n` +
+    `• Missions completed: **${totalCompleted}**\n` +
+    `• Rewards claimed: **${totalClaimed}**\n` +
+    `• Coins earned from missions: **${totalCoins}** 🪙\n\n` +
+    `${activeDays >= 5 ? "Consistency is paying off — keep the streak alive! 🔥" : "Aim for 5+ active days this week to level up faster. 💫"}\n\n— ${bot}`;
+}
+
+async function sendAssistantDM(botId: string, userId: string, text: string, kind: string, preview: string) {
+  const channelId = dmChannel(botId, userId);
+  const { error: msgErr } = await supabaseAdmin.from("messages").insert({
+    channel_id: channelId,
+    author_id: botId,
+    text,
+    kind: "text",
+  });
+  if (msgErr) throw new Error(msgErr.message);
+  await supabaseAdmin.from("notifications").insert({
+    user_id: userId,
+    actor_id: botId,
+    kind,
+    target_type: "dm",
+    target_id: channelId,
+    payload: { preview },
+  });
+}
+
+/**
+ * Mission digest trigger.
+ * Sends at most one daily DM per UTC day and one weekly DM per UTC week,
+ * provided the configured weekly day has arrived. Idempotent — safe to call
+ * on every app mount.
+ */
+export const triggerMissionDigestIfNeeded = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const settings = await readSettings();
+    if (!settings.enabled || !settings.bot_user_id) return { daily: false, weekly: false, reason: "disabled" as const };
+    if (settings.bot_user_id === context.userId) return { daily: false, weekly: false, reason: "self" as const };
+
+    const { data: pref } = await supabaseAdmin
+      .from("assistant_user_prefs")
+      .select("*")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (pref?.muted) return { daily: false, weekly: false, reason: "muted" as const };
+    if (pref?.disable_promo) return { daily: false, weekly: false, reason: "promo_off" as const };
+
+    const today = todayUtc();
+    const dailySentOn = (pref as { mission_daily_sent_on?: string | null } | null)?.mission_daily_sent_on ?? null;
+    const weeklySentOn = (pref as { mission_weekly_sent_on?: string | null } | null)?.mission_weekly_sent_on ?? null;
+
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("username")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const username = prof?.username ?? "friend";
+
+    let sentDaily = false;
+    let sentWeekly = false;
+    const updates: Record<string, string> = {};
+
+    // ----- Daily -----
+    if (settings.mission_daily_dm_enabled && dailySentOn !== today) {
+      const rows = await fetchMissionRows(context.userId, today);
+      const s = summarizeDay(rows[0]);
+      const text = buildDailyMissionDM(username, s, settings.mission_min_completion_pct, settings);
+      const preview = s.completed > s.claimed
+        ? `${s.completed - s.claimed} mission reward(s) ready to claim`
+        : `${s.completed}/${s.total} missions today`;
+      await sendAssistantDM(settings.bot_user_id, context.userId, text, "assistant_mission_daily", preview);
+      updates.mission_daily_sent_on = today;
+      sentDaily = true;
+    }
+
+    // ----- Weekly -----
+    const dow = new Date().getUTCDay();
+    if (
+      settings.mission_weekly_dm_enabled &&
+      dow === settings.mission_weekly_day &&
+      weeklySentOn !== today
+    ) {
+      const rows = await fetchMissionRows(context.userId, daysAgoUtc(6));
+      const text = buildWeeklyMissionDM(username, rows, settings);
+      await sendAssistantDM(
+        settings.bot_user_id,
+        context.userId,
+        text,
+        "assistant_mission_weekly",
+        `Your week in missions (${WEEKDAYS[dow]})`,
+      );
+      updates.mission_weekly_sent_on = today;
+      sentWeekly = true;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await supabaseAdmin
+        .from("assistant_user_prefs")
+        .upsert({ user_id: context.userId, ...updates }, { onConflict: "user_id" });
+    }
+
+    return { daily: sentDaily, weekly: sentWeekly };
+  });
+
