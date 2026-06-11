@@ -439,3 +439,9 @@
   animation: chat-online-pulse 2.2s ease-out infinite;
 }
 
+
+
+/* ===== i18n: RTL adjustments ===== */
+[dir="rtl"] { text-align: right; }
+[dir="rtl"] .ltr-only { display: none; }
+
