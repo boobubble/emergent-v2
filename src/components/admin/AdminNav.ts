@@ -62,6 +62,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       
       { to: "/admin/bots",        label: "Chat Bots",   icon: Bot,       keywords: ["fish", "trivia", "commands"] },
       { to: "/admin/ai-chatbots",  label: "AI Chat Bots", icon: Sparkles, keywords: ["ai", "openrouter", "gpt", "gemini", "claude", "auto reply", "assistant"] },
+      { to: "/admin/boobubble",    label: "BooBubble Assistant", icon: Sparkles, keywords: ["assistant", "official", "verified", "welcome", "system", "bot", "boobubble"] },
     ],
   },
 
