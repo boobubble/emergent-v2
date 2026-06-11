@@ -405,7 +405,7 @@ export const getAssistantFeedRecommendations = createServerFn({ method: "GET" })
     const { data: confs } = await supabaseAdmin
       .from("confessions")
       .select("id, text, like_count")
-      .eq("status", "published")
+      .eq("status", "approved")
       .order("like_count", { ascending: false })
       .limit(3);
     for (const c of confs ?? []) {
