@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Globe, Check } from "lucide-react";
 import { LANGUAGES, getLanguage } from "@/i18n/languages";
 import { setLanguage } from "@/i18n/LanguageProvider";
+import { prefetchLanguage } from "@/i18n";
 
 interface Props {
   variant?: "icon" | "compact" | "full";
@@ -44,6 +45,8 @@ export function LanguageSwitcher({ variant = "icon", className = "" }: Props) {
               <button
                 key={l.code}
                 onClick={() => change(l.code)}
+                onMouseEnter={() => prefetchLanguage(l.code)}
+                onFocus={() => prefetchLanguage(l.code)}
                 className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
               >
                 <span className="flex items-center gap-2">
