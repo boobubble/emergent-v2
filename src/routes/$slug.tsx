@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
 import { getPublishedPage } from "@/lib/pages.functions";
 import { isReservedSlug } from "@/lib/reserved-routes";
 import { sanitizeHtml } from "@/lib/pages-io";
@@ -6,10 +6,49 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Eye } from "lucide-react";
 
+function redirectReservedSlug(slug: string) {
+  const key = slug.toLowerCase();
+  if (key === "rooms" || key === "messages") {
+    throw redirect({ to: "/chatroom", replace: true });
+  }
+  if (["auth", "login", "register", "signup", "logout"].includes(key)) {
+    throw redirect({ to: "/login", replace: true });
+  }
+  throw redirect({ to: "/welcome", replace: true });
+}
+
+function PublicPageNotFound() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-background px-4 text-foreground">
+      <div className="max-w-md text-center">
+        <h1 className="text-3xl font-bold tracking-tight">Page not found</h1>
+        <p className="mt-2 text-sm text-muted-foreground">This page is not available.</p>
+        <Link to="/welcome" className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+          Go to welcome
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function PublicPageError({ reset }: { error: Error; reset: () => void }) {
+  return (
+    <div className="grid min-h-screen place-items-center bg-background px-4 text-foreground">
+      <div className="max-w-md text-center">
+        <h1 className="text-3xl font-bold tracking-tight">Page unavailable</h1>
+        <p className="mt-2 text-sm text-muted-foreground">This page could not be loaded.</p>
+        <button onClick={reset} className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+          Try again
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export const Route = createFileRoute("/$slug")({
   loader: async ({ params }) => {
     // Reserved slugs should never reach a published page; bail early.
-    if (isReservedSlug(params.slug)) throw notFound();
+    if (isReservedSlug(params.slug)) redirectReservedSlug(params.slug);
     const page = await getPublishedPage({ data: { slug: params.slug } });
     if (!page) throw notFound();
     return { page };
@@ -61,6 +100,8 @@ export const Route = createFileRoute("/$slug")({
       }],
     };
   },
+  notFoundComponent: PublicPageNotFound,
+  errorComponent: PublicPageError,
   component: PublicPage,
 });
 
