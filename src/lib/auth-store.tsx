@@ -102,38 +102,93 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    async function hydrate(session: Session | null) {
-      if (!session?.user) {
-        if (!cancelled) setUser(null);
-        return;
-      }
-      const isGuest = Boolean((session.user as { is_anonymous?: boolean }).is_anonymous);
+    let lastUid: string | null = null;
+    let isReady = false;
+
+    // Immediate AuthUser derived purely from the session (no network).
+    // username starts as a best-effort placeholder; the real profile.username
+    // is fetched in the background and patched in.
+    function userFromSession(session: Session): AuthUser {
+      const u = session.user;
+      const isGuest = Boolean((u as { is_anonymous?: boolean }).is_anonymous);
+      const meta = (u.user_metadata ?? {}) as { username?: string };
+      const placeholder =
+        meta.username?.trim() ||
+        u.email?.split("@")[0] ||
+        (isGuest ? "guest" : "user");
+      return { id: u.id, email: u.email ?? "", username: placeholder, isGuest };
+    }
+
+    // Background side effects + real username fetch. Never blocks `ready`.
+    function hydrateProfileBackground(session: Session) {
+      const u = session.user;
+      const isGuest = Boolean((u as { is_anonymous?: boolean }).is_anonymous);
+      const email = u.email ?? undefined;
       if (!isGuest) {
-        const email = session.user.email ?? undefined;
-        void flushPendingAvatar(session.user.id, email).then(() => publishWelcomePost(session.user.id, email));
+        void flushPendingAvatar(u.id, email).then(() => publishWelcomePost(u.id, email));
       }
-      // Hydrate sound preferences from this user's profile (best effort).
       void import("@/lib/sound-prefs").then((m) => m.hydrateSoundPrefsFromServer());
-      // Record this device for ban-evasion tracking (best effort).
       void (async () => {
         try {
           const fp = await getDeviceFingerprint();
           if (fp) await recordDevice({ data: { fingerprint: fp, user_agent: navigator.userAgent.slice(0, 500) } });
         } catch (e) { console.warn("device record failed", e); }
       })();
-      const username = await fetchUsername(session.user.id, session.user.email ?? undefined);
-      if (cancelled) return;
-      setUser({ id: session.user.id, email: session.user.email ?? "", username, isGuest });
+      void (async () => {
+        try {
+          const username = await fetchUsername(u.id, email);
+          if (cancelled) return;
+          setUser(prev => (prev && prev.id === u.id && prev.username !== username
+            ? { ...prev, username }
+            : prev));
+        } catch (e) {
+          console.warn("username hydrate failed", e);
+        }
+      })();
     }
 
+    function applySession(session: Session | null) {
+      if (cancelled) return;
+      const uid = session?.user?.id ?? null;
+      if (!session) {
+        if (lastUid !== null) {
+          lastUid = null;
+          setUser(null);
+        }
+        return;
+      }
+      // Same identity (token refresh / repeated INITIAL_SESSION): no re-hydrate.
+      if (uid === lastUid) return;
+      lastUid = uid;
+      setUser(userFromSession(session));
+      hydrateProfileBackground(session);
+    }
+
+    function markReady() {
+      if (cancelled || isReady) return;
+      isReady = true;
+      window.clearTimeout(readyTimer);
+      setReady(true);
+    }
+
+    // Safety net: guarantee `ready` flips even if getSession hangs or throws.
+    const readyTimer = window.setTimeout(markReady, 3000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      void hydrate(session);
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      void hydrate(data.session).finally(() => { if (!cancelled) setReady(true); });
+      applySession(session);
+      markReady();
     });
 
-    return () => { cancelled = true; subscription.unsubscribe(); };
+    supabase.auth.getSession()
+      .then(({ data }) => { applySession(data.session); })
+      .catch((e) => { console.warn("getSession failed", e); })
+      .finally(() => { markReady(); });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(readyTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Flush guest accounts when the tab closes / page hides.
