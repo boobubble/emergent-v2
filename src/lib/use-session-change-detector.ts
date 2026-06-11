@@ -76,6 +76,7 @@ export function useSessionChangeDetector() {
     const handleUid = (next: string | null, source: string) => {
       const prev = knownUidRef.current;
       if (prev === undefined) {
+        // First observation — pure seed, no side effects.
         knownUidRef.current = next;
         setLiveUid(next);
         rtLog("auth", "init", `${next ?? "anon"} (${source})`);
@@ -86,6 +87,9 @@ export function useSessionChangeDetector() {
       knownUidRef.current = next;
       setLiveUid(next);
 
+      // Only a real account swap (prev user → different user) is a "session
+      // change". null → user (sign-in) and user → null (sign-out) are normal
+      // lifecycle and must NOT trigger cache nukes / router invalidation.
       if (prev && next && prev !== next) {
         rtLog("auth", "swap", `${prev.slice(0, 6)}→${next.slice(0, 6)} (${source})`);
         toast.warning("Another account session has replaced this tab.", {
@@ -93,15 +97,17 @@ export function useSessionChangeDetector() {
           duration: 8000,
         });
         emitConflict({ conflict: true, prevUid: prev, nextUid: next, at: Date.now() });
-      } else if (prev && !next) {
+        nukeRealtime(`auth ${prev.slice(0, 6)}→${next.slice(0, 6)}`);
+        queryClient.invalidateQueries();
+        void router.invalidate();
+        return;
+      }
+
+      if (prev && !next) {
         rtLog("auth", "signed-out", `(${source})`);
       } else if (!prev && next) {
         rtLog("auth", "signed-in", `${next.slice(0, 8)} (${source})`);
       }
-
-      nukeRealtime(`auth ${prev?.slice(0, 6) ?? "·"}→${next?.slice(0, 6) ?? "·"}`);
-      queryClient.invalidateQueries();
-      void router.invalidate();
     };
 
     // Seed
