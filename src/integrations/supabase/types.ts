@@ -80,6 +80,33 @@ export type Database = {
         }
         Relationships: []
       }
+      assistant_user_prefs: {
+        Row: {
+          created_at: string
+          disable_promo: boolean
+          muted: boolean
+          updated_at: string
+          user_id: string
+          welcomed_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          disable_promo?: boolean
+          muted?: boolean
+          updated_at?: string
+          user_id: string
+          welcomed_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          disable_promo?: boolean
+          muted?: boolean
+          updated_at?: string
+          user_id?: string
+          welcomed_at?: string | null
+        }
+        Relationships: []
+      }
       banned_devices: {
         Row: {
           created_at: string
@@ -1126,6 +1153,8 @@ export type Database = {
           gender: string | null
           hide_birth_year: boolean
           id: string
+          is_bot: boolean
+          is_official: boolean
           is_private: boolean
           last_active_day: string | null
           last_seen: string
@@ -1152,6 +1181,8 @@ export type Database = {
           gender?: string | null
           hide_birth_year?: boolean
           id: string
+          is_bot?: boolean
+          is_official?: boolean
           is_private?: boolean
           last_active_day?: string | null
           last_seen?: string
@@ -1178,6 +1209,8 @@ export type Database = {
           gender?: string | null
           hide_birth_year?: boolean
           id?: string
+          is_bot?: boolean
+          is_official?: boolean
           is_private?: boolean
           last_active_day?: string | null
           last_seen?: string
