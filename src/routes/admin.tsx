@@ -17,6 +17,7 @@ import {
 import { useThemeMode, type ThemeMode } from "@/lib/use-theme-mode";
 
 import { useAdminMode } from "@/lib/admin-mode";
+import { APP_VERSION } from "@/lib/app-version";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -175,12 +176,16 @@ function SidebarContent({ isSuper, onNavigate }: { isSuper: boolean; onNavigate?
         )}
       </ScrollArea>
 
-      <div className="border-t border-white/5 p-3">
+      <div className="space-y-2 border-t border-white/5 p-3">
         <Link to="/">
           <Button variant="outline" size="sm" className="w-full justify-start gap-2 border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/10 hover:text-white">
             <ArrowLeft className="h-4 w-4" />Back to app
           </Button>
         </Link>
+        <div className="flex items-center justify-between rounded-md border border-white/5 bg-white/[0.02] px-2.5 py-1.5 text-[10px] text-slate-400">
+          <span className="uppercase tracking-wider">Version</span>
+          <span className="font-mono font-semibold text-slate-200">v{APP_VERSION}</span>
+        </div>
       </div>
     </div>
   );
