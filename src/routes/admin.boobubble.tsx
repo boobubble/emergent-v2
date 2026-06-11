@@ -110,6 +110,40 @@ function AdminBoobubblePage() {
       </section>
 
       <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold">Mission Assistant DMs</h3>
+        <Row label="Send daily mission progress DM" checked={v.mission_daily_dm_enabled} onChange={(b) => set("mission_daily_dm_enabled", b)} />
+        <Row label="Send weekly mission summary DM" checked={v.mission_weekly_dm_enabled} onChange={(b) => set("mission_weekly_dm_enabled", b)} />
+        <label className="block text-xs">
+          <span className="mb-1 flex items-center justify-between text-muted-foreground">
+            <span>Nudge threshold (under this % completed → reminder, above → celebration)</span>
+            <span className="font-mono text-foreground">{v.mission_min_completion_pct}%</span>
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={v.mission_min_completion_pct}
+            onChange={(e) => set("mission_min_completion_pct", Number(e.target.value))}
+            className="w-full"
+          />
+        </label>
+        <label className="block text-xs">
+          <span className="mb-1 block text-muted-foreground">Weekly summary day (UTC)</span>
+          <select
+            value={v.mission_weekly_day}
+            onChange={(e) => set("mission_weekly_day", Number(e.target.value))}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          >
+            {["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].map((d, i) => (
+              <option key={d} value={i}>{d}</option>
+            ))}
+          </select>
+        </label>
+        <p className="text-[11px] text-muted-foreground">DMs are sent at most once per day / week per user. Users who mute the Assistant or disable promo DMs in their settings are skipped.</p>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
         <h3 className="text-sm font-semibold">Identity</h3>
         <label className="block text-xs">
           <span className="mb-1 block text-muted-foreground">Username</span>
