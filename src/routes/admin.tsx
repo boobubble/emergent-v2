@@ -17,6 +17,7 @@ import {
 import { useThemeMode, type ThemeMode } from "@/lib/use-theme-mode";
 
 import { useAdminMode } from "@/lib/admin-mode";
+import { APP_VERSION } from "@/lib/app-version";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
