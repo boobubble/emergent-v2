@@ -1536,3 +1536,7 @@ export function useChat() {
   if (!ctx) throw new Error("useChat must be inside ChatProvider");
   return ctx;
 }
+
+export function useOptionalChat() {
+  return useContext(ChatCtx);
+}

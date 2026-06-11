@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { Navigate } from "@tanstack/react-router";
 import { Flame, Award, PanelLeftOpen } from "lucide-react";
-import { useChat } from "@/lib/chat-store";
+import { useOptionalChat } from "@/lib/chat-store";
 import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
@@ -15,7 +16,7 @@ import { BADGE_MAP } from "@/lib/achievements";
 interface EngageToast { key: number; kind: "buzz" | "streak" | "badge"; title: string; body: string; }
 
 export function ChatApp() {
-  const { state, isDM } = useChat();
+  const chat = useOptionalChat();
   const [profileOpen, setProfileOpen] = useState(false);
   const [lbOpen, setLbOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
@@ -64,6 +65,10 @@ export function ChatApp() {
       window.removeEventListener("palrgo:badge", onBadge);
     };
   }, []);
+
+  if (!chat) return <Navigate to="/welcome" replace />;
+
+  const { state, isDM } = chat;
 
   return (
     <>
