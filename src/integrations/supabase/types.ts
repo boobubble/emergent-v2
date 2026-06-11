@@ -84,6 +84,8 @@ export type Database = {
         Row: {
           created_at: string
           disable_promo: boolean
+          mission_daily_sent_on: string | null
+          mission_weekly_sent_on: string | null
           muted: boolean
           updated_at: string
           user_id: string
@@ -92,6 +94,8 @@ export type Database = {
         Insert: {
           created_at?: string
           disable_promo?: boolean
+          mission_daily_sent_on?: string | null
+          mission_weekly_sent_on?: string | null
           muted?: boolean
           updated_at?: string
           user_id: string
@@ -100,6 +104,8 @@ export type Database = {
         Update: {
           created_at?: string
           disable_promo?: boolean
+          mission_daily_sent_on?: string | null
+          mission_weekly_sent_on?: string | null
           muted?: boolean
           updated_at?: string
           user_id?: string
