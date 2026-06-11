@@ -5,6 +5,7 @@ import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { ACCENTS, useAccent } from "@/lib/use-accent";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { useUsernameCheck } from "@/lib/use-username-check";
 
@@ -178,6 +179,14 @@ export function AccountPanel() {
           })}
         </div>
       </section>
+
+      <section>
+        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Language</h3>
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <LanguageSwitcher variant="full" />
+        </div>
+      </section>
+
 
       <section>
         <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Friends ({friends.length})</h3>

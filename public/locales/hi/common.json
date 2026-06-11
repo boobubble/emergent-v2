@@ -1,0 +1,77 @@
+{
+  "common": {
+    "send": "भेजें",
+    "cancel": "रद्द करें",
+    "save": "सहेजें",
+    "saving": "सहेज रहे हैं…",
+    "delete": "हटाएँ",
+    "edit": "संपादित करें",
+    "close": "बंद करें",
+    "confirm": "पुष्टि करें",
+    "loading": "लोड हो रहा है…",
+    "search": "खोजें",
+    "more": "और",
+    "back": "वापस",
+    "next": "अगला",
+    "yes": "हाँ",
+    "no": "नहीं",
+    "translate": "अनुवाद",
+    "translateSoon": "एआई अनुवाद जल्द आ रहा है",
+    "language": "भाषा"
+  },
+  "nav": {
+    "feed": "फ़ीड",
+    "chatrooms": "चैटरूम",
+    "friends": "मित्र",
+    "games": "गेम्स",
+    "leaderboard": "लीडरबोर्ड",
+    "notifications": "सूचनाएँ",
+    "profile": "प्रोफ़ाइल",
+    "settings": "सेटिंग्स",
+    "wallet": "वॉलेट",
+    "confessions": "कन्फेशन्स",
+    "polls": "पोल्स",
+    "missions": "दैनिक मिशन",
+    "admin": "एडमिन"
+  },
+  "auth": {
+    "login": "लॉग इन",
+    "signup": "साइन अप",
+    "logout": "लॉग आउट",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "username": "उपयोगकर्ता नाम",
+    "forgot": "पासवर्ड भूल गए?"
+  },
+  "errors": {
+    "generic": "कुछ गलत हो गया। पुनः प्रयास करें।",
+    "network": "नेटवर्क त्रुटि।",
+    "notFound": "नहीं मिला।",
+    "unauthorized": "आपके पास पहुँच नहीं है।"
+  },
+  "empty": {
+    "noPosts": "अभी कोई पोस्ट नहीं।",
+    "noFriends": "अभी कोई मित्र नहीं।",
+    "noNotifications": "सब देख लिया।",
+    "noResults": "कोई परिणाम नहीं।"
+  },
+  "feed": {
+    "composerPlaceholder": "आप क्या सोच रहे हैं?",
+    "publish": "प्रकाशित करें",
+    "publishPoll": "पोल प्रकाशित करें",
+    "poll": "पोल",
+    "confession": "कन्फेशन",
+    "post": "पोस्ट"
+  },
+  "admin": {
+    "languages": {
+      "title": "भाषाएँ और i18n",
+      "subtitle": "ऐप के लिए बहुभाषी समर्थन कॉन्फ़िगर करें।",
+      "enabled": "बहुभाषी समर्थन सक्षम करें",
+      "autoDetect": "ब्राउज़र भाषा स्वतः पहचानें",
+      "defaultLanguage": "डिफ़ॉल्ट भाषा",
+      "supportedLanguages": "समर्थित भाषाएँ",
+      "aiTranslation": "उपयोगकर्ता सामग्री के लिए एआई अनुवाद सक्षम करें (जल्द)"
+    }
+  }
+}

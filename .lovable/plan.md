@@ -1,74 +1,62 @@
-All four groups are in scope. To keep each turn shippable and reviewable, I'll deliver in 4 sequential turns. After each turn, you confirm and I move on.
+# Multilingual (i18n) System
 
-## Batch 1 — User-facing (fully working)
-Profile + register:
-- Gender required on register (male/female/other) and on guest auto-login (random or "other")
-- Birthday on register, with "hide year" toggle (stored as date + show_year boolean)
-- Country flag near nickname (auto-detect + manual override), per-user toggle on/off
-- Show guest-vs-registered tag near nickname, per-user toggle
-- Avatar ring color already keys off gender (blue/pink/gray) — verify + extend to feed/DM/members panel everywhere
+This is a very large change. To do it safely without breaking existing modules, I'll deliver it in **two clearly separated layers**: (1) a complete i18n **infrastructure** wired into the whole app immediately, and (2) a **progressive key migration** of UI strings. Layer 1 ships now end-to-end; Layer 2 starts with the highest-traffic surfaces and continues incrementally so nothing breaks.
 
-Sounds:
-- New `sound_prefs` on profile: public_chat, private_chat, notifications, username_mention, calls (5 toggles)
-- Wire into existing sound playback sites; default all on
+## Layer 1 — Infrastructure (this PR)
 
-Birthday reminders:
-- Server fn that returns friends whose birthday is today; small widget on feed sidebar; one notification per friend per day
+### Stack
+- `i18next` + `react-i18next` + `i18next-browser-languagedetector` + `i18next-http-backend` (lazy-load JSON per language from `/locales/{lng}/{ns}.json`).
+- No backend changes required. Optional column `preferred_language` on `profiles` (nullable text) — only added if you confirm; otherwise persisted in `localStorage` for everyone.
 
-Chatroom moderation:
-- Kick / ban / mute buttons in member list & profile popup, visible only when staff
-- Uses existing user_bans + user_mutes tables; adds room kick (transient leave + 5-min rejoin block)
+### Files added
+- `src/i18n/index.ts` — init, detector order: `querystring → localStorage → cookie → navigator`, fallback `en`, namespaces split by area.
+- `src/i18n/languages.ts` — supported language registry (code, name, native name, flag, dir). Adding a new language = one entry + a JSON file.
+- `src/i18n/LanguageProvider.tsx` — provider that:
+  - applies `<html lang dir>` (RTL for `ar`, `he`, `fa`, `ur`),
+  - syncs to `profiles.preferred_language` for logged-in users (only if column exists; otherwise localStorage only),
+  - respects admin "auto-detect" toggle.
+- `src/components/LanguageSwitcher.tsx` — reusable dropdown (flag + native name), used in:
+  - desktop header,
+  - mobile menu,
+  - `account.tsx` (User Settings).
+- `public/locales/{en,hi,es,fr,de,pt,ar}/common.json` — seed translations for shared keys (`common.*`, `nav.*`, `auth.*`, `errors.*`, `empty.*`, plus the module headings listed in the brief).
+- Mounted in `src/routes/__root.tsx` (wrapped above existing providers).
 
-## Batch 2 — Admin quick wins
-- Admin → Users: edit username inline (with validation trigger we already have)
-- Admin → Roles: "Staff permissions" toggle matrix — which roles can kick / ban / mute / delete msg in chatrooms (new `app_settings.staff_permissions`)
-- Admin → Login Background: strip all other options, leave only "Live chatroom blur" on/off
-- Admin → Welcome Page Links: edit destination + visibility for each feature card on /welcome (Feed→/feed, Chatrooms→/groups, etc.), toggle on/off
-- Admin → Chat Emojis: upload custom emojis / stickers / animated gif emojis (new `custom_emojis` table, storage bucket, picker integration)
+### Admin
+- New route `src/routes/admin.languages.tsx` with toggles stored in `app_settings` (existing table, no schema change) under key `i18n`:
+  - `enabled` (master switch),
+  - `default_language`,
+  - `auto_detect`,
+  - `supported_languages[]`,
+  - `ai_translation_enabled` (flag only; no AI call yet).
+- Added to `AdminNav`.
 
-## Batch 3 — Admin panel new sections (scaffolded routes)
-Create real routes (sidebar entries + AdminPageHeader + Card placeholders + 1-2 working pieces each where trivial):
-- Dashboard: Live Stats, Server Health, Active Users Today, Revenue, Quick Actions
-- Users: Activity Logs, Login History, Device History, Notes, Email Verification, Verification Badges, Import/Export, Bulk Actions
-- Roles: Permission Builder (drag-drop), Custom Roles, Permission Matrix, Role Clone
-- Content: Blog, FAQ, Announcements, Popups, Banners, CMS, Homepage Builder
-- Email: SMTP, Template Editor, Bulk Sender, Push, Notification Templates
-- Monetization: Ad Manager, Affiliate, Premium Plans, Subscriptions, Coupons
-- SEO: Robots.txt, Sitemap, Redirects, Slugs, Meta Templates, Schema
-- Security: Login Attempts, 2FA, Sessions, IP Lists, API Keys, Logs
-- Moderation: Audit Logs, Chat Logs, Deleted Recovery, Spam, Auto Rules, Bulk Tools
-- Storage: File Manager, Storage Usage, Image Optim, Media Cleaner
-- Backup: One-click Backup/Restore, DB Backup, Maintenance Mode, Cache, Cleanup
-- Automation: Cron, Scheduled Posts/Announcements/Notifications, Auto Rewards
-- Analytics: User Growth, Room, Feed, Game, Reward, Ad, Export
-- Localization: Languages, Translations, Currency, Timezone
-- Dev Tools: Env Vars, API/Webhooks, Feature Flags, Modules, Debug Logs, System Info
+### RTL
+- `dir` attribute flips on `<html>`; `src/styles.css` gets a small `[dir="rtl"]` block for icon/margin mirroring. Tailwind logical utilities (`ms-`, `me-`, `ps-`, `pe-`) used in new code; existing classes left alone.
 
-Each is a real route with header + "coming soon" Card; sidebar groups updated. Functional wiring follows on demand.
+### User-generated content
+- `src/components/TranslateButton.tsx` — small inline button rendered next to chat messages / post bodies / comments. Disabled with tooltip "AI translation coming soon" until `ai_translation_enabled` is on. Wiring stub only — no AI calls.
 
-## Batch 4 — CodeCanyon packaging
-- /admin/setup-wizard (multi-step first-run)
-- /admin/demo (one-click import / reset / sample data)
-- /admin/updates (version checker, changelog viewer, auto-update stub)
-- /admin/license (license activation form)
-- /admin/health (env checker, requirements checker, health check)
-- /admin/docs (Documentation, Video Guide, API Docs, Hooks, Branding)
-- One-click theme import/export, settings import/export
-- Demo Credentials page
+### Performance
+- Only the active namespace + language JSON is fetched (HTTP backend, lazy). Suspense fallback inherits existing skeletons.
 
-## Technical notes
-- All new DB tables: GRANT + RLS + service_role per platform rules
-- Sound prefs & UI toggles stored on `profiles`
-- Country flag uses emoji from ISO code (no image deps)
-- Custom emojis bucket: public, admin-only write
-- Welcome links stored in `app_settings.welcome_links`
-- Staff permissions stored in `app_settings.staff_permissions` and read by chatroom UI
+## Layer 2 — Key migration (starts now, continues incrementally)
 
-## What's NOT in scope
-- Real Stripe/Paddle integration for Premium Plans (UI only)
-- Real SMTP delivery (settings form only)
-- Real backup engine (UI + manifest only — actual DB dumps need infra)
+To avoid breakage, I migrate hardcoded strings file-by-file using `t('namespace.key')`. In this PR I migrate:
+- Global nav / header / mobile menu,
+- Auth screen (login / signup labels + errors),
+- Feed composer buttons + empty states,
+- Common buttons (Send, Cancel, Save, Delete, Loading…),
+- Admin Languages page itself.
 
----
+Everything else keeps its current English strings and renders normally. Subsequent turns can migrate Feed cards, Chatroom, Profile, Games, Confessions, Polls, Wallet, Leaderboards, Missions, full Admin, etc. — each migration is mechanical and isolated.
 
-Starting Batch 1 right after you approve. Reply "go" to begin, or tell me to reorder.
+## Explicit non-goals (per your "do not break" rules)
+- No edits to backend logic, edge functions, RLS, or auto-generated Supabase files.
+- No rewrites of existing working modules — only string substitutions.
+- No DB migration unless you opt in to the `profiles.preferred_language` column. Default plan = localStorage only.
+
+## Confirm before I build
+1. **DB column** for logged-in users' language: **add `profiles.preferred_language`** or **localStorage only**?
+2. **Initial seed languages** — proceed with the 7 in the brief (en, hi, es, fr, de, pt, ar)?
+3. **Migration scope this turn** — OK with the Layer-2 list above (nav, auth, composer, common, admin-languages), continuing other modules in follow-up turns?

@@ -5,7 +5,7 @@ import {
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
   Rocket, Flame, Radio, Trophy, Youtube, Disc3, UserCircle2, MessageSquareHeart, Vote,
   Bug, Home, Wand2, Database, ScrollText, History, Bell, MousePointerClick, Mail,
-  PowerOff, RefreshCw, Gift, Download,
+  PowerOff, RefreshCw, Gift, Download, Languages,
 } from "lucide-react";
 
 export interface AdminLeaf {
@@ -48,6 +48,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/ads-scripts",   label: "Ads & Scripts", icon: Megaphone,         keywords: ["ads", "adsense", "scripts", "header", "footer", "tracking", "analytics", "pixel"] },
       { to: "/admin/ad-placements", label: "Ad Placements", icon: Megaphone,         keywords: ["ads", "placement", "monetization", "feed", "chatroom", "dm", "profile", "games", "banner", "sponsor", "affiliate", "premium", "guest"] },
       { to: "/admin/media-apis",    label: "Media APIs",    icon: Youtube,           keywords: ["youtube", "giphy", "gif", "video", "embed", "api keys"] },
+      { to: "/admin/languages",     label: "Languages",     icon: Languages,         keywords: ["i18n", "language", "translation", "locale", "multilingual", "rtl"] },
     ],
   },
 
