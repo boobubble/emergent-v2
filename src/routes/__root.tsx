@@ -170,12 +170,19 @@ function isPublicPath(pathname: string) {
   return PUBLIC_PATH_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
+function AuthenticatedHooks({ userId }: { userId: string }) {
+  // These hooks issue Supabase queries / realtime work and previously caused a
+  // request flood when mounted before auth was settled. They now mount only
+  // after `ready === true` and a valid user exists.
+  usePresenceHeartbeat();
+  useSessionChangeDetector();
+  useBanGuard(userId);
+  return null;
+}
+
 function AuthGate() {
   const { user, ready } = useAuth();
   const location = useLocation();
-  usePresenceHeartbeat();
-  useSessionChangeDetector();
-  useBanGuard(user?.id ?? null);
   if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
 
   if (!user) {
@@ -197,6 +204,28 @@ function AuthGate() {
     // Everything else → send guests to the landing page first.
     return <Navigate to="/welcome" replace />;
   }
+
+  return (
+    <AppSettingsProvider>
+      <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
+        <FeedPrefsProvider>
+          <IgnoreProvider>
+            <AuthenticatedHooks userId={user.id} />
+            <HeadFootScripts />
+            <AdsAutoLoader />
+            <SessionConflictBanner />
+            <FaviconSwitcher />
+            <Outlet />
+            <GlobalThemeToggle />
+            <GlobalLanguageToggle />
+            <Sonner />
+            <RealtimeDebugOverlay />
+          </IgnoreProvider>
+        </FeedPrefsProvider>
+      </ChatProvider>
+    </AppSettingsProvider>
+  );
+}
 
   return (
     <AppSettingsProvider>
