@@ -442,7 +442,6 @@ export const getAssistantFeedRecommendations = createServerFn({ method: "GET" })
 // Mission Assistant — daily & weekly progress DMs (idempotent)
 // ============================================================
 
-import { DAILY_MISSIONS } from "./economy-config";
 
 function todayUtc(): string { return new Date().toISOString().slice(0, 10); }
 function daysAgoUtc(n: number): string {
