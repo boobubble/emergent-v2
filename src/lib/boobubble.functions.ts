@@ -25,6 +25,10 @@ export interface BoobubbleSettings {
   welcome_enabled: boolean;
   feed_recs_enabled: boolean;
   ai_personalize_welcome: boolean;
+  mission_daily_dm_enabled: boolean;
+  mission_weekly_dm_enabled: boolean;
+  mission_min_completion_pct: number; // 0..100 — under this, nudge; over, celebrate
+  mission_weekly_day: number; // 0=Sun..6=Sat (UTC) summary day
   bot_user_id: string | null;
   bot_username: string;
   bot_avatar_url: string | null;
@@ -36,6 +40,10 @@ const DEFAULT_SETTINGS: BoobubbleSettings = {
   welcome_enabled: true,
   feed_recs_enabled: true,
   ai_personalize_welcome: true,
+  mission_daily_dm_enabled: true,
+  mission_weekly_dm_enabled: true,
+  mission_min_completion_pct: 60,
+  mission_weekly_day: 1, // Monday
   bot_user_id: null,
   bot_username: "BooBubble",
   bot_avatar_url: null,
