@@ -21,6 +21,8 @@ import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
+import { Route as ChatroomsRouteImport } from './routes/chatrooms'
+import { Route as ChatroomRouteImport } from './routes/chatroom'
 import { Route as BannedRouteImport } from './routes/banned'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AchievementsRouteImport } from './routes/achievements'
@@ -147,6 +149,16 @@ const FeedRoute = FeedRouteImport.update({
 const ConfessionsRoute = ConfessionsRouteImport.update({
   id: '/confessions',
   path: '/confessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatroomsRoute = ChatroomsRouteImport.update({
+  id: '/chatrooms',
+  path: '/chatrooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatroomRoute = ChatroomRouteImport.update({
+  id: '/chatroom',
+  path: '/chatroom',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BannedRoute = BannedRouteImport.update({
@@ -493,6 +505,8 @@ export interface FileRoutesByFullPath {
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
   '/banned': typeof BannedRoute
+  '/chatroom': typeof ChatroomRoute
+  '/chatrooms': typeof ChatroomsRoute
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -573,6 +587,8 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
   '/banned': typeof BannedRoute
+  '/chatroom': typeof ChatroomRoute
+  '/chatrooms': typeof ChatroomsRoute
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -655,6 +671,8 @@ export interface FileRoutesById {
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
   '/banned': typeof BannedRoute
+  '/chatroom': typeof ChatroomRoute
+  '/chatrooms': typeof ChatroomsRoute
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -738,6 +756,8 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/admin'
     | '/banned'
+    | '/chatroom'
+    | '/chatrooms'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -818,6 +838,8 @@ export interface FileRouteTypes {
     | '/account'
     | '/achievements'
     | '/banned'
+    | '/chatroom'
+    | '/chatrooms'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -899,6 +921,8 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/admin'
     | '/banned'
+    | '/chatroom'
+    | '/chatrooms'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -981,6 +1005,8 @@ export interface RootRouteChildren {
   AchievementsRoute: typeof AchievementsRoute
   AdminRoute: typeof AdminRouteWithChildren
   BannedRoute: typeof BannedRoute
+  ChatroomRoute: typeof ChatroomRoute
+  ChatroomsRoute: typeof ChatroomsRoute
   ConfessionsRoute: typeof ConfessionsRoute
   FeedRoute: typeof FeedRouteWithChildren
   FeedbackRoute: typeof FeedbackRoute
@@ -1086,6 +1112,20 @@ declare module '@tanstack/react-router' {
       path: '/confessions'
       fullPath: '/confessions'
       preLoaderRoute: typeof ConfessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chatrooms': {
+      id: '/chatrooms'
+      path: '/chatrooms'
+      fullPath: '/chatrooms'
+      preLoaderRoute: typeof ChatroomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chatroom': {
+      id: '/chatroom'
+      path: '/chatroom'
+      fullPath: '/chatroom'
+      preLoaderRoute: typeof ChatroomRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/banned': {
@@ -1701,6 +1741,8 @@ const rootRouteChildren: RootRouteChildren = {
   AchievementsRoute: AchievementsRoute,
   AdminRoute: AdminRouteWithChildren,
   BannedRoute: BannedRoute,
+  ChatroomRoute: ChatroomRoute,
+  ChatroomsRoute: ChatroomsRoute,
   ConfessionsRoute: ConfessionsRoute,
   FeedRoute: FeedRouteWithChildren,
   FeedbackRoute: FeedbackRoute,
