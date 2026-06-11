@@ -26,10 +26,6 @@ export function ChatApp() {
   );
   const rootRef = useRef<HTMLDivElement>(null);
 
-  if (!chat) return <Navigate to="/welcome" replace />;
-
-  const { state, isDM } = chat;
-
   useEffect(() => {
     function show(t: EngageToast, buzz = false) {
       setToast(t);
@@ -69,6 +65,10 @@ export function ChatApp() {
       window.removeEventListener("palrgo:badge", onBadge);
     };
   }, []);
+
+  if (!chat) return <Navigate to="/welcome" replace />;
+
+  const { state, isDM } = chat;
 
   return (
     <>
