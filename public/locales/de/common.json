@@ -1,0 +1,39 @@
+{
+  "common": {
+    "send": "Senden", "cancel": "Abbrechen", "save": "Speichern", "saving": "Speichern…",
+    "delete": "Löschen", "edit": "Bearbeiten", "close": "Schließen", "confirm": "Bestätigen",
+    "loading": "Lädt…", "search": "Suchen", "more": "Mehr", "back": "Zurück",
+    "next": "Weiter", "yes": "Ja", "no": "Nein",
+    "translate": "Übersetzen", "translateSoon": "KI-Übersetzung folgt", "language": "Sprache"
+  },
+  "nav": {
+    "feed": "Feed", "chatrooms": "Chaträume", "friends": "Freunde", "games": "Spiele",
+    "leaderboard": "Bestenliste", "notifications": "Benachrichtigungen", "profile": "Profil",
+    "settings": "Einstellungen", "wallet": "Wallet", "confessions": "Geständnisse",
+    "polls": "Umfragen", "missions": "Tägliche Missionen", "admin": "Admin"
+  },
+  "auth": {
+    "login": "Anmelden", "signup": "Registrieren", "logout": "Abmelden",
+    "email": "E-Mail", "password": "Passwort", "username": "Benutzername", "forgot": "Passwort vergessen?"
+  },
+  "errors": {
+    "generic": "Etwas ist schiefgelaufen.", "network": "Netzwerkfehler.",
+    "notFound": "Nicht gefunden.", "unauthorized": "Kein Zugriff."
+  },
+  "empty": {
+    "noPosts": "Noch keine Beiträge.", "noFriends": "Noch keine Freunde.",
+    "noNotifications": "Alles gelesen.", "noResults": "Keine Ergebnisse."
+  },
+  "feed": {
+    "composerPlaceholder": "Was denkst du?", "publish": "Veröffentlichen",
+    "publishPoll": "Umfrage veröffentlichen", "poll": "Umfrage", "confession": "Geständnis", "post": "Beitrag"
+  },
+  "admin": {
+    "languages": {
+      "title": "Sprachen & i18n", "subtitle": "Mehrsprachige Unterstützung konfigurieren.",
+      "enabled": "Mehrsprachigkeit aktivieren", "autoDetect": "Browsersprache erkennen",
+      "defaultLanguage": "Standardsprache", "supportedLanguages": "Unterstützte Sprachen",
+      "aiTranslation": "KI-Übersetzung aktivieren (bald)"
+    }
+  }
+}

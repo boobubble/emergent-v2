@@ -1,0 +1,39 @@
+{
+  "common": {
+    "send": "Enviar", "cancel": "Cancelar", "save": "Guardar", "saving": "Guardando…",
+    "delete": "Eliminar", "edit": "Editar", "close": "Cerrar", "confirm": "Confirmar",
+    "loading": "Cargando…", "search": "Buscar", "more": "Más", "back": "Atrás",
+    "next": "Siguiente", "yes": "Sí", "no": "No",
+    "translate": "Traducir", "translateSoon": "Traducción IA próximamente", "language": "Idioma"
+  },
+  "nav": {
+    "feed": "Inicio", "chatrooms": "Salas", "friends": "Amigos", "games": "Juegos",
+    "leaderboard": "Clasificación", "notifications": "Notificaciones", "profile": "Perfil",
+    "settings": "Ajustes", "wallet": "Cartera", "confessions": "Confesiones",
+    "polls": "Encuestas", "missions": "Misiones diarias", "admin": "Admin"
+  },
+  "auth": {
+    "login": "Iniciar sesión", "signup": "Registrarse", "logout": "Cerrar sesión",
+    "email": "Correo", "password": "Contraseña", "username": "Usuario", "forgot": "¿Olvidaste tu contraseña?"
+  },
+  "errors": {
+    "generic": "Algo salió mal. Inténtalo de nuevo.", "network": "Error de red.",
+    "notFound": "No encontrado.", "unauthorized": "No tienes acceso."
+  },
+  "empty": {
+    "noPosts": "Aún no hay publicaciones.", "noFriends": "Aún no tienes amigos.",
+    "noNotifications": "Estás al día.", "noResults": "Sin resultados."
+  },
+  "feed": {
+    "composerPlaceholder": "¿Qué estás pensando?", "publish": "Publicar",
+    "publishPoll": "Publicar encuesta", "poll": "Encuesta", "confession": "Confesión", "post": "Publicación"
+  },
+  "admin": {
+    "languages": {
+      "title": "Idiomas e i18n", "subtitle": "Configura el soporte multilingüe.",
+      "enabled": "Activar soporte multilingüe", "autoDetect": "Detectar idioma del navegador",
+      "defaultLanguage": "Idioma predeterminado", "supportedLanguages": "Idiomas admitidos",
+      "aiTranslation": "Activar traducción IA para contenido (próximamente)"
+    }
+  }
+}
