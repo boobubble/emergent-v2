@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { DAILY_MISSIONS } from "./economy-config";
 
 /**
  * BooBubble Assistant — the single official AI-powered system account.
