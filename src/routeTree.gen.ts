@@ -71,6 +71,7 @@ import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
 import { Route as AdminCacheRouteImport } from './routes/admin.cache'
 import { Route as AdminBotsRouteImport } from './routes/admin.bots'
+import { Route as AdminBoobubbleRouteImport } from './routes/admin.boobubble'
 import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
 import { Route as AdminAuthBackgroundRouteImport } from './routes/admin.auth-background'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
@@ -398,6 +399,11 @@ const AdminBotsRoute = AdminBotsRouteImport.update({
   path: '/bots',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBoobubbleRoute = AdminBoobubbleRouteImport.update({
+  id: '/boobubble',
+  path: '/boobubble',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAutomationRoute = AdminAutomationRouteImport.update({
   id: '/automation',
   path: '/automation',
@@ -510,6 +516,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
@@ -589,6 +596,7 @@ export interface FileRoutesByTo {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
@@ -670,6 +678,7 @@ export interface FileRoutesById {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
@@ -752,6 +761,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/boobubble'
     | '/admin/bots'
     | '/admin/cache'
     | '/admin/chatrooms'
@@ -831,6 +841,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/boobubble'
     | '/admin/bots'
     | '/admin/cache'
     | '/admin/chatrooms'
@@ -911,6 +922,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/boobubble'
     | '/admin/bots'
     | '/admin/cache'
     | '/admin/chatrooms'
@@ -1426,6 +1438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBotsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/boobubble': {
+      id: '/admin/boobubble'
+      path: '/boobubble'
+      fullPath: '/admin/boobubble'
+      preLoaderRoute: typeof AdminBoobubbleRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/automation': {
       id: '/admin/automation'
       path: '/automation'
@@ -1565,6 +1584,7 @@ interface AdminRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminAuthBackgroundRoute: typeof AdminAuthBackgroundRoute
   AdminAutomationRoute: typeof AdminAutomationRoute
+  AdminBoobubbleRoute: typeof AdminBoobubbleRoute
   AdminBotsRoute: typeof AdminBotsRoute
   AdminCacheRoute: typeof AdminCacheRoute
   AdminChatroomsRoute: typeof AdminChatroomsRoute
@@ -1619,6 +1639,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminAuthBackgroundRoute: AdminAuthBackgroundRoute,
   AdminAutomationRoute: AdminAutomationRoute,
+  AdminBoobubbleRoute: AdminBoobubbleRoute,
   AdminBotsRoute: AdminBotsRoute,
   AdminCacheRoute: AdminCacheRoute,
   AdminChatroomsRoute: AdminChatroomsRoute,
@@ -1703,13 +1724,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
