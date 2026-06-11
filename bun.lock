@@ -36,7 +36,9 @@
         "framer-motion": "^12.40.0",
         "i18next": "^26.3.1",
         "i18next-browser-languagedetector": "^8.2.1",
+        "i18next-chained-backend": "^5.0.4",
         "i18next-http-backend": "^4.0.0",
+        "i18next-localstorage-backend": "^4.3.1",
         "lucide-react": "^0.575.0",
         "nitro": "3.0.260603-beta",
         "react": "^19.2.0",
@@ -878,7 +880,11 @@
 
     "i18next-browser-languagedetector": ["i18next-browser-languagedetector@8.2.1", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/i18next-browser-languagedetector/-/i18next-browser-languagedetector-8.2.1.tgz", { "dependencies": { "@babel/runtime": "^7.23.2" } }, "sha512-bZg8+4bdmaOiApD7N7BPT9W8MLZG+nPTOFlLiJiT8uzKXFjhxw4v2ierCXOwB5sFDMtuA5G4kgYZ0AznZxQ/cw=="],
 
+    "i18next-chained-backend": ["i18next-chained-backend@5.0.4", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/i18next-chained-backend/-/i18next-chained-backend-5.0.4.tgz", { "dependencies": { "@babel/runtime": "^7.28.4" } }, "sha512-xM7kSODBvvtAwPoIoI9WX7LMMdrT5RCvqriUk7juHg5dUgRTTfMoOm8PcZeqxKy9Fn1t4psZwgmeB5Ck43cvrg=="],
+
     "i18next-http-backend": ["i18next-http-backend@4.0.0", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/i18next-http-backend/-/i18next-http-backend-4.0.0.tgz", {}, "sha512-EgSjO3Q1G6f2Q5oy7u9mmxuesE0oSfzAD97NFBjC8EmkK4guBSYLljM0Fng3DarMWIIkU70jfo4+mUzmyVISTA=="],
+
+    "i18next-localstorage-backend": ["i18next-localstorage-backend@4.3.1", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/i18next-localstorage-backend/-/i18next-localstorage-backend-4.3.1.tgz", { "dependencies": { "@babel/runtime": "^7.28.4" } }, "sha512-ry8WNBanUs55rsRZs9+xaZWRxCoTEMMOf+2vNSfzzJqDPbHaf0eMFMrtYp/2ocxU6Xrxfwz17Fdz0rSs3Kw39Q=="],
 
     "iceberg-js": ["iceberg-js@0.8.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/iceberg-js/-/iceberg-js-0.8.1.tgz", {}, "sha512-1dhVQZXhcHje7798IVM+xoo/1ZdVfzOMIc8/rgVSijRK38EDqOJoGula9N/8ZI5RD8QTxNQtK/Gozpr+qUqRRA=="],
 
