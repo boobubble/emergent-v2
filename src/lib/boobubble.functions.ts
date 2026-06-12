@@ -158,7 +158,8 @@ export const provisionBoobubbleAssistant = createServerFn({ method: "POST" })
       return { ok: true, user_id: current.bot_user_id, existed: true };
     }
 
-    const email = `boobubble-assistant+${Date.now()}@system.local`;
+    // Use a real-looking domain — Supabase rejects ".local" TLDs as invalid emails.
+    const email = `boobubble-assistant+${Date.now()}@boobubble.system`;
     const password = crypto.randomUUID() + "-" + crypto.randomUUID();
     const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -166,7 +167,12 @@ export const provisionBoobubbleAssistant = createServerFn({ method: "POST" })
       email_confirm: true,
       user_metadata: { username: current.bot_username, gender: "other" },
     });
-    if (cErr || !created.user) throw new Error(cErr?.message ?? "Failed to create assistant user");
+    if (cErr || !created?.user) {
+      console.error("[boobubble] createUser failed", { cErr, created });
+      throw new Error(
+        `Failed to create assistant user: ${cErr?.message ?? "no user returned"}`,
+      );
+    }
     const userId = created.user.id;
 
     // handle_new_user trigger already inserted profile. Mark it official+bot.
