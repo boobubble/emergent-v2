@@ -183,10 +183,25 @@ function AuthenticatedHooks({ userId }: { userId: string }) {
 function AuthGate() {
   const { user, ready } = useAuth();
   const location = useLocation();
+  const path = location.pathname;
+
+  if (!user && isPublicPath(path)) {
+    return (
+      <>
+        <HeadFootScripts />
+        <AdsAutoLoader />
+        <SessionConflictBanner />
+        <Outlet />
+        <GlobalThemeToggle />
+        <Sonner />
+        <RealtimeDebugOverlay />
+      </>
+    );
+  }
+
   if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
 
   if (!user) {
-    const path = location.pathname;
     // Public, self-contained routes (landing, login, password reset, public post pages) render normally.
     if (isPublicPath(path)) {
       return (
