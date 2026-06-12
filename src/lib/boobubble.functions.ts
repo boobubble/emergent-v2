@@ -96,7 +96,7 @@ async function writeSettings(patch: Partial<BoobubbleSettings>): Promise<Boobubb
   const next = { ...(await readSettings()), ...patch };
   const { error } = await supabaseAdmin
     .from("app_settings")
-    .upsert({ key: SETTINGS_KEY, value: next }, { onConflict: "key" });
+    .upsert({ key: SETTINGS_KEY, value: next as unknown as Record<string, unknown> }, { onConflict: "key" });
   if (error) throw new Error(error.message);
   return next;
 }
