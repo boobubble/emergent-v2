@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type FeedReaction, type ReactionType } from "@/lib/feed-types";
