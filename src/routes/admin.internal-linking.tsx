@@ -387,6 +387,207 @@ function AnalyticsTab() {
   );
 }
 
+// =================== BULK ===================
+type BulkItem = {
+  key: string;
+  label: string;
+  pageId: string; // optional, only required to apply
+  content: string;
+  loading: boolean;
+  error?: string;
+  suggestions: any[];
+  picked: Set<number>;
+};
+
+function newBulkItem(partial: Partial<BulkItem> = {}): BulkItem {
+  return {
+    key: crypto.randomUUID(),
+    label: "",
+    pageId: "",
+    content: "",
+    loading: false,
+    suggestions: [],
+    picked: new Set(),
+    ...partial,
+  };
+}
+
+function BulkTab() {
+  const suggest = useServerFn(suggestLinks);
+  const apply = useServerFn(applyLinksToPage);
+  const listPages = useServerFn(listLinkablePages);
+  const { data: pages } = useQuery({ queryKey: ["ilt-pages"], queryFn: () => listPages({}) });
+
+  const [items, setItems] = useState<BulkItem[]>([newBulkItem(), newBulkItem()]);
+  const [running, setRunning] = useState(false);
+  const [applying, setApplying] = useState(false);
+
+  const update = (key: string, patch: Partial<BulkItem>) =>
+    setItems((prev) => prev.map((it) => (it.key === key ? { ...it, ...patch } : it)));
+
+  const loadFromPage = (key: string, pageId: string) => {
+    const p = (pages ?? []).find((x: any) => x.id === pageId);
+    if (!p) return update(key, { pageId });
+    update(key, { pageId, label: p.title, content: p.content });
+  };
+
+  const runAll = async () => {
+    const active = items.filter((it) => it.content.trim().length > 0);
+    if (active.length === 0) return toast.error("Add content to at least one page");
+    setRunning(true);
+    setItems((prev) => prev.map((it) => (active.includes(it) ? { ...it, loading: true, error: undefined } : it)));
+    await Promise.all(
+      active.map(async (it) => {
+        try {
+          const res: any = await suggest({ data: { content: it.content, maxSuggestions: 30 } });
+          update(it.key, {
+            loading: false,
+            suggestions: res,
+            picked: new Set(res.map((_: any, i: number) => i)),
+          });
+        } catch (e: any) {
+          update(it.key, { loading: false, error: e?.message ?? "Failed" });
+        }
+      }),
+    );
+    setRunning(false);
+    toast.success(`Analyzed ${active.length} page(s)`);
+  };
+
+  const applyAll = async () => {
+    const eligible = items.filter((it) => it.pageId && it.picked.size > 0);
+    if (eligible.length === 0) return toast.error("Select a page UUID and at least one suggestion to apply");
+    setApplying(true);
+    let total = 0;
+    let failed = 0;
+    await Promise.all(
+      eligible.map(async (it) => {
+        try {
+          const approved = it.suggestions
+            .filter((_, i) => it.picked.has(i))
+            .map((s) => ({ target_url: s.target_url, anchor_text: s.anchor_text }));
+          const r: any = await apply({ data: { pageId: it.pageId, approved } });
+          total += r.applied ?? 0;
+        } catch {
+          failed++;
+        }
+      }),
+    );
+    setApplying(false);
+    if (failed) toast.error(`${failed} page(s) failed`);
+    toast.success(`Applied ${total} links across ${eligible.length} page(s)`);
+  };
+
+  const totalSelected = items.reduce((n, it) => n + it.picked.size, 0);
+
+  return (
+    <div className="space-y-3">
+      <Card>
+        <CardContent className="flex flex-wrap items-center gap-2 p-3">
+          <div className="text-sm text-muted-foreground">
+            Paste multiple pages, generate suggestions for each, then apply only your approved picks.
+          </div>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => setItems((p) => [...p, newBulkItem()])}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />Add page
+            </Button>
+            <Button size="sm" onClick={runAll} disabled={running}>
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" />{running ? "Analyzing…" : "Generate all"}
+            </Button>
+            <Button size="sm" variant="default" onClick={applyAll} disabled={applying || totalSelected === 0}>
+              {applying ? "Applying…" : `Apply approved (${totalSelected})`}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {items.map((it, idx) => (
+        <Card key={it.key}>
+          <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
+            <CardTitle className="text-sm">Page {idx + 1}{it.label ? ` · ${it.label}` : ""}</CardTitle>
+            <Badge variant="outline" className="text-[10px]">
+              {it.suggestions.length} suggestions · {it.picked.size} selected
+            </Badge>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="ml-auto h-7 w-7"
+              onClick={() => setItems((p) => p.filter((x) => x.key !== it.key))}
+              disabled={items.length <= 1}
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Field label="Load from published page (optional)">
+                <Select value={it.pageId || "__none__"} onValueChange={(v) => loadFromPage(it.key, v === "__none__" ? "" : v)}>
+                  <SelectTrigger><SelectValue placeholder="Pick a page…" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— None —</SelectItem>
+                    {(pages ?? []).map((p: any) => (
+                      <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Or page ID to apply to (UUID)">
+                <Input value={it.pageId} onChange={(e) => update(it.key, { pageId: e.target.value })} placeholder="UUID" />
+              </Field>
+            </div>
+            <Textarea
+              rows={6}
+              value={it.content}
+              onChange={(e) => update(it.key, { content: e.target.value })}
+              placeholder="Paste page HTML or markdown…"
+            />
+            {it.error && <div className="text-xs text-destructive">{it.error}</div>}
+            {it.loading && <Skeleton className="h-24" />}
+            {it.suggestions.length > 0 && (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-8"></TableHead>
+                      <TableHead>Target</TableHead>
+                      <TableHead>Anchor</TableHead>
+                      <TableHead className="text-center">Score</TableHead>
+                      <TableHead>Context</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {it.suggestions.map((s, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          <Checkbox
+                            checked={it.picked.has(i)}
+                            onCheckedChange={(v) => {
+                              const n = new Set(it.picked);
+                              if (v) n.add(i); else n.delete(i);
+                              update(it.key, { picked: n });
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm font-medium">{s.title}</div>
+                          <code className="text-xs text-muted-foreground">{s.target_url}</code>
+                        </TableCell>
+                        <TableCell><Badge variant="secondary">{s.anchor_text}</Badge></TableCell>
+                        <TableCell className="text-center tabular-nums">{s.relevance_score}</TableCell>
+                        <TableCell className="max-w-md text-xs text-muted-foreground">…{s.context_snippet}…</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <Card><CardContent className="p-4">
