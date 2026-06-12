@@ -54,6 +54,7 @@ export const PostCard = memo(function PostCard({
   const earnReaction = useServerFn(earnFeedReaction);
   const earnComment = useServerFn(earnFeedComment);
   const earnShare = useServerFn(earnFeedShare);
+  const claimShare = useServerFn(claimShareReward);
   const doBoost = useServerFn(boostPost);
 
   const author = post.is_anonymous ? null : profiles[post.author_id];
