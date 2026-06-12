@@ -221,7 +221,17 @@ function AuthGate() {
 
   if (!ready && (!hasStoredSession || authWaitExpired)) return <Navigate to="/welcome" replace />;
 
-  if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
+  if (!ready) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background px-4 text-center text-muted-foreground">
+        <script dangerouslySetInnerHTML={{ __html: "setTimeout(function(){if(document.body&&document.body.innerText.includes('Loading')) location.replace('/welcome')},3500)" }} />
+        <div>
+          <p>Loading…</p>
+          <a href="/welcome" className="mt-4 inline-flex text-sm font-medium text-primary underline">Continue to home</a>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     // Public, self-contained routes (landing, login, password reset, public post pages) render normally.
