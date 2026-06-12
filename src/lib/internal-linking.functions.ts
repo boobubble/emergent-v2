@@ -170,6 +170,28 @@ export const syncLinkTargets = createServerFn({ method: "POST" })
     return { ok: true, count: inserted, total: rows.length };
   });
 
+// ---------- LIST LINKABLE PAGES (for bulk picker) ----------
+export const listLinkablePages = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("custom_pages")
+      .select("id, slug, title, content, status")
+      .eq("status", "published")
+      .order("updated_at", { ascending: false })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      title: p.title || p.slug,
+      url: `/p/${p.slug}`,
+      content: (p.content as string) ?? "",
+    }));
+  });
+
 // ---------- SUGGEST LINKS (rule-based) ----------
 function stripHtml(s: string) {
   return s.replace(/<[^>]*>/g, " ");
