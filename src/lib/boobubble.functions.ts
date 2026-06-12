@@ -21,6 +21,15 @@ import { DAILY_MISSIONS } from "./economy-config";
 
 const SETTINGS_KEY = "boobubble_assistant";
 
+export interface EventAnnouncement {
+  id: string;          // unique id — change to re-send
+  title: string;
+  body: string;
+  cta_label: string | null;
+  cta_url: string | null;
+  active: boolean;
+}
+
 export interface BoobubbleSettings {
   enabled: boolean;
   welcome_enabled: boolean;
@@ -28,8 +37,22 @@ export interface BoobubbleSettings {
   ai_personalize_welcome: boolean;
   mission_daily_dm_enabled: boolean;
   mission_weekly_dm_enabled: boolean;
-  mission_min_completion_pct: number; // 0..100 — under this, nudge; over, celebrate
-  mission_weekly_day: number; // 0=Sun..6=Sat (UTC) summary day
+  mission_min_completion_pct: number;
+  mission_weekly_day: number;
+  // Reward Assistant
+  reward_daily_dm_enabled: boolean;
+  reward_min_coins_threshold: number; // only DM if user gained >= this many coins today
+  // Friend Assistant
+  friend_suggestions_enabled: boolean;
+  // Event Assistant
+  event_announcement: EventAnnouncement | null;
+  // Security Assistant
+  security_dm_enabled: boolean;
+  // Share & Earn
+  share_earn_enabled: boolean;
+  share_reward_coins: number;
+  share_daily_limit: number;
+  // Identity
   bot_user_id: string | null;
   bot_username: string;
   bot_avatar_url: string | null;
@@ -44,7 +67,15 @@ const DEFAULT_SETTINGS: BoobubbleSettings = {
   mission_daily_dm_enabled: true,
   mission_weekly_dm_enabled: true,
   mission_min_completion_pct: 60,
-  mission_weekly_day: 1, // Monday
+  mission_weekly_day: 1,
+  reward_daily_dm_enabled: true,
+  reward_min_coins_threshold: 25,
+  friend_suggestions_enabled: true,
+  event_announcement: null,
+  security_dm_enabled: true,
+  share_earn_enabled: true,
+  share_reward_coins: 2,
+  share_daily_limit: 10,
   bot_user_id: null,
   bot_username: "BooBubble",
   bot_avatar_url: null,
@@ -65,7 +96,8 @@ async function writeSettings(patch: Partial<BoobubbleSettings>): Promise<Boobubb
   const next = { ...(await readSettings()), ...patch };
   const { error } = await supabaseAdmin
     .from("app_settings")
-    .upsert({ key: SETTINGS_KEY, value: next }, { onConflict: "key" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .upsert({ key: SETTINGS_KEY, value: next as any }, { onConflict: "key" });
   if (error) throw new Error(error.message);
   return next;
 }
@@ -91,6 +123,11 @@ export const getBoobubblePublic = createServerFn({ method: "GET" }).handler(asyn
     enabled: s.enabled,
     welcome_enabled: s.welcome_enabled,
     feed_recs_enabled: s.feed_recs_enabled,
+    friend_suggestions_enabled: s.friend_suggestions_enabled,
+    share_earn_enabled: s.share_earn_enabled,
+    share_reward_coins: s.share_reward_coins,
+    share_daily_limit: s.share_daily_limit,
+    event_announcement: s.event_announcement,
     bot_user_id: s.bot_user_id,
     bot_username: s.bot_username,
     bot_avatar_url: s.bot_avatar_url,
@@ -119,6 +156,21 @@ export const saveBoobubbleSettings = createServerFn({ method: "POST" })
       mission_weekly_dm_enabled: z.boolean(),
       mission_min_completion_pct: z.number().int().min(0).max(100),
       mission_weekly_day: z.number().int().min(0).max(6),
+      reward_daily_dm_enabled: z.boolean(),
+      reward_min_coins_threshold: z.number().int().min(0).max(10000),
+      friend_suggestions_enabled: z.boolean(),
+      event_announcement: z.object({
+        id: z.string().min(1).max(64),
+        title: z.string().min(1).max(120),
+        body: z.string().min(1).max(600),
+        cta_label: z.string().max(40).nullable(),
+        cta_url: z.string().url().nullable(),
+        active: z.boolean(),
+      }).nullable(),
+      security_dm_enabled: z.boolean(),
+      share_earn_enabled: z.boolean(),
+      share_reward_coins: z.number().int().min(0).max(100),
+      share_daily_limit: z.number().int().min(0).max(100),
       bot_username: z.string().min(2).max(32),
       bot_avatar_url: z.string().url().nullable(),
       bot_bio: z.string().max(280),
@@ -628,5 +680,381 @@ export const triggerMissionDigestIfNeeded = createServerFn({ method: "POST" })
     }
 
     return { daily: sentDaily, weekly: sentWeekly };
+  });
+
+// ============================================================
+// Reward Assistant — daily reward summary DM (idempotent)
+// ============================================================
+
+export const triggerRewardDigestIfNeeded = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const settings = await readSettings();
+    if (!settings.enabled || !settings.reward_daily_dm_enabled || !settings.bot_user_id) {
+      return { sent: false, reason: "disabled" as const };
+    }
+    if (settings.bot_user_id === context.userId) return { sent: false, reason: "self" as const };
+
+    const { data: pref } = await supabaseAdmin
+      .from("assistant_user_prefs")
+      .select("*")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (pref?.muted) return { sent: false, reason: "muted" as const };
+    if (pref?.disable_promo) return { sent: false, reason: "promo_off" as const };
+
+    const today = todayUtc();
+    const sentOn = (pref as { reward_daily_sent_on?: string | null } | null)?.reward_daily_sent_on ?? null;
+    if (sentOn === today) return { sent: false, reason: "already" as const };
+
+    const since = today + "T00:00:00Z";
+    const { data: txs } = await supabaseAdmin
+      .from("coin_transactions")
+      .select("kind, amount, reason")
+      .eq("user_id", context.userId)
+      .gte("created_at", since);
+
+    let coins = 0, xp = 0;
+    const byReason: Record<string, number> = {};
+    for (const t of txs ?? []) {
+      if (t.kind === "coins") coins += t.amount ?? 0;
+      else if (t.kind === "xp") xp += t.amount ?? 0;
+      const r = t.reason ?? "other";
+      byReason[r] = (byReason[r] ?? 0) + (t.amount ?? 0);
+    }
+    if (coins < settings.reward_min_coins_threshold) {
+      return { sent: false, reason: "below_threshold" as const, coins };
+    }
+
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("username, level")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const username = prof?.username ?? "friend";
+    const bot = settings.bot_username || "BooBubble";
+
+    const topReasons = Object.entries(byReason)
+      .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+      .slice(0, 3)
+      .map(([r, v]) => `• ${r.replaceAll("_", " ")}: **${v > 0 ? "+" : ""}${v}**`)
+      .join("\n");
+
+    const text =
+      `💰 **Reward recap, @${username}**\n\n` +
+      `Today you earned **+${coins} 🪙** and **+${xp} ⭐ XP**.\n\n` +
+      (topReasons ? `Top sources:\n${topReasons}\n\n` : "") +
+      `Keep playing — every action counts! 🎮\n\n— ${bot}`;
+
+    await sendAssistantDM(settings.bot_user_id, context.userId, text, "assistant_reward_daily", `+${coins} coins today`);
+
+    await supabaseAdmin
+      .from("assistant_user_prefs")
+      .upsert(
+        { user_id: context.userId, reward_daily_sent_on: today },
+        { onConflict: "user_id" },
+      );
+
+    return { sent: true, coins, xp };
+  });
+
+// ============================================================
+// Friend Assistant — friends-of-friends suggestions (read-only)
+// ============================================================
+
+export interface FriendSuggestion {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  level: number | null;
+  mutual_count: number;
+}
+
+export const getFriendSuggestions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const settings = await readSettings();
+    if (!settings.enabled || !settings.friend_suggestions_enabled) {
+      return { items: [] as FriendSuggestion[] };
+    }
+    const { data: pref } = await supabaseAdmin
+      .from("assistant_user_prefs")
+      .select("muted")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (pref?.muted) return { items: [] as FriendSuggestion[] };
+
+    // Direct friends
+    const { data: fr } = await supabaseAdmin
+      .from("friendships")
+      .select("sender_id, receiver_id")
+      .eq("status", "accepted")
+      .or(`sender_id.eq.${context.userId},receiver_id.eq.${context.userId}`);
+    const myFriendIds = new Set<string>();
+    for (const f of fr ?? []) {
+      const other = f.sender_id === context.userId ? f.receiver_id : f.sender_id;
+      myFriendIds.add(other);
+    }
+    if (myFriendIds.size === 0) return { items: [] as FriendSuggestion[] };
+
+    // Friends-of-friends
+    const friendsList = Array.from(myFriendIds);
+    const { data: fof } = await supabaseAdmin
+      .from("friendships")
+      .select("sender_id, receiver_id")
+      .eq("status", "accepted")
+      .or(`sender_id.in.(${friendsList.join(",")}),receiver_id.in.(${friendsList.join(",")})`);
+
+    const mutualCount = new Map<string, number>();
+    for (const f of fof ?? []) {
+      for (const other of [f.sender_id, f.receiver_id]) {
+        if (!other || other === context.userId) continue;
+        if (myFriendIds.has(other)) continue;
+        mutualCount.set(other, (mutualCount.get(other) ?? 0) + 1);
+      }
+    }
+    const ranked = Array.from(mutualCount.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    if (ranked.length === 0) return { items: [] as FriendSuggestion[] };
+
+    const ids = ranked.map((r) => r[0]);
+    const { data: profs } = await supabaseAdmin
+      .from("profiles")
+      .select("id, username, avatar_url, level, is_bot")
+      .in("id", ids);
+    const profMap = new Map((profs ?? []).filter((p) => !p.is_bot).map((p) => [p.id, p]));
+
+    const items: FriendSuggestion[] = ranked
+      .filter(([id]) => profMap.has(id))
+      .map(([id, count]) => {
+        const p = profMap.get(id)!;
+        return {
+          id,
+          username: p.username,
+          avatar_url: p.avatar_url ?? null,
+          level: p.level ?? null,
+          mutual_count: count,
+        };
+      });
+
+    return { items };
+  });
+
+// ============================================================
+// Event Assistant — one DM per announcement id
+// ============================================================
+
+export const triggerEventAnnouncementIfNeeded = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const settings = await readSettings();
+    const ev = settings.event_announcement;
+    if (!settings.enabled || !settings.bot_user_id || !ev || !ev.active) {
+      return { sent: false, reason: "disabled" as const };
+    }
+    if (settings.bot_user_id === context.userId) return { sent: false, reason: "self" as const };
+
+    const { data: pref } = await supabaseAdmin
+      .from("assistant_user_prefs")
+      .select("*")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (pref?.muted) return { sent: false, reason: "muted" as const };
+    if (pref?.disable_promo) return { sent: false, reason: "promo_off" as const };
+    const sentId = (pref as { event_announced_id?: string | null } | null)?.event_announced_id ?? null;
+    if (sentId === ev.id) return { sent: false, reason: "already" as const };
+
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("username")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const username = prof?.username ?? "friend";
+    const bot = settings.bot_username || "BooBubble";
+
+    const cta = ev.cta_url && ev.cta_label ? `\n\n👉 [${ev.cta_label}](${ev.cta_url})` : "";
+    const text =
+      `🎉 **${ev.title}**\n\n` +
+      `Hey @${username},\n\n` +
+      `${ev.body}${cta}\n\n— ${bot}`;
+
+    await sendAssistantDM(settings.bot_user_id, context.userId, text, "assistant_event", ev.title);
+
+    await supabaseAdmin
+      .from("assistant_user_prefs")
+      .upsert(
+        { user_id: context.userId, event_announced_id: ev.id },
+        { onConflict: "user_id" },
+      );
+
+    return { sent: true, id: ev.id };
+  });
+
+// ============================================================
+// Security Assistant — surface new bans / mutes / report updates
+// ============================================================
+
+export const triggerSecurityDigestIfNeeded = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const settings = await readSettings();
+    if (!settings.enabled || !settings.security_dm_enabled || !settings.bot_user_id) {
+      return { sent: false, reason: "disabled" as const };
+    }
+    if (settings.bot_user_id === context.userId) return { sent: false, reason: "self" as const };
+
+    const { data: pref } = await supabaseAdmin
+      .from("assistant_user_prefs")
+      .select("*")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (pref?.muted) return { sent: false, reason: "muted" as const };
+    // Security DMs are NOT promotional — respect mute only, ignore disable_promo.
+
+    const since = (pref as { security_checked_at?: string | null } | null)?.security_checked_at
+      ?? new Date(Date.now() - 7 * 86400000).toISOString();
+
+    const [bansRes, mutesRes, reportsRes] = await Promise.all([
+      supabaseAdmin
+        .from("user_bans")
+        .select("ban_type, reason, expires_at, created_at, active")
+        .eq("user_id", context.userId)
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      supabaseAdmin
+        .from("user_mutes")
+        .select("scope, reason, expires_at, created_at, active")
+        .eq("user_id", context.userId)
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      supabaseAdmin
+        .from("reports")
+        .select("status, target_type, resolved_at, created_at")
+        .eq("reporter_id", context.userId)
+        .gte("created_at", since)
+        .not("resolved_at", "is", null)
+        .order("resolved_at", { ascending: false })
+        .limit(5),
+    ]);
+
+    const bans = bansRes.data ?? [];
+    const mutes = mutesRes.data ?? [];
+    const reports = reportsRes.data ?? [];
+
+    if (bans.length === 0 && mutes.length === 0 && reports.length === 0) {
+      // Still bump checkpoint so next call only looks forward
+      await supabaseAdmin
+        .from("assistant_user_prefs")
+        .upsert(
+          { user_id: context.userId, security_checked_at: new Date().toISOString() },
+          { onConflict: "user_id" },
+        );
+      return { sent: false, reason: "nothing" as const };
+    }
+
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("username")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const username = prof?.username ?? "friend";
+    const bot = settings.bot_username || "BooBubble";
+
+    const lines: string[] = [];
+    for (const b of bans) {
+      const until = b.expires_at ? new Date(b.expires_at).toUTCString() : "until reviewed";
+      lines.push(`🚫 **Account ${b.ban_type}**${b.reason ? ` — ${b.reason}` : ""} (${until})`);
+    }
+    for (const m of mutes) {
+      const until = m.expires_at ? new Date(m.expires_at).toUTCString() : "until reviewed";
+      lines.push(`🔇 **Mute (${m.scope})**${m.reason ? ` — ${m.reason}` : ""} (${until})`);
+    }
+    for (const r of reports) {
+      lines.push(`✅ Report on **${r.target_type}** — status: *${r.status}*`);
+    }
+
+    const text =
+      `🛡️ **Security update, @${username}**\n\n` +
+      lines.join("\n") +
+      `\n\nIf you think any action is a mistake, reply here and a moderator will review.\n\n— ${bot}`;
+
+    await sendAssistantDM(settings.bot_user_id, context.userId, text, "assistant_security", "Security update");
+
+    await supabaseAdmin
+      .from("assistant_user_prefs")
+      .upsert(
+        { user_id: context.userId, security_checked_at: new Date().toISOString() },
+        { onConflict: "user_id" },
+      );
+
+    return { sent: true, items: bans.length + mutes.length + reports.length };
+  });
+
+// ============================================================
+// Share & Earn — reward the sharer (rate-limited)
+// ============================================================
+
+export const claimShareReward = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({
+    postId: z.string().uuid(),
+    target: z.enum(["whatsapp","telegram","facebook","x","linkedin","copy","native"]),
+  }).parse(i))
+  .handler(async ({ data, context }) => {
+    const settings = await readSettings();
+    if (!settings.enabled || !settings.share_earn_enabled || settings.share_reward_coins <= 0) {
+      return { ok: false, reason: "disabled" as const, awarded: 0 };
+    }
+
+    const since = todayUtc() + "T00:00:00Z";
+    // Daily limit across all shares
+    const { count: todayCount } = await supabaseAdmin
+      .from("coin_transactions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", context.userId)
+      .eq("reason", "boobubble_share")
+      .gte("created_at", since);
+    if ((todayCount ?? 0) >= settings.share_daily_limit) {
+      return { ok: false, reason: "daily_limit" as const, awarded: 0 };
+    }
+
+    // Cooldown: one award per post per day
+    const { data: existing } = await supabaseAdmin
+      .from("coin_transactions")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("reason", "boobubble_share")
+      .eq("ref_type", "post")
+      .eq("ref_id", data.postId)
+      .gte("created_at", since)
+      .maybeSingle();
+    if (existing) return { ok: false, reason: "already" as const, awarded: 0 };
+
+    // Bump profile + log
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("coins")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (!prof) return { ok: false, reason: "no_profile" as const, awarded: 0 };
+    const newCoins = (prof.coins ?? 0) + settings.share_reward_coins;
+    await supabaseAdmin
+      .from("profiles")
+      .update({ coins: newCoins })
+      .eq("id", context.userId);
+    await supabaseAdmin.from("coin_transactions").insert({
+      user_id: context.userId,
+      kind: "coins",
+      amount: settings.share_reward_coins,
+      reason: "boobubble_share",
+      ref_type: "post",
+      ref_id: data.postId,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    return { ok: true, awarded: settings.share_reward_coins, target: data.target };
   });
 

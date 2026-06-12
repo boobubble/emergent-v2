@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type FeedReaction, type ReactionType } from "@/lib/feed-types";
@@ -14,6 +15,7 @@ import { useFeedPrefs } from "@/lib/feed-prefs";
 import { EmojiPicker } from "@/components/chat/EmojiPicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { earnFeedReaction, earnFeedComment, earnFeedShare, boostPost } from "@/lib/economy.functions";
+import { claimShareReward } from "@/lib/boobubble.functions";
 import { SPEND } from "@/lib/economy-config";
 
 
@@ -53,6 +55,7 @@ export const PostCard = memo(function PostCard({
   const earnReaction = useServerFn(earnFeedReaction);
   const earnComment = useServerFn(earnFeedComment);
   const earnShare = useServerFn(earnFeedShare);
+  const claimShare = useServerFn(claimShareReward);
   const doBoost = useServerFn(boostPost);
 
   const author = post.is_anonymous ? null : profiles[post.author_id];
@@ -262,6 +265,9 @@ export const PostCard = memo(function PostCard({
             const shareText = post.text ? post.text : `Check out this post by ${authorName}`;
             const payload: SharePayload = { title, text: shareText, url };
             earnShare({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
+            claimShare({ data: { postId: post.id, target: "native" } })
+              .then((r) => { if (r?.ok && r.awarded > 0) toast.success(`+${r.awarded} 🪙 for sharing!`); })
+              .catch(() => {});
             if (typeof navigator !== "undefined" && navigator.share) {
               try {
                 await navigator.share({ title, text: shareText, url });

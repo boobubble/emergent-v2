@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, Sparkles, Vote, VenetianMask, Newspaper, ArrowRight, BellOff, X } from "lucide-react";
+import { BadgeCheck, Sparkles, Vote, VenetianMask, Newspaper, ArrowRight, BellOff, X, UserPlus } from "lucide-react";
 import {
   getAssistantFeedRecommendations,
   triggerWelcomeIfNeeded,
   triggerMissionDigestIfNeeded,
+  triggerRewardDigestIfNeeded,
+  triggerEventAnnouncementIfNeeded,
+  triggerSecurityDigestIfNeeded,
+  getFriendSuggestions,
   getBoobubblePublic,
   type AssistantRecommendation,
+  type FriendSuggestion,
 } from "@/lib/boobubble.functions";
 import { useAuth } from "@/lib/auth-store";
 
@@ -18,19 +23,27 @@ export function BoobubbleAssistantWidget() {
   const fetchRecs = useServerFn(getAssistantFeedRecommendations);
   const triggerWelcome = useServerFn(triggerWelcomeIfNeeded);
   const triggerMissions = useServerFn(triggerMissionDigestIfNeeded);
+  const triggerRewards = useServerFn(triggerRewardDigestIfNeeded);
+  const triggerEvent = useServerFn(triggerEventAnnouncementIfNeeded);
+  const triggerSecurity = useServerFn(triggerSecurityDigestIfNeeded);
+  const fetchFriends = useServerFn(getFriendSuggestions);
   const fetchPublic = useServerFn(getBoobubblePublic);
 
   const [items, setItems] = useState<AssistantRecommendation[]>([]);
+  const [friends, setFriends] = useState<FriendSuggestion[]>([]);
   const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
 
-  // Fire welcome + mission digest triggers on first authenticated mount
+  // Fire all idempotent triggers on first authenticated mount
   useEffect(() => {
     if (!user?.id || user.isGuest) return;
     triggerWelcome({}).catch(() => {});
     triggerMissions({}).catch(() => {});
-  }, [user?.id, user?.isGuest, triggerWelcome, triggerMissions]);
+    triggerRewards({}).catch(() => {});
+    triggerEvent({}).catch(() => {});
+    triggerSecurity({}).catch(() => {});
+  }, [user?.id, user?.isGuest, triggerWelcome, triggerMissions, triggerRewards, triggerEvent, triggerSecurity]);
 
   // Local dismissal (per 24h)
   useEffect(() => {
@@ -43,20 +56,21 @@ export function BoobubbleAssistantWidget() {
   useEffect(() => {
     if (!user?.id || user.isGuest || dismissed) { setLoading(false); return; }
     let alive = true;
-    Promise.all([fetchPublic({}), fetchRecs({})])
-      .then(([pub, recs]) => {
+    Promise.all([fetchPublic({}), fetchRecs({}), fetchFriends({})])
+      .then(([pub, recs, fr]) => {
         if (!alive) return;
         setEnabled(Boolean(pub?.enabled && pub?.feed_recs_enabled));
         setItems(recs.items ?? []);
+        setFriends(fr.items ?? []);
       })
-      .catch(() => { if (alive) setItems([]); })
+      .catch(() => { if (alive) { setItems([]); setFriends([]); } })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [user?.id, user?.isGuest, dismissed, fetchPublic, fetchRecs]);
+  }, [user?.id, user?.isGuest, dismissed, fetchPublic, fetchRecs, fetchFriends]);
 
   if (!user?.id || user.isGuest || dismissed || !enabled) return null;
   if (loading) return null;
-  if (items.length === 0) return null;
+  if (items.length === 0 && friends.length === 0) return null;
 
   const dismiss = () => {
     try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch { /* ignore */ }
@@ -84,12 +98,40 @@ export function BoobubbleAssistantWidget() {
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
-      <p className="mb-2 text-[11px] text-muted-foreground">Real picks from the community — refreshed for you.</p>
-      <ul className="space-y-1.5">
-        {items.slice(0, 5).map((it) => (
-          <RecItem key={`${it.kind}:${it.id}`} item={it} />
-        ))}
-      </ul>
+      {items.length > 0 && (
+        <>
+          <p className="mb-2 text-[11px] text-muted-foreground">Real picks from the community — refreshed for you.</p>
+          <ul className="space-y-1.5">
+            {items.slice(0, 5).map((it) => (
+              <RecItem key={`${it.kind}:${it.id}`} item={it} />
+            ))}
+          </ul>
+        </>
+      )}
+      {friends.length > 0 && (
+        <div className="mt-3 border-t border-border/60 pt-2">
+          <p className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
+            <UserPlus className="h-3 w-3" /> People you may know
+          </p>
+          <ul className="space-y-1">
+            {friends.slice(0, 3).map((f) => (
+              <li key={f.id}>
+                <Link
+                  to="/u/$username"
+                  params={{ username: f.username }}
+                  className="flex items-center gap-2 rounded-lg bg-background/40 px-2 py-1.5 text-xs hover:bg-background"
+                >
+                  {f.avatar_url
+                    ? <img src={f.avatar_url} alt="" loading="lazy" className="h-6 w-6 rounded-full object-cover" />
+                    : <span className="grid h-6 w-6 place-items-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">{f.username.slice(0, 1).toUpperCase()}</span>}
+                  <span className="min-w-0 flex-1 truncate font-medium">@{f.username}</span>
+                  <span className="text-[10px] text-muted-foreground">{f.mutual_count} mutual</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="mt-2 flex items-center justify-between text-[11px]">
         <Link to="/account" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
           <BellOff className="h-3 w-3" /> Manage assistant
