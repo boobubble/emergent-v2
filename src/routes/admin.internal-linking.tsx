@@ -54,12 +54,14 @@ function InternalLinkingPage() {
         <TabsList className="mb-4 flex flex-wrap">
           <TabsTrigger value="targets"><Link2 className="mr-1.5 h-3.5 w-3.5" />Targets</TabsTrigger>
           <TabsTrigger value="suggestions"><Sparkles className="mr-1.5 h-3.5 w-3.5" />Suggestions</TabsTrigger>
+          <TabsTrigger value="bulk"><Layers className="mr-1.5 h-3.5 w-3.5" />Bulk</TabsTrigger>
           <TabsTrigger value="orphans"><AlertCircle className="mr-1.5 h-3.5 w-3.5" />Orphans</TabsTrigger>
           <TabsTrigger value="analytics"><BarChart3 className="mr-1.5 h-3.5 w-3.5" />Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="targets"><TargetsTab /></TabsContent>
         <TabsContent value="suggestions"><SuggestionsTab /></TabsContent>
+        <TabsContent value="bulk"><BulkTab /></TabsContent>
         <TabsContent value="orphans"><OrphansTab /></TabsContent>
         <TabsContent value="analytics"><AnalyticsTab /></TabsContent>
       </Tabs>
