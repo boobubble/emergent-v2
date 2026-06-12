@@ -160,6 +160,104 @@ function AdminBoobubblePage() {
       </section>
 
       <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold">Reward Assistant</h3>
+        <Row label="Send daily reward summary DM" checked={v.reward_daily_dm_enabled} onChange={(b) => set("reward_daily_dm_enabled", b)} />
+        <label className="block text-xs">
+          <span className="mb-1 flex items-center justify-between text-muted-foreground">
+            <span>Only DM if user earned at least this many coins today</span>
+            <span className="font-mono text-foreground">{v.reward_min_coins_threshold} 🪙</span>
+          </span>
+          <input type="range" min={0} max={500} step={5} value={v.reward_min_coins_threshold} onChange={(e) => set("reward_min_coins_threshold", Number(e.target.value))} className="w-full" />
+        </label>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold">Friend Assistant</h3>
+        <Row label="Show friend suggestions (friends-of-friends) in the Assistant widget" checked={v.friend_suggestions_enabled} onChange={(b) => set("friend_suggestions_enabled", b)} />
+        <p className="text-[11px] text-muted-foreground">Suggestions are real users ranked by mutual connections — bots are excluded.</p>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold">Event Assistant</h3>
+        <p className="text-[11px] text-muted-foreground">Broadcast one announcement DM to every user once. Change the ID to send a new round.</p>
+        <Row
+          label="Announcement active"
+          checked={Boolean(v.event_announcement?.active)}
+          onChange={(b) => set("event_announcement", { ...(v.event_announcement ?? { id: "ann-" + Date.now(), title: "", body: "", cta_label: null, cta_url: null, active: false }), active: b })}
+        />
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="block text-xs">
+            <span className="mb-1 block text-muted-foreground">Announcement ID (change to re-send)</span>
+            <input
+              value={v.event_announcement?.id ?? ""}
+              onChange={(e) => set("event_announcement", { ...(v.event_announcement ?? { title: "", body: "", cta_label: null, cta_url: null, active: false }), id: e.target.value })}
+              placeholder="e.g. weekend-double-xp-2026-06"
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            />
+          </label>
+          <label className="block text-xs">
+            <span className="mb-1 block text-muted-foreground">Title</span>
+            <input
+              value={v.event_announcement?.title ?? ""}
+              onChange={(e) => set("event_announcement", { ...(v.event_announcement ?? { id: "ann-" + Date.now(), body: "", cta_label: null, cta_url: null, active: false }), title: e.target.value })}
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            />
+          </label>
+        </div>
+        <label className="block text-xs">
+          <span className="mb-1 block text-muted-foreground">Body</span>
+          <textarea
+            value={v.event_announcement?.body ?? ""}
+            onChange={(e) => set("event_announcement", { ...(v.event_announcement ?? { id: "ann-" + Date.now(), title: "", cta_label: null, cta_url: null, active: false }), body: e.target.value })}
+            rows={3}
+            maxLength={600}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
+        </label>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="block text-xs">
+            <span className="mb-1 block text-muted-foreground">CTA label (optional)</span>
+            <input
+              value={v.event_announcement?.cta_label ?? ""}
+              onChange={(e) => set("event_announcement", { ...(v.event_announcement ?? { id: "ann-" + Date.now(), title: "", body: "", cta_url: null, active: false }), cta_label: e.target.value.trim() || null })}
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            />
+          </label>
+          <label className="block text-xs">
+            <span className="mb-1 block text-muted-foreground">CTA URL (optional)</span>
+            <input
+              value={v.event_announcement?.cta_url ?? ""}
+              onChange={(e) => set("event_announcement", { ...(v.event_announcement ?? { id: "ann-" + Date.now(), title: "", body: "", cta_label: null, active: false }), cta_url: e.target.value.trim() || null })}
+              placeholder="https://…"
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            />
+          </label>
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold">Security Assistant</h3>
+        <Row label="DM users about new bans, mutes, and resolved reports" checked={v.security_dm_enabled} onChange={(b) => set("security_dm_enabled", b)} />
+        <p className="text-[11px] text-muted-foreground">Security DMs are transactional — they ignore the user's "promo DMs off" preference but still respect a full Assistant mute.</p>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold">Share &amp; Earn</h3>
+        <Row label="Enable Share &amp; Earn rewards for sharing posts" checked={v.share_earn_enabled} onChange={(b) => set("share_earn_enabled", b)} />
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="block text-xs">
+            <span className="mb-1 flex items-center justify-between text-muted-foreground"><span>Reward per share</span><span className="font-mono text-foreground">{v.share_reward_coins} 🪙</span></span>
+            <input type="range" min={0} max={20} step={1} value={v.share_reward_coins} onChange={(e) => set("share_reward_coins", Number(e.target.value))} className="w-full" />
+          </label>
+          <label className="block text-xs">
+            <span className="mb-1 flex items-center justify-between text-muted-foreground"><span>Daily limit (shares/user)</span><span className="font-mono text-foreground">{v.share_daily_limit}</span></span>
+            <input type="range" min={0} max={50} step={1} value={v.share_daily_limit} onChange={(e) => set("share_daily_limit", Number(e.target.value))} className="w-full" />
+          </label>
+        </div>
+        <p className="text-[11px] text-muted-foreground">One reward per post per day. Enforced server-side via the rewards ledger.</p>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
         <h3 className="text-sm font-semibold">Identity</h3>
         <label className="block text-xs">
           <span className="mb-1 block text-muted-foreground">Username</span>
