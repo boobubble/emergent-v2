@@ -58,6 +58,7 @@ import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminMediaApisRouteImport } from './routes/admin.media-apis'
 import { Route as AdminMaintenanceRouteImport } from './routes/admin.maintenance'
 import { Route as AdminLanguagesRouteImport } from './routes/admin.languages'
+import { Route as AdminInternalLinkingRouteImport } from './routes/admin.internal-linking'
 import { Route as AdminHomepageRouteImport } from './routes/admin.homepage'
 import { Route as AdminGuestAccessRouteImport } from './routes/admin.guest-access'
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
@@ -336,6 +337,11 @@ const AdminLanguagesRoute = AdminLanguagesRouteImport.update({
   path: '/languages',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminInternalLinkingRoute = AdminInternalLinkingRouteImport.update({
+  id: '/internal-linking',
+  path: '/internal-linking',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminHomepageRoute = AdminHomepageRouteImport.update({
   id: '/homepage',
   path: '/homepage',
@@ -546,6 +552,7 @@ export interface FileRoutesByFullPath {
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/homepage': typeof AdminHomepageRoute
+  '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/languages': typeof AdminLanguagesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
@@ -628,6 +635,7 @@ export interface FileRoutesByTo {
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/homepage': typeof AdminHomepageRoute
+  '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/languages': typeof AdminLanguagesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
@@ -712,6 +720,7 @@ export interface FileRoutesById {
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/homepage': typeof AdminHomepageRoute
+  '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/languages': typeof AdminLanguagesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
@@ -797,6 +806,7 @@ export interface FileRouteTypes {
     | '/admin/general'
     | '/admin/guest-access'
     | '/admin/homepage'
+    | '/admin/internal-linking'
     | '/admin/languages'
     | '/admin/maintenance'
     | '/admin/media-apis'
@@ -879,6 +889,7 @@ export interface FileRouteTypes {
     | '/admin/general'
     | '/admin/guest-access'
     | '/admin/homepage'
+    | '/admin/internal-linking'
     | '/admin/languages'
     | '/admin/maintenance'
     | '/admin/media-apis'
@@ -962,6 +973,7 @@ export interface FileRouteTypes {
     | '/admin/general'
     | '/admin/guest-access'
     | '/admin/homepage'
+    | '/admin/internal-linking'
     | '/admin/languages'
     | '/admin/maintenance'
     | '/admin/media-apis'
@@ -1373,6 +1385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLanguagesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/internal-linking': {
+      id: '/admin/internal-linking'
+      path: '/internal-linking'
+      fullPath: '/admin/internal-linking'
+      preLoaderRoute: typeof AdminInternalLinkingRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/homepage': {
       id: '/admin/homepage'
       path: '/homepage'
@@ -1640,6 +1659,7 @@ interface AdminRouteChildren {
   AdminGeneralRoute: typeof AdminGeneralRoute
   AdminGuestAccessRoute: typeof AdminGuestAccessRoute
   AdminHomepageRoute: typeof AdminHomepageRoute
+  AdminInternalLinkingRoute: typeof AdminInternalLinkingRoute
   AdminLanguagesRoute: typeof AdminLanguagesRoute
   AdminMaintenanceRoute: typeof AdminMaintenanceRoute
   AdminMediaApisRoute: typeof AdminMediaApisRoute
@@ -1695,6 +1715,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGeneralRoute: AdminGeneralRoute,
   AdminGuestAccessRoute: AdminGuestAccessRoute,
   AdminHomepageRoute: AdminHomepageRoute,
+  AdminInternalLinkingRoute: AdminInternalLinkingRoute,
   AdminLanguagesRoute: AdminLanguagesRoute,
   AdminMaintenanceRoute: AdminMaintenanceRoute,
   AdminMediaApisRoute: AdminMediaApisRoute,
@@ -1766,13 +1787,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
