@@ -15,7 +15,7 @@ import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { IgnoreProvider } from "@/lib/ignore-store";
 import { AppSettingsProvider } from "@/lib/app-settings";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
 import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
@@ -196,6 +196,14 @@ function AuthGate() {
   const location = useLocation();
   const path = location.pathname;
   const hasStoredSession = hasStoredAuthSession();
+  const [authWaitExpired, setAuthWaitExpired] = useState(false);
+
+  useEffect(() => {
+    setAuthWaitExpired(false);
+    if (ready || user) return;
+    const timer = window.setTimeout(() => setAuthWaitExpired(true), 2500);
+    return () => window.clearTimeout(timer);
+  }, [path, ready, user]);
 
   if (!user && isPublicPath(path)) {
     return (
@@ -211,7 +219,7 @@ function AuthGate() {
     );
   }
 
-  if (!ready && !hasStoredSession) return <Navigate to="/welcome" replace />;
+  if (!ready && (!hasStoredSession || authWaitExpired)) return <Navigate to="/welcome" replace />;
 
   if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
 
