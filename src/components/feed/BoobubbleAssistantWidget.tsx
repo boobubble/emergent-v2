@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, Sparkles, Vote, VenetianMask, Newspaper, ArrowRight, BellOff, X } from "lucide-react";
+import { BadgeCheck, Sparkles, Vote, VenetianMask, Newspaper, ArrowRight, BellOff, X, UserPlus } from "lucide-react";
 import {
   getAssistantFeedRecommendations,
   triggerWelcomeIfNeeded,
   triggerMissionDigestIfNeeded,
+  triggerRewardDigestIfNeeded,
+  triggerEventAnnouncementIfNeeded,
+  triggerSecurityDigestIfNeeded,
+  getFriendSuggestions,
   getBoobubblePublic,
   type AssistantRecommendation,
+  type FriendSuggestion,
 } from "@/lib/boobubble.functions";
 import { useAuth } from "@/lib/auth-store";
 
