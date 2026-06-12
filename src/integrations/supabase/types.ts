@@ -84,9 +84,12 @@ export type Database = {
         Row: {
           created_at: string
           disable_promo: boolean
+          event_announced_id: string | null
           mission_daily_sent_on: string | null
           mission_weekly_sent_on: string | null
           muted: boolean
+          reward_daily_sent_on: string | null
+          security_checked_at: string | null
           updated_at: string
           user_id: string
           welcomed_at: string | null
@@ -94,9 +97,12 @@ export type Database = {
         Insert: {
           created_at?: string
           disable_promo?: boolean
+          event_announced_id?: string | null
           mission_daily_sent_on?: string | null
           mission_weekly_sent_on?: string | null
           muted?: boolean
+          reward_daily_sent_on?: string | null
+          security_checked_at?: string | null
           updated_at?: string
           user_id: string
           welcomed_at?: string | null
@@ -104,9 +110,12 @@ export type Database = {
         Update: {
           created_at?: string
           disable_promo?: boolean
+          event_announced_id?: string | null
           mission_daily_sent_on?: string | null
           mission_weekly_sent_on?: string | null
           muted?: boolean
+          reward_daily_sent_on?: string | null
+          security_checked_at?: string | null
           updated_at?: string
           user_id?: string
           welcomed_at?: string | null
