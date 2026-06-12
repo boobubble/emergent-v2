@@ -158,8 +158,8 @@ export const provisionBoobubbleAssistant = createServerFn({ method: "POST" })
       return { ok: true, user_id: current.bot_user_id, existed: true };
     }
 
-    // Use a real-looking domain — Supabase rejects ".local" TLDs as invalid emails.
-    const email = `boobubble-assistant+${Date.now()}@boobubble.system`;
+    // Use a real ICANN TLD — Supabase Auth rejects non-routable TLDs (.local, .system) with 500.
+    const email = `boobubble-assistant+${Date.now()}@boobubble.app`;
     const password = crypto.randomUUID() + "-" + crypto.randomUUID();
     const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
       email,
