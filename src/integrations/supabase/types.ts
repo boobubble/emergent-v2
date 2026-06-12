@@ -358,7 +358,9 @@ export type Database = {
           excerpt: string | null
           featured: boolean
           id: string
+          is_cornerstone: boolean
           layout: string
+          link_priority: number
           meta_description: string | null
           meta_keywords: string | null
           meta_title: string | null
@@ -387,7 +389,9 @@ export type Database = {
           excerpt?: string | null
           featured?: boolean
           id?: string
+          is_cornerstone?: boolean
           layout?: string
+          link_priority?: number
           meta_description?: string | null
           meta_keywords?: string | null
           meta_title?: string | null
@@ -416,7 +420,9 @@ export type Database = {
           excerpt?: string | null
           featured?: boolean
           id?: string
+          is_cornerstone?: boolean
           layout?: string
+          link_priority?: number
           meta_description?: string | null
           meta_keywords?: string | null
           meta_title?: string | null
@@ -885,6 +891,98 @@ export type Database = {
           last_used_at?: string
           tag?: string
           usage_count?: number
+        }
+        Relationships: []
+      }
+      internal_link_clicks: {
+        Row: {
+          anchor_text: string | null
+          created_at: string
+          id: number
+          source_url: string | null
+          target_id: string | null
+          target_url: string
+          user_id: string | null
+        }
+        Insert: {
+          anchor_text?: string | null
+          created_at?: string
+          id?: number
+          source_url?: string | null
+          target_id?: string | null
+          target_url: string
+          user_id?: string | null
+        }
+        Update: {
+          anchor_text?: string | null
+          created_at?: string
+          id?: number
+          source_url?: string | null
+          target_id?: string | null
+          target_url?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_link_clicks_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "internal_link_targets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      internal_link_targets: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_cornerstone: boolean
+          keywords: string[]
+          priority: number
+          slug: string | null
+          source_id: string | null
+          source_table: string | null
+          title: string
+          type: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_cornerstone?: boolean
+          keywords?: string[]
+          priority?: number
+          slug?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          title: string
+          type: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_cornerstone?: boolean
+          keywords?: string[]
+          priority?: number
+          slug?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
