@@ -17,10 +17,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link2, RefreshCw, Plus, Trash2, Pencil, Sparkles, Search, AlertCircle, BarChart3 } from "lucide-react";
+import { Link2, RefreshCw, Plus, Trash2, Pencil, Sparkles, Search, AlertCircle, BarChart3, Layers, X } from "lucide-react";
 import {
   listLinkTargets, upsertLinkTarget, deleteLinkTarget, syncLinkTargets,
   suggestLinks, applyLinksToPage, getOrphanReport, getLinkAnalytics,
+  listLinkablePages,
 } from "@/lib/internal-linking.functions";
 
 export const Route = createFileRoute("/admin/internal-linking")({ component: InternalLinkingPage });
