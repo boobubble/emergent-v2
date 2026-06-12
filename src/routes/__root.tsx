@@ -170,6 +170,17 @@ function isPublicPath(pathname: string) {
   return PUBLIC_PATH_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
+function hasStoredAuthSession() {
+  if (typeof window === "undefined") return true;
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i) ?? "";
+      if (key.startsWith("sb-") && key.endsWith("-auth-token")) return true;
+    }
+  } catch { /* ignore */ }
+  return false;
+}
+
 function AuthenticatedHooks({ userId }: { userId: string }) {
   // These hooks issue Supabase queries / realtime work and previously caused a
   // request flood when mounted before auth was settled. They now mount only
@@ -184,6 +195,7 @@ function AuthGate() {
   const { user, ready } = useAuth();
   const location = useLocation();
   const path = location.pathname;
+  const hasStoredSession = hasStoredAuthSession();
 
   if (!user && isPublicPath(path)) {
     return (
@@ -198,6 +210,8 @@ function AuthGate() {
       </>
     );
   }
+
+  if (!ready && !hasStoredSession) return <Navigate to="/welcome" replace />;
 
   if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
 
