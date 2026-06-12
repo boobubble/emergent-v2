@@ -45,6 +45,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/appearance",    label: "Themes",        icon: Palette,           keywords: ["theme", "colors", "logo", "favicon"] },
       { to: "/admin/social-layout", label: "Layout",        icon: LayoutGrid,        keywords: ["layout", "sidebar", "widgets"] },
       { to: "/admin/seo",           label: "SEO",           icon: Search,            keywords: ["seo", "meta", "sitemap"] },
+      { to: "/admin/internal-linking", label: "Internal Linking", icon: Link2,         keywords: ["internal links", "seo hub", "linking", "cornerstone", "orphan", "anchors", "targets"] },
       { to: "/admin/ads-scripts",   label: "Ads & Scripts", icon: Megaphone,         keywords: ["ads", "adsense", "scripts", "header", "footer", "tracking", "analytics", "pixel"] },
       { to: "/admin/ad-placements", label: "Ad Placements", icon: Megaphone,         keywords: ["ads", "placement", "monetization", "feed", "chatroom", "dm", "profile", "games", "banner", "sponsor", "affiliate", "premium", "guest"] },
       { to: "/admin/media-apis",    label: "Media APIs",    icon: Youtube,           keywords: ["youtube", "giphy", "gif", "video", "embed", "api keys"] },
