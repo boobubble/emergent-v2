@@ -161,7 +161,8 @@ export const provisionBoobubbleAssistant = createServerFn({ method: "POST" })
     // Use a real ICANN TLD — Supabase Auth rejects non-routable TLDs (.local, .system) with 500.
     const email = `boobubble-assistant+${Date.now()}@boobubble.app`;
     // Keep under bcrypt's 72-byte limit; two UUIDs plus a separator is 73 bytes and makes Auth return 500.
-    const password = crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "");
+    const password =
+      crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "");
     const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
