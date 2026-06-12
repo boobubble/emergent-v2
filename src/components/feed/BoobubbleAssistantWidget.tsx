@@ -23,19 +23,27 @@ export function BoobubbleAssistantWidget() {
   const fetchRecs = useServerFn(getAssistantFeedRecommendations);
   const triggerWelcome = useServerFn(triggerWelcomeIfNeeded);
   const triggerMissions = useServerFn(triggerMissionDigestIfNeeded);
+  const triggerRewards = useServerFn(triggerRewardDigestIfNeeded);
+  const triggerEvent = useServerFn(triggerEventAnnouncementIfNeeded);
+  const triggerSecurity = useServerFn(triggerSecurityDigestIfNeeded);
+  const fetchFriends = useServerFn(getFriendSuggestions);
   const fetchPublic = useServerFn(getBoobubblePublic);
 
   const [items, setItems] = useState<AssistantRecommendation[]>([]);
+  const [friends, setFriends] = useState<FriendSuggestion[]>([]);
   const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
 
-  // Fire welcome + mission digest triggers on first authenticated mount
+  // Fire all idempotent triggers on first authenticated mount
   useEffect(() => {
     if (!user?.id || user.isGuest) return;
     triggerWelcome({}).catch(() => {});
     triggerMissions({}).catch(() => {});
-  }, [user?.id, user?.isGuest, triggerWelcome, triggerMissions]);
+    triggerRewards({}).catch(() => {});
+    triggerEvent({}).catch(() => {});
+    triggerSecurity({}).catch(() => {});
+  }, [user?.id, user?.isGuest, triggerWelcome, triggerMissions, triggerRewards, triggerEvent, triggerSecurity]);
 
   // Local dismissal (per 24h)
   useEffect(() => {
@@ -48,20 +56,21 @@ export function BoobubbleAssistantWidget() {
   useEffect(() => {
     if (!user?.id || user.isGuest || dismissed) { setLoading(false); return; }
     let alive = true;
-    Promise.all([fetchPublic({}), fetchRecs({})])
-      .then(([pub, recs]) => {
+    Promise.all([fetchPublic({}), fetchRecs({}), fetchFriends({})])
+      .then(([pub, recs, fr]) => {
         if (!alive) return;
         setEnabled(Boolean(pub?.enabled && pub?.feed_recs_enabled));
         setItems(recs.items ?? []);
+        setFriends(fr.items ?? []);
       })
-      .catch(() => { if (alive) setItems([]); })
+      .catch(() => { if (alive) { setItems([]); setFriends([]); } })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [user?.id, user?.isGuest, dismissed, fetchPublic, fetchRecs]);
+  }, [user?.id, user?.isGuest, dismissed, fetchPublic, fetchRecs, fetchFriends]);
 
   if (!user?.id || user.isGuest || dismissed || !enabled) return null;
   if (loading) return null;
-  if (items.length === 0) return null;
+  if (items.length === 0 && friends.length === 0) return null;
 
   const dismiss = () => {
     try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch { /* ignore */ }
