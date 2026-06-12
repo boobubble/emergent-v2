@@ -21,6 +21,15 @@ import { DAILY_MISSIONS } from "./economy-config";
 
 const SETTINGS_KEY = "boobubble_assistant";
 
+export interface EventAnnouncement {
+  id: string;          // unique id — change to re-send
+  title: string;
+  body: string;
+  cta_label: string | null;
+  cta_url: string | null;
+  active: boolean;
+}
+
 export interface BoobubbleSettings {
   enabled: boolean;
   welcome_enabled: boolean;
@@ -28,8 +37,22 @@ export interface BoobubbleSettings {
   ai_personalize_welcome: boolean;
   mission_daily_dm_enabled: boolean;
   mission_weekly_dm_enabled: boolean;
-  mission_min_completion_pct: number; // 0..100 — under this, nudge; over, celebrate
-  mission_weekly_day: number; // 0=Sun..6=Sat (UTC) summary day
+  mission_min_completion_pct: number;
+  mission_weekly_day: number;
+  // Reward Assistant
+  reward_daily_dm_enabled: boolean;
+  reward_min_coins_threshold: number; // only DM if user gained >= this many coins today
+  // Friend Assistant
+  friend_suggestions_enabled: boolean;
+  // Event Assistant
+  event_announcement: EventAnnouncement | null;
+  // Security Assistant
+  security_dm_enabled: boolean;
+  // Share & Earn
+  share_earn_enabled: boolean;
+  share_reward_coins: number;
+  share_daily_limit: number;
+  // Identity
   bot_user_id: string | null;
   bot_username: string;
   bot_avatar_url: string | null;
@@ -44,7 +67,15 @@ const DEFAULT_SETTINGS: BoobubbleSettings = {
   mission_daily_dm_enabled: true,
   mission_weekly_dm_enabled: true,
   mission_min_completion_pct: 60,
-  mission_weekly_day: 1, // Monday
+  mission_weekly_day: 1,
+  reward_daily_dm_enabled: true,
+  reward_min_coins_threshold: 25,
+  friend_suggestions_enabled: true,
+  event_announcement: null,
+  security_dm_enabled: true,
+  share_earn_enabled: true,
+  share_reward_coins: 2,
+  share_daily_limit: 10,
   bot_user_id: null,
   bot_username: "BooBubble",
   bot_avatar_url: null,
