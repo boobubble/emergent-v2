@@ -264,6 +264,9 @@ export const PostCard = memo(function PostCard({
             const shareText = post.text ? post.text : `Check out this post by ${authorName}`;
             const payload: SharePayload = { title, text: shareText, url };
             earnShare({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
+            claimShare({ data: { postId: post.id, target: "native" } })
+              .then((r) => { if (r?.ok && r.awarded > 0) toast.success(`+${r.awarded} 🪙 for sharing!`); })
+              .catch(() => {});
             if (typeof navigator !== "undefined" && navigator.share) {
               try {
                 await navigator.share({ title, text: shareText, url });
