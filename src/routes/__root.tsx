@@ -15,7 +15,7 @@ import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { IgnoreProvider } from "@/lib/ignore-store";
 import { AppSettingsProvider } from "@/lib/app-settings";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
 import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
@@ -170,6 +170,17 @@ function isPublicPath(pathname: string) {
   return PUBLIC_PATH_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
+function hasStoredAuthSession() {
+  if (typeof window === "undefined") return true;
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i) ?? "";
+      if (key.startsWith("sb-") && key.endsWith("-auth-token")) return true;
+    }
+  } catch { /* ignore */ }
+  return false;
+}
+
 function AuthenticatedHooks({ userId }: { userId: string }) {
   // These hooks issue Supabase queries / realtime work and previously caused a
   // request flood when mounted before auth was settled. They now mount only
@@ -183,10 +194,46 @@ function AuthenticatedHooks({ userId }: { userId: string }) {
 function AuthGate() {
   const { user, ready } = useAuth();
   const location = useLocation();
-  if (!ready) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
+  const path = location.pathname;
+  const hasStoredSession = hasStoredAuthSession();
+  const [authWaitExpired, setAuthWaitExpired] = useState(false);
+
+  useEffect(() => {
+    setAuthWaitExpired(false);
+    if (ready || user) return;
+    const timer = window.setTimeout(() => setAuthWaitExpired(true), 2500);
+    return () => window.clearTimeout(timer);
+  }, [path, ready, user]);
+
+  if (!user && isPublicPath(path)) {
+    return (
+      <>
+        <HeadFootScripts />
+        <AdsAutoLoader />
+        <SessionConflictBanner />
+        <Outlet />
+        <GlobalThemeToggle />
+        <Sonner />
+        <RealtimeDebugOverlay />
+      </>
+    );
+  }
+
+  if (!ready && (!hasStoredSession || authWaitExpired)) return <Navigate to="/welcome" replace />;
+
+  if (!ready) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background px-4 text-center text-muted-foreground">
+        <script dangerouslySetInnerHTML={{ __html: "setTimeout(function(){if(document.body&&document.body.innerText.includes('Loading')) location.replace('/welcome')},3500)" }} />
+        <div>
+          <p>Loading…</p>
+          <a href="/welcome" className="mt-4 inline-flex text-sm font-medium text-primary underline">Continue to home</a>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
-    const path = location.pathname;
     // Public, self-contained routes (landing, login, password reset, public post pages) render normally.
     if (isPublicPath(path)) {
       return (

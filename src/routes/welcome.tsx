@@ -120,7 +120,7 @@ function LandingPage() {
     let cancel = false;
     (async () => {
       try {
-        const res = await fetch("/api/public/landing", { credentials: "omit" });
+        const res = await fetch("/api/public/landing");
         if (!res.ok) return;
         const json = (await res.json()) as LandingPayload;
         if (!cancel) setData(json);
