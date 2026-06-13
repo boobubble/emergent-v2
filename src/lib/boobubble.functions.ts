@@ -344,8 +344,8 @@ async function buildWelcomeMessage(username: string, personalize: boolean): Prom
 // ---- Welcome trigger: idempotent, fires once per user ----
 export const triggerWelcomeIfNeeded = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); context }) => {
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.welcome_enabled || !settings.bot_user_id) {
       return { sent: false, reason: "disabled" };
@@ -415,8 +415,8 @@ export interface AssistantRecommendation {
 
 export const getAssistantFeedRecommendations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); context }) => {
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.feed_recs_enabled) return { items: [] as AssistantRecommendation[] };
 
@@ -627,8 +627,8 @@ async function sendAssistantDM(botId: string, userId: string, text: string, kind
  */
 export const triggerMissionDigestIfNeeded = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); context }) => {
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.bot_user_id) return { daily: false, weekly: false, reason: "disabled" as const };
     if (settings.bot_user_id === context.userId) return { daily: false, weekly: false, reason: "self" as const };
@@ -704,8 +704,8 @@ export const triggerMissionDigestIfNeeded = createServerFn({ method: "POST" })
 
 export const triggerRewardDigestIfNeeded = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); context }) => {
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.reward_daily_dm_enabled || !settings.bot_user_id) {
       return { sent: false, reason: "disabled" as const };
@@ -789,8 +789,8 @@ export interface FriendSuggestion {
 
 export const getFriendSuggestions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); context }) => {
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.friend_suggestions_enabled) {
       return { items: [] as FriendSuggestion[] };
@@ -865,8 +865,8 @@ export const getFriendSuggestions = createServerFn({ method: "GET" })
 
 export const triggerEventAnnouncementIfNeeded = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); context }) => {
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     const ev = settings.event_announcement;
     if (!settings.enabled || !settings.bot_user_id || !ev || !ev.active) {
@@ -916,8 +916,8 @@ export const triggerEventAnnouncementIfNeeded = createServerFn({ method: "POST" 
 
 export const triggerSecurityDigestIfNeeded = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); context }) => {
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.security_dm_enabled || !settings.bot_user_id) {
       return { sent: false, reason: "disabled" as const };
@@ -1023,8 +1023,8 @@ export const claimShareReward = createServerFn({ method: "POST" })
     postId: z.string().uuid(),
     target: z.enum(["whatsapp","telegram","facebook","x","linkedin","copy","native"]),
   }).parse(i))
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); data, context }) => {
+  .handler(async ({ data, context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.share_earn_enabled || settings.share_reward_coins <= 0) {
       return { ok: false, reason: "disabled" as const, awarded: 0 };
