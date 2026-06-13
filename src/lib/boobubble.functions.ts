@@ -183,8 +183,8 @@ export const saveBoobubbleSettings = createServerFn({ method: "POST" })
       bot_bio: z.string().max(280),
     }).parse(input),
   )
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); data, context }) => {
+  .handler(async ({ data, context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     await assertAdmin(context.userId);
     const next = await writeSettings(data);
     // Sync the bot's profile if it exists
@@ -206,8 +206,8 @@ export const saveBoobubbleSettings = createServerFn({ method: "POST" })
 // ---- Admin: provision (create) the bot auth user once ----
 export const provisionBoobubbleAssistant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); context }) => {
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     await assertAdmin(context.userId);
     const current = await readSettings();
     if (current.bot_user_id) {
@@ -257,8 +257,8 @@ export const provisionBoobubbleAssistant = createServerFn({ method: "POST" })
 // ---- User: read my prefs (auto-create row on first read) ----
 export const getMyAssistantPrefs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); context }) => {
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const { data } = await supabaseAdmin
       .from("assistant_user_prefs")
       .select("*")
@@ -282,8 +282,8 @@ export const saveMyAssistantPrefs = createServerFn({ method: "POST" })
       disable_promo: z.boolean().optional(),
     }).parse(input),
   )
-  .handler(async ({
-    const supabaseAdmin = await getSupabaseAdmin(); data, context }) => {
+  .handler(async ({ data, context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const { error } = await supabaseAdmin
       .from("assistant_user_prefs")
       .upsert({ user_id: context.userId, ...data }, { onConflict: "user_id" });
