@@ -9,8 +9,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { EARN, SPEND, roomLoyaltyFor } from "./economy-config";
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 // ──────────────────────────────────────────────────────────────────────────
 // Internal helpers (server-only)
@@ -45,7 +49,7 @@ async function logTx(
   refType?: string,
   refId?: string,
 ) {
-  await supabaseAdmin.from("coin_transactions").insert({
+  await (await getSupabaseAdmin()).from("coin_transactions").insert({
     user_id: userId,
     kind,
     amount,
@@ -91,7 +95,7 @@ async function bumpMissionProgress(userId: string, missionId: string, by = 1) {
     .eq("day", day)
     .maybeSingle();
   if (!row) {
-    await supabaseAdmin.from("daily_missions").insert({
+    await (await getSupabaseAdmin()).from("daily_missions").insert({
       user_id: userId,
       day,
       progress: { [missionId]: by },
@@ -123,7 +127,7 @@ async function bumpRoomLoyalty(userId: string, channelId: string) {
     .maybeSingle();
 
   if (!row) {
-    await supabaseAdmin.from("room_loyalty").insert({
+    await (await getSupabaseAdmin()).from("room_loyalty").insert({
       user_id: userId,
       channel_id: channelId,
       streak_days: 1,
@@ -315,7 +319,7 @@ export const highlightMessage = createServerFn({ method: "POST" })
     await logTx(userId, "coins", -cost, "highlight_message", "message", data.messageId);
 
     const expiresAt = new Date(Date.now() + SPEND.highlight_message.durationMs).toISOString();
-    const { error } = await supabaseAdmin.from("message_highlights").insert({
+    const { error } = await (await getSupabaseAdmin()).from("message_highlights").insert({
       message_id: data.messageId,
       channel_id: data.channelId,
       buyer_id: userId,
@@ -357,7 +361,7 @@ export const boostPost = createServerFn({ method: "POST" })
       .update({ trending_score: (post.trending_score ?? 0) + SPEND.boost_post.scoreDelta })
       .eq("id", data.postId);
 
-    await supabaseAdmin.from("post_boosts").insert({
+    await (await getSupabaseAdmin()).from("post_boosts").insert({
       post_id: data.postId,
       booster_id: userId,
       coins_spent: cost,

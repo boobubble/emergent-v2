@@ -1,8 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { isReservedSlug } from "@/lib/reserved-routes";
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 
 async function assertAdmin(userId: string) {
@@ -58,6 +62,7 @@ export const listPages = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ q: z.string().max(100).optional() }).parse(input ?? {}))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getSupabaseAdmin();
     let q = supabaseAdmin.from("custom_pages").select("*").order("updated_at", { ascending: false }).limit(200);
     if (data.q) q = q.ilike("title", `%${data.q}%`);
     const { data: rows, error } = await q;
@@ -70,7 +75,7 @@ export const getPage = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const { data: row, error } = await supabaseAdmin.from("custom_pages").select("*").eq("id", data.id).maybeSingle();
+    const { data: row, error } = await (await getSupabaseAdmin()).from("custom_pages").select("*").eq("id", data.id).maybeSingle();
     if (error) throw new Error(error.message);
     return row;
   });
@@ -92,7 +97,7 @@ export const savePage = createServerFn({ method: "POST" })
         throw new Error(`Slug "${slug}" already in use. Rename it or enable overwrite.`);
       }
       // overwrite path -> delete the existing page so we can update this one's slug
-      await supabaseAdmin.from("custom_pages").delete().eq("id", existing.id);
+      await (await getSupabaseAdmin()).from("custom_pages").delete().eq("id", existing.id);
     }
 
     const row = {
@@ -121,11 +126,11 @@ export const savePage = createServerFn({ method: "POST" })
     };
 
     if (data.id) {
-      const { error } = await supabaseAdmin.from("custom_pages").update(row).eq("id", data.id);
+      const { error } = await (await getSupabaseAdmin()).from("custom_pages").update(row).eq("id", data.id);
       if (error) throw new Error(error.message);
       return { ok: true, id: data.id, slug };
     }
-    const { data: ins, error } = await supabaseAdmin.from("custom_pages").insert(row).select("id").single();
+    const { data: ins, error } = await (await getSupabaseAdmin()).from("custom_pages").insert(row).select("id").single();
     if (error) throw new Error(error.message);
     return { ok: true, id: ins.id, slug };
   });
@@ -135,7 +140,7 @@ export const deletePage = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const { error } = await supabaseAdmin.from("custom_pages").delete().eq("id", data.id);
+    const { error } = await (await getSupabaseAdmin()).from("custom_pages").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -146,6 +151,7 @@ export const exportPages = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ ids: z.array(z.string().uuid()).optional() }).parse(input ?? {}))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getSupabaseAdmin();
     let q = supabaseAdmin.from("custom_pages").select("*").order("created_at");
     if (data.ids && data.ids.length) q = q.in("id", data.ids);
     const { data: rows, error } = await q;
@@ -179,10 +185,10 @@ export const importPages = createServerFn({ method: "POST" })
       };
       if (existing) {
         if (data.mode === "skip") { skipped++; continue; }
-        await supabaseAdmin.from("custom_pages").update(row).eq("id", existing.id);
+        await (await getSupabaseAdmin()).from("custom_pages").update(row).eq("id", existing.id);
         overwritten++;
       } else {
-        await supabaseAdmin.from("custom_pages").insert(row);
+        await (await getSupabaseAdmin()).from("custom_pages").insert(row);
         imported++;
       }
     }
@@ -206,7 +212,7 @@ export const getPublishedPage = createServerFn({ method: "GET" })
       .maybeSingle();
     if (!row) return null;
     // Fire-and-forget view bump
-    void supabaseAdmin.rpc("bump_page_view", { _slug: finalSlug });
+    void (await getSupabaseAdmin()).rpc("bump_page_view", { _slug: finalSlug });
     return { ...row, redirectedFrom: redir ? slug : null };
   });
 
@@ -233,7 +239,7 @@ export const listRedirects = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
-    const { data, error } = await supabaseAdmin.from("page_redirects").select("*").order("created_at", { ascending: false });
+    const { data, error } = await (await getSupabaseAdmin()).from("page_redirects").select("*").order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
   });
@@ -253,7 +259,7 @@ export const saveRedirect = createServerFn({ method: "POST" })
     }
 
     if (from === to) throw new Error("from and to slugs must differ");
-    const { error } = await supabaseAdmin.from("page_redirects").upsert(
+    const { error } = await (await getSupabaseAdmin()).from("page_redirects").upsert(
       { from_slug: from, to_slug: to },
       { onConflict: "from_slug" },
     );
@@ -266,7 +272,7 @@ export const deleteRedirect = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const { error } = await supabaseAdmin.from("page_redirects").delete().eq("id", data.id);
+    const { error } = await (await getSupabaseAdmin()).from("page_redirects").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

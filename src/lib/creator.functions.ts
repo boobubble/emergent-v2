@@ -5,8 +5,12 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { SCORE_WEIGHTS, creatorRankFor, VIRAL_JACKPOT } from "./economy-config";
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 function weekAgoIso(): string {
   return new Date(Date.now() - 7 * 86_400_000).toISOString();
