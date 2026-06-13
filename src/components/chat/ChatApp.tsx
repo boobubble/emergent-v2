@@ -22,8 +22,14 @@ export function ChatApp() {
   const [achOpen, setAchOpen] = useState(false);
   const [toast, setToast] = useState<EngageToast | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches
+    typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches
   );
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 768px)");
+    const onChange = (e: MediaQueryListEvent) => setSidebarOpen(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
