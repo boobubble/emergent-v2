@@ -6,8 +6,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { DAILY_MISSIONS, MISSION_BY_ID } from "./economy-config";
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 function todayUtc(): string {
   return new Date().toISOString().slice(0, 10);
@@ -83,7 +87,7 @@ export const claimMission = createServerFn({ method: "POST" })
     if (claimed.includes(mission.id)) throw new Error("Already claimed");
 
     await bumpProfile(userId, mission.xp, mission.coins);
-    await supabaseAdmin.from("coin_transactions").insert({
+    await (await getSupabaseAdmin()).from("coin_transactions").insert({
       user_id: userId,
       kind: "coins",
       amount: mission.coins,

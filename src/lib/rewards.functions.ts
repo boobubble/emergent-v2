@@ -1,8 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { SHOP_BY_ID } from "./shop-catalog";
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 const DAILY_CHEST: Record<number, number> = {
   1: 20, 2: 25, 3: 30, 4: 40, 5: 50, 6: 75, 7: 150,
@@ -30,7 +34,7 @@ async function bumpProfile(userId: string, addXp: number, addCoins: number) {
 }
 
 async function logTx(userId: string, kind: "xp" | "coins", amount: number, reason: string, refType?: string, refId?: string) {
-  await supabaseAdmin.from("coin_transactions").insert({
+  await (await getSupabaseAdmin()).from("coin_transactions").insert({
     user_id: userId, kind, amount, reason,
     ref_type: refType ?? null, ref_id: refId ?? null,
   } as never);
@@ -154,7 +158,7 @@ export const purchaseItem = createServerFn({ method: "POST" })
     await bumpProfile(userId, 0, -item.price);
     await logTx(userId, "coins", -item.price, "shop_purchase", "item", item.id);
 
-    const { error: invErr } = await supabaseAdmin.from("user_inventory").insert({
+    const { error: invErr } = await (await getSupabaseAdmin()).from("user_inventory").insert({
       user_id: userId,
       item_id: item.id,
       category: item.category,
@@ -207,8 +211,8 @@ export const getMyInventory = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { userId } = context;
     const [invRes, profRes] = await Promise.all([
-      supabaseAdmin.from("user_inventory").select("item_id, category, equipped, acquired_at").eq("user_id", userId),
-      supabaseAdmin.from("profiles").select("coins, xp, level, streak, longest_streak").eq("id", userId).maybeSingle(),
+      (await getSupabaseAdmin()).from("user_inventory").select("item_id, category, equipped, acquired_at").eq("user_id", userId),
+      (await getSupabaseAdmin()).from("profiles").select("coins, xp, level, streak, longest_streak").eq("id", userId).maybeSingle(),
     ]);
     return {
       inventory: invRes.data ?? [],

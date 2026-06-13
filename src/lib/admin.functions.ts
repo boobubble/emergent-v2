@@ -1,7 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 async function assertAdmin(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -44,7 +48,7 @@ export const getMyRoles = createServerFn({ method: "GET" })
 
 // -------- Settings (public read; admin write) --------
 export const getAllSettings = createServerFn({ method: "GET" }).handler(async () => {
-  const { data, error } = await supabaseAdmin.from("app_settings").select("*");
+  const { data, error } = await (await getSupabaseAdmin()).from("app_settings").select("*");
   if (error) throw new Error(error.message);
   const map: Record<string, any> = {};
   for (const row of data ?? []) map[row.key] = row.value;
@@ -67,7 +71,7 @@ export const updateSetting = createServerFn({ method: "POST" })
 
 // -------- SEO --------
 export const getAllSeo = createServerFn({ method: "GET" }).handler(async () => {
-  const { data, error } = await supabaseAdmin.from("seo_settings").select("*").order("page_key");
+  const { data, error } = await (await getSupabaseAdmin()).from("seo_settings").select("*").order("page_key");
   if (error) throw new Error(error.message);
   return data ?? [];
 });
@@ -115,15 +119,15 @@ export const getAnalytics = createServerFn({ method: "GET" })
       topChannels,
       newUsersByDay,
     ] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
-      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).gte("last_seen", since5m),
-      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since24),
-      supabaseAdmin.from("posts").select("id", { count: "exact", head: true }),
-      supabaseAdmin.from("posts").select("id", { count: "exact", head: true }).gte("created_at", since24),
-      supabaseAdmin.from("messages").select("id", { count: "exact", head: true }).gte("created_at", since24),
-      supabaseAdmin.from("games").select("id", { count: "exact", head: true }).gte("created_at", since24),
-      supabaseAdmin.from("messages").select("channel_id").gte("created_at", since24).limit(2000),
-      supabaseAdmin.from("profiles").select("created_at").gte("created_at", since7d).limit(5000),
+      (await getSupabaseAdmin()).from("profiles").select("id", { count: "exact", head: true }),
+      (await getSupabaseAdmin()).from("profiles").select("id", { count: "exact", head: true }).gte("last_seen", since5m),
+      (await getSupabaseAdmin()).from("profiles").select("id", { count: "exact", head: true }).gte("created_at", since24),
+      (await getSupabaseAdmin()).from("posts").select("id", { count: "exact", head: true }),
+      (await getSupabaseAdmin()).from("posts").select("id", { count: "exact", head: true }).gte("created_at", since24),
+      (await getSupabaseAdmin()).from("messages").select("id", { count: "exact", head: true }).gte("created_at", since24),
+      (await getSupabaseAdmin()).from("games").select("id", { count: "exact", head: true }).gte("created_at", since24),
+      (await getSupabaseAdmin()).from("messages").select("channel_id").gte("created_at", since24).limit(2000),
+      (await getSupabaseAdmin()).from("profiles").select("created_at").gte("created_at", since7d).limit(5000),
     ]);
 
     const channelCounts: Record<string, number> = {};
@@ -170,10 +174,10 @@ export const getRealtimeOverview = createServerFn({ method: "GET" })
     const since10m = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const since1m = new Date(Date.now() - 60 * 1000).toISOString();
     const [online, recentMsgs, activeGames, recentPosts] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).gte("last_seen", since5m),
-      supabaseAdmin.from("messages").select("channel_id").gte("created_at", since10m).limit(500),
-      supabaseAdmin.from("games").select("id", { count: "exact", head: true }).in("status", ["waiting", "active"]),
-      supabaseAdmin.from("posts").select("id", { count: "exact", head: true }).gte("created_at", since1m),
+      (await getSupabaseAdmin()).from("profiles").select("id", { count: "exact", head: true }).gte("last_seen", since5m),
+      (await getSupabaseAdmin()).from("messages").select("channel_id").gte("created_at", since10m).limit(500),
+      (await getSupabaseAdmin()).from("games").select("id", { count: "exact", head: true }).in("status", ["waiting", "active"]),
+      (await getSupabaseAdmin()).from("posts").select("id", { count: "exact", head: true }).gte("created_at", since1m),
     ]);
     const rooms = new Set<string>();
     for (const r of recentMsgs.data ?? []) {
@@ -209,10 +213,10 @@ export const getSeoTargetsSummary = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const [rooms, profiles, posts, games] = await Promise.all([
-      supabaseAdmin.from("messages").select("channel_id").limit(2000),
-      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
-      supabaseAdmin.from("posts").select("id", { count: "exact", head: true }).eq("privacy", "public"),
-      supabaseAdmin.from("games").select("id", { count: "exact", head: true }),
+      (await getSupabaseAdmin()).from("messages").select("channel_id").limit(2000),
+      (await getSupabaseAdmin()).from("profiles").select("id", { count: "exact", head: true }),
+      (await getSupabaseAdmin()).from("posts").select("id", { count: "exact", head: true }).eq("privacy", "public"),
+      (await getSupabaseAdmin()).from("games").select("id", { count: "exact", head: true }),
     ]);
     const roomSet = new Set<string>();
     for (const r of rooms.data ?? []) {
@@ -244,9 +248,9 @@ export const banUser = createServerFn({ method: "POST" })
       ? new Date(Date.now() + data.duration_minutes * 60_000).toISOString()
       : null;
     // Lift any prior active bans so we always have one current record
-    await supabaseAdmin.from("user_bans").update({ active: false })
+    await (await getSupabaseAdmin()).from("user_bans").update({ active: false })
       .eq("user_id", data.user_id).eq("active", true);
-    const { error } = await supabaseAdmin.from("user_bans").insert({
+    const { error } = await (await getSupabaseAdmin()).from("user_bans").insert({
       user_id: data.user_id,
       reason: data.reason,
       expires_at,
@@ -274,12 +278,12 @@ export const banUser = createServerFn({ method: "POST" })
         created_by: context.userId,
       }));
       if (rows.length) {
-        await supabaseAdmin.from("banned_devices").upsert(rows, { onConflict: "fingerprint" });
+        await (await getSupabaseAdmin()).from("banned_devices").upsert(rows, { onConflict: "fingerprint" });
         bannedDeviceCount = rows.length;
       }
     }
 
-    await supabaseAdmin.from("mod_logs").insert({
+    await (await getSupabaseAdmin()).from("mod_logs").insert({
       actor_id: context.userId,
       action: expires_at ? "temp_ban" : "ban",
       target_user_id: data.user_id,
@@ -316,7 +320,7 @@ export const unbanUser = createServerFn({ method: "POST" })
       .eq("user_id", data.user_id)
       .eq("active", true);
     if (error) throw new Error(error.message);
-    await supabaseAdmin.from("mod_logs").insert({
+    await (await getSupabaseAdmin()).from("mod_logs").insert({
       actor_id: context.userId,
       action: "unban",
       target_user_id: data.user_id,
@@ -334,7 +338,7 @@ export const deleteUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context.userId);
     if (data.user_id === context.userId) throw new Error("Cannot delete your own account");
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
+    const { error } = await (await getSupabaseAdmin()).auth.admin.deleteUser(data.user_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -360,8 +364,8 @@ export const listUsersWithRoles = createServerFn({ method: "GET" })
     if (data.filter === "members") query = query.not("username", "ilike", "guest-%");
     const [{ data: profiles, error: pErr }, { data: roles, error: rErr }, { data: bans, error: bErr }] = await Promise.all([
       query,
-      supabaseAdmin.from("user_roles").select("user_id, role"),
-      supabaseAdmin.from("user_bans").select("user_id, reason, expires_at, created_at").eq("active", true),
+      (await getSupabaseAdmin()).from("user_roles").select("user_id, role"),
+      (await getSupabaseAdmin()).from("user_bans").select("user_id, reason, expires_at, created_at").eq("active", true),
     ]);
     if (pErr) throw new Error(pErr.message);
     if (rErr) throw new Error(rErr.message);
@@ -439,7 +443,7 @@ export const updateUserUsername = createServerFn({ method: "POST" })
     const { data: existing } = await supabaseAdmin
       .from("profiles").select("id").ilike("username", v).neq("id", data.user_id).maybeSingle();
     if (existing) throw new Error("Username already taken");
-    const { error } = await supabaseAdmin.from("profiles").update({ username: v }).eq("id", data.user_id);
+    const { error } = await (await getSupabaseAdmin()).from("profiles").update({ username: v }).eq("id", data.user_id);
     if (error) throw new Error(error.message);
     return { ok: true, username: v };
   });

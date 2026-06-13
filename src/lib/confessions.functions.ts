@@ -1,8 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
   CONFESSIONS_DEFAULTS,
   expiryToTimestamp,
   pickRandomAvatar,
@@ -204,7 +208,7 @@ export const toggleReaction = createServerFn({ method: "POST" })
       .eq("type", data.type)
       .maybeSingle();
     if (existing) {
-      await supabaseAdmin.from("confession_reactions").delete().eq("id", existing.id);
+      await (await getSupabaseAdmin()).from("confession_reactions").delete().eq("id", existing.id);
       return { active: false };
     }
     const { error } = await supabaseAdmin
@@ -285,7 +289,7 @@ export const moderateConfession = createServerFn({ method: "POST" })
     if (!(await isAdmin(context.userId))) throw new Error("Forbidden");
 
     if (data.action === "remove") {
-      const { error } = await supabaseAdmin.from("confessions").delete().eq("id", data.id);
+      const { error } = await (await getSupabaseAdmin()).from("confessions").delete().eq("id", data.id);
       if (error) throw new Error(error.message);
       return { ok: true };
     }
@@ -301,7 +305,7 @@ export const moderateConfession = createServerFn({ method: "POST" })
     if (data.action === "feature") patch.is_featured = true;
     if (data.action === "unfeature") patch.is_featured = false;
 
-    const { error } = await supabaseAdmin.from("confessions").update(patch).eq("id", data.id);
+    const { error } = await (await getSupabaseAdmin()).from("confessions").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -314,10 +318,10 @@ export const getConfessionStats = createServerFn({ method: "GET" })
 
     const since24h = new Date(Date.now() - 86400000).toISOString();
     const [{ count: total }, { count: today }, { data: byCat }, { data: top }] = await Promise.all([
-      supabaseAdmin.from("confessions").select("*", { count: "exact", head: true }),
-      supabaseAdmin.from("confessions").select("*", { count: "exact", head: true }).gte("created_at", since24h),
-      supabaseAdmin.from("confessions").select("category"),
-      supabaseAdmin.from("confessions").select("id, text, like_count, reply_count, category, created_at")
+      (await getSupabaseAdmin()).from("confessions").select("*", { count: "exact", head: true }),
+      (await getSupabaseAdmin()).from("confessions").select("*", { count: "exact", head: true }).gte("created_at", since24h),
+      (await getSupabaseAdmin()).from("confessions").select("category"),
+      (await getSupabaseAdmin()).from("confessions").select("id, text, like_count, reply_count, category, created_at")
         .order("like_count", { ascending: false }).limit(5),
     ]);
 

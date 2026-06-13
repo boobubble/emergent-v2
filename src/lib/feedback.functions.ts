@@ -1,8 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { FEEDBACK_DEFAULTS, type FeedbackConfig } from "@/lib/feedback-config";
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 async function getConfig(): Promise<FeedbackConfig> {
   const { data } = await supabaseAdmin
@@ -24,16 +28,16 @@ async function rewardUser(userId: string, xp: number, coins: number, reason: str
   const newXp = Math.max(0, (prof.xp ?? 0) + xp);
   const newCoins = Math.max(0, (prof.coins ?? 0) + coins);
   const newLevel = Math.max(1, Math.floor(newXp / 50) + 1);
-  await supabaseAdmin.from("profiles")
+  await (await getSupabaseAdmin()).from("profiles")
     .update({ xp: newXp, coins: newCoins, level: newLevel })
     .eq("id", userId);
   if (coins !== 0) {
-    await supabaseAdmin.from("coin_transactions").insert({
+    await (await getSupabaseAdmin()).from("coin_transactions").insert({
       user_id: userId, kind: "coins", amount: coins, reason, ref_type: "feedback", ref_id: refId,
     } as never);
   }
   if (xp !== 0) {
-    await supabaseAdmin.from("coin_transactions").insert({
+    await (await getSupabaseAdmin()).from("coin_transactions").insert({
       user_id: userId, kind: "xp_award", amount: xp, reason, ref_type: "feedback", ref_id: refId,
     } as never);
   }
@@ -52,6 +56,7 @@ export const listFeedback = createServerFn({ method: "GET" })
   )
   .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     let q = supabaseAdmin.from("feedback_reports").select("*").limit(data.limit);
     if (data.category && data.category !== "all") q = q.eq("category", data.category as never);
     if (data.status && data.status !== "all") q = q.eq("status", data.status as never);
@@ -88,9 +93,9 @@ export const getFeedback = createServerFn({ method: "GET" })
     if (!row) throw new Error("Report not found");
 
     const [{ data: comments }, { data: vote }] = await Promise.all([
-      supabaseAdmin.from("feedback_comments").select("*")
+      (await getSupabaseAdmin()).from("feedback_comments").select("*")
         .eq("report_id", data.id).order("created_at", { ascending: true }),
-      supabaseAdmin.from("feedback_votes").select("id")
+      (await getSupabaseAdmin()).from("feedback_votes").select("id")
         .eq("report_id", data.id).eq("user_id", context.userId).maybeSingle(),
     ]);
 
@@ -170,7 +175,7 @@ export const toggleVote = createServerFn({ method: "POST" })
       .from("feedback_votes").select("id")
       .eq("report_id", data.reportId).eq("user_id", context.userId).maybeSingle();
     if (existing) {
-      await supabaseAdmin.from("feedback_votes").delete().eq("id", existing.id);
+      await (await getSupabaseAdmin()).from("feedback_votes").delete().eq("id", existing.id);
       return { active: false };
     }
     const { error } = await supabaseAdmin
@@ -241,7 +246,7 @@ export const adminUpdateFeedback = createServerFn({ method: "POST" })
       patch.resolved_by = context.userId;
     }
 
-    const { error } = await supabaseAdmin.from("feedback_reports").update(patch as never).eq("id", data.id);
+    const { error } = await (await getSupabaseAdmin()).from("feedback_reports").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
 
     // Reward author when marked fixed
@@ -258,7 +263,7 @@ export const adminUpdateFeedback = createServerFn({ method: "POST" })
 
     // Notification on status change
     if (cfg.notifyOnStatusChange && data.status && data.status !== before.status && before.author_id) {
-      await supabaseAdmin.from("notifications").insert({
+      await (await getSupabaseAdmin()).from("notifications").insert({
         user_id: before.author_id,
         actor_id: context.userId,
         kind: "feedback_status",
@@ -269,7 +274,7 @@ export const adminUpdateFeedback = createServerFn({ method: "POST" })
     }
 
     // Log
-    await supabaseAdmin.from("mod_logs").insert({
+    await (await getSupabaseAdmin()).from("mod_logs").insert({
       actor_id: context.userId,
       action: "edit",
       target_type: "feedback",
@@ -285,7 +290,7 @@ export const adminDeleteFeedback = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
     if (!(await isAdmin(context.userId))) throw new Error("Forbidden");
-    const { error } = await supabaseAdmin.from("feedback_reports").delete().eq("id", data.id);
+    const { error } = await (await getSupabaseAdmin()).from("feedback_reports").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -302,16 +307,16 @@ export const getFeedbackStats = createServerFn({ method: "GET" })
       { data: byCat }, { data: byStatus },
       { data: topFeatures }, { data: topBugs }, { data: topContrib },
     ] = await Promise.all([
-      supabaseAdmin.from("feedback_reports").select("*", { count: "exact", head: true }),
-      supabaseAdmin.from("feedback_reports").select("*", { count: "exact", head: true }).eq("status", "open"),
-      supabaseAdmin.from("feedback_reports").select("*", { count: "exact", head: true }).gte("created_at", since7d),
-      supabaseAdmin.from("feedback_reports").select("category"),
-      supabaseAdmin.from("feedback_reports").select("status"),
-      supabaseAdmin.from("feedback_reports").select("id, title, upvote_count, status")
+      (await getSupabaseAdmin()).from("feedback_reports").select("*", { count: "exact", head: true }),
+      (await getSupabaseAdmin()).from("feedback_reports").select("*", { count: "exact", head: true }).eq("status", "open"),
+      (await getSupabaseAdmin()).from("feedback_reports").select("*", { count: "exact", head: true }).gte("created_at", since7d),
+      (await getSupabaseAdmin()).from("feedback_reports").select("category"),
+      (await getSupabaseAdmin()).from("feedback_reports").select("status"),
+      (await getSupabaseAdmin()).from("feedback_reports").select("id, title, upvote_count, status")
         .eq("category", "feature").order("upvote_count", { ascending: false }).limit(5),
-      supabaseAdmin.from("feedback_reports").select("id, title, upvote_count, status")
+      (await getSupabaseAdmin()).from("feedback_reports").select("id, title, upvote_count, status")
         .eq("category", "bug").order("upvote_count", { ascending: false }).limit(5),
-      supabaseAdmin.from("feedback_reports").select("author_id"),
+      (await getSupabaseAdmin()).from("feedback_reports").select("author_id"),
     ]);
 
     const catCounts: Record<string, number> = {};
@@ -328,7 +333,7 @@ export const getFeedbackStats = createServerFn({ method: "GET" })
       .sort((a, b) => b[1] - a[1]).slice(0, 5);
     let contributors: Array<{ user_id: string; username: string | null; count: number }> = [];
     if (topContribIds.length) {
-      const { data: profs } = await supabaseAdmin.from("profiles")
+      const { data: profs } = await (await getSupabaseAdmin()).from("profiles")
         .select("id, username").in("id", topContribIds.map(([id]) => id));
       const map = new Map((profs ?? []).map((p) => [p.id, p.username]));
       contributors = topContribIds.map(([id, count]) => ({

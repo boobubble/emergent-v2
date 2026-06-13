@@ -1,6 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 /**
  * Server-controlled XP amounts. Clients pick an action name; the server
@@ -73,7 +77,7 @@ export const awardXp = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // Ledger entry for daily cap accounting + audit trail.
-    await supabaseAdmin.from("coin_transactions").insert({
+    await (await getSupabaseAdmin()).from("coin_transactions").insert({
       user_id: userId,
       amount,
       kind: "xp_award",

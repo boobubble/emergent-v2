@@ -1,8 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
   applyMove,
   applyRoll,
   initLudoState,
@@ -57,7 +61,7 @@ async function maybeStartGame(gameId: string) {
     .eq("id", gameId);
   // Notify other players
   for (const p of players) {
-    await supabaseAdmin.from("notifications").insert({
+    await (await getSupabaseAdmin()).from("notifications").insert({
       user_id: p.user_id,
       actor_id: game.created_by,
       kind: "game_started",
@@ -91,7 +95,7 @@ async function awardRewards(gameId: string, winnerId: string, loserIds: string[]
   const winXp = Math.min(REWARDS.WIN_XP, winnerLeft);
   const winCoins = REWARDS.WIN_COINS;
   // Unique on (game_id, reward_type='win') prevents double payout
-  const { error: winInsertErr } = await supabaseAdmin.from("game_rewards").insert({
+  const { error: winInsertErr } = await (await getSupabaseAdmin()).from("game_rewards").insert({
     user_id: winnerId,
     game_id: gameId,
     reward_type: "win",
@@ -115,7 +119,7 @@ async function awardRewards(gameId: string, winnerId: string, loserIds: string[]
     const left = await xpLeftToday(winnerId);
     const bonus = Math.min(REWARDS.DAILY_FIRST_BONUS_XP, left);
     if (bonus > 0) {
-      await supabaseAdmin.from("game_rewards").insert({
+      await (await getSupabaseAdmin()).from("game_rewards").insert({
         user_id: winnerId,
         game_id: gameId,
         reward_type: "daily_first",
@@ -129,7 +133,7 @@ async function awardRewards(gameId: string, winnerId: string, loserIds: string[]
   for (const loserId of loserIds) {
     const left = await xpLeftToday(loserId);
     const xp = Math.min(REWARDS.PARTICIPATION_XP, left);
-    await supabaseAdmin.from("game_rewards").insert({
+    await (await getSupabaseAdmin()).from("game_rewards").insert({
       user_id: loserId,
       game_id: gameId,
       reward_type: "participation",
@@ -140,7 +144,7 @@ async function awardRewards(gameId: string, winnerId: string, loserIds: string[]
   }
 
   // Winner notification
-  await supabaseAdmin.from("notifications").insert({
+  await (await getSupabaseAdmin()).from("notifications").insert({
     user_id: winnerId,
     actor_id: winnerId,
     kind: "game_won",
@@ -212,7 +216,7 @@ export const createLudoMatch = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error || !game) throw new Error(error?.message || "Failed to create game");
-    await supabaseAdmin.from("game_players").insert({
+    await (await getSupabaseAdmin()).from("game_players").insert({
       game_id: game.id,
       user_id: userId,
       seat: 0,
@@ -258,7 +262,7 @@ export const joinQuickMatch = createServerFn({ method: "POST" })
       let seat = -1;
       for (let s = 0; s < needed; s++) if (!taken.has(s)) { seat = s; break; }
       if (seat < 0) continue;
-      const { error: joinErr } = await supabaseAdmin.from("game_players").insert({
+      const { error: joinErr } = await (await getSupabaseAdmin()).from("game_players").insert({
         game_id: c.id,
         user_id: userId,
         seat,
@@ -281,7 +285,7 @@ export const joinQuickMatch = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error || !game) throw new Error(error?.message || "Failed to create game");
-    await supabaseAdmin.from("game_players").insert({
+    await (await getSupabaseAdmin()).from("game_players").insert({
       game_id: game.id,
       user_id: userId,
       seat: 0,
@@ -319,7 +323,7 @@ export const inviteToGame = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error || !inv) throw new Error(error?.message || "Invite failed");
-    await supabaseAdmin.from("notifications").insert({
+    await (await getSupabaseAdmin()).from("notifications").insert({
       user_id: data.receiverId,
       actor_id: userId,
       kind: "game_invite",
@@ -372,7 +376,7 @@ export const respondToInvite = createServerFn({ method: "POST" })
     for (let s = 0; s < needed; s++) if (!taken.has(s)) { seat = s; break; }
     if (seat < 0) throw new Error("Game full");
     if (!players.some(p => p.user_id === userId)) {
-      const { error: jErr } = await supabaseAdmin.from("game_players").insert({
+      const { error: jErr } = await (await getSupabaseAdmin()).from("game_players").insert({
         game_id: inv.game_id,
         user_id: userId,
         seat,
@@ -413,7 +417,7 @@ export const rollDice = createServerFn({ method: "POST" })
     if (mustPass && !extraTurn) {
       updates.current_turn_seat = nextSeat(me.seat, totalSeats);
     }
-    await supabaseAdmin.from("games").update(updates as never).eq("id", data.gameId);
+    await (await getSupabaseAdmin()).from("games").update(updates as never).eq("id", data.gameId);
     return { die };
   });
 
@@ -453,7 +457,7 @@ export const moveToken = createServerFn({ method: "POST" })
     } else if (!result.extraTurn) {
       updates.current_turn_seat = nextSeat(me.seat, totalSeats);
     }
-    await supabaseAdmin.from("games").update(updates as never).eq("id", data.gameId);
+    await (await getSupabaseAdmin()).from("games").update(updates as never).eq("id", data.gameId);
 
     if (finished && winnerId) {
       const losers = players.filter(p => p.user_id !== winnerId).map(p => p.user_id);
@@ -491,10 +495,10 @@ export const leaveGame = createServerFn({ method: "POST" })
           .eq("id", data.gameId);
       }
     } else if (game.status === "waiting") {
-      await supabaseAdmin.from("game_players").delete().eq("id", me.id);
+      await (await getSupabaseAdmin()).from("game_players").delete().eq("id", me.id);
       // If creator left and no one else, cancel
       if (game.created_by === userId && players.length === 1) {
-        await supabaseAdmin.from("games").update({ status: "cancelled" }).eq("id", data.gameId);
+        await (await getSupabaseAdmin()).from("games").update({ status: "cancelled" }).eq("id", data.gameId);
       }
     }
     return { ok: true };

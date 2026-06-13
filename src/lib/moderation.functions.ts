@@ -1,7 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 async function assertMod(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -22,7 +26,7 @@ type ModActionName =
   | "add_word_filter" | "remove_word_filter" | "add_url_rule" | "remove_url_rule";
 
 async function logAction(actor_id: string, action: ModActionName, extra: Record<string, unknown> = {}) {
-  await supabaseAdmin.from("mod_logs").insert({ actor_id, action, ...extra });
+  await (await getSupabaseAdmin()).from("mod_logs").insert({ actor_id, action, ...extra });
 }
 
 // ---------- Reports ----------
@@ -37,7 +41,7 @@ export const submitReport = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { error } = await supabaseAdmin.from("reports").insert({
+    const { error } = await (await getSupabaseAdmin()).from("reports").insert({
       reporter_id: context.userId,
       target_type: data.target_type,
       target_id: data.target_id,
@@ -58,6 +62,7 @@ export const listReports = createServerFn({ method: "GET" })
   )
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
+    const supabaseAdmin = await getSupabaseAdmin();
     let q = supabaseAdmin.from("reports").select("*").order("created_at", { ascending: false }).limit(data.limit);
     if (data.status !== "all") q = q.eq("status", data.status);
     const { data: rows, error } = await q;
@@ -107,7 +112,7 @@ export const banUser = createServerFn({ method: "POST" })
     const expires_at = data.expires_in_hours
       ? new Date(Date.now() + data.expires_in_hours * 3600 * 1000).toISOString()
       : null;
-    const { error } = await supabaseAdmin.from("user_bans").insert({
+    const { error } = await (await getSupabaseAdmin()).from("user_bans").insert({
       user_id: data.user_id ?? null,
       ip_address: data.ip_address ?? null,
       ban_type: data.ban_type,
@@ -128,8 +133,8 @@ export const unbanUser = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ ban_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
-    const { data: row } = await supabaseAdmin.from("user_bans").select("user_id").eq("id", data.ban_id).maybeSingle();
-    const { error } = await supabaseAdmin.from("user_bans").update({ active: false }).eq("id", data.ban_id);
+    const { data: row } = await (await getSupabaseAdmin()).from("user_bans").select("user_id").eq("id", data.ban_id).maybeSingle();
+    const { error } = await (await getSupabaseAdmin()).from("user_bans").update({ active: false }).eq("id", data.ban_id);
     if (error) throw new Error(error.message);
     await logAction(context.userId, "unban", { target_user_id: row?.user_id ?? null, target_id: data.ban_id });
     return { ok: true };
@@ -164,7 +169,7 @@ export const muteUser = createServerFn({ method: "POST" })
     const expires_at = data.expires_in_minutes
       ? new Date(Date.now() + data.expires_in_minutes * 60_000).toISOString()
       : null;
-    const { error } = await supabaseAdmin.from("user_mutes").insert({
+    const { error } = await (await getSupabaseAdmin()).from("user_mutes").insert({
       user_id: data.user_id,
       scope: data.scope,
       channel_id: data.scope === "room" ? data.channel_id ?? null : null,
@@ -182,8 +187,8 @@ export const unmuteUser = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ mute_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
-    const { data: row } = await supabaseAdmin.from("user_mutes").select("user_id").eq("id", data.mute_id).maybeSingle();
-    const { error } = await supabaseAdmin.from("user_mutes").update({ active: false }).eq("id", data.mute_id);
+    const { data: row } = await (await getSupabaseAdmin()).from("user_mutes").select("user_id").eq("id", data.mute_id).maybeSingle();
+    const { error } = await (await getSupabaseAdmin()).from("user_mutes").update({ active: false }).eq("id", data.mute_id);
     if (error) throw new Error(error.message);
     await logAction(context.userId, "unmute", { target_user_id: row?.user_id, target_id: data.mute_id });
     return { ok: true };
@@ -210,7 +215,7 @@ export const addModNote = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
-    const { error } = await supabaseAdmin.from("mod_notes").insert({
+    const { error } = await (await getSupabaseAdmin()).from("mod_notes").insert({
       user_id: data.user_id, author_id: context.userId, note: data.note,
     });
     if (error) throw new Error(error.message);
@@ -234,7 +239,7 @@ export const listWordFilters = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
-    const { data, error } = await supabaseAdmin.from("word_filters").select("*").order("created_at", { ascending: false });
+    const { data, error } = await (await getSupabaseAdmin()).from("word_filters").select("*").order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
   });
@@ -251,7 +256,7 @@ export const addWordFilter = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
-    const { error } = await supabaseAdmin.from("word_filters").insert({
+    const { error } = await (await getSupabaseAdmin()).from("word_filters").insert({
       pattern: data.pattern, match_mode: data.match_mode, action: data.action,
       severity: data.severity, created_by: context.userId,
     });
@@ -265,7 +270,7 @@ export const toggleWordFilter = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid(), active: z.boolean() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
-    const { error } = await supabaseAdmin.from("word_filters").update({ active: data.active }).eq("id", data.id);
+    const { error } = await (await getSupabaseAdmin()).from("word_filters").update({ active: data.active }).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -275,7 +280,7 @@ export const removeWordFilter = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
-    const { error } = await supabaseAdmin.from("word_filters").delete().eq("id", data.id);
+    const { error } = await (await getSupabaseAdmin()).from("word_filters").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     await logAction(context.userId, "remove_word_filter", { target_id: data.id });
     return { ok: true };
@@ -286,7 +291,7 @@ export const listUrlRules = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
-    const { data, error } = await supabaseAdmin.from("url_rules").select("*").order("created_at", { ascending: false });
+    const { data, error } = await (await getSupabaseAdmin()).from("url_rules").select("*").order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
   });
@@ -302,7 +307,7 @@ export const addUrlRule = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
-    const { error } = await supabaseAdmin.from("url_rules").insert({
+    const { error } = await (await getSupabaseAdmin()).from("url_rules").insert({
       domain: data.domain.toLowerCase(), kind: data.kind, reason: data.reason ?? null,
       created_by: context.userId,
     });
@@ -316,7 +321,7 @@ export const removeUrlRule = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
-    const { error } = await supabaseAdmin.from("url_rules").delete().eq("id", data.id);
+    const { error } = await (await getSupabaseAdmin()).from("url_rules").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     await logAction(context.userId, "remove_url_rule", { target_id: data.id });
     return { ok: true };
@@ -344,7 +349,7 @@ export const deleteMessageMod = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ message_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
-    const { error } = await supabaseAdmin.from("messages").delete().eq("id", data.message_id);
+    const { error } = await (await getSupabaseAdmin()).from("messages").delete().eq("id", data.message_id);
     if (error) throw new Error(error.message);
     await logAction(context.userId, "delete_message", { target_id: data.message_id });
     return { ok: true };
@@ -361,7 +366,7 @@ export const listRoomMods = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false });
     // fk may not exist; fallback raw
     if (error) {
-      const fb = await supabaseAdmin.from("room_moderators").select("*").order("created_at", { ascending: false });
+      const fb = await (await getSupabaseAdmin()).from("room_moderators").select("*").order("created_at", { ascending: false });
       if (fb.error) throw new Error(fb.error.message);
       return fb.data ?? [];
     }
@@ -382,7 +387,7 @@ export const addRoomMod = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
-    const { error } = await supabaseAdmin.from("room_moderators").upsert({
+    const { error } = await (await getSupabaseAdmin()).from("room_moderators").upsert({
       ...data, created_by: context.userId,
     }, { onConflict: "channel_id,user_id" });
     if (error) throw new Error(error.message);
@@ -394,7 +399,7 @@ export const removeRoomMod = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
-    const { error } = await supabaseAdmin.from("room_moderators").delete().eq("id", data.id);
+    const { error } = await (await getSupabaseAdmin()).from("room_moderators").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -405,12 +410,12 @@ export const getModerationOverview = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertMod(context.userId);
     const [openReports, activeBans, activeMutes, filters, urls, logs24] = await Promise.all([
-      supabaseAdmin.from("reports").select("id", { count: "exact", head: true }).eq("status", "open"),
-      supabaseAdmin.from("user_bans").select("id", { count: "exact", head: true }).eq("active", true),
-      supabaseAdmin.from("user_mutes").select("id", { count: "exact", head: true }).eq("active", true),
-      supabaseAdmin.from("word_filters").select("id", { count: "exact", head: true }).eq("active", true),
-      supabaseAdmin.from("url_rules").select("id", { count: "exact", head: true }).eq("active", true),
-      supabaseAdmin.from("mod_logs").select("id", { count: "exact", head: true })
+      (await getSupabaseAdmin()).from("reports").select("id", { count: "exact", head: true }).eq("status", "open"),
+      (await getSupabaseAdmin()).from("user_bans").select("id", { count: "exact", head: true }).eq("active", true),
+      (await getSupabaseAdmin()).from("user_mutes").select("id", { count: "exact", head: true }).eq("active", true),
+      (await getSupabaseAdmin()).from("word_filters").select("id", { count: "exact", head: true }).eq("active", true),
+      (await getSupabaseAdmin()).from("url_rules").select("id", { count: "exact", head: true }).eq("active", true),
+      (await getSupabaseAdmin()).from("mod_logs").select("id", { count: "exact", head: true })
         .gte("created_at", new Date(Date.now() - 24 * 3600 * 1000).toISOString()),
     ]);
     return {
