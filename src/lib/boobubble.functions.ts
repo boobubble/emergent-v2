@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { DAILY_MISSIONS } from "./economy-config";
 
 /**
@@ -20,6 +19,11 @@ import { DAILY_MISSIONS } from "./economy-config";
  */
 
 const SETTINGS_KEY = "boobubble_assistant";
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 export interface EventAnnouncement {
   id: string;          // unique id — change to re-send
@@ -83,6 +87,7 @@ const DEFAULT_SETTINGS: BoobubbleSettings = {
 };
 
 async function readSettings(): Promise<BoobubbleSettings> {
+  const supabaseAdmin = await getSupabaseAdmin();
   const { data } = await supabaseAdmin
     .from("app_settings")
     .select("value")
@@ -93,6 +98,7 @@ async function readSettings(): Promise<BoobubbleSettings> {
 }
 
 async function writeSettings(patch: Partial<BoobubbleSettings>): Promise<BoobubbleSettings> {
+  const supabaseAdmin = await getSupabaseAdmin();
   const next = { ...(await readSettings()), ...patch };
   const { error } = await supabaseAdmin
     .from("app_settings")
@@ -103,6 +109,7 @@ async function writeSettings(patch: Partial<BoobubbleSettings>): Promise<Boobubb
 }
 
 async function assertAdmin(userId: string) {
+  const supabaseAdmin = await getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
@@ -177,6 +184,7 @@ export const saveBoobubbleSettings = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     await assertAdmin(context.userId);
     const next = await writeSettings(data);
     // Sync the bot's profile if it exists
@@ -199,6 +207,7 @@ export const saveBoobubbleSettings = createServerFn({ method: "POST" })
 export const provisionBoobubbleAssistant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     await assertAdmin(context.userId);
     const current = await readSettings();
     if (current.bot_user_id) {
@@ -249,6 +258,7 @@ export const provisionBoobubbleAssistant = createServerFn({ method: "POST" })
 export const getMyAssistantPrefs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const { data } = await supabaseAdmin
       .from("assistant_user_prefs")
       .select("*")
@@ -273,6 +283,7 @@ export const saveMyAssistantPrefs = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const { error } = await supabaseAdmin
       .from("assistant_user_prefs")
       .upsert({ user_id: context.userId, ...data }, { onConflict: "user_id" });
@@ -334,6 +345,7 @@ async function buildWelcomeMessage(username: string, personalize: boolean): Prom
 export const triggerWelcomeIfNeeded = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.welcome_enabled || !settings.bot_user_id) {
       return { sent: false, reason: "disabled" };
@@ -404,6 +416,7 @@ export interface AssistantRecommendation {
 export const getAssistantFeedRecommendations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.feed_recs_enabled) return { items: [] as AssistantRecommendation[] };
 
@@ -514,6 +527,7 @@ const WEEKDAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","S
 interface DailyMissionRow { day: string; progress: Record<string, number>; claimed: string[] }
 
 async function fetchMissionRows(userId: string, sinceDay: string): Promise<DailyMissionRow[]> {
+  const supabaseAdmin = await getSupabaseAdmin();
   const { data } = await supabaseAdmin
     .from("daily_missions")
     .select("day, progress, claimed")
@@ -586,6 +600,7 @@ function buildWeeklyMissionDM(username: string, rows: DailyMissionRow[], setting
 }
 
 async function sendAssistantDM(botId: string, userId: string, text: string, kind: string, preview: string) {
+  const supabaseAdmin = await getSupabaseAdmin();
   const channelId = dmChannel(botId, userId);
   const { error: msgErr } = await supabaseAdmin.from("messages").insert({
     channel_id: channelId,
@@ -613,6 +628,7 @@ async function sendAssistantDM(botId: string, userId: string, text: string, kind
 export const triggerMissionDigestIfNeeded = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.bot_user_id) return { daily: false, weekly: false, reason: "disabled" as const };
     if (settings.bot_user_id === context.userId) return { daily: false, weekly: false, reason: "self" as const };
@@ -689,6 +705,7 @@ export const triggerMissionDigestIfNeeded = createServerFn({ method: "POST" })
 export const triggerRewardDigestIfNeeded = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.reward_daily_dm_enabled || !settings.bot_user_id) {
       return { sent: false, reason: "disabled" as const };
@@ -773,6 +790,7 @@ export interface FriendSuggestion {
 export const getFriendSuggestions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.friend_suggestions_enabled) {
       return { items: [] as FriendSuggestion[] };
@@ -848,6 +866,7 @@ export const getFriendSuggestions = createServerFn({ method: "GET" })
 export const triggerEventAnnouncementIfNeeded = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     const ev = settings.event_announcement;
     if (!settings.enabled || !settings.bot_user_id || !ev || !ev.active) {
@@ -898,6 +917,7 @@ export const triggerEventAnnouncementIfNeeded = createServerFn({ method: "POST" 
 export const triggerSecurityDigestIfNeeded = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.security_dm_enabled || !settings.bot_user_id) {
       return { sent: false, reason: "disabled" as const };
@@ -1004,6 +1024,7 @@ export const claimShareReward = createServerFn({ method: "POST" })
     target: z.enum(["whatsapp","telegram","facebook","x","linkedin","copy","native"]),
   }).parse(i))
   .handler(async ({ data, context }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
     if (!settings.enabled || !settings.share_earn_enabled || settings.share_reward_coins <= 0) {
       return { ok: false, reason: "disabled" as const, awarded: 0 };
