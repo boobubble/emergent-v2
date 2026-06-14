@@ -5,6 +5,7 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { SCORE_WEIGHTS, creatorRankFor, VIRAL_JACKPOT } from "./economy-config";
 
 async function getSupabaseAdmin() {

@@ -1,12 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
-
-async function getSupabaseAdmin() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
-}
   applyMove,
   applyRoll,
   initLudoState,
@@ -15,6 +11,11 @@ async function getSupabaseAdmin() {
   nextSeat,
   SEAT_COLORS,
 } from "./games-engine";
+
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 const REWARDS = {
   WIN_XP: 25,

@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const FpSchema = z.object({
   fingerprint: z.string().regex(/^[a-f0-9]{64}$/, "Invalid fingerprint"),

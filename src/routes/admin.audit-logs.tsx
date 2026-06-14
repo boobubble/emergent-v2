@@ -13,6 +13,7 @@ async function getSupabaseAdmin() {
 export const listAuditLogs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
+    const supabaseAdmin = await getSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from("mod_logs")
       .select("id, actor_id, action, target_type, target_id, payload, created_at")

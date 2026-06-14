@@ -1,12 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
-
-async function getSupabaseAdmin() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
-}
   CONFESSIONS_DEFAULTS,
   expiryToTimestamp,
   pickRandomAvatar,
@@ -15,8 +11,13 @@ async function getSupabaseAdmin() {
   type ConfessionDisplayMode,
 } from "@/lib/confessions-config";
 
+async function getSupabaseAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
 async function getConfig(): Promise<ConfessionsConfig> {
-  const { data } = await supabaseAdmin
+  const { data } = await (await getSupabaseAdmin())
     .from("app_settings")
     .select("value")
     .eq("key", "confessions")
@@ -25,7 +26,7 @@ async function getConfig(): Promise<ConfessionsConfig> {
 }
 
 async function isAdmin(userId: string): Promise<boolean> {
-  const { data } = await supabaseAdmin
+  const { data } = await (await getSupabaseAdmin())
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
@@ -60,7 +61,8 @@ export const listConfessions = createServerFn({ method: "GET" })
     const viewerId = context.userId;
     const admin = await isAdmin(viewerId);
 
-    let q = supabaseAdmin
+    const sb = await getSupabaseAdmin();
+    let q = sb
       .from("confessions")
       .select("*")
       .or("expires_at.is.null,expires_at.gt." + new Date().toISOString())
@@ -86,7 +88,7 @@ export const listConfessions = createServerFn({ method: "GET" })
     const ids = (rows ?? []).map((r) => r.id);
     let myReactions: Record<string, string[]> = {};
     if (ids.length) {
-      const { data: rx } = await supabaseAdmin
+      const { data: rx } = await (await getSupabaseAdmin())
         .from("confession_reactions")
         .select("confession_id, type")
         .eq("user_id", viewerId)
@@ -127,7 +129,7 @@ export const createConfession = createServerFn({ method: "POST" })
 
     // Level gating
     if (cfg.level.enabled) {
-      const { data: prof } = await supabaseAdmin
+      const { data: prof } = await (await getSupabaseAdmin())
         .from("profiles")
         .select("level")
         .eq("id", context.userId)
@@ -151,7 +153,7 @@ export const createConfession = createServerFn({ method: "POST" })
       avatar_emoji = pickRandomAvatar(seed);
       alias = `${avatar_emoji} ${pickAnimalName(avatar_emoji)} #${randomConfessorNumber(seed) % 99}`;
     } else {
-      const { data: prof } = await supabaseAdmin
+      const { data: prof } = await (await getSupabaseAdmin())
         .from("profiles").select("username").eq("id", context.userId).maybeSingle();
       alias = prof?.username ?? "user";
     }
@@ -159,7 +161,7 @@ export const createConfession = createServerFn({ method: "POST" })
     const expiry = data.expiry ?? cfg.expiry.defaultMode;
     const status = cfg.moderation.approvalRequired ? "pending" : "approved";
 
-    const { data: row, error } = await supabaseAdmin
+    const { data: row, error } = await (await getSupabaseAdmin())
       .from("confessions")
       .insert({
         author_id: context.userId,
@@ -200,7 +202,7 @@ export const toggleReaction = createServerFn({ method: "POST" })
   )
   .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await (await getSupabaseAdmin())
       .from("confession_reactions")
       .select("id")
       .eq("confession_id", data.confessionId)
@@ -211,7 +213,7 @@ export const toggleReaction = createServerFn({ method: "POST" })
       await (await getSupabaseAdmin()).from("confession_reactions").delete().eq("id", existing.id);
       return { active: false };
     }
-    const { error } = await supabaseAdmin
+    const { error } = await (await getSupabaseAdmin())
       .from("confession_reactions")
       .insert({ confession_id: data.confessionId, user_id: context.userId, type: data.type });
     if (error) throw new Error(error.message);
@@ -224,7 +226,7 @@ export const listReplies = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
     const admin = await isAdmin(context.userId);
-    const { data: rows, error } = await supabaseAdmin
+    const { data: rows, error } = await (await getSupabaseAdmin())
       .from("confession_replies")
       .select("*")
       .eq("confession_id", data.confessionId)
@@ -257,12 +259,12 @@ export const createReply = createServerFn({ method: "POST" })
       avatar_emoji = pickRandomAvatar(seed);
       alias = `${avatar_emoji} ${pickAnimalName(avatar_emoji)} #${randomConfessorNumber(seed) % 99}`;
     } else {
-      const { data: prof } = await supabaseAdmin
+      const { data: prof } = await (await getSupabaseAdmin())
         .from("profiles").select("username").eq("id", context.userId).maybeSingle();
       alias = prof?.username ?? "user";
     }
 
-    const { data: row, error } = await supabaseAdmin
+    const { data: row, error } = await (await getSupabaseAdmin())
       .from("confession_replies")
       .insert({
         confession_id: data.confessionId,
