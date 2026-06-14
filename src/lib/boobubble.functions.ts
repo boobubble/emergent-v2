@@ -179,7 +179,7 @@ export const saveBoobubbleSettings = createServerFn({ method: "POST" })
       share_earn_enabled: z.boolean(),
       share_reward_coins: z.number().int().min(0).max(100),
       share_daily_limit: z.number().int().min(0).max(100),
-      bot_username: z.string().min(2).max(32),
+      bot_username: z.string().trim().min(2).max(64).regex(/^[A-Za-z0-9_.\- ]+$/, "Only letters, numbers, spaces, underscore, hyphen and dot are allowed"),
       bot_avatar_url: z.string().url().nullable(),
       bot_bio: z.string().max(280),
     }).parse(input),
