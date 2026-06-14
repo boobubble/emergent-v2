@@ -605,22 +605,48 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
 
   // Ambient bot chatter (disabled — bots only respond to user commands now)
 
-  // Merge remote profiles into the users map (skips our own auth uuid; we render as "me")
+  // Merge remote profiles into the users map (skips our own auth uuid; we render as "me").
+  // Also auto-add official bot accounts (e.g. BooBubble) into every room's member list
+  // so they always appear in the chat members panel.
   useEffect(() => {
     setState(s => {
       const users = { ...s.users };
       let changed = false;
+      const botIds: string[] = [];
       Object.entries(remoteProfiles).forEach(([id, u]) => {
         if (id === authUserId) return;
         const prev = users[id];
-        if (!prev || prev.name !== u.name || prev.status !== u.status || prev.avatarColor !== u.avatarColor || prev.avatarUrl !== u.avatarUrl) {
+        if (
+          !prev ||
+          prev.name !== u.name ||
+          prev.status !== u.status ||
+          prev.avatarColor !== u.avatarColor ||
+          prev.avatarUrl !== u.avatarUrl ||
+          prev.isBot !== u.isBot
+        ) {
           users[id] = { ...prev, ...u };
           changed = true;
         }
+        if (u.isBot) botIds.push(id);
       });
-      return changed ? { ...s, users } : s;
+      let rooms = s.rooms;
+      if (botIds.length) {
+        const nextRooms: typeof s.rooms = { ...s.rooms };
+        let roomsChanged = false;
+        for (const rid of Object.keys(nextRooms)) {
+          const r = nextRooms[rid];
+          const missing = botIds.filter(b => !r.members.includes(b));
+          if (missing.length) {
+            nextRooms[rid] = { ...r, members: [...r.members, ...missing] };
+            roomsChanged = true;
+          }
+        }
+        if (roomsChanged) { rooms = nextRooms; changed = true; }
+      }
+      return changed ? { ...s, users, rooms } : s;
     });
   }, [remoteProfiles, authUserId]);
+
 
   // Hydrate dmOrder from existing DM conversations on the server so the inbox
   // surfaces every peer the user has chatted with (across reloads, devices).
