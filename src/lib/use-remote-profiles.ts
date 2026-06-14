@@ -22,6 +22,8 @@ export interface RemoteProfile {
   show_guest_badge: boolean | null;
   birthday: string | null;
   hide_birth_year: boolean | null;
+  is_bot: boolean | null;
+  is_official: boolean | null;
 }
 
 const ONLINE_WINDOW_MS = 75 * 1000; // 75s — slightly longer than 1 missed 25s heartbeat
