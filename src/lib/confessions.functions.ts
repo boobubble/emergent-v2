@@ -60,8 +60,8 @@ export const listConfessions = createServerFn({ method: "GET" })
     const viewerId = context.userId;
     const admin = await isAdmin(viewerId);
 
-    let q = await getSupabaseAdmin();
-    q = q
+    const sb = await getSupabaseAdmin();
+    let q = sb
       .from("confessions")
       .select("*")
       .or("expires_at.is.null,expires_at.gt." + new Date().toISOString())
