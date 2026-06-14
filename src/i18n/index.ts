@@ -8,7 +8,12 @@ import { DEFAULT_LANG, LANGUAGES, LANG_STORAGE_KEY } from "./languages";
 
 const supported = LANGUAGES.map(l => l.code);
 
-if (!i18n.isInitialized) {
+// IMPORTANT: Cloudflare Workers forbid async I/O, setTimeout, or randomness in
+// the global scope. i18next's init() schedules timers and (with HttpBackend)
+// kicks off fetches synchronously, which crashes SSR with
+// "Disallowed operation called within global scope". Only initialize in the
+// browser; SSR renders use the default (untranslated) strings.
+if (typeof window !== "undefined" && !i18n.isInitialized) {
   i18n
     .use(ChainedBackend)
     .use(LanguageDetector)
@@ -16,25 +21,21 @@ if (!i18n.isInitialized) {
     .init({
       fallbackLng: DEFAULT_LANG,
       supportedLngs: supported,
-      // Lazy-load: never fetch anything until a language is actually active.
       preload: false,
       partialBundledLanguages: false,
       load: "languageOnly",
       ns: ["common"],
       defaultNS: "common",
-      // Two-tier cache: serve from localStorage instantly, refresh from network in background.
       backend: {
         backends: [LocalStorageBackend, HttpBackend],
         backendOptions: [
           {
-            // 7-day TTL; bump prefix to invalidate on deploy if you ship new strings.
             prefix: "i18n_res_",
             expirationTime: 7 * 24 * 60 * 60 * 1000,
             defaultVersion: "v1",
           },
           {
             loadPath: "/locales/{{lng}}/{{ns}}.json",
-            // Let the browser HTTP cache help too.
             requestOptions: { cache: "default" },
           },
         ],
@@ -48,7 +49,6 @@ if (!i18n.isInitialized) {
       interpolation: { escapeValue: false },
       react: { useSuspense: false },
       returnEmptyString: false,
-      // Don't auto-fetch every fallback chain — only the active language is loaded.
       nonExplicitSupportedLngs: false,
     });
 }
