@@ -31,6 +31,7 @@ const PRESENCE_CHANNEL = "online-users-presence";
 
 function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User {
   const isGuest = /^guest-/i.test(p.username);
+  const isBot = !!p.is_bot;
   const g = p.gender;
   const gender: User["gender"] | undefined =
     g === "male" || g === "female" || g === "other" ? g : undefined;
@@ -39,13 +40,16 @@ function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User 
   const lastSeenMs = isPresent ? nowMs : dbLastSeenMs;
   const rawStatus = (p.status as User["status"]) || "offline";
   const fresh = lastSeenMs != null && nowMs - lastSeenMs < ONLINE_WINDOW_MS;
-  const status: User["status"] = isPresent
-    ? "online"
-    : rawStatus === "offline"
-      ? "offline"
-      : fresh
-        ? rawStatus
-        : "offline";
+  // Bots: always treat as online unless explicitly set to "offline" in their profile.
+  const status: User["status"] = isBot
+    ? (rawStatus === "offline" ? "offline" : "online")
+    : isPresent
+      ? "online"
+      : rawStatus === "offline"
+        ? "offline"
+        : fresh
+          ? rawStatus
+          : "offline";
   return {
     id: p.id,
     name: p.username,
@@ -58,8 +62,9 @@ function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User 
     coins: p.coins,
     streak: p.streak ?? 0,
     longestStreak: p.longest_streak ?? 0,
-    lastSeen: lastSeenMs,
+    lastSeen: isBot ? nowMs : lastSeenMs,
     isGuest,
+    isBot,
     gender,
     countryCode: p.country_code ?? undefined,
     showCountryFlag: p.show_country_flag ?? true,
