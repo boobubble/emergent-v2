@@ -15,7 +15,7 @@ import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { IgnoreProvider } from "@/lib/ignore-store";
 import { AppSettingsProvider } from "@/lib/app-settings";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
 import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
@@ -196,14 +196,6 @@ function AuthGate() {
   const location = useLocation();
   const path = location.pathname;
   const hasStoredSession = hasStoredAuthSession();
-  const [authWaitExpired, setAuthWaitExpired] = useState(false);
-
-  useEffect(() => {
-    setAuthWaitExpired(false);
-    if (ready || isPublicPath(path)) return;
-    const timer = window.setTimeout(() => setAuthWaitExpired(true), 6000);
-    return () => window.clearTimeout(timer);
-  }, [path, ready]);
 
   if (!user && isPublicPath(path)) {
     return (
@@ -219,23 +211,18 @@ function AuthGate() {
     );
   }
 
-  if (!ready && (!hasStoredSession || authWaitExpired)) return <Navigate to="/welcome" replace />;
+  // No stored session at all → send guests to landing immediately.
+  if (!ready && !hasStoredSession) return <Navigate to="/welcome" replace />;
 
   if (!ready) {
+    // Stored session is being restored — wait without auto-redirecting.
     return (
       <div className="grid min-h-screen place-items-center bg-background px-4 text-center text-muted-foreground">
-        <div>
-          <p>Loading…</p>
-          <a href="/welcome" className="mt-4 inline-flex text-sm font-medium text-primary underline">Continue to home</a>
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `setTimeout(function(){if(location.pathname!=="/welcome"&&document.body&&document.body.innerText.includes("Loading")){location.replace("/welcome")}},8000)`,
-            }}
-          />
-        </div>
+        <p>Loading…</p>
       </div>
     );
   }
+
 
   if (!user) {
     // Public, self-contained routes (landing, login, password reset, public post pages) render normally.
