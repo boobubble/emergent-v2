@@ -88,7 +88,7 @@ export function useRemoteProfiles() {
     async function load() {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, bio, avatar_url, avatar_color, xp, level, coins, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year")
+        .select("id, username, bio, avatar_url, avatar_color, xp, level, coins, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year, is_bot, is_official")
         .order("username", { ascending: true });
       if (cancelled) return;
       if (error) { setLoading(false); return; }
