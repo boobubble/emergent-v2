@@ -49,31 +49,31 @@ export function ChatHeader() {
   if (!room) return null;
 
   return (
-    <header className="chat-glass sticky top-0 z-20 flex h-16 items-center justify-between px-6 pl-14">
-      <div className="flex items-center gap-3">
+    <header className="chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-2 px-3 pl-14 sm:px-6">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <BrandMark
           slot="chat"
           roomId={id}
           alt="Room logo"
-          className="h-9 w-9 rounded-xl object-contain ring-1 ring-border"
+          className="h-9 w-9 shrink-0 rounded-xl object-contain ring-1 ring-border"
           fallback={
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 font-bold text-primary ring-1 ring-primary/20">#</div>
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 font-bold text-primary ring-1 ring-primary/20">#</div>
           }
         />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate font-bold text-foreground">{channelLabel(id)}</span>
             <LoyaltyChip channelId={id} />
           </div>
           <div className="flex items-center gap-1.5 truncate text-[11px] text-muted-foreground">
-            <span className="chat-online-dot" aria-hidden />
+            <span className="chat-online-dot shrink-0" aria-hidden />
             <span className="font-semibold text-foreground/80">{room.members.length}</span>
             <span>online</span>
             {room.topic && <span className="truncate">· {room.topic}</span>}
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1">
         <button
           type="button"
           onClick={() => setIgnoreAllBots(!ignoreAllBots)}
