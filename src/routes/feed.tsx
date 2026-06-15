@@ -217,8 +217,24 @@ function FeedPage() {
         return +new Date(b.created_at) - +new Date(a.created_at);
       });
     }
+    // Search filter (text / #hashtag / @username)
+    const q = query.trim().toLowerCase();
+    if (q) {
+      const isTag = q.startsWith("#");
+      const isUser = q.startsWith("@");
+      const needle = (isTag || isUser) ? q.slice(1) : q;
+      list = list.filter((p) => {
+        const text = (p.text || "").toLowerCase();
+        const tags = (p.hashtags || []).map(t => t.toLowerCase());
+        const author = profiles[p.owner_id]?.name?.toLowerCase() ?? "";
+        if (isTag) return tags.some(t => t.includes(needle));
+        if (isUser) return author.includes(needle);
+        return text.includes(needle) || tags.some(t => t.includes(needle)) || author.includes(needle);
+      });
+    }
+
     return list;
-  }, [posts, tab, friendIds, meId, prefs.hideMedia, prefs.mutedKeywords, prefs.mutedHashtags, prefs.sortOverride]);
+  }, [posts, tab, friendIds, meId, prefs.hideMedia, prefs.mutedKeywords, prefs.mutedHashtags, prefs.sortOverride, query, profiles]);
 
 
   if (!user) return null;
