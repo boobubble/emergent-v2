@@ -67,7 +67,15 @@
   --shadow-glow-sm: 0 1px 2px oklch(0 0 0 / 0.35);
   --shadow-panel: 0 2px 8px oklch(0 0 0 / 0.25);
   --gradient-primary: linear-gradient(135deg, oklch(0.82 0.2 130), oklch(0.7 0.18 150));
+
+  /* Premium soft elevation (Linear/Apple-leaning) */
+  --shadow-soft-1: 0 1px 0 oklch(1 0 0 / 0.04), 0 1px 2px oklch(0 0 0 / 0.25);
+  --shadow-soft-2: 0 1px 0 oklch(1 0 0 / 0.04), 0 8px 24px -14px oklch(0 0 0 / 0.55);
+  --shadow-soft-3: 0 1px 0 oklch(1 0 0 / 0.05), 0 18px 40px -22px oklch(0 0 0 / 0.65);
+  --surface-1: color-mix(in oklab, var(--card) 92%, transparent);
+  --surface-2: color-mix(in oklab, var(--card) 80%, transparent);
 }
+
 
 :root.light, .light {
   --background: oklch(0.99 0 0);
@@ -95,7 +103,13 @@
   --shadow-glow: 0 1px 2px oklch(0 0 0 / 0.06);
   --shadow-glow-sm: 0 1px 2px oklch(0 0 0 / 0.05);
   --shadow-panel: 0 2px 6px oklch(0 0 0 / 0.05);
+  --shadow-soft-1: 0 1px 0 oklch(0 0 0 / 0.02), 0 1px 2px oklch(0 0 0 / 0.05);
+  --shadow-soft-2: 0 1px 0 oklch(0 0 0 / 0.02), 0 8px 24px -14px oklch(0 0 0 / 0.12);
+  --shadow-soft-3: 0 1px 0 oklch(0 0 0 / 0.03), 0 18px 40px -22px oklch(0 0 0 / 0.16);
+  --surface-1: color-mix(in oklab, var(--card) 94%, transparent);
+  --surface-2: color-mix(in oklab, var(--card) 86%, transparent);
 }
+
 
 /* ===== Accent themes (applied via data-accent on <html>) =====
    Each block overrides the primary/accent token family so every
