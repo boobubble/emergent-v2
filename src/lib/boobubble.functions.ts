@@ -190,6 +190,9 @@ export const saveBoobubbleSettings = createServerFn({ method: "POST" })
       bot_username: z.string().trim().min(2).max(64).regex(/^[A-Za-z0-9_.\- ]+$/, "Only letters, numbers, spaces, underscore, hyphen and dot are allowed"),
       bot_avatar_url: z.string().url().nullable(),
       bot_bio: z.string().max(280),
+      lobby_ai_enabled: z.boolean(),
+      openai_model: z.string().trim().min(2).max(64),
+      openai_system_prompt: z.string().min(10).max(2000),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
