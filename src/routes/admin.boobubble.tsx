@@ -53,12 +53,16 @@ function AdminBoobubblePage() {
   const provisionFn = useServerFn(provisionBoobubbleAssistant);
   const fetchKeyStatus = useServerFn(getBoobubbleOpenAIKeyStatus);
   const saveKeyFn = useServerFn(setBoobubbleOpenAIKey);
+  const fetchGeminiKeyStatus = useServerFn(getBoobubbleGeminiKeyStatus);
+  const saveGeminiKeyFn = useServerFn(setBoobubbleGeminiKey);
   const qc = useQueryClient();
 
   const { data } = useQuery({ queryKey: ["boobubble-settings"], queryFn: () => fetchSettings({}) });
   const { data: keyStatus } = useQuery({ queryKey: ["boobubble-openai-key"], queryFn: () => fetchKeyStatus({}) });
+  const { data: geminiKeyStatus } = useQuery({ queryKey: ["boobubble-gemini-key"], queryFn: () => fetchGeminiKeyStatus({}) });
   const [v, setV] = useState<BoobubbleSettings>(DEFAULTS);
   const [openaiKeyInput, setOpenaiKeyInput] = useState("");
+  const [geminiKeyInput, setGeminiKeyInput] = useState("");
   useEffect(() => { if (data) setV({ ...DEFAULTS, ...data }); }, [data]);
 
   const save = useMutation({
@@ -84,7 +88,9 @@ function AdminBoobubblePage() {
         bot_avatar_url: v.bot_avatar_url,
         bot_bio: v.bot_bio,
         lobby_ai_enabled: v.lobby_ai_enabled,
+        lobby_ai_provider: v.lobby_ai_provider,
         openai_model: v.openai_model,
+        gemini_model: v.gemini_model,
         openai_system_prompt: v.openai_system_prompt,
       },
     }),
@@ -110,6 +116,17 @@ function AdminBoobubblePage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const saveGeminiKey = useMutation({
+    mutationFn: (key: string) => saveGeminiKeyFn({ data: { key } }),
+    onSuccess: (r) => {
+      toast.success(r.cleared ? "Gemini key cleared" : "Gemini key saved");
+      setGeminiKeyInput("");
+      qc.invalidateQueries({ queryKey: ["boobubble-gemini-key"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   const set = <K extends keyof BoobubbleSettings>(k: K, val: BoobubbleSettings[K]) =>
     setV((s) => ({ ...s, [k]: val }));
