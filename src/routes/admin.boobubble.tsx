@@ -295,6 +295,45 @@ function AdminBoobubblePage() {
         </label>
       </section>
 
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold">ChatGPT in Lobby</h3>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          When enabled, any lobby/chatroom message that mentions <code className="font-mono">boobubble</code> (case-insensitive)
+          triggers a public reply from BooBubble using your OpenAI account.
+          The <code className="font-mono">OPENAI_API_KEY</code> is stored as a server-side secret and never exposed to users.
+        </p>
+        <Row label="Reply in lobby when mentioned (ChatGPT)" checked={v.lobby_ai_enabled} onChange={(b) => set("lobby_ai_enabled", b)} />
+        <label className="block text-xs">
+          <span className="mb-1 block text-muted-foreground">OpenAI model</span>
+          <input
+            value={v.openai_model}
+            onChange={(e) => set("openai_model", e.target.value)}
+            placeholder="gpt-4o-mini"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm font-mono"
+          />
+        </label>
+        <label className="block text-xs">
+          <span className="mb-1 block text-muted-foreground">System prompt</span>
+          <textarea
+            value={v.openai_system_prompt}
+            onChange={(e) => set("openai_system_prompt", e.target.value)}
+            rows={4}
+            maxLength={2000}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
+        </label>
+        <p className="text-[11px] text-muted-foreground">
+          To set or rotate the OpenAI API key, ask in chat: <em>"Update OPENAI_API_KEY"</em>. Get one at
+          {" "}<a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="underline">platform.openai.com/api-keys</a>.
+          Per-user cooldown: 8 seconds. Rate limit and credit errors are logged server-side.
+        </p>
+      </section>
+
+
+
       <div className="flex justify-end">
         <button
           onClick={() => save.mutate()}
