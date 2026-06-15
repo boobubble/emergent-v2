@@ -336,23 +336,45 @@ function AdminBoobubblePage() {
       <section className="space-y-3 rounded-xl border border-border bg-card p-4">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-semibold">ChatGPT in Lobby</h3>
+          <h3 className="text-sm font-semibold">AI Reply in Lobby</h3>
         </div>
         <p className="text-[11px] text-muted-foreground">
           When enabled, any lobby/chatroom message that mentions <code className="font-mono">boobubble</code> (case-insensitive)
-          triggers a public reply from BooBubble using your OpenAI account.
-          The <code className="font-mono">OPENAI_API_KEY</code> is stored as a server-side secret and never exposed to users.
+          triggers a public reply from BooBubble using the selected AI provider. Only one provider is active at a time.
         </p>
-        <Row label="Reply in lobby when mentioned (ChatGPT)" checked={v.lobby_ai_enabled} onChange={(b) => set("lobby_ai_enabled", b)} />
+        <Row label="Reply in lobby when mentioned" checked={v.lobby_ai_enabled} onChange={(b) => set("lobby_ai_enabled", b)} />
         <label className="block text-xs">
-          <span className="mb-1 block text-muted-foreground">OpenAI model</span>
-          <input
-            value={v.openai_model}
-            onChange={(e) => set("openai_model", e.target.value)}
-            placeholder="gpt-4o-mini"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm font-mono"
-          />
+          <span className="mb-1 block text-muted-foreground">AI provider</span>
+          <select
+            value={v.lobby_ai_provider}
+            onChange={(e) => set("lobby_ai_provider", e.target.value as "openai" | "gemini")}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          >
+            <option value="openai">OpenAI (ChatGPT)</option>
+            <option value="gemini">Google Gemini</option>
+          </select>
         </label>
+        {v.lobby_ai_provider === "openai" ? (
+          <label className="block text-xs">
+            <span className="mb-1 block text-muted-foreground">OpenAI model</span>
+            <input
+              value={v.openai_model}
+              onChange={(e) => set("openai_model", e.target.value)}
+              placeholder="gpt-4o-mini"
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm font-mono"
+            />
+          </label>
+        ) : (
+          <label className="block text-xs">
+            <span className="mb-1 block text-muted-foreground">Gemini model</span>
+            <input
+              value={v.gemini_model}
+              onChange={(e) => set("gemini_model", e.target.value)}
+              placeholder="gemini-2.5-flash"
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm font-mono"
+            />
+          </label>
+        )}
         <label className="block text-xs">
           <span className="mb-1 block text-muted-foreground">System prompt</span>
           <textarea
@@ -372,6 +394,9 @@ function AdminBoobubblePage() {
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold">OpenAI API Key</h3>
+          {v.lobby_ai_provider === "openai" && (
+            <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">Active</span>
+          )}
         </div>
         <p className="text-[11px] text-muted-foreground">
           Paste your own OpenAI API key below. It's stored server-side and never returned to the browser.
@@ -422,6 +447,65 @@ function AdminBoobubblePage() {
           </button>
         </div>
       </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold">Gemini API Key</h3>
+          {v.lobby_ai_provider === "gemini" && (
+            <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">Active</span>
+          )}
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Paste your own Google Gemini API key below. Stored server-side and never returned to the browser.
+          Get one at{" "}
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="underline">
+            aistudio.google.com/app/apikey
+          </a>
+          . The free tier works for low volume; for production usage enable billing in Google AI Studio.
+        </p>
+        <div className="text-xs text-muted-foreground">
+          Status:{" "}
+          {geminiKeyStatus?.configured ? (
+            <span className="font-mono text-foreground">
+              {geminiKeyStatus.masked} <span className="ml-1 text-[10px] opacity-70">({geminiKeyStatus.source})</span>
+            </span>
+          ) : (
+            <span className="text-amber-500">Not configured</span>
+          )}
+        </div>
+        <label className="block text-xs">
+          <span className="mb-1 block text-muted-foreground">New Gemini API key</span>
+          <input
+            type="password"
+            value={geminiKeyInput}
+            onChange={(e) => setGeminiKeyInput(e.target.value)}
+            placeholder="AIza..."
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm font-mono"
+          />
+        </label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => saveGeminiKey.mutate(geminiKeyInput)}
+            disabled={saveGeminiKey.isPending || geminiKeyInput.trim().length < 10}
+            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {saveGeminiKey.isPending ? "Saving…" : "Save key"}
+          </button>
+          <button
+            type="button"
+            onClick={() => { if (confirm("Clear the stored Gemini key?")) saveGeminiKey.mutate(""); }}
+            disabled={saveGeminiKey.isPending || !geminiKeyStatus?.configured || geminiKeyStatus?.source !== "admin"}
+            className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            Clear stored key
+          </button>
+        </div>
+      </section>
+
 
 
 
