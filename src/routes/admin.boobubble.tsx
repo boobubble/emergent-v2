@@ -10,6 +10,8 @@ import {
   getBoobubbleSettings,
   saveBoobubbleSettings,
   provisionBoobubbleAssistant,
+  getBoobubbleOpenAIKeyStatus,
+  setBoobubbleOpenAIKey,
   type BoobubbleSettings,
 } from "@/lib/boobubble.functions";
 
