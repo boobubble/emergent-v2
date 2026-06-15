@@ -102,6 +102,7 @@ function FeedPage() {
   const [dmOpenKey, setDmOpenKey] = useState(0);
   const [defaultTabApplied, setDefaultTabApplied] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const navigate = useNavigate();
 
   const focusComposer = () => {
@@ -216,8 +217,24 @@ function FeedPage() {
         return +new Date(b.created_at) - +new Date(a.created_at);
       });
     }
+    // Search filter (text / #hashtag / @username)
+    const q = query.trim().toLowerCase();
+    if (q) {
+      const isTag = q.startsWith("#");
+      const isUser = q.startsWith("@");
+      const needle = (isTag || isUser) ? q.slice(1) : q;
+      list = list.filter((p) => {
+        const text = (p.text || "").toLowerCase();
+        const tags = (p.hashtags || []).map(t => t.toLowerCase());
+        const author = profiles[p.owner_id]?.name?.toLowerCase() ?? "";
+        if (isTag) return tags.some(t => t.includes(needle));
+        if (isUser) return author.includes(needle);
+        return text.includes(needle) || tags.some(t => t.includes(needle)) || author.includes(needle);
+      });
+    }
+
     return list;
-  }, [posts, tab, friendIds, meId, prefs.hideMedia, prefs.mutedKeywords, prefs.mutedHashtags, prefs.sortOverride]);
+  }, [posts, tab, friendIds, meId, prefs.hideMedia, prefs.mutedKeywords, prefs.mutedHashtags, prefs.sortOverride, query, profiles]);
 
 
   if (!user) return null;
@@ -340,9 +357,26 @@ function FeedPage() {
             <span className="hidden text-[17px] font-bold tracking-tight sm:inline">Palrgo</span>
           </Link>
           <div className="mx-auto hidden w-full max-w-md md:block">
-            <div className="flex items-center gap-2 rounded-full bg-muted/60 px-4 py-2 text-sm text-muted-foreground ring-1 ring-border focus-within:ring-primary/40 transition">
-              <span>🔎</span>
-              <span>Search posts, people, hashtags…</span>
+            <div className="flex items-center gap-2 rounded-full bg-muted/60 px-4 py-2 text-sm ring-1 ring-border focus-within:ring-primary/40 transition">
+              <span className="text-muted-foreground">🔎</span>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); if (view !== "feed") setView("feed"); }}
+                placeholder="Search posts, people, hashtags…"
+                aria-label="Search feed"
+                className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground text-foreground"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                  type="button"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
           <div className="ml-auto flex items-center gap-1">
