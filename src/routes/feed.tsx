@@ -357,9 +357,26 @@ function FeedPage() {
             <span className="hidden text-[17px] font-bold tracking-tight sm:inline">Palrgo</span>
           </Link>
           <div className="mx-auto hidden w-full max-w-md md:block">
-            <div className="flex items-center gap-2 rounded-full bg-muted/60 px-4 py-2 text-sm text-muted-foreground ring-1 ring-border focus-within:ring-primary/40 transition">
-              <span>🔎</span>
-              <span>Search posts, people, hashtags…</span>
+            <div className="flex items-center gap-2 rounded-full bg-muted/60 px-4 py-2 text-sm ring-1 ring-border focus-within:ring-primary/40 transition">
+              <span className="text-muted-foreground">🔎</span>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); if (view !== "feed") setView("feed"); }}
+                placeholder="Search posts, people, hashtags…"
+                aria-label="Search feed"
+                className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground text-foreground"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                  type="button"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
           <div className="ml-auto flex items-center gap-1">
