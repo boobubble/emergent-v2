@@ -1170,7 +1170,7 @@ export const askBoobubbleInLobby = createServerFn({ method: "POST" })
     if (!settings.bot_user_id) return { ok: false, reason: "not_provisioned" };
     if (settings.bot_user_id === context.userId) return { ok: false, reason: "self" };
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = (await readStoredOpenAIKey()) ?? process.env.OPENAI_API_KEY;
     if (!apiKey) return { ok: false, reason: "missing_openai_key" };
 
     // Per-user cooldown
