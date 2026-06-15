@@ -303,12 +303,12 @@ function RingAvatar({ user, size, ring }: { user: User; size: number; ring: "eme
 }
 
 const accentMap = {
-  amber: { dot: "bg-amber-300 shadow-[0_0_0_3px_rgba(251,191,36,0.25)]", orb1: "bg-amber-500/15", orb2: "bg-fuchsia-500/10", border: "hover:border-amber-400/30" },
-  fuchsia: { dot: "bg-fuchsia-400 shadow-[0_0_0_3px_rgba(232,121,249,0.25)]", orb1: "bg-fuchsia-500/15", orb2: "bg-violet-500/10", border: "hover:border-fuchsia-400/30" },
-  violet: { dot: "bg-violet-400 shadow-[0_0_0_3px_rgba(167,139,250,0.25)]", orb1: "bg-violet-500/15", orb2: "bg-indigo-500/10", border: "hover:border-violet-400/30" },
-  emerald: { dot: "bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.25)]", orb1: "bg-emerald-500/15", orb2: "bg-teal-500/10", border: "hover:border-emerald-400/30" },
-  sky: { dot: "bg-sky-400 shadow-[0_0_0_3px_rgba(56,189,248,0.25)]", orb1: "bg-sky-500/15", orb2: "bg-indigo-500/10", border: "hover:border-sky-400/30" },
-  rose: { dot: "bg-rose-400 shadow-[0_0_0_3px_rgba(251,113,133,0.25)]", orb1: "bg-rose-500/15", orb2: "bg-orange-500/10", border: "hover:border-rose-400/30" },
+  amber: { dot: "bg-amber-400", icon: "text-amber-600 dark:text-amber-300" },
+  fuchsia: { dot: "bg-fuchsia-400", icon: "text-fuchsia-600 dark:text-fuchsia-300" },
+  violet: { dot: "bg-violet-400", icon: "text-violet-600 dark:text-violet-300" },
+  emerald: { dot: "bg-emerald-400", icon: "text-emerald-600 dark:text-emerald-300" },
+  sky: { dot: "bg-sky-400", icon: "text-sky-600 dark:text-sky-300" },
+  rose: { dot: "bg-rose-400", icon: "text-rose-500 dark:text-rose-300" },
 } as const;
 
 function PremiumCard({
@@ -328,25 +328,20 @@ function PremiumCard({
 }) {
   const a = accentMap[accent];
   return (
-    <div className={`group relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-card/80 p-4 shadow-sm backdrop-blur-xl transition dark:border-white/[0.06] dark:from-white/[0.04] dark:via-white/[0.02] dark:to-white/[0.04] ${a.border}`}>
-      {/* Decorative glow orbs */}
-      <div className={`pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full ${a.orb1} blur-2xl`} />
-      <div className={`pointer-events-none absolute -bottom-12 -left-10 h-24 w-24 rounded-full ${a.orb2} blur-2xl`} />
-
-      <div className="relative">
-        <div className="mb-3 flex items-center gap-2">
-          <span className={`inline-block h-1.5 w-1.5 rounded-full ${a.dot}`} />
-          {icon}
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{title}</h3>
-          {typeof badge === "number" && (
-            <span className="ml-1 rounded-full bg-foreground/[0.06] px-1.5 py-0.5 text-[10px] font-bold text-foreground/80 ring-1 ring-inset ring-border/60 dark:bg-white/[0.06] dark:ring-border/60 dark:ring-white/10">
-              {badge}
-            </span>
-          )}
-          {rightSlot && <div className="ml-auto">{rightSlot}</div>}
-        </div>
-        <div className="space-y-0.5">{children}</div>
+    <div className="group relative premium-surface premium-surface-hover p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <span className={`inline-block h-1.5 w-1.5 rounded-full ${a.dot}`} aria-hidden />
+        {icon}
+        <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{title}</h3>
+        {typeof badge === "number" && (
+          <span className="ml-1 rounded-full bg-foreground/[0.06] px-1.5 py-0.5 text-[10px] font-bold text-foreground/80 ring-1 ring-inset ring-border">
+            {badge}
+          </span>
+        )}
+        {rightSlot && <div className="ml-auto">{rightSlot}</div>}
       </div>
+      <div className="space-y-0.5">{children}</div>
     </div>
   );
 }
+
