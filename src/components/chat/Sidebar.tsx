@@ -165,10 +165,10 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
           target={user?.isGuest ? undefined : "_blank"}
           rel={user?.isGuest ? undefined : "noopener noreferrer"}
           onClick={(e) => { if (user?.isGuest) e.preventDefault(); }}
-          className="group relative block w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-amber-500/10 via-white/[0.04] to-fuchsia-500/10 p-2.5 text-left transition-all hover:border-amber-400/30 hover:from-amber-500/15 hover:to-fuchsia-500/15"
+          className="group relative block w-full overflow-hidden rounded-2xl border border-border bg-card/60 p-3 text-left transition-all hover:border-primary/30 hover:bg-card"
           title={user?.isGuest ? "Guest session" : "Open account settings in new tab"}
         >
-          <div className="pointer-events-none absolute -top-8 -right-8 h-20 w-20 rounded-full bg-amber-400/15 blur-2xl" />
+
           <div className="relative flex items-center gap-3">
             <Avatar user={state.me} size={36} />
             <div className="min-w-0 flex-1 leading-tight">
