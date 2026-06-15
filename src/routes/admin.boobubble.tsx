@@ -10,6 +10,8 @@ import {
   getBoobubbleSettings,
   saveBoobubbleSettings,
   provisionBoobubbleAssistant,
+  getBoobubbleOpenAIKeyStatus,
+  setBoobubbleOpenAIKey,
   type BoobubbleSettings,
 } from "@/lib/boobubble.functions";
 
@@ -44,10 +46,14 @@ function AdminBoobubblePage() {
   const fetchSettings = useServerFn(getBoobubbleSettings);
   const saveFn = useServerFn(saveBoobubbleSettings);
   const provisionFn = useServerFn(provisionBoobubbleAssistant);
+  const fetchKeyStatus = useServerFn(getBoobubbleOpenAIKeyStatus);
+  const saveKeyFn = useServerFn(setBoobubbleOpenAIKey);
   const qc = useQueryClient();
 
   const { data } = useQuery({ queryKey: ["boobubble-settings"], queryFn: () => fetchSettings({}) });
+  const { data: keyStatus } = useQuery({ queryKey: ["boobubble-openai-key"], queryFn: () => fetchKeyStatus({}) });
   const [v, setV] = useState<BoobubbleSettings>(DEFAULTS);
+  const [openaiKeyInput, setOpenaiKeyInput] = useState("");
   useEffect(() => { if (data) setV({ ...DEFAULTS, ...data }); }, [data]);
 
   const save = useMutation({
@@ -86,6 +92,16 @@ function AdminBoobubblePage() {
     onSuccess: (r) => {
       toast.success(r.existed ? "Assistant already exists" : "BooBubble Assistant created");
       qc.invalidateQueries({ queryKey: ["boobubble-settings"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const saveKey = useMutation({
+    mutationFn: (key: string) => saveKeyFn({ data: { key } }),
+    onSuccess: (r) => {
+      toast.success(r.cleared ? "OpenAI key cleared" : "OpenAI key saved");
+      setOpenaiKeyInput("");
+      qc.invalidateQueries({ queryKey: ["boobubble-openai-key"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -326,11 +342,66 @@ function AdminBoobubblePage() {
           />
         </label>
         <p className="text-[11px] text-muted-foreground">
-          To set or rotate the OpenAI API key, ask in chat: <em>"Update OPENAI_API_KEY"</em>. Get one at
-          {" "}<a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="underline">platform.openai.com/api-keys</a>.
           Per-user cooldown: 8 seconds. Rate limit and credit errors are logged server-side.
         </p>
       </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold">OpenAI API Key</h3>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Paste your own OpenAI API key below. It's stored server-side and never returned to the browser.
+          Get one at{" "}
+          <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="underline">
+            platform.openai.com/api-keys
+          </a>
+          . Make sure your OpenAI account has billing/credits enabled — otherwise replies fail with quota errors.
+        </p>
+        <div className="text-xs text-muted-foreground">
+          Status:{" "}
+          {keyStatus?.configured ? (
+            <span className="font-mono text-foreground">
+              {keyStatus.masked} <span className="ml-1 text-[10px] opacity-70">({keyStatus.source})</span>
+            </span>
+          ) : (
+            <span className="text-amber-500">Not configured</span>
+          )}
+        </div>
+        <label className="block text-xs">
+          <span className="mb-1 block text-muted-foreground">New OpenAI API key</span>
+          <input
+            type="password"
+            value={openaiKeyInput}
+            onChange={(e) => setOpenaiKeyInput(e.target.value)}
+            placeholder="sk-..."
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm font-mono"
+          />
+        </label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => saveKey.mutate(openaiKeyInput)}
+            disabled={saveKey.isPending || openaiKeyInput.trim().length < 10}
+            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {saveKey.isPending ? "Saving…" : "Save key"}
+          </button>
+          <button
+            type="button"
+            onClick={() => { if (confirm("Clear the stored OpenAI key?")) saveKey.mutate(""); }}
+            disabled={saveKey.isPending || !keyStatus?.configured || keyStatus?.source !== "admin"}
+            className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            Clear stored key
+          </button>
+        </div>
+      </section>
+
+
 
 
 

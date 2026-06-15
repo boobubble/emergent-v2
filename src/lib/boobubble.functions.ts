@@ -1096,6 +1096,62 @@ export const claimShareReward = createServerFn({ method: "POST" })
 const lobbyAiLastCall = new Map<string, number>();
 const LOBBY_AI_COOLDOWN_MS = 8000;
 
+const OPENAI_KEY_SETTING = "boobubble_openai_key";
+
+async function readStoredOpenAIKey(): Promise<string | null> {
+  const admin = await getSupabaseAdmin();
+  const { data } = await admin
+    .from("app_settings")
+    .select("value")
+    .eq("key", OPENAI_KEY_SETTING)
+    .maybeSingle();
+  const v = data?.value as { key?: string } | null;
+  return v?.key && typeof v.key === "string" && v.key.length > 10 ? v.key : null;
+}
+
+function maskKey(k: string): string {
+  if (!k) return "";
+  if (k.length <= 8) return "••••";
+  return `${k.slice(0, 4)}…${k.slice(-4)}`;
+}
+
+// Admin: status (does a key exist + masked preview). Never returns the raw key.
+export const getBoobubbleOpenAIKeyStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const stored = await readStoredOpenAIKey();
+    const envKey = process.env.OPENAI_API_KEY;
+    if (stored) return { configured: true, source: "admin" as const, masked: maskKey(stored) };
+    if (envKey) return { configured: true, source: "env" as const, masked: maskKey(envKey) };
+    return { configured: false, source: "none" as const, masked: "" };
+  });
+
+// Admin: set or clear the OpenAI API key (stored in app_settings, server-only).
+export const setBoobubbleOpenAIKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ key: z.string().trim().max(256) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const admin = await getSupabaseAdmin();
+    const key = data.key.trim();
+    if (!key) {
+      await admin.from("app_settings").delete().eq("key", OPENAI_KEY_SETTING);
+      return { ok: true, cleared: true };
+    }
+    if (!/^sk-[A-Za-z0-9_\-]{20,}$/.test(key)) {
+      throw new Error("Invalid OpenAI key format. Expected sk-…");
+    }
+    const { error } = await admin
+      .from("app_settings")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .upsert({ key: OPENAI_KEY_SETTING, value: { key, set_at: new Date().toISOString() } as any }, { onConflict: "key" });
+    if (error) throw new Error(error.message);
+    return { ok: true, masked: maskKey(key) };
+  });
+
 export const askBoobubbleInLobby = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -1114,7 +1170,7 @@ export const askBoobubbleInLobby = createServerFn({ method: "POST" })
     if (!settings.bot_user_id) return { ok: false, reason: "not_provisioned" };
     if (settings.bot_user_id === context.userId) return { ok: false, reason: "self" };
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = (await readStoredOpenAIKey()) ?? process.env.OPENAI_API_KEY;
     if (!apiKey) return { ok: false, reason: "missing_openai_key" };
 
     // Per-user cooldown
