@@ -96,6 +96,16 @@ function AdminBoobubblePage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const saveKey = useMutation({
+    mutationFn: (key: string) => saveKeyFn({ data: { key } }),
+    onSuccess: (r) => {
+      toast.success(r.cleared ? "OpenAI key cleared" : "OpenAI key saved");
+      setOpenaiKeyInput("");
+      qc.invalidateQueries({ queryKey: ["boobubble-openai-key"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const set = <K extends keyof BoobubbleSettings>(k: K, val: BoobubbleSettings[K]) =>
     setV((s) => ({ ...s, [k]: val }));
 
