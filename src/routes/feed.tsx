@@ -102,6 +102,7 @@ function FeedPage() {
   const [dmOpenKey, setDmOpenKey] = useState(0);
   const [defaultTabApplied, setDefaultTabApplied] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const navigate = useNavigate();
 
   const focusComposer = () => {
