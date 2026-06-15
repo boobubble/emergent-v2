@@ -46,10 +46,14 @@ function AdminBoobubblePage() {
   const fetchSettings = useServerFn(getBoobubbleSettings);
   const saveFn = useServerFn(saveBoobubbleSettings);
   const provisionFn = useServerFn(provisionBoobubbleAssistant);
+  const fetchKeyStatus = useServerFn(getBoobubbleOpenAIKeyStatus);
+  const saveKeyFn = useServerFn(setBoobubbleOpenAIKey);
   const qc = useQueryClient();
 
   const { data } = useQuery({ queryKey: ["boobubble-settings"], queryFn: () => fetchSettings({}) });
+  const { data: keyStatus } = useQuery({ queryKey: ["boobubble-openai-key"], queryFn: () => fetchKeyStatus({}) });
   const [v, setV] = useState<BoobubbleSettings>(DEFAULTS);
+  const [openaiKeyInput, setOpenaiKeyInput] = useState("");
   useEffect(() => { if (data) setV({ ...DEFAULTS, ...data }); }, [data]);
 
   const save = useMutation({
