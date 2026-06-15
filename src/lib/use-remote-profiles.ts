@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { rtLog } from "@/lib/realtime-debug";
 import type { User } from "@/lib/chat-types";
@@ -26,7 +26,7 @@ export interface RemoteProfile {
   is_official: boolean | null;
 }
 
-const ONLINE_WINDOW_MS = 75 * 1000; // 75s — slightly longer than 1 missed 25s heartbeat
+const ONLINE_WINDOW_MS = 75 * 1000;
 const PRESENCE_CHANNEL = "online-users-presence";
 
 function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User {
@@ -40,7 +40,6 @@ function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User 
   const lastSeenMs = isPresent ? nowMs : dbLastSeenMs;
   const rawStatus = (p.status as User["status"]) || "offline";
   const fresh = lastSeenMs != null && nowMs - lastSeenMs < ONLINE_WINDOW_MS;
-  // Bots: always treat as online unless explicitly set to "offline" in their profile.
   const status: User["status"] = isBot
     ? (rawStatus === "offline" ? "offline" : "online")
     : isPresent
@@ -74,122 +73,182 @@ function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User 
   };
 }
 
-/** Fetches all profiles from the shared directory and keeps them live via realtime
- *  + Supabase Realtime Presence so online/offline reflects instantly. */
-export function useRemoteProfiles() {
-  const [rawProfiles, setRawProfiles] = useState<Record<string, RemoteProfile>>({});
-  const [presentIds, setPresentIds] = useState<Set<string>>(new Set());
-  const [tick, setTick] = useState(0);
-  const [loading, setLoading] = useState(true);
+/* ─────────────────────────────────────────────────────────────
+ * Module-level singleton store: one fetch + one realtime
+ * subscription + one presence channel, shared across all hook
+ * instances. Refcounted so it tears down when nothing is mounted.
+ * ───────────────────────────────────────────────────────────── */
 
-  // Load + subscribe to profile row changes.
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, username, bio, avatar_url, avatar_color, xp, level, coins, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year, is_bot, is_official")
-        .order("username", { ascending: true });
-      if (cancelled) return;
-      if (error) { setLoading(false); return; }
-      const map: Record<string, RemoteProfile> = {};
-      (data ?? []).forEach(p => { map[p.id] = p as RemoteProfile; });
-      setRawProfiles(map);
-      setLoading(false);
+type Snapshot = {
+  rawProfiles: Record<string, RemoteProfile>;
+  presentIds: Set<string>;
+  loading: boolean;
+  tick: number;
+};
+
+let snapshot: Snapshot = {
+  rawProfiles: {},
+  presentIds: new Set(),
+  loading: true,
+  tick: 0,
+};
+const listeners = new Set<() => void>();
+let refCount = 0;
+let profilesChannel: ReturnType<typeof supabase.channel> | null = null;
+let presenceChannel: ReturnType<typeof supabase.channel> | null = null;
+let authSub: { unsubscribe: () => void } | null = null;
+let tickInterval: number | null = null;
+let initialized = false;
+
+function emit() {
+  for (const l of listeners) l();
+}
+function setSnap(patch: Partial<Snapshot>) {
+  snapshot = { ...snapshot, ...patch };
+  emit();
+}
+
+async function joinPresence(userId: string) {
+  if (presenceChannel) {
+    await supabase.removeChannel(presenceChannel);
+    presenceChannel = null;
+  }
+  for (const c of supabase.getChannels()) {
+    if (c.topic === `realtime:${PRESENCE_CHANNEL}`) {
+      await supabase.removeChannel(c);
     }
-    load();
-
-    const channel = supabase
-      .channel(`profiles-directory-${Math.random().toString(36).slice(2)}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, (payload) => {
-        setRawProfiles(prev => {
-          const next = { ...prev };
-          if (payload.eventType === "DELETE") {
-            const id = (payload.old as { id: string }).id;
-            delete next[id];
-          } else {
-            const row = payload.new as RemoteProfile;
-            next[row.id] = row;
-          }
-          return next;
-        });
-      })
-      .subscribe(status => rtLog("ws", status, "profiles-directory"));
-
-    return () => { cancelled = true; supabase.removeChannel(channel); };
-  }, []);
-
-  // Realtime Presence: anyone subscribed to this channel is considered online.
-  useEffect(() => {
-    let cancelled = false;
-    let presenceChannel: ReturnType<typeof supabase.channel> | null = null;
-    let authSub: { unsubscribe: () => void } | null = null;
-
-    async function joinPresence(userId: string) {
-      if (presenceChannel) {
-        await supabase.removeChannel(presenceChannel);
-        presenceChannel = null;
+  }
+  const ch = supabase.channel(PRESENCE_CHANNEL, {
+    config: { presence: { key: userId } },
+  });
+  const recompute = (event: string) => {
+    const state = ch.presenceState() as Record<string, unknown[]>;
+    const ids = new Set(Object.keys(state));
+    setSnap({ presentIds: ids });
+    if (event !== "sync") rtLog("presence", event, `${ids.size} online`);
+  };
+  ch.on("presence", { event: "sync" }, () => recompute("sync"))
+    .on("presence", { event: "join" }, () => recompute("join"))
+    .on("presence", { event: "leave" }, () => recompute("leave"))
+    .subscribe(async (status) => {
+      rtLog("ws", status, "presence");
+      if (status === "SUBSCRIBED") {
+        await ch.track({ online_at: new Date().toISOString() });
       }
-      // In React StrictMode the effect remounts; remove any stale instance
-      // with the same topic so .on() doesn't throw "after subscribe()".
-      for (const c of supabase.getChannels()) {
-        if (c.topic === `realtime:${PRESENCE_CHANNEL}`) {
-          await supabase.removeChannel(c);
+    });
+  presenceChannel = ch;
+}
+
+async function startStore() {
+  if (initialized) return;
+  initialized = true;
+
+  // Initial fetch.
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(
+      "id, username, bio, avatar_url, avatar_color, xp, level, coins, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year, is_bot, is_official",
+    )
+    .order("username", { ascending: true });
+  if (!error) {
+    const map: Record<string, RemoteProfile> = {};
+    (data ?? []).forEach((p) => {
+      map[p.id] = p as RemoteProfile;
+    });
+    setSnap({ rawProfiles: map, loading: false });
+  } else {
+    setSnap({ loading: false });
+  }
+
+  // Postgres changes subscription.
+  profilesChannel = supabase
+    .channel("profiles-directory-singleton")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "profiles" },
+      (payload) => {
+        const next = { ...snapshot.rawProfiles };
+        if (payload.eventType === "DELETE") {
+          const id = (payload.old as { id: string }).id;
+          delete next[id];
+        } else {
+          const row = payload.new as RemoteProfile;
+          next[row.id] = row;
         }
-      }
-      const ch = supabase.channel(PRESENCE_CHANNEL, {
-        config: { presence: { key: userId } },
-      });
-      const recompute = (event: string) => {
-        if (cancelled) return;
-        const state = ch.presenceState() as Record<string, unknown[]>;
-        const ids = new Set(Object.keys(state));
-        setPresentIds(ids);
-        if (event !== "sync") rtLog("presence", event, `${ids.size} online`);
-      };
-      ch.on("presence", { event: "sync" }, () => recompute("sync"))
-        .on("presence", { event: "join" }, () => recompute("join"))
-        .on("presence", { event: "leave" }, () => recompute("leave"))
-        .subscribe(async (status) => {
-          rtLog("ws", status, "presence");
-          if (status === "SUBSCRIBED") {
-            await ch.track({ online_at: new Date().toISOString() });
-          }
-        });
-      presenceChannel = ch;
+        setSnap({ rawProfiles: next });
+      },
+    )
+    .subscribe((status) => rtLog("ws", status, "profiles-directory"));
+
+  // Presence channel tied to the current auth user.
+  const { data: u } = await supabase.auth.getUser();
+  if (u.user?.id) await joinPresence(u.user.id);
+  const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    if (session?.user?.id) void joinPresence(session.user.id);
+  });
+  authSub = sub.subscription;
+
+  // Periodic freshness recompute.
+  tickInterval = window.setInterval(() => {
+    setSnap({ tick: snapshot.tick + 1 });
+  }, 10_000);
+}
+
+async function stopStore() {
+  initialized = false;
+  if (profilesChannel) {
+    await supabase.removeChannel(profilesChannel);
+    profilesChannel = null;
+  }
+  if (presenceChannel) {
+    await supabase.removeChannel(presenceChannel);
+    presenceChannel = null;
+  }
+  if (authSub) {
+    authSub.unsubscribe();
+    authSub = null;
+  }
+  if (tickInterval != null) {
+    window.clearInterval(tickInterval);
+    tickInterval = null;
+  }
+}
+
+function subscribe(cb: () => void): () => void {
+  listeners.add(cb);
+  refCount += 1;
+  if (refCount === 1) void startStore();
+  return () => {
+    listeners.delete(cb);
+    refCount -= 1;
+    if (refCount === 0) {
+      // Defer teardown slightly so rapid remounts (StrictMode, route changes)
+      // don't tear down and immediately re-create the subscriptions.
+      setTimeout(() => {
+        if (refCount === 0) void stopStore();
+      }, 1000);
     }
+  };
+}
 
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (cancelled) return;
-      if (data.user?.id) await joinPresence(data.user.id);
-      const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session?.user?.id) void joinPresence(session.user.id);
-      });
-      authSub = sub.subscription;
-    })();
+function getSnapshot(): Snapshot {
+  return snapshot;
+}
 
-    return () => {
-      cancelled = true;
-      if (presenceChannel) supabase.removeChannel(presenceChannel);
-      authSub?.unsubscribe();
-    };
-  }, []);
-
-  // Re-derive freshness periodically so stale "online" rows flip to offline
-  // without needing another realtime event.
+/** Fetches all profiles from the shared directory and keeps them live via
+ *  one shared subscription + Supabase Realtime Presence. Safe to call from
+ *  many components — they all share a single underlying channel. */
+export function useRemoteProfiles() {
+  const snap = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const [, setNow] = useState(0);
   useEffect(() => {
-    const id = window.setInterval(() => setTick(t => t + 1), 10_000);
-    return () => window.clearInterval(id);
-  }, []);
+    setNow(Date.now()); // ensure a render after mount with current time
+  }, [snap.tick]);
 
   const now = Date.now();
   const profiles: Record<string, User> = {};
-  for (const id in rawProfiles) {
-    profiles[id] = toUser(rawProfiles[id], presentIds, now);
+  for (const id in snap.rawProfiles) {
+    profiles[id] = toUser(snap.rawProfiles[id], snap.presentIds, now);
   }
-  // tick is used to trigger recomputation
-  void tick;
-
-  return { profiles, loading };
+  return { profiles, loading: snap.loading };
 }
