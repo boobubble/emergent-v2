@@ -342,11 +342,66 @@ function AdminBoobubblePage() {
           />
         </label>
         <p className="text-[11px] text-muted-foreground">
-          To set or rotate the OpenAI API key, ask in chat: <em>"Update OPENAI_API_KEY"</em>. Get one at
-          {" "}<a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="underline">platform.openai.com/api-keys</a>.
           Per-user cooldown: 8 seconds. Rate limit and credit errors are logged server-side.
         </p>
       </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold">OpenAI API Key</h3>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Paste your own OpenAI API key below. It's stored server-side and never returned to the browser.
+          Get one at{" "}
+          <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="underline">
+            platform.openai.com/api-keys
+          </a>
+          . Make sure your OpenAI account has billing/credits enabled — otherwise replies fail with quota errors.
+        </p>
+        <div className="text-xs text-muted-foreground">
+          Status:{" "}
+          {keyStatus?.configured ? (
+            <span className="font-mono text-foreground">
+              {keyStatus.masked} <span className="ml-1 text-[10px] opacity-70">({keyStatus.source})</span>
+            </span>
+          ) : (
+            <span className="text-amber-500">Not configured</span>
+          )}
+        </div>
+        <label className="block text-xs">
+          <span className="mb-1 block text-muted-foreground">New OpenAI API key</span>
+          <input
+            type="password"
+            value={openaiKeyInput}
+            onChange={(e) => setOpenaiKeyInput(e.target.value)}
+            placeholder="sk-..."
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm font-mono"
+          />
+        </label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => saveKey.mutate(openaiKeyInput)}
+            disabled={saveKey.isPending || openaiKeyInput.trim().length < 10}
+            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {saveKey.isPending ? "Saving…" : "Save key"}
+          </button>
+          <button
+            type="button"
+            onClick={() => { if (confirm("Clear the stored OpenAI key?")) saveKey.mutate(""); }}
+            disabled={saveKey.isPending || !keyStatus?.configured || keyStatus?.source !== "admin"}
+            className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            Clear stored key
+          </button>
+        </div>
+      </section>
+
+
 
 
 
