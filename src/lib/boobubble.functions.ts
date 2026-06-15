@@ -196,9 +196,12 @@ export const saveBoobubbleSettings = createServerFn({ method: "POST" })
       bot_avatar_url: z.string().url().nullable(),
       bot_bio: z.string().max(280),
       lobby_ai_enabled: z.boolean(),
+      lobby_ai_provider: z.enum(["openai", "gemini"]),
       openai_model: z.string().trim().min(2).max(64),
+      gemini_model: z.string().trim().min(2).max(64),
       openai_system_prompt: z.string().min(10).max(2000),
     }).parse(input),
+
   )
   .handler(async ({ data, context }) => {
     const supabaseAdmin = await getSupabaseAdmin();
