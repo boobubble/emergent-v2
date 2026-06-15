@@ -231,7 +231,9 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
           </button>
         </div>
       </div>
+      </div>
     </aside>
+
   );
 }
 
