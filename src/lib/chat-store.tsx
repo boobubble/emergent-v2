@@ -1280,6 +1280,12 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
             import("@/lib/ai-chatbots.functions").then(({ aiChatbotReply }) => {
               aiChatbotReply({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
             }).catch(() => {});
+            // BooBubble ChatGPT lobby reply — trigger on any "boobubble" mention (case-insensitive)
+            if (out.kind === "text" && /boobubble/i.test(out.text)) {
+              import("@/lib/boobubble.functions").then(({ askBoobubbleInLobby }) => {
+                askBoobubbleInLobby({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
+              }).catch(() => {});
+            }
           }
         }
       });
