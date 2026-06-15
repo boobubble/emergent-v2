@@ -25,7 +25,9 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
   const [newTopic, setNewTopic] = useState("");
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-card">
+    <aside className="flex h-full w-64 shrink-0 flex-col bg-transparent p-2">
+      <div className="flex h-full flex-col premium-floating-sidebar overflow-hidden">
+
       <div className="flex items-center gap-3 p-5">
         <BrandMark
           slot="chat"
@@ -110,8 +112,8 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
                   key={id}
                   onClick={() => setActive(id)}
                   className={cn(
-                    "chat-room-item",
-                    active && "chat-room-item-active",
+                    "premium-nav-item",
+                    active && "premium-nav-item-active",
                   )}
                 >
                   <span className="flex items-center gap-2.5 truncate">
@@ -131,6 +133,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
         </div>
 
       </nav>
+
 
       <div className="border-t border-border p-3">
         <div className="mb-2 hidden lg:block">
