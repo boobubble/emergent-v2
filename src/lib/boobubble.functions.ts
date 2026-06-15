@@ -1091,3 +1091,96 @@ export const claimShareReward = createServerFn({ method: "POST" })
     return { ok: true, awarded: settings.share_reward_coins, target: data.target };
   });
 
+// ---- Lobby ChatGPT integration ----
+// In-memory per-user rate limit (best-effort; worker is stateless across regions but fine to throttle bursts).
+const lobbyAiLastCall = new Map<string, number>();
+const LOBBY_AI_COOLDOWN_MS = 8000;
+
+export const askBoobubbleInLobby = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      channel_id: z.string().min(1).max(128),
+      text: z.string().min(1).max(800),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    // Only public/room channels; never DMs
+    if (data.channel_id.startsWith("dm:")) return { ok: false, reason: "dm_not_supported" };
+
+    const supabaseAdmin = await getSupabaseAdmin();
+    const settings = await readSettings();
+    if (!settings.enabled || !settings.lobby_ai_enabled) return { ok: false, reason: "disabled" };
+    if (!settings.bot_user_id) return { ok: false, reason: "not_provisioned" };
+    if (settings.bot_user_id === context.userId) return { ok: false, reason: "self" };
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return { ok: false, reason: "missing_openai_key" };
+
+    // Per-user cooldown
+    const now = Date.now();
+    const last = lobbyAiLastCall.get(context.userId) ?? 0;
+    if (now - last < LOBBY_AI_COOLDOWN_MS) {
+      return { ok: false, reason: "rate_limited" };
+    }
+    lobbyAiLastCall.set(context.userId, now);
+
+    // Get asker's username for context
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("username")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const askerName = prof?.username ?? "friend";
+
+    let replyText: string;
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: settings.openai_model || "gpt-4o-mini",
+          max_tokens: 220,
+          temperature: 0.8,
+          messages: [
+            { role: "system", content: settings.openai_system_prompt },
+            { role: "user", content: `@${askerName} asked in the lobby: ${data.text}` },
+          ],
+        }),
+      });
+      if (!res.ok) {
+        const errBody = await res.text();
+        console.error("[boobubble.lobby] OpenAI error", res.status, errBody);
+        if (res.status === 401) return { ok: false, reason: "invalid_openai_key" };
+        if (res.status === 429) return { ok: false, reason: "openai_rate_limited" };
+        return { ok: false, reason: "openai_error" };
+      }
+      const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+      replyText = (json.choices?.[0]?.message?.content ?? "").trim();
+      if (!replyText) return { ok: false, reason: "empty_reply" };
+    } catch (e) {
+      console.error("[boobubble.lobby] fetch failed", e);
+      return { ok: false, reason: "fetch_failed" };
+    }
+
+    // Prefix with @mention so the asker is notified, message is public to all
+    const finalText = `@${askerName} ${replyText}`.slice(0, 2000);
+
+    const { error: msgErr } = await supabaseAdmin.from("messages").insert({
+      channel_id: data.channel_id,
+      author_id: settings.bot_user_id,
+      text: finalText,
+      kind: "text",
+    });
+    if (msgErr) {
+      console.error("[boobubble.lobby] insert failed", msgErr);
+      return { ok: false, reason: "insert_failed" };
+    }
+
+    return { ok: true };
+  });
+
+
