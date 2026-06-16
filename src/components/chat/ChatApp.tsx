@@ -21,13 +21,28 @@ export function ChatApp() {
   const [lbOpen, setLbOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
   const [toast, setToast] = useState<EngageToast | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  // Only auto-collapse on truly small screens (phones); never override the
-  // user's manual choice on resizes wider than that.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.matchMedia("(max-width: 640px)").matches) setSidebarOpen(false);
-  }, []);
+  // Persist the user's sidebar open/closed choice across route switches and
+  // browser resizes. Only fall back to auto-collapse on phones when the user
+  // has never expressed a preference.
+  const [sidebarOpen, setSidebarOpenState] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const saved = window.localStorage.getItem("palrgo:sidebarOpen");
+      if (saved === "1") return true;
+      if (saved === "0") return false;
+    } catch {
+      // ignore storage errors (private mode, etc.)
+    }
+    return !window.matchMedia("(max-width: 640px)").matches;
+  });
+  const setSidebarOpen = (next: boolean) => {
+    setSidebarOpenState(next);
+    try {
+      window.localStorage.setItem("palrgo:sidebarOpen", next ? "1" : "0");
+    } catch {
+      // ignore
+    }
+  };
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
