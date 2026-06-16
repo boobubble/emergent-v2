@@ -70,7 +70,9 @@ export function StoryTray() {
   const [slideIndex, setSlideIndex] = useState(0);
   const [composerOpen, setComposerOpen] = useState(false);
   const [draftFiles, setDraftFiles] = useState<File[]>([]);
+  const [draftCaptions, setDraftCaptions] = useState<string[]>([]);
   const [draftText, setDraftText] = useState("");
+  const [activeDraft, setActiveDraft] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -82,7 +84,9 @@ export function StoryTray() {
 
   function openComposer() {
     setDraftFiles([]);
+    setDraftCaptions([]);
     setDraftText("");
+    setActiveDraft(0);
     setComposerOpen(true);
   }
 
@@ -90,8 +94,22 @@ export function StoryTray() {
     const files = Array.from(e.target.files ?? []);
     e.target.value = "";
     if (!files.length) return;
-    // Cap at 10 slides per story to stay reasonable.
-    setDraftFiles((prev) => [...prev, ...files].slice(0, 10));
+    setDraftFiles((prev) => {
+      const next = [...prev, ...files].slice(0, 10);
+      setDraftCaptions((prevCaps) => {
+        const caps = [...prevCaps];
+        while (caps.length < next.length) caps.push("");
+        return caps.slice(0, next.length);
+      });
+      setActiveDraft(prev.length); // jump to the first newly added slide
+      return next;
+    });
+  }
+
+  function removeDraft(i: number) {
+    setDraftFiles((prev) => prev.filter((_, j) => j !== i));
+    setDraftCaptions((prev) => prev.filter((_, j) => j !== i));
+    setActiveDraft((prev) => Math.max(0, Math.min(prev, draftFiles.length - 2)));
   }
 
   async function publishStory() {
