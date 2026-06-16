@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BrandMark } from "@/components/BrandMark";
+import { BrandMark, BrandText } from "@/components/BrandMark";
 import { useEffect, useMemo, useState } from "react";
 import {
   Search, Menu, X, ArrowRight, Flame, Heart, MessageSquare, Coins,
