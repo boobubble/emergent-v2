@@ -371,6 +371,27 @@ export const deleteMessageMod = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const clearChannelMessages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ channel_id: z.string().min(1).max(120) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCanClearChannel(context.userId);
+    const admin = await getSupabaseAdmin();
+    const { error, count } = await admin
+      .from("messages")
+      .delete({ count: "exact" })
+      .eq("channel_id", data.channel_id);
+    if (error) throw new Error(error.message);
+    await logAction(context.userId, "clear_channel", {
+      target_type: "room",
+      target_id: data.channel_id,
+      payload: { deleted: count ?? 0 },
+    });
+    return { ok: true, deleted: count ?? 0 };
+  });
+
 // ---------- Room moderators ----------
 export const listRoomMods = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
