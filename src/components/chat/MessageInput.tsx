@@ -16,6 +16,7 @@ import { earnChatMessage } from "@/lib/economy.functions";
 import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
 import { clearChannelMessages } from "@/lib/moderation.functions";
 import type { Attachment } from "@/lib/chat-types";
+import { supabase } from "@/integrations/supabase/client";
 
 
 const COMMANDS = [
