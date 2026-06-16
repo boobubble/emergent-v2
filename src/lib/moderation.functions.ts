@@ -392,7 +392,7 @@ export const clearChannelMessages = createServerFn({ method: "POST" })
     z.object({ channel_id: z.string().min(1).max(120) }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertCanClearChannel(context.userId);
+    await assertCanClearChannel(context.userId, data.channel_id);
     const admin = await getSupabaseAdmin();
     const { error, count } = await admin
       .from("messages")
