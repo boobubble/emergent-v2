@@ -185,9 +185,9 @@ export function AccountPanel() {
 
 
       <section>
-        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Friends ({friends.length})</h3>
+        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("account.friendsCount", { count: friends.length })}</h3>
         {friends.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">No friends yet.</p>
+          <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">{t("empty.noFriends")}</p>
         ) : (
           <ul className="grid gap-2">
             {friends.map(u => (
@@ -197,8 +197,8 @@ export function AccountPanel() {
                   <div className="truncate text-sm font-bold">{u.name}</div>
                   <div className="text-[11px] text-muted-foreground">Lv {u.level} · {u.xp} XP</div>
                 </div>
-                <button onClick={() => { startDM(u.id); navigate({ to: "/" }); }} className="rounded-full bg-primary/15 p-1.5 text-primary hover:bg-primary/25" title="Send message"><MessageCircle className="h-3.5 w-3.5" /></button>
-                <button onClick={() => removeFriend(u.id)} className="rounded-full bg-white/5 p-1.5 text-muted-foreground hover:bg-destructive/20 hover:text-destructive" title="Remove friend"><UserMinus className="h-3.5 w-3.5" /></button>
+                <button onClick={() => { startDM(u.id); navigate({ to: "/" }); }} className="rounded-full bg-primary/15 p-1.5 text-primary hover:bg-primary/25" title={t("account.sendMessageTitle")}><MessageCircle className="h-3.5 w-3.5" /></button>
+                <button onClick={() => removeFriend(u.id)} className="rounded-full bg-white/5 p-1.5 text-muted-foreground hover:bg-destructive/20 hover:text-destructive" title={t("account.removeFriendTitle")}><UserMinus className="h-3.5 w-3.5" /></button>
               </li>
             ))}
           </ul>
@@ -206,16 +206,16 @@ export function AccountPanel() {
       </section>
 
       <section>
-        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Blocked ({blocked.length})</h3>
+        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("account.blockedCount", { count: blocked.length })}</h3>
         {blocked.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">No blocked users.</p>
+          <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">{t("empty.noBlocked")}</p>
         ) : (
           <ul className="grid gap-2">
             {blocked.map(u => (
               <li key={u.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-2">
                 <Avatar user={u} size={36} />
                 <div className="min-w-0 flex-1 truncate text-sm font-bold">{u.name}</div>
-                <button onClick={() => unblockUser(u.id)} className="flex items-center gap-1 rounded-full bg-white/5 px-3 py-1 text-[11px] font-bold text-muted-foreground hover:text-foreground"><UserX className="h-3 w-3" /> Unblock</button>
+                <button onClick={() => unblockUser(u.id)} className="flex items-center gap-1 rounded-full bg-white/5 px-3 py-1 text-[11px] font-bold text-muted-foreground hover:text-foreground"><UserX className="h-3 w-3" /> {t("account.unblock")}</button>
               </li>
             ))}
           </ul>
