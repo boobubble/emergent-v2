@@ -103,6 +103,9 @@ function FeedPage() {
   const [defaultTabApplied, setDefaultTabApplied] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchHighlight, setSearchHighlight] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
 
   const focusComposer = () => {
@@ -236,6 +239,57 @@ function FeedPage() {
     return list;
   }, [posts, tab, friendIds, meId, prefs.hideMedia, prefs.mutedKeywords, prefs.mutedHashtags, prefs.sortOverride, query, profiles]);
 
+  // Autocomplete suggestions for the search bar
+  type SearchSuggestion = { kind: "hashtag" | "user"; value: string; label: string; sub?: string };
+  const searchSuggestions = useMemo<SearchSuggestion[]>(() => {
+    const raw = query.trim();
+    if (!raw) return [];
+    const tagPool = new Map<string, number>();
+    for (const p of posts) {
+      for (const t of p.hashtags || []) {
+        const k = String(t).toLowerCase().replace(/^#/, "");
+        if (k) tagPool.set(k, (tagPool.get(k) ?? 0) + 1);
+      }
+    }
+    const userPool = Object.values(profiles).filter(Boolean) as import("@/lib/chat-types").User[];
+
+    const out: SearchSuggestion[] = [];
+    const mode: "hashtag" | "user" | "any" = raw.startsWith("#") ? "hashtag" : raw.startsWith("@") ? "user" : "any";
+    const needle = raw.replace(/^[#@]/, "").toLowerCase();
+
+    if (mode === "hashtag" || mode === "any") {
+      const tags = Array.from(tagPool.entries())
+        .filter(([t]) => (needle ? t.includes(needle) : true))
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([t, n]): SearchSuggestion => ({ kind: "hashtag", value: `#${t}`, label: `#${t}`, sub: `${n} post${n === 1 ? "" : "s"}` }));
+      out.push(...tags);
+    }
+    if (mode === "user" || mode === "any") {
+      const users = userPool
+        .filter(u => {
+          const n = (u.name || "").toLowerCase();
+          return needle ? n.includes(needle) : true;
+        })
+        .slice(0, 6)
+        .map((u): SearchSuggestion => ({ kind: "user", value: `@${u.name}`, label: u.name, sub: "Person" }));
+      out.push(...users);
+    }
+    return out.slice(0, 8);
+  }, [query, posts, profiles]);
+
+  // Reset highlight when suggestions change
+  useEffect(() => { setSearchHighlight(0); }, [query]);
+
+  const applySuggestion = (s: SearchSuggestion) => {
+    setQuery(s.value);
+    setSearchOpen(false);
+    if (view !== "feed") setView("feed");
+    searchInputRef.current?.blur();
+  };
+
+
+
 
   if (!user) return null;
   if (user.isGuest) {
@@ -356,20 +410,52 @@ function FeedPage() {
             />
             <span className="hidden text-[17px] font-bold tracking-tight sm:inline">Palrgo</span>
           </Link>
-          <div className="mx-auto hidden w-full max-w-md md:block">
+          <div className="relative mx-auto hidden w-full max-w-md md:block">
             <div className="flex items-center gap-2 rounded-full bg-muted/60 px-4 py-2 text-sm ring-1 ring-border focus-within:ring-primary/40 transition">
               <span className="text-muted-foreground">🔎</span>
               <input
+                ref={searchInputRef}
                 type="text"
                 value={query}
-                onChange={(e) => { setQuery(e.target.value); if (view !== "feed") setView("feed"); }}
+                onChange={(e) => { setQuery(e.target.value); setSearchOpen(true); if (view !== "feed") setView("feed"); }}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={() => setTimeout(() => setSearchOpen(false), 120)}
+                onKeyDown={(e) => {
+                  const open = searchOpen && searchSuggestions.length > 0;
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    if (query) setQuery("");
+                    setSearchOpen(false);
+                    searchInputRef.current?.blur();
+                  } else if (e.key === "ArrowDown" && open) {
+                    e.preventDefault();
+                    setSearchHighlight(i => (i + 1) % searchSuggestions.length);
+                  } else if (e.key === "ArrowUp" && open) {
+                    e.preventDefault();
+                    setSearchHighlight(i => (i - 1 + searchSuggestions.length) % searchSuggestions.length);
+                  } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (open) {
+                      applySuggestion(searchSuggestions[searchHighlight] ?? searchSuggestions[0]);
+                    } else {
+                      setSearchOpen(false);
+                      if (view !== "feed") setView("feed");
+                      searchInputRef.current?.blur();
+                    }
+                  }
+                }}
                 placeholder="Search posts, people, hashtags…"
                 aria-label="Search feed"
+                aria-autocomplete="list"
+                aria-expanded={searchOpen && searchSuggestions.length > 0}
+                aria-controls="feed-search-suggestions"
+                aria-activedescendant={searchOpen && searchSuggestions.length > 0 ? `feed-search-opt-${searchHighlight}` : undefined}
+                role="combobox"
                 className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground text-foreground"
               />
               {query && (
                 <button
-                  onClick={() => setQuery("")}
+                  onMouseDown={(e) => { e.preventDefault(); setQuery(""); searchInputRef.current?.focus(); }}
                   className="text-muted-foreground hover:text-foreground"
                   aria-label="Clear search"
                   type="button"
@@ -378,7 +464,35 @@ function FeedPage() {
                 </button>
               )}
             </div>
+            {searchOpen && searchSuggestions.length > 0 && (
+              <ul
+                id="feed-search-suggestions"
+                role="listbox"
+                className="absolute left-0 right-0 top-full z-40 mt-2 max-h-80 overflow-auto rounded-2xl border border-border bg-popover p-1 text-sm shadow-[var(--shadow-soft-3,0_10px_30px_-10px_rgba(0,0,0,0.25))]"
+              >
+                {searchSuggestions.map((s, i) => (
+                  <li
+                    key={`${s.kind}-${s.value}`}
+                    id={`feed-search-opt-${i}`}
+                    role="option"
+                    aria-selected={i === searchHighlight}
+                    onMouseDown={(e) => { e.preventDefault(); applySuggestion(s); }}
+                    onMouseEnter={() => setSearchHighlight(i)}
+                    className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2 transition ${i === searchHighlight ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"}`}
+                  >
+                    <span className="flex items-center gap-2 truncate">
+                      <span className={`grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold ${s.kind === "hashtag" ? "bg-primary/15 text-primary" : "bg-secondary text-secondary-foreground"}`}>
+                        {s.kind === "hashtag" ? "#" : "@"}
+                      </span>
+                      <span className="truncate font-medium">{s.label}</span>
+                    </span>
+                    {s.sub && <span className="shrink-0 text-xs text-muted-foreground">{s.sub}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+
           <div className="ml-auto flex items-center gap-1">
             <FeedNotifications meId={meId} profiles={profiles} />
             <button
