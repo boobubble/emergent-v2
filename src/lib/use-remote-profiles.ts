@@ -98,6 +98,8 @@ let profilesChannel: ReturnType<typeof supabase.channel> | null = null;
 let presenceChannel: ReturnType<typeof supabase.channel> | null = null;
 let authSub: { unsubscribe: () => void } | null = null;
 let tickInterval: number | null = null;
+let refetchInterval: number | null = null;
+let focusListener: (() => void) | null = null;
 let initialized = false;
 
 function emit() {
@@ -139,26 +141,25 @@ async function joinPresence(userId: string) {
   presenceChannel = ch;
 }
 
-async function startStore() {
-  if (initialized) return;
-  initialized = true;
-
-  // Initial fetch.
+async function refetchAll() {
   const { data, error } = await supabase
     .from("profiles")
     .select(
       "id, username, bio, avatar_url, avatar_color, xp, level, coins, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year, is_bot, is_official",
     )
     .order("username", { ascending: true });
-  if (!error) {
-    const map: Record<string, RemoteProfile> = {};
-    (data ?? []).forEach((p) => {
-      map[p.id] = p as RemoteProfile;
-    });
-    setSnap({ rawProfiles: map, loading: false });
-  } else {
-    setSnap({ loading: false });
-  }
+  if (error) return;
+  const map: Record<string, RemoteProfile> = {};
+  (data ?? []).forEach((p) => { map[p.id] = p as RemoteProfile; });
+  setSnap({ rawProfiles: map, loading: false });
+}
+
+async function startStore() {
+  if (initialized) return;
+  initialized = true;
+
+  // Initial fetch.
+  await refetchAll();
 
   // Postgres changes subscription.
   profilesChannel = supabase
@@ -188,10 +189,17 @@ async function startStore() {
   });
   authSub = sub.subscription;
 
-  // Periodic freshness recompute.
+  // Periodic freshness recompute (status/lastSeen derivation).
   tickInterval = window.setInterval(() => {
     setSnap({ tick: snapshot.tick + 1 });
   }, 10_000);
+
+  // Safety net: re-fetch profiles every 60s and whenever the tab regains focus,
+  // so missed realtime events (e.g. dropped websocket) don't leave stale usernames/avatars.
+  refetchInterval = window.setInterval(() => { void refetchAll(); }, 60_000);
+  focusListener = () => { if (document.visibilityState === "visible") void refetchAll(); };
+  window.addEventListener("focus", focusListener);
+  document.addEventListener("visibilitychange", focusListener);
 }
 
 async function stopStore() {
@@ -211,6 +219,15 @@ async function stopStore() {
   if (tickInterval != null) {
     window.clearInterval(tickInterval);
     tickInterval = null;
+  }
+  if (refetchInterval != null) {
+    window.clearInterval(refetchInterval);
+    refetchInterval = null;
+  }
+  if (focusListener) {
+    window.removeEventListener("focus", focusListener);
+    document.removeEventListener("visibilitychange", focusListener);
+    focusListener = null;
   }
 }
 
