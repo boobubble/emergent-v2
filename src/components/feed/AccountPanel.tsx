@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUsernameCheck } from "@/lib/use-username-check";
 
 export function AccountPanel() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { state, updateMe, removeFriend, unblockUser, startDM } = useChat();
   const { user: auth, logout, refreshUsername } = useAuth();
