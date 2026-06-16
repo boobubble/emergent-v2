@@ -5,7 +5,7 @@ import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { ACCENTS, useAccent } from "@/lib/use-accent";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useUsernameCheck } from "@/lib/use-username-check";
 
