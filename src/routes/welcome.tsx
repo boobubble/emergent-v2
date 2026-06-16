@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BrandMark } from "@/components/BrandMark";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search, Menu, X, ArrowRight, Flame, Heart, MessageSquare, Coins,
   Users, Activity, MessageCircle, Newspaper, Gamepad2, Trophy,
