@@ -91,12 +91,12 @@ export function AccountPanel() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold">Account settings</h2>
+        <h2 className="text-lg font-bold">{t("account.title")}</h2>
         <button
           onClick={() => { logout(); navigate({ to: "/" }); }}
           className="flex items-center gap-2 rounded-full bg-destructive/10 px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/20"
         >
-          <LogOut className="h-4 w-4" /> Sign out
+          <LogOut className="h-4 w-4" /> {t("auth.signOut")}
         </button>
       </div>
 
