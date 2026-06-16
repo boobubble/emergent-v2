@@ -282,10 +282,27 @@ function FeedPage() {
   useEffect(() => { setSearchHighlight(0); }, [query]);
 
   const applySuggestion = (s: SearchSuggestion) => {
-    setQuery(s.value);
     setSearchOpen(false);
-    if (view !== "feed") setView("feed");
     searchInputRef.current?.blur();
+    if (s.kind === "user") {
+      const uname = s.value.replace(/^@/, "");
+      setQuery("");
+      setProfileUsername(uname);
+      setView("profile");
+      return;
+    }
+    if (s.kind === "hashtag") {
+      setQuery(s.value);
+      if (view !== "feed") setView("feed");
+      // Try to scroll to first matching post
+      setTimeout(() => {
+        const el = document.querySelector('[data-feed-post]') as HTMLElement | null;
+        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+      return;
+    }
+    setQuery(s.value);
+    if (view !== "feed") setView("feed");
   };
 
 
