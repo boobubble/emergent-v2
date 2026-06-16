@@ -14,6 +14,7 @@ import { useAppSettings } from "@/lib/app-settings";
 import { mergeMediaConfig } from "@/lib/media-providers-config";
 import { earnChatMessage } from "@/lib/economy.functions";
 import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
+import { clearChannelMessages } from "@/lib/moderation.functions";
 import type { Attachment } from "@/lib/chat-types";
 
 
