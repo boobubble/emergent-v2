@@ -208,6 +208,31 @@ function BrandAssetsCard() {
           </div>
         </div>
 
+        {/* Per-page brand text */}
+        <div className="rounded-xl border border-border bg-background/40 p-4">
+          <div className="mb-1 text-sm font-semibold">Brand text (per page)</div>
+          <div className="mb-3 text-xs text-muted-foreground">
+            Custom wordmark text for each page. Automatically hidden when a logo image is uploaded for the same section.
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {([
+              { key: "logo", label: "Header / Auth & Welcome" },
+              { key: "feed", label: "Feed page" },
+              { key: "chat", label: "Chat sidebar" },
+            ] as const).map((t) => (
+              <div key={t.key} className="space-y-1.5">
+                <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{t.label}</Label>
+                <Input
+                  value={values.texts?.[t.key] ?? ""}
+                  placeholder="e.g. Palrgo"
+                  maxLength={32}
+                  onChange={(e) => patch({ texts: { ...(values.texts ?? {}), [t.key]: e.target.value } })}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Global brand assets */}
         <div className="space-y-3">
           {GLOBAL_GROUPS.map((g) => (

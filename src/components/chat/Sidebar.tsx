@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
-import { BrandMark } from "@/components/BrandMark";
+import { BrandMark, BrandText, useBrandAsset } from "@/components/BrandMark";
 import { ChatExploreMenu } from "./ChatExploreMenu";
 import { levelProgress } from "@/lib/ranks";
 
@@ -23,6 +23,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newTopic, setNewTopic] = useState("");
+  const chatLogo = useBrandAsset("chat");
 
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col bg-transparent p-2">
@@ -42,12 +43,14 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
             </div>
           }
         />
-        <div className="min-w-0 flex-1 leading-tight">
-          <div className="font-bold text-foreground">Palrgo</div>
-          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Social Chat
+        {!chatLogo && (
+          <div className="min-w-0 flex-1 leading-tight">
+            <BrandText slot="chat" defaultText="Palrgo" className="block font-bold text-foreground" alwaysShow />
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Social Chat
+            </div>
           </div>
-        </div>
+        )}
         {onCollapse && (
           <button
             onClick={onCollapse}
