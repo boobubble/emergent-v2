@@ -119,6 +119,7 @@ export function MessageInput() {
   }, []);
 
   const earnChat = useServerFn(earnChatMessage);
+  const clearChannelFn = useServerFn(clearChannelMessages);
   const queryClient = useQueryClient();
 
   async function handleClearCache() {
@@ -132,12 +133,29 @@ export function MessageInput() {
     toast.success("Caches cleared", { id: "clearcache", description: formatClearReport(report) });
   }
 
+  async function handleClearChannel() {
+    const channelId = state.activeChannel;
+    toast.loading("Clearing chat…", { id: "clearchat" });
+    try {
+      const res = await clearChannelFn({ data: { channelId } });
+      toast.success("Chat cleared", { id: "clearchat", description: `${res?.deleted ?? 0} messages removed.` });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to clear chat";
+      toast.error("Cannot clear chat", { id: "clearchat", description: msg });
+    }
+  }
+
   function submit() {
     if (!text.trim() && !attachment) return;
     const trimmed = text.trim();
     if (/^\/clearcache\b/i.test(trimmed)) {
       setText(""); setAttachment(null); setAttachError("");
       void handleClearCache();
+      return;
+    }
+    if (/^\/clear\b/i.test(trimmed)) {
+      setText(""); setAttachment(null); setAttachError("");
+      void handleClearChannel();
       return;
     }
     send(text, { attachment: attachment || undefined, replyToId: replyingTo?.id });
