@@ -113,3 +113,32 @@ export function BrandMark({ slot, roomId, alt = "Logo", className, fallback, for
   }
   return <img src={url} alt={alt} className={className} style={style} />;
 }
+
+export function useBrandText(slot: BrandSlot, roomId?: string): string | undefined {
+  const b = useBrandingMap();
+  if (roomId && b.rooms?.[roomId]?.text != null) return b.rooms[roomId]!.text;
+  return b.texts?.[slot];
+}
+
+interface BrandTextProps {
+  slot: BrandSlot;
+  roomId?: string;
+  defaultText?: string;
+  className?: string;
+  forceTheme?: "light" | "dark";
+  /** If true, render even when a logo image is present (used for subtitles). */
+  alwaysShow?: boolean;
+}
+
+/**
+ * Renders admin-configurable brand text for a slot.
+ * Automatically hides when a logo image is set for that slot, so the logo replaces the text.
+ */
+export function BrandText({ slot, roomId, defaultText, className, forceTheme, alwaysShow }: BrandTextProps) {
+  const url = useBrandAsset(slot, roomId, forceTheme);
+  const override = useBrandText(slot, roomId);
+  if (url && !alwaysShow) return null;
+  const text = override ?? defaultText;
+  if (!text) return null;
+  return <span className={className}>{text}</span>;
+}
