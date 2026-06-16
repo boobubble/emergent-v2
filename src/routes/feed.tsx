@@ -704,7 +704,9 @@ function FeedPage() {
                   </div>
                 )}
                 {!loading && filtered.map((post) => (
-                  <PostCard key={post.id} post={post} profiles={profiles} meId={meId} />
+                  <div key={post.id} data-feed-post={post.id} className="rounded-3xl transition-shadow outline-none">
+                    <PostCard post={post} profiles={profiles} meId={meId} />
+                  </div>
                 ))}
                 </>)}
               </div>
