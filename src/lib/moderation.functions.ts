@@ -27,18 +27,33 @@ type ModActionName =
   | "resolve_report" | "dismiss_report" | "note"
   | "add_word_filter" | "remove_word_filter" | "add_url_rule" | "remove_url_rule";
 
-async function assertCanClearChannel(userId: string) {
+async function assertCanClearChannel(userId: string, channelId: string) {
   const admin = await getSupabaseAdmin();
   const { data: roles } = await admin
     .from("user_roles").select("role").eq("user_id", userId);
   const list = (roles ?? []).map(r => r.role as string);
   const isAdmin = list.includes("super_admin") || list.includes("admin");
   if (isAdmin) return;
-  if (!list.includes("moderator")) throw new Error("Forbidden: staff only");
-  const { data: settings } = await admin
-    .from("app_settings").select("value").eq("key", "staff_permissions").maybeSingle();
-  const allowed = !!(settings?.value as Record<string, unknown> | null)?.["mod_can_clear"];
-  if (!allowed) throw new Error("Forbidden: clear not permitted for moderators");
+
+  // Per-chatroom moderator with delete permission can clear that room
+  const { data: roomMod } = await admin
+    .from("room_moderators")
+    .select("can_delete")
+    .eq("channel_id", channelId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (roomMod?.can_delete) return;
+
+  // Global moderator, gated by admin-configured staff permissions
+  if (list.includes("moderator")) {
+    const { data: settings } = await admin
+      .from("app_settings").select("value").eq("key", "staff_permissions").maybeSingle();
+    const allowed = !!(settings?.value as Record<string, unknown> | null)?.["mod_can_clear"];
+    if (allowed) return;
+    throw new Error("Forbidden: clear not permitted for moderators in this room");
+  }
+
+  throw new Error("Forbidden: admins only");
 }
 
 async function logAction(actor_id: string, action: ModActionName, extra: Record<string, unknown> = {}) {
@@ -377,7 +392,7 @@ export const clearChannelMessages = createServerFn({ method: "POST" })
     z.object({ channel_id: z.string().min(1).max(120) }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertCanClearChannel(context.userId);
+    await assertCanClearChannel(context.userId, data.channel_id);
     const admin = await getSupabaseAdmin();
     const { error, count } = await admin
       .from("messages")
