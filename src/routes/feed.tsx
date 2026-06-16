@@ -239,6 +239,57 @@ function FeedPage() {
     return list;
   }, [posts, tab, friendIds, meId, prefs.hideMedia, prefs.mutedKeywords, prefs.mutedHashtags, prefs.sortOverride, query, profiles]);
 
+  // Autocomplete suggestions for the search bar
+  type SearchSuggestion = { kind: "hashtag" | "user"; value: string; label: string; sub?: string };
+  const searchSuggestions = useMemo<SearchSuggestion[]>(() => {
+    const raw = query.trim();
+    if (!raw) return [];
+    const tagPool = new Map<string, number>();
+    for (const p of posts) {
+      for (const t of p.hashtags || []) {
+        const k = String(t).toLowerCase().replace(/^#/, "");
+        if (k) tagPool.set(k, (tagPool.get(k) ?? 0) + 1);
+      }
+    }
+    const userPool = Object.values(profiles).filter(Boolean) as import("@/lib/chat-types").User[];
+
+    const out: SearchSuggestion[] = [];
+    const mode: "hashtag" | "user" | "any" = raw.startsWith("#") ? "hashtag" : raw.startsWith("@") ? "user" : "any";
+    const needle = raw.replace(/^[#@]/, "").toLowerCase();
+
+    if (mode === "hashtag" || mode === "any") {
+      const tags = Array.from(tagPool.entries())
+        .filter(([t]) => (needle ? t.includes(needle) : true))
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([t, n]): SearchSuggestion => ({ kind: "hashtag", value: `#${t}`, label: `#${t}`, sub: `${n} post${n === 1 ? "" : "s"}` }));
+      out.push(...tags);
+    }
+    if (mode === "user" || mode === "any") {
+      const users = userPool
+        .filter(u => {
+          const n = (u.name || "").toLowerCase();
+          return needle ? n.includes(needle) : true;
+        })
+        .slice(0, 6)
+        .map((u): SearchSuggestion => ({ kind: "user", value: `@${u.name}`, label: u.name, sub: "Person" }));
+      out.push(...users);
+    }
+    return out.slice(0, 8);
+  }, [query, posts, profiles]);
+
+  // Reset highlight when suggestions change
+  useEffect(() => { setSearchHighlight(0); }, [query]);
+
+  const applySuggestion = (s: SearchSuggestion) => {
+    setQuery(s.value);
+    setSearchOpen(false);
+    if (view !== "feed") setView("feed");
+    searchInputRef.current?.blur();
+  };
+
+
+
 
   if (!user) return null;
   if (user.isGuest) {
