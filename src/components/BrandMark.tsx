@@ -33,6 +33,8 @@ export interface BrandingMap {
   chat_dark?: string;
   sizes?: BrandSizes;
   rooms?: Record<string, RoomBranding>;
+  texts?: Partial<Record<BrandSlot, string>>;
+  chat_subtitle?: string;
 }
 
 function useResolvedTheme(): "light" | "dark" {
