@@ -409,17 +409,16 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         </div>
       )}
 
-      <div className="p-3">
-        <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/15 to-transparent p-2.5">
-          <p className="text-[11px] font-bold text-primary">Try a command</p>
-          <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
+      <div className="p-5">
+        <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/15 to-transparent p-4">
+          <p className="mb-1 text-xs font-bold text-primary">Try a command</p>
+          <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">
             Type{" "}
-            <code className="rounded bg-white/10 px-1 font-mono text-[9px] text-primary">!help</code>{" "}
-            for games & fun.
+            <code className="rounded bg-white/10 px-1 font-mono text-[10px] text-primary">!help</code>{" "}
+            to see games and fun stuff.
           </p>
         </div>
       </div>
-
     </>
   );
 

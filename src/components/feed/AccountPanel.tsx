@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { Upload, Trash2, Save, LogOut, Coins, Flame, Trophy, Award, UserX, UserMinus, MessageCircle } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { ACCENTS, useAccent } from "@/lib/use-accent";
-
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { useUsernameCheck } from "@/lib/use-username-check";
 
 export function AccountPanel() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { state, updateMe, removeFriend, unblockUser, startDM } = useChat();
   const { user: auth, logout, refreshUsername } = useAuth();
@@ -91,12 +89,12 @@ export function AccountPanel() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold">{t("account.title")}</h2>
+        <h2 className="text-lg font-bold">Account settings</h2>
         <button
           onClick={() => { logout(); navigate({ to: "/" }); }}
           className="flex items-center gap-2 rounded-full bg-destructive/10 px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/20"
         >
-          <LogOut className="h-4 w-4" /> {t("auth.signOut")}
+          <LogOut className="h-4 w-4" /> Sign out
         </button>
       </div>
 
@@ -106,11 +104,11 @@ export function AccountPanel() {
             <Avatar user={me} size={96} />
             <div className="flex gap-1">
               <button onClick={() => fileRef.current?.click()} className="flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-[11px] font-bold text-primary hover:bg-primary/25">
-                <Upload className="h-3 w-3" /> {t("common.upload")}
+                <Upload className="h-3 w-3" /> Upload
               </button>
               {me.avatarUrl && (
                 <button onClick={() => updateMe({ avatarUrl: undefined })} className="flex items-center gap-1 rounded-full bg-destructive/15 px-3 py-1 text-[11px] font-bold text-destructive hover:bg-destructive/25">
-                  <Trash2 className="h-3 w-3" /> {t("common.clear")}
+                  <Trash2 className="h-3 w-3" /> Clear
                 </button>
               )}
             </div>
@@ -118,54 +116,54 @@ export function AccountPanel() {
           </div>
 
           <div className="min-w-0 flex-1 space-y-4">
-            <Field label={t("account.usernameLabel")}>
-              <input value={name} onChange={e => setName(e.target.value)} className="w-full rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder={t("account.usernameHint")} />
-              {nameChanged && usernameStatus.state === "checking" && <p className="mt-1 text-[10px] text-muted-foreground">{t("account.checking")}</p>}
-              {nameChanged && usernameStatus.state === "ok" && <p className="mt-1 text-[10px] font-semibold text-primary">{t("account.available")}</p>}
+            <Field label="Username (2–10 letters)">
+              <input value={name} onChange={e => setName(e.target.value)} className="w-full rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="your display name" />
+              {nameChanged && usernameStatus.state === "checking" && <p className="mt-1 text-[10px] text-muted-foreground">Checking…</p>}
+              {nameChanged && usernameStatus.state === "ok" && <p className="mt-1 text-[10px] font-semibold text-primary">✓ Available</p>}
               {nameChanged && usernameStatus.state === "error" && <p className="mt-1 text-[10px] font-semibold text-destructive">{usernameStatus.message}</p>}
             </Field>
-            <Field label={t("account.bio")}>
-              <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} maxLength={160} className="w-full resize-none rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder={t("account.bioPlaceholder")} />
+            <Field label="Bio">
+              <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} maxLength={160} className="w-full resize-none rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="A short bio…" />
               <p className="mt-1 text-right text-[10px] text-muted-foreground">{bio.length}/160</p>
             </Field>
-            <Field label={t("account.status")}>
+            <Field label="Status">
               <div className="flex gap-2">
                 {(["online", "away", "offline"] as const).map(s => (
                   <button key={s} onClick={() => setStatus(s)} className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${status === s ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}>
-                    {t(`account.${s}`)}
+                    {s}
                   </button>
                 ))}
               </div>
             </Field>
-            <Field label={t("account.gender")}>
+            <Field label="Gender">
               <div className="flex gap-2">
                 {(["male", "female", "other"] as const).map(g => (
                   <button key={g} onClick={() => setGender(g)} className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider capitalize transition ${gender === g ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}>
-                    {t(`account.${g}`)}
+                    {g}
                   </button>
                 ))}
               </div>
             </Field>
             <div className="flex items-center gap-3 pt-2">
               <button onClick={save} disabled={nameChanged && usernameStatus.state !== "ok"} className="flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50">
-                <Save className="h-4 w-4" /> {t("account.saveChanges")}
+                <Save className="h-4 w-4" /> Save changes
               </button>
-              {saved && <span className="text-xs font-semibold text-primary">{t("account.savedFlag")}</span>}
-              {auth?.email && <span className="ml-auto text-[11px] text-muted-foreground">{t("auth.signedInAs", { email: auth.email })}</span>}
+              {saved && <span className="text-xs font-semibold text-primary">✓ Saved</span>}
+              {auth?.email && <span className="ml-auto text-[11px] text-muted-foreground">Signed in as {auth.email}</span>}
             </div>
           </div>
         </div>
       </section>
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label={t("account.level")} value={`Lv ${me.level}`} icon={<Award className="h-3.5 w-3.5 text-primary" />} />
-        <Stat label={t("account.xp")} value={`${me.xp}`} icon={<Trophy className="h-3.5 w-3.5 text-warning" />} />
-        <Stat label={t("account.coins")} value={`${me.coins ?? 0}`} icon={<Coins className="h-3.5 w-3.5 text-yellow-500" />} />
-        <Stat label={t("account.rank")} value={rank ? `#${rank}` : "—"} icon={<Flame className="h-3.5 w-3.5 text-orange-400" />} />
+        <Stat label="Level" value={`Lv ${me.level}`} icon={<Award className="h-3.5 w-3.5 text-primary" />} />
+        <Stat label="XP" value={`${me.xp}`} icon={<Trophy className="h-3.5 w-3.5 text-warning" />} />
+        <Stat label="Coins" value={`${me.coins ?? 0}`} icon={<Coins className="h-3.5 w-3.5 text-yellow-500" />} />
+        <Stat label="Rank" value={rank ? `#${rank}` : "—"} icon={<Flame className="h-3.5 w-3.5 text-orange-400" />} />
       </section>
 
       <section>
-        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("account.accentColor")}</h3>
+        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Accent color</h3>
         <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-3 sm:grid-cols-3">
           {ACCENTS.map(a => {
             const active = accent === a.id;
@@ -174,7 +172,7 @@ export function AccountPanel() {
                 <span className="h-7 w-7 shrink-0 rounded-full ring-1 ring-black/10" style={{ background: a.gradient }} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs font-bold">{a.label}</span>
-                  {active && <span className="text-[10px] font-semibold text-primary">{t("account.active")}</span>}
+                  {active && <span className="text-[10px] font-semibold text-primary">Active</span>}
                 </span>
               </button>
             );
@@ -182,12 +180,18 @@ export function AccountPanel() {
         </div>
       </section>
 
+      <section>
+        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Language</h3>
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <LanguageSwitcher variant="full" />
+        </div>
+      </section>
 
 
       <section>
-        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("account.friendsCount", { count: friends.length })}</h3>
+        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Friends ({friends.length})</h3>
         {friends.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">{t("empty.noFriends")}</p>
+          <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">No friends yet.</p>
         ) : (
           <ul className="grid gap-2">
             {friends.map(u => (
@@ -197,8 +201,8 @@ export function AccountPanel() {
                   <div className="truncate text-sm font-bold">{u.name}</div>
                   <div className="text-[11px] text-muted-foreground">Lv {u.level} · {u.xp} XP</div>
                 </div>
-                <button onClick={() => { startDM(u.id); navigate({ to: "/" }); }} className="rounded-full bg-primary/15 p-1.5 text-primary hover:bg-primary/25" title={t("account.sendMessageTitle")}><MessageCircle className="h-3.5 w-3.5" /></button>
-                <button onClick={() => removeFriend(u.id)} className="rounded-full bg-white/5 p-1.5 text-muted-foreground hover:bg-destructive/20 hover:text-destructive" title={t("account.removeFriendTitle")}><UserMinus className="h-3.5 w-3.5" /></button>
+                <button onClick={() => { startDM(u.id); navigate({ to: "/" }); }} className="rounded-full bg-primary/15 p-1.5 text-primary hover:bg-primary/25" title="Send message"><MessageCircle className="h-3.5 w-3.5" /></button>
+                <button onClick={() => removeFriend(u.id)} className="rounded-full bg-white/5 p-1.5 text-muted-foreground hover:bg-destructive/20 hover:text-destructive" title="Remove friend"><UserMinus className="h-3.5 w-3.5" /></button>
               </li>
             ))}
           </ul>
@@ -206,16 +210,16 @@ export function AccountPanel() {
       </section>
 
       <section>
-        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("account.blockedCount", { count: blocked.length })}</h3>
+        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Blocked ({blocked.length})</h3>
         {blocked.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">{t("empty.noBlocked")}</p>
+          <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">No blocked users.</p>
         ) : (
           <ul className="grid gap-2">
             {blocked.map(u => (
               <li key={u.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-2">
                 <Avatar user={u} size={36} />
                 <div className="min-w-0 flex-1 truncate text-sm font-bold">{u.name}</div>
-                <button onClick={() => unblockUser(u.id)} className="flex items-center gap-1 rounded-full bg-white/5 px-3 py-1 text-[11px] font-bold text-muted-foreground hover:text-foreground"><UserX className="h-3 w-3" /> {t("account.unblock")}</button>
+                <button onClick={() => unblockUser(u.id)} className="flex items-center gap-1 rounded-full bg-white/5 px-3 py-1 text-[11px] font-bold text-muted-foreground hover:text-foreground"><UserX className="h-3 w-3" /> Unblock</button>
               </li>
             ))}
           </ul>
