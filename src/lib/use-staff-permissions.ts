@@ -9,6 +9,7 @@ export interface StaffPermissions {
   mod_can_mute: boolean;
   mod_can_ban: boolean;
   mod_can_announce: boolean;
+  mod_can_clear: boolean;
 }
 
 export const DEFAULT_STAFF_PERMISSIONS: StaffPermissions = {
@@ -16,6 +17,7 @@ export const DEFAULT_STAFF_PERMISSIONS: StaffPermissions = {
   mod_can_mute: true,
   mod_can_ban: true,
   mod_can_announce: false,
+  mod_can_clear: false,
 };
 
 
