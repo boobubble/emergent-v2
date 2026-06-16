@@ -267,14 +267,17 @@ function LandingPage() {
               forceTheme="dark"
               alt={cfg.copyrightOwner}
               fallback={
-                <>
-                  <span className="grid h-9 w-9 place-items-center rounded-xl text-base font-black text-white shadow-lg"
-                        style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 8px 24px -8px rgba(139,92,246,0.6)" }}>
-                    💬
-                  </span>
-                  <span className="text-lg font-extrabold tracking-tight">{cfg.copyrightOwner}</span>
-                </>
+                <span className="grid h-9 w-9 place-items-center rounded-xl text-base font-black text-white shadow-lg"
+                      style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 8px 24px -8px rgba(139,92,246,0.6)" }}>
+                  💬
+                </span>
               }
+            />
+            <BrandText
+              slot="logo"
+              forceTheme="dark"
+              defaultText={cfg.copyrightOwner}
+              className="text-lg font-extrabold tracking-tight"
             />
           </Link>
 
