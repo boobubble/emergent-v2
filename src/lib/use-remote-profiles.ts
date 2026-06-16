@@ -220,6 +220,15 @@ async function stopStore() {
     window.clearInterval(tickInterval);
     tickInterval = null;
   }
+  if (refetchInterval != null) {
+    window.clearInterval(refetchInterval);
+    refetchInterval = null;
+  }
+  if (focusListener) {
+    window.removeEventListener("focus", focusListener);
+    document.removeEventListener("visibilitychange", focusListener);
+    focusListener = null;
+  }
 }
 
 function subscribe(cb: () => void): () => void {
