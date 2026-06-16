@@ -23,8 +23,23 @@ type ModActionName =
   | "ban" | "unban" | "temp_ban" | "shadow_ban" | "ip_ban"
   | "mute" | "unmute" | "kick" | "warn"
   | "delete_message" | "delete_post" | "pin_message" | "unpin_message"
+  | "clear_channel"
   | "resolve_report" | "dismiss_report" | "note"
   | "add_word_filter" | "remove_word_filter" | "add_url_rule" | "remove_url_rule";
+
+async function assertCanClearChannel(userId: string) {
+  const admin = await getSupabaseAdmin();
+  const { data: roles } = await admin
+    .from("user_roles").select("role").eq("user_id", userId);
+  const list = (roles ?? []).map(r => r.role as string);
+  const isAdmin = list.includes("super_admin") || list.includes("admin");
+  if (isAdmin) return;
+  if (!list.includes("moderator")) throw new Error("Forbidden: staff only");
+  const { data: settings } = await admin
+    .from("app_settings").select("value").eq("key", "staff_permissions").maybeSingle();
+  const allowed = !!(settings?.value as Record<string, unknown> | null)?.["mod_can_clear"];
+  if (!allowed) throw new Error("Forbidden: clear not permitted for moderators");
+}
 
 async function logAction(actor_id: string, action: ModActionName, extra: Record<string, unknown> = {}) {
   await (await getSupabaseAdmin()).from("mod_logs").insert({ actor_id, action, ...extra });
