@@ -290,6 +290,7 @@ function LandingPage() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
+            <LanguageSwitcher variant="compact" />
             <button
               onClick={toggleTheme}
               className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white/70 hover:text-white"
