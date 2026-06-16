@@ -233,6 +233,9 @@ export function StoryTray() {
   const viewerList = buildViewerList();
   const viewing = viewIndex != null ? viewerList[viewIndex] : null;
   const viewingSlide = viewing?.images[slideIndex] ?? "";
+  const viewingCaption = viewing
+    ? (viewing.captions?.[slideIndex]?.trim() || viewing.text?.trim() || "")
+    : "";
 
   return (
     <>
