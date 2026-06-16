@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-store";
 import { useChat } from "@/lib/chat-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useFeedPrefs } from "@/lib/feed-prefs";
+import { useSavedPosts } from "@/lib/use-saved-posts";
 import { Composer } from "@/components/feed/Composer";
 import { StoryTray } from "@/components/feed/StoryTray";
 import { PostCard } from "@/components/feed/PostCard";
