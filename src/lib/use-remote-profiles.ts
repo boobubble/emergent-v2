@@ -98,6 +98,8 @@ let profilesChannel: ReturnType<typeof supabase.channel> | null = null;
 let presenceChannel: ReturnType<typeof supabase.channel> | null = null;
 let authSub: { unsubscribe: () => void } | null = null;
 let tickInterval: number | null = null;
+let refetchInterval: number | null = null;
+let focusListener: (() => void) | null = null;
 let initialized = false;
 
 function emit() {
