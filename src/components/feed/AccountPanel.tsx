@@ -158,10 +158,10 @@ export function AccountPanel() {
       </section>
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Level" value={`Lv ${me.level}`} icon={<Award className="h-3.5 w-3.5 text-primary" />} />
-        <Stat label="XP" value={`${me.xp}`} icon={<Trophy className="h-3.5 w-3.5 text-warning" />} />
-        <Stat label="Coins" value={`${me.coins ?? 0}`} icon={<Coins className="h-3.5 w-3.5 text-yellow-500" />} />
-        <Stat label="Rank" value={rank ? `#${rank}` : "—"} icon={<Flame className="h-3.5 w-3.5 text-orange-400" />} />
+        <Stat label={t("account.level")} value={`Lv ${me.level}`} icon={<Award className="h-3.5 w-3.5 text-primary" />} />
+        <Stat label={t("account.xp")} value={`${me.xp}`} icon={<Trophy className="h-3.5 w-3.5 text-warning" />} />
+        <Stat label={t("account.coins")} value={`${me.coins ?? 0}`} icon={<Coins className="h-3.5 w-3.5 text-yellow-500" />} />
+        <Stat label={t("account.rank")} value={rank ? `#${rank}` : "—"} icon={<Flame className="h-3.5 w-3.5 text-orange-400" />} />
       </section>
 
       <section>
