@@ -481,15 +481,26 @@ export function StoryTray() {
                 draggable={false}
               />
             ) : (
-              <div className="w-full aspect-[3/4] max-h-[85vh] grid place-items-center rounded-2xl bg-gradient-to-br from-primary/40 via-fuchsia-500/30 to-amber-400/30 animate-scale-in p-8">
-                <p className="text-center text-2xl font-bold text-white drop-shadow-lg">{viewingCaption}</p>
+              <div className="w-full aspect-[3/4] max-h-[85vh] grid place-items-center rounded-2xl bg-gradient-to-br from-primary/40 via-fuchsia-500/30 to-amber-400/30 animate-scale-in p-6 sm:p-8">
+                <p
+                  className="max-w-full text-center text-xl sm:text-2xl font-bold text-white whitespace-pre-wrap break-words [text-wrap:balance]"
+                  style={{ textShadow: "0 2px 12px rgba(0,0,0,0.55)" }}
+                >
+                  {viewingCaption}
+                </p>
               </div>
             )}
             <div className="absolute top-3 left-3 rounded-full bg-black/60 backdrop-blur px-3 py-1 text-xs font-semibold text-white">
               {viewing.username}
             </div>
             {viewingCaption && viewingSlide && (
-              <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/55 backdrop-blur px-4 py-2.5 text-center text-sm font-medium text-white">
+              <div
+                className="absolute inset-x-3 rounded-2xl bg-black/70 backdrop-blur-md px-4 py-2.5 text-center text-sm sm:text-base font-medium text-white shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] ring-1 ring-white/10 max-h-[40vh] overflow-y-auto whitespace-pre-wrap break-words [text-wrap:pretty] [overflow-wrap:anywhere]"
+                style={{
+                  bottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)",
+                  textShadow: "0 1px 6px rgba(0,0,0,0.6)",
+                }}
+              >
                 {viewingCaption}
               </div>
             )}
