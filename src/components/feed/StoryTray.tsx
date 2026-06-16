@@ -321,18 +321,31 @@ export function StoryTray() {
             </div>
 
             {draftFiles.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="mt-4 grid grid-cols-5 gap-2">
                 {draftFiles.map((f, i) => (
-                  <div key={i} className="relative aspect-[3/4] overflow-hidden rounded-xl border border-border">
+                  <button
+                    key={i}
+                    onClick={() => setActiveDraft(i)}
+                    className={`relative aspect-[3/4] overflow-hidden rounded-xl border transition ${activeDraft === i ? "border-primary ring-2 ring-primary/50" : "border-border hover:border-primary/50"}`}
+                    aria-label={`Edit slide ${i + 1}`}
+                  >
                     <img src={URL.createObjectURL(f)} alt="" className="h-full w-full object-cover" />
-                    <button
-                      onClick={() => setDraftFiles((prev) => prev.filter((_, j) => j !== i))}
-                      className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white hover:bg-destructive transition"
-                      aria-label="Remove"
+                    {draftCaptions[i] && (
+                      <div className="absolute inset-x-0 bottom-0 bg-black/70 px-1 py-0.5 text-[9px] font-semibold text-white truncate">
+                        {draftCaptions[i]}
+                      </div>
+                    )}
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); removeDraft(i); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); removeDraft(i); } }}
+                      className="absolute top-1 right-1 grid h-5 w-5 cursor-pointer place-items-center rounded-full bg-black/70 text-white hover:bg-destructive transition"
+                      aria-label="Remove slide"
                     >
                       <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
+                    </span>
+                  </button>
                 ))}
               </div>
             )}
@@ -346,14 +359,40 @@ export function StoryTray() {
               {draftFiles.length ? `Add more (${draftFiles.length}/10)` : "Add photos"}
             </button>
 
-            <textarea
-              value={draftText}
-              onChange={(e) => setDraftText(e.target.value.slice(0, 280))}
-              placeholder="Say something… (optional)"
-              rows={3}
-              className="mt-3 w-full resize-none rounded-2xl border border-border bg-background/60 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
-            />
-            <div className="mt-1 text-right text-[11px] text-muted-foreground">{draftText.length}/280</div>
+            {draftFiles.length > 0 ? (
+              <>
+                <div className="mt-3 flex items-center justify-between text-xs font-semibold text-muted-foreground">
+                  <span>Caption for slide {activeDraft + 1} of {draftFiles.length}</span>
+                  <span>{(draftCaptions[activeDraft] ?? "").length}/280</span>
+                </div>
+                <textarea
+                  value={draftCaptions[activeDraft] ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value.slice(0, 280);
+                    setDraftCaptions((prev) => {
+                      const next = [...prev];
+                      while (next.length < draftFiles.length) next.push("");
+                      next[activeDraft] = v;
+                      return next;
+                    });
+                  }}
+                  placeholder="Caption for this photo… (optional)"
+                  rows={3}
+                  className="mt-1.5 w-full resize-none rounded-2xl border border-border bg-background/60 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
+                />
+              </>
+            ) : (
+              <>
+                <textarea
+                  value={draftText}
+                  onChange={(e) => setDraftText(e.target.value.slice(0, 280))}
+                  placeholder="Say something… (text-only story)"
+                  rows={3}
+                  className="mt-3 w-full resize-none rounded-2xl border border-border bg-background/60 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
+                />
+                <div className="mt-1 text-right text-[11px] text-muted-foreground">{draftText.length}/280</div>
+              </>
+            )}
 
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
