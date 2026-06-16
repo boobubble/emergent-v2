@@ -294,11 +294,23 @@ function FeedPage() {
     if (s.kind === "hashtag") {
       setQuery(s.value);
       if (view !== "feed") setView("feed");
-      // Try to scroll to first matching post
+      const tag = s.value.replace(/^#/, "").toLowerCase();
+      const match = posts.find(p => (p.hashtags || []).some(t => String(t).toLowerCase().replace(/^#/, "") === tag));
+      if (match?.slug) {
+        navigate({ to: "/feed/$slug", params: { slug: match.slug } });
+        return;
+      }
+      // Fallback: scroll to + focus first rendered matching post
       setTimeout(() => {
-        const el = document.querySelector('[data-feed-post]') as HTMLElement | null;
-        el?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 50);
+        const el = document.querySelector(match ? `[data-feed-post="${match.id}"]` : '[data-feed-post]') as HTMLElement | null;
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          el.setAttribute("tabindex", "-1");
+          el.focus({ preventScroll: true });
+          el.classList.add("ring-2", "ring-primary");
+          setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 1600);
+        }
+      }, 80);
       return;
     }
     setQuery(s.value);
