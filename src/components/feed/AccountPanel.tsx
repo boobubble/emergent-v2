@@ -165,7 +165,7 @@ export function AccountPanel() {
       </section>
 
       <section>
-        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Accent color</h3>
+        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("account.accentColor")}</h3>
         <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-3 sm:grid-cols-3">
           {ACCENTS.map(a => {
             const active = accent === a.id;
@@ -174,7 +174,7 @@ export function AccountPanel() {
                 <span className="h-7 w-7 shrink-0 rounded-full ring-1 ring-black/10" style={{ background: a.gradient }} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs font-bold">{a.label}</span>
-                  {active && <span className="text-[10px] font-semibold text-primary">Active</span>}
+                  {active && <span className="text-[10px] font-semibold text-primary">{t("account.active")}</span>}
                 </span>
               </button>
             );
