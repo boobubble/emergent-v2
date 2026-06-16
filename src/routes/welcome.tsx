@@ -97,10 +97,12 @@ function PillAvatar({ name, size = 32, color }: { name: string; size?: number; c
 }
 
 function LandingPage() {
+  const { t } = useTranslation();
   const [data, setData] = useState<LandingPayload | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pollChoice, setPollChoice] = useState<number | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+
 
   useEffect(() => {
     try {
