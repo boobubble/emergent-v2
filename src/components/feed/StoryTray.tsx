@@ -9,6 +9,9 @@ interface Story {
   user_id: string;
   username: string;
   images: string[];
+  /** Per-slide captions, aligned by index with `images`. */
+  captions?: string[];
+  /** Legacy single caption — applied to slides without an explicit caption. */
   text?: string;
   created_at: number;
 }
@@ -18,18 +21,22 @@ const TTL = 24 * 60 * 60 * 1000; // 24h
 
 function normalize(raw: unknown): Story | null {
   if (!raw || typeof raw !== "object") return null;
-  const r = raw as Record<string, unknown> & { image?: string; images?: string[] };
+  const r = raw as Record<string, unknown> & { image?: string; images?: string[]; captions?: string[] };
   const images = Array.isArray(r.images)
     ? r.images.filter((v): v is string => typeof v === "string")
     : typeof r.image === "string"
       ? [r.image]
       : [];
   if (!images.length) return null;
+  const captions = Array.isArray(r.captions)
+    ? r.captions.map((v) => (typeof v === "string" ? v : ""))
+    : undefined;
   return {
     id: String(r.id ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`),
     user_id: String(r.user_id ?? ""),
     username: String(r.username ?? ""),
     images,
+    captions,
     text: typeof r.text === "string" ? r.text : undefined,
     created_at: typeof r.created_at === "number" ? r.created_at : Date.now(),
   };
@@ -63,7 +70,9 @@ export function StoryTray() {
   const [slideIndex, setSlideIndex] = useState(0);
   const [composerOpen, setComposerOpen] = useState(false);
   const [draftFiles, setDraftFiles] = useState<File[]>([]);
+  const [draftCaptions, setDraftCaptions] = useState<string[]>([]);
   const [draftText, setDraftText] = useState("");
+  const [activeDraft, setActiveDraft] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -75,7 +84,9 @@ export function StoryTray() {
 
   function openComposer() {
     setDraftFiles([]);
+    setDraftCaptions([]);
     setDraftText("");
+    setActiveDraft(0);
     setComposerOpen(true);
   }
 
@@ -83,8 +94,22 @@ export function StoryTray() {
     const files = Array.from(e.target.files ?? []);
     e.target.value = "";
     if (!files.length) return;
-    // Cap at 10 slides per story to stay reasonable.
-    setDraftFiles((prev) => [...prev, ...files].slice(0, 10));
+    setDraftFiles((prev) => {
+      const next = [...prev, ...files].slice(0, 10);
+      setDraftCaptions((prevCaps) => {
+        const caps = [...prevCaps];
+        while (caps.length < next.length) caps.push("");
+        return caps.slice(0, next.length);
+      });
+      setActiveDraft(prev.length); // jump to the first newly added slide
+      return next;
+    });
+  }
+
+  function removeDraft(i: number) {
+    setDraftFiles((prev) => prev.filter((_, j) => j !== i));
+    setDraftCaptions((prev) => prev.filter((_, j) => j !== i));
+    setActiveDraft((prev) => Math.max(0, Math.min(prev, draftFiles.length - 2)));
   }
 
   async function publishStory() {
@@ -103,12 +128,17 @@ export function StoryTray() {
       }
       // Text-only stories get a transparent placeholder slide so the viewer
       // has something to render the caption over.
-      if (!urls.length) urls.push("");
+      const captions = draftFiles.map((_, i) => (draftCaptions[i] ?? "").trim());
+      if (!urls.length) {
+        urls.push("");
+        captions.push(draftText.trim());
+      }
       const story: Story = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         user_id: user.id,
         username: user.username,
         images: urls,
+        captions: captions.some((c) => c.length > 0) ? captions : undefined,
         text: draftText.trim() || undefined,
         created_at: Date.now(),
       };
@@ -117,7 +147,9 @@ export function StoryTray() {
       saveStories(next);
       setComposerOpen(false);
       setDraftFiles([]);
+      setDraftCaptions([]);
       setDraftText("");
+      setActiveDraft(0);
     } catch (err) {
       console.error("story upload failed", err);
     } finally {
@@ -201,6 +233,9 @@ export function StoryTray() {
   const viewerList = buildViewerList();
   const viewing = viewIndex != null ? viewerList[viewIndex] : null;
   const viewingSlide = viewing?.images[slideIndex] ?? "";
+  const viewingCaption = viewing
+    ? (viewing.captions?.[slideIndex]?.trim() || viewing.text?.trim() || "")
+    : "";
 
   return (
     <>
@@ -289,18 +324,31 @@ export function StoryTray() {
             </div>
 
             {draftFiles.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="mt-4 grid grid-cols-5 gap-2">
                 {draftFiles.map((f, i) => (
-                  <div key={i} className="relative aspect-[3/4] overflow-hidden rounded-xl border border-border">
+                  <button
+                    key={i}
+                    onClick={() => setActiveDraft(i)}
+                    className={`relative aspect-[3/4] overflow-hidden rounded-xl border transition ${activeDraft === i ? "border-primary ring-2 ring-primary/50" : "border-border hover:border-primary/50"}`}
+                    aria-label={`Edit slide ${i + 1}`}
+                  >
                     <img src={URL.createObjectURL(f)} alt="" className="h-full w-full object-cover" />
-                    <button
-                      onClick={() => setDraftFiles((prev) => prev.filter((_, j) => j !== i))}
-                      className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white hover:bg-destructive transition"
-                      aria-label="Remove"
+                    {draftCaptions[i] && (
+                      <div className="absolute inset-x-0 bottom-0 bg-black/70 px-1 py-0.5 text-[9px] font-semibold text-white truncate">
+                        {draftCaptions[i]}
+                      </div>
+                    )}
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); removeDraft(i); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); removeDraft(i); } }}
+                      className="absolute top-1 right-1 grid h-5 w-5 cursor-pointer place-items-center rounded-full bg-black/70 text-white hover:bg-destructive transition"
+                      aria-label="Remove slide"
                     >
                       <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
+                    </span>
+                  </button>
                 ))}
               </div>
             )}
@@ -314,14 +362,40 @@ export function StoryTray() {
               {draftFiles.length ? `Add more (${draftFiles.length}/10)` : "Add photos"}
             </button>
 
-            <textarea
-              value={draftText}
-              onChange={(e) => setDraftText(e.target.value.slice(0, 280))}
-              placeholder="Say something… (optional)"
-              rows={3}
-              className="mt-3 w-full resize-none rounded-2xl border border-border bg-background/60 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
-            />
-            <div className="mt-1 text-right text-[11px] text-muted-foreground">{draftText.length}/280</div>
+            {draftFiles.length > 0 ? (
+              <>
+                <div className="mt-3 flex items-center justify-between text-xs font-semibold text-muted-foreground">
+                  <span>Caption for slide {activeDraft + 1} of {draftFiles.length}</span>
+                  <span>{(draftCaptions[activeDraft] ?? "").length}/280</span>
+                </div>
+                <textarea
+                  value={draftCaptions[activeDraft] ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value.slice(0, 280);
+                    setDraftCaptions((prev) => {
+                      const next = [...prev];
+                      while (next.length < draftFiles.length) next.push("");
+                      next[activeDraft] = v;
+                      return next;
+                    });
+                  }}
+                  placeholder="Caption for this photo… (optional)"
+                  rows={3}
+                  className="mt-1.5 w-full resize-none rounded-2xl border border-border bg-background/60 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
+                />
+              </>
+            ) : (
+              <>
+                <textarea
+                  value={draftText}
+                  onChange={(e) => setDraftText(e.target.value.slice(0, 280))}
+                  placeholder="Say something… (text-only story)"
+                  rows={3}
+                  className="mt-3 w-full resize-none rounded-2xl border border-border bg-background/60 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
+                />
+                <div className="mt-1 text-right text-[11px] text-muted-foreground">{draftText.length}/280</div>
+              </>
+            )}
 
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
@@ -397,15 +471,15 @@ export function StoryTray() {
               />
             ) : (
               <div className="w-full aspect-[3/4] max-h-[85vh] grid place-items-center rounded-2xl bg-gradient-to-br from-primary/40 via-fuchsia-500/30 to-amber-400/30 animate-scale-in p-8">
-                <p className="text-center text-2xl font-bold text-white drop-shadow-lg">{viewing.text}</p>
+                <p className="text-center text-2xl font-bold text-white drop-shadow-lg">{viewingCaption}</p>
               </div>
             )}
             <div className="absolute top-3 left-3 rounded-full bg-black/60 backdrop-blur px-3 py-1 text-xs font-semibold text-white">
               {viewing.username}
             </div>
-            {viewing.text && viewingSlide && (
+            {viewingCaption && viewingSlide && (
               <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/55 backdrop-blur px-4 py-2.5 text-center text-sm font-medium text-white">
-                {viewing.text}
+                {viewingCaption}
               </div>
             )}
             <button
