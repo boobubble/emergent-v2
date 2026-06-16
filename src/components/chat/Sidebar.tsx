@@ -27,17 +27,17 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
   const [newTopic, setNewTopic] = useState("");
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col bg-transparent p-2">
+    <aside className="flex h-full w-52 shrink-0 flex-col bg-transparent p-1.5">
       <div className="flex h-full flex-col premium-floating-sidebar overflow-hidden">
 
-      <div className="flex items-center gap-3 p-5">
+      <div className="flex items-center gap-2 p-3">
         <BrandMark
           slot="chat"
           alt="Logo"
-          className="h-10 w-10 rounded-xl object-contain"
+          className="h-8 w-8 rounded-lg object-contain"
           fallback={
             <div
-              className="grid h-10 w-10 place-items-center rounded-xl text-xl font-bold text-primary-foreground"
+              className="grid h-8 w-8 place-items-center rounded-lg text-base font-bold text-primary-foreground"
               style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}
             >
               P
@@ -45,24 +45,25 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
           }
         />
         <div className="min-w-0 flex-1 leading-tight">
-          <div className="font-bold text-foreground">Palrgo</div>
-          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <div className="text-sm font-bold text-foreground">Palrgo</div>
+          <div className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">
             {t("chat.social")}
           </div>
         </div>
         {onCollapse && (
           <button
             onClick={onCollapse}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/30 transition-all hover:scale-105 hover:bg-primary hover:text-primary-foreground"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/30 transition-all hover:scale-105 hover:bg-primary hover:text-primary-foreground"
             title={t("chat.hideSidebar")}
             aria-label={t("chat.hideSidebar")}
           >
-            <PanelLeftClose className="h-4 w-4" />
+            <PanelLeftClose className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
 
-      <nav className="flex-1 space-y-6 overflow-y-auto px-3">
+      <nav className="flex-1 space-y-4 overflow-y-auto px-2">
+
         <div>
           <SectionLabel
             title={t("chat.publicRooms")}
