@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker, Youtube, ImagePlay } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
