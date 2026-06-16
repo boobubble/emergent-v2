@@ -25,10 +25,10 @@ interface BotsValues {
   bots: Record<string, BotConfig>;
 }
 
-const BOT_LIST: { id: string; label: string; desc: string; defaultName: string; defaultMessages: string[] }[] = [
+const BOT_LIST: { id: string; label: string; desc: string; defaultName: string; icon: string; defaultMessages: string[] }[] = [
   {
     id: "fish", label: "Fish bot", desc: "Periodic catch-the-fish mini-game.",
-    defaultName: "FishBot",
+    defaultName: "FishBot", icon: "🎣",
     defaultMessages: [
       "🎣 A big one just bit! Type !catch to reel it in.",
       "🐟 Schools of fish spotted nearby — !catch fast!",
@@ -37,7 +37,7 @@ const BOT_LIST: { id: string; label: string; desc: string; defaultName: string; 
   },
   {
     id: "wine", label: "Wine bot", desc: "Drops collectible bottles in chat.",
-    defaultName: "WineBot",
+    defaultName: "WineBot", icon: "🍷",
     defaultMessages: [
       "🍷 A vintage bottle appears! Type !grab to claim it.",
       "🥂 Cellar restock — grab one with !grab.",
@@ -45,7 +45,7 @@ const BOT_LIST: { id: string; label: string; desc: string; defaultName: string; 
   },
   {
     id: "dig", label: "Dig bot", desc: "Treasure-dig coin reward bursts.",
-    defaultName: "DigBot",
+    defaultName: "DigBot", icon: "⛏️",
     defaultMessages: [
       "⛏️ Treasure spotted! Type !dig to start digging.",
       "💰 X marks the spot — !dig for coins!",
@@ -53,7 +53,7 @@ const BOT_LIST: { id: string; label: string; desc: string; defaultName: string; 
   },
   {
     id: "trivia", label: "Trivia bot", desc: "Posts trivia questions with rewards.",
-    defaultName: "TriviaBot",
+    defaultName: "TriviaBot", icon: "🧠",
     defaultMessages: [
       "❓ Trivia time! First correct answer wins.",
       "🧠 Quick question coming up — get ready!",
@@ -61,7 +61,7 @@ const BOT_LIST: { id: string; label: string; desc: string; defaultName: string; 
   },
   {
     id: "ai", label: "AI bot", desc: "Responds to mentions using AI.",
-    defaultName: "Aria",
+    defaultName: "Aria", icon: "✨",
     defaultMessages: [
       "👋 Mention me anytime with @Aria — I'm here to help.",
     ],
