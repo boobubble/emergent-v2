@@ -116,42 +116,101 @@ function BotsPage() {
         </div>
       </SettingsCard>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-2">
         {BOT_LIST.map((b) => {
           const cfg = values.bots?.[b.id] ?? defaultBot(b.id, values.default_interval_sec, values.default_cooldown_sec);
           return (
-            <SettingsCard key={b.id} title={b.label} description={b.desc}>
-              <ToggleRow label="Enabled" value={cfg.enabled} onChange={(v) => updateBot(b.id, { enabled: v })} />
-              <div className="space-y-1.5">
-                <Label className="text-xs">Display name</Label>
-                <Input
-                  value={cfg.name}
-                  maxLength={32}
-                  onChange={(e) => updateBot(b.id, { name: e.target.value })}
-                  placeholder={b.defaultName}
-                />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <NumberField label="Interval (sec)" value={cfg.interval_sec} onChange={(v) => updateBot(b.id, { interval_sec: v })} />
-                <NumberField label="Cooldown (sec)" value={cfg.cooldown_sec} onChange={(v) => updateBot(b.id, { cooldown_sec: v })} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Rooms (comma-separated channel IDs)</Label>
-                <Input value={cfg.rooms} onChange={(e) => updateBot(b.id, { rooms: e.target.value })} placeholder="lobby, games" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Default messages (one per line)</Label>
-                <Textarea
-                  rows={4}
-                  value={cfg.messages}
-                  onChange={(e) => updateBot(b.id, { messages: e.target.value })}
-                  placeholder={b.defaultMessages.join("\n")}
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  The bot picks one line at random each interval.
-                </p>
-              </div>
-            </SettingsCard>
+            <Card
+              key={b.id}
+              className="rounded-2xl border-border/60 bg-card/70 backdrop-blur-sm transition-shadow hover:shadow-md"
+            >
+              <CardContent className="space-y-3 p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    aria-hidden
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-base ring-1 ring-primary/15"
+                  >
+                    <span className="leading-none">{b.icon}</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate text-sm font-semibold">{b.label}</h3>
+                      <span
+                        className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                          cfg.enabled
+                            ? "bg-emerald-500/15 text-emerald-500"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {cfg.enabled ? "On" : "Off"}
+                      </span>
+                    </div>
+                    <p className="truncate text-[11px] text-muted-foreground">{b.desc}</p>
+                  </div>
+                  <AdminToggle
+                    checked={cfg.enabled}
+                    onCheckedChange={(v) => updateBot(b.id, { enabled: v })}
+                    ariaLabel={`Enable ${b.label}`}
+                  />
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">Name</Label>
+                    <Input
+                      className="h-8 text-sm"
+                      value={cfg.name}
+                      maxLength={32}
+                      onChange={(e) => updateBot(b.id, { name: e.target.value })}
+                      placeholder={b.defaultName}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">Rooms</Label>
+                    <Input
+                      className="h-8 text-sm"
+                      value={cfg.rooms}
+                      onChange={(e) => updateBot(b.id, { rooms: e.target.value })}
+                      placeholder="lobby, games"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">Interval (s)</Label>
+                    <Input
+                      type="number"
+                      className="h-8 text-sm"
+                      value={Number.isFinite(cfg.interval_sec) ? cfg.interval_sec : 0}
+                      min={0}
+                      onChange={(e) => updateBot(b.id, { interval_sec: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">Cooldown (s)</Label>
+                    <Input
+                      type="number"
+                      className="h-8 text-sm"
+                      value={Number.isFinite(cfg.cooldown_sec) ? cfg.cooldown_sec : 0}
+                      min={0}
+                      onChange={(e) => updateBot(b.id, { cooldown_sec: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">Messages (one per line)</Label>
+                  <Textarea
+                    rows={3}
+                    className="resize-none text-sm leading-snug"
+                    value={cfg.messages}
+                    onChange={(e) => updateBot(b.id, { messages: e.target.value })}
+                    placeholder={b.defaultMessages.join("\n")}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
       </div>
