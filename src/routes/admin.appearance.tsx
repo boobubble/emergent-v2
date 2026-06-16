@@ -140,6 +140,10 @@ function BrandAssetsCard() {
     const cur = getCfg(key);
     patch({ sizes: { ...sizes, [key]: { ...cur, fit } } });
   }
+  function setLock(key: keyof BrandSizes, lock: boolean) {
+    const cur = getCfg(key);
+    patch({ sizes: { ...sizes, [key]: { ...cur, lock } } });
+  }
   // Backward-compat shim for any in-file refs
   const getWH = getCfg;
 
