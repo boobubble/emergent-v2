@@ -14,7 +14,7 @@ export interface RoomBranding {
 }
 
 export type BrandFit = "contain" | "cover" | "fill";
-export interface BrandSizeValue { w?: number; h?: number; fit?: BrandFit }
+export interface BrandSizeValue { w?: number; h?: number; fit?: BrandFit; lock?: boolean }
 export interface BrandSizes {
   logo?: number | BrandSizeValue;
   favicon?: number | BrandSizeValue;
@@ -103,12 +103,17 @@ export function BrandMark({ slot, roomId, alt = "Logo", className, fallback, for
 
   const size = useBrandSize(slot);
   const fit: BrandFit = size?.fit ?? "contain";
+  // When `lock` is enabled, ignore configured pixel width/height and let the
+  // caller's className define the bounding box — prevents UI shift after upload.
+  const locked = !!size?.lock;
   const style: React.CSSProperties | undefined = size
-    ? { width: size.w, height: size.h, objectFit: fit, objectPosition: "center" }
+    ? locked
+      ? { maxWidth: "100%", maxHeight: "100%", width: "100%", height: "100%", objectFit: fit, objectPosition: "center" }
+      : { width: size.w, height: size.h, maxWidth: "100%", objectFit: fit, objectPosition: "center" }
     : undefined;
   if (!url) {
     if (!fallback) return null;
-    if (!size) return <>{fallback}</>;
+    if (!size || locked) return <>{fallback}</>;
     return <span style={style} className="inline-grid place-items-center">{fallback}</span>;
   }
   return <img src={url} alt={alt} className={className} style={style} />;

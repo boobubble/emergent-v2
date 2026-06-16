@@ -126,7 +126,7 @@ function BrandAssetsCard() {
   );
   const [selectedRoom, setSelectedRoom] = useState<string>("");
 
-  function getCfg(key: keyof BrandSizes): { w?: number; h?: number; fit?: BrandFit } {
+  function getCfg(key: keyof BrandSizes): { w?: number; h?: number; fit?: BrandFit; lock?: boolean } {
     const v = sizes[key];
     if (v == null) return {};
     if (typeof v === "number") return { w: v, h: v };
@@ -139,6 +139,10 @@ function BrandAssetsCard() {
   function setFit(key: keyof BrandSizes, fit: BrandFit) {
     const cur = getCfg(key);
     patch({ sizes: { ...sizes, [key]: { ...cur, fit } } });
+  }
+  function setLock(key: keyof BrandSizes, lock: boolean) {
+    const cur = getCfg(key);
+    patch({ sizes: { ...sizes, [key]: { ...cur, lock } } });
   }
   // Backward-compat shim for any in-file refs
   const getWH = getCfg;
@@ -172,7 +176,7 @@ function BrandAssetsCard() {
         {/* Global section sizes */}
         <div className="rounded-xl border border-border bg-background/40 p-4">
           <div className="mb-1 text-sm font-semibold">Section sizes (px)</div>
-          <div className="mb-3 text-xs text-muted-foreground">Set width × height for each slot. Leave width blank to keep the natural aspect ratio.</div>
+          <div className="mb-3 text-xs text-muted-foreground">Set width × height for each slot. Enable <b>Lock</b> to keep the original layout — the logo fits inside the existing box and never shifts the UI, regardless of upload dimensions.</div>
           <div className="grid gap-3 sm:grid-cols-2">
             {GLOBAL_GROUPS.map((g) => {
               const cfg = getCfg(g.key);
@@ -184,6 +188,7 @@ function BrandAssetsCard() {
                       type="number" min={8} max={1024}
                       value={cfg.w ?? ""}
                       placeholder="W"
+                      disabled={!!cfg.lock}
                       onChange={(e) => setWH(g.key, "w", Number(e.target.value))}
                     />
                     <span className="text-xs text-muted-foreground">×</span>
@@ -191,6 +196,7 @@ function BrandAssetsCard() {
                       type="number" min={8} max={1024}
                       value={cfg.h ?? ""}
                       placeholder="H"
+                      disabled={!!cfg.lock}
                       onChange={(e) => setWH(g.key, "h", Number(e.target.value))}
                     />
                     <Select value={cfg.fit ?? "contain"} onValueChange={(v) => setFit(g.key, v as BrandFit)}>
@@ -202,6 +208,15 @@ function BrandAssetsCard() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <label className="flex cursor-pointer items-center gap-2 text-[11px] text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5 accent-primary"
+                      checked={!!cfg.lock}
+                      onChange={(e) => setLock(g.key, e.target.checked)}
+                    />
+                    Lock to layout (don't change UI — fit logo inside existing slot)
+                  </label>
                 </div>
               );
             })}
