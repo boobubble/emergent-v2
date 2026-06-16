@@ -312,10 +312,10 @@ function FeedPage() {
   }
 
   const TABS: { id: Tab; label: string; icon: typeof Sparkles }[] = [
-    { id: "foryou", label: "For You", icon: Sparkles },
-    { id: "trending", label: "Trending", icon: Flame },
-    { id: "latest", label: "Latest", icon: Clock },
-    { id: "friends", label: "Friends", icon: Users },
+    { id: "foryou", label: t("nav.forYou"), icon: Sparkles },
+    { id: "trending", label: t("nav.trending"), icon: Flame },
+    { id: "latest", label: t("nav.latest"), icon: Clock },
+    { id: "friends", label: t("nav.friends"), icon: Users },
   ];
 
   const leftRailRef = useRef<HTMLDivElement | null>(null);
