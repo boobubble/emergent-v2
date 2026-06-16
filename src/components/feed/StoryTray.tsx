@@ -471,15 +471,15 @@ export function StoryTray() {
               />
             ) : (
               <div className="w-full aspect-[3/4] max-h-[85vh] grid place-items-center rounded-2xl bg-gradient-to-br from-primary/40 via-fuchsia-500/30 to-amber-400/30 animate-scale-in p-8">
-                <p className="text-center text-2xl font-bold text-white drop-shadow-lg">{viewing.text}</p>
+                <p className="text-center text-2xl font-bold text-white drop-shadow-lg">{viewingCaption}</p>
               </div>
             )}
             <div className="absolute top-3 left-3 rounded-full bg-black/60 backdrop-blur px-3 py-1 text-xs font-semibold text-white">
               {viewing.username}
             </div>
-            {viewing.text && viewingSlide && (
+            {viewingCaption && viewingSlide && (
               <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/55 backdrop-blur px-4 py-2.5 text-center text-sm font-medium text-white">
-                {viewing.text}
+                {viewingCaption}
               </div>
             )}
             <button
