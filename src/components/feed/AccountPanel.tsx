@@ -180,12 +180,6 @@ export function AccountPanel() {
         </div>
       </section>
 
-      <section>
-        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Language</h3>
-        <div className="rounded-2xl border border-border bg-card p-3">
-          <LanguageSwitcher variant="full" />
-        </div>
-      </section>
 
 
       <section>
