@@ -47,15 +47,15 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
         <div className="min-w-0 flex-1 leading-tight">
           <div className="font-bold text-foreground">Palrgo</div>
           <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Social Chat
+            {t("chat.social")}
           </div>
         </div>
         {onCollapse && (
           <button
             onClick={onCollapse}
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/30 transition-all hover:scale-105 hover:bg-primary hover:text-primary-foreground"
-            title="Hide sidebar"
-            aria-label="Hide sidebar"
+            title={t("chat.hideSidebar")}
+            aria-label={t("chat.hideSidebar")}
           >
             <PanelLeftClose className="h-4 w-4" />
           </button>
