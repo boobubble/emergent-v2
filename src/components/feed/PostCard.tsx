@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket } from "lucide-react";
+import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket, Bookmark } from "lucide-react";
+import { useSavedPosts } from "@/lib/use-saved-posts";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +52,8 @@ export const PostCard = memo(function PostCard({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState<SharePayload | null>(null);
   const [boosting, setBoosting] = useState(false);
+  const { isSaved, toggle: toggleSaved } = useSavedPosts();
+  const saved = isSaved(post.id);
 
   const earnReaction = useServerFn(earnFeedReaction);
   const earnComment = useServerFn(earnFeedComment);
@@ -281,6 +284,18 @@ export const PostCard = memo(function PostCard({
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-accent/20 hover:text-foreground transition"
         >
           <Share2 className="h-4 w-4" /> <span>Share</span>
+        </button>
+        <button
+          onClick={() => {
+            const nowSaved = toggleSaved(post.id);
+            toast.success(nowSaved ? "Saved to bookmarks" : "Removed from bookmarks");
+          }}
+          aria-pressed={saved}
+          title={saved ? "Remove bookmark" : "Save post"}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition ${saved ? "text-amber-400 bg-amber-500/10" : "text-muted-foreground hover:bg-accent/20 hover:text-foreground"}`}
+        >
+          <Bookmark className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
+          <span className="hidden sm:inline">{saved ? "Saved" : "Save"}</span>
         </button>
       </footer>
       {shareOpen && <ShareModal payload={shareOpen} onClose={() => setShareOpen(null)} />}

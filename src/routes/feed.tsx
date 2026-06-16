@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-store";
 import { useChat } from "@/lib/chat-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useFeedPrefs } from "@/lib/feed-prefs";
+import { useSavedPosts } from "@/lib/use-saved-posts";
 import { Composer } from "@/components/feed/Composer";
 import { StoryTray } from "@/components/feed/StoryTray";
 import { PostCard } from "@/components/feed/PostCard";
@@ -92,6 +93,7 @@ function FeedPage() {
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const { prefs } = useFeedPrefs();
+  const { savedIds } = useSavedPosts();
   const [tab, setTabState] = useState<Tab>(isVisibleFeedTab(prefs.defaultTab) ? prefs.defaultTab : "foryou");
   const initial = getInitialView();
   const [view, setView] = useState<View>(initial.view);
@@ -682,13 +684,25 @@ function FeedPage() {
               </div>
 
               <div className="mt-4 space-y-4">
-                {tab === "saved" ? (
-                  <div className="feed-card p-10 text-center">
-                    <Bookmark className="mx-auto h-10 w-10 text-muted-foreground/50" />
-                    <p className="mt-3 text-base font-semibold">No saved posts yet</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Bookmark posts from the feed to find them here later.</p>
-                  </div>
-                ) : tab === "notifications" ? (
+                {tab === "saved" ? (() => {
+                  const savedPosts = savedIds
+                    .map((id) => posts.find((p) => p.id === id))
+                    .filter((p): p is FeedPost => !!p);
+                  if (savedPosts.length === 0) {
+                    return (
+                      <div className="feed-card p-10 text-center">
+                        <Bookmark className="mx-auto h-10 w-10 text-muted-foreground/50" />
+                        <p className="mt-3 text-base font-semibold">No saved posts yet</p>
+                        <p className="mt-1 text-sm text-muted-foreground">Tap the bookmark icon on any post to save it here.</p>
+                      </div>
+                    );
+                  }
+                  return savedPosts.map((post) => (
+                    <div key={post.id} data-feed-post={post.id} className="rounded-3xl transition-shadow outline-none">
+                      <PostCard post={post} profiles={profiles} meId={meId} />
+                    </div>
+                  ));
+                })() : tab === "notifications" ? (
                   <div className="feed-card p-10 text-center">
                     <Bell className="mx-auto h-10 w-10 text-muted-foreground/50" />
                     <p className="mt-3 text-base font-semibold">Notifications</p>
