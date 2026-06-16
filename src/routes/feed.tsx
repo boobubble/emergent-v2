@@ -410,20 +410,52 @@ function FeedPage() {
             />
             <span className="hidden text-[17px] font-bold tracking-tight sm:inline">Palrgo</span>
           </Link>
-          <div className="mx-auto hidden w-full max-w-md md:block">
+          <div className="relative mx-auto hidden w-full max-w-md md:block">
             <div className="flex items-center gap-2 rounded-full bg-muted/60 px-4 py-2 text-sm ring-1 ring-border focus-within:ring-primary/40 transition">
               <span className="text-muted-foreground">🔎</span>
               <input
+                ref={searchInputRef}
                 type="text"
                 value={query}
-                onChange={(e) => { setQuery(e.target.value); if (view !== "feed") setView("feed"); }}
+                onChange={(e) => { setQuery(e.target.value); setSearchOpen(true); if (view !== "feed") setView("feed"); }}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={() => setTimeout(() => setSearchOpen(false), 120)}
+                onKeyDown={(e) => {
+                  const open = searchOpen && searchSuggestions.length > 0;
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    if (query) setQuery("");
+                    setSearchOpen(false);
+                    searchInputRef.current?.blur();
+                  } else if (e.key === "ArrowDown" && open) {
+                    e.preventDefault();
+                    setSearchHighlight(i => (i + 1) % searchSuggestions.length);
+                  } else if (e.key === "ArrowUp" && open) {
+                    e.preventDefault();
+                    setSearchHighlight(i => (i - 1 + searchSuggestions.length) % searchSuggestions.length);
+                  } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (open) {
+                      applySuggestion(searchSuggestions[searchHighlight] ?? searchSuggestions[0]);
+                    } else {
+                      setSearchOpen(false);
+                      if (view !== "feed") setView("feed");
+                      searchInputRef.current?.blur();
+                    }
+                  }
+                }}
                 placeholder="Search posts, people, hashtags…"
                 aria-label="Search feed"
+                aria-autocomplete="list"
+                aria-expanded={searchOpen && searchSuggestions.length > 0}
+                aria-controls="feed-search-suggestions"
+                aria-activedescendant={searchOpen && searchSuggestions.length > 0 ? `feed-search-opt-${searchHighlight}` : undefined}
+                role="combobox"
                 className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground text-foreground"
               />
               {query && (
                 <button
-                  onClick={() => setQuery("")}
+                  onMouseDown={(e) => { e.preventDefault(); setQuery(""); searchInputRef.current?.focus(); }}
                   className="text-muted-foreground hover:text-foreground"
                   aria-label="Clear search"
                   type="button"
@@ -432,7 +464,35 @@ function FeedPage() {
                 </button>
               )}
             </div>
+            {searchOpen && searchSuggestions.length > 0 && (
+              <ul
+                id="feed-search-suggestions"
+                role="listbox"
+                className="absolute left-0 right-0 top-full z-40 mt-2 max-h-80 overflow-auto rounded-2xl border border-border bg-popover p-1 text-sm shadow-[var(--shadow-soft-3,0_10px_30px_-10px_rgba(0,0,0,0.25))]"
+              >
+                {searchSuggestions.map((s, i) => (
+                  <li
+                    key={`${s.kind}-${s.value}`}
+                    id={`feed-search-opt-${i}`}
+                    role="option"
+                    aria-selected={i === searchHighlight}
+                    onMouseDown={(e) => { e.preventDefault(); applySuggestion(s); }}
+                    onMouseEnter={() => setSearchHighlight(i)}
+                    className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2 transition ${i === searchHighlight ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"}`}
+                  >
+                    <span className="flex items-center gap-2 truncate">
+                      <span className={`grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold ${s.kind === "hashtag" ? "bg-primary/15 text-primary" : "bg-secondary text-secondary-foreground"}`}>
+                        {s.kind === "hashtag" ? "#" : "@"}
+                      </span>
+                      <span className="truncate font-medium">{s.label}</span>
+                    </span>
+                    {s.sub && <span className="shrink-0 text-xs text-muted-foreground">{s.sub}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+
           <div className="ml-auto flex items-center gap-1">
             <FeedNotifications meId={meId} profiles={profiles} />
             <button
