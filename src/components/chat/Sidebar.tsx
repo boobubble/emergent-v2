@@ -19,6 +19,7 @@ interface Props {
 }
 
 export function Sidebar({ onOpenProfile, onCollapse }: Props) {
+  const { t } = useTranslation();
   const { state, setActive, createRoom, reset } = useChat();
   const { logout, user } = useAuth();
   const [showNew, setShowNew] = useState(false);
