@@ -446,8 +446,8 @@ function FeedPage() {
                     }
                   }
                 }}
-                placeholder="Search posts, people, hashtags…"
-                aria-label="Search feed"
+                placeholder={t("feed.searchPlaceholder")}
+                aria-label={t("feed.searchFeed")}
                 aria-autocomplete="list"
                 aria-expanded={searchOpen && searchSuggestions.length > 0}
                 aria-controls="feed-search-suggestions"
