@@ -138,8 +138,8 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
       </nav>
 
 
-      <div className="border-t border-border p-3">
-        <div className="mb-2 hidden lg:block">
+      <div className="border-t border-border p-2">
+        <div className="mb-1.5 hidden lg:block">
           <ChatExploreMenu />
         </div>
 
@@ -150,17 +150,17 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
             href="/feed"
             target="_blank"
             rel="noopener noreferrer"
-            className="mb-1 flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+            className="mb-1 flex w-full items-center gap-2 rounded-full px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
             title="Open achievements & leaderboard in feed"
           >
-            <Award className="h-4 w-4" /> {t("nav.achievements")}
-            <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+            <Award className="h-3.5 w-3.5" /> {t("nav.achievements")}
+            <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold text-primary">
               {state.me.badges?.length ?? 0}
             </span>
           </a>
         )}
 
-        <div className="mb-2">
+        <div className="mb-1.5">
           <ThemeToggle />
         </div>
         <a
@@ -168,42 +168,42 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
           target={user?.isGuest ? undefined : "_blank"}
           rel={user?.isGuest ? undefined : "noopener noreferrer"}
           onClick={(e) => { if (user?.isGuest) e.preventDefault(); }}
-          className="group relative block w-full overflow-hidden rounded-2xl border border-border bg-card/60 p-3 text-left transition-all hover:border-primary/30 hover:bg-card"
+          className="group relative block w-full overflow-hidden rounded-xl border border-border bg-card/60 p-2 text-left transition-all hover:border-primary/30 hover:bg-card"
           title={user?.isGuest ? "Guest session" : "Open account settings in new tab"}
         >
 
-          <div className="relative flex items-center gap-3">
-            <Avatar user={state.me} size={36} />
+          <div className="relative flex items-center gap-2">
+            <Avatar user={state.me} size={28} />
             <div className="min-w-0 flex-1 leading-tight">
-              <div className="truncate text-sm font-bold text-foreground">{state.me.name}</div>
+              <div className="truncate text-xs font-bold text-foreground">{state.me.name}</div>
               {user?.isGuest ? (
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("chat.guest")}</div>
+                <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{t("chat.guest")}</div>
               ) : (
-                <div className="mt-0.5 flex items-center gap-1.5 text-[10px]">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/20 to-fuchsia-500/20 px-1.5 py-0.5 font-bold text-amber-200 ring-1 ring-amber-400/30">
-                    <Zap className="h-2.5 w-2.5" /> Lv {state.me.level}
+                <div className="mt-0.5 flex items-center gap-1 text-[9px]">
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-400/20 to-fuchsia-500/20 px-1 py-0.5 font-bold text-amber-200 ring-1 ring-amber-400/30">
+                    <Zap className="h-2 w-2" /> Lv {state.me.level}
                   </span>
                   {(state.me.streak ?? 0) > 0 && (
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-500/15 px-1.5 py-0.5 font-bold text-rose-300 ring-1 ring-rose-400/30">
-                      <Flame className="h-2.5 w-2.5" />{state.me.streak}d
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-500/15 px-1 py-0.5 font-bold text-rose-300 ring-1 ring-rose-400/30">
+                      <Flame className="h-2 w-2" />{state.me.streak}d
                     </span>
                   )}
                 </div>
               )}
             </div>
-            {!user?.isGuest && <Settings className="h-4 w-4 text-muted-foreground transition group-hover:text-foreground" />}
+            {!user?.isGuest && <Settings className="h-3.5 w-3.5 text-muted-foreground transition group-hover:text-foreground" />}
           </div>
           {!user?.isGuest && (() => {
             const lp = levelProgress(state.me.xp ?? 0);
             return (
-              <div className="relative mt-2">
-                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="relative mt-1.5">
+                <div className="h-1 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-fuchsia-500 shadow-[0_0_10px_rgba(251,191,36,0.6)] transition-all duration-700"
                     style={{ width: `${lp.pct}%` }}
                   />
                 </div>
-                <div className="mt-1 flex items-center justify-between text-[9px] font-semibold text-muted-foreground">
+                <div className="mt-0.5 flex items-center justify-between text-[8px] font-semibold text-muted-foreground">
                   <span>{(state.me.xp ?? 0).toLocaleString()} XP</span>
                   <span>{lp.intoLevel}/{lp.toNext} → Lv {lp.level + 1}</span>
                 </div>
@@ -214,28 +214,29 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
         <button
           type="button"
           onClick={onOpenProfile}
-          className="mt-1 w-full rounded-full px-3 py-1.5 text-[11px] text-muted-foreground hover:bg-white/5 hover:text-foreground"
+          className="mt-1 w-full rounded-full px-2.5 py-1 text-[10px] text-muted-foreground hover:bg-white/5 hover:text-foreground"
         >
           {t("chat.quickEditProfile")}
         </button>
-        <div className="mt-2 flex gap-1">
+        <div className="mt-1.5 flex gap-1">
           <button
             onClick={() => { if (confirm(t("chat.resetConfirm"))) reset(); }}
-            className="flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+            className="flex flex-1 items-center justify-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
           >
-            <RotateCcw className="h-3 w-3" /> {t("common.reset")}
+            <RotateCcw className="h-2.5 w-2.5" /> {t("common.reset")}
           </button>
           <button
             onClick={logout}
-            className="flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground hover:text-destructive"
+            className="flex flex-1 items-center justify-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-destructive"
             title={user?.email}
           >
-            <LogOut className="h-3 w-3" /> {t("auth.signOut")}
+            <LogOut className="h-2.5 w-2.5" /> {t("auth.signOut")}
           </button>
         </div>
       </div>
       </div>
     </aside>
+
 
   );
 }
