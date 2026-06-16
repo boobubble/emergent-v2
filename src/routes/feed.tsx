@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus } from "lucide-react";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
@@ -89,6 +90,7 @@ function getInitialView(): { view: View; username: string } {
 }
 
 function FeedPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const { prefs } = useFeedPrefs();
@@ -310,10 +312,10 @@ function FeedPage() {
   }
 
   const TABS: { id: Tab; label: string; icon: typeof Sparkles }[] = [
-    { id: "foryou", label: "For You", icon: Sparkles },
-    { id: "trending", label: "Trending", icon: Flame },
-    { id: "latest", label: "Latest", icon: Clock },
-    { id: "friends", label: "Friends", icon: Users },
+    { id: "foryou", label: t("nav.forYou"), icon: Sparkles },
+    { id: "trending", label: t("nav.trending"), icon: Flame },
+    { id: "latest", label: t("nav.latest"), icon: Clock },
+    { id: "friends", label: t("nav.friends"), icon: Users },
   ];
 
   const leftRailRef = useRef<HTMLDivElement | null>(null);
@@ -444,8 +446,8 @@ function FeedPage() {
                     }
                   }
                 }}
-                placeholder="Search posts, people, hashtags…"
-                aria-label="Search feed"
+                placeholder={t("feed.searchPlaceholder")}
+                aria-label={t("feed.searchFeed")}
                 aria-autocomplete="list"
                 aria-expanded={searchOpen && searchSuggestions.length > 0}
                 aria-controls="feed-search-suggestions"
