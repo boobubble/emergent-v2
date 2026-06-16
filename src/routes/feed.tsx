@@ -103,6 +103,9 @@ function FeedPage() {
   const [defaultTabApplied, setDefaultTabApplied] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchHighlight, setSearchHighlight] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
 
   const focusComposer = () => {
