@@ -188,6 +188,7 @@ function BrandAssetsCard() {
                       type="number" min={8} max={1024}
                       value={cfg.w ?? ""}
                       placeholder="W"
+                      disabled={!!cfg.lock}
                       onChange={(e) => setWH(g.key, "w", Number(e.target.value))}
                     />
                     <span className="text-xs text-muted-foreground">×</span>
@@ -195,6 +196,7 @@ function BrandAssetsCard() {
                       type="number" min={8} max={1024}
                       value={cfg.h ?? ""}
                       placeholder="H"
+                      disabled={!!cfg.lock}
                       onChange={(e) => setWH(g.key, "h", Number(e.target.value))}
                     />
                     <Select value={cfg.fit ?? "contain"} onValueChange={(v) => setFit(g.key, v as BrandFit)}>
@@ -206,6 +208,15 @@ function BrandAssetsCard() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <label className="flex cursor-pointer items-center gap-2 text-[11px] text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5 accent-primary"
+                      checked={!!cfg.lock}
+                      onChange={(e) => setLock(g.key, e.target.checked)}
+                    />
+                    Lock to layout (don't change UI — fit logo inside existing slot)
+                  </label>
                 </div>
               );
             })}
