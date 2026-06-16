@@ -25,7 +25,7 @@ const COMMANDS = [
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 export function MessageInput() {
-  const { send, state, replyingTo, setReplyingTo } = useChat();
+  const { send, state, replyingTo, setReplyingTo, pushSystem } = useChat();
   const { user } = useAuth();
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
   const { typers, sendTyping } = useTyping(state.activeChannel, me, !!me);
@@ -138,10 +138,14 @@ export function MessageInput() {
     toast.loading("Clearing chat…", { id: "clearchat" });
     try {
       const res = await clearChannelFn({ data: { channelId } });
-      toast.success("Chat cleared", { id: "clearchat", description: `${res?.deleted ?? 0} messages removed.` });
+      const count = res?.deleted ?? 0;
+      toast.success("Chat cleared", { id: "clearchat", description: `${count} messages removed.` });
+      const who = user?.username ? `@${user.username}` : "An admin";
+      pushSystem(channelId, `🧹 Chat history cleared by ${who} — ${count} message${count === 1 ? "" : "s"} removed.`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to clear chat";
       toast.error("Cannot clear chat", { id: "clearchat", description: msg });
+      pushSystem(state.activeChannel, `⚠️ Couldn't clear chat — ${msg}`);
     }
   }
 
