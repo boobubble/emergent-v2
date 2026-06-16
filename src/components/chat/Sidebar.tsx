@@ -65,12 +65,12 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
       <nav className="flex-1 space-y-6 overflow-y-auto px-3">
         <div>
           <SectionLabel
-            title="Public Rooms"
+            title={t("chat.publicRooms")}
             action={
               <button
                 onClick={() => setShowNew(s => !s)}
                 className="text-lg leading-none text-muted-foreground transition-colors hover:text-primary"
-                aria-label="New room"
+                aria-label={t("chat.newRoom")}
               >
                 +
               </button>
@@ -81,13 +81,13 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
               <input
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
-                placeholder="Room name"
+                placeholder={t("chat.roomName")}
                 className="w-full rounded-lg bg-input px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
               />
               <input
                 value={newTopic}
                 onChange={e => setNewTopic(e.target.value)}
-                placeholder="Topic"
+                placeholder={t("chat.topic")}
                 className="w-full rounded-lg bg-input px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
               />
               <button
@@ -101,7 +101,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
                 }}
                 className="w-full rounded-lg bg-primary px-2 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90"
               >
-                Create
+                {t("chat.create")}
               </button>
             </div>
           )}
