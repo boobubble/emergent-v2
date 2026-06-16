@@ -52,6 +52,8 @@ export const PostCard = memo(function PostCard({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState<SharePayload | null>(null);
   const [boosting, setBoosting] = useState(false);
+  const { isSaved, toggle: toggleSaved } = useSavedPosts();
+  const saved = isSaved(post.id);
 
   const earnReaction = useServerFn(earnFeedReaction);
   const earnComment = useServerFn(earnFeedComment);
