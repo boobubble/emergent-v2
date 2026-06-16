@@ -191,6 +191,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Re-fetch own username on tab focus so a rename made elsewhere reflects quickly.
+  useEffect(() => {
+    if (!user?.id) return;
+    const uid = user.id;
+    const refetch = async () => {
+      const { data } = await supabase.from("profiles").select("username").eq("id", uid).maybeSingle();
+      const next = data?.username;
+      if (!next) return;
+      setUser(prev => (prev && prev.id === uid && prev.username !== next ? { ...prev, username: next } : prev));
+    };
+    const onVisible = () => { if (document.visibilityState === "visible") void refetch(); };
+    window.addEventListener("focus", onVisible);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", onVisible);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [user?.id]);
+
   // Flush guest accounts when the tab closes / page hides.
   useEffect(() => {
     if (!user?.isGuest) return;
