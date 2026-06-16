@@ -21,14 +21,12 @@ export function ChatApp() {
   const [lbOpen, setLbOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
   const [toast, setToast] = useState<EngageToast | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(() =>
-    typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches
-  );
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Only auto-collapse on truly small screens (phones); never override the
+  // user's manual choice on resizes wider than that.
   useEffect(() => {
-    const mql = window.matchMedia("(min-width: 768px)");
-    const onChange = (e: MediaQueryListEvent) => setSidebarOpen(e.matches);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(max-width: 640px)").matches) setSidebarOpen(false);
   }, []);
   const rootRef = useRef<HTMLDivElement>(null);
 
