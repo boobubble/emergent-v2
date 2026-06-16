@@ -1827,6 +1827,7 @@ export type Database = {
         | "remove_word_filter"
         | "add_url_rule"
         | "remove_url_rule"
+        | "clear_channel"
       mute_scope: "global" | "room"
       post_kind: "text" | "image" | "gif" | "poll"
       post_privacy: "public" | "friends" | "private"
@@ -2032,6 +2033,7 @@ export const Constants = {
         "remove_word_filter",
         "add_url_rule",
         "remove_url_rule",
+        "clear_channel",
       ],
       mute_scope: ["global", "room"],
       post_kind: ["text", "image", "gif", "poll"],

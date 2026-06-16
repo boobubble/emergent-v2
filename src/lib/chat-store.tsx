@@ -842,6 +842,30 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
         }
         rtLog(msg.channelId.startsWith("dm:") ? "dm" : "msg", "in", `${msg.channelId} · ${msg.text.slice(0, 30)}`);
       })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "messages" }, (payload) => {
+        const oldRow = payload.old as { id?: string; channel_id?: string } | null;
+        const delId = oldRow?.id;
+        const delChan = oldRow?.channel_id;
+        setState(s => {
+          if (delChan && s.messages[delChan]) {
+            const filtered = delId
+              ? s.messages[delChan].filter(m => m.id !== delId)
+              : s.messages[delChan].filter(m => m.kind === "system");
+            if (filtered.length === s.messages[delChan].length) return s;
+            return { ...s, messages: { ...s.messages, [delChan]: filtered } };
+          }
+          if (!delId) return s;
+          // Unknown channel — scan all channels for the id
+          let changed = false;
+          const next: typeof s.messages = {};
+          for (const [ch, msgs] of Object.entries(s.messages)) {
+            const f = msgs.filter(m => m.id !== delId);
+            if (f.length !== msgs.length) changed = true;
+            next[ch] = f;
+          }
+          return changed ? { ...s, messages: next } : s;
+        });
+      })
       .subscribe(status => rtLog("ws", status, "messages"));
     return () => { supabase.removeChannel(channel); };
   }, [authUserId]);

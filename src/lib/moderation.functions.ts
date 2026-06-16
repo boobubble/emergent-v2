@@ -23,8 +23,23 @@ type ModActionName =
   | "ban" | "unban" | "temp_ban" | "shadow_ban" | "ip_ban"
   | "mute" | "unmute" | "kick" | "warn"
   | "delete_message" | "delete_post" | "pin_message" | "unpin_message"
+  | "clear_channel"
   | "resolve_report" | "dismiss_report" | "note"
   | "add_word_filter" | "remove_word_filter" | "add_url_rule" | "remove_url_rule";
+
+async function assertCanClearChannel(userId: string) {
+  const admin = await getSupabaseAdmin();
+  const { data: roles } = await admin
+    .from("user_roles").select("role").eq("user_id", userId);
+  const list = (roles ?? []).map(r => r.role as string);
+  const isAdmin = list.includes("super_admin") || list.includes("admin");
+  if (isAdmin) return;
+  if (!list.includes("moderator")) throw new Error("Forbidden: staff only");
+  const { data: settings } = await admin
+    .from("app_settings").select("value").eq("key", "staff_permissions").maybeSingle();
+  const allowed = !!(settings?.value as Record<string, unknown> | null)?.["mod_can_clear"];
+  if (!allowed) throw new Error("Forbidden: clear not permitted for moderators");
+}
 
 async function logAction(actor_id: string, action: ModActionName, extra: Record<string, unknown> = {}) {
   await (await getSupabaseAdmin()).from("mod_logs").insert({ actor_id, action, ...extra });
@@ -354,6 +369,27 @@ export const deleteMessageMod = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await logAction(context.userId, "delete_message", { target_id: data.message_id });
     return { ok: true };
+  });
+
+export const clearChannelMessages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ channel_id: z.string().min(1).max(120) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCanClearChannel(context.userId);
+    const admin = await getSupabaseAdmin();
+    const { error, count } = await admin
+      .from("messages")
+      .delete({ count: "exact" })
+      .eq("channel_id", data.channel_id);
+    if (error) throw new Error(error.message);
+    await logAction(context.userId, "clear_channel", {
+      target_type: "room",
+      target_id: data.channel_id,
+      payload: { deleted: count ?? 0 },
+    });
+    return { ok: true, deleted: count ?? 0 };
   });
 
 // ---------- Room moderators ----------

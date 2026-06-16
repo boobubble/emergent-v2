@@ -19,6 +19,7 @@ function StaffPermissionsPage() {
     { key: "mod_can_mute",     label: "Moderators can Mute",            desc: "Allow moderators to mute users in chatrooms." },
     { key: "mod_can_ban",      label: "Moderators can Ban",             desc: "Allow moderators to ban users from the platform." },
     { key: "mod_can_announce", label: "Moderators can edit Announcements", desc: "Allow approved moderators to create or edit scheduled chat announcements." },
+    { key: "mod_can_clear",    label: "Moderators can Clear chat",       desc: "Allow moderators to use /clear to wipe all messages in a chatroom. Admins can always use /clear." },
 
   ];
 
