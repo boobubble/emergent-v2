@@ -137,7 +137,7 @@ export function MessageInput() {
     const channelId = state.activeChannel;
     toast.loading("Clearing chat…", { id: "clearchat" });
     try {
-      const res = await clearChannelFn({ data: { channelId } });
+      const res = await clearChannelFn({ data: { channel_id: channelId } });
       const count = res?.deleted ?? 0;
       toast.success("Chat cleared", { id: "clearchat", description: `${count} messages removed.` });
       const who = user?.username ? `@${user.username}` : "An admin";
