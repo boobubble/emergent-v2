@@ -135,6 +135,33 @@ export function MessageInput() {
 
   async function handleClearChannel() {
     const channelId = state.activeChannel;
+    if (!me) {
+      toast.error("Admins only", { description: "/clear is restricted to admins and room moderators." });
+      return;
+    }
+    // Client-side pre-check (server still enforces per-room permission)
+    const { data: roleRows } = await supabase
+      .from("user_roles").select("role").eq("user_id", me.id);
+    const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
+    const isAdmin = roles.includes("super_admin") || roles.includes("admin");
+    let canClear = isAdmin;
+    if (!canClear) {
+      const { data: rm } = await supabase
+        .from("room_moderators")
+        .select("can_delete")
+        .eq("channel_id", channelId)
+        .eq("user_id", me.id)
+        .maybeSingle();
+      canClear = !!rm?.can_delete;
+    }
+    if (!canClear && roles.includes("moderator")) {
+      // Global moderator may be allowed if admin enabled staff permission
+      canClear = true; // let the server make the final call
+    }
+    if (!canClear) {
+      toast.error("Admins only", { description: "/clear is restricted to admins and room moderators." });
+      return;
+    }
     toast.loading("Clearing chat…", { id: "clearchat" });
     try {
       const res = await clearChannelFn({ data: { channel_id: channelId } });
