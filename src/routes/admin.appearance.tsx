@@ -176,7 +176,7 @@ function BrandAssetsCard() {
         {/* Global section sizes */}
         <div className="rounded-xl border border-border bg-background/40 p-4">
           <div className="mb-1 text-sm font-semibold">Section sizes (px)</div>
-          <div className="mb-3 text-xs text-muted-foreground">Set width × height for each slot. Leave width blank to keep the natural aspect ratio.</div>
+          <div className="mb-3 text-xs text-muted-foreground">Set width × height for each slot. Enable <b>Lock</b> to keep the original layout — the logo fits inside the existing box and never shifts the UI, regardless of upload dimensions.</div>
           <div className="grid gap-3 sm:grid-cols-2">
             {GLOBAL_GROUPS.map((g) => {
               const cfg = getCfg(g.key);
