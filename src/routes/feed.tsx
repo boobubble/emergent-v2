@@ -93,6 +93,7 @@ function FeedPage() {
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const { prefs } = useFeedPrefs();
+  const { savedIds } = useSavedPosts();
   const [tab, setTabState] = useState<Tab>(isVisibleFeedTab(prefs.defaultTab) ? prefs.defaultTab : "foryou");
   const initial = getInitialView();
   const [view, setView] = useState<View>(initial.view);
