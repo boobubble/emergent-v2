@@ -128,12 +128,17 @@ export function StoryTray() {
       }
       // Text-only stories get a transparent placeholder slide so the viewer
       // has something to render the caption over.
-      if (!urls.length) urls.push("");
+      const captions = draftFiles.map((_, i) => (draftCaptions[i] ?? "").trim());
+      if (!urls.length) {
+        urls.push("");
+        captions.push(draftText.trim());
+      }
       const story: Story = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         user_id: user.id,
         username: user.username,
         images: urls,
+        captions: captions.some((c) => c.length > 0) ? captions : undefined,
         text: draftText.trim() || undefined,
         created_at: Date.now(),
       };
@@ -142,7 +147,9 @@ export function StoryTray() {
       saveStories(next);
       setComposerOpen(false);
       setDraftFiles([]);
+      setDraftCaptions([]);
       setDraftText("");
+      setActiveDraft(0);
     } catch (err) {
       console.error("story upload failed", err);
     } finally {
