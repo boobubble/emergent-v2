@@ -25,6 +25,7 @@ const COMMANDS = [
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 export function MessageInput() {
+  const { t } = useTranslation();
   const { send, state, replyingTo, setReplyingTo } = useChat();
   const { user } = useAuth();
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
