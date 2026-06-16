@@ -9,6 +9,9 @@ interface Story {
   user_id: string;
   username: string;
   images: string[];
+  /** Per-slide captions, aligned by index with `images`. */
+  captions?: string[];
+  /** Legacy single caption — applied to slides without an explicit caption. */
   text?: string;
   created_at: number;
 }
