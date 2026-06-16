@@ -176,7 +176,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
             <div className="min-w-0 flex-1 leading-tight">
               <div className="truncate text-sm font-bold text-foreground">{state.me.name}</div>
               {user?.isGuest ? (
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Guest</div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("chat.guest")}</div>
               ) : (
                 <div className="mt-0.5 flex items-center gap-1.5 text-[10px]">
                   <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/20 to-fuchsia-500/20 px-1.5 py-0.5 font-bold text-amber-200 ring-1 ring-amber-400/30">
