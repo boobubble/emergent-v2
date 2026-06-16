@@ -215,21 +215,21 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
           onClick={onOpenProfile}
           className="mt-1 w-full rounded-full px-3 py-1.5 text-[11px] text-muted-foreground hover:bg-white/5 hover:text-foreground"
         >
-          Quick edit profile
+          {t("chat.quickEditProfile")}
         </button>
         <div className="mt-2 flex gap-1">
           <button
-            onClick={() => { if (confirm("Reset chat data for this account?")) reset(); }}
+            onClick={() => { if (confirm(t("chat.resetConfirm"))) reset(); }}
             className="flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
           >
-            <RotateCcw className="h-3 w-3" /> Reset
+            <RotateCcw className="h-3 w-3" /> {t("common.reset")}
           </button>
           <button
             onClick={logout}
             className="flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground hover:text-destructive"
             title={user?.email}
           >
-            <LogOut className="h-3 w-3" /> Sign out
+            <LogOut className="h-3 w-3" /> {t("auth.signOut")}
           </button>
         </div>
       </div>
