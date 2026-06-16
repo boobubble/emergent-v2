@@ -106,11 +106,11 @@ export function AccountPanel() {
             <Avatar user={me} size={96} />
             <div className="flex gap-1">
               <button onClick={() => fileRef.current?.click()} className="flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-[11px] font-bold text-primary hover:bg-primary/25">
-                <Upload className="h-3 w-3" /> Upload
+                <Upload className="h-3 w-3" /> {t("common.upload")}
               </button>
               {me.avatarUrl && (
                 <button onClick={() => updateMe({ avatarUrl: undefined })} className="flex items-center gap-1 rounded-full bg-destructive/15 px-3 py-1 text-[11px] font-bold text-destructive hover:bg-destructive/25">
-                  <Trash2 className="h-3 w-3" /> Clear
+                  <Trash2 className="h-3 w-3" /> {t("common.clear")}
                 </button>
               )}
             </div>
