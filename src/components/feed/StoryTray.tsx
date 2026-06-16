@@ -21,18 +21,22 @@ const TTL = 24 * 60 * 60 * 1000; // 24h
 
 function normalize(raw: unknown): Story | null {
   if (!raw || typeof raw !== "object") return null;
-  const r = raw as Record<string, unknown> & { image?: string; images?: string[] };
+  const r = raw as Record<string, unknown> & { image?: string; images?: string[]; captions?: string[] };
   const images = Array.isArray(r.images)
     ? r.images.filter((v): v is string => typeof v === "string")
     : typeof r.image === "string"
       ? [r.image]
       : [];
   if (!images.length) return null;
+  const captions = Array.isArray(r.captions)
+    ? r.captions.map((v) => (typeof v === "string" ? v : ""))
+    : undefined;
   return {
     id: String(r.id ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`),
     user_id: String(r.user_id ?? ""),
     username: String(r.username ?? ""),
     images,
+    captions,
     text: typeof r.text === "string" ? r.text : undefined,
     created_at: typeof r.created_at === "number" ? r.created_at : Date.now(),
   };
