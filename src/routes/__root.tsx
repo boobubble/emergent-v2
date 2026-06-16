@@ -255,7 +255,7 @@ function AuthGate() {
             <FaviconSwitcher />
             <Outlet />
             <GlobalThemeToggle />
-            <GlobalLanguageToggle />
+            
             <Sonner />
             <RealtimeDebugOverlay />
           </IgnoreProvider>
