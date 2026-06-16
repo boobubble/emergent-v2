@@ -339,21 +339,21 @@ export function MessageInput() {
       ) : (
       <div className="chat-composer-glow group relative flex items-end gap-1 rounded-3xl border border-border bg-card/60 py-2 pl-4 pr-2 shadow-sm backdrop-blur-md transition-all">
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
-        <button onClick={() => fileRef.current?.click()} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Attach file">
+        <button onClick={() => fileRef.current?.click()} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title={t("chat.attach")}>
           <Paperclip className="h-5 w-5" />
         </button>
-        <button onClick={() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !"))} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Command">
+        <button onClick={() => setText(v => v + (v.endsWith(" ") || !v ? "!" : " !"))} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title={t("chat.command")}>
           <Sparkles className="h-5 w-5" />
         </button>
-        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help or @mention"} className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
-        <button onClick={() => { setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Animated stickers">
+        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? t("chat.replyPlaceholder") : t("chat.messagePlaceholder")} className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
+        <button onClick={() => { setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title={t("chat.stickers")}>
           <Sticker className="h-5 w-5" />
         </button>
         {media.giphy.enabled && (
           <button
             onClick={() => { setShowGiphy(s => !s); setShowEmoji(false); setShowStickers(false); setShowYoutube(false); }}
             className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-fuchsia-400"
-            title="Share a GIF"
+            title={t("chat.gif")}
           >
             <ImagePlay className="h-5 w-5" />
           </button>
@@ -362,7 +362,7 @@ export function MessageInput() {
           <button
             onClick={() => { setShowYoutube(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); }}
             className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-red-500"
-            title="Share a YouTube video"
+            title={t("chat.youtube")}
           >
             <Youtube className="h-5 w-5" />
           </button>
