@@ -90,6 +90,7 @@ function getInitialView(): { view: View; username: string } {
 }
 
 function FeedPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const { prefs } = useFeedPrefs();
