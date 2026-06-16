@@ -1,0 +1,1 @@
+ALTER TYPE public.mod_action ADD VALUE IF NOT EXISTS 'clear_channel';
