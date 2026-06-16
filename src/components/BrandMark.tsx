@@ -10,6 +10,7 @@ export interface RoomBranding {
   favicon_dark?: string;
   feed_light?: string;
   feed_dark?: string;
+  text?: string;
 }
 
 export type BrandFit = "contain" | "cover" | "fill";
