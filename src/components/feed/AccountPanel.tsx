@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { Upload, Trash2, Save, LogOut, Coins, Flame, Trophy, Award, UserX, UserMinus, MessageCircle } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
