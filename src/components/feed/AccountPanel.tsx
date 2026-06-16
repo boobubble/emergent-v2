@@ -118,40 +118,40 @@ export function AccountPanel() {
           </div>
 
           <div className="min-w-0 flex-1 space-y-4">
-            <Field label="Username (2–10 letters)">
-              <input value={name} onChange={e => setName(e.target.value)} className="w-full rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="your display name" />
-              {nameChanged && usernameStatus.state === "checking" && <p className="mt-1 text-[10px] text-muted-foreground">Checking…</p>}
-              {nameChanged && usernameStatus.state === "ok" && <p className="mt-1 text-[10px] font-semibold text-primary">✓ Available</p>}
+            <Field label={t("account.usernameLabel")}>
+              <input value={name} onChange={e => setName(e.target.value)} className="w-full rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder={t("account.usernameHint")} />
+              {nameChanged && usernameStatus.state === "checking" && <p className="mt-1 text-[10px] text-muted-foreground">{t("account.checking")}</p>}
+              {nameChanged && usernameStatus.state === "ok" && <p className="mt-1 text-[10px] font-semibold text-primary">{t("account.available")}</p>}
               {nameChanged && usernameStatus.state === "error" && <p className="mt-1 text-[10px] font-semibold text-destructive">{usernameStatus.message}</p>}
             </Field>
-            <Field label="Bio">
-              <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} maxLength={160} className="w-full resize-none rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="A short bio…" />
+            <Field label={t("account.bio")}>
+              <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} maxLength={160} className="w-full resize-none rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder={t("account.bioPlaceholder")} />
               <p className="mt-1 text-right text-[10px] text-muted-foreground">{bio.length}/160</p>
             </Field>
-            <Field label="Status">
+            <Field label={t("account.status")}>
               <div className="flex gap-2">
                 {(["online", "away", "offline"] as const).map(s => (
                   <button key={s} onClick={() => setStatus(s)} className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${status === s ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}>
-                    {s}
+                    {t(`account.${s}`)}
                   </button>
                 ))}
               </div>
             </Field>
-            <Field label="Gender">
+            <Field label={t("account.gender")}>
               <div className="flex gap-2">
                 {(["male", "female", "other"] as const).map(g => (
                   <button key={g} onClick={() => setGender(g)} className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider capitalize transition ${gender === g ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}>
-                    {g}
+                    {t(`account.${g}`)}
                   </button>
                 ))}
               </div>
             </Field>
             <div className="flex items-center gap-3 pt-2">
               <button onClick={save} disabled={nameChanged && usernameStatus.state !== "ok"} className="flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50">
-                <Save className="h-4 w-4" /> Save changes
+                <Save className="h-4 w-4" /> {t("account.saveChanges")}
               </button>
-              {saved && <span className="text-xs font-semibold text-primary">✓ Saved</span>}
-              {auth?.email && <span className="ml-auto text-[11px] text-muted-foreground">Signed in as {auth.email}</span>}
+              {saved && <span className="text-xs font-semibold text-primary">{t("account.savedFlag")}</span>}
+              {auth?.email && <span className="ml-auto text-[11px] text-muted-foreground">{t("auth.signedInAs", { email: auth.email })}</span>}
             </div>
           </div>
         </div>
