@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
-import { BrandMark } from "@/components/BrandMark";
+import { BrandMark, BrandText, useBrandAsset } from "@/components/BrandMark";
 import { ChatExploreMenu } from "./ChatExploreMenu";
 import { levelProgress } from "@/lib/ranks";
 
