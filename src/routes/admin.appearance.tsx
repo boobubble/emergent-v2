@@ -126,7 +126,7 @@ function BrandAssetsCard() {
   );
   const [selectedRoom, setSelectedRoom] = useState<string>("");
 
-  function getCfg(key: keyof BrandSizes): { w?: number; h?: number; fit?: BrandFit } {
+  function getCfg(key: keyof BrandSizes): { w?: number; h?: number; fit?: BrandFit; lock?: boolean } {
     const v = sizes[key];
     if (v == null) return {};
     if (typeof v === "number") return { w: v, h: v };
