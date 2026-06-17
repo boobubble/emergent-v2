@@ -795,7 +795,7 @@ function FeedPage() {
             <Plus className="h-7 w-7" strokeWidth={2.5} />
           </button>
         </div>
-        <button onClick={() => setView("account")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "account" ? "text-primary" : "text-muted-foreground"}`}><Settings className="h-5 w-5" /> Settings</button>
+        <button onClick={() => setView("explore")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "explore" ? "text-primary" : "text-muted-foreground"}`}><Compass className="h-5 w-5" /> Explore</button>
         <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
 
