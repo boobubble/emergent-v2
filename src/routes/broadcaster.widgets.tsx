@@ -129,6 +129,8 @@ function WidgetsPage() {
                     value={current}
                     onChange={(e) => setEditStream((s) => ({ ...s, [w.id]: e.target.value }))}
                   />
+                  <StreamHint url={current} />
+
                   <div className="flex gap-2">
                     <Button
                       size="sm"
