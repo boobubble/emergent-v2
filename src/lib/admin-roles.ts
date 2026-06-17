@@ -70,6 +70,20 @@ export const ROLE_REGISTRY: RoleDef[] = [
     permissions: ["moderation.room","content.create"],
   },
   {
+    id: "dj",
+    label: "DJ",
+    description: "Broadcaster Studio access: manage widgets, queue, mic, schedule, and go live.",
+    color: "text-fuchsia-500",
+    permissions: ["broadcaster.access","broadcaster.manage","content.create"],
+  },
+  {
+    id: "rj",
+    label: "RJ",
+    description: "Radio jockey: host shows, run the queue, and post broadcaster announcements.",
+    color: "text-cyan-500",
+    permissions: ["broadcaster.access","broadcaster.manage","content.create"],
+  },
+  {
     id: "vip",
     label: "VIP",
     description: "Premium perks, badges, and boosted reach.",
