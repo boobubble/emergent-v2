@@ -19,6 +19,7 @@ import {
   TrendingCommunitiesWidget,
   CommunityActivityWidget,
 } from "@/components/feed/DiscoveryWidgets";
+import { PullToRefresh } from "@/components/feed/PullToRefresh";
 import { ConfessionsFeedWidget, ActivePollsWidget } from "@/components/feed/ConfessionsFeedWidget";
 import { BoobubbleAssistantWidget } from "@/components/feed/BoobubbleAssistantWidget";
 import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
