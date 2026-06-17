@@ -74,7 +74,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/poll-widget", label: "Poll Widget",   icon: Vote,          keywords: ["poll", "polls", "vote", "voting", "chatroom widget", "discovery", "trending poll", "poll of the day"] },
       { to: "/admin/games",       label: "Games",        icon: Gamepad2,      keywords: ["mini-games"] },
       { to: "/admin/confessions", label: "Confessions",  icon: MessageSquareHeart, keywords: ["confess", "anonymous", "secrets", "community"] },
-      { to: "/admin/dj",          label: "Live DJ / RJ", icon: Disc3,         keywords: ["music", "dj", "rj", "player", "radio", "live", "audio", "stream", "youtube"] },
+      { to: "/broadcaster",      label: "Broadcaster Studio", icon: Disc3,         keywords: ["broadcaster", "studio", "music", "dj", "rj", "player", "radio", "live", "audio", "stream", "youtube", "widgets", "queue", "mic", "schedule", "announcements"] },
       { to: "/admin/pages",       label: "Custom Pages", icon: FileText,      keywords: ["cms", "landing"] },
       { to: "/admin/feedback",    label: "Feedback",     icon: Bug,           keywords: ["bug", "bugs", "feedback", "feature request", "ui issue", "performance", "security", "reports"] },
     ],
