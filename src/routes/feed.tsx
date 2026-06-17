@@ -662,6 +662,7 @@ function FeedPage() {
                 </Suspense>
                 <DailyChallengesWidget meId={meId} />
               </div>
+              <BroadcasterTicker target="feed" className="mb-3 rounded-md" />
               <StoryTray />
               <div className="feed-card mt-4">
                 <Composer authorId={meId} onPosted={loadPosts} />
