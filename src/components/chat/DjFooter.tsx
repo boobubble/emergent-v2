@@ -120,7 +120,7 @@ function DjFooterView({
             className="h-8 gap-1 px-2"
             onClick={() => mediaControlsRef.current?.play()}
           >
-            <Play className="h-3.5 w-3.5" /> Listen
+            <Play className="h-3.5 w-3.5" /> Play
           </Button>
         )}
       </div>
