@@ -514,10 +514,11 @@
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.85rem;
-  font-size: 0.875rem;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.65rem;
+  font-size: 0.75rem;
+  line-height: 1.1;
   color: var(--color-muted-foreground);
   transition: background .18s ease, color .18s ease;
   &:hover { background: color-mix(in oklab, var(--color-foreground) 6%, transparent); color: var(--color-foreground); }
