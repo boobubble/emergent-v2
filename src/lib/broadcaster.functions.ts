@@ -460,7 +460,7 @@ export const updateBroadcasterSettings = createServerFn({ method: "POST" })
   }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const patch: Record<string, unknown> = {};
+    const patch: { disclaimer_text?: string; disclaimer_enabled?: boolean; ticker_template?: string } = {};
     if (data.disclaimer_text !== undefined) patch.disclaimer_text = data.disclaimer_text;
     if (data.disclaimer_enabled !== undefined) patch.disclaimer_enabled = data.disclaimer_enabled;
     if (data.ticker_template !== undefined) patch.ticker_template = data.ticker_template;
