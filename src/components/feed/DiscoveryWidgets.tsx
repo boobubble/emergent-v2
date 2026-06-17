@@ -10,21 +10,20 @@ import type { FeedPost } from "@/lib/feed-types";
 /* ──────────────────────────── Promoted Posts ──────────────────────────── */
 
 export function PromotedPostsWidget({ profiles }: { profiles: Record<string, User> }) {
-  const [posts, setPosts] = useState<Array<FeedPost & { reaction_count?: number; comment_count?: number }>>([]);
+  const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       const { data } = await supabase
-        .from("feed_posts")
+        .from("posts")
         .select("*")
         .eq("privacy", "public")
         .order("created_at", { ascending: false })
         .limit(40);
       if (!alive) return;
-      const rows = (data ?? []) as any[];
-      // Pick top-3 by reaction_count fallback to recency
+      const rows = (data ?? []) as unknown as FeedPost[];
       rows.sort((a, b) => (b.reaction_count ?? 0) - (a.reaction_count ?? 0));
       setPosts(rows.slice(0, 3));
       setLoaded(true);
