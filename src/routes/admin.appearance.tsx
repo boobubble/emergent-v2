@@ -463,3 +463,68 @@ function UploadSlot({ theme, scope, slotKey, value, hint, onChange }:
     </div>
   );
 }
+
+function LivePreview({
+  label,
+  cfg,
+  lightUrl,
+  darkUrl,
+}: {
+  label: string;
+  cfg: { w?: number; h?: number; fit?: BrandFit; lock?: boolean; pad?: BrandPadding };
+  lightUrl: string;
+  darkUrl: string;
+}) {
+  const fit: BrandFit = cfg.fit ?? "contain";
+  const padStyle: React.CSSProperties = {
+    paddingTop: cfg.pad?.t || undefined,
+    paddingRight: cfg.pad?.r || undefined,
+    paddingBottom: cfg.pad?.b || undefined,
+    paddingLeft: cfg.pad?.l || undefined,
+    boxSizing: "border-box",
+  };
+  // Simulated slot container — represents the "existing" layout box.
+  const SLOT_W = 180;
+  const SLOT_H = 56;
+
+  function Tile({ theme, url }: { theme: "light" | "dark"; url: string }) {
+    const bg = theme === "dark" ? "bg-zinc-900 border-zinc-700" : "bg-white border-zinc-200";
+    const imgStyle: React.CSSProperties = cfg.lock
+      ? { width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%", objectFit: fit, objectPosition: "center", ...padStyle }
+      : { width: cfg.w, height: cfg.h, maxWidth: "100%", objectFit: fit, objectPosition: "center", ...padStyle };
+    return (
+      <div className="flex-1 space-y-1">
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{theme}</div>
+        <div
+          className={`relative grid place-items-center overflow-hidden rounded-md border ${bg}`}
+          style={{ width: SLOT_W, height: SLOT_H }}
+        >
+          {/* dashed slot outline shown when lock is on so user can see the fixed bounds */}
+          {cfg.lock && (
+            <div className="pointer-events-none absolute inset-0 rounded-md border border-dashed border-primary/40" />
+          )}
+          {url ? (
+            <img src={url} alt="" style={imgStyle} />
+          ) : (
+            <span className="text-[10px] text-muted-foreground">no {theme} logo</span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 rounded-md border border-border bg-muted/10 p-2">
+      <div className="mb-1.5 flex items-center justify-between">
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+        <div className="text-[10px] text-muted-foreground">
+          slot {SLOT_W}×{SLOT_H} · {cfg.lock ? "locked" : `${cfg.w ?? "?"}×${cfg.h ?? "?"}`} · {fit}
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Tile theme="light" url={lightUrl} />
+        <Tile theme="dark" url={darkUrl} />
+      </div>
+    </div>
+  );
+}
