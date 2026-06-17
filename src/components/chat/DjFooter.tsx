@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import {
-  Disc3, Pause, Play, Volume2, VolumeX, Radio,
+  Disc3, Pause, Play, Volume2, VolumeX, Radio, Bell, BellOff,
 } from "lucide-react";
 
 import { useDjPlayer } from "@/lib/dj-store";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/dj-config";
 import { Button } from "@/components/ui/button";
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
+import { useSoundPrefs, setSoundPref } from "@/lib/sound-prefs";
 
 
 const LISTENER_MUTE_KEY = "dj_player.listener_muted.v2";
