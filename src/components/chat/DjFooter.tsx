@@ -270,5 +270,23 @@ function DjMediaSink({
   return null;
 }
 
+function RadioNotifyToggle() {
+  const prefs = useSoundPrefs();
+  const on = prefs.radio_announcements !== false;
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8"
+      onClick={() => setSoundPref("radio_announcements", !on)}
+      title={on ? "Mute radio notifications" : "Enable radio notifications"}
+      aria-label={on ? "Mute radio notifications" : "Enable radio notifications"}
+    >
+      {on ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
+    </Button>
+  );
+}
+
 // Re-export defaults for admin pages that prefer the named import.
 export { DJ_DEFAULTS };
