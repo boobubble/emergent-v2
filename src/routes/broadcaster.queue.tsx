@@ -36,6 +36,8 @@ function QueuePage() {
   });
 
   const [url, setUrl] = useState("");
+  const [streamUrl, setStreamUrl] = useState("");
+  const [streamName, setStreamName] = useState("");
   const addMut = useMutation({
     mutationFn: () => add({ data: { widget_id: widgetId, url } }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["broadcaster-queue", widgetId] }); setUrl(""); },
