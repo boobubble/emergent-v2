@@ -198,8 +198,8 @@ export function MessageList({ channelId }: { channelId: string }) {
                             <div
                               className={
                                 m.kind === "me"
-                                  ? "rounded-2xl bg-white/5 px-4 py-2.5 text-sm italic text-primary chat-bubble-in"
-                                  : "rounded-2xl rounded-tr-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in"
+                                  ? "rounded-2xl bg-white/5 px-3 py-1.5 text-xs italic text-primary chat-bubble-in"
+                                  : "rounded-2xl rounded-tr-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in"
                               }
                             >
                               <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
@@ -223,12 +223,12 @@ export function MessageList({ channelId }: { channelId: string }) {
           }
 
           return (
-            <div key={gi} className="group flex gap-3">
-              <FrameAvatar user={author} size={36} />
+            <div key={gi} className="group flex gap-2">
+              <FrameAvatar user={author} size={28} />
               <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center gap-2">
+                <div className="mb-0.5 flex items-center gap-1.5">
                   <UserMenu userId={author.id} username={author.name}>
-                    <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-foreground">
                       <CosmeticName userId={author.id} name={author.name} />
                       <NameAdornments user={author} />
                     </span>
@@ -251,8 +251,8 @@ export function MessageList({ channelId }: { channelId: string }) {
                           <div
                             className={
                               m.kind === "me"
-                                ? "rounded-2xl bg-white/5 px-4 py-2.5 text-sm italic text-primary chat-bubble-in"
-                                : "max-w-[80%] rounded-2xl rounded-tl-md border border-border bg-card/70 backdrop-blur-sm px-4 py-2.5 text-sm leading-relaxed text-foreground/90 shadow-sm chat-bubble-in"
+                                ? "rounded-2xl bg-white/5 px-3 py-1.5 text-xs italic text-primary chat-bubble-in"
+                                : "max-w-[80%] rounded-2xl rounded-tl-md border border-border bg-card/70 backdrop-blur-sm px-3 py-1.5 text-xs leading-snug text-foreground/90 shadow-sm chat-bubble-in"
                             }
                           >
                             <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
