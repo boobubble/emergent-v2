@@ -625,7 +625,7 @@ function FeedPage() {
                 label="My Profile"
                 color="text-primary"
               />
-              <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Settings" color="text-slate-400" />
+              
             </nav>
             <Suspense fallback={<RewardsWidgetSkeleton />}>
               <RewardsWidget
