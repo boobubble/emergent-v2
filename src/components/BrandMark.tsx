@@ -14,7 +14,8 @@ export interface RoomBranding {
 }
 
 export type BrandFit = "contain" | "cover" | "fill";
-export interface BrandSizeValue { w?: number; h?: number; fit?: BrandFit; lock?: boolean }
+export interface BrandPadding { t?: number; r?: number; b?: number; l?: number }
+export interface BrandSizeValue { w?: number; h?: number; fit?: BrandFit; lock?: boolean; pad?: BrandPadding }
 export interface BrandSizes {
   logo?: number | BrandSizeValue;
   favicon?: number | BrandSizeValue;
@@ -103,14 +104,22 @@ export function BrandMark({ slot, roomId, alt = "Logo", className, fallback, for
 
   const size = useBrandSize(slot);
   const fit: BrandFit = size?.fit ?? "contain";
-  // When `lock` is enabled, ignore configured pixel width/height and let the
-  // caller's className define the bounding box — prevents UI shift after upload.
   const locked = !!size?.lock;
+  const pad = size?.pad;
+  const padStyle: React.CSSProperties = pad
+    ? {
+        paddingTop: pad.t || undefined,
+        paddingRight: pad.r || undefined,
+        paddingBottom: pad.b || undefined,
+        paddingLeft: pad.l || undefined,
+        boxSizing: "border-box",
+      }
+    : {};
   const style: React.CSSProperties | undefined = size
     ? locked
-      ? { maxWidth: "100%", maxHeight: "100%", width: "100%", height: "100%", objectFit: fit, objectPosition: "center" }
-      : { width: size.w, height: size.h, maxWidth: "100%", objectFit: fit, objectPosition: "center" }
-    : undefined;
+      ? { maxWidth: "100%", maxHeight: "100%", width: "100%", height: "100%", objectFit: fit, objectPosition: "center", ...padStyle }
+      : { width: size.w, height: size.h, maxWidth: "100%", objectFit: fit, objectPosition: "center", ...padStyle }
+    : padStyle;
   if (!url) {
     if (!fallback) return null;
     if (!size || locked) return <>{fallback}</>;

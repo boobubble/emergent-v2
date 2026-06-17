@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminSetting } from "@/lib/use-admin-setting";
 import { useChat } from "@/lib/chat-store";
 import { toast } from "sonner";
-import type { BrandingMap, RoomBranding, BrandSizes, BrandFit } from "@/components/BrandMark";
+import type { BrandingMap, RoomBranding, BrandSizes, BrandFit, BrandPadding } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/admin/appearance")({
   component: Appearance,
@@ -126,7 +126,7 @@ function BrandAssetsCard() {
   );
   const [selectedRoom, setSelectedRoom] = useState<string>("");
 
-  function getCfg(key: keyof BrandSizes): { w?: number; h?: number; fit?: BrandFit; lock?: boolean } {
+  function getCfg(key: keyof BrandSizes): { w?: number; h?: number; fit?: BrandFit; lock?: boolean; pad?: BrandPadding } {
     const v = sizes[key];
     if (v == null) return {};
     if (typeof v === "number") return { w: v, h: v };
@@ -143,6 +143,11 @@ function BrandAssetsCard() {
   function setLock(key: keyof BrandSizes, lock: boolean) {
     const cur = getCfg(key);
     patch({ sizes: { ...sizes, [key]: { ...cur, lock } } });
+  }
+  function setPad(key: keyof BrandSizes, side: keyof BrandPadding, n: number) {
+    const cur = getCfg(key);
+    const nextPad = { ...(cur.pad ?? {}), [side]: Number.isFinite(n) && n > 0 ? n : undefined };
+    patch({ sizes: { ...sizes, [key]: { ...cur, pad: nextPad } } });
   }
   // Backward-compat shim for any in-file refs
   const getWH = getCfg;
@@ -180,6 +185,8 @@ function BrandAssetsCard() {
           <div className="grid gap-3 sm:grid-cols-2">
             {GLOBAL_GROUPS.map((g) => {
               const cfg = getCfg(g.key);
+              const lightUrl = (values[`${g.key}_light` as keyof BrandingMap] as string) || "";
+              const darkUrl = (values[`${g.key}_dark` as keyof BrandingMap] as string) || "";
               return (
                 <div key={g.key} className="space-y-1.5">
                   <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{g.title}</Label>
@@ -217,6 +224,33 @@ function BrandAssetsCard() {
                     />
                     Lock to layout (don't change UI — fit logo inside existing slot)
                   </label>
+
+                  {/* Padding inputs */}
+                  <div className="pt-1">
+                    <div className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">Padding (px)</div>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {(["t", "r", "b", "l"] as const).map((side) => (
+                        <div key={side} className="flex items-center gap-1">
+                          <span className="w-3 text-[10px] uppercase text-muted-foreground">{side}</span>
+                          <Input
+                            type="number" min={0} max={128}
+                            value={cfg.pad?.[side] ?? ""}
+                            placeholder="0"
+                            className="h-8 px-1.5 text-xs"
+                            onChange={(e) => setPad(g.key, side, Number(e.target.value))}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Live preview */}
+                  <LivePreview
+                    label={cfg.lock ? "Preview (lock-to-layout)" : "Live preview"}
+                    cfg={cfg}
+                    lightUrl={lightUrl}
+                    darkUrl={darkUrl}
+                  />
                 </div>
               );
             })}
@@ -426,6 +460,71 @@ function UploadSlot({ theme, scope, slotKey, value, hint, onChange }:
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       )}
+    </div>
+  );
+}
+
+function LivePreview({
+  label,
+  cfg,
+  lightUrl,
+  darkUrl,
+}: {
+  label: string;
+  cfg: { w?: number; h?: number; fit?: BrandFit; lock?: boolean; pad?: BrandPadding };
+  lightUrl: string;
+  darkUrl: string;
+}) {
+  const fit: BrandFit = cfg.fit ?? "contain";
+  const padStyle: React.CSSProperties = {
+    paddingTop: cfg.pad?.t || undefined,
+    paddingRight: cfg.pad?.r || undefined,
+    paddingBottom: cfg.pad?.b || undefined,
+    paddingLeft: cfg.pad?.l || undefined,
+    boxSizing: "border-box",
+  };
+  // Simulated slot container — represents the "existing" layout box.
+  const SLOT_W = 180;
+  const SLOT_H = 56;
+
+  function Tile({ theme, url }: { theme: "light" | "dark"; url: string }) {
+    const bg = theme === "dark" ? "bg-zinc-900 border-zinc-700" : "bg-white border-zinc-200";
+    const imgStyle: React.CSSProperties = cfg.lock
+      ? { width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%", objectFit: fit, objectPosition: "center", ...padStyle }
+      : { width: cfg.w, height: cfg.h, maxWidth: "100%", objectFit: fit, objectPosition: "center", ...padStyle };
+    return (
+      <div className="flex-1 space-y-1">
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{theme}</div>
+        <div
+          className={`relative grid place-items-center overflow-hidden rounded-md border ${bg}`}
+          style={{ width: SLOT_W, height: SLOT_H }}
+        >
+          {/* dashed slot outline shown when lock is on so user can see the fixed bounds */}
+          {cfg.lock && (
+            <div className="pointer-events-none absolute inset-0 rounded-md border border-dashed border-primary/40" />
+          )}
+          {url ? (
+            <img src={url} alt="" style={imgStyle} />
+          ) : (
+            <span className="text-[10px] text-muted-foreground">no {theme} logo</span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 rounded-md border border-border bg-muted/10 p-2">
+      <div className="mb-1.5 flex items-center justify-between">
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+        <div className="text-[10px] text-muted-foreground">
+          slot {SLOT_W}×{SLOT_H} · {cfg.lock ? "locked" : `${cfg.w ?? "?"}×${cfg.h ?? "?"}`} · {fit}
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Tile theme="light" url={lightUrl} />
+        <Tile theme="dark" url={darkUrl} />
+      </div>
     </div>
   );
 }
