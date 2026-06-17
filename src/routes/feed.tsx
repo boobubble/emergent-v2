@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon } from "lucide-react";
+import { useThemeMode } from "@/lib/use-theme-mode";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -537,6 +539,9 @@ function FeedPage() {
           </div>
 
           <div className="ml-auto flex items-center gap-1">
+            <HeaderThemeToggle />
+            <div className="hidden sm:block"><LanguageSwitcher variant="compact" /></div>
+            <div className="sm:hidden"><LanguageSwitcher variant="icon" /></div>
             <FeedNotifications meId={meId} profiles={profiles} />
             <button
               onClick={() => setDmOpenKey(k => k + 1)}
@@ -920,6 +925,22 @@ function SideNavLink({ to, icon: Icon, label, badge, color }: { to: string; icon
   );
 }
 
+
+function HeaderThemeToggle() {
+  const { mode, setMode } = useThemeMode();
+  const isDark = mode === "dark";
+  return (
+    <button
+      type="button"
+      onClick={() => setMode(isDark ? "light" : "dark")}
+      className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent/30 transition"
+      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label="Toggle theme"
+    >
+      {isDark ? <Sun className="h-5 w-5 text-foreground" /> : <Moon className="h-5 w-5 text-foreground" />}
+    </button>
+  );
+}
 
 
 

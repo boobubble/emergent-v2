@@ -6,7 +6,7 @@ export function GlobalThemeToggle() {
   const { mode, setMode } = useThemeMode();
   const pathname = useRouterState({ select: s => s.location.pathname });
   // Hide on the chatroom route — sidebar already has a theme toggle there.
-  if (pathname === "/" ) return null;
+  if (pathname === "/" || pathname === "/feed" || pathname.startsWith("/feed/")) return null;
   const isDark = mode === "dark";
   const toggle = () => setMode(isDark ? "light" : "dark");
   return (
