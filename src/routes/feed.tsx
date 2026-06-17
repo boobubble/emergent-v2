@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass } from "lucide-react";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -63,7 +63,7 @@ export const Route = createFileRoute("/feed")({
 });
 
 type Tab = "foryou" | "trending" | "latest" | "friends" | "saved" | "notifications";
-type View = "feed" | "account" | "profile" | "settings" | "achievements" | "leaderboard" | "findFriends" | "dailyChest" | "spin" | "shop";
+type View = "feed" | "account" | "profile" | "settings" | "achievements" | "leaderboard" | "findFriends" | "dailyChest" | "spin" | "shop" | "explore";
 
 function isVisibleFeedTab(tab: string): tab is Tab {
   return ["foryou", "trending", "latest", "friends", "saved", "notifications"].includes(tab);
@@ -659,6 +659,20 @@ function FeedPage() {
             <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><ShopPanel onBack={() => setView("feed")} /></Suspense></div>
           ) : view === "profile" ? (
             <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></Suspense></div>
+          ) : view === "explore" ? (
+            <div className="space-y-4">
+              <div className="feed-card p-4">
+                <h1 className="flex items-center gap-2 text-lg font-black tracking-tight">
+                  <Compass className="h-5 w-5 text-primary" /> Explore
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground">Discover people, groups and trending communities.</p>
+              </div>
+              <FriendsWidget meId={meId} profiles={profiles} />
+              <FeaturedMembersWidget meId={meId} profiles={profiles} />
+              <PromotedPostsWidget profiles={profiles} />
+              <SuggestedGroupsWidget />
+              <TrendingCommunitiesWidget />
+            </div>
           ) : (
             <>
               <div className="mb-4 space-y-3 lg:hidden">
@@ -781,7 +795,7 @@ function FeedPage() {
             <Plus className="h-7 w-7" strokeWidth={2.5} />
           </button>
         </div>
-        <button onClick={() => setView("account")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "account" ? "text-primary" : "text-muted-foreground"}`}><Settings className="h-5 w-5" /> Settings</button>
+        <button onClick={() => setView("explore")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "explore" ? "text-primary" : "text-muted-foreground"}`}><Compass className="h-5 w-5" /> Explore</button>
         <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
 
