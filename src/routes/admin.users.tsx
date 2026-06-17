@@ -126,7 +126,7 @@ function UsersPage() {
 
   const users = usersQ.data ?? [];
   const totals = useMemo(() => {
-    const t = { super_admin: 0, admin: 0, moderator: 0 };
+    const t: Record<ManagedRole, number> = { super_admin: 0, admin: 0, moderator: 0, dj: 0, rj: 0 };
     for (const u of users) for (const r of u.roles) if (r in t) (t as any)[r]++;
     return t;
   }, [users]);
