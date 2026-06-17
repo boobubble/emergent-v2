@@ -162,14 +162,14 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   const body = (
     <>
-      <div className="flex items-center justify-end gap-1 px-3 pt-4 pr-12 lg:pr-3">
+      <div className="flex items-center justify-end gap-0 px-3 pt-3 pr-12 lg:pr-3">
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               title="Direct messages"
               aria-label="Direct messages"
-              className="relative grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+              className="relative grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
             >
               <Inbox className="h-5 w-5" />
               {dmUnreadCount > 0 && (
@@ -226,7 +226,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             <button
               title="Notifications"
               aria-label="Notifications"
-              className="relative grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+              className="relative grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
             >
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
@@ -272,7 +272,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           title={viewMode === "friends" ? "Show members" : "Show friends"}
           aria-label="Toggle friends list"
           aria-pressed={viewMode === "friends"}
-          className={`relative grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-white/5 hover:text-foreground ${viewMode === "friends" ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
+          className={`relative grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-white/5 hover:text-foreground ${viewMode === "friends" ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
         >
           <Users2 className="h-5 w-5" />
           {friendIds.length > 0 && (
@@ -288,7 +288,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           rel="noopener noreferrer"
           title="Profile settings (opens in new tab)"
           aria-label="Profile settings"
-          className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
         >
           <UserCog className="h-5 w-5" />
         </a>
@@ -409,16 +409,6 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         </div>
       )}
 
-      <div className="p-5">
-        <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/15 to-transparent p-4">
-          <p className="mb-1 text-xs font-bold text-primary">Try a command</p>
-          <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">
-            Type{" "}
-            <code className="rounded bg-white/10 px-1 font-mono text-[10px] text-primary">!help</code>{" "}
-            to see games and fun stuff.
-          </p>
-        </div>
-      </div>
     </>
   );
 
@@ -466,7 +456,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         </UserMenu>
         <UserMenu userId={u.id} username={u.name}>
           <div className="min-w-0 flex-1 leading-tight">
-            <div className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground/90 hover:text-primary">
+            <div className="flex items-center gap-1.5 truncate text-xs font-semibold text-foreground/90 hover:text-primary">
               <CosmeticName userId={u.id} name={u.name} />
               <NameAdornments user={u} />
               {ICONS[role]}
