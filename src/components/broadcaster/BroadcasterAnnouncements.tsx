@@ -151,6 +151,9 @@ export function BroadcasterAnnouncementsRunner() {
           seen.current.add(a.id);
           if (!isLive(a)) return;
 
+          // Respect per-user mute for radio announcements/alerts.
+          if (!canPlaySound("radio_announcements")) return;
+
           if (a.kind === "community" && targetEnabled(a, "notifications")) {
             toast(a.title, {
               description: a.body ?? undefined,
