@@ -119,10 +119,20 @@ function DjFooterView({
             variant={playbackBlocked ? "default" : "outline"}
             size="sm"
             className="h-8 gap-1 px-2"
-            onClick={() => mediaControlsRef.current?.play()}
-            title="Play stream"
+            onClick={() => {
+              if (localPaused) {
+                setLocalPaused(false);
+                mediaControlsRef.current?.play();
+              } else {
+                setLocalPaused(true);
+                mediaControlsRef.current?.pause();
+              }
+            }}
+            title={localPaused ? "Play stream" : "Pause stream"}
           >
-            <Play className="h-3.5 w-3.5" /> Play
+            {localPaused
+              ? <><Play className="h-3.5 w-3.5" /> Play</>
+              : <><Pause className="h-3.5 w-3.5" /> Pause</>}
           </Button>
         )}
       </div>
