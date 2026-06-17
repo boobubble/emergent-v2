@@ -202,6 +202,8 @@ function UsersPage() {
                   <th className="py-2 pr-3 font-medium">Super</th>
                   <th className="py-2 pr-3 font-medium">Admin</th>
                   <th className="py-2 pr-3 font-medium">Mod</th>
+                  <th className="py-2 pr-3 font-medium" title="Grants /broadcaster access (broadcaster.access + broadcaster.manage)">DJ</th>
+                  <th className="py-2 pr-3 font-medium" title="Grants /broadcaster access (broadcaster.access + broadcaster.manage)">RJ</th>
                   <th className="py-2 pr-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
@@ -209,11 +211,11 @@ function UsersPage() {
                 {usersQ.isLoading &&
                   Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i} className="border-b">
-                      <td colSpan={8} className="py-2"><Skeleton className="h-8 w-full" /></td>
+                      <td colSpan={10} className="py-2"><Skeleton className="h-8 w-full" /></td>
                     </tr>
                   ))}
                 {!usersQ.isLoading && users.length === 0 && (
-                  <tr><td colSpan={8} className="py-8 text-center text-sm text-muted-foreground">No users found.</td></tr>
+                  <tr><td colSpan={10} className="py-8 text-center text-sm text-muted-foreground">No users found.</td></tr>
                 )}
                 {users.map((u) => (
                   <tr key={u.id} className="group border-b align-top hover:bg-muted/30">
