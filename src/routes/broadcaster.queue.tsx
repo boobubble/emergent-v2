@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Trash2, Play, Pause, Square } from "lucide-react";
+import { Trash2, Play, Pause, Square, Radio } from "lucide-react";
 
 export const Route = createFileRoute("/broadcaster/queue")({
   component: QueuePage,
