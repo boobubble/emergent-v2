@@ -1,0 +1,1 @@
+ALTER TABLE public.radio_widgets ADD COLUMN IF NOT EXISTS stream_url text;

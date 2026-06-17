@@ -70,11 +70,13 @@ export const listWidgets = createServerFn({ method: "GET" }).handler(async () =>
 
 export const createWidget = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { name: string; description?: string; accent_color?: string; cover_url?: string }) => d)
+  .inputValidator((d: { name: string; description?: string; accent_color?: string; cover_url?: string; stream_url?: string }) => d)
   .handler(async ({ data, context }) => {
     await assertBroadcaster(context.userId);
     const name = (data.name || "").trim();
     if (!name) throw new Error("Name required");
+    const streamUrl = (data.stream_url || "").trim();
+    if (streamUrl && !/^https?:\/\//i.test(streamUrl)) throw new Error("Stream URL must start with http(s)://");
     let slug = slugify(name);
     // ensure uniqueness with small suffix
     for (let i = 0; i < 6; i++) {
@@ -94,6 +96,7 @@ export const createWidget = createServerFn({ method: "POST" })
         description: data.description ?? null,
         accent_color: data.accent_color ?? "#a855f7",
         cover_url: data.cover_url ?? null,
+        stream_url: streamUrl || null,
         owner_id: context.userId,
         created_by: context.userId,
       })
@@ -103,6 +106,7 @@ export const createWidget = createServerFn({ method: "POST" })
     return row;
   });
 
+
 export const updateWidget = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: {
@@ -111,6 +115,7 @@ export const updateWidget = createServerFn({ method: "POST" })
     description?: string | null;
     accent_color?: string;
     cover_url?: string | null;
+    stream_url?: string | null;
     enabled?: boolean;
   }) => d)
   .handler(async ({ data, context }) => {
@@ -129,12 +134,18 @@ export const updateWidget = createServerFn({ method: "POST" })
       description?: string | null;
       accent_color?: string;
       cover_url?: string | null;
+      stream_url?: string | null;
       enabled?: boolean;
     } = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.description !== undefined) patch.description = data.description;
     if (data.accent_color !== undefined) patch.accent_color = data.accent_color;
     if (data.cover_url !== undefined) patch.cover_url = data.cover_url;
+    if (data.stream_url !== undefined) {
+      const s = (data.stream_url || "").trim();
+      if (s && !/^https?:\/\//i.test(s)) throw new Error("Stream URL must start with http(s)://");
+      patch.stream_url = s || null;
+    }
     if (data.enabled !== undefined) patch.enabled = data.enabled;
     const { data: row, error } = await supabaseAdmin
       .from("radio_widgets")
@@ -145,6 +156,7 @@ export const updateWidget = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return row;
   });
+
 
 export const deleteWidget = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
