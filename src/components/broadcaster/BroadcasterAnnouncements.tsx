@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Megaphone } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { canPlaySound } from "@/lib/sound-prefs";
 import type { Database } from "@/integrations/supabase/types";
 
 type Announcement = Database["public"]["Tables"]["radio_announcements"]["Row"];
@@ -150,6 +151,9 @@ export function BroadcasterAnnouncementsRunner() {
           if (seen.current.has(a.id)) return;
           seen.current.add(a.id);
           if (!isLive(a)) return;
+
+          // Respect per-user mute for radio announcements/alerts.
+          if (!canPlaySound("radio_announcements")) return;
 
           if (a.kind === "community" && targetEnabled(a, "notifications")) {
             toast(a.title, {

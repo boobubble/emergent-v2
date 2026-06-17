@@ -12,6 +12,7 @@ export function FeedSettingsPanel() {
     { key: "notifications", label: "Notification sounds" },
     { key: "username_mention", label: "Username mention sound" },
     { key: "calls", label: "Voice / video call sounds" },
+    { key: "radio_announcements", label: "Radio announcements & alerts" },
   ];
   const [kw, setKw] = useState("");
   const [tag, setTag] = useState("");

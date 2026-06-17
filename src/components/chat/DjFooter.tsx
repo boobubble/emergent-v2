@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import {
-  Disc3, Pause, Play, Volume2, VolumeX, Radio,
+  Disc3, Pause, Play, Volume2, VolumeX, Radio, Bell, BellOff,
 } from "lucide-react";
 
 import { useDjPlayer } from "@/lib/dj-store";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/dj-config";
 import { Button } from "@/components/ui/button";
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
+import { useSoundPrefs, setSoundPref } from "@/lib/sound-prefs";
 
 
 const LISTENER_MUTE_KEY = "dj_player.listener_muted.v2";
@@ -112,6 +113,10 @@ function DjFooterView({
             {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </Button>
         )}
+
+        {/* Radio announcement notifications toggle */}
+        <RadioNotifyToggle />
+
 
         {state.playing && state.track?.kind === "audio" && !muted && (
           <Button
@@ -263,6 +268,24 @@ function DjMediaSink({
     );
   }
   return null;
+}
+
+function RadioNotifyToggle() {
+  const prefs = useSoundPrefs();
+  const on = prefs.radio_announcements !== false;
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8"
+      onClick={() => setSoundPref("radio_announcements", !on)}
+      title={on ? "Mute radio notifications" : "Enable radio notifications"}
+      aria-label={on ? "Mute radio notifications" : "Enable radio notifications"}
+    >
+      {on ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
+    </Button>
+  );
 }
 
 // Re-export defaults for admin pages that prefer the named import.

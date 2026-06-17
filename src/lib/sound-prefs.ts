@@ -7,7 +7,8 @@ export type SoundKind =
   | "private_chat"
   | "notifications"
   | "username_mention"
-  | "calls";
+  | "calls"
+  | "radio_announcements";
 
 export type SoundPrefs = Record<SoundKind, boolean>;
 
@@ -17,6 +18,7 @@ export const SOUND_PREFS_DEFAULTS: SoundPrefs = {
   notifications: true,
   username_mention: true,
   calls: true,
+  radio_announcements: true,
 };
 
 const LS_KEY = "palrgo:sound-prefs";
