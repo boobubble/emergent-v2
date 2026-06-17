@@ -13,7 +13,7 @@ import {
 
 import { useDjPlayer } from "@/lib/dj-store";
 import {
-  currentPositionSec, DJ_DEFAULTS, type DjPlayerState,
+  currentPositionSec, DJ_DEFAULTS, normalizeStreamUrl, type DjPlayerState,
 } from "@/lib/dj-config";
 import { Button } from "@/components/ui/button";
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
@@ -157,6 +157,7 @@ function DjMediaSink({
   onPlaybackBlockedChange: (blocked: boolean) => void;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const audioSrc = state.track?.kind === "audio" ? normalizeStreamUrl(state.track.url) : null;
 
   const requestAudioPlay = useCallback((reload = false) => {
     const el = audioRef.current;
@@ -200,7 +201,7 @@ function DjMediaSink({
       el.pause();
       onPlaybackBlockedChange(false);
     }
-  }, [requestAudioPlay, state.playing, state.track?.url, state.track?.kind, onPlaybackBlockedChange]);
+  }, [requestAudioPlay, state.playing, audioSrc, state.track?.kind, onPlaybackBlockedChange]);
 
   const youtubeSrc = useMemo(() => {
     if (!state.track || state.track.kind !== "youtube" || !state.track.videoId) return null;
@@ -218,11 +219,12 @@ function DjMediaSink({
     return `https://www.youtube-nocookie.com/embed/${state.track.videoId}?${params.toString()}`;
   }, [state.track?.videoId, state.playing, state.startedAtMs, muted]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (state.track?.kind === "audio") {
+  if (audioSrc) {
     return (
       <audio
+        key={audioSrc}
         ref={audioRef}
-        src={state.track.url}
+        src={audioSrc}
         autoPlay={state.playing}
         preload="auto"
         playsInline
