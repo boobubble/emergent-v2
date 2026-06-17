@@ -126,7 +126,7 @@ function BrandAssetsCard() {
   );
   const [selectedRoom, setSelectedRoom] = useState<string>("");
 
-  function getCfg(key: keyof BrandSizes): { w?: number; h?: number; fit?: BrandFit; lock?: boolean } {
+  function getCfg(key: keyof BrandSizes): { w?: number; h?: number; fit?: BrandFit; lock?: boolean; pad?: BrandPadding } {
     const v = sizes[key];
     if (v == null) return {};
     if (typeof v === "number") return { w: v, h: v };
@@ -143,6 +143,11 @@ function BrandAssetsCard() {
   function setLock(key: keyof BrandSizes, lock: boolean) {
     const cur = getCfg(key);
     patch({ sizes: { ...sizes, [key]: { ...cur, lock } } });
+  }
+  function setPad(key: keyof BrandSizes, side: keyof BrandPadding, n: number) {
+    const cur = getCfg(key);
+    const nextPad = { ...(cur.pad ?? {}), [side]: Number.isFinite(n) && n > 0 ? n : undefined };
+    patch({ sizes: { ...sizes, [key]: { ...cur, pad: nextPad } } });
   }
   // Backward-compat shim for any in-file refs
   const getWH = getCfg;
