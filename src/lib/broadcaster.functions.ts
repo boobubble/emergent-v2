@@ -658,6 +658,12 @@ export const getBroadcasterAnalytics = createServerFn({ method: "GET" }).handler
   }
 
 
-  return { topHost, topShow, peakHour, mostActiveWidget, mostPlayedTrack };
+  return {
+    topHost: topHost as { host_id: string; shows: number } | null,
+    topShow: topShow as { title: string; minutes: number } | null,
+    peakHour: peakHour as { hour: number; listeners: number } | null,
+    mostActiveWidget: mostActiveWidget as { widget_id: string; name: string; listeners: number } | null,
+    mostPlayedTrack: mostPlayedTrack as { youtube_id: string; title: string | null; plays: number } | null,
+  };
 });
 
