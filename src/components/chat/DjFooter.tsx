@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import {
-  Disc3, Play, Volume2, VolumeX, Radio,
+  Disc3, Pause, Play, Volume2, VolumeX, Radio,
 } from "lucide-react";
 
 import { useDjPlayer } from "@/lib/dj-store";
@@ -21,7 +21,7 @@ import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncem
 
 const LISTENER_MUTE_KEY = "dj_player.listener_muted.v2";
 
-type DjMediaControls = { play: () => void };
+type DjMediaControls = { play: () => void; pause: () => void };
 
 export function DjFooter() {
   const { state, ready } = useDjPlayer();
@@ -57,6 +57,7 @@ function DjFooterView({
   const muted = state.allowListenerMute && listenerMuted;
   const effectiveVolume = muted ? 0 : Math.max(0, Math.min(100, state.defaultVolume));
   const [playbackBlocked, setPlaybackBlocked] = useState(false);
+  const [localPaused, setLocalPaused] = useState(false);
   const mediaControlsRef = useRef<DjMediaControls | null>(null);
 
   // ── Render ──────────────────────────────────────────────────────
@@ -118,10 +119,20 @@ function DjFooterView({
             variant={playbackBlocked ? "default" : "outline"}
             size="sm"
             className="h-8 gap-1 px-2"
-            onClick={() => mediaControlsRef.current?.play()}
-            title="Play stream"
+            onClick={() => {
+              if (localPaused) {
+                setLocalPaused(false);
+                mediaControlsRef.current?.play();
+              } else {
+                setLocalPaused(true);
+                mediaControlsRef.current?.pause();
+              }
+            }}
+            title={localPaused ? "Play stream" : "Pause stream"}
           >
-            <Play className="h-3.5 w-3.5" /> Play
+            {localPaused
+              ? <><Play className="h-3.5 w-3.5" /> Play</>
+              : <><Pause className="h-3.5 w-3.5" /> Pause</>}
           </Button>
         )}
       </div>
@@ -179,9 +190,12 @@ function DjMediaSink({
   }, [muted, onPlaybackBlockedChange, state.playing, state.track?.kind, volume]);
 
   useEffect(() => {
-    controlRef.current = { play: () => requestAudioPlay(true) };
+    controlRef.current = {
+      play: () => requestAudioPlay(true),
+      pause: () => { audioRef.current?.pause(); onPlaybackBlockedChange(false); },
+    };
     return () => { controlRef.current = null; };
-  }, [controlRef, requestAudioPlay]);
+  }, [controlRef, requestAudioPlay, onPlaybackBlockedChange]);
 
   // Apply volume / mute to the <audio> element whenever it changes.
   useEffect(() => {
