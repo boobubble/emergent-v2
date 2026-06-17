@@ -169,7 +169,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             <button
               title="Direct messages"
               aria-label="Direct messages"
-              className="relative grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+              className="relative grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
             >
               <Inbox className="h-5 w-5" />
               {dmUnreadCount > 0 && (
@@ -226,7 +226,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             <button
               title="Notifications"
               aria-label="Notifications"
-              className="relative grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+              className="relative grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
             >
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
@@ -272,7 +272,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           title={viewMode === "friends" ? "Show members" : "Show friends"}
           aria-label="Toggle friends list"
           aria-pressed={viewMode === "friends"}
-          className={`relative grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-white/5 hover:text-foreground ${viewMode === "friends" ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
+          className={`relative grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-white/5 hover:text-foreground ${viewMode === "friends" ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
         >
           <Users2 className="h-5 w-5" />
           {friendIds.length > 0 && (
@@ -288,7 +288,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           rel="noopener noreferrer"
           title="Profile settings (opens in new tab)"
           aria-label="Profile settings"
-          className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
         >
           <UserCog className="h-5 w-5" />
         </a>
