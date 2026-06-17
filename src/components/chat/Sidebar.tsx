@@ -26,17 +26,17 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
   const chatLogo = useBrandAsset("chat");
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col bg-transparent p-2">
+    <aside className="flex h-full w-56 shrink-0 flex-col bg-transparent p-1">
       <div className="flex h-full flex-col premium-floating-sidebar overflow-hidden">
 
-      <div className="flex items-center gap-3 p-5">
+      <div className="flex items-center gap-2 p-3">
         <BrandMark
           slot="chat"
           alt="Logo"
-          className="h-10 w-10 rounded-xl object-contain"
+          className="h-8 w-8 rounded-xl object-contain"
           fallback={
             <div
-              className="grid h-10 w-10 place-items-center rounded-xl text-xl font-bold text-primary-foreground"
+              className="grid h-8 w-8 place-items-center rounded-xl text-xl font-bold text-primary-foreground"
               style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}
             >
               P
@@ -63,7 +63,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
         )}
       </div>
 
-      <nav className="flex-1 space-y-6 overflow-y-auto px-3">
+      <nav className="flex-1 space-y-3 overflow-y-auto px-2">
         <div>
           <SectionLabel
             title="Public Rooms"
@@ -138,7 +138,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
       </nav>
 
 
-      <div className="border-t border-border p-3">
+      <div className="border-t border-border p-2">
         <div className="mb-2 hidden lg:block">
           <ChatExploreMenu />
         </div>
@@ -168,11 +168,11 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
           target={user?.isGuest ? undefined : "_blank"}
           rel={user?.isGuest ? undefined : "noopener noreferrer"}
           onClick={(e) => { if (user?.isGuest) e.preventDefault(); }}
-          className="group relative block w-full overflow-hidden rounded-2xl border border-border bg-card/60 p-3 text-left transition-all hover:border-primary/30 hover:bg-card"
+          className="group relative block w-full overflow-hidden rounded-2xl border border-border bg-card/60 p-2 text-left transition-all hover:border-primary/30 hover:bg-card"
           title={user?.isGuest ? "Guest session" : "Open account settings in new tab"}
         >
 
-          <div className="relative flex items-center gap-3">
+          <div className="relative flex items-center gap-2">
             <Avatar user={state.me} size={36} />
             <div className="min-w-0 flex-1 leading-tight">
               <div className="truncate text-sm font-bold text-foreground">{state.me.name}</div>
@@ -252,7 +252,7 @@ function SectionLabel({
   return (
     <div
       className={cn(
-        "mb-3 flex items-center justify-between px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground",
+        "mb-1.5 flex items-center justify-between px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground",
         className,
       )}
     >
