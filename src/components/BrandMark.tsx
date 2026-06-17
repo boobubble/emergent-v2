@@ -14,7 +14,8 @@ export interface RoomBranding {
 }
 
 export type BrandFit = "contain" | "cover" | "fill";
-export interface BrandSizeValue { w?: number; h?: number; fit?: BrandFit; lock?: boolean }
+export interface BrandPadding { t?: number; r?: number; b?: number; l?: number }
+export interface BrandSizeValue { w?: number; h?: number; fit?: BrandFit; lock?: boolean; pad?: BrandPadding }
 export interface BrandSizes {
   logo?: number | BrandSizeValue;
   favicon?: number | BrandSizeValue;
