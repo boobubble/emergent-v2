@@ -662,19 +662,32 @@ function FeedPage() {
           ) : view === "profile" ? (
             <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></Suspense></div>
           ) : view === "explore" ? (
-            <div className="space-y-4">
-              <div className="feed-card p-4">
-                <h1 className="flex items-center gap-2 text-lg font-black tracking-tight">
-                  <Compass className="h-5 w-5 text-primary" /> Explore
-                </h1>
-                <p className="mt-1 text-xs text-muted-foreground">Discover people, groups and trending communities.</p>
+            <PullToRefresh
+              onRefresh={async () => {
+                setExploreKey((k) => k + 1);
+                // brief delay so the spinner is perceptible even with cached data
+                await new Promise((r) => setTimeout(r, 450));
+              }}
+            >
+              <div className="space-y-4">
+                <div className="feed-card p-4">
+                  <h1 className="flex items-center gap-2 text-lg font-black tracking-tight">
+                    <Compass className="h-5 w-5 text-primary" /> Explore
+                  </h1>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Discover people, groups and trending communities.
+                    <span className="ml-1 hidden sm:inline">Pull down to refresh.</span>
+                  </p>
+                </div>
+                <div key={exploreKey} className="space-y-4">
+                  <FriendsWidget meId={meId} profiles={profiles} />
+                  <FeaturedMembersWidget meId={meId} profiles={profiles} />
+                  <PromotedPostsWidget profiles={profiles} />
+                  <SuggestedGroupsWidget />
+                  <TrendingCommunitiesWidget />
+                </div>
               </div>
-              <FriendsWidget meId={meId} profiles={profiles} />
-              <FeaturedMembersWidget meId={meId} profiles={profiles} />
-              <PromotedPostsWidget profiles={profiles} />
-              <SuggestedGroupsWidget />
-              <TrendingCommunitiesWidget />
-            </div>
+            </PullToRefresh>
           ) : (
             <>
               <div className="mb-4 space-y-3 lg:hidden">
