@@ -926,6 +926,22 @@ function SideNavLink({ to, icon: Icon, label, badge, color }: { to: string; icon
 }
 
 
+function HeaderThemeToggle() {
+  const { mode, setMode } = useThemeMode();
+  const isDark = mode === "dark";
+  return (
+    <button
+      type="button"
+      onClick={() => setMode(isDark ? "light" : "dark")}
+      className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent/30 transition"
+      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label="Toggle theme"
+    >
+      {isDark ? <Sun className="h-5 w-5 text-foreground" /> : <Moon className="h-5 w-5 text-foreground" />}
+    </button>
+  );
+}
+
 
 
 function NavLink({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active?: boolean }) {
