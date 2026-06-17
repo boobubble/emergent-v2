@@ -5,7 +5,7 @@ import { useState } from "react";
 import { listWidgets, listQueue, addQueueItem, removeQueueItem, clearQueue } from "@/lib/broadcaster.functions";
 import { updateSetting } from "@/lib/admin.functions";
 import { useDjPlayer } from "@/lib/dj-store";
-import { buildTrackFromUrl, currentPositionSec, type DjPlayerState } from "@/lib/dj-config";
+import { analyzeStreamUrl, buildTrackFromUrl, currentPositionSec, type DjPlayerState } from "@/lib/dj-config";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
