@@ -101,9 +101,9 @@ export function FeaturedMembersWidget({
   async function follow(targetId: string) {
     if (!meId || following[targetId]) return;
     setFollowing((s) => ({ ...s, [targetId]: true }));
-    await supabase.from("feed_friendships").insert({
-      user_id: meId,
-      friend_id: targetId,
+    await supabase.from("friendships").insert({
+      sender_id: meId,
+      receiver_id: targetId,
       status: "pending",
     } as any);
   }
