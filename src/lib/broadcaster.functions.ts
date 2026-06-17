@@ -70,11 +70,13 @@ export const listWidgets = createServerFn({ method: "GET" }).handler(async () =>
 
 export const createWidget = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { name: string; description?: string; accent_color?: string; cover_url?: string }) => d)
+  .inputValidator((d: { name: string; description?: string; accent_color?: string; cover_url?: string; stream_url?: string }) => d)
   .handler(async ({ data, context }) => {
     await assertBroadcaster(context.userId);
     const name = (data.name || "").trim();
     if (!name) throw new Error("Name required");
+    const streamUrl = (data.stream_url || "").trim();
+    if (streamUrl && !/^https?:\/\//i.test(streamUrl)) throw new Error("Stream URL must start with http(s)://");
     let slug = slugify(name);
     // ensure uniqueness with small suffix
     for (let i = 0; i < 6; i++) {
@@ -94,6 +96,7 @@ export const createWidget = createServerFn({ method: "POST" })
         description: data.description ?? null,
         accent_color: data.accent_color ?? "#a855f7",
         cover_url: data.cover_url ?? null,
+        stream_url: streamUrl || null,
         owner_id: context.userId,
         created_by: context.userId,
       })
@@ -102,6 +105,7 @@ export const createWidget = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return row;
   });
+
 
 export const updateWidget = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
