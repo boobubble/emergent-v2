@@ -79,14 +79,32 @@ export function mergeDjConfig(raw: unknown): DjPlayerState {
   };
 }
 
+/**
+ * Normalize known radio-station web-player URLs to their actual audio stream.
+ * Azuracast example: https://host/public/STATION → https://host/listen/STATION/radio.mp3
+ */
+function normalizeStreamUrl(input: string): string {
+  try {
+    const u = new URL(input);
+    const m = u.pathname.match(/^\/public\/([^/]+)\/?$/);
+    if (m) {
+      return `${u.origin}/listen/${m[1]}/radio.mp3`;
+    }
+    return input;
+  } catch {
+    return input;
+  }
+}
+
 /** Build a DjTrack from a pasted URL. Returns null when unparseable. */
 export function buildTrackFromUrl(input: string, title?: string): DjTrack | null {
-  const url = (input || "").trim();
-  if (!url) return null;
-  const videoId = parseYoutubeId(url);
-  if (videoId) return { kind: "youtube", url, videoId, title: title?.trim() || undefined };
+  const raw = (input || "").trim();
+  if (!raw) return null;
+  const videoId = parseYoutubeId(raw);
+  if (videoId) return { kind: "youtube", url: raw, videoId, title: title?.trim() || undefined };
   // Treat any other http(s) url as a direct audio stream (mp3/aac/ogg/m3u8).
-  if (/^https?:\/\//i.test(url)) {
+  if (/^https?:\/\//i.test(raw)) {
+    const url = normalizeStreamUrl(raw);
     return { kind: "audio", url, title: title?.trim() || undefined };
   }
   return null;
