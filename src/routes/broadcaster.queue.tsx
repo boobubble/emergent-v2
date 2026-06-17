@@ -68,8 +68,60 @@ function QueuePage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const togglePauseMut = useMutation({
+    mutationFn: async () => {
+      const next: DjPlayerState = {
+        ...djState,
+        playing: !djState.playing,
+        startedAtMs: Date.now(),
+      };
+      await saveSetting({ data: { key: "dj_player", value: next } });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const stopMut = useMutation({
+    mutationFn: async () => {
+      const next: DjPlayerState = {
+        ...djState,
+        playing: false,
+        track: null,
+        positionSec: 0,
+      };
+      await saveSetting({ data: { key: "dj_player", value: next } });
+    },
+    onSuccess: () => toast.success("Stopped"),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const nowPlayingItem = (queue.data ?? []).find((q) => q.youtube_url === djState.track?.url);
+
   return (
     <div className="space-y-6">
+      {djState.enabled && djState.track && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs uppercase tracking-wide text-primary flex items-center gap-2">
+              <span className={`inline-block h-2 w-2 rounded-full ${djState.playing ? "bg-red-500 animate-pulse" : "bg-muted-foreground"}`} />
+              {djState.playing ? "Now playing" : "Paused"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center gap-3">
+            {nowPlayingItem?.thumbnail && <img src={nowPlayingItem.thumbnail} alt="" className="h-12 w-20 rounded object-cover" />}
+            <div className="flex-1 min-w-0">
+              <div className="truncate text-sm font-medium">{djState.track.title || nowPlayingItem?.title || djState.track.url}</div>
+              <div className="truncate text-xs text-muted-foreground">{nowPlayingItem?.channel || djState.track.url}</div>
+            </div>
+            <Button size="sm" variant="outline" disabled={togglePauseMut.isPending} onClick={() => togglePauseMut.mutate()} className="gap-1">
+              {djState.playing ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" /> Resume</>}
+            </Button>
+            <Button size="sm" variant="ghost" disabled={stopMut.isPending} onClick={() => stopMut.mutate()} className="gap-1">
+              <Square className="h-4 w-4" /> Stop
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader><CardTitle className="text-sm">YouTube queue</CardTitle></CardHeader>
         <CardContent className="space-y-2">
@@ -96,23 +148,40 @@ function QueuePage() {
 
       <div className="space-y-2">
         {(queue.data ?? []).map((q) => {
-          const isCurrent = djState.track?.url === q.youtube_url && djState.playing;
+          const isLoaded = djState.track?.url === q.youtube_url;
+          const isCurrent = isLoaded && djState.playing;
           return (
-            <div key={q.id} className="flex items-center gap-3 rounded-md border p-2">
+            <div key={q.id} className={`flex items-center gap-3 rounded-md border p-2 ${isLoaded ? "border-primary/50 bg-primary/5" : ""}`}>
               {q.thumbnail && <img src={q.thumbnail} alt="" className="h-12 w-20 rounded object-cover" />}
               <div className="flex-1 min-w-0">
-                <div className="truncate text-sm font-medium">{q.title || q.youtube_url}</div>
+                <div className="truncate text-sm font-medium flex items-center gap-2">
+                  {isCurrent && <span className="inline-block h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
+                  {isLoaded && !isCurrent && <span className="text-xs text-muted-foreground">(paused)</span>}
+                  {q.title || q.youtube_url}
+                </div>
                 <div className="truncate text-xs text-muted-foreground">{q.channel || q.youtube_id}</div>
               </div>
-              <Button
-                size="sm"
-                variant={isCurrent ? "default" : "outline"}
-                disabled={playMut.isPending}
-                onClick={() => playMut.mutate({ youtube_url: q.youtube_url, title: q.title })}
-                className="gap-1"
-              >
-                <Play className="h-4 w-4" /> {isCurrent ? "Live" : "Play"}
-              </Button>
+              {isLoaded ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={togglePauseMut.isPending}
+                  onClick={() => togglePauseMut.mutate()}
+                  className="gap-1"
+                >
+                  {djState.playing ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" /> Resume</>}
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={playMut.isPending}
+                  onClick={() => playMut.mutate({ youtube_url: q.youtube_url, title: q.title })}
+                  className="gap-1"
+                >
+                  <Play className="h-4 w-4" /> Play
+                </Button>
+              )}
               <Button size="icon" variant="ghost" onClick={() => removeMut.mutate(q.id)}><Trash2 className="h-4 w-4" /></Button>
             </div>
           );
