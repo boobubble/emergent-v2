@@ -2,46 +2,29 @@
 //
 // • All listeners see the same player state, synced through
 //   app_settings.dj_player + realtime (see src/lib/dj-store.tsx).
-// • Admins get inline controls (paste URL, play / pause / skip).
-// • Non-admins only see the "Now playing" chip and a local mute toggle.
+// • Chatroom users only see the "Now playing" chip and a local mute toggle.
 // • Hidden behind the master switch in /admin/dj — renders nothing
 //   when disabled, so existing chat UX is untouched by default.
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { toast } from "sonner";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import {
-  Disc3, Play, Pause, SkipForward, Volume2, VolumeX, Radio, Square,
+  Disc3, Play, Volume2, VolumeX, Radio,
 } from "lucide-react";
 
 import { useDjPlayer } from "@/lib/dj-store";
 import {
   currentPositionSec, DJ_DEFAULTS, type DjPlayerState,
 } from "@/lib/dj-config";
-import { updateSetting } from "@/lib/admin.functions";
-import { getMyRoles } from "@/lib/admin.functions";
-import { useAuth } from "@/lib/auth-store";
 import { Button } from "@/components/ui/button";
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
 
 
-const LISTENER_MUTE_KEY = "dj_player.listener_muted";
+const LISTENER_MUTE_KEY = "dj_player.listener_muted.v2";
+
+type DjMediaControls = { play: () => void };
 
 export function DjFooter() {
   const { state, ready } = useDjPlayer();
-  const { user } = useAuth();
-  const fetchRoles = useServerFn(getMyRoles);
-  const saveSetting = useServerFn(updateSetting);
-  const qc = useQueryClient();
-
-  const { data: rolesData } = useQuery({
-    queryKey: ["my-roles", user?.id],
-    queryFn: () => fetchRoles({}),
-    enabled: !!user,
-    staleTime: 60_000,
-  });
-  const isAdmin = !!rolesData?.isAdmin;
 
   // Listener-side mute is stored locally, never broadcast.
   const [listenerMuted, setListenerMuted] = useState<boolean>(() => {
@@ -53,60 +36,28 @@ export function DjFooter() {
     localStorage.setItem(LISTENER_MUTE_KEY, listenerMuted ? "1" : "0");
   }, [listenerMuted]);
 
-  const save = useMutation({
-    mutationFn: (next: DjPlayerState) =>
-      saveSetting({ data: { key: "dj_player", value: next } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-settings"] }),
-    onError: (e: any) => toast.error(e?.message ?? "Failed to update player"),
-  });
-
   if (!ready || !state.enabled) return null;
 
   return (
     <DjFooterView
       state={state}
-      isAdmin={isAdmin}
       listenerMuted={listenerMuted}
       onToggleListenerMute={() => setListenerMuted((m) => !m)}
-      onSave={(next) => save.mutate(next)}
-      saving={save.isPending}
     />
   );
 }
 
 function DjFooterView({
-  state, isAdmin, listenerMuted, onToggleListenerMute, onSave, saving,
+  state, listenerMuted, onToggleListenerMute,
 }: {
   state: DjPlayerState;
-  isAdmin: boolean;
   listenerMuted: boolean;
   onToggleListenerMute: () => void;
-  onSave: (next: DjPlayerState) => void;
-  saving: boolean;
 }) {
   const muted = state.allowListenerMute && listenerMuted;
   const effectiveVolume = muted ? 0 : Math.max(0, Math.min(100, state.defaultVolume));
-
-  // Admin actions (track loading is now managed from /broadcaster).
-
-
-  const togglePlay = () => {
-    if (!state.track) return;
-    if (state.playing) {
-      onSave({
-        ...state,
-        playing: false,
-        positionSec: currentPositionSec(state),
-        startedAtMs: 0,
-      });
-    } else {
-      onSave({ ...state, playing: true, startedAtMs: Date.now() });
-    }
-  };
-
-  const stopTrack = () => {
-    onSave({ ...state, track: null, playing: false, positionSec: 0, startedAtMs: 0 });
-  };
+  const [playbackBlocked, setPlaybackBlocked] = useState(false);
+  const mediaControlsRef = useRef<DjMediaControls | null>(null);
 
   // ── Render ──────────────────────────────────────────────────────
   return (
@@ -150,7 +101,10 @@ function DjFooterView({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={onToggleListenerMute}
+            onClick={() => {
+              onToggleListenerMute();
+              if (muted) mediaControlsRef.current?.play();
+            }}
             title={muted ? "Unmute" : "Mute"}
             aria-label={muted ? "Unmute DJ player" : "Mute DJ player"}
           >
@@ -158,46 +112,16 @@ function DjFooterView({
           </Button>
         )}
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={onToggleListenerMute}
-          disabled={!state.track}
-          title={muted ? "Resume listening" : "Stop listening"}
-          aria-label={muted ? "Resume listening to music" : "Stop listening to music"}
-        >
-          {muted ? <Play className="h-4 w-4" /> : <Square className="h-4 w-4" />}
-        </Button>
-
-        {/* Admin controls */}
-        {isAdmin && (
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-2"
-              onClick={togglePlay}
-              disabled={!state.track || saving}
-              title={state.playing ? "Pause" : "Play"}
-            >
-              {state.playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={stopTrack}
-              disabled={!state.track || saving}
-              title="Skip / stop"
-              aria-label="Skip current track"
-            >
-              <SkipForward className="h-4 w-4" />
-            </Button>
-          </div>
+        {playbackBlocked && state.playing && state.track && !muted && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1 px-2"
+            onClick={() => mediaControlsRef.current?.play()}
+          >
+            <Play className="h-3.5 w-3.5" /> Listen
+          </Button>
         )}
       </div>
 
@@ -205,7 +129,13 @@ function DjFooterView({
 
 
       {/* Hidden media element — drives the actual playback. */}
-      <DjMediaSink state={state} volume={effectiveVolume} muted={muted} />
+      <DjMediaSink
+        state={state}
+        volume={effectiveVolume}
+        muted={muted}
+        controlRef={mediaControlsRef}
+        onPlaybackBlockedChange={setPlaybackBlocked}
+      />
     </div>
   );
 }
@@ -217,9 +147,36 @@ function DjFooterView({
  * stays in sync across listeners.
  */
 function DjMediaSink({
-  state, volume, muted,
-}: { state: DjPlayerState; volume: number; muted: boolean }) {
+  state, volume, muted, controlRef, onPlaybackBlockedChange,
+}: {
+  state: DjPlayerState;
+  volume: number;
+  muted: boolean;
+  controlRef: RefObject<DjMediaControls | null>;
+  onPlaybackBlockedChange: (blocked: boolean) => void;
+}) {
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const requestAudioPlay = useCallback(() => {
+    const el = audioRef.current;
+    if (!el || state.track?.kind !== "audio" || !state.playing) return;
+    el.volume = Math.max(0, Math.min(1, volume / 100));
+    el.muted = muted;
+    const p = el.play();
+    if (p && typeof p.then === "function") {
+      p.then(() => onPlaybackBlockedChange(false)).catch((err) => {
+        onPlaybackBlockedChange(true);
+        console.warn("[DjPlayer] audio play blocked:", err);
+      });
+    } else {
+      onPlaybackBlockedChange(false);
+    }
+  }, [muted, onPlaybackBlockedChange, state.playing, state.track?.kind, volume]);
+
+  useEffect(() => {
+    controlRef.current = { play: requestAudioPlay };
+    return () => { controlRef.current = null; };
+  }, [controlRef, requestAudioPlay]);
 
   // Apply volume / mute to the <audio> element whenever it changes.
   useEffect(() => {
@@ -234,16 +191,12 @@ function DjMediaSink({
     const el = audioRef.current;
     if (!el || state.track?.kind !== "audio") return;
     if (state.playing) {
-      const p = el.play();
-      if (p && typeof p.catch === "function") {
-        p.catch((err) => {
-          console.warn("[DjPlayer] audio play blocked:", err);
-        });
-      }
+      requestAudioPlay();
     } else {
       el.pause();
+      onPlaybackBlockedChange(false);
     }
-  }, [state.playing, state.track?.url, state.track?.kind]);
+  }, [requestAudioPlay, state.playing, state.track?.url, state.track?.kind, onPlaybackBlockedChange]);
 
   const youtubeSrc = useMemo(() => {
     if (!state.track || state.track.kind !== "youtube" || !state.track.videoId) return null;
@@ -270,6 +223,8 @@ function DjMediaSink({
         preload="auto"
         playsInline
         className="hidden"
+        onPlaying={() => onPlaybackBlockedChange(false)}
+        onError={() => onPlaybackBlockedChange(true)}
       />
     );
   }
