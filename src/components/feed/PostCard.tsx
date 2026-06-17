@@ -313,20 +313,20 @@ export const PostCard = memo(function PostCard({
 
 
       {showComments && (
-        <div className="mt-4 space-y-3 border-t border-border pt-4">
+        <div className="mt-4 space-y-3 border-t border-border/70 pt-4 animate-fade-in">
           {comments.map((c) => {
             const cAuthor = profiles[c.author_id];
             return (
               <div key={c.id} className="flex gap-2.5 animate-fade-in">
                 {cAuthor && <FrameAvatar user={cAuthor} size={32} />}
-                <div className="min-w-0 flex-1 rounded-2xl bg-accent/15 border border-border/60 px-3.5 py-2.5">
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="font-semibold text-foreground">
+                <div className="min-w-0 flex-1 rounded-2xl bg-gradient-to-b from-accent/20 to-accent/10 border border-border/60 px-3.5 py-2.5 shadow-[inset_0_1px_0_oklch(1_0_0/0.04)]">
+                  <div className="flex items-center gap-2 text-[11.5px]">
+                    <span className="font-semibold text-foreground tracking-tight">
                       {cAuthor ? <CosmeticName userId={cAuthor.id} name={cAuthor.name} /> : "user"}
                     </span>
-                    <span className="text-muted-foreground">{timeAgo(c.created_at)}</span>
+                    <span className="text-muted-foreground/80">{timeAgo(c.created_at)}</span>
                   </div>
-                  <p className="mt-0.5 text-[14px] leading-relaxed">{c.text}</p>
+                  <p className="mt-1 text-[14px] leading-[1.6] text-foreground/95">{c.text}</p>
                 </div>
               </div>
             );
@@ -337,11 +337,11 @@ export const PostCard = memo(function PostCard({
               onChange={(e) => setCommentText(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addComment(); } }}
               placeholder="Write a comment…"
-              className="flex-1 rounded-full border border-border bg-background/60 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
+              className="flex-1 rounded-full border border-border/70 bg-background/60 px-4 py-2.5 text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all duration-200"
             />
             <Popover>
               <PopoverTrigger asChild>
-                <button type="button" className="rounded-full p-2 text-muted-foreground hover:bg-accent/30 hover:text-foreground transition" aria-label="Add emoji">
+                <button type="button" className="rounded-full p-2 text-muted-foreground hover:bg-accent/30 hover:text-foreground transition-colors duration-200" aria-label="Add emoji">
                   <Smile className="h-4 w-4" />
                 </button>
               </PopoverTrigger>
@@ -349,7 +349,7 @@ export const PostCard = memo(function PostCard({
                 <EmojiPicker onPick={(e) => setCommentText((t) => t + e)} />
               </PopoverContent>
             </Popover>
-            <button onClick={addComment} disabled={sending || !commentText.trim()} className="rounded-full bg-gradient-to-r from-primary to-primary/80 p-2.5 text-primary-foreground shadow-[0_6px_18px_-6px_var(--primary-glow)] hover:scale-105 active:scale-95 transition disabled:opacity-50 disabled:hover:scale-100">
+            <button onClick={addComment} disabled={sending || !commentText.trim()} className="rounded-full bg-gradient-to-br from-primary to-primary/80 p-2.5 text-primary-foreground shadow-[0_8px_22px_-8px_var(--primary-glow)] hover:scale-[1.06] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
           </div>
