@@ -11,7 +11,14 @@ import { useSavedPosts } from "@/lib/use-saved-posts";
 import { Composer } from "@/components/feed/Composer";
 import { StoryTray } from "@/components/feed/StoryTray";
 import { PostCard } from "@/components/feed/PostCard";
-import { FriendsWidget, HashtagsWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
+import { FriendsWidget, HashtagsWidget } from "@/components/feed/SideWidgets";
+import {
+  PromotedPostsWidget,
+  FeaturedMembersWidget,
+  SuggestedGroupsWidget,
+  TrendingCommunitiesWidget,
+  CommunityActivityWidget,
+} from "@/components/feed/DiscoveryWidgets";
 import { ConfessionsFeedWidget, ActivePollsWidget } from "@/components/feed/ConfessionsFeedWidget";
 import { BoobubbleAssistantWidget } from "@/components/feed/BoobubbleAssistantWidget";
 import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
@@ -737,11 +744,15 @@ function FeedPage() {
         <aside className="hidden lg:block">
           <div ref={rightRailRef} className="space-y-4 pl-1 will-change-transform">
             <BoobubbleAssistantWidget />
+            <PromotedPostsWidget profiles={profiles} />
+            <FeaturedMembersWidget meId={meId} profiles={profiles} />
+            <SuggestedGroupsWidget />
+            <TrendingCommunitiesWidget />
+            <CommunityActivityWidget meId={meId} profiles={profiles} />
             <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
             <ConfessionsFeedWidget />
             <ActivePollsWidget />
-            <ChatroomOnlineWidget />
             <BirthdaysWidget />
             <FriendsWidget meId={meId} profiles={profiles} />
             <HashtagsWidget />

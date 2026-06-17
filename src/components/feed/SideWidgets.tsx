@@ -311,7 +311,7 @@ const accentMap = {
   rose: { dot: "bg-rose-400", icon: "text-rose-500 dark:text-rose-300" },
 } as const;
 
-function PremiumCard({
+export function PremiumCard({
   title,
   icon,
   children,
