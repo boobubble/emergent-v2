@@ -112,13 +112,14 @@ function DjFooterView({
           </Button>
         )}
 
-        {playbackBlocked && state.playing && state.track && !muted && (
+        {state.playing && state.track?.kind === "audio" && !muted && (
           <Button
             type="button"
-            variant="outline"
+            variant={playbackBlocked ? "default" : "outline"}
             size="sm"
             className="h-8 gap-1 px-2"
             onClick={() => mediaControlsRef.current?.play()}
+            title="Play stream"
           >
             <Play className="h-3.5 w-3.5" /> Play
           </Button>
@@ -157,11 +158,14 @@ function DjMediaSink({
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const requestAudioPlay = useCallback(() => {
+  const requestAudioPlay = useCallback((reload = false) => {
     const el = audioRef.current;
     if (!el || state.track?.kind !== "audio" || !state.playing) return;
     el.volume = Math.max(0, Math.min(1, volume / 100));
     el.muted = muted;
+    if (reload || el.error || el.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+      try { el.load(); } catch { /* noop */ }
+    }
     const p = el.play();
     if (p && typeof p.then === "function") {
       p.then(() => onPlaybackBlockedChange(false)).catch((err) => {
@@ -174,7 +178,7 @@ function DjMediaSink({
   }, [muted, onPlaybackBlockedChange, state.playing, state.track?.kind, volume]);
 
   useEffect(() => {
-    controlRef.current = { play: requestAudioPlay };
+    controlRef.current = { play: () => requestAudioPlay(true) };
     return () => { controlRef.current = null; };
   }, [controlRef, requestAudioPlay]);
 
