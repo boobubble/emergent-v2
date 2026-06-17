@@ -12,7 +12,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  Disc3, Play, Pause, SkipForward, Volume2, VolumeX, Radio,
+  Disc3, Play, Pause, SkipForward, Volume2, VolumeX, Radio, Square,
 } from "lucide-react";
 
 import { useDjPlayer } from "@/lib/dj-store";
@@ -143,7 +143,7 @@ function DjFooterView({
           </span>
         </div>
 
-        {/* Listener mute (everyone) */}
+        {/* Listener controls (everyone) */}
         {state.allowListenerMute && (
           <Button
             type="button"
@@ -157,6 +157,19 @@ function DjFooterView({
             {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </Button>
         )}
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={onToggleListenerMute}
+          disabled={!state.track}
+          title={muted ? "Resume listening" : "Stop listening"}
+          aria-label={muted ? "Resume listening to music" : "Stop listening to music"}
+        >
+          {muted ? <Play className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+        </Button>
 
         {/* Admin controls */}
         {isAdmin && (

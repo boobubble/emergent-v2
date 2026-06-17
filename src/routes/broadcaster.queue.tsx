@@ -5,7 +5,7 @@ import { useState } from "react";
 import { listWidgets, listQueue, addQueueItem, removeQueueItem, clearQueue } from "@/lib/broadcaster.functions";
 import { updateSetting } from "@/lib/admin.functions";
 import { useDjPlayer } from "@/lib/dj-store";
-import { buildTrackFromUrl, type DjPlayerState } from "@/lib/dj-config";
+import { buildTrackFromUrl, currentPositionSec, type DjPlayerState } from "@/lib/dj-config";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,13 +70,16 @@ function QueuePage() {
 
   const togglePauseMut = useMutation({
     mutationFn: async () => {
+      if (!djState.track) return;
       const next: DjPlayerState = {
         ...djState,
         playing: !djState.playing,
-        startedAtMs: Date.now(),
+        positionSec: djState.playing ? currentPositionSec(djState) : djState.positionSec,
+        startedAtMs: djState.playing ? 0 : Date.now(),
       };
       await saveSetting({ data: { key: "dj_player", value: next } });
     },
+    onSuccess: () => toast.success(djState.playing ? "Paused" : "Resumed"),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -87,6 +90,7 @@ function QueuePage() {
         playing: false,
         track: null,
         positionSec: 0,
+        startedAtMs: 0,
       };
       await saveSetting({ data: { key: "dj_player", value: next } });
     },
