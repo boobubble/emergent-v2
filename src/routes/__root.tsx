@@ -250,6 +250,7 @@ function AuthGate() {
         <FeedPrefsProvider>
           <IgnoreProvider>
             <AuthenticatedHooks userId={user.id} />
+            <BroadcasterAnnouncementsRunner />
             <HeadFootScripts />
             <AdsAutoLoader />
             <SessionConflictBanner />
