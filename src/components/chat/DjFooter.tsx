@@ -21,7 +21,7 @@ import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncem
 
 const LISTENER_MUTE_KEY = "dj_player.listener_muted.v2";
 
-type DjMediaControls = { play: () => void };
+type DjMediaControls = { play: () => void; pause: () => void };
 
 export function DjFooter() {
   const { state, ready } = useDjPlayer();
