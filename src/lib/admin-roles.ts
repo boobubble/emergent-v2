@@ -5,6 +5,8 @@ export type AppRole =
   | "admin"
   | "moderator"
   | "room_moderator"
+  | "dj"
+  | "rj"
   | "vip"
   | "verified_creator"
   | "user";
@@ -25,8 +27,11 @@ export type Permission =
   | "admin.seo.write"
   | "moderation.global"
   | "moderation.room"
+  | "broadcaster.access"
+  | "broadcaster.manage"
   | "content.create"
   | "content.boost";
+
 
 export const ROLE_REGISTRY: RoleDef[] = [
   {
