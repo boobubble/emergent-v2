@@ -940,6 +940,65 @@ function HeaderThemeToggle() {
   );
 }
 
+function UserMenu({ username, onProfile, onSettings }: { username: string; onProfile: () => void; onSettings: () => void }) {
+  const { mode, setMode } = useThemeMode();
+  const { isAdmin } = useMyRoles();
+  const isDark = mode === "dark";
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent/30 transition"
+          title="Account"
+          aria-label="Account menu"
+        >
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-sm font-bold ring-2 ring-card">
+            {username.slice(0, 1).toUpperCase()}
+          </div>
+          <span className="hidden text-sm font-semibold sm:inline">{username}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-60 p-1">
+        <button
+          onClick={() => { close(); onProfile(); }}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+        >
+          <UserCircle className="h-4 w-4 text-primary" /> My Profile
+        </button>
+        <button
+          onClick={() => { close(); onSettings(); }}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+        >
+          <Settings className="h-4 w-4 text-slate-400" /> Settings
+        </button>
+        <button
+          onClick={() => setMode(isDark ? "light" : "dark")}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+        >
+          {isDark ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-400" />}
+          {isDark ? "Light mode" : "Dark mode"}
+        </button>
+        <div className="px-2 py-1.5">
+          <LanguageSwitcher variant="compact" />
+        </div>
+        {isAdmin && (
+          <a
+            href="/admin"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={close}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+          >
+            <Shield className="h-4 w-4 text-rose-400" /> Admin Panel
+          </a>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 
 
 function NavLink({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active?: boolean }) {
