@@ -148,9 +148,36 @@ function DjFooterView({
  * stays in sync across listeners.
  */
 function DjMediaSink({
-  state, volume, muted,
-}: { state: DjPlayerState; volume: number; muted: boolean }) {
+  state, volume, muted, controlRef, onPlaybackBlockedChange,
+}: {
+  state: DjPlayerState;
+  volume: number;
+  muted: boolean;
+  controlRef: MutableRefObject<DjMediaControls | null>;
+  onPlaybackBlockedChange: (blocked: boolean) => void;
+}) {
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const requestAudioPlay = () => {
+    const el = audioRef.current;
+    if (!el || state.track?.kind !== "audio" || !state.playing) return;
+    el.volume = Math.max(0, Math.min(1, volume / 100));
+    el.muted = muted;
+    const p = el.play();
+    if (p && typeof p.then === "function") {
+      p.then(() => onPlaybackBlockedChange(false)).catch((err) => {
+        onPlaybackBlockedChange(true);
+        console.warn("[DjPlayer] audio play blocked:", err);
+      });
+    } else {
+      onPlaybackBlockedChange(false);
+    }
+  };
+
+  useEffect(() => {
+    controlRef.current = { play: requestAudioPlay };
+    return () => { controlRef.current = null; };
+  });
 
   // Apply volume / mute to the <audio> element whenever it changes.
   useEffect(() => {
@@ -165,14 +192,10 @@ function DjMediaSink({
     const el = audioRef.current;
     if (!el || state.track?.kind !== "audio") return;
     if (state.playing) {
-      const p = el.play();
-      if (p && typeof p.catch === "function") {
-        p.catch((err) => {
-          console.warn("[DjPlayer] audio play blocked:", err);
-        });
-      }
+      requestAudioPlay();
     } else {
       el.pause();
+      onPlaybackBlockedChange(false);
     }
   }, [state.playing, state.track?.url, state.track?.kind]);
 
@@ -201,6 +224,8 @@ function DjMediaSink({
         preload="auto"
         playsInline
         className="hidden"
+        onPlaying={() => onPlaybackBlockedChange(false)}
+        onError={() => onPlaybackBlockedChange(true)}
       />
     );
   }
