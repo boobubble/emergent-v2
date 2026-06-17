@@ -1,8 +1,10 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon, Shield, LogOut } from "lucide-react";
 import { useThemeMode } from "@/lib/use-theme-mode";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useMyRoles } from "@/lib/use-my-role";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -551,16 +553,12 @@ function FeedPage() {
             >
               <MessageCircle className="h-5 w-5 text-foreground" />
             </button>
-            <button
-              onClick={() => { setProfileUsername(user.username); setView("profile"); }}
-              className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent/30 transition"
-              title="My profile"
-            >
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-sm font-bold ring-2 ring-card">
-                {user.username.slice(0, 1).toUpperCase()}
-              </div>
-              <span className="hidden text-sm font-semibold sm:inline">{user.username}</span>
-            </button>
+            <UserMenu
+              username={user.username}
+              onProfile={() => { setProfileUsername(user.username); setView("profile"); }}
+              onSettings={() => setView("account")}
+            />
+
           </div>
         </div>
       </header>
@@ -627,7 +625,7 @@ function FeedPage() {
                 label="My Profile"
                 color="text-primary"
               />
-              <SideItem onClick={() => setView("account")} active={view === "account"} icon={Settings} label="Settings" color="text-slate-400" />
+              
             </nav>
             <Suspense fallback={<RewardsWidgetSkeleton />}>
               <RewardsWidget
@@ -939,6 +937,65 @@ function HeaderThemeToggle() {
     >
       {isDark ? <Sun className="h-5 w-5 text-foreground" /> : <Moon className="h-5 w-5 text-foreground" />}
     </button>
+  );
+}
+
+function UserMenu({ username, onProfile, onSettings }: { username: string; onProfile: () => void; onSettings: () => void }) {
+  const { mode, setMode } = useThemeMode();
+  const { isAdmin } = useMyRoles();
+  const isDark = mode === "dark";
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent/30 transition"
+          title="Account"
+          aria-label="Account menu"
+        >
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-sm font-bold ring-2 ring-card">
+            {username.slice(0, 1).toUpperCase()}
+          </div>
+          <span className="hidden text-sm font-semibold sm:inline">{username}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-60 p-1">
+        <button
+          onClick={() => { close(); onProfile(); }}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+        >
+          <UserCircle className="h-4 w-4 text-primary" /> My Profile
+        </button>
+        <button
+          onClick={() => { close(); onSettings(); }}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+        >
+          <Settings className="h-4 w-4 text-slate-400" /> Settings
+        </button>
+        <button
+          onClick={() => setMode(isDark ? "light" : "dark")}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+        >
+          {isDark ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-400" />}
+          {isDark ? "Light mode" : "Dark mode"}
+        </button>
+        <div className="px-2 py-1.5">
+          <LanguageSwitcher variant="compact" />
+        </div>
+        {isAdmin && (
+          <a
+            href="/admin"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={close}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent transition"
+          >
+            <Shield className="h-4 w-4 text-rose-400" /> Admin Panel
+          </a>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }
 
