@@ -57,6 +57,7 @@ function DjFooterView({
   const muted = state.allowListenerMute && listenerMuted;
   const effectiveVolume = muted ? 0 : Math.max(0, Math.min(100, state.defaultVolume));
   const [playbackBlocked, setPlaybackBlocked] = useState(false);
+  const [localPaused, setLocalPaused] = useState(false);
   const mediaControlsRef = useRef<DjMediaControls | null>(null);
 
   // ── Render ──────────────────────────────────────────────────────
