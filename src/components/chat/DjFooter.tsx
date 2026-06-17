@@ -125,6 +125,7 @@ function DjFooterView({
   // ── Render ──────────────────────────────────────────────────────
   return (
     <div className="border-t border-border/60 bg-muted/40 backdrop-blur-sm">
+      <BroadcasterTicker target="chatbar" />
       <div className="flex flex-wrap items-center gap-2 px-3 py-2">
         {/* On Air chip */}
         <div className="flex items-center gap-2 rounded-full bg-background/70 px-2.5 py-1 shadow-sm">
