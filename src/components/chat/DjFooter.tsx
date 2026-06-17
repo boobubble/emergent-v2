@@ -2,12 +2,11 @@
 //
 // • All listeners see the same player state, synced through
 //   app_settings.dj_player + realtime (see src/lib/dj-store.tsx).
-// • Admins get inline controls (paste URL, play / pause / skip).
-// • Non-admins only see the "Now playing" chip and a local mute toggle.
+// • Chatroom users only see the "Now playing" chip and a local mute toggle.
 // • Hidden behind the master switch in /admin/dj — renders nothing
 //   when disabled, so existing chat UX is untouched by default.
 
-import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import {
   Disc3, Play, Volume2, VolumeX, Radio,
 } from "lucide-react";
@@ -153,12 +152,12 @@ function DjMediaSink({
   state: DjPlayerState;
   volume: number;
   muted: boolean;
-  controlRef: MutableRefObject<DjMediaControls | null>;
+  controlRef: RefObject<DjMediaControls | null>;
   onPlaybackBlockedChange: (blocked: boolean) => void;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const requestAudioPlay = () => {
+  const requestAudioPlay = useCallback(() => {
     const el = audioRef.current;
     if (!el || state.track?.kind !== "audio" || !state.playing) return;
     el.volume = Math.max(0, Math.min(1, volume / 100));
@@ -172,12 +171,12 @@ function DjMediaSink({
     } else {
       onPlaybackBlockedChange(false);
     }
-  };
+  }, [muted, onPlaybackBlockedChange, state.playing, state.track?.kind, volume]);
 
   useEffect(() => {
     controlRef.current = { play: requestAudioPlay };
     return () => { controlRef.current = null; };
-  });
+  }, [controlRef, requestAudioPlay]);
 
   // Apply volume / mute to the <audio> element whenever it changes.
   useEffect(() => {
@@ -197,7 +196,7 @@ function DjMediaSink({
       el.pause();
       onPlaybackBlockedChange(false);
     }
-  }, [state.playing, state.track?.url, state.track?.kind]);
+  }, [requestAudioPlay, state.playing, state.track?.url, state.track?.kind, onPlaybackBlockedChange]);
 
   const youtubeSrc = useMemo(() => {
     if (!state.track || state.track.kind !== "youtube" || !state.track.videoId) return null;
