@@ -209,3 +209,69 @@ function QueuePage() {
     </div>
   );
 }
+
+function StreamUrlCard({
+  streamUrl, setStreamUrl, streamName, setStreamName, onGoLive, isPending,
+}: {
+  streamUrl: string;
+  setStreamUrl: (v: string) => void;
+  streamName: string;
+  setStreamName: (v: string) => void;
+  onGoLive: (finalUrl: string) => void;
+  isPending: boolean;
+}) {
+  const analysis = analyzeStreamUrl(streamUrl);
+  const showFeedback = streamUrl.trim().length > 0;
+  const toneClass =
+    analysis.kind === "invalid" || analysis.kind === "player-page"
+      ? "text-destructive"
+      : analysis.wasNormalized
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-emerald-600 dark:text-emerald-400";
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Radio className="h-4 w-4" /> Play radio stream URL
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <Input
+          placeholder="Station name (optional, e.g. YoChat Radio)"
+          value={streamName}
+          maxLength={120}
+          onChange={(e) => setStreamName(e.target.value)}
+        />
+        <div className="flex gap-2">
+          <Input
+            placeholder="https://radio.example.org/listen/yourstation/radio.mp3"
+            value={streamUrl}
+            maxLength={2048}
+            onChange={(e) => setStreamUrl(e.target.value)}
+          />
+          <Button
+            disabled={!analysis.ok || isPending}
+            onClick={() => onGoLive(analysis.normalizedUrl)}
+            className="gap-1"
+          >
+            <Play className="h-4 w-4" /> Go live
+          </Button>
+        </div>
+        {showFeedback && (
+          <div className="space-y-1 text-xs">
+            <p className={toneClass}>{analysis.note}</p>
+            {analysis.wasNormalized && analysis.ok && (
+              <p className="text-muted-foreground break-all">
+                Will play: <code className="rounded bg-muted px-1 py-0.5">{analysis.normalizedUrl}</code>
+              </p>
+            )}
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Pushes the stream live to every listener via the DJ player. Use Pause/Stop above to control it.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
