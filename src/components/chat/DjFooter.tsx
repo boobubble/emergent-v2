@@ -190,9 +190,12 @@ function DjMediaSink({
   }, [muted, onPlaybackBlockedChange, state.playing, state.track?.kind, volume]);
 
   useEffect(() => {
-    controlRef.current = { play: () => requestAudioPlay(true) };
+    controlRef.current = {
+      play: () => requestAudioPlay(true),
+      pause: () => { audioRef.current?.pause(); onPlaybackBlockedChange(false); },
+    };
     return () => { controlRef.current = null; };
-  }, [controlRef, requestAudioPlay]);
+  }, [controlRef, requestAudioPlay, onPlaybackBlockedChange]);
 
   // Apply volume / mute to the <audio> element whenever it changes.
   useEffect(() => {
