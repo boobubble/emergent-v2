@@ -553,16 +553,12 @@ function FeedPage() {
             >
               <MessageCircle className="h-5 w-5 text-foreground" />
             </button>
-            <button
-              onClick={() => { setProfileUsername(user.username); setView("profile"); }}
-              className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent/30 transition"
-              title="My profile"
-            >
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-sm font-bold ring-2 ring-card">
-                {user.username.slice(0, 1).toUpperCase()}
-              </div>
-              <span className="hidden text-sm font-semibold sm:inline">{user.username}</span>
-            </button>
+            <UserMenu
+              username={user.username}
+              onProfile={() => { setProfileUsername(user.username); setView("profile"); }}
+              onSettings={() => setView("account")}
+            />
+
           </div>
         </div>
       </header>
