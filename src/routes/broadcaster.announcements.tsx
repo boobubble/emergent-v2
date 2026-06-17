@@ -65,12 +65,15 @@ function AnnouncementsPage() {
             <CreateForm
               kind={k}
               widgets={widgets.data ?? []}
-              onCreate={(payload) =>
-                create({ data: { ...payload, kind: k } as never }).then(() => {
+              onCreate={async (payload) => {
+                try {
+                  await create({ data: { ...payload, kind: k } as never });
                   qc.invalidateQueries({ queryKey: ["broadcaster-announcements", k] });
                   toast.success("Posted");
-                }).catch((e: Error) => toast.error(e.message))
-              }
+                } catch (e) {
+                  toast.error((e as Error).message);
+                }
+              }}
             />
             <div className="space-y-2">
               {(list.data ?? []).map((a) => (
