@@ -146,6 +146,30 @@ export type Database = {
         }
         Relationships: []
       }
+      broadcaster_settings: {
+        Row: {
+          disclaimer_enabled: boolean
+          disclaimer_text: string
+          id: number
+          ticker_template: string
+          updated_at: string
+        }
+        Insert: {
+          disclaimer_enabled?: boolean
+          disclaimer_text?: string
+          id?: number
+          ticker_template?: string
+          updated_at?: string
+        }
+        Update: {
+          disclaimer_enabled?: boolean
+          disclaimer_text?: string
+          id?: number
+          ticker_template?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coin_transactions: {
         Row: {
           amount: number
@@ -1340,6 +1364,207 @@ export type Database = {
         }
         Relationships: []
       }
+      radio_queue_items: {
+        Row: {
+          added_by: string | null
+          channel: string | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          played: boolean
+          position: number
+          thumbnail: string | null
+          title: string | null
+          widget_id: string
+          youtube_id: string | null
+          youtube_url: string
+        }
+        Insert: {
+          added_by?: string | null
+          channel?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          played?: boolean
+          position?: number
+          thumbnail?: string | null
+          title?: string | null
+          widget_id: string
+          youtube_id?: string | null
+          youtube_url: string
+        }
+        Update: {
+          added_by?: string | null
+          channel?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          played?: boolean
+          position?: number
+          thumbnail?: string | null
+          title?: string | null
+          widget_id?: string
+          youtube_id?: string | null
+          youtube_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "radio_queue_items_widget_id_fkey"
+            columns: ["widget_id"]
+            isOneToOne: false
+            referencedRelation: "radio_widgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      radio_schedules: {
+        Row: {
+          created_at: string
+          description: string | null
+          ends_at: string
+          host_id: string
+          id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["radio_schedule_status"]
+          title: string
+          updated_at: string
+          widget_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ends_at: string
+          host_id: string
+          id?: string
+          starts_at: string
+          status?: Database["public"]["Enums"]["radio_schedule_status"]
+          title: string
+          updated_at?: string
+          widget_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ends_at?: string
+          host_id?: string
+          id?: string
+          starts_at?: string
+          status?: Database["public"]["Enums"]["radio_schedule_status"]
+          title?: string
+          updated_at?: string
+          widget_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "radio_schedules_widget_id_fkey"
+            columns: ["widget_id"]
+            isOneToOne: false
+            referencedRelation: "radio_widgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      radio_widget_state: {
+        Row: {
+          current_host_id: string | null
+          current_show_title: string | null
+          current_track_artist: string | null
+          current_track_artwork: string | null
+          current_track_title: string | null
+          is_live: boolean
+          listener_count: number
+          mic_active: boolean
+          peak_listeners_24h: number
+          queue_size: number
+          samples_24h: Json
+          started_at: string | null
+          updated_at: string
+          widget_id: string
+        }
+        Insert: {
+          current_host_id?: string | null
+          current_show_title?: string | null
+          current_track_artist?: string | null
+          current_track_artwork?: string | null
+          current_track_title?: string | null
+          is_live?: boolean
+          listener_count?: number
+          mic_active?: boolean
+          peak_listeners_24h?: number
+          queue_size?: number
+          samples_24h?: Json
+          started_at?: string | null
+          updated_at?: string
+          widget_id: string
+        }
+        Update: {
+          current_host_id?: string | null
+          current_show_title?: string | null
+          current_track_artist?: string | null
+          current_track_artwork?: string | null
+          current_track_title?: string | null
+          is_live?: boolean
+          listener_count?: number
+          mic_active?: boolean
+          peak_listeners_24h?: number
+          queue_size?: number
+          samples_24h?: Json
+          started_at?: string | null
+          updated_at?: string
+          widget_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "radio_widget_state_widget_id_fkey"
+            columns: ["widget_id"]
+            isOneToOne: true
+            referencedRelation: "radio_widgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      radio_widgets: {
+        Row: {
+          accent_color: string | null
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          enabled: boolean
+          id: string
+          name: string
+          owner_id: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          name: string
+          owner_id?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          name?: string
+          owner_id?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reactions: {
         Row: {
           created_at: string
@@ -1762,7 +1987,7 @@ export type Database = {
       slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
-      app_role: "super_admin" | "admin" | "moderator" | "user"
+      app_role: "super_admin" | "admin" | "moderator" | "user" | "dj" | "rj"
       ban_type: "ban" | "temp_ban" | "shadow_ban" | "ip_ban"
       confession_display_mode:
         | "fully_anonymous"
@@ -1831,6 +2056,7 @@ export type Database = {
       mute_scope: "global" | "room"
       post_kind: "text" | "image" | "gif" | "poll"
       post_privacy: "public" | "friends" | "private"
+      radio_schedule_status: "scheduled" | "live" | "completed" | "cancelled"
       reaction_type: "like" | "love" | "haha" | "angry" | "fire"
       report_status: "open" | "reviewing" | "resolved" | "dismissed"
       report_target: "message" | "post" | "user" | "room"
@@ -1963,7 +2189,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "admin", "moderator", "user"],
+      app_role: ["super_admin", "admin", "moderator", "user", "dj", "rj"],
       ban_type: ["ban", "temp_ban", "shadow_ban", "ip_ban"],
       confession_display_mode: [
         "fully_anonymous",
@@ -2038,6 +2264,7 @@ export const Constants = {
       mute_scope: ["global", "room"],
       post_kind: ["text", "image", "gif", "poll"],
       post_privacy: ["public", "friends", "private"],
+      radio_schedule_status: ["scheduled", "live", "completed", "cancelled"],
       reaction_type: ["like", "love", "haha", "angry", "fire"],
       report_status: ["open", "reviewing", "resolved", "dismissed"],
       report_target: ["message", "post", "user", "room"],
