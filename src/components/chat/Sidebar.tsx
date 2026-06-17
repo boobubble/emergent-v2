@@ -139,7 +139,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
 
 
       <div className="border-t border-border p-2">
-        <div className="mb-2 hidden lg:block">
+        <div className="mb-2 block">
           <ChatExploreMenu />
         </div>
 
