@@ -23,6 +23,7 @@ import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
 import { pingDailyStreak } from "@/lib/gamification.functions";
 import { BrandMark, BrandText } from "@/components/BrandMark";
 import { PostSkeleton, WidgetSkeleton, RewardsWidgetSkeleton } from "@/components/feed/FeedSkeletons";
+import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
 
 // Lazy-loaded panels — only fetched when the user navigates to them, keeping
 // the initial feed bundle small for faster first paint.
