@@ -11,7 +11,7 @@ export const Route = createFileRoute("/broadcaster")({
   component: BroadcasterLayout,
 });
 
-const NAV = [
+const NAV: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
   { to: "/broadcaster", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/broadcaster/widgets", label: "Widgets", icon: Boxes },
   { to: "/broadcaster/schedule", label: "Schedule", icon: Calendar },
@@ -19,7 +19,7 @@ const NAV = [
   { to: "/broadcaster/mic", label: "Mic", icon: Mic },
   { to: "/broadcaster/announcements", label: "Announcements", icon: Megaphone },
   { to: "/broadcaster/analytics", label: "Analytics", icon: BarChart3 },
-] as const;
+];
 
 function BroadcasterLayout() {
   const { user, ready } = useAuth();
