@@ -3,7 +3,7 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function GlobalLanguageToggle() {
   const pathname = useRouterState({ select: s => s.location.pathname });
-  if (pathname === "/") return null;
+  if (pathname === "/" || pathname === "/feed" || pathname.startsWith("/feed/")) return null;
   return (
     <div className="fixed right-4 z-[60] bottom-[calc(9rem+env(safe-area-inset-bottom))] md:bottom-16">
       <LanguageSwitcher variant="compact" />
