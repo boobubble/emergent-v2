@@ -9,7 +9,7 @@
 // one-line render injection of these components.
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Megaphone } from "lucide-react";
+import { Megaphone, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { canPlaySound } from "@/lib/sound-prefs";
@@ -82,19 +82,44 @@ export function BroadcasterTicker({
   className?: string;
 }) {
   const items = useAnnouncements({ widgetId });
+
+  const dismissKey = `broadcaster_ticker_dismissed.${target}.v1`;
+  const [dismissed, setDismissed] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const raw = localStorage.getItem(dismissKey);
+      return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+    } catch {
+      return new Set();
+    }
+  });
+  const persistDismissed = (next: Set<string>) => {
+    setDismissed(next);
+    if (typeof window !== "undefined") {
+      try { localStorage.setItem(dismissKey, JSON.stringify([...next])); } catch { /* noop */ }
+    }
+  };
+
   const visible = useMemo(
     () =>
       items.filter((a) => {
+        if (dismissed.has(a.id)) return false;
         if (!targetEnabled(a, target)) return false;
         if (target === "widget") return a.kind === "upcoming_show" || a.kind === "ticker";
         if (target === "chatbar") return a.kind === "ticker" || a.kind === "upcoming_show";
         if (target === "feed") return a.kind === "ticker" || a.kind === "community";
         return true;
       }),
-    [items, target],
+    [items, target, dismissed],
   );
 
   if (visible.length === 0) return null;
+
+  const dismissAll = () => {
+    const next = new Set(dismissed);
+    visible.forEach((a) => next.add(a.id));
+    persistDismissed(next);
+  };
 
   return (
     <div
@@ -106,7 +131,7 @@ export function BroadcasterTicker({
       aria-live="polite"
     >
       <Megaphone className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-      <div className="truncate">
+      <div className="truncate flex-1 min-w-0">
         {visible.map((a, i) => (
           <span key={a.id}>
             {i > 0 && <span className="mx-2 text-muted-foreground">•</span>}
@@ -115,6 +140,15 @@ export function BroadcasterTicker({
           </span>
         ))}
       </div>
+      <button
+        type="button"
+        onClick={dismissAll}
+        className="flex-shrink-0 inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-background/60 hover:text-foreground transition-colors"
+        title="Dismiss announcement"
+        aria-label="Dismiss announcement"
+      >
+        <X className="h-3 w-3" />
+      </button>
     </div>
   );
 }
