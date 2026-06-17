@@ -383,7 +383,6 @@ export const addQueueItem = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     // bump queue_size for fast read
-    await supabaseAdmin.rpc("increment", {}).then(() => {/* noop */}).catch(() => {});
     await supabaseAdmin
       .from("radio_widget_state")
       .update({ queue_size: nextPos })
