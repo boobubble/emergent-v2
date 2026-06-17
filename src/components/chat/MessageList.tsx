@@ -165,10 +165,11 @@ export function MessageList({ channelId }: { channelId: string }) {
 
           if (isMe) {
             return (
-              <div key={gi} className="group flex flex-row-reverse gap-3">
-                <FrameAvatar user={author} size={36} />
+              <div key={gi} className="group flex flex-row-reverse gap-2">
+                <FrameAvatar user={author} size={28} />
                 <div className="flex min-w-0 flex-1 flex-col items-end">
-                  <div className="mb-1 flex items-center gap-2">
+                  <div className="mb-0.5 flex items-center gap-1.5">
+
                     <Time ts={g[0].ts} />
                     <UserMenu userId={author.id} username={author.name}>
                       <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
