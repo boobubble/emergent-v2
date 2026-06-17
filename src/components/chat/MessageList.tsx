@@ -145,7 +145,7 @@ export function MessageList({ channelId }: { channelId: string }) {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
     <EmojiEffectLayer channelId={channelId} />
-    <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2 text-xs">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2 text-xs md:text-[15px]">
       {groups.length === 0 && (
         <div className="grid h-full place-items-center text-center text-sm text-muted-foreground">
           <div>
