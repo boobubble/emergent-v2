@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Megaphone } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { canPlaySound } from "@/lib/sound-prefs";
 import type { Database } from "@/integrations/supabase/types";
 
 type Announcement = Database["public"]["Tables"]["radio_announcements"]["Row"];
