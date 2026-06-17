@@ -12,19 +12,19 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  Disc3, Play, Pause, SkipForward, Volume2, VolumeX, Link as LinkIcon, Radio,
+  Disc3, Play, Pause, SkipForward, Volume2, VolumeX, Radio,
 } from "lucide-react";
 
 import { useDjPlayer } from "@/lib/dj-store";
 import {
-  buildTrackFromUrl, currentPositionSec, DJ_DEFAULTS, type DjPlayerState,
+  currentPositionSec, DJ_DEFAULTS, type DjPlayerState,
 } from "@/lib/dj-config";
 import { updateSetting } from "@/lib/admin.functions";
 import { getMyRoles } from "@/lib/admin.functions";
 import { useAuth } from "@/lib/auth-store";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
+
 
 const LISTENER_MUTE_KEY = "dj_player.listener_muted";
 
