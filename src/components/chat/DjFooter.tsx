@@ -114,6 +114,10 @@ function DjFooterView({
           </Button>
         )}
 
+        {/* Radio announcement notifications toggle */}
+        <RadioNotifyToggle />
+
+
         {state.playing && state.track?.kind === "audio" && !muted && (
           <Button
             type="button"
