@@ -91,9 +91,8 @@ function WidgetsPage() {
               value={streamUrl}
               onChange={(e) => setStreamUrl(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
-              Optional. Paste an Icecast/Azuracast/SHOUTcast MP3/AAC/HLS URL to play a live broadcast.
-            </p>
+            <StreamHint url={streamUrl} />
+
           </div>
           <Button
             disabled={!name.trim() || createMut.isPending}
