@@ -124,7 +124,13 @@ export const updateWidget = createServerFn({ method: "POST" })
         .maybeSingle();
       if (!w || w.owner_id !== context.userId) throw new Error("Forbidden");
     }
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      name?: string;
+      description?: string | null;
+      accent_color?: string;
+      cover_url?: string | null;
+      enabled?: boolean;
+    } = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.description !== undefined) patch.description = data.description;
     if (data.accent_color !== undefined) patch.accent_color = data.accent_color;
