@@ -229,6 +229,22 @@ function DjMediaSink({
     el.muted = muted;
   }, [volume, muted]);
 
+  // Drive play/pause on the <audio> element based on shared state.
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el || state.track?.kind !== "audio") return;
+    if (state.playing) {
+      const p = el.play();
+      if (p && typeof p.catch === "function") {
+        p.catch((err) => {
+          console.warn("[DjPlayer] audio play blocked:", err);
+        });
+      }
+    } else {
+      el.pause();
+    }
+  }, [state.playing, state.track?.url, state.track?.kind]);
+
   const youtubeSrc = useMemo(() => {
     if (!state.track || state.track.kind !== "youtube" || !state.track.videoId) return null;
     if (!state.playing) return null;
@@ -249,13 +265,15 @@ function DjMediaSink({
     return (
       <audio
         ref={audioRef}
-        src={state.playing ? state.track.url : undefined}
+        src={state.track.url}
         autoPlay={state.playing}
-        loop={false}
+        preload="auto"
+        crossOrigin="anonymous"
         className="hidden"
       />
     );
   }
+
 
   if (youtubeSrc) {
     return (
