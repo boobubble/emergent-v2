@@ -235,33 +235,33 @@ export const PostCard = memo(function PostCard({
         </div>
       )}
 
-      <footer className="mt-3 flex items-center gap-1 border-t border-border pt-2">
+      <footer className="mt-3 flex items-center gap-1 border-t border-border/70 pt-2">
         <div className="relative flex-1">
           <button
             onClick={() => { ensureReactions(); setPickerOpen(!pickerOpen); }}
-            className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition ${myReaction ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-accent/20 hover:text-foreground"}`}
+            className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${myReaction ? "text-primary bg-primary/10 ring-1 ring-inset ring-primary/20" : "text-muted-foreground hover:bg-accent/25 hover:text-foreground"}`}
           >
             <span className={`text-lg ${myReaction ? "like-burst" : ""}`}>{myReaction ? REACTION_EMOJI[myReaction.type] : "👍"}</span>
             <span>{hideCounts ? "React" : (myReaction ? "Reacted" : "Like")}</span>
           </button>
           {pickerOpen && (
-            <div className="absolute bottom-full left-0 z-10 mb-2 flex gap-1 rounded-full border border-border bg-card p-1.5 shadow-2xl animate-scale-in">
+            <div className="feed-glass absolute bottom-full left-0 z-10 mb-2 flex gap-1 rounded-full p-1.5 animate-scale-in">
               {REACTION_ORDER.map((r) => (
-                <button key={r} onClick={() => react(r)} className="rounded-full p-1.5 text-xl transition-transform hover:scale-150 hover:-translate-y-1">
+                <button key={r} onClick={() => react(r)} className="rounded-full p-1.5 text-xl transition-transform duration-200 hover:scale-[1.45] hover:-translate-y-1 active:scale-110">
                   {REACTION_EMOJI[r]}
                 </button>
               ))}
             </div>
           )}
         </div>
-        <button onClick={() => setShowComments(!showComments)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-accent/20 hover:text-foreground transition">
+        <button onClick={() => setShowComments(!showComments)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-all duration-200 active:scale-[0.97]">
           <MessageCircle className="h-4 w-4" /> <span>Comment</span>
         </button>
         {post.owner_id !== meId && (
           <button
             onClick={boost}
             disabled={boosting}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500 disabled:opacity-50 transition"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500 disabled:opacity-50 transition-all duration-200 active:scale-[0.97]"
             title={`Boost (${SPEND.boost_post.coins} coins)`}
           >
             {boosting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
@@ -291,7 +291,7 @@ export const PostCard = memo(function PostCard({
             }
             setShareOpen(payload);
           }}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-accent/20 hover:text-foreground transition"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-all duration-200 active:scale-[0.97]"
         >
           <Share2 className="h-4 w-4" /> <span>Share</span>
         </button>
@@ -302,7 +302,7 @@ export const PostCard = memo(function PostCard({
           }}
           aria-pressed={saved}
           title={saved ? "Remove bookmark" : "Save post"}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition ${saved ? "text-amber-400 bg-amber-500/10" : "text-muted-foreground hover:bg-accent/20 hover:text-foreground"}`}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${saved ? "text-amber-400 bg-amber-500/10 ring-1 ring-inset ring-amber-500/25" : "text-muted-foreground hover:bg-accent/25 hover:text-foreground"}`}
         >
           <Bookmark className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
           <span className="hidden sm:inline">{saved ? "Saved" : "Save"}</span>
