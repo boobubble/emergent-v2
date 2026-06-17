@@ -1762,7 +1762,7 @@ export type Database = {
       slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
-      app_role: "super_admin" | "admin" | "moderator" | "user"
+      app_role: "super_admin" | "admin" | "moderator" | "user" | "dj" | "rj"
       ban_type: "ban" | "temp_ban" | "shadow_ban" | "ip_ban"
       confession_display_mode:
         | "fully_anonymous"
@@ -1963,7 +1963,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "admin", "moderator", "user"],
+      app_role: ["super_admin", "admin", "moderator", "user", "dj", "rj"],
       ban_type: ["ban", "temp_ban", "shadow_ban", "ip_ban"],
       confession_display_mode: [
         "fully_anonymous",
