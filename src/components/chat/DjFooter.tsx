@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import {
-  Disc3, Play, Volume2, VolumeX, Radio,
+  Disc3, Pause, Play, Volume2, VolumeX, Radio,
 } from "lucide-react";
 
 import { useDjPlayer } from "@/lib/dj-store";
