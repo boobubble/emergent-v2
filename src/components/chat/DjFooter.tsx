@@ -203,29 +203,8 @@ function DjFooterView({
         )}
       </div>
 
-      {/* Admin URL bar */}
-      {isAdmin && (
-        <div className="flex items-center gap-2 border-t border-border/40 px-3 py-2">
-          <LinkIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <Input
-            value={urlDraft}
-            onChange={(e) => setUrlDraft(e.target.value)}
-            placeholder="Paste YouTube URL or direct .mp3 / stream link"
-            className="h-8 flex-1 text-xs"
-            onKeyDown={(e) => { if (e.key === "Enter") loadTrack(); }}
-          />
-          <Input
-            value={titleDraft}
-            onChange={(e) => setTitleDraft(e.target.value)}
-            placeholder="Title (optional)"
-            className="hidden h-8 w-40 text-xs sm:block"
-            onKeyDown={(e) => { if (e.key === "Enter") loadTrack(); }}
-          />
-          <Button type="button" size="sm" className="h-8 gap-1" onClick={loadTrack} disabled={saving}>
-            <Play className="h-3.5 w-3.5" /> Go live
-          </Button>
-        </div>
-      )}
+      {/* Admin URL paste bar removed — manage tracks from the Broadcaster Studio (/broadcaster). */}
+
 
       {/* Hidden media element — drives the actual playback. */}
       <DjMediaSink state={state} volume={effectiveVolume} muted={muted} />
