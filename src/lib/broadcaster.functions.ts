@@ -473,3 +473,197 @@ export const updateBroadcasterSettings = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return row;
   });
+
+// ---------------- Announcements ----------------
+const announcementKindSchema = z.enum(["upcoming_show", "ticker", "community"]);
+const targetSchema = z.object({
+  widget: z.boolean().optional(),
+  chatbar: z.boolean().optional(),
+  notifications: z.boolean().optional(),
+  feed: z.boolean().optional(),
+});
+
+export const listAnnouncements = createServerFn({ method: "GET" })
+  .inputValidator((d: { widget_id?: string | null; kind?: string; activeOnly?: boolean } | undefined) => d ?? {})
+  .handler(async ({ data }) => {
+    let q = supabaseAdmin
+      .from("radio_announcements")
+      .select("*")
+      .order("pinned", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (data.activeOnly) q = q.eq("active", true);
+    if (data.kind) q = q.eq("kind", data.kind);
+    if (data.widget_id === null) q = q.is("widget_id", null);
+    else if (data.widget_id) q = q.eq("widget_id", data.widget_id);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    const now = Date.now();
+    return (rows ?? []).filter((r) => {
+      if (!data.activeOnly) return true;
+      if (r.starts_at && new Date(r.starts_at).getTime() > now) return false;
+      if (r.ends_at && new Date(r.ends_at).getTime() < now) return false;
+      return true;
+    });
+  });
+
+const announcementInput = z.object({
+  widget_id: z.string().uuid().nullable().optional(),
+  kind: announcementKindSchema,
+  title: z.string().min(1).max(140),
+  body: z.string().max(2000).optional().nullable(),
+  link: z.string().url().max(500).optional().nullable(),
+  starts_at: z.string().optional().nullable(),
+  ends_at: z.string().optional().nullable(),
+  pinned: z.boolean().optional(),
+  active: z.boolean().optional(),
+  target: targetSchema.optional(),
+});
+
+export const createAnnouncement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: z.infer<typeof announcementInput>) => announcementInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertBroadcaster(context.userId);
+    const { data: row, error } = await supabaseAdmin
+      .from("radio_announcements")
+      .insert({
+        widget_id: data.widget_id ?? null,
+        author_id: context.userId,
+        kind: data.kind,
+        title: data.title,
+        body: data.body ?? null,
+        link: data.link ?? null,
+        starts_at: data.starts_at ?? null,
+        ends_at: data.ends_at ?? null,
+        pinned: data.pinned ?? false,
+        active: data.active ?? true,
+        target: (data.target ?? { widget: true, chatbar: true, notifications: true, feed: true }) as never,
+      })
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
+export const updateAnnouncement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: Partial<z.infer<typeof announcementInput>> & { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    await assertBroadcaster(context.userId);
+    const { id, ...rest } = data;
+    const patch: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(rest)) {
+      if (v !== undefined) patch[k] = v;
+    }
+    const { data: row, error } = await supabaseAdmin
+      .from("radio_announcements")
+      .update(patch as never)
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
+export const deleteAnnouncement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    await assertBroadcaster(context.userId);
+    const { error } = await supabaseAdmin.from("radio_announcements").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ---------------- Analytics ----------------
+export const getBroadcasterAnalytics = createServerFn({ method: "GET" }).handler(async () => {
+  const [
+    { data: schedules },
+    { data: states },
+    { data: widgets },
+    { data: tracks },
+  ] = await Promise.all([
+    supabaseAdmin.from("radio_schedules").select("*").limit(2000),
+    supabaseAdmin.from("radio_widget_state").select("*").limit(500),
+    supabaseAdmin.from("radio_widgets").select("id,name,slug").limit(500),
+    supabaseAdmin.from("radio_queue_items").select("youtube_id,title,played").eq("played", true).limit(5000),
+  ]);
+
+  const widgetMap = new Map<string, { name: string; slug: string }>();
+  (widgets ?? []).forEach((w) => widgetMap.set(w.id, { name: w.name, slug: w.slug }));
+
+  // Top host (most completed shows)
+  const hostCounts = new Map<string, number>();
+  (schedules ?? []).forEach((s) => {
+    if (s.status === "completed" && s.host_id) {
+      hostCounts.set(s.host_id, (hostCounts.get(s.host_id) ?? 0) + 1);
+    }
+  });
+  let topHost: { host_id: string; shows: number } | null = null;
+  for (const [host_id, shows] of hostCounts) {
+    if (!topHost || shows > topHost.shows) topHost = { host_id, shows };
+  }
+
+  // Top show (by total scheduled minutes across completed)
+  const showMinutes = new Map<string, number>();
+  (schedules ?? []).forEach((s) => {
+    if (s.status === "completed" && s.starts_at && s.ends_at) {
+      const mins = Math.max(0, (new Date(s.ends_at).getTime() - new Date(s.starts_at).getTime()) / 60000);
+      showMinutes.set(s.title, (showMinutes.get(s.title) ?? 0) + mins);
+    }
+  });
+  let topShow: { title: string; minutes: number } | null = null;
+  for (const [title, minutes] of showMinutes) {
+    if (!topShow || minutes > topShow.minutes) topShow = { title, minutes: Math.round(minutes) };
+  }
+
+  // Peak listener time — group widget_state.started_at hour bucket weighted by listener_count
+  const hourBuckets = new Map<number, number>();
+  (states ?? []).forEach((st) => {
+    if (st.started_at && st.listener_count) {
+      const h = new Date(st.started_at).getUTCHours();
+      hourBuckets.set(h, (hourBuckets.get(h) ?? 0) + st.listener_count);
+    }
+  });
+  let peakHour: { hour: number; listeners: number } | null = null;
+  for (const [hour, listeners] of hourBuckets) {
+    if (!peakHour || listeners > peakHour.listeners) peakHour = { hour, listeners };
+  }
+
+  // Most active widget — highest sum of listener_count across recent states
+  let mostActiveWidget: { widget_id: string; name: string; listeners: number } | null = null;
+  (states ?? []).forEach((st) => {
+    const info = widgetMap.get(st.widget_id);
+    if (!info) return;
+    const candidate = { widget_id: st.widget_id, name: info.name, listeners: st.listener_count ?? 0 };
+    if (!mostActiveWidget || candidate.listeners > mostActiveWidget.listeners) {
+      mostActiveWidget = candidate;
+    }
+  });
+
+  // Most played track
+  const trackCounts = new Map<string, { title: string | null; count: number }>();
+  (tracks ?? []).forEach((t) => {
+    if (!t.youtube_id) return;
+    const cur = trackCounts.get(t.youtube_id);
+    if (cur) cur.count += 1;
+    else trackCounts.set(t.youtube_id, { title: t.title, count: 1 });
+  });
+  let mostPlayedTrack: { youtube_id: string; title: string | null; plays: number } | null = null;
+  for (const [youtube_id, v] of trackCounts) {
+    if (!mostPlayedTrack || v.count > mostPlayedTrack.plays) {
+      mostPlayedTrack = { youtube_id, title: v.title, plays: v.count };
+    }
+  }
+
+
+  return {
+    topHost: topHost as { host_id: string; shows: number } | null,
+    topShow: topShow as { title: string; minutes: number } | null,
+    peakHour: peakHour as { hour: number; listeners: number } | null,
+    mostActiveWidget: mostActiveWidget as { widget_id: string; name: string; listeners: number } | null,
+    mostPlayedTrack: mostPlayedTrack as { youtube_id: string; title: string | null; plays: number } | null,
+  };
+});
+

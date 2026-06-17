@@ -1364,6 +1364,65 @@ export type Database = {
         }
         Relationships: []
       }
+      radio_announcements: {
+        Row: {
+          active: boolean
+          author_id: string
+          body: string | null
+          created_at: string
+          ends_at: string | null
+          id: string
+          kind: string
+          link: string | null
+          pinned: boolean
+          starts_at: string | null
+          target: Json
+          title: string
+          updated_at: string
+          widget_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          author_id: string
+          body?: string | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind: string
+          link?: string | null
+          pinned?: boolean
+          starts_at?: string | null
+          target?: Json
+          title: string
+          updated_at?: string
+          widget_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          author_id?: string
+          body?: string | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          link?: string | null
+          pinned?: boolean
+          starts_at?: string | null
+          target?: Json
+          title?: string
+          updated_at?: string
+          widget_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "radio_announcements_widget_id_fkey"
+            columns: ["widget_id"]
+            isOneToOne: false
+            referencedRelation: "radio_widgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       radio_queue_items: {
         Row: {
           added_by: string | null
