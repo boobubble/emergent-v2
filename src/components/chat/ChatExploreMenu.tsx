@@ -63,9 +63,11 @@ export function ChatExploreMenu() {
           </div>
           <div className="flex flex-col gap-0">
             {SHORTCUTS.map(({ to, label, icon: Icon, gradient }) => (
-              <Link
+              <a
                 key={to}
-                to={to}
+                href={to}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => setOpen(false)}
                 className="group flex items-center gap-2 rounded-lg px-1.5 py-1 transition-colors hover:bg-white/5"
               >
@@ -73,7 +75,7 @@ export function ChatExploreMenu() {
                   <Icon className="h-3 w-3" />
                 </span>
                 <span className="truncate text-[11px] font-semibold text-foreground">{label}</span>
-              </Link>
+              </a>
             ))}
           </div>
         </div>
