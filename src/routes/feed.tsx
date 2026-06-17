@@ -744,11 +744,15 @@ function FeedPage() {
         <aside className="hidden lg:block">
           <div ref={rightRailRef} className="space-y-4 pl-1 will-change-transform">
             <BoobubbleAssistantWidget />
+            <PromotedPostsWidget profiles={profiles} />
+            <FeaturedMembersWidget meId={meId} profiles={profiles} />
+            <SuggestedGroupsWidget />
+            <TrendingCommunitiesWidget />
+            <CommunityActivityWidget meId={meId} profiles={profiles} />
             <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
             <ConfessionsFeedWidget />
             <ActivePollsWidget />
-            <ChatroomOnlineWidget />
             <BirthdaysWidget />
             <FriendsWidget meId={meId} profiles={profiles} />
             <HashtagsWidget />
