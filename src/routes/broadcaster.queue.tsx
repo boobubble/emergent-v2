@@ -152,6 +152,40 @@ function QueuePage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Radio className="h-4 w-4" /> Play radio stream URL
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Input
+            placeholder="Station name (optional, e.g. YoChat Radio)"
+            value={streamName}
+            onChange={(e) => setStreamName(e.target.value)}
+          />
+          <div className="flex gap-2">
+            <Input
+              placeholder="https://radio.example.org/public/yourstation (MP3, Icecast, HLS)"
+              value={streamUrl}
+              onChange={(e) => setStreamUrl(e.target.value)}
+            />
+            <Button
+              disabled={!streamUrl.trim() || playMut.isPending}
+              onClick={() =>
+                playMut.mutate({ youtube_url: streamUrl.trim(), title: streamName.trim() || null })
+              }
+              className="gap-1"
+            >
+              <Play className="h-4 w-4" /> Go live
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Pushes the stream live to every listener via the DJ player. Use Pause/Stop above to control it.
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="space-y-2">
         {(queue.data ?? []).map((q) => {
           const isLoaded = djState.track?.url === q.youtube_url;
