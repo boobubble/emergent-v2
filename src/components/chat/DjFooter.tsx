@@ -112,13 +112,14 @@ function DjFooterView({
           </Button>
         )}
 
-        {playbackBlocked && state.playing && state.track && !muted && (
+        {state.playing && state.track?.kind === "audio" && !muted && (
           <Button
             type="button"
-            variant="outline"
+            variant={playbackBlocked ? "default" : "outline"}
             size="sm"
             className="h-8 gap-1 px-2"
             onClick={() => mediaControlsRef.current?.play()}
+            title="Play stream"
           >
             <Play className="h-3.5 w-3.5" /> Play
           </Button>
