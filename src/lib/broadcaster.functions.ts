@@ -558,7 +558,7 @@ export const updateAnnouncement = createServerFn({ method: "POST" })
     }
     const { data: row, error } = await supabaseAdmin
       .from("radio_announcements")
-      .update(patch)
+      .update(patch as never)
       .eq("id", id)
       .select("*")
       .single();
