@@ -438,7 +438,7 @@ function FeedPage() {
   }, [view, tab]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24 lg:pb-0">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground pb-24 lg:pb-0">
       {/* Top bar */}
       <header className="sticky top-0 z-30 feed-glass border-b border-border">
         <div className="mx-auto flex max-w-[1360px] items-center gap-3 px-3 py-2.5 sm:gap-4 sm:px-5">
