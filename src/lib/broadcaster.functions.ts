@@ -655,7 +655,8 @@ export const getBroadcasterAnalytics = createServerFn({ method: "GET" }).handler
     if (!mostPlayedTrack || v.count > mostPlayedTrack.plays) {
       mostPlayedTrack = { youtube_id, title: v.title, plays: v.count };
     }
-  });
+  }
+
 
   return { topHost, topShow, peakHour, mostActiveWidget, mostPlayedTrack };
 });
