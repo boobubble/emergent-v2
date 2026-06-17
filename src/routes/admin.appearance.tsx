@@ -185,6 +185,8 @@ function BrandAssetsCard() {
           <div className="grid gap-3 sm:grid-cols-2">
             {GLOBAL_GROUPS.map((g) => {
               const cfg = getCfg(g.key);
+              const lightUrl = (values[`${g.key}_light` as keyof BrandingMap] as string) || "";
+              const darkUrl = (values[`${g.key}_dark` as keyof BrandingMap] as string) || "";
               return (
                 <div key={g.key} className="space-y-1.5">
                   <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">{g.title}</Label>
@@ -222,6 +224,33 @@ function BrandAssetsCard() {
                     />
                     Lock to layout (don't change UI — fit logo inside existing slot)
                   </label>
+
+                  {/* Padding inputs */}
+                  <div className="pt-1">
+                    <div className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">Padding (px)</div>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {(["t", "r", "b", "l"] as const).map((side) => (
+                        <div key={side} className="flex items-center gap-1">
+                          <span className="w-3 text-[10px] uppercase text-muted-foreground">{side}</span>
+                          <Input
+                            type="number" min={0} max={128}
+                            value={cfg.pad?.[side] ?? ""}
+                            placeholder="0"
+                            className="h-8 px-1.5 text-xs"
+                            onChange={(e) => setPad(g.key, side, Number(e.target.value))}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Live preview */}
+                  <LivePreview
+                    label={cfg.lock ? "Preview (lock-to-layout)" : "Live preview"}
+                    cfg={cfg}
+                    lightUrl={lightUrl}
+                    darkUrl={darkUrl}
+                  />
                 </div>
               );
             })}
