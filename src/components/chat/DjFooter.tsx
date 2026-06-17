@@ -84,26 +84,11 @@ function DjFooterView({
   onSave: (next: DjPlayerState) => void;
   saving: boolean;
 }) {
-  const [urlDraft, setUrlDraft] = useState("");
-  const [titleDraft, setTitleDraft] = useState("");
-
   const muted = state.allowListenerMute && listenerMuted;
   const effectiveVolume = muted ? 0 : Math.max(0, Math.min(100, state.defaultVolume));
 
-  // ── Admin actions ───────────────────────────────────────────────
-  const loadTrack = () => {
-    const track = buildTrackFromUrl(urlDraft, titleDraft);
-    if (!track) { toast.error("Paste a YouTube URL or a direct audio link"); return; }
-    onSave({
-      ...state,
-      track,
-      playing: true,
-      positionSec: 0,
-      startedAtMs: Date.now(),
-    });
-    setUrlDraft("");
-    setTitleDraft("");
-  };
+  // Admin actions (track loading is now managed from /broadcaster).
+
 
   const togglePlay = () => {
     if (!state.track) return;
