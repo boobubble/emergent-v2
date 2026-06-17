@@ -46,8 +46,8 @@ export function PromotedPostsWidget({ profiles }: { profiles: Record<string, Use
           <p className="px-1 py-2 text-xs text-muted-foreground">No featured posts yet.</p>
         )}
         {loaded && posts.map((p) => {
-          const author = profiles[p.user_id];
-          const snippet = (p.body ?? "").replace(/\s+/g, " ").trim().slice(0, 70);
+          const author = profiles[p.author_id];
+          const snippet = (p.text ?? "").replace(/\s+/g, " ").trim().slice(0, 70);
           return (
             <Link
               key={p.id}
