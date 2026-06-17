@@ -5,6 +5,8 @@ export type AppRole =
   | "admin"
   | "moderator"
   | "room_moderator"
+  | "dj"
+  | "rj"
   | "vip"
   | "verified_creator"
   | "user";
@@ -25,8 +27,11 @@ export type Permission =
   | "admin.seo.write"
   | "moderation.global"
   | "moderation.room"
+  | "broadcaster.access"
+  | "broadcaster.manage"
   | "content.create"
   | "content.boost";
+
 
 export const ROLE_REGISTRY: RoleDef[] = [
   {
@@ -63,6 +68,20 @@ export const ROLE_REGISTRY: RoleDef[] = [
     description: "Moderate specific rooms only.",
     color: "text-yellow-500",
     permissions: ["moderation.room","content.create"],
+  },
+  {
+    id: "dj",
+    label: "DJ",
+    description: "Broadcaster Studio access: manage widgets, queue, mic, schedule, and go live.",
+    color: "text-fuchsia-500",
+    permissions: ["broadcaster.access","broadcaster.manage","content.create"],
+  },
+  {
+    id: "rj",
+    label: "RJ",
+    description: "Radio jockey: host shows, run the queue, and post broadcaster announcements.",
+    color: "text-cyan-500",
+    permissions: ["broadcaster.access","broadcaster.manage","content.create"],
   },
   {
     id: "vip",

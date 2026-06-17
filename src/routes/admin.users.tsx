@@ -30,14 +30,17 @@ import {
 
 export const Route = createFileRoute("/admin/users")({ component: UsersPage });
 
-type ManagedRole = "super_admin" | "admin" | "moderator";
+type ManagedRole = "super_admin" | "admin" | "moderator" | "dj" | "rj";
 type FilterKey = "all" | "members" | "guests" | "banned" | "staff";
 
 const ROLE_META: Record<ManagedRole, { label: string; color: string; icon: typeof Shield }> = {
   super_admin: { label: "Super Admin", color: "text-rose-500", icon: ShieldCheck },
   admin: { label: "Admin", color: "text-orange-500", icon: Shield },
   moderator: { label: "Moderator", color: "text-amber-500", icon: Hammer },
+  dj: { label: "DJ", color: "text-fuchsia-500", icon: Shield },
+  rj: { label: "RJ", color: "text-cyan-500", icon: Shield },
 };
+
 
 const DURATION_OPTIONS: { value: string; label: string; minutes: number | null }[] = [
   { value: "60", label: "1 hour", minutes: 60 },
@@ -123,7 +126,7 @@ function UsersPage() {
 
   const users = usersQ.data ?? [];
   const totals = useMemo(() => {
-    const t = { super_admin: 0, admin: 0, moderator: 0 };
+    const t: Record<ManagedRole, number> = { super_admin: 0, admin: 0, moderator: 0, dj: 0, rj: 0 };
     for (const u of users) for (const r of u.roles) if (r in t) (t as any)[r]++;
     return t;
   }, [users]);
