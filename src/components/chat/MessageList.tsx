@@ -172,7 +172,8 @@ export function MessageList({ channelId }: { channelId: string }) {
 
                     <Time ts={g[0].ts} />
                     <UserMenu userId={author.id} username={author.name}>
-                      <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-foreground">
+
                         <CosmeticName userId={author.id} name={author.name} />
                         <NameAdornments user={author} />
                       </span>
