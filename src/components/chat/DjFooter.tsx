@@ -157,11 +157,14 @@ function DjMediaSink({
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const requestAudioPlay = useCallback(() => {
+  const requestAudioPlay = useCallback((reload = false) => {
     const el = audioRef.current;
     if (!el || state.track?.kind !== "audio" || !state.playing) return;
     el.volume = Math.max(0, Math.min(1, volume / 100));
     el.muted = muted;
+    if (reload || el.error || el.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+      try { el.load(); } catch { /* noop */ }
+    }
     const p = el.play();
     if (p && typeof p.then === "function") {
       p.then(() => onPlaybackBlockedChange(false)).catch((err) => {
@@ -174,7 +177,7 @@ function DjMediaSink({
   }, [muted, onPlaybackBlockedChange, state.playing, state.track?.kind, volume]);
 
   useEffect(() => {
-    controlRef.current = { play: requestAudioPlay };
+    controlRef.current = { play: () => requestAudioPlay(true) };
     return () => { controlRef.current = null; };
   }, [controlRef, requestAudioPlay]);
 
