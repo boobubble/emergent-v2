@@ -268,7 +268,7 @@ function DjMediaSink({
         src={state.track.url}
         autoPlay={state.playing}
         preload="auto"
-        crossOrigin="anonymous"
+        playsInline
         className="hidden"
       />
     );
