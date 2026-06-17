@@ -57,22 +57,22 @@ export function ChatExploreMenu() {
       </button>
 
       {open && (
-        <div className="absolute bottom-full left-0 z-50 mb-2 w-60 rounded-2xl border border-border bg-card/95 p-2 shadow-2xl backdrop-blur-xl animate-scale-in">
-          <div className="px-2 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        <div className="absolute bottom-full left-0 z-50 mb-1 w-52 rounded-xl border border-border bg-card/95 p-1 shadow-2xl backdrop-blur-xl animate-scale-in">
+          <div className="px-1.5 pb-0.5 pt-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
             Explore More
           </div>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0">
             {SHORTCUTS.map(({ to, label, icon: Icon, gradient }) => (
               <Link
                 key={to}
                 to={to}
                 onClick={() => setOpen(false)}
-                className="group flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors hover:bg-white/5"
+                className="group flex items-center gap-2 rounded-lg px-1.5 py-1 transition-colors hover:bg-white/5"
               >
-                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${gradient} text-white shadow-sm ring-1 ring-white/10`}>
-                  <Icon className="h-4 w-4" />
+                <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-md bg-gradient-to-br ${gradient} text-white shadow-sm ring-1 ring-white/10`}>
+                  <Icon className="h-3 w-3" />
                 </span>
-                <span className="truncate text-sm font-semibold text-foreground">{label}</span>
+                <span className="truncate text-[11px] font-semibold text-foreground">{label}</span>
               </Link>
             ))}
           </div>
