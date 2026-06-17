@@ -157,7 +157,7 @@ export function MessageList({ channelId }: { channelId: string }) {
           </div>
         </div>
       )}
-      <div className="space-y-5">
+      <div className="space-y-2">
         {groups.map((g, gi) => {
           const author = state.users[g[0].authorId];
           if (!author) return null;
