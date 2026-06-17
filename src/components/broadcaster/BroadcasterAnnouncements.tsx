@@ -9,7 +9,7 @@
 // one-line render injection of these components.
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Megaphone } from "lucide-react";
+import { Megaphone, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { canPlaySound } from "@/lib/sound-prefs";
