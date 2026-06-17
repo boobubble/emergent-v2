@@ -11,7 +11,7 @@ import { useSavedPosts } from "@/lib/use-saved-posts";
 import { Composer } from "@/components/feed/Composer";
 import { StoryTray } from "@/components/feed/StoryTray";
 import { PostCard } from "@/components/feed/PostCard";
-import { FriendsWidget, HashtagsWidget, ChatroomOnlineWidget } from "@/components/feed/SideWidgets";
+import { FriendsWidget, HashtagsWidget } from "@/components/feed/SideWidgets";
 import {
   PromotedPostsWidget,
   FeaturedMembersWidget,
