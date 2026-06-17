@@ -614,14 +614,8 @@ function FeedPage() {
               <SideItem onClick={() => setView("spin")} active={view === "spin"} icon={Sparkles} label="Daily Spin" color="text-violet-400" />
               <SideItem onClick={() => setView("shop")} active={view === "shop"} icon={Coins} label="Shop" color="text-emerald-400" />
 
-              <div className="feed-section-label">Account</div>
-              <SideItem
-                active={view === "profile"}
-                onClick={() => { setProfileUsername(user.username); setView("profile"); }}
-                icon={UserCircle}
-                label="My Profile"
-                color="text-primary"
-              />
+              
+
               
             </nav>
             <Suspense fallback={<RewardsWidgetSkeleton />}>
