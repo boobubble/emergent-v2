@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReelsRouteImport } from './routes/reels'
+import { Route as RadioRouteImport } from './routes/radio'
 import { Route as PagesRouteImport } from './routes/pages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
@@ -23,17 +24,25 @@ import { Route as FeedRouteImport } from './routes/feed'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as ChatroomsRouteImport } from './routes/chatrooms'
 import { Route as ChatroomRouteImport } from './routes/chatroom'
+import { Route as BroadcasterRouteImport } from './routes/broadcaster'
 import { Route as BannedRouteImport } from './routes/banned'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
+import { Route as BroadcasterWidgetsRouteImport } from './routes/broadcaster.widgets'
+import { Route as BroadcasterScheduleRouteImport } from './routes/broadcaster.schedule'
+import { Route as BroadcasterQueueRouteImport } from './routes/broadcaster.queue'
+import { Route as BroadcasterMicRouteImport } from './routes/broadcaster.mic'
+import { Route as BroadcasterAnnouncementsRouteImport } from './routes/broadcaster.announcements'
+import { Route as BroadcasterAnalyticsRouteImport } from './routes/broadcaster.analytics'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminUpcomingRouteImport } from './routes/admin.upcoming'
 import { Route as AdminSystemRouteImport } from './routes/admin.system'
@@ -107,6 +116,11 @@ const ReelsRoute = ReelsRouteImport.update({
   path: '/reels',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RadioRoute = RadioRouteImport.update({
+  id: '/radio',
+  path: '/radio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PagesRoute = PagesRouteImport.update({
   id: '/pages',
   path: '/pages',
@@ -162,6 +176,11 @@ const ChatroomRoute = ChatroomRouteImport.update({
   path: '/chatroom',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BroadcasterRoute = BroadcasterRouteImport.update({
+  id: '/broadcaster',
+  path: '/broadcaster',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BannedRoute = BannedRouteImport.update({
   id: '/banned',
   path: '/banned',
@@ -192,6 +211,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BroadcasterIndexRoute = BroadcasterIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BroadcasterRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -216,6 +240,37 @@ const FeedSlugRoute = FeedSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => FeedRoute,
+} as any)
+const BroadcasterWidgetsRoute = BroadcasterWidgetsRouteImport.update({
+  id: '/widgets',
+  path: '/widgets',
+  getParentRoute: () => BroadcasterRoute,
+} as any)
+const BroadcasterScheduleRoute = BroadcasterScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => BroadcasterRoute,
+} as any)
+const BroadcasterQueueRoute = BroadcasterQueueRouteImport.update({
+  id: '/queue',
+  path: '/queue',
+  getParentRoute: () => BroadcasterRoute,
+} as any)
+const BroadcasterMicRoute = BroadcasterMicRouteImport.update({
+  id: '/mic',
+  path: '/mic',
+  getParentRoute: () => BroadcasterRoute,
+} as any)
+const BroadcasterAnnouncementsRoute =
+  BroadcasterAnnouncementsRouteImport.update({
+    id: '/announcements',
+    path: '/announcements',
+    getParentRoute: () => BroadcasterRoute,
+  } as any)
+const BroadcasterAnalyticsRoute = BroadcasterAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => BroadcasterRoute,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
@@ -511,6 +566,7 @@ export interface FileRoutesByFullPath {
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
   '/banned': typeof BannedRoute
+  '/broadcaster': typeof BroadcasterRouteWithChildren
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
   '/confessions': typeof ConfessionsRoute
@@ -522,6 +578,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
+  '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
@@ -577,11 +634,18 @@ export interface FileRoutesByFullPath {
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
+  '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
+  '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
+  '/broadcaster/mic': typeof BroadcasterMicRoute
+  '/broadcaster/queue': typeof BroadcasterQueueRoute
+  '/broadcaster/schedule': typeof BroadcasterScheduleRoute
+  '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
+  '/broadcaster/': typeof BroadcasterIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
@@ -605,6 +669,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
+  '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
@@ -660,11 +725,18 @@ export interface FileRoutesByTo {
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
+  '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
+  '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
+  '/broadcaster/mic': typeof BroadcasterMicRoute
+  '/broadcaster/queue': typeof BroadcasterQueueRoute
+  '/broadcaster/schedule': typeof BroadcasterScheduleRoute
+  '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
+  '/broadcaster': typeof BroadcasterIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
@@ -679,6 +751,7 @@ export interface FileRoutesById {
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
   '/banned': typeof BannedRoute
+  '/broadcaster': typeof BroadcasterRouteWithChildren
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
   '/confessions': typeof ConfessionsRoute
@@ -690,6 +763,7 @@ export interface FileRoutesById {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
+  '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
@@ -745,11 +819,18 @@ export interface FileRoutesById {
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
+  '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
+  '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
+  '/broadcaster/mic': typeof BroadcasterMicRoute
+  '/broadcaster/queue': typeof BroadcasterQueueRoute
+  '/broadcaster/schedule': typeof BroadcasterScheduleRoute
+  '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
+  '/broadcaster/': typeof BroadcasterIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
@@ -765,6 +846,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/admin'
     | '/banned'
+    | '/broadcaster'
     | '/chatroom'
     | '/chatrooms'
     | '/confessions'
@@ -776,6 +858,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/pages'
+    | '/radio'
     | '/reels'
     | '/reset-password'
     | '/welcome'
@@ -831,11 +914,18 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
+    | '/broadcaster/analytics'
+    | '/broadcaster/announcements'
+    | '/broadcaster/mic'
+    | '/broadcaster/queue'
+    | '/broadcaster/schedule'
+    | '/broadcaster/widgets'
     | '/feed/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
     | '/admin/'
+    | '/broadcaster/'
     | '/admin/upcoming/$key'
     | '/api/public/community-bg'
     | '/api/public/feedback-showcase'
@@ -859,6 +949,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/pages'
+    | '/radio'
     | '/reels'
     | '/reset-password'
     | '/welcome'
@@ -914,11 +1005,18 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
+    | '/broadcaster/analytics'
+    | '/broadcaster/announcements'
+    | '/broadcaster/mic'
+    | '/broadcaster/queue'
+    | '/broadcaster/schedule'
+    | '/broadcaster/widgets'
     | '/feed/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
     | '/admin'
+    | '/broadcaster'
     | '/admin/upcoming/$key'
     | '/api/public/community-bg'
     | '/api/public/feedback-showcase'
@@ -932,6 +1030,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/admin'
     | '/banned'
+    | '/broadcaster'
     | '/chatroom'
     | '/chatrooms'
     | '/confessions'
@@ -943,6 +1042,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/pages'
+    | '/radio'
     | '/reels'
     | '/reset-password'
     | '/welcome'
@@ -998,11 +1098,18 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
+    | '/broadcaster/analytics'
+    | '/broadcaster/announcements'
+    | '/broadcaster/mic'
+    | '/broadcaster/queue'
+    | '/broadcaster/schedule'
+    | '/broadcaster/widgets'
     | '/feed/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
     | '/admin/'
+    | '/broadcaster/'
     | '/admin/upcoming/$key'
     | '/api/public/community-bg'
     | '/api/public/feedback-showcase'
@@ -1017,6 +1124,7 @@ export interface RootRouteChildren {
   AchievementsRoute: typeof AchievementsRoute
   AdminRoute: typeof AdminRouteWithChildren
   BannedRoute: typeof BannedRoute
+  BroadcasterRoute: typeof BroadcasterRouteWithChildren
   ChatroomRoute: typeof ChatroomRoute
   ChatroomsRoute: typeof ChatroomsRoute
   ConfessionsRoute: typeof ConfessionsRoute
@@ -1028,6 +1136,7 @@ export interface RootRouteChildren {
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
   PagesRoute: typeof PagesRoute
+  RadioRoute: typeof RadioRoute
   ReelsRoute: typeof ReelsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -1061,6 +1170,13 @@ declare module '@tanstack/react-router' {
       path: '/reels'
       fullPath: '/reels'
       preLoaderRoute: typeof ReelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/radio': {
+      id: '/radio'
+      path: '/radio'
+      fullPath: '/radio'
+      preLoaderRoute: typeof RadioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pages': {
@@ -1140,6 +1256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatroomRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/broadcaster': {
+      id: '/broadcaster'
+      path: '/broadcaster'
+      fullPath: '/broadcaster'
+      preLoaderRoute: typeof BroadcasterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/banned': {
       id: '/banned'
       path: '/banned'
@@ -1182,6 +1305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/broadcaster/': {
+      id: '/broadcaster/'
+      path: '/'
+      fullPath: '/broadcaster/'
+      preLoaderRoute: typeof BroadcasterIndexRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -1216,6 +1346,48 @@ declare module '@tanstack/react-router' {
       fullPath: '/feed/$slug'
       preLoaderRoute: typeof FeedSlugRouteImport
       parentRoute: typeof FeedRoute
+    }
+    '/broadcaster/widgets': {
+      id: '/broadcaster/widgets'
+      path: '/widgets'
+      fullPath: '/broadcaster/widgets'
+      preLoaderRoute: typeof BroadcasterWidgetsRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/broadcaster/schedule': {
+      id: '/broadcaster/schedule'
+      path: '/schedule'
+      fullPath: '/broadcaster/schedule'
+      preLoaderRoute: typeof BroadcasterScheduleRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/broadcaster/queue': {
+      id: '/broadcaster/queue'
+      path: '/queue'
+      fullPath: '/broadcaster/queue'
+      preLoaderRoute: typeof BroadcasterQueueRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/broadcaster/mic': {
+      id: '/broadcaster/mic'
+      path: '/mic'
+      fullPath: '/broadcaster/mic'
+      preLoaderRoute: typeof BroadcasterMicRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/broadcaster/announcements': {
+      id: '/broadcaster/announcements'
+      path: '/announcements'
+      fullPath: '/broadcaster/announcements'
+      preLoaderRoute: typeof BroadcasterAnnouncementsRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/broadcaster/analytics': {
+      id: '/broadcaster/analytics'
+      path: '/analytics'
+      fullPath: '/broadcaster/analytics'
+      preLoaderRoute: typeof BroadcasterAnalyticsRouteImport
+      parentRoute: typeof BroadcasterRoute
     }
     '/admin/users': {
       id: '/admin/users'
@@ -1745,6 +1917,30 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface BroadcasterRouteChildren {
+  BroadcasterAnalyticsRoute: typeof BroadcasterAnalyticsRoute
+  BroadcasterAnnouncementsRoute: typeof BroadcasterAnnouncementsRoute
+  BroadcasterMicRoute: typeof BroadcasterMicRoute
+  BroadcasterQueueRoute: typeof BroadcasterQueueRoute
+  BroadcasterScheduleRoute: typeof BroadcasterScheduleRoute
+  BroadcasterWidgetsRoute: typeof BroadcasterWidgetsRoute
+  BroadcasterIndexRoute: typeof BroadcasterIndexRoute
+}
+
+const BroadcasterRouteChildren: BroadcasterRouteChildren = {
+  BroadcasterAnalyticsRoute: BroadcasterAnalyticsRoute,
+  BroadcasterAnnouncementsRoute: BroadcasterAnnouncementsRoute,
+  BroadcasterMicRoute: BroadcasterMicRoute,
+  BroadcasterQueueRoute: BroadcasterQueueRoute,
+  BroadcasterScheduleRoute: BroadcasterScheduleRoute,
+  BroadcasterWidgetsRoute: BroadcasterWidgetsRoute,
+  BroadcasterIndexRoute: BroadcasterIndexRoute,
+}
+
+const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
+  BroadcasterRouteChildren,
+)
+
 interface FeedRouteChildren {
   FeedSlugRoute: typeof FeedSlugRoute
 }
@@ -1762,6 +1958,7 @@ const rootRouteChildren: RootRouteChildren = {
   AchievementsRoute: AchievementsRoute,
   AdminRoute: AdminRouteWithChildren,
   BannedRoute: BannedRoute,
+  BroadcasterRoute: BroadcasterRouteWithChildren,
   ChatroomRoute: ChatroomRoute,
   ChatroomsRoute: ChatroomsRoute,
   ConfessionsRoute: ConfessionsRoute,
@@ -1773,6 +1970,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
   PagesRoute: PagesRoute,
+  RadioRoute: RadioRoute,
   ReelsRoute: ReelsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   WelcomeRoute: WelcomeRoute,
