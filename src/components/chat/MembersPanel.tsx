@@ -190,6 +190,13 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const meRole = (meId && room.roles[meId]) || "member";
   const isStaff = meRole === "owner" || meRole === "admin";
 
+  useEffect(() => {
+    if (tab === "bots" && (effectiveMode === "merged" || totalBotsCount === 0)) {
+      setTab("users");
+    }
+  }, [tab, effectiveMode, totalBotsCount]);
+
+
 
 
   const body = (
