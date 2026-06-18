@@ -48,9 +48,10 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [showAllOffline, setShowAllOffline] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notifs, setNotifs] = useState<FeedNotification[]>([]);
-  const [viewMode, setViewMode] = useState<"members" | "friends">("members");
   const [friendIds, setFriendIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [tab, setTab] = useState<"users" | "friends" | "bots">("users");
   const isMobile = useIsMobile();
 
   type BotMode = "auto" | "split" | "merged";
@@ -63,8 +64,6 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     try { window.localStorage.setItem("chat-bot-mode", botMode); } catch { /* ignore */ }
   }, [botMode]);
 
-  const [botsCollapsed, setBotsCollapsed] = useState(false);
-  const [mobileTab, setMobileTab] = useState<"users" | "bots">("users");
 
   
   const meId = authUser?.id;
