@@ -1000,7 +1000,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           : null;
       if (reason) {
         setState(s => {
-          const ch = s.activeChannel;
+          const ch = channelOverride || s.activeChannel;
           const sys: Message = { id: uid(), channelId: ch, authorId: "bot-gamebot", text: reason, ts: Date.now(), kind: "system" };
           return { ...s, messages: { ...s.messages, [ch]: [...(s.messages[ch] || []), sys] } };
         });
