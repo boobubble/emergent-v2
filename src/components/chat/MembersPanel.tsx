@@ -221,7 +221,10 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             >
               <Inbox className="h-5 w-5" />
               {dmUnreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                <span
+                  key={`dm-${dmUnreadCount}`}
+                  className="unread-pop absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground"
+                >
                   {dmUnreadCount > 9 ? "9+" : dmUnreadCount}
                 </span>
               )}
@@ -247,7 +250,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                     <FrameAvatar user={u} size={24} />
                     <span className="truncate"><CosmeticName userId={u.id} name={u.name} /></span>
                     {isDmUnread(uid) && (
-                      <span className="ml-1 h-1.5 w-1.5 rounded-full bg-primary" title="Unread" />
+                      <span key="dm-unread" className="unread-pop unread-dot-primary ml-1 h-1.5 w-1.5 rounded-full bg-primary" title="Unread" />
                     )}
                     <span
                       className={`ml-auto h-2 w-2 rounded-full ${
@@ -278,7 +281,10 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             >
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                <span
+                  key={`notif-${unreadCount}`}
+                  className="unread-pop absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground"
+                >
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
