@@ -221,7 +221,10 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             >
               <Inbox className="h-5 w-5" />
               {dmUnreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                <span
+                  key={`dm-${dmUnreadCount}`}
+                  className="unread-pop absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground"
+                >
                   {dmUnreadCount > 9 ? "9+" : dmUnreadCount}
                 </span>
               )}
