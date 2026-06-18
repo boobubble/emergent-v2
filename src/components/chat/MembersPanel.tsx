@@ -54,6 +54,15 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [tab, setTab] = useState<"users" | "friends" | "bots">("users");
   const isMobile = useIsMobile();
 
+  const openDM = (id: string) => {
+    if (!id || id === "me") return;
+    if (isMobile) {
+      startDM(id);
+    } else if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId: id } }));
+    }
+  };
+
   type BotMode = "auto" | "split" | "merged";
   const [botMode, setBotMode] = useState<BotMode>(() => {
     if (typeof window === "undefined") return "auto";
