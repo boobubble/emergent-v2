@@ -429,7 +429,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               ))
           )}
         </div>
-      ) : (
+      ) : effectiveMode === "merged" ? (
         <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
           <div className="space-y-1">
             {online.map(id => (
@@ -476,7 +476,127 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             </div>
           )}
         </div>
+      ) : isMobile ? (
+        // Split + mobile → tabs
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="mx-3 mb-2 grid grid-cols-2 gap-1 rounded-full bg-white/5 p-1">
+            <button
+              onClick={() => setMobileTab("users")}
+              className={`flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors ${mobileTab === "users" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Users <span className="opacity-80">({totalUsersCount})</span>
+            </button>
+            <button
+              onClick={() => setMobileTab("bots")}
+              className={`flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors ${mobileTab === "bots" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              <Bot className="h-3 w-3" /> Bots <span className="opacity-80">({totalBotsCount})</span>
+            </button>
+          </div>
+
+          {mobileTab === "users" ? (
+            <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+              <div className="space-y-1">
+                {onlineUsers.length === 0 ? (
+                  <p className="px-3 py-6 text-center text-xs text-muted-foreground">No users online.</p>
+                ) : onlineUsers.map(id => (
+                  <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                ))}
+              </div>
+              {offlineUsers.length > 0 && (
+                <div>
+                  <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                    Offline — {offlineSortedUsers.length}
+                  </div>
+                  <div className="space-y-1 opacity-60">
+                    {offlineUsers.map(id => (
+                      <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                    ))}
+                  </div>
+                  {hiddenOfflineUsers > 0 && (
+                    <button
+                      onClick={() => setShowAllOffline(true)}
+                      className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
+                    >
+                      Show {hiddenOfflineUsers} more
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
+              {onlineBots.length === 0 ? (
+                <p className="px-3 py-6 text-center text-xs text-muted-foreground">No bots available.</p>
+              ) : onlineBots.map(id => (
+                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        // Split + desktop → two sections (bots collapsible)
+        <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+          <div>
+            <div className="flex items-center justify-between px-3 pb-2">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                Users — {totalUsersCount}
+              </div>
+            </div>
+            <div className="space-y-1">
+              {onlineUsers.length === 0 ? (
+                <p className="px-3 py-3 text-center text-[11px] text-muted-foreground">No users online.</p>
+              ) : onlineUsers.map(id => (
+                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+              ))}
+            </div>
+            {offlineUsers.length > 0 && (
+              <div className="mt-3">
+                <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                  Offline — {offlineSortedUsers.length}
+                </div>
+                <div className="space-y-1 opacity-60">
+                  {offlineUsers.map(id => (
+                    <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                  ))}
+                </div>
+                {hiddenOfflineUsers > 0 && (
+                  <button
+                    onClick={() => setShowAllOffline(true)}
+                    className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
+                  >
+                    Show {hiddenOfflineUsers} more
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {totalBotsCount > 0 && (
+            <div className="border-t border-border/50 pt-3">
+              <button
+                onClick={() => setBotsCollapsed(c => !c)}
+                className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left transition-colors hover:bg-white/5"
+                aria-expanded={!botsCollapsed}
+              >
+                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                  <Bot className="h-3 w-3" />
+                  Bots — {totalBotsCount}
+                </span>
+                {botsCollapsed ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+              </button>
+              {!botsCollapsed && (
+                <div className="mt-1 space-y-1">
+                  {onlineBots.map(id => (
+                    <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
+
 
     </>
   );
