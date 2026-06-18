@@ -85,7 +85,7 @@ export function TrioRoomsDock() {
 
   // Allow other UI (e.g. members panel header icon) to open the create dialog
   useEffect(() => {
-    const onOpenCreate = () => { setShowCreate(true); setShowPanel(true); };
+    const onOpenCreate = () => { setShowCreate(true); };
     window.addEventListener("trio:open-create", onOpenCreate);
     return () => window.removeEventListener("trio:open-create", onOpenCreate);
   }, []);
