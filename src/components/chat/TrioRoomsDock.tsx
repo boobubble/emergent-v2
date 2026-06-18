@@ -337,12 +337,34 @@ function InviteCard({
   const chat = useChat();
   const ownerName = chat.state.users[inv.ownerId]?.name ?? "Someone";
   const [pwd, setPwd] = useState("");
+  const [balance, setBalance] = useState<number | null>(null);
+  const cost = trio.TRIO_JOIN_COST;
+
+  useEffect(() => { trio.getMyCoins().then(setBalance).catch(() => setBalance(0)); }, []);
+
+  const insufficient = balance !== null && balance < cost;
+
   return (
     <div className="mt-2 rounded-xl border border-primary/30 bg-primary/5 p-2.5">
       <div className="text-[11px] text-muted-foreground">
         <span className="font-semibold text-foreground">{ownerName}</span> invited you to
       </div>
-      <div className="mt-0.5 truncate text-sm font-semibold">{inv.roomName}</div>
+      <div className="mt-0.5 truncate text-sm font-semibold">Join {inv.roomName}</div>
+      <div className="mt-1.5 flex items-center justify-between rounded-md bg-background/60 px-2 py-1 text-[10px]">
+        <span className="text-muted-foreground">Cost</span>
+        <span className="font-bold text-amber-500">🪙 {cost}</span>
+      </div>
+      <div className="mt-1 flex items-center justify-between px-2 text-[10px]">
+        <span className="text-muted-foreground">Your balance</span>
+        <span className={`font-semibold ${insufficient ? "text-destructive" : "text-foreground"}`}>
+          {balance === null ? "…" : `🪙 ${balance.toLocaleString()}`}
+        </span>
+      </div>
+      {insufficient && (
+        <div className="mt-1.5 rounded-md bg-destructive/10 px-2 py-1 text-[10px] text-destructive">
+          Not enough coins. Earn more by chatting, posting, or completing daily missions.
+        </div>
+      )}
       <input
         value={pwd}
         onChange={(e) => setPwd(e.target.value)}
@@ -352,9 +374,10 @@ function InviteCard({
       <div className="mt-2 flex gap-1.5">
         <button
           onClick={() => onAccept(inv, pwd || undefined)}
-          className="flex-1 rounded-md bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground hover:opacity-90"
+          disabled={insufficient}
+          className="flex-1 rounded-md bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Accept
+          {insufficient ? "Need coins" : `Join · 🪙${cost}`}
         </button>
         <button
           onClick={() => onReject(inv)}
@@ -379,10 +402,18 @@ function CreateRoomDialog({
   const [hidden, setHidden] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [balance, setBalance] = useState<number | null>(null);
+  const createCost = trio.TRIO_CREATE_COST;
+  const joinCost = trio.TRIO_JOIN_COST;
+
+  useEffect(() => { trio.getMyCoins().then(setBalance).catch(() => setBalance(0)); }, []);
+
+  const insufficient = balance !== null && balance < createCost;
 
   async function submit() {
     setErr("");
     if (!name.trim()) { setErr("Name required"); return; }
+    if (insufficient) { setErr("Not enough coins"); return; }
     setBusy(true);
     try {
       const r = await trio.createRoom({ name: name.trim(), password: password || null, hidden });
@@ -401,6 +432,30 @@ function CreateRoomDialog({
           <Users className="h-4 w-4 text-primary" />
           <div className="text-sm font-bold">Create Private Trio Room</div>
         </div>
+
+        {/* Cost summary */}
+        <div className="mb-3 rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-primary/5 p-2.5 text-xs">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-muted-foreground">Create cost</span>
+            <span className="font-bold text-amber-500">🪙 {createCost}</span>
+          </div>
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-muted-foreground">Each invited member pays</span>
+            <span className="font-semibold text-amber-500/90">🪙 {joinCost}</span>
+          </div>
+          <div className="mt-1.5 flex items-center justify-between border-t border-border/50 pt-1.5">
+            <span className="text-muted-foreground">Your balance</span>
+            <span className={`font-bold ${insufficient ? "text-destructive" : "text-foreground"}`}>
+              {balance === null ? "…" : `🪙 ${balance.toLocaleString()}`}
+            </span>
+          </div>
+          {insufficient && (
+            <div className="mt-2 rounded-md bg-destructive/10 px-2 py-1 text-[10px] text-destructive">
+              Not enough coins. Earn more from daily missions, chatting, and posting — or top up from the shop.
+            </div>
+          )}
+        </div>
+
         <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Room name</label>
         <input
           autoFocus
@@ -428,14 +483,19 @@ function CreateRoomDialog({
         {err && <div className="mb-2 text-xs text-destructive">{err}</div>}
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-sm hover:bg-muted/60">Cancel</button>
-          <button onClick={submit} disabled={busy} className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50">
-            {busy ? "Creating…" : "Create"}
+          <button
+            onClick={submit}
+            disabled={busy || insufficient}
+            className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {busy ? "Creating…" : insufficient ? "Need coins" : `Create · 🪙${createCost}`}
           </button>
         </div>
       </div>
     </div>
   );
 }
+
 
 function TrioRoomWindow({
   room,
