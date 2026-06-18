@@ -111,8 +111,19 @@ export function TrioRoomsDock() {
   }, [uid]);
 
   const openRoom = useCallback((room: OpenRoom) => {
+    // Only one fullscreen room at a time — minimize any currently open ones.
+    setOpenRooms(prevOpen => {
+      const others = prevOpen.filter(r => r.id !== room.id);
+      if (others.length > 0) {
+        setMinimized(m => {
+          const next = [...m];
+          for (const o of others) if (!next.some(n => n.id === o.id)) next.push(o);
+          return next;
+        });
+      }
+      return [room];
+    });
     setMinimized(m => m.filter(r => r.id !== room.id));
-    setOpenRooms(o => (o.some(r => r.id === room.id) ? o : [...o, room]));
   }, []);
 
   const closeWindow = (id: string) => {
@@ -123,6 +134,7 @@ export function TrioRoomsDock() {
   const minimizeWindow = (room: OpenRoom) => {
     setOpenRooms(o => o.filter(r => r.id !== room.id));
     setMinimized(m => (m.some(r => r.id === room.id) ? m : [...m, room]));
+    setShowPanel(true);
   };
 
   async function handleAccept(inv: PendingInvite, password?: string) {
@@ -140,7 +152,9 @@ export function TrioRoomsDock() {
     setInvites(prev => prev.filter(p => p.roomId !== inv.roomId));
   }
 
-  if (isMobile || !uid) return null;
+  if (!uid) return null;
+  void isMobile;
+
 
   return (
     <>
