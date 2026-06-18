@@ -39,6 +39,8 @@ export function TrioRoomsDock() {
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
+  const [unread, setUnread] = useState<Record<string, number>>({});
+
 
   const uid = user?.id;
 
@@ -124,7 +126,30 @@ export function TrioRoomsDock() {
       return [room];
     });
     setMinimized(m => m.filter(r => r.id !== room.id));
+    setUnread(u => (u[room.id] ? { ...u, [room.id]: 0 } : u));
   }, []);
+
+  // Subscribe to messages in minimized rooms to count unreads.
+  useEffect(() => {
+    if (!uid || minimized.length === 0) return;
+    const channels = minimized.map(room => {
+      const channelId = trio.trioChannel(room.id);
+      return supabase
+        .channel(`trio-unread-${room.id}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "messages", filter: `channel_id=eq.${channelId}` },
+          (payload) => {
+            const row = payload.new as { author_id: string };
+            if (row.author_id === uid) return;
+            setUnread(u => ({ ...u, [room.id]: (u[room.id] ?? 0) + 1 }));
+          },
+        )
+        .subscribe();
+    });
+    return () => { for (const ch of channels) void supabase.removeChannel(ch); };
+  }, [uid, minimized]);
+
 
   const closeWindow = (id: string) => {
     setOpenRooms(o => o.filter(r => r.id !== id));
@@ -193,18 +218,29 @@ export function TrioRoomsDock() {
               <InviteCard key={inv.roomId} inv={inv} onAccept={handleAccept} onReject={handleReject} />
             ))}
 
-            {minimized.map(room => (
-              <button
-                key={room.id}
-                onClick={() => openRoom(room)}
-                className="mt-1 flex w-full items-center justify-between rounded-lg bg-muted/20 px-2 py-1.5 text-left text-xs hover:bg-muted/40"
-              >
-                <span className="flex items-center gap-1.5 truncate">
-                  <Users className="h-3 w-3 text-primary" /> {room.name}
-                </span>
-                <span className="text-[10px] text-muted-foreground">Open</span>
-              </button>
-            ))}
+            {minimized.map(room => {
+              const count = unread[room.id] ?? 0;
+              return (
+                <button
+                  key={room.id}
+                  onClick={() => openRoom(room)}
+                  className={`mt-1 flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs hover:bg-muted/40 ${count > 0 ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/20"}`}
+                >
+                  <span className="flex min-w-0 items-center gap-1.5 truncate">
+                    <Users className="h-3 w-3 shrink-0 text-primary" />
+                    <span className="truncate">{room.name}</span>
+                  </span>
+                  {count > 0 ? (
+                    <span className="ml-2 grid h-5 min-w-[20px] shrink-0 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground animate-pulse">
+                      {count > 99 ? "99+" : count}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">Open</span>
+                  )}
+                </button>
+              );
+            })}
+
           </div>
         )}
       </div>
