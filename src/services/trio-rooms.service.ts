@@ -34,35 +34,31 @@ export function trioChannel(roomId: string): string {
   return `trio:${roomId}`;
 }
 
+export const TRIO_CREATE_COST = 100;
+export const TRIO_JOIN_COST = 50;
+
+export async function getMyCoins(): Promise<number> {
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth.user?.id;
+  if (!uid) return 0;
+  const { data } = await supabase.from("profiles").select("coins").eq("id", uid).maybeSingle();
+  return data?.coins ?? 0;
+}
+
 export async function createRoom(opts: {
   name: string;
   password?: string | null;
   hidden?: boolean;
 }): Promise<TrioRoom> {
-  const { data: auth } = await supabase.auth.getUser();
-  const uid = auth.user?.id;
-  if (!uid) throw new Error("Not signed in");
-  const { data, error } = await supabase
-    .from("trio_rooms")
-    .insert({
-      name: opts.name.trim().slice(0, 60),
-      password: opts.password?.trim() || null,
-      hidden: !!opts.hidden,
-      owner_id: uid,
-    })
-    .select(ROOM_COLS)
-    .single();
-  if (error) throw error;
-  // Owner auto-joins as accepted
-  await supabase.from("trio_room_members").insert({
-    room_id: data.id,
-    user_id: uid,
-    status: "accepted",
-    invited_by: uid,
-    joined_at: new Date().toISOString(),
+  const { data, error } = await supabase.rpc("create_trio_room", {
+    _name: opts.name.trim().slice(0, 60),
+    _password: opts.password?.trim() || null,
+    _hidden: !!opts.hidden,
   });
+  if (error) throw error;
   return data as TrioRoom;
 }
+
 
 export async function inviteByUsername(roomId: string, username: string): Promise<void> {
   const { data: auth } = await supabase.auth.getUser();
