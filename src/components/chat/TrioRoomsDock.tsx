@@ -111,8 +111,19 @@ export function TrioRoomsDock() {
   }, [uid]);
 
   const openRoom = useCallback((room: OpenRoom) => {
+    // Only one fullscreen room at a time — minimize any currently open ones.
+    setOpenRooms(prevOpen => {
+      const others = prevOpen.filter(r => r.id !== room.id);
+      if (others.length > 0) {
+        setMinimized(m => {
+          const next = [...m];
+          for (const o of others) if (!next.some(n => n.id === o.id)) next.push(o);
+          return next;
+        });
+      }
+      return [room];
+    });
     setMinimized(m => m.filter(r => r.id !== room.id));
-    setOpenRooms(o => (o.some(r => r.id === room.id) ? o : [...o, room]));
   }, []);
 
   const closeWindow = (id: string) => {
@@ -123,6 +134,7 @@ export function TrioRoomsDock() {
   const minimizeWindow = (room: OpenRoom) => {
     setOpenRooms(o => o.filter(r => r.id !== room.id));
     setMinimized(m => (m.some(r => r.id === room.id) ? m : [...m, room]));
+    setShowPanel(true);
   };
 
   async function handleAccept(inv: PendingInvite, password?: string) {
@@ -140,12 +152,14 @@ export function TrioRoomsDock() {
     setInvites(prev => prev.filter(p => p.roomId !== inv.roomId));
   }
 
-  if (isMobile || !uid) return null;
+  if (!uid) return null;
+  void isMobile;
+
 
   return (
     <>
       {/* Private rooms panel (opens via right-side header icon or pending invites) */}
-      <div className="pointer-events-auto fixed bottom-4 left-4 z-40 hidden lg:flex flex-col items-start gap-2">
+      <div className="pointer-events-auto fixed bottom-4 left-4 z-40 flex flex-col items-start gap-2 max-w-[calc(100vw-2rem)]">
         {(showPanel || invites.length > 0) && (
           <div className="animate-scale-in w-72 rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
@@ -196,20 +210,17 @@ export function TrioRoomsDock() {
       </div>
 
 
-      {/* Open trio windows row (bottom-left, stacking right) */}
-      <div className="pointer-events-none fixed bottom-0 left-20 z-40 hidden lg:flex items-end gap-3">
-        <div className="pointer-events-auto flex items-end gap-3">
-          {openRooms.map(room => (
-            <TrioRoomWindow
-              key={room.id}
-              room={room}
-              meId={uid}
-              onClose={() => closeWindow(room.id)}
-              onMinimize={() => minimizeWindow(room)}
-            />
-          ))}
-        </div>
-      </div>
+      {/* Fullscreen trio room (desktop: large centered card, mobile: full sheet) */}
+      {openRooms.map(room => (
+        <TrioRoomWindow
+          key={room.id}
+          room={room}
+          meId={uid}
+          onClose={() => closeWindow(room.id)}
+          onMinimize={() => minimizeWindow(room)}
+        />
+      ))}
+
 
       {showCreate && (
         <CreateRoomDialog
@@ -462,10 +473,12 @@ function TrioRoomWindow({
   }
 
   return (
-    <div
-      className="flex h-[460px] w-[320px] flex-col overflow-hidden rounded-2xl border border-primary/40 bg-card/95 shadow-2xl backdrop-blur-xl animate-scale-in"
-      style={{ boxShadow: "0 10px 40px rgba(0,0,0,.4), 0 0 0 1px hsl(var(--primary)/0.25)" }}
-    >
+    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/60 backdrop-blur-sm animate-fade-in sm:items-center sm:p-6">
+      <div
+        className="flex h-full w-full flex-col overflow-hidden border border-primary/40 bg-card/95 shadow-2xl backdrop-blur-xl animate-scale-in sm:h-[min(85vh,800px)] sm:w-[min(95vw,1100px)] sm:rounded-2xl"
+        style={{ boxShadow: "0 10px 40px rgba(0,0,0,.4), 0 0 0 1px hsl(var(--primary)/0.25)" }}
+      >
+
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-border bg-gradient-to-r from-primary/15 to-transparent px-3 py-2">
         <Users className="h-4 w-4 text-primary" />
@@ -584,6 +597,8 @@ function TrioRoomWindow({
           <Send className="h-4 w-4" />
         </button>
       </div>
+      </div>
     </div>
   );
+
 }
