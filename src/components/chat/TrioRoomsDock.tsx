@@ -40,6 +40,9 @@ export function TrioRoomsDock() {
   const [showCreate, setShowCreate] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [unread, setUnread] = useState<Record<string, number>>({});
+  const [acceptedRooms, setAcceptedRooms] = useState<OpenRoom[]>([]);
+  const openRoomIdRef = useRef<string | null>(null);
+
 
 
   const uid = user?.id;
@@ -58,7 +61,6 @@ export function TrioRoomsDock() {
         const acceptedRoomIds = new Set(
           members.filter(m => m.status === "accepted").map(m => m.room_id),
         );
-        // pre-open nothing; just collect invites
         const invitedIds = members.filter(m => m.status === "invited").map(m => m.room_id);
         const roomById = new Map(rooms.map(r => [r.id, r]));
         const inv: PendingInvite[] = [];
@@ -67,8 +69,13 @@ export function TrioRoomsDock() {
           if (r) inv.push({ roomId: r.id, roomName: r.name, ownerId: r.owner_id, passwordRequired: false });
         }
         setInvites(inv);
-        // optionally surface that user is in N rooms
-        void acceptedRoomIds;
+        const accepted: OpenRoom[] = [];
+        for (const rid of acceptedRoomIds) {
+          const r = roomById.get(rid);
+          if (r) accepted.push({ id: r.id, name: r.name, ownerId: r.owner_id });
+        }
+        setAcceptedRooms(accepted);
+
       } catch {
         /* swallow — RLS may filter */
       }
@@ -127,12 +134,19 @@ export function TrioRoomsDock() {
     });
     setMinimized(m => m.filter(r => r.id !== room.id));
     setUnread(u => (u[room.id] ? { ...u, [room.id]: 0 } : u));
+    openRoomIdRef.current = room.id;
+    setAcceptedRooms(prev => (prev.some(r => r.id === room.id) ? prev : [...prev, room]));
   }, []);
 
-  // Subscribe to messages in minimized rooms to count unreads.
+  // Track which room is in the foreground so its incoming messages don't count as unread.
   useEffect(() => {
-    if (!uid || minimized.length === 0) return;
-    const channels = minimized.map(room => {
+    openRoomIdRef.current = openRooms[0]?.id ?? null;
+  }, [openRooms]);
+
+  // Realtime unread badges: subscribe to every accepted room the user is in.
+  useEffect(() => {
+    if (!uid || acceptedRooms.length === 0) return;
+    const channels = acceptedRooms.map(room => {
       const channelId = trio.trioChannel(room.id);
       return supabase
         .channel(`trio-unread-${room.id}`)
@@ -142,13 +156,53 @@ export function TrioRoomsDock() {
           (payload) => {
             const row = payload.new as { author_id: string };
             if (row.author_id === uid) return;
+            // Foreground room: skip — TrioRoomWindow renders it live.
+            if (openRoomIdRef.current === room.id) return;
             setUnread(u => ({ ...u, [room.id]: (u[room.id] ?? 0) + 1 }));
+            // Surface the room in the dock so the badge is visible.
+            setMinimized(m => (m.some(r => r.id === room.id) ? m : [...m, room]));
+            setShowPanel(true);
           },
         )
         .subscribe();
     });
     return () => { for (const ch of channels) void supabase.removeChannel(ch); };
-  }, [uid, minimized]);
+  }, [uid, acceptedRooms]);
+
+  // Realtime membership changes → keep accepted room list in sync (new rooms, kicks).
+  useEffect(() => {
+    if (!uid) return;
+    const ch = supabase
+      .channel(`trio-membership-${uid}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "trio_room_members", filter: `user_id=eq.${uid}` },
+        async (payload) => {
+          const row = (payload.new ?? payload.old) as { room_id: string; status?: string } | null;
+          if (!row) return;
+          const newStatus = (payload.new as { status?: string } | null)?.status;
+          if (payload.eventType === "DELETE" || newStatus === "removed") {
+            setAcceptedRooms(prev => prev.filter(r => r.id !== row.room_id));
+            return;
+          }
+          if (newStatus === "accepted") {
+            const { data: r } = await supabase
+              .from("trio_rooms")
+              .select("id,name,owner_id")
+              .eq("id", row.room_id)
+              .maybeSingle();
+            if (!r) return;
+            setAcceptedRooms(prev =>
+              prev.some(p => p.id === r.id) ? prev : [...prev, { id: r.id, name: r.name, ownerId: r.owner_id }],
+            );
+          }
+        },
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [uid]);
+
+
 
 
   const closeWindow = (id: string) => {
