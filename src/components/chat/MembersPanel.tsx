@@ -483,7 +483,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                     className={activeInRoom ? "rounded-xl ring-1 ring-primary/40 bg-primary/5" : ""}
                     title={activeInRoom ? "Active in this room" : undefined}
                   >
-                    <MemberRow id={id} role={room.roles[id] || "member"} onClick={() => startDM(id)} />
+                    <MemberRow id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
                   </div>
                 );
               })
@@ -497,7 +497,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             </p>
           ) : (
             onlineBots.map((id) => (
-              <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+              <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
             ))
           )}
         </div>
@@ -511,7 +511,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               </p>
             ) : (
               (effectiveMode === "split" ? onlineUsers : online).map((id) => (
-                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
               ))
             )}
           </div>
@@ -523,7 +523,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               </div>
               <div className="space-y-1 opacity-60">
                 {(effectiveMode === "split" ? offlineUsers : offline).map((id) => (
-                  <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                  <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
                 ))}
               </div>
               {(effectiveMode === "split" ? hiddenOfflineUsers : hiddenOffline) > 0 && (
