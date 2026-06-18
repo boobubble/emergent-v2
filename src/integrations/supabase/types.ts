@@ -2098,6 +2098,25 @@ export type Database = {
         Returns: undefined
       }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
+      create_trio_room: {
+        Args: { _hidden?: boolean; _name: string; _password?: string }
+        Returns: {
+          closed_at: string | null
+          closed_reason: string | null
+          created_at: string
+          hidden: boolean
+          id: string
+          name: string
+          owner_id: string
+          password: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "trio_rooms"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
       has_role: {
         Args: {
