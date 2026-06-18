@@ -185,7 +185,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const totalBotsCount = allIds.filter(id => isBot(id)).length;
 
   const effectiveMode: "split" | "merged" =
-    botMode === "auto" ? (onlineUsers.length > 5 ? "split" : "merged") : botMode;
+    botMode === "auto" ? (onlineUsers.length >= 8 ? "split" : "merged") : botMode;
 
   const meRole = (meId && room.roles[meId]) || "member";
   const isStaff = meRole === "owner" || meRole === "admin";
