@@ -1810,6 +1810,74 @@ export type Database = {
         }
         Relationships: []
       }
+      trio_room_members: {
+        Row: {
+          invited_at: string
+          invited_by: string | null
+          joined_at: string | null
+          room_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          invited_at?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          room_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          invited_at?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          room_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trio_room_members_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "trio_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trio_rooms: {
+        Row: {
+          closed_at: string | null
+          closed_reason: string | null
+          created_at: string
+          hidden: boolean
+          id: string
+          name: string
+          owner_id: string
+          password: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          hidden?: boolean
+          id?: string
+          name: string
+          owner_id: string
+          password?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          hidden?: boolean
+          id?: string
+          name?: string
+          owner_id?: string
+          password?: string | null
+        }
+        Relationships: []
+      }
       url_rules: {
         Row: {
           active: boolean
@@ -2025,6 +2093,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_trio_invite: {
+        Args: { _password?: string; _room: string }
+        Returns: undefined
+      }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
       has_role: {
@@ -2041,12 +2113,21 @@ export type Database = {
         Returns: boolean
       }
       is_moderator: { Args: { _user_id: string }; Returns: boolean }
+      is_trio_channel_allowed: {
+        Args: { _channel: string; _user: string }
+        Returns: boolean
+      }
+      is_trio_member: {
+        Args: { _room: string; _user: string }
+        Returns: boolean
+      }
       is_user_banned: { Args: { _user_id: string }; Returns: boolean }
       is_user_muted: {
         Args: { _channel: string; _user_id: string }
         Returns: boolean
       }
       slugify: { Args: { input: string }; Returns: string }
+      trio_channel_room: { Args: { _channel: string }; Returns: string }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "moderator" | "user" | "dj" | "rj"
