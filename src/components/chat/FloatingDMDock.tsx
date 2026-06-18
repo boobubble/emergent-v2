@@ -224,7 +224,9 @@ function MiniDMWindow({
   send: (text: string, opts?: { channelId?: string; attachment?: Attachment }) => void;
   dmChannelFor: (peerId: string) => string;
 }) {
-  const { state } = useChat();
+  const chat = useChat();
+  const { state } = chat;
+  const unread = chat.isDmUnread(peerId);
   const u = state.users[peerId];
   const channelId = dmChannelFor(peerId);
   const [text, setText] = useState("");
