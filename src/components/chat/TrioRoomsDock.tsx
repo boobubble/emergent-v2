@@ -243,7 +243,7 @@ export function TrioRoomsDock() {
           <div className="animate-scale-in w-72 rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Private Rooms
+                3 Some Rooms
               </div>
               <div className="flex items-center gap-1">
                 <button
@@ -264,7 +264,7 @@ export function TrioRoomsDock() {
 
             {invites.length === 0 && minimized.length === 0 && openRooms.length === 0 && (
               <div className="rounded-lg bg-muted/30 p-3 text-center text-[11px] text-muted-foreground">
-                No active rooms. Create a private trio room to chat with up to 2 friends.
+                No active rooms. Create a 3 Some Room to chat with up to 2 friends.
               </div>
             )}
 
@@ -430,7 +430,7 @@ function CreateRoomDialog({
       <div className="w-80 rounded-2xl border border-border bg-card p-4 shadow-2xl animate-scale-in" onClick={e => e.stopPropagation()}>
         <div className="mb-3 flex items-center gap-2">
           <Users className="h-4 w-4 text-primary" />
-          <div className="text-sm font-bold">Create Private Trio Room</div>
+          <div className="text-sm font-bold">Create 3 Some Room</div>
         </div>
 
         {/* Cost summary */}
