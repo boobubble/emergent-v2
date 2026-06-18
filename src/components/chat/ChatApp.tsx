@@ -126,6 +126,7 @@ export function ChatApp() {
         </main>
         {!isDM(state.activeChannel) && <MembersPanel roomId={state.activeChannel} />}
         <FloatingDMDock />
+        <TrioRoomsDock />
         <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
         <LeaderboardModal open={lbOpen} onClose={() => setLbOpen(false)} />
         <AchievementsModal open={achOpen} onClose={() => setAchOpen(false)} />
