@@ -264,7 +264,7 @@ export function TrioRoomsDock() {
 
             {invites.length === 0 && minimized.length === 0 && openRooms.length === 0 && (
               <div className="rounded-lg bg-muted/30 p-3 text-center text-[11px] text-muted-foreground">
-                No active rooms. Create a private trio room to chat with up to 2 friends.
+                No active rooms. Create a 3 Some Room to chat with up to 2 friends.
               </div>
             )}
 
