@@ -195,7 +195,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   const body = (
     <>
-      <div className="flex items-center justify-end gap-0 px-3 pt-3 pr-12 lg:pr-3">
+      <div className="flex items-center justify-end gap-0 px-3 pt-2 pr-12 lg:pr-3">
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -363,8 +363,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
       </div>
 
-      <div className="px-5 pt-3">
-        <div className="mb-4 flex items-center justify-between gap-2">
+      <div className="px-5 pt-1.5">
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+
           <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             {viewMode === "friends" ? <>Friends &mdash; {friendIds.length}</> : <>Members &mdash; {allIds.length}</>}
           </h2>
@@ -381,7 +382,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
         </div>
 
-        <div className="relative mb-3">
+        <div className="relative mb-2">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
