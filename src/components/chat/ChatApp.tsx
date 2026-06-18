@@ -8,6 +8,7 @@ import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { MembersPanel } from "@/components/chat/MembersPanel";
 import { FloatingDMDock } from "@/components/chat/FloatingDMDock";
+import { TrioRoomsDock } from "@/components/chat/TrioRoomsDock";
 import { PresenceFeed } from "@/components/chat/PresenceFeed";
 import { DjFooter } from "@/components/chat/DjFooter";
 import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
