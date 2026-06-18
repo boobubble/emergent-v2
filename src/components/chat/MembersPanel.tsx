@@ -317,7 +317,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               <DropdownMenuLabel>Members list mode</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {([
-                { v: "auto", label: "Auto", hint: "Split when 6+ users online" },
+                { v: "auto", label: "Auto", hint: "Split when 8+ users online" },
                 { v: "split", label: "Split users & bots", hint: "Always separate sections" },
                 { v: "merged", label: "Merge lists", hint: "Single combined list" },
               ] as { v: BotMode; label: string; hint: string }[]).map((opt) => (
