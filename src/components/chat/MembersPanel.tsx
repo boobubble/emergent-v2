@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, VolumeX, Search } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, VolumeX, Search, Bot, ChevronDown, ChevronRight, Settings2, Check } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
@@ -50,6 +51,21 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [viewMode, setViewMode] = useState<"members" | "friends">("members");
   const [friendIds, setFriendIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const isMobile = useIsMobile();
+
+  type BotMode = "auto" | "split" | "merged";
+  const [botMode, setBotMode] = useState<BotMode>(() => {
+    if (typeof window === "undefined") return "auto";
+    const v = window.localStorage.getItem("chat-bot-mode");
+    return v === "split" || v === "merged" || v === "auto" ? v : "auto";
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("chat-bot-mode", botMode); } catch { /* ignore */ }
+  }, [botMode]);
+
+  const [botsCollapsed, setBotsCollapsed] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"users" | "bots">("users");
+
   
   const meId = authUser?.id;
 
@@ -158,6 +174,23 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const OFFLINE_MIN = 20;
   const offline = (showAllOffline || q) ? offlineSorted : offlineSorted.slice(0, OFFLINE_MIN);
   const hiddenOffline = offlineSorted.length - offline.length;
+
+  // Smart user/bot split
+  const isBot = (id: string) => !!usersById[id]?.isBot;
+  const onlineUsers = useMemo(() => online.filter(id => !isBot(id)), [online]);
+  const onlineBots = useMemo(() => online.filter(id => isBot(id)), [online]);
+  const offlineUsers = useMemo(() => offline.filter(id => !isBot(id)), [offline]);
+  const offlineSortedUsers = useMemo(() => offlineSorted.filter(id => !isBot(id)), [offlineSorted]);
+  const hiddenOfflineUsers = offlineSortedUsers.length - offlineUsers.length;
+  const totalUsersCount = allIds.filter(id => !isBot(id) && !usersById[id]?.isGuest).length;
+  const totalBotsCount = allIds.filter(id => isBot(id)).length;
+
+  const effectiveMode: "split" | "merged" =
+    botMode === "auto" ? (onlineUsers.length > 5 ? "split" : "merged") : botMode;
+
+  const meRole = (meId && room.roles[meId]) || "member";
+  const isStaff = meRole === "owner" || meRole === "admin";
+
 
 
   const body = (
@@ -282,6 +315,41 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           )}
         </button>
 
+        {isStaff && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                title="Member list mode"
+                aria-label="Member list mode"
+                className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+              >
+                <Settings2 className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel>Members list mode</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {([
+                { v: "auto", label: "Auto", hint: "Split when 6+ users online" },
+                { v: "split", label: "Split users & bots", hint: "Always separate sections" },
+                { v: "merged", label: "Merge lists", hint: "Single combined list" },
+              ] as { v: BotMode; label: string; hint: string }[]).map((opt) => (
+                <DropdownMenuItem
+                  key={opt.v}
+                  onSelect={(e) => { e.preventDefault(); setBotMode(opt.v); }}
+                  className="flex items-start gap-2"
+                >
+                  <Check className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${botMode === opt.v ? "opacity-100 text-primary" : "opacity-0"}`} />
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold">{opt.label}</div>
+                    <div className="text-[10px] text-muted-foreground">{opt.hint}</div>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         <a
           href="/feed?tab=account"
           target="_blank"
@@ -292,6 +360,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         >
           <UserCog className="h-5 w-5" />
         </a>
+
       </div>
 
       <div className="px-5 pt-3">
@@ -360,7 +429,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               ))
           )}
         </div>
-      ) : (
+      ) : effectiveMode === "merged" ? (
         <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
           <div className="space-y-1">
             {online.map(id => (
@@ -407,7 +476,127 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             </div>
           )}
         </div>
+      ) : isMobile ? (
+        // Split + mobile → tabs
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="mx-3 mb-2 grid grid-cols-2 gap-1 rounded-full bg-white/5 p-1">
+            <button
+              onClick={() => setMobileTab("users")}
+              className={`flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors ${mobileTab === "users" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Users <span className="opacity-80">({totalUsersCount})</span>
+            </button>
+            <button
+              onClick={() => setMobileTab("bots")}
+              className={`flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors ${mobileTab === "bots" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              <Bot className="h-3 w-3" /> Bots <span className="opacity-80">({totalBotsCount})</span>
+            </button>
+          </div>
+
+          {mobileTab === "users" ? (
+            <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+              <div className="space-y-1">
+                {onlineUsers.length === 0 ? (
+                  <p className="px-3 py-6 text-center text-xs text-muted-foreground">No users online.</p>
+                ) : onlineUsers.map(id => (
+                  <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                ))}
+              </div>
+              {offlineUsers.length > 0 && (
+                <div>
+                  <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                    Offline — {offlineSortedUsers.length}
+                  </div>
+                  <div className="space-y-1 opacity-60">
+                    {offlineUsers.map(id => (
+                      <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                    ))}
+                  </div>
+                  {hiddenOfflineUsers > 0 && (
+                    <button
+                      onClick={() => setShowAllOffline(true)}
+                      className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
+                    >
+                      Show {hiddenOfflineUsers} more
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
+              {onlineBots.length === 0 ? (
+                <p className="px-3 py-6 text-center text-xs text-muted-foreground">No bots available.</p>
+              ) : onlineBots.map(id => (
+                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        // Split + desktop → two sections (bots collapsible)
+        <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+          <div>
+            <div className="flex items-center justify-between px-3 pb-2">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                Users — {totalUsersCount}
+              </div>
+            </div>
+            <div className="space-y-1">
+              {onlineUsers.length === 0 ? (
+                <p className="px-3 py-3 text-center text-[11px] text-muted-foreground">No users online.</p>
+              ) : onlineUsers.map(id => (
+                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+              ))}
+            </div>
+            {offlineUsers.length > 0 && (
+              <div className="mt-3">
+                <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                  Offline — {offlineSortedUsers.length}
+                </div>
+                <div className="space-y-1 opacity-60">
+                  {offlineUsers.map(id => (
+                    <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                  ))}
+                </div>
+                {hiddenOfflineUsers > 0 && (
+                  <button
+                    onClick={() => setShowAllOffline(true)}
+                    className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
+                  >
+                    Show {hiddenOfflineUsers} more
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {totalBotsCount > 0 && (
+            <div className="border-t border-border/50 pt-3">
+              <button
+                onClick={() => setBotsCollapsed(c => !c)}
+                className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left transition-colors hover:bg-white/5"
+                aria-expanded={!botsCollapsed}
+              >
+                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                  <Bot className="h-3 w-3" />
+                  Bots — {totalBotsCount}
+                </span>
+                {botsCollapsed ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+              </button>
+              {!botsCollapsed && (
+                <div className="mt-1 space-y-1">
+                  {onlineBots.map(id => (
+                    <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
+
 
     </>
   );
