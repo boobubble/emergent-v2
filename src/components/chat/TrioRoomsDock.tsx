@@ -210,20 +210,17 @@ export function TrioRoomsDock() {
       </div>
 
 
-      {/* Open trio windows row (bottom-left, stacking right) */}
-      <div className="pointer-events-none fixed bottom-0 left-20 z-40 hidden lg:flex items-end gap-3">
-        <div className="pointer-events-auto flex items-end gap-3">
-          {openRooms.map(room => (
-            <TrioRoomWindow
-              key={room.id}
-              room={room}
-              meId={uid}
-              onClose={() => closeWindow(room.id)}
-              onMinimize={() => minimizeWindow(room)}
-            />
-          ))}
-        </div>
-      </div>
+      {/* Fullscreen trio room (desktop: large centered card, mobile: full sheet) */}
+      {openRooms.map(room => (
+        <TrioRoomWindow
+          key={room.id}
+          room={room}
+          meId={uid}
+          onClose={() => closeWindow(room.id)}
+          onMinimize={() => minimizeWindow(room)}
+        />
+      ))}
+
 
       {showCreate && (
         <CreateRoomDialog
