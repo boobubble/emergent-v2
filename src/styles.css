@@ -479,6 +479,25 @@
   animation: chat-online-pulse 2.2s ease-out infinite;
 }
 
+@keyframes unread-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--destructive) 55%, transparent); transform: scale(1); }
+  50% { box-shadow: 0 0 0 5px color-mix(in oklab, var(--destructive) 0%, transparent); transform: scale(1.08); }
+}
+.unread-dot { animation: unread-pulse 1.8s ease-out infinite; }
+@keyframes unread-pop {
+  0% { transform: scale(.4); opacity: 0; }
+  60% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.unread-pop { animation: unread-pop .32s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes unread-pulse-primary {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 55%, transparent); transform: scale(1); }
+  50% { box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 0%, transparent); transform: scale(1.15); }
+}
+.unread-dot-primary { animation: unread-pulse-primary 1.8s ease-out infinite; }
+
+
+
 
 
 /* ===== i18n: RTL adjustments ===== */
