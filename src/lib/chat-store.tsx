@@ -348,7 +348,7 @@ function applyDailyStreak(s: State): StreakResult {
 interface Ctx {
   state: State;
   setActive: (channelId: string) => void;
-  send: (text: string, opts?: { attachment?: Attachment; replyToId?: string }) => void;
+  send: (text: string, opts?: { attachment?: Attachment; replyToId?: string; channelId?: string }) => void;
   startDM: (userId: string) => void;
   closeDM: (userId: string) => void;
   joinRoom: (roomId: string) => void;
