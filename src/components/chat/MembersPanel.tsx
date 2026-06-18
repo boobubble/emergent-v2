@@ -299,20 +299,8 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <button
-          onClick={() => setViewMode(v => v === "friends" ? "members" : "friends")}
-          title={viewMode === "friends" ? "Show members" : "Show friends"}
-          aria-label="Toggle friends list"
-          aria-pressed={viewMode === "friends"}
-          className={`relative grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-white/5 hover:text-foreground ${viewMode === "friends" ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
-        >
-          <Users2 className="h-5 w-5" />
-          {friendIds.length > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
-              {friendIds.length}
-            </span>
-          )}
-        </button>
+
+
 
         {isStaff && (
           <DropdownMenu>
