@@ -120,6 +120,7 @@ export function ChatApp() {
           <DjFooter />
         </main>
         {!isDM(state.activeChannel) && <MembersPanel roomId={state.activeChannel} />}
+        <FloatingDMDock />
         <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
         <LeaderboardModal open={lbOpen} onClose={() => setLbOpen(false)} />
         <AchievementsModal open={achOpen} onClose={() => setAchOpen(false)} />
