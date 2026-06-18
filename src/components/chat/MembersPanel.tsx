@@ -51,6 +51,21 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [viewMode, setViewMode] = useState<"members" | "friends">("members");
   const [friendIds, setFriendIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const isMobile = useIsMobile();
+
+  type BotMode = "auto" | "split" | "merged";
+  const [botMode, setBotMode] = useState<BotMode>(() => {
+    if (typeof window === "undefined") return "auto";
+    const v = window.localStorage.getItem("chat-bot-mode");
+    return v === "split" || v === "merged" || v === "auto" ? v : "auto";
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("chat-bot-mode", botMode); } catch { /* ignore */ }
+  }, [botMode]);
+
+  const [botsCollapsed, setBotsCollapsed] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"users" | "bots">("users");
+
   
   const meId = authUser?.id;
 
