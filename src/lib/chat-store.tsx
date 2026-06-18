@@ -984,10 +984,11 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     setReplyingTo(null);
   }, []);
 
-  const send = useCallback((text: string, opts?: { attachment?: Attachment; replyToId?: string }) => {
+  const send = useCallback((text: string, opts?: { attachment?: Attachment; replyToId?: string; channelId?: string }) => {
     const trimmed = text.trim();
     const attachment = opts?.attachment;
     const replyToId = opts?.replyToId;
+    const channelOverride = opts?.channelId;
     if (!trimmed && !attachment) return;
     if (isGuest) {
       const isCmdGuest = trimmed.startsWith("!") || /^\/(mute|kick)\b/i.test(trimmed);
