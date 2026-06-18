@@ -1011,7 +1011,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     type Outgoing = { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null };
     const outgoingRemotes: Outgoing[] = [];
     setState(s => {
-      const channelId = s.activeChannel;
+      const channelId = channelOverride || s.activeChannel;
       const isSlashMod = /^\/(mute|kick)\b/i.test(trimmed);
       const isCmd = trimmed.startsWith("!") || isSlashMod;
       const cmdInput = isSlashMod ? "!" + trimmed.slice(1) : trimmed;
