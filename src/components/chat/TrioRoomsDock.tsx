@@ -430,7 +430,7 @@ function CreateRoomDialog({
       <div className="w-80 rounded-2xl border border-border bg-card p-4 shadow-2xl animate-scale-in" onClick={e => e.stopPropagation()}>
         <div className="mb-3 flex items-center gap-2">
           <Users className="h-4 w-4 text-primary" />
-          <div className="text-sm font-bold">Create Private Trio Room</div>
+          <div className="text-sm font-bold">Create 3 Some Room</div>
         </div>
 
         {/* Cost summary */}
