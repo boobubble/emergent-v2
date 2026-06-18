@@ -243,7 +243,7 @@ export function TrioRoomsDock() {
           <div className="animate-scale-in w-72 rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Private Rooms
+                3 Some Rooms
               </div>
               <div className="flex items-center gap-1">
                 <button
