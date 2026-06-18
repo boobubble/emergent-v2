@@ -363,8 +363,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
       </div>
 
-      <div className="px-5 pt-3">
-        <div className="mb-4 flex items-center justify-between gap-2">
+      <div className="px-5 pt-1.5">
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+
           <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             {viewMode === "friends" ? <>Friends &mdash; {friendIds.length}</> : <>Members &mdash; {allIds.length}</>}
           </h2>
