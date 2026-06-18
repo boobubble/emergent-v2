@@ -74,6 +74,13 @@ export function TrioRoomsDock() {
     return () => { cancelled = true; };
   }, [uid]);
 
+  // Allow other UI (e.g. members panel header icon) to open the create dialog
+  useEffect(() => {
+    const onOpenCreate = () => { setShowCreate(true); setShowPanel(true); };
+    window.addEventListener("trio:open-create", onOpenCreate);
+    return () => window.removeEventListener("trio:open-create", onOpenCreate);
+  }, []);
+
   // Realtime: listen for new invites for me
   useEffect(() => {
     if (!uid) return;

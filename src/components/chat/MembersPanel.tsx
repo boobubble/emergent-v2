@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, UserCheck, VolumeX, Search, Bot, Settings2, Check } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, UserCheck, VolumeX, Search, Bot, Settings2, Check, Sparkles } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
@@ -320,6 +320,19 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <button
+          type="button"
+          title="Create private trio room"
+          aria-label="Create private trio room"
+          onClick={() => window.dispatchEvent(new CustomEvent("trio:open-create"))}
+          className="relative grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-fuchsia-500 via-pink-500 to-amber-400 text-white shadow-[0_0_12px_-2px_rgba(236,72,153,0.7)] ring-1 ring-white/20 transition-transform hover:scale-110 hover:shadow-[0_0_16px_-1px_rgba(236,72,153,0.9)]"
+        >
+          <Sparkles className="h-4 w-4 drop-shadow" />
+          <span className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-fuchsia-400/40 animate-pulse" />
+        </button>
+
+
 
 
 
