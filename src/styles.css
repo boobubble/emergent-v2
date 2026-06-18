@@ -571,3 +571,13 @@
   text-transform: uppercase;
   color: var(--color-muted-foreground);
 }
+
+@keyframes presence-fade {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.96); }
+  15%  { opacity: 1; transform: translateY(0)   scale(1); }
+  80%  { opacity: 1; transform: translateY(0)   scale(1); }
+  100% { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+.presence-msg {
+  animation: presence-fade 6s ease both;
+}
