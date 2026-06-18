@@ -126,7 +126,30 @@ export function TrioRoomsDock() {
       return [room];
     });
     setMinimized(m => m.filter(r => r.id !== room.id));
+    setUnread(u => (u[room.id] ? { ...u, [room.id]: 0 } : u));
   }, []);
+
+  // Subscribe to messages in minimized rooms to count unreads.
+  useEffect(() => {
+    if (!uid || minimized.length === 0) return;
+    const channels = minimized.map(room => {
+      const channelId = trio.trioChannel(room.id);
+      return supabase
+        .channel(`trio-unread-${room.id}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "messages", filter: `channel_id=eq.${channelId}` },
+          (payload) => {
+            const row = payload.new as { author_id: string };
+            if (row.author_id === uid) return;
+            setUnread(u => ({ ...u, [room.id]: (u[room.id] ?? 0) + 1 }));
+          },
+        )
+        .subscribe();
+    });
+    return () => { for (const ch of channels) void supabase.removeChannel(ch); };
+  }, [uid, minimized]);
+
 
   const closeWindow = (id: string) => {
     setOpenRooms(o => o.filter(r => r.id !== id));
