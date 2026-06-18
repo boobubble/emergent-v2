@@ -382,7 +382,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
         </div>
 
-        <div className="relative mb-3">
+        <div className="relative mb-2">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
