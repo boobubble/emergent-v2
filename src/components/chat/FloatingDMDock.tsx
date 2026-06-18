@@ -299,6 +299,13 @@ function MiniDMWindow({
                 u.status === "online" ? "bg-emerald-500" : "bg-muted-foreground/50"
               }`}
             />
+            {unread && (
+              <span
+                key="hdr-unread"
+                className="unread-pop unread-dot absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-card"
+                title="Unread"
+              />
+            )}
           </div>
           <div className="min-w-0 flex-1 leading-tight">
             <div className="truncate text-xs font-semibold">
