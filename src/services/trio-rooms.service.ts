@@ -93,7 +93,7 @@ export async function inviteByUsername(roomId: string, username: string): Promis
 export async function acceptInvite(roomId: string, password?: string): Promise<void> {
   const { error } = await supabase.rpc("accept_trio_invite", {
     _room: roomId,
-    _password: password ?? null,
+    _password: password ?? undefined,
   });
   if (error) throw error;
 }
