@@ -175,6 +175,23 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const offline = (showAllOffline || q) ? offlineSorted : offlineSorted.slice(0, OFFLINE_MIN);
   const hiddenOffline = offlineSorted.length - offline.length;
 
+  // Smart user/bot split
+  const isBot = (id: string) => !!usersById[id]?.isBot;
+  const onlineUsers = useMemo(() => online.filter(id => !isBot(id)), [online]);
+  const onlineBots = useMemo(() => online.filter(id => isBot(id)), [online]);
+  const offlineUsers = useMemo(() => offline.filter(id => !isBot(id)), [offline]);
+  const offlineSortedUsers = useMemo(() => offlineSorted.filter(id => !isBot(id)), [offlineSorted]);
+  const hiddenOfflineUsers = offlineSortedUsers.length - offlineUsers.length;
+  const totalUsersCount = allIds.filter(id => !isBot(id) && !usersById[id]?.isGuest).length;
+  const totalBotsCount = allIds.filter(id => isBot(id)).length;
+
+  const effectiveMode: "split" | "merged" =
+    botMode === "auto" ? (onlineUsers.length > 5 ? "split" : "merged") : botMode;
+
+  const meRole = (meId && room.roles[meId]) || "member";
+  const isStaff = meRole === "owner" || meRole === "admin";
+
+
 
   const body = (
     <>
