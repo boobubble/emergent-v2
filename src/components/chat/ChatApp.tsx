@@ -115,7 +115,10 @@ export function ChatApp() {
             </button>
           )}
           <ChatHeader />
-          <MessageList channelId={state.activeChannel} />
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <MessageList channelId={state.activeChannel} />
+            <PresenceFeed channelId={state.activeChannel} />
+          </div>
           <PollDiscoveryWidget />
           <MessageInput />
           <DjFooter />
