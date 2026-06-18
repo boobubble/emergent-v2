@@ -164,7 +164,10 @@ export function FloatingDMDock() {
                   }`}
                 />
                 {unread && (
-                  <span className="absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground ring-2 ring-card animate-scale-in">
+                  <span
+                    key="unread"
+                    className="unread-pop unread-dot absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground ring-2 ring-card"
+                  >
                     •
                   </span>
                 )}
