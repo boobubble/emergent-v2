@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, VolumeX, Search, Bot, ChevronDown, ChevronRight, Settings2, Check } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, UserCheck, VolumeX, Search, Bot, Settings2, Check } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
@@ -48,9 +48,10 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [showAllOffline, setShowAllOffline] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notifs, setNotifs] = useState<FeedNotification[]>([]);
-  const [viewMode, setViewMode] = useState<"members" | "friends">("members");
   const [friendIds, setFriendIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [tab, setTab] = useState<"users" | "friends" | "bots">("users");
   const isMobile = useIsMobile();
 
   type BotMode = "auto" | "split" | "merged";
@@ -63,8 +64,6 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     try { window.localStorage.setItem("chat-bot-mode", botMode); } catch { /* ignore */ }
   }, [botMode]);
 
-  const [botsCollapsed, setBotsCollapsed] = useState(false);
-  const [mobileTab, setMobileTab] = useState<"users" | "bots">("users");
 
   
   const meId = authUser?.id;
@@ -186,10 +185,17 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const totalBotsCount = allIds.filter(id => isBot(id)).length;
 
   const effectiveMode: "split" | "merged" =
-    botMode === "auto" ? (onlineUsers.length > 5 ? "split" : "merged") : botMode;
+    botMode === "auto" ? (onlineUsers.length >= 8 ? "split" : "merged") : botMode;
 
   const meRole = (meId && room.roles[meId]) || "member";
   const isStaff = meRole === "owner" || meRole === "admin";
+
+  useEffect(() => {
+    if (tab === "bots" && (effectiveMode === "merged" || totalBotsCount === 0)) {
+      setTab("users");
+    }
+  }, [tab, effectiveMode, totalBotsCount]);
+
 
 
 
@@ -300,20 +306,8 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <button
-          onClick={() => setViewMode(v => v === "friends" ? "members" : "friends")}
-          title={viewMode === "friends" ? "Show members" : "Show friends"}
-          aria-label="Toggle friends list"
-          aria-pressed={viewMode === "friends"}
-          className={`relative grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-white/5 hover:text-foreground ${viewMode === "friends" ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
-        >
-          <Users2 className="h-5 w-5" />
-          {friendIds.length > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
-              {friendIds.length}
-            </span>
-          )}
-        </button>
+
+
 
         {isStaff && (
           <DropdownMenu>
@@ -330,7 +324,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               <DropdownMenuLabel>Members list mode</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {([
-                { v: "auto", label: "Auto", hint: "Split when 6+ users online" },
+                { v: "auto", label: "Auto", hint: "Split when 8+ users online" },
                 { v: "split", label: "Split users & bots", hint: "Always separate sections" },
                 { v: "merged", label: "Merge lists", hint: "Single combined list" },
               ] as { v: BotMode; label: string; hint: string }[]).map((opt) => (
@@ -363,32 +357,84 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
       </div>
 
-      <div className="px-5 pt-1.5">
-        <div className="mb-1.5 flex items-center justify-between gap-2">
-
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-            {viewMode === "friends" ? <>Friends &mdash; {friendIds.length}</> : <>Members &mdash; {allIds.length}</>}
-          </h2>
-          {viewMode === "friends" ? (
+      {/* Tab bar: Close | Users | Friends | Bots | Search */}
+      <div className="flex items-center gap-1 px-2 pt-1.5">
+        {isMobile && (
+          <button
+            onClick={() => setSheetOpen(false)}
+            title="Close"
+            aria-label="Close members panel"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+        {([
+          {
+            key: "users" as const,
+            label: "Users",
+            icon: <Users2 className="h-3.5 w-3.5" />,
+            count: effectiveMode === "merged" ? totalUsersCount + totalBotsCount : totalUsersCount,
+          },
+          {
+            key: "friends" as const,
+            label: "Friends",
+            icon: <UserCheck className="h-3.5 w-3.5" />,
+            count: friendIds.length,
+          },
+          ...(effectiveMode === "split" && totalBotsCount > 0
+            ? [{
+                key: "bots" as const,
+                label: "Bots",
+                icon: <Bot className="h-3.5 w-3.5" />,
+                count: totalBotsCount,
+              }]
+            : []),
+        ]).map((t) => {
+          const active = tab === t.key;
+          return (
             <button
-              onClick={() => setViewMode("members")}
-              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary transition-colors hover:bg-primary/20"
-              title="Show online users"
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              title={t.label}
+              aria-pressed={active}
+              className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-semibold transition-colors ${
+                active
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+              }`}
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Online Users
+              {t.icon}
+              <span className="truncate">{t.label}</span>
+              <span className={`text-[10px] tabular-nums ${active ? "opacity-90" : "opacity-70"}`}>
+                {t.count}
+              </span>
             </button>
-          ) : null}
+          );
+        })}
+        <button
+          onClick={() => setSearchOpen((s) => !s)}
+          title="Search"
+          aria-label="Toggle search"
+          aria-pressed={searchOpen}
+          className={`grid h-8 w-8 shrink-0 place-items-center rounded-full transition-colors ${
+            searchOpen ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+          }`}
+        >
+          <Search className="h-4 w-4" />
+        </button>
+      </div>
 
-        </div>
-
-        <div className="relative mb-2">
+      {/* Inline search (toggled) */}
+      {searchOpen && (
+        <div className="relative mx-3 mt-2">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
+            autoFocus
             type="text"
             value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={viewMode === "friends" ? "Search friends…" : "Search users…"}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={`Search ${tab}…`}
             className="w-full rounded-full bg-white/5 py-1.5 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground outline-none ring-1 ring-border focus:ring-primary"
           />
           {search && (
@@ -401,11 +447,11 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             </button>
           )}
         </div>
-      </div>
+      )}
 
-
-      {viewMode === "friends" ? (
-        <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
+      {/* Tab content */}
+      {tab === "friends" ? (
+        <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4 pt-2">
           {friendIds.filter(matchesQuery).length === 0 ? (
             <p className="px-3 py-8 text-center text-xs text-muted-foreground">
               {q ? "No friends match your search." : "No friends yet. Add some from the feed or click a member to start."}
@@ -420,50 +466,63 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                 if (ao !== bo) return ao - bo;
                 return (usersById[a]?.name || profiles[a]?.name || "").localeCompare(usersById[b]?.name || profiles[b]?.name || "");
               })
-              .map(id => (
-                <MemberRow
-                  key={id}
-                  id={id}
-                  role={room.roles[id] || "member"}
-                  onClick={() => startDM(id)}
-                />
-              ))
+              .map((id) => {
+                const activeInRoom = isOnline(id) && room.members.includes(id);
+                return (
+                  <div
+                    key={id}
+                    className={activeInRoom ? "rounded-xl ring-1 ring-primary/40 bg-primary/5" : ""}
+                    title={activeInRoom ? "Active in this room" : undefined}
+                  >
+                    <MemberRow id={id} role={room.roles[id] || "member"} onClick={() => startDM(id)} />
+                  </div>
+                );
+              })
           )}
         </div>
-      ) : effectiveMode === "merged" ? (
-        <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+      ) : tab === "bots" ? (
+        <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4 pt-2">
+          {onlineBots.length === 0 ? (
+            <p className="px-3 py-6 text-center text-xs text-muted-foreground">
+              {q ? "No bots match your search." : "No bots available."}
+            </p>
+          ) : (
+            onlineBots.map((id) => (
+              <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+            ))
+          )}
+        </div>
+      ) : (
+        // Users tab — in merged mode bots are included via `online`/`offline`; in split mode bots are excluded.
+        <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4 pt-2">
           <div className="space-y-1">
-            {online.map(id => (
-              <MemberRow
-                key={id}
-                id={id}
-                role={room.roles[id] || "member"}
-                onClick={() => id !== "me" && startDM(id)}
-              />
-            ))}
+            {(effectiveMode === "split" ? onlineUsers : online).length === 0 ? (
+              <p className="px-3 py-6 text-center text-xs text-muted-foreground">
+                {q ? "No users match your search." : "No users online."}
+              </p>
+            ) : (
+              (effectiveMode === "split" ? onlineUsers : online).map((id) => (
+                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+              ))
+            )}
           </div>
 
-          {offline.length > 0 && (
+          {(effectiveMode === "split" ? offlineUsers : offline).length > 0 && (
             <div>
               <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-                Offline — {offlineSorted.length}
+                Offline — {(effectiveMode === "split" ? offlineSortedUsers : offlineSorted).length}
               </div>
               <div className="space-y-1 opacity-60">
-                {offline.map(id => (
-                  <MemberRow
-                    key={id}
-                    id={id}
-                    role={room.roles[id] || "member"}
-                    onClick={() => id !== "me" && startDM(id)}
-                  />
+                {(effectiveMode === "split" ? offlineUsers : offline).map((id) => (
+                  <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
                 ))}
               </div>
-              {hiddenOffline > 0 && (
+              {(effectiveMode === "split" ? hiddenOfflineUsers : hiddenOffline) > 0 && (
                 <button
                   onClick={() => setShowAllOffline(true)}
                   className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
                 >
-                  Show {hiddenOffline} more
+                  Show {effectiveMode === "split" ? hiddenOfflineUsers : hiddenOffline} more
                 </button>
               )}
               {showAllOffline && offlineSorted.length > OFFLINE_MIN && (
@@ -477,126 +536,8 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             </div>
           )}
         </div>
-      ) : isMobile ? (
-        // Split + mobile → tabs
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="mx-3 mb-2 grid grid-cols-2 gap-1 rounded-full bg-white/5 p-1">
-            <button
-              onClick={() => setMobileTab("users")}
-              className={`flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors ${mobileTab === "users" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Users <span className="opacity-80">({totalUsersCount})</span>
-            </button>
-            <button
-              onClick={() => setMobileTab("bots")}
-              className={`flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors ${mobileTab === "bots" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              <Bot className="h-3 w-3" /> Bots <span className="opacity-80">({totalBotsCount})</span>
-            </button>
-          </div>
-
-          {mobileTab === "users" ? (
-            <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
-              <div className="space-y-1">
-                {onlineUsers.length === 0 ? (
-                  <p className="px-3 py-6 text-center text-xs text-muted-foreground">No users online.</p>
-                ) : onlineUsers.map(id => (
-                  <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
-                ))}
-              </div>
-              {offlineUsers.length > 0 && (
-                <div>
-                  <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-                    Offline — {offlineSortedUsers.length}
-                  </div>
-                  <div className="space-y-1 opacity-60">
-                    {offlineUsers.map(id => (
-                      <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
-                    ))}
-                  </div>
-                  {hiddenOfflineUsers > 0 && (
-                    <button
-                      onClick={() => setShowAllOffline(true)}
-                      className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
-                    >
-                      Show {hiddenOfflineUsers} more
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
-              {onlineBots.length === 0 ? (
-                <p className="px-3 py-6 text-center text-xs text-muted-foreground">No bots available.</p>
-              ) : onlineBots.map(id => (
-                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        // Split + desktop → two sections (bots collapsible)
-        <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
-          <div>
-            <div className="flex items-center justify-between px-3 pb-2">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
-                Users — {totalUsersCount}
-              </div>
-            </div>
-            <div className="space-y-1">
-              {onlineUsers.length === 0 ? (
-                <p className="px-3 py-3 text-center text-[11px] text-muted-foreground">No users online.</p>
-              ) : onlineUsers.map(id => (
-                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
-              ))}
-            </div>
-            {offlineUsers.length > 0 && (
-              <div className="mt-3">
-                <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-                  Offline — {offlineSortedUsers.length}
-                </div>
-                <div className="space-y-1 opacity-60">
-                  {offlineUsers.map(id => (
-                    <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
-                  ))}
-                </div>
-                {hiddenOfflineUsers > 0 && (
-                  <button
-                    onClick={() => setShowAllOffline(true)}
-                    className="mt-2 w-full rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-primary"
-                  >
-                    Show {hiddenOfflineUsers} more
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {totalBotsCount > 0 && (
-            <div className="border-t border-border/50 pt-3">
-              <button
-                onClick={() => setBotsCollapsed(c => !c)}
-                className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left transition-colors hover:bg-white/5"
-                aria-expanded={!botsCollapsed}
-              >
-                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
-                  <Bot className="h-3 w-3" />
-                  Bots — {totalBotsCount}
-                </span>
-                {botsCollapsed ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
-              </button>
-              {!botsCollapsed && (
-                <div className="mt-1 space-y-1">
-                  {onlineBots.map(id => (
-                    <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
       )}
+
 
 
     </>
