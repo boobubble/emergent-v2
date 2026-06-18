@@ -144,33 +144,29 @@ export function TrioRoomsDock() {
 
   return (
     <>
-      {/* Floating launcher button (bottom-left) */}
+      {/* Private rooms panel (opens via right-side header icon or pending invites) */}
       <div className="pointer-events-auto fixed bottom-4 left-4 z-40 hidden lg:flex flex-col items-start gap-2">
-        <button
-          onClick={() => setShowPanel(s => !s)}
-          title="Private rooms"
-          className="group relative grid h-11 w-11 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-1 ring-primary/40 transition-transform hover:scale-105"
-        >
-          <Users className="h-5 w-5" />
-          {invites.length > 0 && (
-            <span className="unread-pop absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground ring-2 ring-card">
-              {invites.length}
-            </span>
-          )}
-        </button>
-
-        {showPanel && (
+        {(showPanel || invites.length > 0) && (
           <div className="animate-scale-in w-72 rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Private Rooms
               </div>
-              <button
-                onClick={() => setShowCreate(true)}
-                className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/25"
-              >
-                <Plus className="h-3 w-3" /> Create
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/25"
+                >
+                  <Plus className="h-3 w-3" /> Create
+                </button>
+                <button
+                  onClick={() => setShowPanel(false)}
+                  title="Close"
+                  className="grid h-6 w-6 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
             </div>
 
             {invites.length === 0 && minimized.length === 0 && openRooms.length === 0 && (
@@ -198,6 +194,7 @@ export function TrioRoomsDock() {
           </div>
         )}
       </div>
+
 
       {/* Open trio windows row (bottom-left, stacking right) */}
       <div className="pointer-events-none fixed bottom-0 left-20 z-40 hidden lg:flex items-end gap-3">
