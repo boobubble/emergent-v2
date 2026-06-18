@@ -7,6 +7,7 @@ import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { MembersPanel } from "@/components/chat/MembersPanel";
+import { FloatingDMDock } from "@/components/chat/FloatingDMDock";
 import { DjFooter } from "@/components/chat/DjFooter";
 import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
@@ -119,6 +120,7 @@ export function ChatApp() {
           <DjFooter />
         </main>
         {!isDM(state.activeChannel) && <MembersPanel roomId={state.activeChannel} />}
+        <FloatingDMDock />
         <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
         <LeaderboardModal open={lbOpen} onClose={() => setLbOpen(false)} />
         <AchievementsModal open={achOpen} onClose={() => setAchOpen(false)} />

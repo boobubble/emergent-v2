@@ -348,7 +348,7 @@ function applyDailyStreak(s: State): StreakResult {
 interface Ctx {
   state: State;
   setActive: (channelId: string) => void;
-  send: (text: string, opts?: { attachment?: Attachment; replyToId?: string }) => void;
+  send: (text: string, opts?: { attachment?: Attachment; replyToId?: string; channelId?: string }) => void;
   startDM: (userId: string) => void;
   closeDM: (userId: string) => void;
   joinRoom: (roomId: string) => void;
@@ -984,10 +984,11 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     setReplyingTo(null);
   }, []);
 
-  const send = useCallback((text: string, opts?: { attachment?: Attachment; replyToId?: string }) => {
+  const send = useCallback((text: string, opts?: { attachment?: Attachment; replyToId?: string; channelId?: string }) => {
     const trimmed = text.trim();
     const attachment = opts?.attachment;
     const replyToId = opts?.replyToId;
+    const channelOverride = opts?.channelId;
     if (!trimmed && !attachment) return;
     if (isGuest) {
       const isCmdGuest = trimmed.startsWith("!") || /^\/(mute|kick)\b/i.test(trimmed);
@@ -999,7 +1000,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           : null;
       if (reason) {
         setState(s => {
-          const ch = s.activeChannel;
+          const ch = channelOverride || s.activeChannel;
           const sys: Message = { id: uid(), channelId: ch, authorId: "bot-gamebot", text: reason, ts: Date.now(), kind: "system" };
           return { ...s, messages: { ...s.messages, [ch]: [...(s.messages[ch] || []), sys] } };
         });
@@ -1010,7 +1011,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     type Outgoing = { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null };
     const outgoingRemotes: Outgoing[] = [];
     setState(s => {
-      const channelId = s.activeChannel;
+      const channelId = channelOverride || s.activeChannel;
       const isSlashMod = /^\/(mute|kick)\b/i.test(trimmed);
       const isCmd = trimmed.startsWith("!") || isSlashMod;
       const cmdInput = isSlashMod ? "!" + trimmed.slice(1) : trimmed;

@@ -42,7 +42,7 @@ const ICONS: Record<Role, React.ReactNode> = {
 };
 
 export function MembersPanel({ roomId }: { roomId: string }) {
-  const { state, startDM, setActive, closeDM, dmChannelFor, isDmUnread, dmUnreadCount } = useChat();
+  const { state, startDM, closeDM, dmChannelFor, isDmUnread, dmUnreadCount } = useChat();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [showAllOffline, setShowAllOffline] = useState(false);
@@ -53,6 +53,15 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [tab, setTab] = useState<"users" | "friends" | "bots">("users");
   const isMobile = useIsMobile();
+
+  const openDM = (id: string) => {
+    if (!id || id === "me") return;
+    if (isMobile) {
+      startDM(id);
+    } else if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId: id } }));
+    }
+  };
 
   type BotMode = "auto" | "split" | "merged";
   const [botMode, setBotMode] = useState<BotMode>(() => {
@@ -232,7 +241,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                 return (
                   <DropdownMenuItem
                     key={uid}
-                    onSelect={(e) => { e.preventDefault(); setActive(dmChannelFor(uid)); }}
+                    onSelect={(e) => { e.preventDefault(); openDM(uid); }}
                     className="gap-2"
                   >
                     <FrameAvatar user={u} size={24} />
@@ -474,7 +483,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                     className={activeInRoom ? "rounded-xl ring-1 ring-primary/40 bg-primary/5" : ""}
                     title={activeInRoom ? "Active in this room" : undefined}
                   >
-                    <MemberRow id={id} role={room.roles[id] || "member"} onClick={() => startDM(id)} />
+                    <MemberRow id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
                   </div>
                 );
               })
@@ -488,7 +497,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             </p>
           ) : (
             onlineBots.map((id) => (
-              <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+              <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
             ))
           )}
         </div>
@@ -502,7 +511,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               </p>
             ) : (
               (effectiveMode === "split" ? onlineUsers : online).map((id) => (
-                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
               ))
             )}
           </div>
@@ -514,7 +523,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               </div>
               <div className="space-y-1 opacity-60">
                 {(effectiveMode === "split" ? offlineUsers : offline).map((id) => (
-                  <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => id !== "me" && startDM(id)} />
+                  <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
                 ))}
               </div>
               {(effectiveMode === "split" ? hiddenOfflineUsers : hiddenOffline) > 0 && (
