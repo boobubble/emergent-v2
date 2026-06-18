@@ -61,7 +61,6 @@ export function TrioRoomsDock() {
         const acceptedRoomIds = new Set(
           members.filter(m => m.status === "accepted").map(m => m.room_id),
         );
-        // pre-open nothing; just collect invites
         const invitedIds = members.filter(m => m.status === "invited").map(m => m.room_id);
         const roomById = new Map(rooms.map(r => [r.id, r]));
         const inv: PendingInvite[] = [];
@@ -70,8 +69,13 @@ export function TrioRoomsDock() {
           if (r) inv.push({ roomId: r.id, roomName: r.name, ownerId: r.owner_id, passwordRequired: false });
         }
         setInvites(inv);
-        // optionally surface that user is in N rooms
-        void acceptedRoomIds;
+        const accepted: OpenRoom[] = [];
+        for (const rid of acceptedRoomIds) {
+          const r = roomById.get(rid);
+          if (r) accepted.push({ id: r.id, name: r.name, ownerId: r.owner_id });
+        }
+        setAcceptedRooms(accepted);
+
       } catch {
         /* swallow — RLS may filter */
       }
