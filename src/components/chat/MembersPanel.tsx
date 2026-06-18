@@ -247,7 +247,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                     <FrameAvatar user={u} size={24} />
                     <span className="truncate"><CosmeticName userId={u.id} name={u.name} /></span>
                     {isDmUnread(uid) && (
-                      <span className="ml-1 h-1.5 w-1.5 rounded-full bg-primary" title="Unread" />
+                      <span key="dm-unread" className="unread-pop unread-dot-primary ml-1 h-1.5 w-1.5 rounded-full bg-primary" title="Unread" />
                     )}
                     <span
                       className={`ml-auto h-2 w-2 rounded-full ${
