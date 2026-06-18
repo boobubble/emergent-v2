@@ -218,18 +218,29 @@ export function TrioRoomsDock() {
               <InviteCard key={inv.roomId} inv={inv} onAccept={handleAccept} onReject={handleReject} />
             ))}
 
-            {minimized.map(room => (
-              <button
-                key={room.id}
-                onClick={() => openRoom(room)}
-                className="mt-1 flex w-full items-center justify-between rounded-lg bg-muted/20 px-2 py-1.5 text-left text-xs hover:bg-muted/40"
-              >
-                <span className="flex items-center gap-1.5 truncate">
-                  <Users className="h-3 w-3 text-primary" /> {room.name}
-                </span>
-                <span className="text-[10px] text-muted-foreground">Open</span>
-              </button>
-            ))}
+            {minimized.map(room => {
+              const count = unread[room.id] ?? 0;
+              return (
+                <button
+                  key={room.id}
+                  onClick={() => openRoom(room)}
+                  className={`mt-1 flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs hover:bg-muted/40 ${count > 0 ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/20"}`}
+                >
+                  <span className="flex min-w-0 items-center gap-1.5 truncate">
+                    <Users className="h-3 w-3 shrink-0 text-primary" />
+                    <span className="truncate">{room.name}</span>
+                  </span>
+                  {count > 0 ? (
+                    <span className="ml-2 grid h-5 min-w-[20px] shrink-0 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground animate-pulse">
+                      {count > 99 ? "99+" : count}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">Open</span>
+                  )}
+                </button>
+              );
+            })}
+
           </div>
         )}
       </div>
