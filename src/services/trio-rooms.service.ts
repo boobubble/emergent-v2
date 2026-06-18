@@ -52,7 +52,7 @@ export async function createRoom(opts: {
 }): Promise<TrioRoom> {
   const { data, error } = await supabase.rpc("create_trio_room", {
     _name: opts.name.trim().slice(0, 60),
-    _password: opts.password?.trim() || null,
+    _password: opts.password?.trim() || undefined,
     _hidden: !!opts.hidden,
   });
   if (error) throw error;
