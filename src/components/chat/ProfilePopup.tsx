@@ -288,7 +288,12 @@ export function ProfilePopup({
         {!isMe && (
           <div className="flex items-center gap-2 border-t border-border bg-card px-4 py-3">
             <button
-              onClick={() => { startDM(userId); onOpenChange(false); }}
+              onClick={() => {
+                const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+                if (isMobile) startDM(userId);
+                else window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId: userId } }));
+                onOpenChange(false);
+              }}
               className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
             >
               <MessageCircle className="h-4 w-4 shrink-0" /> Message
