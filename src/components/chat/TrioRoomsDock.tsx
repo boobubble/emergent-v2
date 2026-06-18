@@ -39,6 +39,8 @@ export function TrioRoomsDock() {
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
+  const [unread, setUnread] = useState<Record<string, number>>({});
+
 
   const uid = user?.id;
 
