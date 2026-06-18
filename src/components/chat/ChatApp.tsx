@@ -8,6 +8,7 @@ import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { MembersPanel } from "@/components/chat/MembersPanel";
 import { FloatingDMDock } from "@/components/chat/FloatingDMDock";
+import { PresenceFeed } from "@/components/chat/PresenceFeed";
 import { DjFooter } from "@/components/chat/DjFooter";
 import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
@@ -114,7 +115,10 @@ export function ChatApp() {
             </button>
           )}
           <ChatHeader />
-          <MessageList channelId={state.activeChannel} />
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <MessageList channelId={state.activeChannel} />
+            <PresenceFeed channelId={state.activeChannel} />
+          </div>
           <PollDiscoveryWidget />
           <MessageInput />
           <DjFooter />

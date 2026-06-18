@@ -1,8 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Radio, MessageSquare, MessagesSquare, Users, Newspaper, Bell } from "lucide-react";
+import { AdminToggle } from "@/components/admin/AdminToggle";
+import { useAppSettings } from "@/lib/app-settings";
+import { updateSetting } from "@/lib/admin.functions";
+import { Radio, MessageSquare, MessagesSquare, Users, Newspaper, Bell, LogIn } from "lucide-react";
 
 export const Route = createFileRoute("/admin/realtime")({ component: RealtimePage });
 
@@ -23,12 +29,41 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function RealtimePage() {
+  const { raw, refresh } = useAppSettings();
+  const presenceMessages = raw.presence_messages !== false;
+  const save = useServerFn(updateSetting);
+  const mut = useMutation({
+    mutationFn: async (value: boolean) => save({ data: { key: "presence_messages", value } }),
+    onSuccess: () => { void refresh(); toast.success("Presence messages updated"); },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to save"),
+  });
+
   return (
     <div className="space-y-5">
       <AdminPageHeader
         title="Realtime"
         description="Monitoring placeholders for live channels. Live metrics ship in a later step — current realtime implementation is unchanged."
       />
+
+      <Card>
+        <CardContent className="flex items-center gap-3 p-4">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+            <LogIn className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold">Show Presence Messages</div>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Display lightweight join/leave system lines inside public chatrooms.
+              Anti-spam: join after 10s connected, leave after 15s offline, 60s cooldown per user.
+            </p>
+          </div>
+          <AdminToggle
+            checked={presenceMessages}
+            onCheckedChange={(v) => mut.mutate(v)}
+            disabled={mut.isPending}
+          />
+        </CardContent>
+      </Card>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {CHANNELS.map((c) => {
