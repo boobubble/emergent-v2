@@ -315,6 +315,41 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           )}
         </button>
 
+        {isStaff && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                title="Member list mode"
+                aria-label="Member list mode"
+                className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+              >
+                <Settings2 className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel>Members list mode</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {([
+                { v: "auto", label: "Auto", hint: "Split when 6+ users online" },
+                { v: "split", label: "Split users & bots", hint: "Always separate sections" },
+                { v: "merged", label: "Merge lists", hint: "Single combined list" },
+              ] as { v: BotMode; label: string; hint: string }[]).map((opt) => (
+                <DropdownMenuItem
+                  key={opt.v}
+                  onSelect={(e) => { e.preventDefault(); setBotMode(opt.v); }}
+                  className="flex items-start gap-2"
+                >
+                  <Check className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${botMode === opt.v ? "opacity-100 text-primary" : "opacity-0"}`} />
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold">{opt.label}</div>
+                    <div className="text-[10px] text-muted-foreground">{opt.hint}</div>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         <a
           href="/feed?tab=account"
           target="_blank"
@@ -325,6 +360,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         >
           <UserCog className="h-5 w-5" />
         </a>
+
       </div>
 
       <div className="px-5 pt-3">
