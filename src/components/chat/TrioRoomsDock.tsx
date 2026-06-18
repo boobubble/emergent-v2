@@ -40,6 +40,9 @@ export function TrioRoomsDock() {
   const [showCreate, setShowCreate] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [unread, setUnread] = useState<Record<string, number>>({});
+  const [acceptedRooms, setAcceptedRooms] = useState<OpenRoom[]>([]);
+  const openRoomIdRef = useRef<string | null>(null);
+
 
 
   const uid = user?.id;
