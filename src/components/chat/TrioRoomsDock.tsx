@@ -1001,7 +1001,7 @@ function TrioRoomWindow({
           </button>
           <input
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => { setText(e.target.value); sendTyping(); }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
