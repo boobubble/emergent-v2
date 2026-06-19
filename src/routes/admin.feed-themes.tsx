@@ -29,21 +29,35 @@ function AdminFeedThemesPage() {
   const [grantUser, setGrantUser] = useState("");
   const [grantTheme, setGrantTheme] = useState("");
   const [grantDays, setGrantDays] = useState<string>("");
+  const [brandLabels, setBrandLabels] = useState<Record<string, string>>({});
 
   const refresh = async () => {
     setLoading(true);
-    const { data, error } = await sb
-      .from("feed_themes")
-      .select("*")
-      .order("sort_order", { ascending: true });
+    const [{ data, error }, { data: settingRow }] = await Promise.all([
+      sb.from("feed_themes").select("*").order("sort_order", { ascending: true }),
+      sb.from("app_settings").select("value").eq("key", "theme_brand_labels").maybeSingle(),
+    ]);
     if (error) toast.error(error.message);
     setRows((data ?? []) as FeedThemeRow[]);
+    const v = settingRow?.value;
+    setBrandLabels((v && typeof v === "object" && !Array.isArray(v) ? v : {}) as Record<string, string>);
     setLoading(false);
   };
 
   useEffect(() => {
     refresh();
   }, []);
+
+  const saveBrandLabel = async (themeKey: string, label: string) => {
+    const next = { ...brandLabels };
+    const trimmed = label.trim();
+    if (trimmed) next[themeKey] = trimmed;
+    else delete next[themeKey];
+    const { error } = await sb.from("app_settings").upsert({ key: "theme_brand_labels", value: next });
+    if (error) return toast.error(error.message);
+    setBrandLabels(next);
+    toast.success("Brand label saved");
+  };
 
   const update = async (id: string, patch: Partial<FeedThemeRow>) => {
     const { error } = await sb.from("feed_themes").update(patch).eq("id", id);
@@ -132,6 +146,19 @@ function AdminFeedThemesPage() {
                       <SelectItem value="days_7">7 days</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="min-w-[200px]">
+                  <Label className="text-xs">Brand label (in-theme header/footer)</Label>
+                  <Input
+                    className="w-full"
+                    defaultValue={brandLabels[t.theme_key] ?? ""}
+                    placeholder={t.theme_key === "orkut_retro" ? "boobubble" : "(use theme default)"}
+                    onBlur={(e) => {
+                      const v = e.target.value;
+                      if (v !== (brandLabels[t.theme_key] ?? "")) saveBrandLabel(t.theme_key, v);
+                    }}
+                  />
                 </div>
               </div>
             </Card>

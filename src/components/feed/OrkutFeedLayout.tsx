@@ -36,6 +36,14 @@ import { EmojiPicker } from "@/components/chat/EmojiPicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { FeedPost } from "@/lib/feed-types";
 import type { User } from "@/lib/chat-types";
+import { useAppSettings } from "@/lib/app-settings";
+
+function useThemeBrandLabel(themeKey: string, fallback: string): string {
+  const { raw } = useAppSettings();
+  const map = (raw?.theme_brand_labels as Record<string, string> | undefined) || {};
+  const v = map[themeKey];
+  return (typeof v === "string" && v.trim()) ? v.trim() : fallback;
+}
 
 /**
  * OrkutFeedLayout — classic Orkut-inspired premium layout.
@@ -112,6 +120,7 @@ export function OrkutFeedLayout(props: Props) {
   const myPosts = useMemo(() => posts.filter((p) => p.author_id === meId).length, [posts, meId]);
   const photos = useMemo(() => posts.filter((p) => p.author_id === meId && (p.media_urls?.length ?? 0) > 0).length, [posts, meId]);
   const fans = friendList.length;
+  const brandLabel = useThemeBrandLabel("orkut_retro", "boobubble");
 
   return (
     <div className="min-h-screen orkut-classic-root">
@@ -120,6 +129,7 @@ export function OrkutFeedLayout(props: Props) {
       <OrkutTopBar
         username={username}
         me={me}
+        brandLabel={brandLabel}
         onOpenProfile={onOpenProfile}
         onOpenMessages={onOpenMessages}
         onOpenThemeStore={onOpenThemeStore}
@@ -193,7 +203,7 @@ export function OrkutFeedLayout(props: Props) {
       </div>
 
       <footer className="mt-6 border-t border-[#b5c7e0] bg-[#e8eef5] py-4 text-center text-[11px] text-[#5a6b85]">
-        <span className="orkut-brand">orkut</span> · classic retro layout · powered by BooBubble · {new Date().getFullYear()}
+        <span className="orkut-brand">{brandLabel}</span> · classic retro layout · powered by BooBubble · {new Date().getFullYear()}
       </footer>
     </div>
   );
@@ -204,6 +214,7 @@ export function OrkutFeedLayout(props: Props) {
 function OrkutTopBar({
   username,
   me,
+  brandLabel,
   onOpenProfile,
   onOpenMessages,
   onOpenThemeStore,
@@ -212,6 +223,7 @@ function OrkutTopBar({
 }: {
   username: string;
   me: User;
+  brandLabel: string;
   onOpenProfile: (u: string) => void;
   onOpenMessages: () => void;
   onOpenThemeStore: () => void;
@@ -238,7 +250,7 @@ function OrkutTopBar({
       {/* Top strip — logo + search + actions */}
       <div className="mx-auto flex max-w-[1180px] items-center gap-3 px-4 py-1.5">
         <Link to="/feed" className="flex items-center gap-2">
-          <span className="orkut-logo">orkut</span>
+          <span className="orkut-logo">{brandLabel}</span>
         </Link>
 
         <form
