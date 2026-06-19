@@ -91,7 +91,7 @@ function PostPage() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data } = await supabase.from("posts").select("*").eq("slug", slug).maybeSingle();
+      const { data } = await postsSafe().select("*").eq("slug", slug).maybeSingle();
       if (!alive) return;
       if (!data) setNotFound(true);
       else setPost(data as FeedPost);
