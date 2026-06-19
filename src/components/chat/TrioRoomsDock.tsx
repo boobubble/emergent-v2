@@ -14,6 +14,7 @@ import {
   Paperclip,
   Maximize2,
   Minimize2,
+  Sparkles,
 } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphyPicker } from "./GiphyPicker";
@@ -292,9 +293,10 @@ export function TrioRoomsDock() {
                     key={room.id}
                     onClick={() => openRoom(room)}
                     title={room.name}
-                    className="group relative grid h-10 w-10 place-items-center rounded-full bg-card/80 text-primary shadow-lg ring-1 ring-border backdrop-blur-md transition-all duration-200 hover:scale-110 animate-scale-in"
+                    className="group relative grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-fuchsia-500 via-pink-500 to-amber-400 text-white shadow-[0_0_12px_-2px_rgba(236,72,153,0.7)] ring-1 ring-white/20 backdrop-blur-md transition-all duration-200 hover:scale-110 hover:shadow-[0_0_16px_-1px_rgba(236,72,153,0.9)] animate-scale-in"
                   >
-                    <Users className="h-5 w-5" />
+                    <Sparkles className="h-5 w-5 drop-shadow" />
+                    <span className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-fuchsia-400/40 animate-pulse" />
                     {count > 0 && (
                       <span className="unread-pop absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground ring-2 ring-card">
                         {count > 99 ? "99+" : count}
