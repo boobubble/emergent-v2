@@ -163,12 +163,12 @@ export function OrkutFeedLayout(props: Props) {
 /* ============================ Top bar ============================ */
 
 function OrkutTopBar({
-  user,
+  username,
   onOpenProfile,
   onOpenMessages,
   onOpenThemeStore,
 }: {
-  user: User;
+  username: string;
   onOpenProfile: (u: string) => void;
   onOpenMessages: () => void;
   onOpenThemeStore: () => void;
@@ -186,7 +186,7 @@ function OrkutTopBar({
         </Link>
         <nav className="ml-4 hidden items-center gap-1 text-[13px] font-semibold md:flex">
           <TopLink label="home" />
-          <TopLink label="profile" onClick={() => onOpenProfile(user.username)} />
+          <TopLink label="profile" onClick={() => onOpenProfile(username)} />
           <TopLink label="scraps" />
           <TopLink label="communities" />
           <TopLink label="friends" />
@@ -207,13 +207,13 @@ function OrkutTopBar({
             <MessageCircle className="h-4 w-4" />
           </button>
           <button
-            onClick={() => onOpenProfile(user.username)}
+            onClick={() => onOpenProfile(username)}
             className="flex items-center gap-2 rounded-md bg-white/15 pl-1 pr-2 py-1 hover:bg-white/25"
           >
             <span className="grid h-6 w-6 place-items-center rounded-sm bg-white text-[#9333ea] text-xs font-black">
-              {user.username.slice(0, 1).toUpperCase()}
+              {username.slice(0, 1).toUpperCase()}
             </span>
-            <span className="hidden text-xs font-bold sm:inline">{user.username}</span>
+            <span className="hidden text-xs font-bold sm:inline">{username}</span>
           </button>
         </div>
       </div>
