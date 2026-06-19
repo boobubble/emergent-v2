@@ -38,7 +38,8 @@ export function ChatHeader() {
           <button
             onClick={() => {
               window.dispatchEvent(new CustomEvent("palrgo:minimizeMobileDM", { detail: { peerId: u.id } }));
-              closeDM(u.id);
+              const fallback = state.roomOrder?.[0] || "lobby";
+              setActive(fallback);
             }}
             aria-label="Minimize DM"
             title="Minimize"
