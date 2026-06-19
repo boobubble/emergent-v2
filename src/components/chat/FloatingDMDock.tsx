@@ -5,6 +5,8 @@ import { useAuth } from "@/lib/auth-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { MessageList } from "./MessageList";
+import { TypingIndicator } from "./TypingIndicator";
+import { useTyping } from "@/lib/use-typing";
 import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import type { Attachment } from "@/lib/chat-types";
 
@@ -229,6 +231,9 @@ function MiniDMWindow({
   const unread = chat.isDmUnread(peerId);
   const u = state.users[peerId];
   const channelId = dmChannelFor(peerId);
+  const me = state.users.me;
+  const meForTyping = me && !me.isGuest ? { id: me.id, name: me.name } : null;
+  const { typers, sendTyping } = useTyping(channelId, meForTyping, !!meForTyping);
   const [text, setText] = useState("");
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
@@ -360,6 +365,8 @@ function MiniDMWindow({
       )}
       {attachError && <div className="px-3 pb-1 text-[11px] text-destructive">{attachError}</div>}
 
+      <TypingIndicator typers={typers} />
+
       {/* Footer */}
       <div className="flex items-center gap-1.5 border-t border-border bg-card/70 px-2 py-2">
         <input
@@ -386,7 +393,7 @@ function MiniDMWindow({
         <input
           ref={inputRef}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => { setText(e.target.value); sendTyping(); }}
           onFocus={onActivity}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {

@@ -24,6 +24,8 @@ import { useChat } from "@/lib/chat-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import * as trio from "@/services/trio-rooms.service";
+import { useTyping } from "@/lib/use-typing";
+import { TypingIndicator } from "./TypingIndicator";
 
 interface OpenRoom {
   id: string;
@@ -559,6 +561,9 @@ function TrioRoomWindow({
 }) {
   const chat = useChat();
   const channelId = trio.trioChannel(room.id);
+  const me = chat.state.users.me;
+  const meForTyping = me && !me.isGuest ? { id: me.id, name: me.name } : null;
+  const { typers, sendTyping } = useTyping(channelId, meForTyping, !!meForTyping);
   const [messages, setMessages] = useState<RoomMsg[]>([]);
   const [members, setMembers] = useState<trio.TrioMember[]>([]);
   const [text, setText] = useState("");
@@ -927,6 +932,8 @@ function TrioRoomWindow({
           </div>
         )}
 
+        <TypingIndicator typers={typers} />
+
         {/* Composer */}
         <div className="relative flex items-center gap-1.5 border-t border-border bg-card/70 px-2 py-2">
           {showEmoji && (
@@ -994,7 +1001,7 @@ function TrioRoomWindow({
           </button>
           <input
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => { setText(e.target.value); sendTyping(); }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
