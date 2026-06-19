@@ -129,6 +129,7 @@ export function OrkutFeedLayout(props: Props) {
       <OrkutTopBar
         username={username}
         me={me}
+        brandLabel={brandLabel}
         onOpenProfile={onOpenProfile}
         onOpenMessages={onOpenMessages}
         onOpenThemeStore={onOpenThemeStore}
