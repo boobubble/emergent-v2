@@ -17,6 +17,7 @@ import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
 import { ScheduledAnnouncementsRunner } from "@/components/chat/ScheduledAnnouncements";
 import { BADGE_MAP } from "@/lib/achievements";
+import { chatVariantFor } from "@/lib/theme-variants";
 
 interface EngageToast { key: number; kind: "buzz" | "streak" | "badge"; title: string; body: string; }
 
@@ -104,7 +105,7 @@ export function ChatApp() {
 
   return (
     <>
-      <div ref={rootRef} data-chat-theme={chatTheme} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+      <div ref={rootRef} data-chat-theme={chatTheme} data-theme-variant={chatVariantFor(chatTheme)} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
         {sidebarOpen && (
           <Sidebar
             onOpenProfile={() => setProfileOpen(true)}

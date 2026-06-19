@@ -583,16 +583,67 @@
 }
 
 /* ====================================================================
-   FEED THEME SKINS
-   Skin-only overrides applied via `data-feed-theme` on the /feed wrapper.
-   Layout, spacing, and component placement remain identical to default.
-   These only retint colors, gradients, shadows, typography, and radii.
+   THEME SYSTEM — LOCKED LAYOUT + OPTIONAL STRUCTURAL VARIANT
+
+   1. BASE LAYOUT LOCK: Every chat/feed theme inherits identical structural
+      CSS (radii, padding, avatar size, header height, shadow). Themes can
+      ONLY override colors, gradients, fonts, and tokens — NOT structure.
+
+   2. VARIANT FLAG: A theme may opt into ONE intentional structural variant
+      via `data-theme-variant="classic" | "modern" | "square"`. This is the
+      ONLY escape hatch from the locked layout.
+
+      - modern  (default): medium radius, soft shadows
+      - classic         : tighter radius, denser feel (retro themes)
+      - square          : flat 0 radius, no shadow (utilitarian themes)
+
+   Per-theme blocks below define ONLY tokens + tint via `&` nesting.
    ==================================================================== */
 
-/* All themes use the merged-block pattern: tokens + skin overrides via CSS
-   nesting in a single self-contained block per theme. Layout/structure is
-   inherited from the base styles — themes only retint colors, gradients,
-   shadows, typography, and radii. */
+/* --- Locked base layout (applies to all themes) --- */
+[data-feed-theme] article,
+[data-feed-theme] .feed-card {
+  border-radius: var(--feed-card-radius, 14px);
+  padding: var(--feed-card-padding, 16px);
+}
+[data-chat-theme] .msg-bubble,
+[data-chat-theme] [data-message-role] {
+  border-radius: var(--chat-bubble-radius, 14px);
+}
+[data-chat-theme] .chat-avatar,
+[data-feed-theme] .feed-avatar {
+  width: var(--avatar-size, 40px);
+  height: var(--avatar-size, 40px);
+  border-radius: 9999px;
+}
+
+/* --- Variant: classic (tight radius, denser) --- */
+[data-theme-variant="classic"] {
+  --feed-card-radius: 6px;
+  --chat-bubble-radius: 8px;
+  --avatar-size: 36px;
+}
+
+/* --- Variant: square (flat, no shadow) --- */
+[data-theme-variant="square"] {
+  --feed-card-radius: 0px;
+  --chat-bubble-radius: 2px;
+  --avatar-size: 40px;
+}
+[data-theme-variant="square"] article,
+[data-theme-variant="square"] .feed-card,
+[data-theme-variant="square"] .msg-bubble {
+  box-shadow: none !important;
+}
+
+/* --- Variant: modern (default) --- */
+[data-theme-variant="modern"] {
+  --feed-card-radius: 14px;
+  --chat-bubble-radius: 14px;
+  --avatar-size: 40px;
+}
+
+
 
 [data-feed-theme="facebook_classic"] {
   --primary: oklch(0.58 0.18 252);

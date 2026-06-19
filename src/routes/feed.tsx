@@ -39,6 +39,7 @@ import { PostSkeleton, WidgetSkeleton, RewardsWidgetSkeleton } from "@/component
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
 import { FeedThemeStore } from "@/components/feed/FeedThemeStore";
 import { useActiveFeedTheme } from "@/lib/feed-themes";
+import { feedVariantFor } from "@/lib/theme-variants";
 import { Palette } from "lucide-react";
 
 // Lazy-loaded panels — only fetched when the user navigates to them, keeping
@@ -449,7 +450,7 @@ function FeedPage() {
   const [themeStoreOpen, setThemeStoreOpen] = useState(false);
 
   return (
-    <div data-feed-theme={feedTheme} className="min-h-screen overflow-x-hidden bg-background text-foreground pb-24 lg:pb-0">
+    <div data-feed-theme={feedTheme} data-theme-variant={feedVariantFor(feedTheme)} className="min-h-screen overflow-x-hidden bg-background text-foreground pb-24 lg:pb-0">
       <FeedThemeStore
         open={themeStoreOpen}
         onOpenChange={setThemeStoreOpen}
