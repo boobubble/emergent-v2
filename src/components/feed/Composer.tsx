@@ -149,9 +149,8 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
         if (error) throw new Error(error.message);
       } else {
         const media_urls = await uploadFiles();
-        const hasVideo = files.some((f) => f.type.startsWith("video/"));
-        const hasImage = files.some((f) => f.type.startsWith("image/"));
-        const kind = hasVideo ? "video" : hasImage ? "image" : "text";
+        const hasMedia = files.length > 0;
+        const kind = hasMedia ? "image" : "text";
         const { error } = await supabase.from("posts").insert({
           author_id: authorId,
           owner_id: authorId,
