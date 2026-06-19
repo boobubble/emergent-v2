@@ -238,11 +238,14 @@ export function TrioRoomsDock() {
   void isMobile;
 
 
+  const totalUnread = Object.values(unread).reduce((a, b) => a + b, 0);
+  const badgeCount = totalUnread + invites.length;
+
   return (
     <>
-      {/* Private rooms panel (opens via right-side header icon or pending invites) */}
+      {/* Private rooms dock — floating icon + collapsible panel */}
       <div className="pointer-events-auto fixed bottom-4 left-4 z-40 flex flex-col items-start gap-2 max-w-[calc(100vw-2rem)]">
-        {(showPanel || invites.length > 0) && openRooms.length === 0 && (
+        {showPanel && openRooms.length === 0 && (
           <div className="animate-scale-in w-72 rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -300,7 +303,27 @@ export function TrioRoomsDock() {
 
           </div>
         )}
+
+        {openRooms.length === 0 && (
+          <button
+            onClick={() => setShowPanel(s => !s)}
+            title="3 Some Rooms"
+            aria-label="3 Some Rooms"
+            className="relative grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-xl transition-all hover:scale-110 active:scale-95"
+            style={{ boxShadow: "0 8px 24px -8px hsl(var(--primary)/0.6)" }}
+          >
+            <Users className="h-5 w-5" />
+            {badgeCount > 0 && !showPanel && (
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground ring-2 ring-background animate-pulse">
+                {badgeCount > 99 ? "99+" : badgeCount}
+              </span>
+            )}
+          </button>
+        )}
       </div>
+
+
+
 
 
       {/* Fullscreen trio room (desktop: large centered card, mobile: full sheet) */}
