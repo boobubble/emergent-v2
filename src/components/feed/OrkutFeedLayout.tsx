@@ -87,15 +87,18 @@ export function OrkutFeedLayout(props: Props) {
     [friendIds, profiles],
   );
 
+  const username = user.username;
+  const me: User = profiles[meId] ?? synthUser(username, meId);
+
   return (
     <div className="min-h-screen bg-[oklch(0.97_0.02_310)] text-foreground dark:bg-[oklch(0.18_0.04_295)] orkut-retro-root">
       <style>{ORKUT_CSS}</style>
-      <OrkutTopBar user={user} onOpenProfile={onOpenProfile} onOpenMessages={onOpenMessages} onOpenThemeStore={onOpenThemeStore} />
+      <OrkutTopBar username={username} onOpenProfile={onOpenProfile} onOpenMessages={onOpenMessages} onOpenThemeStore={onOpenThemeStore} />
 
       <div className="mx-auto grid max-w-[1180px] gap-4 px-3 py-5 md:grid-cols-[260px_minmax(0,1fr)_280px] md:gap-5 md:px-4">
         {/* LEFT: Profile sidebar */}
         <aside className="space-y-4">
-          <OrkutProfileCard user={user} fansCount={friendList.length} onEdit={onOpenAccount} onProfile={() => onOpenProfile(user.username)} />
+          <OrkutProfileCard user={me} username={username} fansCount={friendList.length} onEdit={onOpenAccount} onProfile={() => onOpenProfile(username)} />
           <OrkutRecentVisitors visitors={friendList.slice(0, 6)} onOpenProfile={onOpenProfile} />
           <OrkutQuickLinks
             onFindFriends={onOpenFindFriends}
@@ -107,7 +110,7 @@ export function OrkutFeedLayout(props: Props) {
 
         {/* CENTER: Scrapbook feed */}
         <main className="min-w-0 space-y-4">
-          <OrkutWelcomeBanner name={user.name || user.username} fans={friendList.length} />
+          <OrkutWelcomeBanner name={me.name || username} fans={friendList.length} />
 
           <div className="orkut-card">
             <div className="orkut-card-header">
