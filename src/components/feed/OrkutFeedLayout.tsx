@@ -203,7 +203,7 @@ export function OrkutFeedLayout(props: Props) {
       </div>
 
       <footer className="mt-6 border-t border-[#b5c7e0] bg-[#e8eef5] py-4 text-center text-[11px] text-[#5a6b85]">
-        <span className="orkut-brand">orkut</span> · classic retro layout · powered by BooBubble · {new Date().getFullYear()}
+        <span className="orkut-brand">{brandLabel}</span> · classic retro layout · powered by BooBubble · {new Date().getFullYear()}
       </footer>
     </div>
   );
