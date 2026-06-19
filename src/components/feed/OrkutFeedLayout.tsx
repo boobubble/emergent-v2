@@ -26,6 +26,8 @@ import {
   Crown,
   Gift,
 } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
 import { PostCard } from "@/components/feed/PostCard";
 import { Composer } from "@/components/feed/Composer";
