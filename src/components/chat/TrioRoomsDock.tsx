@@ -654,11 +654,11 @@ function TrioRoomWindow({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/60 backdrop-blur-sm animate-fade-in sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-50 flex bg-background animate-fade-in">
       <div
-        className="flex h-full w-full flex-col overflow-hidden border border-primary/40 bg-card/95 shadow-2xl backdrop-blur-xl animate-scale-in sm:h-[min(85vh,800px)] sm:w-[min(95vw,1100px)] sm:rounded-2xl"
-        style={{ boxShadow: "0 10px 40px rgba(0,0,0,.4), 0 0 0 1px hsl(var(--primary)/0.25)" }}
+        className="flex h-full w-full flex-col overflow-hidden bg-card animate-scale-in"
       >
+
 
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-border bg-gradient-to-r from-primary/15 to-transparent px-3 py-2">
