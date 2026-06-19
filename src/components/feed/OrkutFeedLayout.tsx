@@ -141,7 +141,7 @@ export function OrkutFeedLayout(props: Props) {
 
         {/* CENTER: Status box + counters + feed */}
         <main className="min-w-0 space-y-3">
-          <OrkutStatusBox name={me.name || username} />
+          <OrkutStatusBox name={me.name || username} authorId={meId} onPosted={onReload} />
 
           <OrkutSocialCounters
             posts={myPosts}
@@ -153,7 +153,7 @@ export function OrkutFeedLayout(props: Props) {
 
           <OrkutFriendSuggestions users={allProfiles.slice(0, 6)} friendIds={friendIds} meId={meId} onOpenProfile={onOpenProfile} />
 
-          <div className="orkut-card">
+          <div className="orkut-card" data-orkut-scrapbook>
             <div className="orkut-card-header">
               <Sparkles className="h-3.5 w-3.5" />
               <span>Scraps from the Community</span>
@@ -217,6 +217,20 @@ function OrkutTopBar({
   headerSlot?: React.ReactNode;
 }) {
   const [q, setQ] = useState("");
+  const navigate = useNavigate();
+
+  const goHome = () => {
+    navigate({ to: "/feed" });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const goScrapbook = () => {
+    if (typeof window !== "undefined") {
+      const el = document.querySelector('[data-orkut-scrapbook]') as HTMLElement | null;
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+  const goCommunities = () => navigate({ to: "/groups" });
+
   return (
     <header className="orkut-navbar sticky top-0 z-30 text-white shadow-[0_2px_0_rgba(0,0,0,0.08)]">
       {/* Top strip — logo + search + actions */}
@@ -268,11 +282,11 @@ function OrkutTopBar({
       {/* Nav strip — classic Orkut blue tabs */}
       <nav className="border-t border-white/15 bg-[color-mix(in_oklab,#15356b_55%,transparent)]">
         <div className="mx-auto flex max-w-[1180px] items-center gap-0.5 px-4 text-[12px]">
-          <TopLink icon={Home} label="home" />
+          <TopLink icon={Home} label="home" onClick={goHome} />
           <TopLink icon={Smile} label="profile" onClick={() => onOpenProfile(username)} />
-          <TopLink icon={ScrollText} label="scrapbook" />
+          <TopLink icon={ScrollText} label="scrapbook" onClick={goScrapbook} />
           <TopLink icon={Users} label="friends" onClick={onOpenFindFriends} />
-          <TopLink icon={Star} label="communities" />
+          <TopLink icon={Star} label="communities" onClick={goCommunities} />
           <TopLink icon={MessageCircle} label="messages" onClick={onOpenMessages} />
         </div>
       </nav>
@@ -442,16 +456,26 @@ function OrkutQuickLinks({
   onAccount: () => void;
   onThemes: () => void;
 }) {
+  const navigate = useNavigate();
+  const scrollToScrapbook = () => {
+    if (typeof window === "undefined") return;
+    const el = document.querySelector('[data-orkut-scrapbook]') as HTMLElement | null;
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const logout = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/welcome" });
+  };
   const items: { icon: typeof Heart; label: string; onClick: () => void }[] = [
     { icon: Smile, label: "profile", onClick: onProfile },
-    { icon: ScrollText, label: "scrapbook", onClick: () => {} },
-    { icon: ImageIcon, label: "photos", onClick: () => {} },
+    { icon: ScrollText, label: "scrapbook", onClick: scrollToScrapbook },
+    { icon: ImageIcon, label: "photos", onClick: scrollToScrapbook },
     { icon: Users, label: "friends", onClick: onFindFriends },
-    { icon: Star, label: "communities", onClick: () => {} },
+    { icon: Star, label: "communities", onClick: () => navigate({ to: "/groups" }) },
     { icon: MessageCircle, label: "messages", onClick: onMessages },
     { icon: Palette, label: "themes", onClick: onThemes },
     { icon: Settings, label: "account", onClick: onAccount },
-    { icon: LogOut, label: "logout", onClick: () => {} },
+    { icon: LogOut, label: "logout", onClick: logout },
   ];
   return (
     <div className="orkut-card">
@@ -482,17 +506,35 @@ function OrkutQuickLinks({
 
 /* ============================ Status box ============================ */
 
-function OrkutStatusBox({ name }: { name: string }) {
+function OrkutStatusBox({ name, authorId, onPosted }: { name: string; authorId: string; onPosted: () => void }) {
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
-  const submit = () => {
-    if (!text.trim()) return;
+  const submit = async () => {
+    const body = text.trim();
+    if (!body || posting) return;
     setPosting(true);
-    // Status update is a presentational widget — clear locally.
-    setTimeout(() => {
-      setText("");
-      setPosting(false);
-    }, 350);
+    const slug =
+      body.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) ||
+      `status-${Date.now()}`;
+    const { error } = await supabase.from("posts").insert({
+      author_id: authorId,
+      owner_id: authorId,
+      kind: "text",
+      text: body,
+      slug,
+      media_urls: [],
+      privacy: "public",
+      is_anonymous: false,
+      hashtags: [],
+    });
+    setPosting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Status updated ✨");
+    setText("");
+    onPosted();
   };
   return (
     <div className="orkut-card">
