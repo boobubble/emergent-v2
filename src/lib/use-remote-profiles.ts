@@ -60,7 +60,7 @@ function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User 
     bio: p.bio ?? undefined,
     xp: p.xp,
     level: p.level,
-    coins: p.coins,
+    coins: p.coins ?? 0,
     streak: p.streak ?? 0,
     longestStreak: p.longest_streak ?? 0,
     lastSeen: isBot ? nowMs : lastSeenMs,
