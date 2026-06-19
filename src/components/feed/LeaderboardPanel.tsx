@@ -77,7 +77,9 @@ export function LeaderboardPanel() {
                 })}
               </Link>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${rankFor(u.level).chip}`}>{rankFor(u.level).title}</span>
+                {u.level > 1 && (
+                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${rankFor(u.level).chip}`}>{rankFor(u.level).title}</span>
+                )}
                 Lv {u.level} · 🔥 {u.streak ?? 0}
               </div>
             </div>
