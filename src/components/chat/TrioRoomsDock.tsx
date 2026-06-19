@@ -12,6 +12,8 @@ import {
   Smile,
   Image as ImageIcon,
   Paperclip,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphyPicker } from "./GiphyPicker";
