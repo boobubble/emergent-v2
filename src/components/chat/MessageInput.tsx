@@ -177,6 +177,24 @@ export function MessageInput() {
     }
   }
 
+  function autoMentionUsernames(input: string): string {
+    if (!input) return input;
+    // Build map of known usernames (excluding self) sorted longest-first so multi-word/longer names win.
+    const names = Object.values(state.users)
+      .filter(u => u.id !== "me" && u.id !== me?.id && u.name && u.name.length >= 2)
+      .map(u => u.name)
+      .sort((a, b) => b.length - a.length);
+    if (names.length === 0) return input;
+    const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    let out = input;
+    for (const name of names) {
+      // Match the name as a whole token, not already preceded by @, case-insensitive.
+      const re = new RegExp(`(^|[^\\w@])(${escape(name)})(?=$|[^\\w])`, "gi");
+      out = out.replace(re, (_m, pre) => `${pre}@${name}`);
+    }
+    return out;
+  }
+
   function submit() {
     if (!text.trim() && !attachment) return;
     const trimmed = text.trim();
@@ -190,7 +208,8 @@ export function MessageInput() {
       void handleClearChannel();
       return;
     }
-    send(text, { attachment: attachment || undefined, replyToId: replyingTo?.id });
+    const outgoing = autoMentionUsernames(text);
+    send(outgoing, { attachment: attachment || undefined, replyToId: replyingTo?.id });
     // Fire-and-forget earn call — server enforces cooldown + daily cap.
     if (me) {
       earnChat({ data: { channelId: state.activeChannel, isReply: !!replyingTo } }).catch(() => {});
