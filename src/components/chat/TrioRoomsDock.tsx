@@ -26,6 +26,7 @@ import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import * as trio from "@/services/trio-rooms.service";
 import { useTyping } from "@/lib/use-typing";
 import { TypingIndicator } from "./TypingIndicator";
+import { linkify } from "@/lib/linkify";
 
 interface OpenRoom {
   id: string;
