@@ -728,25 +728,66 @@ function OrkutPromotedUsers({
 }) {
   if (users.length === 0) return null;
   return (
-    <div className="orkut-card">
-      <div className="orkut-card-header">
+    <div className="orkut-card orkut-promoted">
+      <div className="orkut-card-header orkut-header-glossy">
         <Gift className="h-3.5 w-3.5" />
         <span>promoted users</span>
+        <span className="ml-auto text-[9px] font-bold uppercase tracking-wider opacity-90">★ sponsored</span>
       </div>
       <ul className="divide-y divide-[#d6e0ee] bg-white">
         {users.map((u) => (
           <li key={u.id}>
             <button
               onClick={() => onOpenProfile(u.name)}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[#eef3fa]"
+              className="orkut-tip flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[#eef3fa]"
+              data-tip={`visit ${u.name}'s profile`}
             >
-              <span className="rounded-sm border border-[#b5c7e0] bg-white p-0.5">
+              <span className="rounded-sm border-2 border-[#b5c7e0] bg-white p-0.5 shadow-[0_1px_2px_rgba(29,68,136,0.15)]">
                 <Avatar user={u} size={28} />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[11px] font-bold text-[#1d4488]">{u.name}</span>
                 <span className="text-[9px] uppercase tracking-wider text-[#5a6b85]">featured · lvl {u.level ?? 1}</span>
               </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/* ============================ Promoted groups ============================ */
+
+const ORKUT_PROMOTED_GROUPS = [
+  { name: "Retro Web Lovers", members: "5.2k", emoji: "💾", tag: "nostalgia" },
+  { name: "Bollywood Classics", members: "9.1k", emoji: "🎬", tag: "movies" },
+  { name: "Late Night Scrappers", members: "1.7k", emoji: "🌙", tag: "chill" },
+];
+
+function OrkutPromotedGroups() {
+  return (
+    <div className="orkut-card orkut-promoted">
+      <div className="orkut-card-header orkut-header-glossy">
+        <Star className="h-3.5 w-3.5" />
+        <span>promoted groups</span>
+        <span className="ml-auto text-[9px] font-bold uppercase tracking-wider opacity-90">★ sponsored</span>
+      </div>
+      <ul className="divide-y divide-[#d6e0ee] bg-white">
+        {ORKUT_PROMOTED_GROUPS.map((g) => (
+          <li key={g.name} className="flex items-center gap-2 px-3 py-2">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-sm border-2 border-[#b5c7e0] bg-gradient-to-br from-[#eef3fa] to-white text-base shadow-[0_1px_2px_rgba(29,68,136,0.15)]">
+              {g.emoji}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[11px] font-bold text-[#1d4488]">{g.name}</span>
+              <span className="text-[9px] uppercase tracking-wider text-[#5a6b85]">{g.tag} · {g.members}</span>
+            </span>
+            <button
+              className="orkut-btn-blue orkut-tip px-2 py-0.5 text-[10px]"
+              data-tip={`join ${g.name}`}
+            >
+              join
             </button>
           </li>
         ))}
