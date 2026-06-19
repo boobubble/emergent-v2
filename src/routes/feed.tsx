@@ -695,7 +695,7 @@ function FeedPage() {
               <SideItem onClick={() => setView("dailyChest")} active={view === "dailyChest"} icon={Gift} label="Daily Chest" color="text-rose-400" />
               <SideItem onClick={() => setView("spin")} active={view === "spin"} icon={Sparkles} label="Daily Spin" color="text-violet-400" />
               <SideItem onClick={() => setView("shop")} active={view === "shop"} icon={Coins} label="Shop" color="text-emerald-400" />
-              <SideItem onClick={() => setThemeStoreOpen(true)} active={false} icon={Palette} label="Feed Themes" color="text-fuchsia-400" />
+              
 
               
 
