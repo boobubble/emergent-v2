@@ -250,7 +250,7 @@ function OrkutTopBar({
       {/* Top strip — logo + search + actions */}
       <div className="mx-auto flex max-w-[1180px] items-center gap-3 px-4 py-1.5">
         <Link to="/feed" className="flex items-center gap-2">
-          <span className="orkut-logo">orkut</span>
+          <span className="orkut-logo">{brandLabel}</span>
         </Link>
 
         <form
