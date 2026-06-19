@@ -243,6 +243,13 @@ export type Database = {
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       confession_reactions: {
@@ -2090,7 +2097,63 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      posts_safe: {
+        Row: {
+          author_id: string | null
+          comment_count: number | null
+          created_at: string | null
+          hashtags: string[] | null
+          id: string | null
+          is_anonymous: boolean | null
+          kind: Database["public"]["Enums"]["post_kind"] | null
+          media_urls: string[] | null
+          owner_id: string | null
+          poll: Json | null
+          privacy: Database["public"]["Enums"]["post_privacy"] | null
+          reaction_count: number | null
+          slug: string | null
+          text: string | null
+          trending_score: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          comment_count?: number | null
+          created_at?: string | null
+          hashtags?: string[] | null
+          id?: string | null
+          is_anonymous?: boolean | null
+          kind?: Database["public"]["Enums"]["post_kind"] | null
+          media_urls?: string[] | null
+          owner_id?: never
+          poll?: Json | null
+          privacy?: Database["public"]["Enums"]["post_privacy"] | null
+          reaction_count?: number | null
+          slug?: string | null
+          text?: string | null
+          trending_score?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          comment_count?: number | null
+          created_at?: string | null
+          hashtags?: string[] | null
+          id?: string | null
+          is_anonymous?: boolean | null
+          kind?: Database["public"]["Enums"]["post_kind"] | null
+          media_urls?: string[] | null
+          owner_id?: never
+          poll?: Json | null
+          privacy?: Database["public"]["Enums"]["post_privacy"] | null
+          reaction_count?: number | null
+          slug?: string | null
+          text?: string | null
+          trending_score?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_trio_invite: {
@@ -2150,6 +2213,7 @@ export type Database = {
         Args: { _channel: string; _user_id: string }
         Returns: boolean
       }
+      my_coin_balance: { Args: never; Returns: number }
       slugify: { Args: { input: string }; Returns: string }
       trio_channel_room: { Args: { _channel: string }; Returns: string }
     }
