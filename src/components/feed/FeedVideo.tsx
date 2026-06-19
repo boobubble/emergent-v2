@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Loader2, VideoOff } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Play, Pause, Loader2, VideoOff, X } from "lucide-react";
 
 /**
  * Consistent video player for the feed.
- * - Shows a captured thumbnail (from first frame) as a poster before play
+ * - Shows a captured thumbnail (from first frame) as a poster
  * - Hover on desktop shows a muted silent preview
- * - Click/tap plays with full controls (audio on)
+ * - Click/tap opens a fullscreen modal with pause/resume + close
  * - Graceful error fallback
  */
 export function FeedVideo({
@@ -15,13 +16,15 @@ export function FeedVideo({
   src: string;
   className?: string;
 }) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const previewRef = useRef<HTMLVideoElement | null>(null);
+  const modalVideoRef = useRef<HTMLVideoElement | null>(null);
   const [poster, setPoster] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-  const [playing, setPlaying] = useState(false);
   const [hovering, setHovering] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [modalPlaying, setModalPlaying] = useState(false);
 
-  // Capture a poster frame from the video (works for same-origin or CORS-enabled hosts)
+  // Capture a poster frame from the video
   useEffect(() => {
     let cancelled = false;
     const v = document.createElement("video");
@@ -33,7 +36,6 @@ export function FeedVideo({
 
     const onLoaded = () => {
       try {
-        // seek slightly in to avoid black first-frame
         v.currentTime = Math.min(0.1, (v.duration || 1) / 2);
       } catch {
         capture();
@@ -59,13 +61,10 @@ export function FeedVideo({
           setStatus("ready");
         }
       } catch {
-        // CORS — can't read pixels; still ok, video itself will play
         if (!cancelled) setStatus("ready");
       }
     };
-    const onError = () => {
-      if (!cancelled) setStatus("error");
-    };
+    const onError = () => { if (!cancelled) setStatus("error"); };
     v.addEventListener("loadedmetadata", onLoaded);
     v.addEventListener("seeked", onSeeked);
     v.addEventListener("error", onError);
@@ -80,8 +79,8 @@ export function FeedVideo({
 
   // Desktop hover: silent muted preview
   useEffect(() => {
-    const v = videoRef.current;
-    if (!v || playing) return;
+    const v = previewRef.current;
+    if (!v) return;
     if (hovering) {
       v.muted = true;
       v.currentTime = 0;
@@ -90,15 +89,61 @@ export function FeedVideo({
       v.pause();
       try { v.currentTime = 0; } catch {}
     }
-  }, [hovering, playing]);
+  }, [hovering]);
 
-  function handlePlay() {
-    const v = videoRef.current;
+  // Lock body scroll + ESC to close while modal is open
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+      if (e.key === " " || e.code === "Space") {
+        e.preventDefault();
+        togglePlay();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  function openModal() {
+    setOpen(true);
+    setModalPlaying(true);
+    // attempt autoplay once the video element is mounted
+    requestAnimationFrame(() => {
+      const v = modalVideoRef.current;
+      if (!v) return;
+      v.muted = false;
+      v.play().catch(() => {
+        // autoplay with sound blocked — try muted, user can unmute via controls
+        v.muted = true;
+        v.play().catch(() => setModalPlaying(false));
+      });
+    });
+  }
+
+  function closeModal() {
+    const v = modalVideoRef.current;
+    if (v) v.pause();
+    setOpen(false);
+    setModalPlaying(false);
+  }
+
+  function togglePlay() {
+    const v = modalVideoRef.current;
     if (!v) return;
-    v.muted = false;
-    v.controls = true;
-    v.play().catch(() => {});
-    setPlaying(true);
+    if (v.paused) {
+      v.play().catch(() => {});
+      setModalPlaying(true);
+    } else {
+      v.pause();
+      setModalPlaying(false);
+    }
   }
 
   if (status === "error") {
@@ -113,30 +158,25 @@ export function FeedVideo({
   }
 
   return (
-    <div
-      className={`relative bg-black overflow-hidden ${className}`}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
-    >
-      <video
-        ref={videoRef}
-        src={src}
-        poster={poster ?? undefined}
-        playsInline
-        preload="metadata"
-        controls={playing}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
-        className="h-full w-full object-contain"
-      />
-      {!playing && (
-        <button
-          type="button"
-          onClick={handlePlay}
-          aria-label="Play video"
-          className="absolute inset-0 grid place-items-center bg-gradient-to-t from-black/40 via-transparent to-transparent transition-colors hover:bg-black/20"
-        >
+    <>
+      <div
+        className={`relative bg-black overflow-hidden cursor-pointer ${className}`}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
+        onClick={openModal}
+        role="button"
+        aria-label="Play video fullscreen"
+      >
+        <video
+          ref={previewRef}
+          src={src}
+          poster={poster ?? undefined}
+          playsInline
+          muted
+          preload="metadata"
+          className="h-full w-full object-contain pointer-events-none"
+        />
+        <div className="absolute inset-0 grid place-items-center bg-gradient-to-t from-black/40 via-transparent to-transparent transition-colors hover:bg-black/15">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-white/95 text-black shadow-lg ring-1 ring-black/10 transition-transform duration-200 hover:scale-110 active:scale-95">
             {status === "loading" ? (
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -144,8 +184,59 @@ export function FeedVideo({
               <Play className="h-7 w-7 translate-x-0.5 fill-current" />
             )}
           </span>
-        </button>
+        </div>
+      </div>
+
+      {open && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm animate-fade-in flex items-center justify-center"
+          onClick={closeModal}
+        >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); closeModal(); }}
+            aria-label="Close video"
+            className="absolute top-4 right-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 backdrop-blur transition hover:bg-white/20 active:scale-95"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          <div
+            className="relative max-h-full max-w-full w-full h-full flex items-center justify-center p-4 sm:p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <video
+              ref={modalVideoRef}
+              src={src}
+              poster={poster ?? undefined}
+              controls
+              autoPlay
+              playsInline
+              onPlay={() => setModalPlaying(true)}
+              onPause={() => setModalPlaying(false)}
+              onEnded={() => setModalPlaying(false)}
+              className="max-h-full max-w-full rounded-lg shadow-2xl bg-black"
+            />
+
+            {/* Center pause/resume tap target overlay (mobile-friendly) */}
+            <button
+              type="button"
+              onClick={togglePlay}
+              aria-label={modalPlaying ? "Pause" : "Resume"}
+              className={`absolute inset-0 grid place-items-center transition-opacity ${modalPlaying ? "opacity-0 hover:opacity-100" : "opacity-100"}`}
+            >
+              <span className="grid h-16 w-16 place-items-center rounded-full bg-white/90 text-black shadow-xl ring-1 ring-black/10 transition-transform hover:scale-110 active:scale-95">
+                {modalPlaying ? (
+                  <Pause className="h-7 w-7 fill-current" />
+                ) : (
+                  <Play className="h-8 w-8 translate-x-0.5 fill-current" />
+                )}
+              </span>
+            </button>
+          </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
