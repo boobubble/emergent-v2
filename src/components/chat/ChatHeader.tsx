@@ -1,4 +1,4 @@
-import { MessageCircle, X, Bot, BotOff, Search, Users } from "lucide-react";
+import { MessageCircle, X, Bot, BotOff, Search, Users, Palette } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
@@ -83,6 +83,15 @@ export function ChatHeader() {
         >
           {ignoreAllBots ? <BotOff className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
           <span>{ignoreAllBots ? "Bots hidden" : "Bots on"}</span>
+        </button>
+        <button
+          type="button"
+          className="chat-icon-btn"
+          title="Chatroom themes"
+          aria-label="Chatroom themes"
+          onClick={() => window.dispatchEvent(new Event("palrgo:open-chat-theme-store"))}
+        >
+          <Palette className="h-4 w-4" />
         </button>
         <button
           type="button"

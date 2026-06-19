@@ -170,6 +170,57 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_themes: {
+        Row: {
+          accent_hex: string | null
+          created_at: string
+          description: string | null
+          duration_days: number | null
+          enabled: boolean
+          id: string
+          is_default: boolean
+          name: string
+          preview_url: string | null
+          price_coins: number
+          sort_order: number
+          theme_key: string
+          unlock_mode: string
+          updated_at: string
+        }
+        Insert: {
+          accent_hex?: string | null
+          created_at?: string
+          description?: string | null
+          duration_days?: number | null
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
+          name: string
+          preview_url?: string | null
+          price_coins?: number
+          sort_order?: number
+          theme_key: string
+          unlock_mode?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_hex?: string | null
+          created_at?: string
+          description?: string | null
+          duration_days?: number | null
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
+          name?: string
+          preview_url?: string | null
+          price_coins?: number
+          sort_order?: number
+          theme_key?: string
+          unlock_mode?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coin_transactions: {
         Row: {
           amount: number
@@ -1337,6 +1388,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_chat_theme: string | null
           active_feed_theme: string | null
           avatar_color: string
           avatar_url: string | null
@@ -1366,6 +1418,7 @@ export type Database = {
           xp: number
         }
         Insert: {
+          active_chat_theme?: string | null
           active_feed_theme?: string | null
           avatar_color?: string
           avatar_url?: string | null
@@ -1395,6 +1448,7 @@ export type Database = {
           xp?: number
         }
         Update: {
+          active_chat_theme?: string | null
           active_feed_theme?: string | null
           avatar_color?: string
           avatar_url?: string | null
@@ -2005,6 +2059,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_chat_themes: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          source: string
+          theme_key: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          source?: string
+          theme_key: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          source?: string
+          theme_key?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_chat_themes_theme_key_fkey"
+            columns: ["theme_key"]
+            isOneToOne: false
+            referencedRelation: "chat_themes"
+            referencedColumns: ["theme_key"]
+          },
+        ]
+      }
       user_devices: {
         Row: {
           fingerprint: string
@@ -2252,7 +2344,26 @@ export type Database = {
         Args: { _password?: string; _room: string }
         Returns: undefined
       }
+      activate_chat_theme: { Args: { _theme_key: string }; Returns: string }
       activate_feed_theme: { Args: { _theme_key: string }; Returns: string }
+      admin_grant_chat_theme: {
+        Args: { _days?: number; _theme_key: string; _user: string }
+        Returns: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          source: string
+          theme_key: string
+          unlocked_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_chat_themes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_grant_feed_theme: {
         Args: { _days?: number; _theme_key: string; _user: string }
         Returns: {
@@ -2270,6 +2381,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_revoke_chat_theme: {
+        Args: { _theme_key: string; _user: string }
+        Returns: undefined
       }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
       create_trio_room: {
@@ -2292,6 +2407,7 @@ export type Database = {
         }
       }
       delete_user_cascade: { Args: { _user: string }; Returns: undefined }
+      get_active_chat_theme: { Args: { _user: string }; Returns: string }
       get_active_feed_theme: { Args: { _user: string }; Returns: string }
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
       has_role: {
@@ -2328,6 +2444,24 @@ export type Database = {
       my_coin_balance: { Args: never; Returns: number }
       slugify: { Args: { input: string }; Returns: string }
       trio_channel_room: { Args: { _channel: string }; Returns: string }
+      unlock_chat_theme: {
+        Args: { _theme_key: string }
+        Returns: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          source: string
+          theme_key: string
+          unlocked_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_chat_themes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       unlock_feed_theme: {
         Args: { _theme_key: string }
         Returns: {

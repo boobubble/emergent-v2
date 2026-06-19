@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate } from "@tanstack/react-router";
 import { Flame, Award, PanelLeftOpen } from "lucide-react";
+import { ChatThemeStore } from "@/components/chat/ChatThemeStore";
+import { useActiveChatTheme } from "@/lib/chat-themes";
 import { useOptionalChat } from "@/lib/chat-store";
 import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
@@ -91,10 +93,18 @@ export function ChatApp() {
   if (!chat) return <Navigate to="/welcome" replace />;
 
   const { state, isDM } = chat;
+  const { theme: chatTheme, refresh: refreshChatTheme } = useActiveChatTheme();
+  const [themeStoreOpen, setThemeStoreOpen] = useState(false);
+
+  useEffect(() => {
+    const open = () => setThemeStoreOpen(true);
+    window.addEventListener("palrgo:open-chat-theme-store", open);
+    return () => window.removeEventListener("palrgo:open-chat-theme-store", open);
+  }, []);
 
   return (
     <>
-      <div ref={rootRef} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+      <div ref={rootRef} data-chat-theme={chatTheme} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
         {sidebarOpen && (
           <Sidebar
             onOpenProfile={() => setProfileOpen(true)}
@@ -131,6 +141,12 @@ export function ChatApp() {
         <LeaderboardModal open={lbOpen} onClose={() => setLbOpen(false)} />
         <AchievementsModal open={achOpen} onClose={() => setAchOpen(false)} />
         <ScheduledAnnouncementsRunner />
+        <ChatThemeStore
+          open={themeStoreOpen}
+          onOpenChange={setThemeStoreOpen}
+          activeTheme={chatTheme}
+          onThemeChange={refreshChatTheme}
+        />
       </div>
 
       {toast && (
