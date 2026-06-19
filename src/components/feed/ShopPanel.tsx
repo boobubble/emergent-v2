@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Coins, Check, Lock, ArrowLeft } from "lucide-react";
+import { Coins, Check, Lock, ArrowLeft, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { SHOP_BY_CATEGORY, CATEGORY_LABEL, stickerGifUrl, type ShopCategory, type ShopItem } from "@/lib/shop-catalog";
 import { getMyInventory, purchaseItem, equipItem } from "@/lib/rewards.functions";
