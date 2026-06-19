@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Users, Plus, Minus, X, Lock, EyeOff, Send, ShieldX, Mic } from "lucide-react";
+import { Users, Plus, Minus, X, Lock, EyeOff, Send, ShieldX, Mic, Smile, Image as ImageIcon, Paperclip } from "lucide-react";
+import { EmojiPicker } from "./EmojiPicker";
+import { GiphyPicker } from "./GiphyPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { useChat } from "@/lib/chat-store";
@@ -18,6 +20,7 @@ interface RoomMsg {
   authorId: string;
   text: string;
   ts: number;
+  attachment?: { kind: "image" | "file"; name?: string; mime?: string; size?: number; dataUrl: string } | null;
 }
 
 interface PendingInvite {
@@ -239,7 +242,7 @@ export function TrioRoomsDock() {
     <>
       {/* Private rooms panel (opens via right-side header icon or pending invites) */}
       <div className="pointer-events-auto fixed bottom-4 left-4 z-40 flex flex-col items-start gap-2 max-w-[calc(100vw-2rem)]">
-        {(showPanel || invites.length > 0) && (
+        {(showPanel || invites.length > 0) && openRooms.length === 0 && (
           <div className="animate-scale-in w-72 rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -317,6 +320,7 @@ export function TrioRoomsDock() {
           onClose={() => setShowCreate(false)}
           onCreated={(r) => {
             setShowCreate(false);
+            setShowPanel(false);
             openRoom({ id: r.id, name: r.name, ownerId: r.owner_id });
           }}
         />
@@ -517,7 +521,11 @@ function TrioRoomWindow({
   const [inviteName, setInviteName] = useState("");
   const [inviteErr, setInviteErr] = useState("");
   const [closed, setClosed] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [showGif, setShowGif] = useState(false);
+  const [pending, setPending] = useState<RoomMsg["attachment"] | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const isOwner = room.ownerId === meId;
 
   // initial fetch
@@ -526,13 +534,14 @@ function TrioRoomWindow({
     (async () => {
       const { data } = await supabase
         .from("messages")
-        .select("id,author_id,text,created_at")
+        .select("id,author_id,text,created_at,attachment")
         .eq("channel_id", channelId)
         .order("created_at", { ascending: true })
         .limit(200);
       if (cancelled) return;
       setMessages((data ?? []).map(r => ({
         id: r.id, authorId: r.author_id, text: r.text ?? "", ts: new Date(r.created_at).getTime(),
+        attachment: (r.attachment as RoomMsg["attachment"]) ?? null,
       })));
       const m = await trio.listMembers(room.id);
       if (!cancelled) setMembers(m);
@@ -548,11 +557,11 @@ function TrioRoomWindow({
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `channel_id=eq.${channelId}` },
         (payload) => {
-          const r = payload.new as { id: string; author_id: string; text: string; created_at: string };
+          const r = payload.new as { id: string; author_id: string; text: string; created_at: string; attachment: RoomMsg["attachment"] };
           setMessages(prev =>
             prev.some(m => m.id === r.id)
               ? prev
-              : [...prev, { id: r.id, authorId: r.author_id, text: r.text ?? "", ts: new Date(r.created_at).getTime() }],
+              : [...prev, { id: r.id, authorId: r.author_id, text: r.text ?? "", ts: new Date(r.created_at).getTime(), attachment: r.attachment ?? null }],
           );
         },
       )
@@ -589,18 +598,40 @@ function TrioRoomWindow({
 
   async function send() {
     const t = text.trim();
-    if (!t || closed) return;
+    if ((!t && !pending) || closed) return;
+    const att = pending;
     setText("");
+    setPending(null);
     const { error } = await supabase.from("messages").insert({
       channel_id: channelId,
       author_id: meId,
       text: t,
-      kind: "text",
+      kind: att?.kind === "image" ? "image" : "text",
+      attachment: att ? JSON.parse(JSON.stringify(att)) : null,
     });
     if (error) {
       setText(t);
+      setPending(att ?? null);
       alert(error.message);
     }
+  }
+
+  function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (e.target) e.target.value = "";
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("Max 5MB"); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPending({
+        kind: file.type.startsWith("image/") ? "image" : "file",
+        name: file.name,
+        mime: file.type,
+        size: file.size,
+        dataUrl: String(reader.result),
+      });
+    };
+    reader.readAsDataURL(file);
   }
 
   async function doInvite() {
@@ -623,11 +654,11 @@ function TrioRoomWindow({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/60 backdrop-blur-sm animate-fade-in sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-50 flex bg-background animate-fade-in">
       <div
-        className="flex h-full w-full flex-col overflow-hidden border border-primary/40 bg-card/95 shadow-2xl backdrop-blur-xl animate-scale-in sm:h-[min(85vh,800px)] sm:w-[min(95vw,1100px)] sm:rounded-2xl"
-        style={{ boxShadow: "0 10px 40px rgba(0,0,0,.4), 0 0 0 1px hsl(var(--primary)/0.25)" }}
+        className="flex h-full w-full flex-col overflow-hidden bg-card animate-scale-in"
       >
+
 
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-border bg-gradient-to-r from-primary/15 to-transparent px-3 py-2">
@@ -721,7 +752,15 @@ function TrioRoomWindow({
                     <CosmeticName userId={u.id} name={u.name} />
                   </div>
                 )}
-                <div className="whitespace-pre-wrap break-words">{m.text}</div>
+                {m.attachment?.kind === "image" && (
+                  <img src={m.attachment.dataUrl} alt={m.attachment.name ?? "image"} className="mt-1 max-h-64 max-w-full rounded-lg object-contain" />
+                )}
+                {m.attachment?.kind === "file" && (
+                  <a href={m.attachment.dataUrl} download={m.attachment.name} className="mt-1 flex items-center gap-1 underline">
+                    <Paperclip className="h-3 w-3" /> {m.attachment.name}
+                  </a>
+                )}
+                {m.text && <div className="whitespace-pre-wrap break-words">{m.text}</div>}
               </div>
             </div>
           );
@@ -733,8 +772,49 @@ function TrioRoomWindow({
         )}
       </div>
 
+      {/* Pending attachment preview */}
+      {pending && (
+        <div className="flex items-center gap-2 border-t border-border bg-muted/20 px-3 py-2">
+          {pending.kind === "image" ? (
+            <img src={pending.dataUrl} alt={pending.name} className="h-12 w-12 rounded object-cover" />
+          ) : (
+            <div className="grid h-12 w-12 place-items-center rounded bg-muted"><Paperclip className="h-4 w-4" /></div>
+          )}
+          <div className="flex-1 min-w-0 text-xs">
+            <div className="truncate font-medium">{pending.name}</div>
+            <div className="text-muted-foreground">{((pending.size ?? 0) / 1024).toFixed(1)} KB</div>
+          </div>
+          <button onClick={() => setPending(null)} className="text-muted-foreground hover:text-destructive" aria-label="Remove">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Composer */}
-      <div className="flex items-center gap-1.5 border-t border-border bg-card/70 px-2 py-2">
+      <div className="relative flex items-center gap-1.5 border-t border-border bg-card/70 px-2 py-2">
+        {showEmoji && (
+          <div className="absolute bottom-12 left-2 z-10">
+            <EmojiPicker onPick={(e) => { setText(t => t + e); setShowEmoji(false); }} />
+          </div>
+        )}
+        {showGif && (
+          <div className="absolute bottom-12 left-2 z-10">
+            <GiphyPicker onPick={(gif) => {
+              setPending({ kind: "image", name: `${gif.title || "gif"}.gif`, mime: "image/gif", size: 0, dataUrl: gif.fullUrl });
+              setShowGif(false);
+            }} />
+          </div>
+        )}
+        <input ref={fileRef} type="file" onChange={onPickFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
+        <button onClick={() => fileRef.current?.click()} disabled={closed} title="Attach" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40">
+          <Paperclip className="h-4 w-4" />
+        </button>
+        <button onClick={() => { setShowEmoji(s => !s); setShowGif(false); }} disabled={closed} title="Emoji" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40">
+          <Smile className="h-4 w-4" />
+        </button>
+        <button onClick={() => { setShowGif(s => !s); setShowEmoji(false); }} disabled={closed} title="GIF" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40">
+          <ImageIcon className="h-4 w-4" />
+        </button>
         <input
           value={text}
           onChange={e => setText(e.target.value)}
@@ -743,7 +823,7 @@ function TrioRoomWindow({
           placeholder={closed ? "Room closed" : "Private message…"}
           className="min-w-0 flex-1 rounded-full bg-muted/40 px-3 py-1.5 text-xs outline-none focus:bg-muted/60 disabled:opacity-50"
         />
-        <button onClick={send} disabled={!text.trim() || closed} className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 disabled:opacity-40">
+        <button onClick={send} disabled={(!text.trim() && !pending) || closed} className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 disabled:opacity-40">
           <Send className="h-4 w-4" />
         </button>
       </div>
