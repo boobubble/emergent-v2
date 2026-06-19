@@ -521,7 +521,11 @@ function TrioRoomWindow({
   const [inviteName, setInviteName] = useState("");
   const [inviteErr, setInviteErr] = useState("");
   const [closed, setClosed] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [showGif, setShowGif] = useState(false);
+  const [pending, setPending] = useState<RoomMsg["attachment"] | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const isOwner = room.ownerId === meId;
 
   // initial fetch
@@ -530,13 +534,14 @@ function TrioRoomWindow({
     (async () => {
       const { data } = await supabase
         .from("messages")
-        .select("id,author_id,text,created_at")
+        .select("id,author_id,text,created_at,attachment")
         .eq("channel_id", channelId)
         .order("created_at", { ascending: true })
         .limit(200);
       if (cancelled) return;
       setMessages((data ?? []).map(r => ({
         id: r.id, authorId: r.author_id, text: r.text ?? "", ts: new Date(r.created_at).getTime(),
+        attachment: (r.attachment as RoomMsg["attachment"]) ?? null,
       })));
       const m = await trio.listMembers(room.id);
       if (!cancelled) setMembers(m);
