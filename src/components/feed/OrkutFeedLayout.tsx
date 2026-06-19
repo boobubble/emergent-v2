@@ -153,7 +153,7 @@ export function OrkutFeedLayout(props: Props) {
 
           <OrkutFriendSuggestions users={allProfiles.slice(0, 6)} friendIds={friendIds} meId={meId} onOpenProfile={onOpenProfile} />
 
-          <div className="orkut-card">
+          <div className="orkut-card" data-orkut-scrapbook>
             <div className="orkut-card-header">
               <Sparkles className="h-3.5 w-3.5" />
               <span>Scraps from the Community</span>
