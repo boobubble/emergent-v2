@@ -292,7 +292,8 @@ function TopLink({
   return (
     <button
       onClick={onClick}
-      className="orkut-tab flex items-center gap-1.5 px-2.5 py-1.5 font-bold uppercase tracking-wide text-white/90 transition hover:bg-white/15 hover:text-white"
+      data-tip={label}
+      className="orkut-tab orkut-tip flex items-center gap-1.5 px-2.5 py-1.5 font-bold uppercase tracking-wide text-white/90 transition hover:bg-white/15 hover:text-white"
     >
       <Icon className="h-3 w-3" />
       <span>{label}</span>
