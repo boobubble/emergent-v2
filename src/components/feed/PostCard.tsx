@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { earnFeedReaction, earnFeedComment, earnFeedShare, boostPost } from "@/lib/economy.functions";
 import { claimShareReward } from "@/lib/boobubble.functions";
 import { SPEND } from "@/lib/economy-config";
+import { FeedVideo } from "@/components/feed/FeedVideo";
 
 
 function timeAgo(iso: string) {
