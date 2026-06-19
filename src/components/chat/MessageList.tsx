@@ -238,7 +238,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                       Bot
                     </span>
                   )}
-                  {!author.isBot && <RankChip level={author.level} compact />}
+                  {!author.isBot && author.level > 1 && <RankChip level={author.level} compact />}
                   <Time ts={g[0].ts} />
                 </div>
                 <div className="flex flex-col gap-1">
