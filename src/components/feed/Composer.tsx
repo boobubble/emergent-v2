@@ -323,7 +323,20 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
         <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-emerald-400 hover:bg-emerald-400/10 transition">
           <ImageIcon className="h-4 w-4" /> <span className="hidden sm:inline">Photo</span>
         </button>
-        <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e) => setFiles([...files, ...Array.from(e.target.files ?? [])])} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*,video/mp4,video/webm,.mp4,.webm"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            const picked = Array.from(e.target.files ?? []);
+            const { ok, rejected } = validateAndFilter(picked);
+            if (rejected.length) toast.error("Some files were skipped", { description: rejected.join("\n") });
+            if (ok.length) setFiles([...files, ...ok]);
+            if (fileRef.current) fileRef.current.value = "";
+          }}
+        />
         <Popover>
           <PopoverTrigger asChild>
             <button className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-amber-400 hover:bg-amber-400/10 transition">
