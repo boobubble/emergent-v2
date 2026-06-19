@@ -14,6 +14,7 @@ import {
   Paperclip,
   Maximize2,
   Minimize2,
+  Sparkles,
 } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphyPicker } from "./GiphyPicker";
