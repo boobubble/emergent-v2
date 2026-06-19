@@ -34,13 +34,26 @@ export function ChatHeader() {
             </div>
           </div>
         </div>
-        <button
-          onClick={() => closeDM(u.id)}
-          aria-label="Close DM"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-destructive/15 hover:text-destructive"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("palrgo:minimizeMobileDM", { detail: { peerId: u.id } }));
+              closeDM(u.id);
+            }}
+            aria-label="Minimize DM"
+            title="Minimize"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-white/5 hover:text-foreground lg:hidden"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => closeDM(u.id)}
+            aria-label="Close DM"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-destructive/15 hover:text-destructive"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </header>
     );
   }
