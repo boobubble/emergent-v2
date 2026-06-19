@@ -151,7 +151,7 @@ export function OrkutFeedLayout(props: Props) {
             friends={fans}
           />
 
-          <OrkutFriendSuggestions users={allProfiles.slice(0, 6)} onOpenProfile={onOpenProfile} />
+          <OrkutFriendSuggestions users={allProfiles.slice(0, 6)} friendIds={friendIds} meId={meId} onOpenProfile={onOpenProfile} />
 
           <div className="orkut-card">
             <div className="orkut-card-header">
