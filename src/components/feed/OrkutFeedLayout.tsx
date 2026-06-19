@@ -456,16 +456,26 @@ function OrkutQuickLinks({
   onAccount: () => void;
   onThemes: () => void;
 }) {
+  const navigate = useNavigate();
+  const scrollToScrapbook = () => {
+    if (typeof window === "undefined") return;
+    const el = document.querySelector('[data-orkut-scrapbook]') as HTMLElement | null;
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const logout = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/welcome" });
+  };
   const items: { icon: typeof Heart; label: string; onClick: () => void }[] = [
     { icon: Smile, label: "profile", onClick: onProfile },
-    { icon: ScrollText, label: "scrapbook", onClick: () => {} },
-    { icon: ImageIcon, label: "photos", onClick: () => {} },
+    { icon: ScrollText, label: "scrapbook", onClick: scrollToScrapbook },
+    { icon: ImageIcon, label: "photos", onClick: scrollToScrapbook },
     { icon: Users, label: "friends", onClick: onFindFriends },
-    { icon: Star, label: "communities", onClick: () => {} },
+    { icon: Star, label: "communities", onClick: () => navigate({ to: "/groups" }) },
     { icon: MessageCircle, label: "messages", onClick: onMessages },
     { icon: Palette, label: "themes", onClick: onThemes },
     { icon: Settings, label: "account", onClick: onAccount },
-    { icon: LogOut, label: "logout", onClick: () => {} },
+    { icon: LogOut, label: "logout", onClick: logout },
   ];
   return (
     <div className="orkut-card">
