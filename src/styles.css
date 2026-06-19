@@ -589,6 +589,11 @@
    These only retint colors, gradients, shadows, typography, and radii.
    ==================================================================== */
 
+/* All themes use the merged-block pattern: tokens + skin overrides via CSS
+   nesting in a single self-contained block per theme. Layout/structure is
+   inherited from the base styles — themes only retint colors, gradients,
+   shadows, typography, and radii. */
+
 [data-feed-theme="facebook_classic"] {
   --primary: oklch(0.58 0.18 252);
   --primary-foreground: oklch(0.99 0 0);
@@ -598,11 +603,12 @@
   --primary-glow: oklch(0.58 0.18 252 / 0.35);
   --gradient-primary: linear-gradient(135deg, oklch(0.58 0.18 252), oklch(0.52 0.2 258));
   --radius: 0.5rem;
-}
-[data-feed-theme="facebook_classic"] article,
-[data-feed-theme="facebook_classic"] .feed-card,
-[data-feed-theme="facebook_classic"] [class*="rounded-2xl"] {
-  border-radius: 8px;
+
+  & article,
+  & .feed-card,
+  & [class*="rounded-2xl"] {
+    border-radius: 8px;
+  }
 }
 
 [data-feed-theme="instagram"] {
@@ -614,12 +620,13 @@
   --primary-glow: oklch(0.65 0.24 5 / 0.4);
   --gradient-primary: linear-gradient(135deg, #f09433, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888);
   --shadow-glow: 0 4px 18px oklch(0.65 0.24 5 / 0.25);
-}
-[data-feed-theme="instagram"] button,
-[data-feed-theme="instagram"] .btn-primary,
-[data-feed-theme="instagram"] [data-variant="default"] {
-  background-image: var(--gradient-primary);
-  color: white;
+
+  & button,
+  & .btn-primary,
+  & [data-variant="default"] {
+    background-image: var(--gradient-primary);
+    color: white;
+  }
 }
 
 [data-feed-theme="twitter_x"] {
@@ -631,11 +638,12 @@
   --primary-glow: oklch(0 0 0 / 0.3);
   --gradient-primary: linear-gradient(135deg, oklch(0.18 0 0), oklch(0.28 0 0));
   font-feature-settings: "ss01", "cv11";
-}
-[data-feed-theme="twitter_x"] article,
-[data-feed-theme="twitter_x"] .feed-card {
-  border-radius: 16px;
-  box-shadow: none !important;
+
+  & article,
+  & .feed-card {
+    border-radius: 16px;
+    box-shadow: none !important;
+  }
 }
 
 [data-feed-theme="reddit"] {
@@ -649,10 +657,6 @@
   --card: color-mix(in oklab, var(--background) 96%, white);
 }
 
-/* POC: single self-contained theme block (tokens + skin via CSS nesting).
-   Identical output to the previous split-block pattern, but every theme
-   is now one cohesive unit. Apply the same shape to remaining themes
-   once this POC is approved. */
 [data-feed-theme="orkut_retro"] {
   --primary: oklch(0.55 0.22 295);
   --primary-foreground: oklch(0.99 0 0);
@@ -670,7 +674,6 @@
   }
 }
 
-
 [data-feed-theme="neon_glass"] {
   --primary: oklch(0.85 0.18 200);
   --primary-foreground: oklch(0.12 0 0);
@@ -680,22 +683,19 @@
   --gradient-primary: linear-gradient(135deg, #22d3ee, #a855f7 60%, #ec4899);
   --shadow-glow: 0 0 24px oklch(0.85 0.18 200 / 0.45);
   --shadow-soft-2: 0 8px 32px -10px oklch(0.85 0.18 200 / 0.35);
-}
-[data-feed-theme="neon_glass"] article,
-[data-feed-theme="neon_glass"] .feed-card,
-[data-feed-theme="neon_glass"] header {
-  backdrop-filter: blur(18px) saturate(140%);
-  background: color-mix(in oklab, var(--card) 55%, transparent) !important;
-  border: 1px solid color-mix(in oklab, var(--primary) 35%, transparent);
-  box-shadow: var(--shadow-glow);
+
+  & article,
+  & .feed-card,
+  & header {
+    backdrop-filter: blur(18px) saturate(140%);
+    background: color-mix(in oklab, var(--card) 55%, transparent) !important;
+    border: 1px solid color-mix(in oklab, var(--primary) 35%, transparent);
+    box-shadow: var(--shadow-glow);
+  }
 }
 
 /* ====================================================================
    CHATROOM THEME SKINS
-   Skin-only overrides applied via `data-chat-theme` on the chat root.
-   Preserves layout, sidebars, members panel, DM dock, radio widgets,
-   bots panel, and animations — only retints colors, gradients, shadows,
-   typography, and radii.
    ==================================================================== */
 
 [data-chat-theme="discord"] {
@@ -716,7 +716,6 @@
   --radius: 0.5rem;
 }
 
-/* POC: single self-contained theme block (tokens + skin via CSS nesting). */
 [data-chat-theme="yahoo_messenger"] {
   --background: oklch(0.97 0.02 295);
   --foreground: oklch(0.2 0.05 295);
@@ -738,7 +737,6 @@
   }
 }
 
-
 [data-chat-theme="whatsapp"] {
   --background: oklch(0.96 0.005 145);
   --foreground: oklch(0.2 0.02 145);
@@ -752,12 +750,13 @@
   --primary-glow: oklch(0.62 0.17 152 / 0.35);
   --gradient-primary: linear-gradient(135deg, #25d366, #128c7e);
   --radius: 1rem;
-}
-[data-chat-theme="whatsapp"] [data-message-role="me"],
-[data-chat-theme="whatsapp"] .msg-mine {
-  background: #dcf8c6 !important;
-  color: #111 !important;
-  border-radius: 12px 12px 4px 12px !important;
+
+  & [data-message-role="me"],
+  & .msg-mine {
+    background: #dcf8c6 !important;
+    color: #111 !important;
+    border-radius: 12px 12px 4px 12px !important;
+  }
 }
 
 [data-chat-theme="cyber_neon"] {
@@ -775,10 +774,11 @@
   --primary-glow: oklch(0.85 0.18 200 / 0.6);
   --shadow-glow: 0 0 24px oklch(0.85 0.18 200 / 0.5);
   --gradient-primary: linear-gradient(135deg, #22d3ee, #a855f7 60%, #ec4899);
-}
-[data-chat-theme="cyber_neon"] header,
-[data-chat-theme="cyber_neon"] aside {
-  box-shadow: inset 0 -1px 0 oklch(0.85 0.18 200 / 0.3);
+
+  & header,
+  & aside {
+    box-shadow: inset 0 -1px 0 oklch(0.85 0.18 200 / 0.3);
+  }
 }
 
 [data-chat-theme="minimal_modern"] {
@@ -800,6 +800,11 @@
   letter-spacing: -0.005em;
 }
 
+@keyframes vip-gold-shimmer {
+  0%, 100% { box-shadow: 0 0 18px oklch(0.78 0.16 85 / 0.35); }
+  50%      { box-shadow: 0 0 32px oklch(0.78 0.16 85 / 0.65); }
+}
+
 [data-chat-theme="vip_gold"] {
   --background: oklch(0.13 0.01 80);
   --foreground: oklch(0.95 0.05 85);
@@ -815,18 +820,16 @@
   --primary-glow: oklch(0.78 0.16 85 / 0.55);
   --shadow-glow: 0 0 28px oklch(0.78 0.16 85 / 0.5);
   --gradient-primary: linear-gradient(135deg, #d4af37, #f5e08c 50%, #d4af37);
-}
-@keyframes vip-gold-shimmer {
-  0%, 100% { box-shadow: 0 0 18px oklch(0.78 0.16 85 / 0.35); }
-  50%      { box-shadow: 0 0 32px oklch(0.78 0.16 85 / 0.65); }
-}
-[data-chat-theme="vip_gold"] header,
-[data-chat-theme="vip_gold"] .chat-icon-btn {
-  border-color: oklch(0.78 0.16 85 / 0.4);
-}
-[data-chat-theme="vip_gold"] [data-variant="default"],
-[data-chat-theme="vip_gold"] button.bg-primary {
-  background-image: var(--gradient-primary) !important;
-  color: oklch(0.15 0.02 80) !important;
-  animation: vip-gold-shimmer 3s ease-in-out infinite;
+
+  & header,
+  & .chat-icon-btn {
+    border-color: oklch(0.78 0.16 85 / 0.4);
+  }
+
+  & [data-variant="default"],
+  & button.bg-primary {
+    background-image: var(--gradient-primary) !important;
+    color: oklch(0.15 0.02 80) !important;
+    animation: vip-gold-shimmer 3s ease-in-out infinite;
+  }
 }
