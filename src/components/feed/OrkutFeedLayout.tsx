@@ -36,6 +36,14 @@ import { EmojiPicker } from "@/components/chat/EmojiPicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { FeedPost } from "@/lib/feed-types";
 import type { User } from "@/lib/chat-types";
+import { useAppSettings } from "@/lib/app-settings";
+
+function useThemeBrandLabel(themeKey: string, fallback: string): string {
+  const { raw } = useAppSettings();
+  const map = (raw?.theme_brand_labels as Record<string, string> | undefined) || {};
+  const v = map[themeKey];
+  return (typeof v === "string" && v.trim()) ? v.trim() : fallback;
+}
 
 /**
  * OrkutFeedLayout — classic Orkut-inspired premium layout.
