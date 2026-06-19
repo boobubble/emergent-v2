@@ -6,7 +6,7 @@ import { LoyaltyChip } from "./LoyaltyChip";
 import { BrandMark } from "@/components/BrandMark";
 
 export function ChatHeader() {
-  const { state, isDM, dmUser, channelLabel, closeDM } = useChat();
+  const { state, isDM, dmUser, channelLabel, closeDM, setActive } = useChat();
   const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
   const id = state.activeChannel;
 
