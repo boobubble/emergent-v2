@@ -570,6 +570,7 @@ function TrioRoomWindow({
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const isOwner = room.ownerId === meId;
+  const [fullscreen, setFullscreen] = useState(false);
 
   // initial fetch
   useEffect(() => {
