@@ -87,6 +87,15 @@ export function ChatHeader() {
         <button
           type="button"
           className="chat-icon-btn"
+          title="Chatroom themes"
+          aria-label="Chatroom themes"
+          onClick={() => window.dispatchEvent(new Event("palrgo:open-chat-theme-store"))}
+        >
+          <Palette className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          className="chat-icon-btn"
           title="Search messages"
           aria-label="Search messages"
           onClick={() => window.dispatchEvent(new Event("palrgo:search-open"))}

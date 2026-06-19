@@ -683,3 +683,141 @@
   border: 1px solid color-mix(in oklab, var(--primary) 35%, transparent);
   box-shadow: var(--shadow-glow);
 }
+
+/* ====================================================================
+   CHATROOM THEME SKINS
+   Skin-only overrides applied via `data-chat-theme` on the chat root.
+   Preserves layout, sidebars, members panel, DM dock, radio widgets,
+   bots panel, and animations — only retints colors, gradients, shadows,
+   typography, and radii.
+   ==================================================================== */
+
+[data-chat-theme="discord"] {
+  --background: oklch(0.22 0.02 270);
+  --foreground: oklch(0.93 0.01 270);
+  --card: oklch(0.27 0.025 270);
+  --card-foreground: oklch(0.93 0.01 270);
+  --muted: oklch(0.3 0.02 270);
+  --muted-foreground: oklch(0.68 0.02 270);
+  --border: oklch(1 0 0 / 0.06);
+  --primary: oklch(0.62 0.18 268);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.62 0.18 268);
+  --accent-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.62 0.18 268);
+  --primary-glow: oklch(0.62 0.18 268 / 0.4);
+  --gradient-primary: linear-gradient(135deg, #5865f2, #404eed);
+  --radius: 0.5rem;
+}
+
+[data-chat-theme="yahoo_messenger"] {
+  --background: oklch(0.97 0.02 295);
+  --foreground: oklch(0.2 0.05 295);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.05 295);
+  --muted: oklch(0.93 0.03 295);
+  --primary: oklch(0.5 0.24 305);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.7 0.22 35);
+  --ring: oklch(0.5 0.24 305);
+  --primary-glow: oklch(0.5 0.24 305 / 0.4);
+  --gradient-primary: linear-gradient(135deg, #7b0099, #c200a0 60%, #ff9100);
+  --radius: 0.375rem;
+  font-family: "Trebuchet MS", "Verdana", sans-serif;
+}
+[data-chat-theme="yahoo_messenger"] header {
+  background: var(--gradient-primary) !important;
+  color: white;
+}
+
+[data-chat-theme="whatsapp"] {
+  --background: oklch(0.96 0.005 145);
+  --foreground: oklch(0.2 0.02 145);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.02 145);
+  --muted: oklch(0.92 0.015 145);
+  --primary: oklch(0.62 0.17 152);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.62 0.17 152);
+  --ring: oklch(0.62 0.17 152);
+  --primary-glow: oklch(0.62 0.17 152 / 0.35);
+  --gradient-primary: linear-gradient(135deg, #25d366, #128c7e);
+  --radius: 1rem;
+}
+[data-chat-theme="whatsapp"] [data-message-role="me"],
+[data-chat-theme="whatsapp"] .msg-mine {
+  background: #dcf8c6 !important;
+  color: #111 !important;
+  border-radius: 12px 12px 4px 12px !important;
+}
+
+[data-chat-theme="cyber_neon"] {
+  --background: oklch(0.08 0 0);
+  --foreground: oklch(0.95 0.02 200);
+  --card: oklch(0.12 0.02 260);
+  --card-foreground: oklch(0.95 0.02 200);
+  --muted: oklch(0.18 0.03 260);
+  --muted-foreground: oklch(0.7 0.03 200);
+  --border: oklch(0.85 0.18 200 / 0.25);
+  --primary: oklch(0.85 0.18 200);
+  --primary-foreground: oklch(0.08 0 0);
+  --accent: oklch(0.78 0.22 330);
+  --ring: oklch(0.85 0.18 200);
+  --primary-glow: oklch(0.85 0.18 200 / 0.6);
+  --shadow-glow: 0 0 24px oklch(0.85 0.18 200 / 0.5);
+  --gradient-primary: linear-gradient(135deg, #22d3ee, #a855f7 60%, #ec4899);
+}
+[data-chat-theme="cyber_neon"] header,
+[data-chat-theme="cyber_neon"] aside {
+  box-shadow: inset 0 -1px 0 oklch(0.85 0.18 200 / 0.3);
+}
+
+[data-chat-theme="minimal_modern"] {
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --border: oklch(0 0 0 / 0.08);
+  --primary: oklch(0.2 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.2 0 0);
+  --ring: oklch(0.2 0 0);
+  --primary-glow: oklch(0 0 0 / 0.15);
+  --shadow-soft-2: 0 1px 2px oklch(0 0 0 / 0.04), 0 8px 32px -16px oklch(0 0 0 / 0.08);
+  --gradient-primary: linear-gradient(135deg, oklch(0.2 0 0), oklch(0.35 0 0));
+  --radius: 0.875rem;
+  letter-spacing: -0.005em;
+}
+
+[data-chat-theme="vip_gold"] {
+  --background: oklch(0.13 0.01 80);
+  --foreground: oklch(0.95 0.05 85);
+  --card: oklch(0.18 0.02 80);
+  --card-foreground: oklch(0.95 0.05 85);
+  --muted: oklch(0.22 0.02 80);
+  --muted-foreground: oklch(0.75 0.06 85);
+  --border: oklch(0.78 0.16 85 / 0.35);
+  --primary: oklch(0.78 0.16 85);
+  --primary-foreground: oklch(0.15 0.02 80);
+  --accent: oklch(0.78 0.16 85);
+  --ring: oklch(0.78 0.16 85);
+  --primary-glow: oklch(0.78 0.16 85 / 0.55);
+  --shadow-glow: 0 0 28px oklch(0.78 0.16 85 / 0.5);
+  --gradient-primary: linear-gradient(135deg, #d4af37, #f5e08c 50%, #d4af37);
+}
+@keyframes vip-gold-shimmer {
+  0%, 100% { box-shadow: 0 0 18px oklch(0.78 0.16 85 / 0.35); }
+  50%      { box-shadow: 0 0 32px oklch(0.78 0.16 85 / 0.65); }
+}
+[data-chat-theme="vip_gold"] header,
+[data-chat-theme="vip_gold"] .chat-icon-btn {
+  border-color: oklch(0.78 0.16 85 / 0.4);
+}
+[data-chat-theme="vip_gold"] [data-variant="default"],
+[data-chat-theme="vip_gold"] button.bg-primary {
+  background-image: var(--gradient-primary) !important;
+  color: oklch(0.15 0.02 80) !important;
+  animation: vip-gold-shimmer 3s ease-in-out infinite;
+}
