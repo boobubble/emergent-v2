@@ -236,11 +236,13 @@ function TopLink({ label, onClick }: { label: string; onClick?: () => void }) {
 
 function OrkutProfileCard({
   user,
+  username,
   fansCount,
   onEdit,
   onProfile,
 }: {
   user: User;
+  username: string;
   fansCount: number;
   onEdit: () => void;
   onProfile: () => void;
@@ -251,9 +253,10 @@ function OrkutProfileCard({
         <div className="mx-auto inline-block rounded-md border-4 border-white/90 bg-white p-0.5 shadow-md">
           <Avatar user={user} size={88} />
         </div>
-        <div className="mt-2 text-base font-bold leading-tight">{user.name || user.username}</div>
+        <div className="mt-2 text-base font-bold leading-tight">{user.name || username}</div>
         <div className="text-[11px] uppercase tracking-wider text-pink-100/90">{user.status ?? "online"}</div>
       </div>
+
 
       <div className="p-3 text-xs">
         {user.bio ? (
