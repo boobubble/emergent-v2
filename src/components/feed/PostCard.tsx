@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { earnFeedReaction, earnFeedComment, earnFeedShare, boostPost } from "@/lib/economy.functions";
 import { claimShareReward } from "@/lib/boobubble.functions";
 import { SPEND } from "@/lib/economy-config";
+import { FeedVideo } from "@/components/feed/FeedVideo";
 
 
 function timeAgo(iso: string) {
@@ -207,13 +208,10 @@ export const PostCard = memo(function PostCard({
             const isVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(u);
             if (isVideo) {
               return (
-                <video
+                <FeedVideo
                   key={i}
                   src={u}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className={`w-full bg-black object-contain ${compact ? "max-h-80" : "max-h-[480px]"}`}
+                  className={`w-full ${compact ? "max-h-80 aspect-video" : "max-h-[480px] aspect-video"}`}
                 />
               );
             }
