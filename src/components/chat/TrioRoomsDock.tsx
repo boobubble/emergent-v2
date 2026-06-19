@@ -234,104 +234,57 @@ export function TrioRoomsDock() {
   void isMobile;
 
 
-  const totalUnread = Object.values(unread).reduce((a, b) => a + b, 0);
-  const badgeCount = totalUnread + invites.length;
+  const visibleMinimized = minimized.slice(0, 4);
+  const moreMinimized = Math.max(0, minimized.length - visibleMinimized.length);
 
   return (
     <>
-      {/* Private rooms dock — floating icon + collapsible panel */}
-      <div className="pointer-events-auto fixed bottom-20 right-4 z-40 flex flex-col items-end gap-2 max-w-[calc(100vw-2rem)]">
-        {showPanel && openRooms.length === 0 && (
-          <div className="animate-scale-in w-72 rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-xl">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                3 Some Rooms
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setShowCreate(true)}
-                  className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/25"
+      {(openRooms.length > 0 || visibleMinimized.length > 0 || moreMinimized > 0) && (
+        <div className="pointer-events-none fixed bottom-0 right-4 z-40 hidden items-end gap-3 lg:flex">
+          {(visibleMinimized.length > 0 || moreMinimized > 0) && (
+            <div className="pointer-events-auto mb-3 flex items-end gap-2">
+              {visibleMinimized.map(room => {
+                const count = unread[room.id] ?? 0;
+                return (
+                  <button
+                    key={room.id}
+                    onClick={() => openRoom(room)}
+                    title={room.name}
+                    className="group relative grid h-10 w-10 place-items-center rounded-full bg-card/80 text-primary shadow-lg ring-1 ring-border backdrop-blur-md transition-all duration-200 hover:scale-110 animate-scale-in"
+                  >
+                    <Users className="h-5 w-5" />
+                    {count > 0 && (
+                      <span className="unread-pop absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground ring-2 ring-card">
+                        {count > 99 ? "99+" : count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+              {moreMinimized > 0 && (
+                <div
+                  className="grid h-10 min-w-10 place-items-center rounded-full bg-card/80 px-2 text-[11px] font-bold text-foreground shadow-lg ring-1 ring-border backdrop-blur-md"
+                  title={`${moreMinimized} more private room${moreMinimized === 1 ? "" : "s"}`}
                 >
-                  <Plus className="h-3 w-3" /> Create
-                </button>
-                <button
-                  onClick={() => setShowPanel(false)}
-                  title="Close"
-                  className="grid h-6 w-6 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
+                  +{moreMinimized}
+                </div>
+              )}
             </div>
+          )}
 
-            {invites.length === 0 && minimized.length === 0 && openRooms.length === 0 && (
-              <div className="rounded-lg bg-muted/30 p-3 text-center text-[11px] text-muted-foreground">
-                No active rooms. Create a 3 Some Room to chat with up to 2 friends.
-              </div>
-            )}
-
-            {invites.map(inv => (
-              <InviteCard key={inv.roomId} inv={inv} onAccept={handleAccept} onReject={handleReject} />
+          <div className="pointer-events-auto flex items-end gap-3">
+            {openRooms.map(room => (
+              <TrioRoomWindow
+                key={room.id}
+                room={room}
+                meId={uid}
+                onClose={() => closeWindow(room.id)}
+                onMinimize={() => minimizeWindow(room)}
+              />
             ))}
-
-            {minimized.map(room => {
-              const count = unread[room.id] ?? 0;
-              return (
-                <button
-                  key={room.id}
-                  onClick={() => openRoom(room)}
-                  className={`mt-1 flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs hover:bg-muted/40 ${count > 0 ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/20"}`}
-                >
-                  <span className="flex min-w-0 items-center gap-1.5 truncate">
-                    <Users className="h-3 w-3 shrink-0 text-primary" />
-                    <span className="truncate">{room.name}</span>
-                  </span>
-                  {count > 0 ? (
-                    <span className="ml-2 grid h-5 min-w-[20px] shrink-0 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground animate-pulse">
-                      {count > 99 ? "99+" : count}
-                    </span>
-                  ) : (
-                    <span className="text-[10px] text-muted-foreground">Open</span>
-                  )}
-                </button>
-              );
-            })}
-
           </div>
-        )}
-
-        {openRooms.length === 0 && (
-          <button
-            onClick={() => setShowPanel(s => !s)}
-            title="3 Some Rooms"
-            aria-label="3 Some Rooms"
-            className="relative grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-xl transition-all hover:scale-110 active:scale-95"
-            style={{ boxShadow: "0 8px 24px -8px hsl(var(--primary)/0.6)" }}
-          >
-            <Users className="h-5 w-5" />
-            {badgeCount > 0 && !showPanel && (
-              <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground ring-2 ring-background animate-pulse">
-                {badgeCount > 99 ? "99+" : badgeCount}
-              </span>
-            )}
-          </button>
-        )}
-      </div>
-
-
-
-
-
-      {/* Fullscreen trio room (desktop: large centered card, mobile: full sheet) */}
-      {openRooms.map(room => (
-        <TrioRoomWindow
-          key={room.id}
-          room={room}
-          meId={uid}
-          onClose={() => closeWindow(room.id)}
-          onMinimize={() => minimizeWindow(room)}
-        />
-      ))}
+        </div>
+      )}
 
 
       {showCreate && (
@@ -339,7 +292,6 @@ export function TrioRoomsDock() {
           onClose={() => setShowCreate(false)}
           onCreated={(r) => {
             setShowCreate(false);
-            setShowPanel(false);
             openRoom({ id: r.id, name: r.name, ownerId: r.owner_id });
           }}
         />
