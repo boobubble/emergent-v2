@@ -621,13 +621,13 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               {ICONS[role]}
               {muted && <VolumeX className="h-3 w-3 text-destructive" />}
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              {!u.isBot && !u.isGuest && <RankChip level={u.level} compact />}
-              <span className="truncate">{muted ? "Muted" : u.isBot ? "Bot" : u.isGuest ? "Guest" : isOnline(u.id) ? "Online" : "Offline"}</span>
-            </div>
-
-
+            {(muted || u.isBot || u.isGuest) && (
+              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <span className="truncate">{muted ? "Muted" : u.isBot ? "Bot" : "Guest"}</span>
+              </div>
+            )}
           </div>
+
         </UserMenu>
 
         {id !== "me" && (
