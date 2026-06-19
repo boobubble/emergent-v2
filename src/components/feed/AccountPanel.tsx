@@ -22,8 +22,16 @@ export function AccountPanel() {
   const [status, setStatus] = useState<typeof me.status>(me.status);
   const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
   const [saved, setSaved] = useState(false);
+  const localEditsRef = useRef(false);
   const nameChanged = name.trim().toLowerCase() !== me.name.toLowerCase();
   const usernameStatus = useUsernameCheck(nameChanged ? name : "", auth?.id);
+
+  useEffect(() => {
+    if (localEditsRef.current) return;
+    setName(me.name);
+    setBio(me.bio ?? "");
+    setStatus(me.status);
+  }, [me.name, me.bio, me.status]);
 
   useEffect(() => {
     if (!auth?.id) return;
@@ -82,6 +90,7 @@ export function AccountPanel() {
       }
       await refreshUsername();
     }
+    localEditsRef.current = false;
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
   };
@@ -117,19 +126,19 @@ export function AccountPanel() {
 
           <div className="min-w-0 flex-1 space-y-4">
             <Field label="Username (2–10 letters)">
-              <input value={name} onChange={e => setName(e.target.value)} className="w-full rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="your display name" />
+              <input value={name} onChange={e => { localEditsRef.current = true; setName(e.target.value); }} className="w-full rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="your display name" />
               {nameChanged && usernameStatus.state === "checking" && <p className="mt-1 text-[10px] text-muted-foreground">Checking…</p>}
               {nameChanged && usernameStatus.state === "ok" && <p className="mt-1 text-[10px] font-semibold text-primary">✓ Available</p>}
               {nameChanged && usernameStatus.state === "error" && <p className="mt-1 text-[10px] font-semibold text-destructive">{usernameStatus.message}</p>}
             </Field>
             <Field label="Bio">
-              <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} maxLength={160} className="w-full resize-none rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="A short bio…" />
+              <textarea value={bio} onChange={e => { localEditsRef.current = true; setBio(e.target.value); }} rows={3} maxLength={160} className="w-full resize-none rounded-xl border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="A short bio…" />
               <p className="mt-1 text-right text-[10px] text-muted-foreground">{bio.length}/160</p>
             </Field>
             <Field label="Status">
               <div className="flex gap-2">
                 {(["online", "away", "offline"] as const).map(s => (
-                  <button key={s} onClick={() => setStatus(s)} className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${status === s ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}>
+                  <button key={s} onClick={() => { localEditsRef.current = true; setStatus(s); }} className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${status === s ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}>
                     {s}
                   </button>
                 ))}

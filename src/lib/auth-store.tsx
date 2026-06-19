@@ -32,11 +32,34 @@ interface Ctx {
 
 const AuthCtx = createContext<Ctx | null>(null);
 
+function usernameCacheKey(userId: string) {
+  return `palrgo:profile-username:${userId}`;
+}
+
+function getCachedUsername(userId: string): string | null {
+  try {
+    return localStorage.getItem(usernameCacheKey(userId));
+  } catch {
+    return null;
+  }
+}
+
+function cacheUsername(userId: string, username: string) {
+  try {
+    localStorage.setItem(usernameCacheKey(userId), username);
+  } catch {
+    /* ignore */
+  }
+}
+
 async function fetchUsername(userId: string, fallbackEmail?: string): Promise<string> {
   // Poll briefly since the trigger inserts the row asynchronously after signup.
   for (let i = 0; i < 8; i++) {
     const { data } = await supabase.from("profiles").select("username").eq("id", userId).maybeSingle();
-    if (data?.username) return data.username;
+    if (data?.username) {
+      cacheUsername(userId, data.username);
+      return data.username;
+    }
     await new Promise(r => setTimeout(r, 200));
   }
   return fallbackEmail?.split("@")[0] || "user";
@@ -113,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const isGuest = Boolean((u as { is_anonymous?: boolean }).is_anonymous);
       const meta = (u.user_metadata ?? {}) as { username?: string };
       const placeholder =
+        getCachedUsername(u.id) ||
         meta.username?.trim() ||
         u.email?.split("@")[0] ||
         (isGuest ? "guest" : "user");
@@ -199,6 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await supabase.from("profiles").select("username").eq("id", uid).maybeSingle();
       const next = data?.username;
       if (!next) return;
+      cacheUsername(uid, next);
       setUser(prev => (prev && prev.id === uid && prev.username !== next ? { ...prev, username: next } : prev));
     };
     const onVisible = () => { if (document.visibilityState === "visible") void refetch(); };
@@ -327,6 +352,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: prof } = await supabase.from("profiles").select("username").eq("id", u.id).maybeSingle();
     const next = prof?.username;
     if (!next) return;
+    cacheUsername(u.id, next);
     setUser(prev => prev ? { ...prev, username: next } : prev);
   }, []);
 
