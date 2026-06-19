@@ -17,8 +17,7 @@ export function PromotedPostsWidget({ profiles }: { profiles: Record<string, Use
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data } = await supabase
-        .from("posts")
+      const { data } = await postsSafe()
         .select("*")
         .eq("privacy", "public")
         .order("created_at", { ascending: false })
