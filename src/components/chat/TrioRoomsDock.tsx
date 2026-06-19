@@ -767,6 +767,13 @@ function TrioRoomWindow({
             </button>
           )}
           <button
+            onClick={() => setFullscreen((f) => !f)}
+            title={fullscreen ? "Exit full screen" : "Full screen"}
+            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground"
+          >
+            {fullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+          </button>
+          <button
             onClick={onMinimize}
             title="Minimize"
             className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground"
