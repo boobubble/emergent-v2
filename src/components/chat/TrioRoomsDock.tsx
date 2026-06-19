@@ -12,6 +12,8 @@ import {
   Smile,
   Image as ImageIcon,
   Paperclip,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphyPicker } from "./GiphyPicker";
@@ -568,6 +570,7 @@ function TrioRoomWindow({
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const isOwner = room.ownerId === meId;
+  const [fullscreen, setFullscreen] = useState(false);
 
   // initial fetch
   useEffect(() => {
@@ -732,7 +735,10 @@ function TrioRoomWindow({
   }
 
   return (
-    <div className="flex h-[440px] w-[min(320px,calc(100vw-1rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl origin-bottom-right animate-scale-in">
+    <div className={fullscreen
+      ? "fixed inset-0 z-[60] flex flex-col overflow-hidden rounded-none border-0 bg-card/95 shadow-2xl backdrop-blur-xl animate-scale-in"
+      : "flex h-[440px] w-[min(320px,calc(100vw-1rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl origin-bottom-right animate-scale-in"
+    }>
       <div className="flex h-full w-full flex-col overflow-hidden bg-card/70">
         {/* Header */}
         <div className="flex items-center gap-2 border-b border-border bg-gradient-to-r from-primary/15 to-transparent px-3 py-2">
@@ -760,6 +766,13 @@ function TrioRoomWindow({
               <ShieldX className="h-3.5 w-3.5" />
             </button>
           )}
+          <button
+            onClick={() => setFullscreen((f) => !f)}
+            title={fullscreen ? "Exit full screen" : "Full screen"}
+            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground"
+          >
+            {fullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+          </button>
           <button
             onClick={onMinimize}
             title="Minimize"
