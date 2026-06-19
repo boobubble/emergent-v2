@@ -1,5 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Users, Plus, Minus, X, Lock, EyeOff, Send, ShieldX, Mic, Smile, Image as ImageIcon, Paperclip } from "lucide-react";
+import {
+  Users,
+  Plus,
+  Minus,
+  X,
+  Lock,
+  EyeOff,
+  Send,
+  ShieldX,
+  Mic,
+  Smile,
+  Image as ImageIcon,
+  Paperclip,
+} from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphyPicker } from "./GiphyPicker";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +33,13 @@ interface RoomMsg {
   authorId: string;
   text: string;
   ts: number;
-  attachment?: { kind: "image" | "file"; name?: string; mime?: string; size?: number; dataUrl: string } | null;
+  attachment?: {
+    kind: "image" | "file";
+    name?: string;
+    mime?: string;
+    size?: number;
+    dataUrl: string;
+  } | null;
 }
 
 interface PendingInvite {
@@ -45,8 +64,6 @@ export function TrioRoomsDock() {
   const [acceptedRooms, setAcceptedRooms] = useState<OpenRoom[]>([]);
   const openRoomIdRef = useRef<string | null>(null);
 
-
-
   const uid = user?.id;
 
   // Load existing rooms the user is in + pending invites
@@ -55,20 +72,23 @@ export function TrioRoomsDock() {
     let cancelled = false;
     (async () => {
       try {
-        const [rooms, members] = await Promise.all([
-          trio.listMyRooms(),
-          trio.listMyMemberships(),
-        ]);
+        const [rooms, members] = await Promise.all([trio.listMyRooms(), trio.listMyMemberships()]);
         if (cancelled) return;
         const acceptedRoomIds = new Set(
-          members.filter(m => m.status === "accepted").map(m => m.room_id),
+          members.filter((m) => m.status === "accepted").map((m) => m.room_id),
         );
-        const invitedIds = members.filter(m => m.status === "invited").map(m => m.room_id);
-        const roomById = new Map(rooms.map(r => [r.id, r]));
+        const invitedIds = members.filter((m) => m.status === "invited").map((m) => m.room_id);
+        const roomById = new Map(rooms.map((r) => [r.id, r]));
         const inv: PendingInvite[] = [];
         for (const rid of invitedIds) {
           const r = roomById.get(rid);
-          if (r) inv.push({ roomId: r.id, roomName: r.name, ownerId: r.owner_id, passwordRequired: false });
+          if (r)
+            inv.push({
+              roomId: r.id,
+              roomName: r.name,
+              ownerId: r.owner_id,
+              passwordRequired: false,
+            });
         }
         setInvites(inv);
         const accepted: OpenRoom[] = [];
@@ -77,17 +97,20 @@ export function TrioRoomsDock() {
           if (r) accepted.push({ id: r.id, name: r.name, ownerId: r.owner_id });
         }
         setAcceptedRooms(accepted);
-
       } catch {
         /* swallow — RLS may filter */
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [uid]);
 
   // Allow other UI (e.g. members panel header icon) to open the create dialog
   useEffect(() => {
-    const onOpenCreate = () => { setShowCreate(true); };
+    const onOpenCreate = () => {
+      setShowCreate(true);
+    };
     window.addEventListener("trio:open-create", onOpenCreate);
     return () => window.removeEventListener("trio:open-create", onOpenCreate);
   }, []);
@@ -99,7 +122,12 @@ export function TrioRoomsDock() {
       .channel(`trio-invites-${uid}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "trio_room_members", filter: `user_id=eq.${uid}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "trio_room_members",
+          filter: `user_id=eq.${uid}`,
+        },
         async (payload) => {
           const row = payload.new as { room_id: string; status: string };
           if (row.status !== "invited") return;
@@ -109,34 +137,39 @@ export function TrioRoomsDock() {
             .eq("id", row.room_id)
             .maybeSingle();
           if (!r) return;
-          setInvites(prev =>
-            prev.some(p => p.roomId === r.id)
+          setInvites((prev) =>
+            prev.some((p) => p.roomId === r.id)
               ? prev
-              : [...prev, { roomId: r.id, roomName: r.name, ownerId: r.owner_id, passwordRequired: false }],
+              : [
+                  ...prev,
+                  { roomId: r.id, roomName: r.name, ownerId: r.owner_id, passwordRequired: false },
+                ],
           );
         },
       )
       .subscribe();
-    return () => { void supabase.removeChannel(ch); };
+    return () => {
+      void supabase.removeChannel(ch);
+    };
   }, [uid]);
 
   const openRoom = useCallback((room: OpenRoom) => {
     // Only one fullscreen room at a time — minimize any currently open ones.
-    setOpenRooms(prevOpen => {
-      const others = prevOpen.filter(r => r.id !== room.id);
+    setOpenRooms((prevOpen) => {
+      const others = prevOpen.filter((r) => r.id !== room.id);
       if (others.length > 0) {
-        setMinimized(m => {
+        setMinimized((m) => {
           const next = [...m];
-          for (const o of others) if (!next.some(n => n.id === o.id)) next.push(o);
+          for (const o of others) if (!next.some((n) => n.id === o.id)) next.push(o);
           return next;
         });
       }
       return [room];
     });
-    setMinimized(m => m.filter(r => r.id !== room.id));
-    setUnread(u => (u[room.id] ? { ...u, [room.id]: 0 } : u));
+    setMinimized((m) => m.filter((r) => r.id !== room.id));
+    setUnread((u) => (u[room.id] ? { ...u, [room.id]: 0 } : u));
     openRoomIdRef.current = room.id;
-    setAcceptedRooms(prev => (prev.some(r => r.id === room.id) ? prev : [...prev, room]));
+    setAcceptedRooms((prev) => (prev.some((r) => r.id === room.id) ? prev : [...prev, room]));
   }, []);
 
   // Track which room is in the foreground so its incoming messages don't count as unread.
@@ -147,26 +180,33 @@ export function TrioRoomsDock() {
   // Realtime unread badges: subscribe to every accepted room the user is in.
   useEffect(() => {
     if (!uid || acceptedRooms.length === 0) return;
-    const channels = acceptedRooms.map(room => {
+    const channels = acceptedRooms.map((room) => {
       const channelId = trio.trioChannel(room.id);
       return supabase
         .channel(`trio-unread-${room.id}`)
         .on(
           "postgres_changes",
-          { event: "INSERT", schema: "public", table: "messages", filter: `channel_id=eq.${channelId}` },
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `channel_id=eq.${channelId}`,
+          },
           (payload) => {
             const row = payload.new as { author_id: string };
             if (row.author_id === uid) return;
             // Foreground room: skip — TrioRoomWindow renders it live.
             if (openRoomIdRef.current === room.id) return;
-            setUnread(u => ({ ...u, [room.id]: (u[room.id] ?? 0) + 1 }));
+            setUnread((u) => ({ ...u, [room.id]: (u[room.id] ?? 0) + 1 }));
             // Surface the room in the dock so the badge is visible.
-            setMinimized(m => (m.some(r => r.id === room.id) ? m : [...m, room]));
+            setMinimized((m) => (m.some((r) => r.id === room.id) ? m : [...m, room]));
           },
         )
         .subscribe();
     });
-    return () => { for (const ch of channels) void supabase.removeChannel(ch); };
+    return () => {
+      for (const ch of channels) void supabase.removeChannel(ch);
+    };
   }, [uid, acceptedRooms]);
 
   // Realtime membership changes → keep accepted room list in sync (new rooms, kicks).
@@ -182,7 +222,7 @@ export function TrioRoomsDock() {
           if (!row) return;
           const newStatus = (payload.new as { status?: string } | null)?.status;
           if (payload.eventType === "DELETE" || newStatus === "removed") {
-            setAcceptedRooms(prev => prev.filter(r => r.id !== row.room_id));
+            setAcceptedRooms((prev) => prev.filter((r) => r.id !== row.room_id));
             return;
           }
           if (newStatus === "accepted") {
@@ -192,33 +232,34 @@ export function TrioRoomsDock() {
               .eq("id", row.room_id)
               .maybeSingle();
             if (!r) return;
-            setAcceptedRooms(prev =>
-              prev.some(p => p.id === r.id) ? prev : [...prev, { id: r.id, name: r.name, ownerId: r.owner_id }],
+            setAcceptedRooms((prev) =>
+              prev.some((p) => p.id === r.id)
+                ? prev
+                : [...prev, { id: r.id, name: r.name, ownerId: r.owner_id }],
             );
           }
         },
       )
       .subscribe();
-    return () => { void supabase.removeChannel(ch); };
+    return () => {
+      void supabase.removeChannel(ch);
+    };
   }, [uid]);
 
-
-
-
   const closeWindow = (id: string) => {
-    setOpenRooms(o => o.filter(r => r.id !== id));
-    setMinimized(m => m.filter(r => r.id !== id));
+    setOpenRooms((o) => o.filter((r) => r.id !== id));
+    setMinimized((m) => m.filter((r) => r.id !== id));
   };
 
   const minimizeWindow = (room: OpenRoom) => {
-    setOpenRooms(o => o.filter(r => r.id !== room.id));
-    setMinimized(m => (m.some(r => r.id === room.id) ? m : [...m, room]));
+    setOpenRooms((o) => o.filter((r) => r.id !== room.id));
+    setMinimized((m) => (m.some((r) => r.id === room.id) ? m : [...m, room]));
   };
 
   async function handleAccept(inv: PendingInvite, password?: string) {
     try {
       await trio.acceptInvite(inv.roomId, password);
-      setInvites(prev => prev.filter(p => p.roomId !== inv.roomId));
+      setInvites((prev) => prev.filter((p) => p.roomId !== inv.roomId));
       openRoom({ id: inv.roomId, name: inv.roomName, ownerId: inv.ownerId });
     } catch (e) {
       alert((e as Error).message || "Could not join");
@@ -227,12 +268,11 @@ export function TrioRoomsDock() {
 
   async function handleReject(inv: PendingInvite) {
     await trio.rejectInvite(inv.roomId);
-    setInvites(prev => prev.filter(p => p.roomId !== inv.roomId));
+    setInvites((prev) => prev.filter((p) => p.roomId !== inv.roomId));
   }
 
   if (!uid) return null;
   void isMobile;
-
 
   const visibleMinimized = minimized.slice(0, 4);
   const moreMinimized = Math.max(0, minimized.length - visibleMinimized.length);
@@ -243,7 +283,7 @@ export function TrioRoomsDock() {
         <div className="pointer-events-none fixed bottom-0 right-4 z-40 flex max-w-[calc(100vw-1rem)] items-end gap-3">
           {(visibleMinimized.length > 0 || moreMinimized > 0) && (
             <div className="pointer-events-auto mb-3 flex items-end gap-2">
-              {visibleMinimized.map(room => {
+              {visibleMinimized.map((room) => {
                 const count = unread[room.id] ?? 0;
                 return (
                   <button
@@ -273,7 +313,7 @@ export function TrioRoomsDock() {
           )}
 
           <div className="pointer-events-auto flex items-end gap-3">
-            {openRooms.map(room => (
+            {openRooms.map((room) => (
               <TrioRoomWindow
                 key={room.id}
                 room={room}
@@ -285,7 +325,6 @@ export function TrioRoomsDock() {
           </div>
         </div>
       )}
-
 
       {showCreate && (
         <CreateRoomDialog
@@ -315,7 +354,12 @@ function InviteCard({
   const [balance, setBalance] = useState<number | null>(null);
   const cost = trio.TRIO_JOIN_COST;
 
-  useEffect(() => { trio.getMyCoins().then(setBalance).catch(() => setBalance(0)); }, []);
+  useEffect(() => {
+    trio
+      .getMyCoins()
+      .then(setBalance)
+      .catch(() => setBalance(0));
+  }, []);
 
   const insufficient = balance !== null && balance < cost;
 
@@ -381,14 +425,25 @@ function CreateRoomDialog({
   const createCost = trio.TRIO_CREATE_COST;
   const joinCost = trio.TRIO_JOIN_COST;
 
-  useEffect(() => { trio.getMyCoins().then(setBalance).catch(() => setBalance(0)); }, []);
+  useEffect(() => {
+    trio
+      .getMyCoins()
+      .then(setBalance)
+      .catch(() => setBalance(0));
+  }, []);
 
   const insufficient = balance !== null && balance < createCost;
 
   async function submit() {
     setErr("");
-    if (!name.trim()) { setErr("Name required"); return; }
-    if (insufficient) { setErr("Not enough coins"); return; }
+    if (!name.trim()) {
+      setErr("Name required");
+      return;
+    }
+    if (insufficient) {
+      setErr("Not enough coins");
+      return;
+    }
     setBusy(true);
     try {
       const r = await trio.createRoom({ name: name.trim(), password: password || null, hidden });
@@ -401,8 +456,14 @@ function CreateRoomDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-80 rounded-2xl border border-border bg-card p-4 shadow-2xl animate-scale-in" onClick={e => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-80 rounded-2xl border border-border bg-card p-4 shadow-2xl animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-3 flex items-center gap-2">
           <Users className="h-4 w-4 text-primary" />
           <div className="text-sm font-bold">Create 3 Some Room</div>
@@ -426,38 +487,48 @@ function CreateRoomDialog({
           </div>
           {insufficient && (
             <div className="mt-2 rounded-md bg-destructive/10 px-2 py-1 text-[10px] text-destructive">
-              Not enough coins. Earn more from daily missions, chatting, and posting — or top up from the shop.
+              Not enough coins. Earn more from daily missions, chatting, and posting — or top up
+              from the shop.
             </div>
           )}
         </div>
 
-        <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Room name</label>
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Room name
+        </label>
         <input
           autoFocus
           value={name}
           maxLength={60}
-          onChange={e => setName(e.target.value)}
+          onChange={(e) => setName(e.target.value)}
           placeholder="Late night lounge"
           className="mb-3 mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
         />
-        <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Password (optional)</label>
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Password (optional)
+        </label>
         <div className="mb-3 mt-1 flex items-center gap-1.5">
           <Lock className="h-3.5 w-3.5 text-muted-foreground" />
           <input
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Leave blank for open invite"
             className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
           />
         </div>
         <label className="mb-3 flex items-center gap-2 text-xs text-foreground">
-          <input type="checkbox" checked={hidden} onChange={e => setHidden(e.target.checked)} />
+          <input type="checkbox" checked={hidden} onChange={(e) => setHidden(e.target.checked)} />
           <EyeOff className="h-3.5 w-3.5" />
           Hidden room (don't surface to others)
         </label>
         {err && <div className="mb-2 text-xs text-destructive">{err}</div>}
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-sm hover:bg-muted/60">Cancel</button>
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-sm hover:bg-muted/60"
+          >
+            Cancel
+          </button>
           <button
             onClick={submit}
             disabled={busy || insufficient}
@@ -470,7 +541,6 @@ function CreateRoomDialog({
     </div>
   );
 }
-
 
 function TrioRoomWindow({
   room,
@@ -510,14 +580,21 @@ function TrioRoomWindow({
         .order("created_at", { ascending: true })
         .limit(200);
       if (cancelled) return;
-      setMessages((data ?? []).map(r => ({
-        id: r.id, authorId: r.author_id, text: r.text ?? "", ts: new Date(r.created_at).getTime(),
-        attachment: (r.attachment as RoomMsg["attachment"]) ?? null,
-      })));
+      setMessages(
+        (data ?? []).map((r) => ({
+          id: r.id,
+          authorId: r.author_id,
+          text: r.text ?? "",
+          ts: new Date(r.created_at).getTime(),
+          attachment: (r.attachment as RoomMsg["attachment"]) ?? null,
+        })),
+      );
       const m = await trio.listMembers(room.id);
       if (!cancelled) setMembers(m);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [channelId, room.id]);
 
   // realtime: messages + member changes + room closed
@@ -526,19 +603,44 @@ function TrioRoomWindow({
       .channel(`trio-room-${room.id}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `channel_id=eq.${channelId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `channel_id=eq.${channelId}`,
+        },
         (payload) => {
-          const r = payload.new as { id: string; author_id: string; text: string; created_at: string; attachment: RoomMsg["attachment"] };
-          setMessages(prev =>
-            prev.some(m => m.id === r.id)
+          const r = payload.new as {
+            id: string;
+            author_id: string;
+            text: string;
+            created_at: string;
+            attachment: RoomMsg["attachment"];
+          };
+          setMessages((prev) =>
+            prev.some((m) => m.id === r.id)
               ? prev
-              : [...prev, { id: r.id, authorId: r.author_id, text: r.text ?? "", ts: new Date(r.created_at).getTime(), attachment: r.attachment ?? null }],
+              : [
+                  ...prev,
+                  {
+                    id: r.id,
+                    authorId: r.author_id,
+                    text: r.text ?? "",
+                    ts: new Date(r.created_at).getTime(),
+                    attachment: r.attachment ?? null,
+                  },
+                ],
           );
         },
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "trio_room_members", filter: `room_id=eq.${room.id}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "trio_room_members",
+          filter: `room_id=eq.${room.id}`,
+        },
         async () => {
           const m = await trio.listMembers(room.id);
           setMembers(m);
@@ -553,7 +655,9 @@ function TrioRoomWindow({
         },
       )
       .subscribe();
-    return () => { void supabase.removeChannel(ch); };
+    return () => {
+      void supabase.removeChannel(ch);
+    };
   }, [channelId, room.id]);
 
   // autoscroll
@@ -562,7 +666,7 @@ function TrioRoomWindow({
   }, [messages.length]);
 
   const activeMembers = useMemo(
-    () => members.filter(m => m.status === "accepted" || m.status === "invited"),
+    () => members.filter((m) => m.status === "accepted" || m.status === "invited"),
     [members],
   );
   const canInvite = isOwner && activeMembers.length < 3 && !closed;
@@ -591,7 +695,10 @@ function TrioRoomWindow({
     const file = e.target.files?.[0];
     if (e.target) e.target.value = "";
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert("Max 5MB"); return; }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Max 5MB");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       setPending({
@@ -626,180 +733,272 @@ function TrioRoomWindow({
 
   return (
     <div className="flex h-[440px] w-[min(320px,calc(100vw-1rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl origin-bottom-right animate-scale-in">
-      <div
-        className="flex h-full w-full flex-col overflow-hidden bg-card/70"
-      >
-
-
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b border-border bg-gradient-to-r from-primary/15 to-transparent px-3 py-2">
-        <Users className="h-4 w-4 text-primary" />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-xs font-bold">{room.name}</div>
-          <div className="text-[10px] text-muted-foreground">
-            {activeMembers.filter(m => m.status === "accepted").length}/3 in room
-            {closed && " · closed"}
+      <div className="flex h-full w-full flex-col overflow-hidden bg-card/70">
+        {/* Header */}
+        <div className="flex items-center gap-2 border-b border-border bg-gradient-to-r from-primary/15 to-transparent px-3 py-2">
+          <Users className="h-4 w-4 text-primary" />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-xs font-bold">{room.name}</div>
+            <div className="text-[10px] text-muted-foreground">
+              {activeMembers.filter((m) => m.status === "accepted").length}/3 in room
+              {closed && " · closed"}
+            </div>
           </div>
-        </div>
-        <button
-          title="Voice chat coming soon"
-          disabled
-          className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground/40 cursor-not-allowed"
-        >
-          <Mic className="h-3.5 w-3.5" />
-        </button>
-        {isOwner && !closed && (
           <button
-            onClick={forceClose}
-            title="Force close room"
+            title="Voice chat coming soon"
+            disabled
+            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground/40 cursor-not-allowed"
+          >
+            <Mic className="h-3.5 w-3.5" />
+          </button>
+          {isOwner && !closed && (
+            <button
+              onClick={forceClose}
+              title="Force close room"
+              className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-destructive/15 hover:text-destructive"
+            >
+              <ShieldX className="h-3.5 w-3.5" />
+            </button>
+          )}
+          <button
+            onClick={onMinimize}
+            title="Minimize"
+            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+          <button
+            onClick={onClose}
+            title="Close"
             className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-destructive/15 hover:text-destructive"
           >
-            <ShieldX className="h-3.5 w-3.5" />
-          </button>
-        )}
-        <button onClick={onMinimize} title="Minimize" className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground">
-          <Minus className="h-4 w-4" />
-        </button>
-        <button onClick={onClose} title="Close" className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-destructive/15 hover:text-destructive">
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Members strip */}
-      <div className="flex items-center gap-1.5 border-b border-border bg-card/60 px-2 py-1.5">
-        {activeMembers.map(m => {
-          const u = chat.state.users[m.user_id];
-          return (
-            <div key={m.user_id} className={`flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] ${m.status === "accepted" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-muted/40 text-muted-foreground"}`}>
-              {u ? <FrameAvatar user={u} size={16} /> : <span className="grid h-4 w-4 place-items-center rounded-full bg-muted text-[8px]">?</span>}
-              <span className="max-w-[80px] truncate">{u ? <CosmeticName userId={u.id} name={u.name} /> : m.user_id.slice(0, 6)}</span>
-              {m.status === "invited" && <span className="opacity-60">…</span>}
-            </div>
-          );
-        })}
-        {canInvite && (
-          <button
-            onClick={() => setShowInvite(s => !s)}
-            className="ml-auto flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/25"
-          >
-            <Plus className="h-3 w-3" /> Invite
-          </button>
-        )}
-      </div>
-
-      {showInvite && (
-        <div className="border-b border-border bg-muted/20 p-2">
-          <div className="flex gap-1.5">
-            <input
-              autoFocus
-              value={inviteName}
-              onChange={e => setInviteName(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") doInvite(); }}
-              placeholder="@username"
-              className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] outline-none focus:border-primary"
-            />
-            <button onClick={doInvite} className="rounded-md bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground">Send</button>
-          </div>
-          {inviteErr && <div className="mt-1 text-[10px] text-destructive">{inviteErr}</div>}
-        </div>
-      )}
-
-      {/* Messages */}
-      <div ref={scrollRef} className="flex-1 space-y-1.5 overflow-y-auto px-3 py-2">
-        {messages.length === 0 && (
-          <div className="grid h-full place-items-center text-center text-[11px] text-muted-foreground">
-            🔒 Private room. Only invited members can see this chat.
-          </div>
-        )}
-        {messages.map(m => {
-          const u = chat.state.users[m.authorId];
-          const mine = m.authorId === meId;
-          return (
-            <div key={m.id} className={`flex gap-1.5 ${mine ? "flex-row-reverse" : ""}`}>
-              {u && <FrameAvatar user={u} size={20} />}
-              <div className={`max-w-[75%] rounded-2xl px-2.5 py-1.5 text-xs ${mine ? "bg-primary text-primary-foreground" : "bg-muted/50 text-foreground"}`}>
-                {!mine && u && (
-                  <div className="text-[9px] font-semibold opacity-70">
-                    <CosmeticName userId={u.id} name={u.name} />
-                  </div>
-                )}
-                {m.attachment?.kind === "image" && (
-                  <img src={m.attachment.dataUrl} alt={m.attachment.name ?? "image"} className="mt-1 max-h-64 max-w-full rounded-lg object-contain" />
-                )}
-                {m.attachment?.kind === "file" && (
-                  <a href={m.attachment.dataUrl} download={m.attachment.name} className="mt-1 flex items-center gap-1 underline">
-                    <Paperclip className="h-3 w-3" /> {m.attachment.name}
-                  </a>
-                )}
-                {m.text && <div className="whitespace-pre-wrap break-words">{m.text}</div>}
-              </div>
-            </div>
-          );
-        })}
-        {closed && (
-          <div className="mt-2 rounded-lg bg-destructive/10 px-3 py-2 text-center text-[11px] text-destructive">
-            This room was closed.
-          </div>
-        )}
-      </div>
-
-      {/* Pending attachment preview */}
-      {pending && (
-        <div className="flex items-center gap-2 border-t border-border bg-muted/20 px-3 py-2">
-          {pending.kind === "image" ? (
-            <img src={pending.dataUrl} alt={pending.name} className="h-12 w-12 rounded object-cover" />
-          ) : (
-            <div className="grid h-12 w-12 place-items-center rounded bg-muted"><Paperclip className="h-4 w-4" /></div>
-          )}
-          <div className="flex-1 min-w-0 text-xs">
-            <div className="truncate font-medium">{pending.name}</div>
-            <div className="text-muted-foreground">{((pending.size ?? 0) / 1024).toFixed(1)} KB</div>
-          </div>
-          <button onClick={() => setPending(null)} className="text-muted-foreground hover:text-destructive" aria-label="Remove">
             <X className="h-4 w-4" />
           </button>
         </div>
-      )}
 
-      {/* Composer */}
-      <div className="relative flex items-center gap-1.5 border-t border-border bg-card/70 px-2 py-2">
-        {showEmoji && (
-          <div className="absolute bottom-12 left-2 z-10">
-            <EmojiPicker onPick={(e) => { setText(t => t + e); setShowEmoji(false); }} />
+        {/* Members strip */}
+        <div className="flex items-center gap-1.5 border-b border-border bg-card/60 px-2 py-1.5">
+          {activeMembers.map((m) => {
+            const u = chat.state.users[m.user_id];
+            return (
+              <div
+                key={m.user_id}
+                className={`flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] ${m.status === "accepted" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-muted/40 text-muted-foreground"}`}
+              >
+                {u ? (
+                  <FrameAvatar user={u} size={16} />
+                ) : (
+                  <span className="grid h-4 w-4 place-items-center rounded-full bg-muted text-[8px]">
+                    ?
+                  </span>
+                )}
+                <span className="max-w-[80px] truncate">
+                  {u ? <CosmeticName userId={u.id} name={u.name} /> : m.user_id.slice(0, 6)}
+                </span>
+                {m.status === "invited" && <span className="opacity-60">…</span>}
+              </div>
+            );
+          })}
+          {canInvite && (
+            <button
+              onClick={() => setShowInvite((s) => !s)}
+              className="ml-auto flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/25"
+            >
+              <Plus className="h-3 w-3" /> Invite
+            </button>
+          )}
+        </div>
+
+        {showInvite && (
+          <div className="border-b border-border bg-muted/20 p-2">
+            <div className="flex gap-1.5">
+              <input
+                autoFocus
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") doInvite();
+                }}
+                placeholder="@username"
+                className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] outline-none focus:border-primary"
+              />
+              <button
+                onClick={doInvite}
+                className="rounded-md bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground"
+              >
+                Send
+              </button>
+            </div>
+            {inviteErr && <div className="mt-1 text-[10px] text-destructive">{inviteErr}</div>}
           </div>
         )}
-        {showGif && (
-          <div className="absolute bottom-12 left-2 z-10">
-            <GiphyPicker onPick={(gif) => {
-              setPending({ kind: "image", name: `${gif.title || "gif"}.gif`, mime: "image/gif", size: 0, dataUrl: gif.fullUrl });
+
+        {/* Messages */}
+        <div ref={scrollRef} className="flex-1 space-y-1.5 overflow-y-auto px-3 py-2">
+          {messages.length === 0 && (
+            <div className="grid h-full place-items-center text-center text-[11px] text-muted-foreground">
+              🔒 Private room. Only invited members can see this chat.
+            </div>
+          )}
+          {messages.map((m) => {
+            const u = chat.state.users[m.authorId];
+            const mine = m.authorId === meId;
+            return (
+              <div key={m.id} className={`flex gap-1.5 ${mine ? "flex-row-reverse" : ""}`}>
+                {u && <FrameAvatar user={u} size={20} />}
+                <div
+                  className={`max-w-[75%] rounded-2xl px-2.5 py-1.5 text-xs ${mine ? "bg-primary text-primary-foreground" : "bg-muted/50 text-foreground"}`}
+                >
+                  {!mine && u && (
+                    <div className="text-[9px] font-semibold opacity-70">
+                      <CosmeticName userId={u.id} name={u.name} />
+                    </div>
+                  )}
+                  {m.attachment?.kind === "image" && (
+                    <img
+                      src={m.attachment.dataUrl}
+                      alt={m.attachment.name ?? "image"}
+                      className="mt-1 max-h-64 max-w-full rounded-lg object-contain"
+                    />
+                  )}
+                  {m.attachment?.kind === "file" && (
+                    <a
+                      href={m.attachment.dataUrl}
+                      download={m.attachment.name}
+                      className="mt-1 flex items-center gap-1 underline"
+                    >
+                      <Paperclip className="h-3 w-3" /> {m.attachment.name}
+                    </a>
+                  )}
+                  {m.text && <div className="whitespace-pre-wrap break-words">{m.text}</div>}
+                </div>
+              </div>
+            );
+          })}
+          {closed && (
+            <div className="mt-2 rounded-lg bg-destructive/10 px-3 py-2 text-center text-[11px] text-destructive">
+              This room was closed.
+            </div>
+          )}
+        </div>
+
+        {/* Pending attachment preview */}
+        {pending && (
+          <div className="flex items-center gap-2 border-t border-border bg-muted/20 px-3 py-2">
+            {pending.kind === "image" ? (
+              <img
+                src={pending.dataUrl}
+                alt={pending.name}
+                className="h-12 w-12 rounded object-cover"
+              />
+            ) : (
+              <div className="grid h-12 w-12 place-items-center rounded bg-muted">
+                <Paperclip className="h-4 w-4" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0 text-xs">
+              <div className="truncate font-medium">{pending.name}</div>
+              <div className="text-muted-foreground">
+                {((pending.size ?? 0) / 1024).toFixed(1)} KB
+              </div>
+            </div>
+            <button
+              onClick={() => setPending(null)}
+              className="text-muted-foreground hover:text-destructive"
+              aria-label="Remove"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Composer */}
+        <div className="relative flex items-center gap-1.5 border-t border-border bg-card/70 px-2 py-2">
+          {showEmoji && (
+            <div className="absolute bottom-12 left-2 z-10">
+              <EmojiPicker
+                onPick={(e) => {
+                  setText((t) => t + e);
+                  setShowEmoji(false);
+                }}
+              />
+            </div>
+          )}
+          {showGif && (
+            <div className="absolute bottom-12 left-2 z-10">
+              <GiphyPicker
+                onPick={(gif) => {
+                  setPending({
+                    kind: "image",
+                    name: `${gif.title || "gif"}.gif`,
+                    mime: "image/gif",
+                    size: 0,
+                    dataUrl: gif.fullUrl,
+                  });
+                  setShowGif(false);
+                }}
+              />
+            </div>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            onChange={onPickFile}
+            className="hidden"
+            accept="image/*,application/pdf,text/plain,.zip,.doc,.docx"
+          />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={closed}
+            title="Attach"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => {
+              setShowEmoji((s) => !s);
               setShowGif(false);
-            }} />
-          </div>
-        )}
-        <input ref={fileRef} type="file" onChange={onPickFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
-        <button onClick={() => fileRef.current?.click()} disabled={closed} title="Attach" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40">
-          <Paperclip className="h-4 w-4" />
-        </button>
-        <button onClick={() => { setShowEmoji(s => !s); setShowGif(false); }} disabled={closed} title="Emoji" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40">
-          <Smile className="h-4 w-4" />
-        </button>
-        <button onClick={() => { setShowGif(s => !s); setShowEmoji(false); }} disabled={closed} title="GIF" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40">
-          <ImageIcon className="h-4 w-4" />
-        </button>
-        <input
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-          disabled={closed}
-          placeholder={closed ? "Room closed" : "Private message…"}
-          className="min-w-0 flex-1 rounded-full bg-muted/40 px-3 py-1.5 text-xs outline-none focus:bg-muted/60 disabled:opacity-50"
-        />
-        <button onClick={send} disabled={(!text.trim() && !pending) || closed} className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 disabled:opacity-40">
-          <Send className="h-4 w-4" />
-        </button>
-      </div>
+            }}
+            disabled={closed}
+            title="Emoji"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40"
+          >
+            <Smile className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => {
+              setShowGif((s) => !s);
+              setShowEmoji(false);
+            }}
+            disabled={closed}
+            title="GIF"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40"
+          >
+            <ImageIcon className="h-4 w-4" />
+          </button>
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            disabled={closed}
+            placeholder={closed ? "Room closed" : "Private message…"}
+            className="min-w-0 flex-1 rounded-full bg-muted/40 px-3 py-1.5 text-xs outline-none focus:bg-muted/60 disabled:opacity-50"
+          />
+          <button
+            onClick={send}
+            disabled={(!text.trim() && !pending) || closed}
+            className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 disabled:opacity-40"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
-
 }
