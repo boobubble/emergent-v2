@@ -752,7 +752,15 @@ function TrioRoomWindow({
                     <CosmeticName userId={u.id} name={u.name} />
                   </div>
                 )}
-                <div className="whitespace-pre-wrap break-words">{m.text}</div>
+                {m.attachment?.kind === "image" && (
+                  <img src={m.attachment.dataUrl} alt={m.attachment.name ?? "image"} className="mt-1 max-h-64 max-w-full rounded-lg object-contain" />
+                )}
+                {m.attachment?.kind === "file" && (
+                  <a href={m.attachment.dataUrl} download={m.attachment.name} className="mt-1 flex items-center gap-1 underline">
+                    <Paperclip className="h-3 w-3" /> {m.attachment.name}
+                  </a>
+                )}
+                {m.text && <div className="whitespace-pre-wrap break-words">{m.text}</div>}
               </div>
             </div>
           );
@@ -764,8 +772,49 @@ function TrioRoomWindow({
         )}
       </div>
 
+      {/* Pending attachment preview */}
+      {pending && (
+        <div className="flex items-center gap-2 border-t border-border bg-muted/20 px-3 py-2">
+          {pending.kind === "image" ? (
+            <img src={pending.dataUrl} alt={pending.name} className="h-12 w-12 rounded object-cover" />
+          ) : (
+            <div className="grid h-12 w-12 place-items-center rounded bg-muted"><Paperclip className="h-4 w-4" /></div>
+          )}
+          <div className="flex-1 min-w-0 text-xs">
+            <div className="truncate font-medium">{pending.name}</div>
+            <div className="text-muted-foreground">{((pending.size ?? 0) / 1024).toFixed(1)} KB</div>
+          </div>
+          <button onClick={() => setPending(null)} className="text-muted-foreground hover:text-destructive" aria-label="Remove">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Composer */}
-      <div className="flex items-center gap-1.5 border-t border-border bg-card/70 px-2 py-2">
+      <div className="relative flex items-center gap-1.5 border-t border-border bg-card/70 px-2 py-2">
+        {showEmoji && (
+          <div className="absolute bottom-12 left-2 z-10">
+            <EmojiPicker onPick={(e) => { setText(t => t + e); setShowEmoji(false); }} />
+          </div>
+        )}
+        {showGif && (
+          <div className="absolute bottom-12 left-2 z-10">
+            <GiphyPicker onPick={(gif) => {
+              setPending({ kind: "image", name: `${gif.title || "gif"}.gif`, mime: "image/gif", size: 0, dataUrl: gif.url });
+              setShowGif(false);
+            }} />
+          </div>
+        )}
+        <input ref={fileRef} type="file" onChange={onPickFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
+        <button onClick={() => fileRef.current?.click()} disabled={closed} title="Attach" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40">
+          <Paperclip className="h-4 w-4" />
+        </button>
+        <button onClick={() => { setShowEmoji(s => !s); setShowGif(false); }} disabled={closed} title="Emoji" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40">
+          <Smile className="h-4 w-4" />
+        </button>
+        <button onClick={() => { setShowGif(s => !s); setShowEmoji(false); }} disabled={closed} title="GIF" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground disabled:opacity-40">
+          <ImageIcon className="h-4 w-4" />
+        </button>
         <input
           value={text}
           onChange={e => setText(e.target.value)}
@@ -774,7 +823,7 @@ function TrioRoomWindow({
           placeholder={closed ? "Room closed" : "Private message…"}
           className="min-w-0 flex-1 rounded-full bg-muted/40 px-3 py-1.5 text-xs outline-none focus:bg-muted/60 disabled:opacity-50"
         />
-        <button onClick={send} disabled={!text.trim() || closed} className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 disabled:opacity-40">
+        <button onClick={send} disabled={(!text.trim() && !pending) || closed} className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 disabled:opacity-40">
           <Send className="h-4 w-4" />
         </button>
       </div>
