@@ -203,17 +203,32 @@ export const PostCard = memo(function PostCard({
 
       {mediaUrls.length > 0 && (
         <div className={`mt-4 grid gap-1 overflow-hidden rounded-2xl ring-1 ring-inset ring-border/70 shadow-[0_8px_24px_-16px_oklch(0_0_0/0.55)] ${mediaUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
-          {mediaUrls.map((u, i) => (
-            <img
-              key={i}
-              src={u}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              onLoad={(e) => e.currentTarget.classList.add("feed-media-in")}
-              className={`w-full bg-muted/40 object-cover transition-transform duration-[450ms] ease-out hover:scale-[1.02] ${compact ? "max-h-80" : "max-h-[480px]"}`}
-            />
-          ))}
+          {mediaUrls.map((u, i) => {
+            const isVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(u);
+            if (isVideo) {
+              return (
+                <video
+                  key={i}
+                  src={u}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className={`w-full bg-black object-contain ${compact ? "max-h-80" : "max-h-[480px]"}`}
+                />
+              );
+            }
+            return (
+              <img
+                key={i}
+                src={u}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                onLoad={(e) => e.currentTarget.classList.add("feed-media-in")}
+                className={`w-full bg-muted/40 object-cover transition-transform duration-[450ms] ease-out hover:scale-[1.02] ${compact ? "max-h-80" : "max-h-[480px]"}`}
+              />
+            );
+          })}
         </div>
       )}
 
