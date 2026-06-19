@@ -1,0 +1,3 @@
+CREATE POLICY "Admins can insert app settings" ON public.app_settings FOR INSERT TO authenticated WITH CHECK (public.is_admin(auth.uid()));
+CREATE POLICY "Admins can update app settings" ON public.app_settings FOR UPDATE TO authenticated USING (public.is_admin(auth.uid())) WITH CHECK (public.is_admin(auth.uid()));
+CREATE POLICY "Admins can delete app settings" ON public.app_settings FOR DELETE TO authenticated USING (public.is_admin(auth.uid()));
