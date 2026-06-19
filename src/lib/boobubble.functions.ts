@@ -1211,7 +1211,7 @@ async function callOpenAI(apiKey: string, model: string, systemPrompt: string, u
     headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: model || "gpt-4o-mini",
-      max_tokens: 220,
+      max_tokens: 700,
       temperature: 0.8,
       messages: [
         { role: "system", content: systemPrompt },
