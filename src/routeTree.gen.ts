@@ -75,6 +75,7 @@ import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
 import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
 import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
+import { Route as AdminFeedThemesRouteImport } from './routes/admin.feed-themes'
 import { Route as AdminExportRouteImport } from './routes/admin.export'
 import { Route as AdminEmailRouteImport } from './routes/admin.email'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
@@ -433,6 +434,11 @@ const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
   path: '/feedback',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFeedThemesRoute = AdminFeedThemesRouteImport.update({
+  id: '/feed-themes',
+  path: '/feed-themes',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminExportRoute = AdminExportRouteImport.update({
   id: '/export',
   path: '/export',
@@ -610,6 +616,7 @@ export interface FileRoutesByFullPath {
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
   '/admin/export': typeof AdminExportRoute
+  '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
@@ -702,6 +709,7 @@ export interface FileRoutesByTo {
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
   '/admin/export': typeof AdminExportRoute
+  '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
@@ -797,6 +805,7 @@ export interface FileRoutesById {
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
   '/admin/export': typeof AdminExportRoute
+  '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
@@ -893,6 +902,7 @@ export interface FileRouteTypes {
     | '/admin/economy'
     | '/admin/email'
     | '/admin/export'
+    | '/admin/feed-themes'
     | '/admin/feedback'
     | '/admin/filters'
     | '/admin/games'
@@ -985,6 +995,7 @@ export interface FileRouteTypes {
     | '/admin/economy'
     | '/admin/email'
     | '/admin/export'
+    | '/admin/feed-themes'
     | '/admin/feedback'
     | '/admin/filters'
     | '/admin/games'
@@ -1079,6 +1090,7 @@ export interface FileRouteTypes {
     | '/admin/economy'
     | '/admin/email'
     | '/admin/export'
+    | '/admin/feed-themes'
     | '/admin/feedback'
     | '/admin/filters'
     | '/admin/games'
@@ -1626,6 +1638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFeedbackRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/feed-themes': {
+      id: '/admin/feed-themes'
+      path: '/feed-themes'
+      fullPath: '/admin/feed-themes'
+      preLoaderRoute: typeof AdminFeedThemesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/export': {
       id: '/admin/export'
       path: '/export'
@@ -1845,6 +1864,7 @@ interface AdminRouteChildren {
   AdminEconomyRoute: typeof AdminEconomyRoute
   AdminEmailRoute: typeof AdminEmailRoute
   AdminExportRoute: typeof AdminExportRoute
+  AdminFeedThemesRoute: typeof AdminFeedThemesRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminFiltersRoute: typeof AdminFiltersRoute
   AdminGamesRoute: typeof AdminGamesRoute
@@ -1901,6 +1921,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEconomyRoute: AdminEconomyRoute,
   AdminEmailRoute: AdminEmailRoute,
   AdminExportRoute: AdminExportRoute,
+  AdminFeedThemesRoute: AdminFeedThemesRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
   AdminFiltersRoute: AdminFiltersRoute,
   AdminGamesRoute: AdminGamesRoute,

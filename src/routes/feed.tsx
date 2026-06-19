@@ -37,6 +37,9 @@ import { pingDailyStreak } from "@/lib/gamification.functions";
 import { BrandMark, BrandText } from "@/components/BrandMark";
 import { PostSkeleton, WidgetSkeleton, RewardsWidgetSkeleton } from "@/components/feed/FeedSkeletons";
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
+import { FeedThemeStore } from "@/components/feed/FeedThemeStore";
+import { useActiveFeedTheme } from "@/lib/feed-themes";
+import { Palette } from "lucide-react";
 
 // Lazy-loaded panels — only fetched when the user navigates to them, keeping
 // the initial feed bundle small for faster first paint.
@@ -442,8 +445,17 @@ function FeedPage() {
     };
   }, [view, tab]);
 
+  const { theme: feedTheme, refresh: refreshFeedTheme } = useActiveFeedTheme();
+  const [themeStoreOpen, setThemeStoreOpen] = useState(false);
+
   return (
-    <div className="min-h-screen overflow-x-hidden bg-background text-foreground pb-24 lg:pb-0">
+    <div data-feed-theme={feedTheme} className="min-h-screen overflow-x-hidden bg-background text-foreground pb-24 lg:pb-0">
+      <FeedThemeStore
+        open={themeStoreOpen}
+        onOpenChange={setThemeStoreOpen}
+        activeTheme={feedTheme}
+        onThemeChange={refreshFeedTheme}
+      />
       {/* Top bar */}
       <header className="sticky top-0 z-30 feed-glass border-b border-border">
         <div className="mx-auto flex max-w-[1360px] items-center gap-3 px-3 py-2.5 sm:gap-4 sm:px-5">
@@ -614,6 +626,7 @@ function FeedPage() {
               <SideItem onClick={() => setView("dailyChest")} active={view === "dailyChest"} icon={Gift} label="Daily Chest" color="text-rose-400" />
               <SideItem onClick={() => setView("spin")} active={view === "spin"} icon={Sparkles} label="Daily Spin" color="text-violet-400" />
               <SideItem onClick={() => setView("shop")} active={view === "shop"} icon={Coins} label="Shop" color="text-emerald-400" />
+              <SideItem onClick={() => setThemeStoreOpen(true)} active={false} icon={Palette} label="Feed Themes" color="text-fuchsia-400" />
 
               
 
