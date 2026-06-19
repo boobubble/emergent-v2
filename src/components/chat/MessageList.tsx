@@ -53,12 +53,12 @@ function renderText(text: string) {
     const tokens = line.split(/(\*\*[^*]+\*\*|`[^`]+`|_[^_]+_)/g);
     tokens.forEach((t, i) => {
       if (/^\*\*.+\*\*$/.test(t))
-        parts.push(<strong key={`${li}-${i}`} className="font-semibold text-foreground">{t.slice(2, -2)}</strong>);
+        parts.push(<strong key={`${li}-${i}`} className="font-semibold text-foreground">{linkify(t.slice(2, -2), `${li}-${i}`)}</strong>);
       else if (/^`.+`$/.test(t))
         parts.push(<code key={`${li}-${i}`} className="rounded-md bg-white/5 px-1.5 py-0.5 font-mono text-xs text-primary">{t.slice(1, -1)}</code>);
       else if (/^_.+_$/.test(t))
-        parts.push(<em key={`${li}-${i}`} className="text-muted-foreground">{t.slice(1, -1)}</em>);
-      else parts.push(<span key={`${li}-${i}`}>{t}</span>);
+        parts.push(<em key={`${li}-${i}`} className="text-muted-foreground">{linkify(t.slice(1, -1), `${li}-${i}`)}</em>);
+      else parts.push(<span key={`${li}-${i}`}>{linkify(t, `${li}-${i}`)}</span>);
     });
     if (li < lines.length - 1) parts.push(<br key={`br-${li}`} />);
   });
