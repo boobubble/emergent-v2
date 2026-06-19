@@ -20,6 +20,7 @@ interface RoomMsg {
   authorId: string;
   text: string;
   ts: number;
+  attachment?: { kind: "image" | "file"; name?: string; mime?: string; size?: number; dataUrl: string } | null;
 }
 
 interface PendingInvite {
