@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Users, Plus, Minus, X, Lock, EyeOff, Send, ShieldX, Mic } from "lucide-react";
+import { Users, Plus, Minus, X, Lock, EyeOff, Send, ShieldX, Mic, Smile, Image as ImageIcon, Paperclip } from "lucide-react";
+import { EmojiPicker } from "./EmojiPicker";
+import { GiphyPicker } from "./GiphyPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { useChat } from "@/lib/chat-store";
