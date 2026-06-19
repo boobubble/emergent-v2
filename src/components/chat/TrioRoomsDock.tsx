@@ -24,6 +24,8 @@ import { useChat } from "@/lib/chat-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import * as trio from "@/services/trio-rooms.service";
+import { useTyping } from "@/lib/use-typing";
+import { TypingIndicator } from "./TypingIndicator";
 
 interface OpenRoom {
   id: string;
