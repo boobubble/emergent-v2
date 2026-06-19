@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as TrustRouteImport } from './routes/trust'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as RadioRouteImport } from './routes/radio'
@@ -104,6 +105,11 @@ import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$k
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrustRoute = TrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -581,6 +587,7 @@ export interface FileRoutesByFullPath {
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/trust': typeof TrustRoute
   '/welcome': typeof WelcomeRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
@@ -672,6 +679,7 @@ export interface FileRoutesByTo {
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/trust': typeof TrustRoute
   '/welcome': typeof WelcomeRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
@@ -766,6 +774,7 @@ export interface FileRoutesById {
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/trust': typeof TrustRoute
   '/welcome': typeof WelcomeRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
@@ -861,6 +870,7 @@ export interface FileRouteTypes {
     | '/radio'
     | '/reels'
     | '/reset-password'
+    | '/trust'
     | '/welcome'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
@@ -952,6 +962,7 @@ export interface FileRouteTypes {
     | '/radio'
     | '/reels'
     | '/reset-password'
+    | '/trust'
     | '/welcome'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
@@ -1045,6 +1056,7 @@ export interface FileRouteTypes {
     | '/radio'
     | '/reels'
     | '/reset-password'
+    | '/trust'
     | '/welcome'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
@@ -1139,6 +1151,7 @@ export interface RootRouteChildren {
   RadioRoute: typeof RadioRoute
   ReelsRoute: typeof ReelsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TrustRoute: typeof TrustRoute
   WelcomeRoute: typeof WelcomeRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
@@ -1156,6 +1169,13 @@ declare module '@tanstack/react-router' {
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trust': {
+      id: '/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof TrustRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -1973,6 +1993,7 @@ const rootRouteChildren: RootRouteChildren = {
   RadioRoute: RadioRoute,
   ReelsRoute: ReelsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TrustRoute: TrustRoute,
   WelcomeRoute: WelcomeRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
