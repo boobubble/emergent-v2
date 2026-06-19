@@ -621,7 +621,8 @@ function FeedPage() {
             )}
           </div>
 
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1.5">
+            <RedditPreviewToggle />
             <FeedNotifications meId={meId} profiles={profiles} />
             <button
               onClick={() => setDmOpenKey(k => k + 1)}
