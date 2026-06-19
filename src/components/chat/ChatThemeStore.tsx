@@ -105,13 +105,12 @@ export function ChatThemeStore({ open, onOpenChange, activeTheme, onThemeChange 
       toast.success(`Unlocked ${t.name}`, {
         description: `${t.price_coins.toLocaleString()} coins spent · ${remaining.toLocaleString()} left · activating…`,
       });
-      // Auto-activate the just-purchased theme and refresh the page so it applies everywhere.
+      // Auto-activate the just-purchased theme; live event syncs every mounted shell.
       try {
         await activateChatTheme(t.theme_key);
         onThemeChange();
         setConfirmTheme(null);
         onOpenChange(false);
-        setTimeout(() => window.location.reload(), 350);
         return;
       } catch (actErr: any) {
         toast.error(friendlyError(actErr?.message ?? "Activate failed"));
@@ -139,12 +138,12 @@ export function ChatThemeStore({ open, onOpenChange, activeTheme, onThemeChange 
     setBusy(t.theme_key);
     try {
       await activateChatTheme(t.theme_key);
-      toast.success(`Activated ${t.name}`, { description: "Reloading to apply…" });
+      toast.success(`Activated ${t.name}`);
       onThemeChange();
       onOpenChange(false);
-      setTimeout(() => window.location.reload(), 350);
     } catch (e: any) {
       toast.error(friendlyError(e?.message ?? "Activate failed"));
+    } finally {
       setBusy(null);
     }
   };

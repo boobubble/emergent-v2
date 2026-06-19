@@ -79,7 +79,6 @@ export function FeedThemeStore({ open, onOpenChange, activeTheme, onThemeChange 
         await activateFeedTheme(t.theme_key);
         onThemeChange();
         onOpenChange(false);
-        setTimeout(() => window.location.reload(), 350);
         return;
       } catch (actErr: any) {
         toast.error(actErr?.message ?? "Activate failed");
@@ -96,12 +95,12 @@ export function FeedThemeStore({ open, onOpenChange, activeTheme, onThemeChange 
     setBusy(t.theme_key);
     try {
       await activateFeedTheme(t.theme_key);
-      toast.success(`Activated ${t.name}`, { description: "Reloading to apply…" });
+      toast.success(`Activated ${t.name}`);
       onThemeChange();
       onOpenChange(false);
-      setTimeout(() => window.location.reload(), 350);
     } catch (e: any) {
       toast.error(e.message ?? "Activate failed");
+    } finally {
       setBusy(null);
     }
   };
