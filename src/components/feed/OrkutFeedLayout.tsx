@@ -38,9 +38,11 @@ import type { User } from "@/lib/chat-types";
  * Uses purple/pink gradients via the orkut_retro theme tokens already
  * defined in styles.css. Renders only when feedTheme === "orkut_retro".
  */
+type AuthLike = { username: string };
+
 type Props = {
   meId: string;
-  user: User;
+  user: AuthLike;
   profiles: Record<string, User>;
   posts: FeedPost[];
   friendIds: Set<string>;
@@ -52,6 +54,17 @@ type Props = {
   onOpenFindFriends: () => void;
   onOpenMessages: () => void;
 };
+
+function synthUser(username: string, id: string): User {
+  return {
+    id,
+    name: username,
+    avatarColor: "#9333ea",
+    status: "online",
+    xp: 0,
+    level: 1,
+  };
+}
 
 export function OrkutFeedLayout(props: Props) {
   const {
