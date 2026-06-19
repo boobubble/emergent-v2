@@ -242,14 +242,11 @@ export function detectFormatFromName(name: string): ExportFormat {
   return "txt";
 }
 
-// Lightweight runtime HTML sanitizer for rendering CMS content publicly.
-// Strips <script>, <style>, <iframe>, on*=, and javascript: URLs.
+// Robust runtime HTML sanitizer for rendering CMS content publicly.
+// Uses DOMPurify to prevent XSS across all known vectors (unquoted attrs,
+// SVG onload, vbscript:, <object>/<embed>, nested obfuscation, etc.).
+import DOMPurify from "isomorphic-dompurify";
+
 export function sanitizeHtml(html: string): string {
-  return (html ?? "")
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
-    .replace(/\son\w+="[^"]*"/gi, "")
-    .replace(/\son\w+='[^']*'/gi, "")
-    .replace(/javascript:/gi, "");
+  return DOMPurify.sanitize(html ?? "", { USE_PROFILES: { html: true } });
 }
