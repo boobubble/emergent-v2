@@ -94,6 +94,15 @@ export function ShopPanel({ onBack, onOpenThemes }: { onBack: () => void; onOpen
       </div>
       <p className="mt-1 text-xs text-muted-foreground">Cosmetics only — show off your style. No gambling, no trading.</p>
 
+      {onOpenThemes && (
+        <button
+          onClick={onOpenThemes}
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-500 to-purple-600 px-4 py-2 text-sm font-bold text-white hover:opacity-90"
+        >
+          <Palette className="h-4 w-4" /> Browse Feed Themes
+        </button>
+      )}
+
 
 
 
