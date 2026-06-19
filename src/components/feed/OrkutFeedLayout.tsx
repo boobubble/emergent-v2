@@ -53,6 +53,7 @@ type Props = {
   onOpenProfile: (username: string) => void;
   onOpenFindFriends: () => void;
   onOpenMessages: () => void;
+  headerSlot?: React.ReactNode;
 };
 
 function synthUser(username: string, id: string): User {
