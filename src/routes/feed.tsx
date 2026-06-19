@@ -487,9 +487,33 @@ function FeedPage() {
             <FeedDMDock key={dmOpenKey} meId={meId} profiles={profiles} initialOpen={true} />
           </Suspense>
         )}
+        {view !== "feed" && (
+          <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/60 backdrop-blur-sm p-4 sm:p-8">
+            <div className="mx-auto max-w-3xl rounded-2xl bg-background text-foreground shadow-2xl">
+              <div className="flex items-center justify-between border-b px-4 py-3">
+                <h2 className="text-sm font-bold capitalize">{view}</h2>
+                <button onClick={() => setView("feed")} className="rounded-md border px-3 py-1 text-xs font-semibold hover:bg-muted">Close</button>
+              </div>
+              <div className="p-4">
+                <Suspense fallback={<PanelFallback />}>
+                  {view === "account" && <AccountPanel />}
+                  {view === "profile" && <ProfilePanel username={profileUsername} onBack={() => setView("feed")} />}
+                  {view === "findFriends" && <FindFriendsPanel />}
+                  {view === "achievements" && <AchievementsPanel />}
+                  {view === "leaderboard" && <LeaderboardPanel />}
+                  {view === "settings" && <FeedSettingsPanel />}
+                  {view === "dailyChest" && <DailyChestPanel onBack={() => setView("feed")} />}
+                  {view === "spin" && <SpinWheelPanel onBack={() => setView("feed")} />}
+                  {view === "shop" && <ShopPanel onBack={() => setView("feed")} />}
+                </Suspense>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
+
 
   return (
     <div data-feed-theme={feedTheme} data-theme-variant={feedVariantFor(feedTheme)} className="min-h-screen overflow-x-hidden bg-background text-foreground pb-24 lg:pb-0">
