@@ -557,11 +557,11 @@ function TrioRoomWindow({
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `channel_id=eq.${channelId}` },
         (payload) => {
-          const r = payload.new as { id: string; author_id: string; text: string; created_at: string };
+          const r = payload.new as { id: string; author_id: string; text: string; created_at: string; attachment: RoomMsg["attachment"] };
           setMessages(prev =>
             prev.some(m => m.id === r.id)
               ? prev
-              : [...prev, { id: r.id, authorId: r.author_id, text: r.text ?? "", ts: new Date(r.created_at).getTime() }],
+              : [...prev, { id: r.id, authorId: r.author_id, text: r.text ?? "", ts: new Date(r.created_at).getTime(), attachment: r.attachment ?? null }],
           );
         },
       )
