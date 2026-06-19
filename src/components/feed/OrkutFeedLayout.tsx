@@ -496,17 +496,35 @@ function OrkutQuickLinks({
 
 /* ============================ Status box ============================ */
 
-function OrkutStatusBox({ name }: { name: string }) {
+function OrkutStatusBox({ name, authorId, onPosted }: { name: string; authorId: string; onPosted: () => void }) {
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
-  const submit = () => {
-    if (!text.trim()) return;
+  const submit = async () => {
+    const body = text.trim();
+    if (!body || posting) return;
     setPosting(true);
-    // Status update is a presentational widget — clear locally.
-    setTimeout(() => {
-      setText("");
-      setPosting(false);
-    }, 350);
+    const slug =
+      body.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) ||
+      `status-${Date.now()}`;
+    const { error } = await supabase.from("posts").insert({
+      author_id: authorId,
+      owner_id: authorId,
+      kind: "text",
+      text: body,
+      slug,
+      media_urls: [],
+      privacy: "public",
+      is_anonymous: false,
+      hashtags: [],
+    });
+    setPosting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Status updated ✨");
+    setText("");
+    onPosted();
   };
   return (
     <div className="orkut-card">
