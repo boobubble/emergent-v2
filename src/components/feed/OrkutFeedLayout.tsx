@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Users,
@@ -15,9 +15,16 @@ import {
   LogOut,
   Quote,
   Flame,
-  Calendar,
   Music,
   Palette,
+  Home,
+  Search,
+  Image as ImageIcon,
+  Coins,
+  MapPin,
+  Smile,
+  Crown,
+  Gift,
 } from "lucide-react";
 import { Avatar } from "@/components/chat/Avatar";
 import { PostCard } from "@/components/feed/PostCard";
@@ -27,16 +34,12 @@ import type { FeedPost } from "@/lib/feed-types";
 import type { User } from "@/lib/chat-types";
 
 /**
- * OrkutFeedLayout — premium flagship layout for `orkut_retro` theme.
+ * OrkutFeedLayout — classic Orkut-inspired premium layout.
  *
- * A true alternative layout (NOT a visual skin) inspired by Orkut's
- * classic profile-first design:
- *   - Left: profile card, fans count, recent visitors, quick links
- *   - Center: scrapbook-style composer + posts
- *   - Right: testimonials, communities, birthdays
- *
- * Uses purple/pink gradients via the orkut_retro theme tokens already
- * defined in styles.css. Renders only when feedTheme === "orkut_retro".
+ * Palette is the original Orkut blue (#1d4488 navbar, soft #e8eef5 bg, white
+ * cards with blue borders) with pink heart accents. Typography uses the era's
+ * Verdana/Tahoma stack. Backend/feed logic is untouched — this only re-skins
+ * and adds Orkut-style widgets around the existing Composer + PostCard.
  */
 type AuthLike = { username: string };
 
@@ -60,12 +63,17 @@ function synthUser(username: string, id: string): User {
   return {
     id,
     name: username,
-    avatarColor: "#9333ea",
+    avatarColor: "#1d4488",
     status: "online",
     xp: 0,
     level: 1,
   };
 }
+
+const ORKUT_BLUE = "#1d4488";
+const ORKUT_BLUE_DARK = "#15356b";
+const ORKUT_BLUE_LIGHT = "#4068a3";
+const ORKUT_PINK = "#ff66aa";
 
 export function OrkutFeedLayout(props: Props) {
   const {
@@ -88,20 +96,40 @@ export function OrkutFeedLayout(props: Props) {
     [friendIds, profiles],
   );
 
+  const allProfiles = useMemo(
+    () => Object.values(profiles).filter((p) => p && p.id !== meId) as User[],
+    [profiles, meId],
+  );
+
   const username = user.username;
   const me: User = profiles[meId] ?? synthUser(username, meId);
 
-  return (
-    <div className="min-h-screen bg-[oklch(0.97_0.02_310)] text-foreground dark:bg-[oklch(0.18_0.04_295)] orkut-retro-root">
-      <style>{ORKUT_CSS}</style>
-      <OrkutTopBar username={username} onOpenProfile={onOpenProfile} onOpenMessages={onOpenMessages} onOpenThemeStore={onOpenThemeStore} headerSlot={props.headerSlot} />
+  // Counter approximations from existing data — no backend changes.
+  const myPosts = useMemo(() => posts.filter((p) => p.author_id === meId).length, [posts, meId]);
+  const photos = useMemo(() => posts.filter((p) => p.author_id === meId && (p.media_urls?.length ?? 0) > 0).length, [posts, meId]);
+  const fans = friendList.length;
 
-      <div className="mx-auto grid max-w-[1180px] gap-4 px-3 py-5 md:grid-cols-[260px_minmax(0,1fr)_280px] md:gap-5 md:px-4">
+  return (
+    <div className="min-h-screen orkut-classic-root">
+      <style>{ORKUT_CSS}</style>
+
+      <OrkutTopBar
+        username={username}
+        me={me}
+        onOpenProfile={onOpenProfile}
+        onOpenMessages={onOpenMessages}
+        onOpenThemeStore={onOpenThemeStore}
+        onOpenFindFriends={onOpenFindFriends}
+        headerSlot={props.headerSlot}
+      />
+
+      <div className="mx-auto grid max-w-[1180px] gap-4 px-3 py-4 md:grid-cols-[230px_minmax(0,1fr)_260px] md:gap-4 md:px-4">
         {/* LEFT: Profile sidebar */}
-        <aside className="space-y-4">
-          <OrkutProfileCard user={me} username={username} fansCount={friendList.length} onEdit={onOpenAccount} onProfile={() => onOpenProfile(username)} />
-          <OrkutRecentVisitors visitors={friendList.slice(0, 6)} onOpenProfile={onOpenProfile} />
+        <aside className="space-y-3">
+          <OrkutProfileCard user={me} username={username} fansCount={fans} onEdit={onOpenAccount} onProfile={() => onOpenProfile(username)} />
+          <OrkutProfileStats fans={fans} />
           <OrkutQuickLinks
+            onProfile={() => onOpenProfile(username)}
             onFindFriends={onOpenFindFriends}
             onMessages={onOpenMessages}
             onAccount={onOpenAccount}
@@ -109,30 +137,33 @@ export function OrkutFeedLayout(props: Props) {
           />
         </aside>
 
-        {/* CENTER: Scrapbook feed */}
-        <main className="min-w-0 space-y-4">
-          <OrkutWelcomeBanner name={me.name || username} fans={friendList.length} />
+        {/* CENTER: Status box + counters + feed */}
+        <main className="min-w-0 space-y-3">
+          <OrkutStatusBox name={me.name || username} />
+
+          <OrkutSocialCounters
+            posts={myPosts}
+            photos={photos}
+            fans={fans}
+            messages={0}
+            friends={fans}
+          />
+
+          <OrkutFriendSuggestions users={allProfiles.slice(0, 6)} onOpenProfile={onOpenProfile} />
 
           <div className="orkut-card">
             <div className="orkut-card-header">
-              <ScrollText className="h-4 w-4" />
-              <span>Scrapbook · Share something with your friends</span>
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Scraps from the Community</span>
             </div>
-            <div className="p-3">
+            <div className="border-b border-[#d6e0ee] bg-[#f5f8fc] p-3">
               <Composer authorId={meId} onPosted={onReload} />
-            </div>
-          </div>
-
-          <div className="orkut-card">
-            <div className="orkut-card-header">
-              <Sparkles className="h-4 w-4" />
-              <span>Community Feed</span>
             </div>
             <div className="space-y-3 p-3">
               {loading && Array.from({ length: 3 }).map((_, i) => <PostSkeleton key={i} />)}
               {!loading && posts.length === 0 && (
-                <div className="rounded-md border border-dashed border-[color-mix(in_oklab,var(--primary)_40%,transparent)] bg-[color-mix(in_oklab,var(--primary)_6%,transparent)] p-8 text-center text-sm text-muted-foreground">
-                  No scraps yet. Be the first to post on the community feed!
+                <div className="rounded border border-dashed border-[#b5c7e0] bg-[#f5f8fc] p-8 text-center text-xs text-[#5a6b85]">
+                  No scraps yet — be the first to leave one on the community feed!
                 </div>
               )}
               {!loading &&
@@ -145,17 +176,19 @@ export function OrkutFeedLayout(props: Props) {
           </div>
         </main>
 
-        {/* RIGHT: Testimonials + Communities */}
-        <aside className="space-y-4">
-          <OrkutTestimonials onOpenProfile={onOpenProfile} friends={friendList} />
+        {/* RIGHT: Friends grid + promoted + communities */}
+        <aside className="space-y-3">
+          <OrkutFriendsPanel friends={friendList} onOpenProfile={onOpenProfile} onFindFriends={onOpenFindFriends} />
+          <OrkutPromotedUsers users={allProfiles.slice(0, 4)} onOpenProfile={onOpenProfile} />
           <OrkutCommunities />
-          <OrkutFanCounter fans={friendList.length} />
+          <OrkutTestimonials onOpenProfile={onOpenProfile} friends={friendList} />
+          <OrkutFanCounter fans={fans} />
           <OrkutMusicScrap />
         </aside>
       </div>
 
-      <footer className="mt-6 border-t border-[color-mix(in_oklab,var(--primary)_25%,transparent)] bg-[color-mix(in_oklab,var(--primary)_8%,transparent)] py-4 text-center text-xs text-muted-foreground">
-        <span className="orkut-brand">Orkut Retro Layout</span> · A nostalgic premium theme · {new Date().getFullYear()}
+      <footer className="mt-6 border-t border-[#b5c7e0] bg-[#e8eef5] py-4 text-center text-[11px] text-[#5a6b85]">
+        <span className="orkut-brand">orkut</span> · classic retro layout · powered by BooBubble · {new Date().getFullYear()}
       </footer>
     </div>
   );
@@ -165,73 +198,101 @@ export function OrkutFeedLayout(props: Props) {
 
 function OrkutTopBar({
   username,
+  me,
   onOpenProfile,
   onOpenMessages,
   onOpenThemeStore,
+  onOpenFindFriends,
   headerSlot,
 }: {
   username: string;
+  me: User;
   onOpenProfile: (u: string) => void;
   onOpenMessages: () => void;
   onOpenThemeStore: () => void;
+  onOpenFindFriends: () => void;
   headerSlot?: React.ReactNode;
 }) {
+  const [q, setQ] = useState("");
   return (
-    <header className="sticky top-0 z-30 border-b border-[color-mix(in_oklab,var(--primary)_30%,transparent)] bg-gradient-to-r from-[#6b21a8] via-[#9333ea] to-[#db2777] text-white shadow-md">
-      <div className="mx-auto flex max-w-[1180px] items-center gap-3 px-4 py-2">
+    <header className="orkut-navbar sticky top-0 z-30 text-white shadow-[0_2px_0_rgba(0,0,0,0.08)]">
+      {/* Top strip — logo + search + actions */}
+      <div className="mx-auto flex max-w-[1180px] items-center gap-3 px-4 py-1.5">
         <Link to="/feed" className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-md bg-white/95 font-black text-[#9333ea] shadow-inner">
-            o
-          </span>
-          <span className="text-lg font-black tracking-tight" style={{ fontFamily: '"Georgia", serif' }}>
-            orkut <span className="text-pink-200">retro</span>
-          </span>
+          <span className="orkut-logo">orkut</span>
         </Link>
-        <nav className="ml-4 hidden items-center gap-1 text-[13px] font-semibold md:flex">
-          <TopLink label="home" />
-          <TopLink label="profile" onClick={() => onOpenProfile(username)} />
-          <TopLink label="scraps" />
-          <TopLink label="communities" />
-          <TopLink label="friends" />
-        </nav>
-        <div className="ml-auto flex items-center gap-2">
+
+        <form
+          onSubmit={(e) => e.preventDefault()}
+          className="ml-2 hidden flex-1 max-w-[360px] items-center gap-1 rounded-sm bg-white p-0.5 pl-2 text-[#1d4488] shadow-inner sm:flex"
+        >
+          <Search className="h-3.5 w-3.5 opacity-70" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="search friends, communities, scraps…"
+            className="w-full bg-transparent px-1 py-0.5 text-[12px] outline-none placeholder:text-[#7d8da5]"
+          />
+          <button
+            type="submit"
+            className="orkut-btn-blue px-2 py-0.5 text-[11px]"
+          >
+            search
+          </button>
+        </form>
+
+        <div className="ml-auto flex items-center gap-2 text-[11px]">
           {headerSlot}
           <button
             onClick={onOpenThemeStore}
-            className="hidden items-center gap-1 rounded-md bg-white/15 px-2.5 py-1 text-xs font-bold uppercase tracking-wider hover:bg-white/25 md:inline-flex"
+            className="hidden items-center gap-1 rounded-sm bg-white/15 px-2 py-0.5 font-bold hover:bg-white/25 md:inline-flex"
+            title="Themes"
           >
-            <Palette className="h-3.5 w-3.5" /> themes
-          </button>
-          <button
-            onClick={onOpenMessages}
-            className="grid h-8 w-8 place-items-center rounded-md bg-white/15 hover:bg-white/25"
-            aria-label="Messages"
-            title="Messages"
-          >
-            <MessageCircle className="h-4 w-4" />
+            <Palette className="h-3 w-3" /> themes
           </button>
           <button
             onClick={() => onOpenProfile(username)}
-            className="flex items-center gap-2 rounded-md bg-white/15 pl-1 pr-2 py-1 hover:bg-white/25"
+            className="flex items-center gap-1.5 rounded-sm bg-white/15 pl-1 pr-2 py-0.5 hover:bg-white/25"
           >
-            <span className="grid h-6 w-6 place-items-center rounded-sm bg-white text-[#9333ea] text-xs font-black">
-              {username.slice(0, 1).toUpperCase()}
+            <span className="grid h-5 w-5 place-items-center rounded-sm bg-white text-[10px] font-black text-[#1d4488]">
+              {(me.name || username).slice(0, 1).toUpperCase()}
             </span>
-            <span className="hidden text-xs font-bold sm:inline">{username}</span>
+            <span className="hidden text-[11px] font-bold sm:inline">{me.name || username}</span>
           </button>
         </div>
       </div>
+
+      {/* Nav strip — classic Orkut blue tabs */}
+      <nav className="border-t border-white/15 bg-[color-mix(in_oklab,#15356b_55%,transparent)]">
+        <div className="mx-auto flex max-w-[1180px] items-center gap-0.5 px-4 text-[12px]">
+          <TopLink icon={Home} label="home" />
+          <TopLink icon={Smile} label="profile" onClick={() => onOpenProfile(username)} />
+          <TopLink icon={ScrollText} label="scrapbook" />
+          <TopLink icon={Users} label="friends" onClick={onOpenFindFriends} />
+          <TopLink icon={Star} label="communities" />
+          <TopLink icon={MessageCircle} label="messages" onClick={onOpenMessages} />
+        </div>
+      </nav>
     </header>
   );
 }
 
-function TopLink({ label, onClick }: { label: string; onClick?: () => void }) {
+function TopLink({
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  icon: typeof Heart;
+  label: string;
+  onClick?: () => void;
+}) {
   return (
     <button
       onClick={onClick}
-      className="rounded px-2 py-1 text-white/90 transition hover:bg-white/15 hover:text-white"
+      className="orkut-tab flex items-center gap-1.5 px-2.5 py-1.5 font-bold uppercase tracking-wide text-white/90 transition hover:bg-white/15 hover:text-white"
     >
-      {label}
+      <Icon className="h-3 w-3" />
+      <span>{label}</span>
     </button>
   );
 }
@@ -253,87 +314,111 @@ function OrkutProfileCard({
 }) {
   return (
     <div className="orkut-card">
-      <div className="bg-gradient-to-br from-[#9333ea] to-[#db2777] p-4 text-center text-white">
-        <div className="mx-auto inline-block rounded-md border-4 border-white/90 bg-white p-0.5 shadow-md">
-          <Avatar user={user} size={88} />
+      <div className="orkut-card-header">
+        <Smile className="h-3.5 w-3.5" />
+        <span>my profile</span>
+      </div>
+      <div className="bg-white p-3 text-center">
+        <button
+          onClick={onProfile}
+          className="mx-auto inline-block rounded-sm border border-[#b5c7e0] bg-white p-1 shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition hover:border-[#1d4488]"
+        >
+          <Avatar user={user} size={92} />
+        </button>
+        <div className="mt-2 text-[13px] font-bold leading-tight text-[#1d4488]">{user.name || username}</div>
+        <div className="mt-0.5 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-[#5a6b85]">
+          <span className={`h-1.5 w-1.5 rounded-full ${user.status === "online" ? "bg-emerald-500" : user.status === "away" ? "bg-amber-500" : "bg-zinc-400"}`} />
+          {user.status ?? "online"}
         </div>
-        <div className="mt-2 text-base font-bold leading-tight">{user.name || username}</div>
-        <div className="text-[11px] uppercase tracking-wider text-pink-100/90">{user.status ?? "online"}</div>
       </div>
 
-
-      <div className="p-3 text-xs">
-        {user.bio ? (
-          <p className="mb-2 italic text-muted-foreground">"{user.bio}"</p>
-        ) : (
-          <p className="mb-2 italic text-muted-foreground">No about message yet — add one to make your profile pop!</p>
+      <div className="space-y-2 border-t border-[#d6e0ee] bg-[#f5f8fc] p-3 text-[11px] text-[#3b4a66]">
+        <StatLine icon={Crown} label="level" value={String(user.level ?? 1)} />
+        <StatLine icon={Sparkles} label="xp" value={String(user.xp ?? 0)} />
+        <StatLine icon={Coins} label="coins" value={String(user.coins ?? 0)} />
+        <StatLine icon={Flame} label="streak" value={`${user.streak ?? 0} days`} />
+        {user.countryCode && (
+          <StatLine icon={MapPin} label="from" value={user.countryCode.toUpperCase()} />
         )}
+      </div>
 
-        <div className="grid grid-cols-3 gap-2 border-y border-[color-mix(in_oklab,var(--primary)_25%,transparent)] py-2 text-center">
-          <Stat label="fans" value={fansCount} icon={Star} />
-          <Stat label="cool" value={Math.min(99, fansCount * 2)} icon={Heart} />
-          <Stat label="trusty" value={Math.min(99, (user.level ?? 1) * 5)} icon={Sparkles} />
+      {user.bio && (
+        <div className="border-t border-[#d6e0ee] bg-white p-3 text-[11px] italic text-[#5a6b85]">
+          "{user.bio}"
         </div>
+      )}
 
-        <div className="mt-3 flex gap-2">
-          <button
-            onClick={onProfile}
-            className="flex-1 rounded-md border border-[color-mix(in_oklab,var(--primary)_40%,transparent)] bg-[color-mix(in_oklab,var(--primary)_10%,transparent)] px-2 py-1.5 text-[11px] font-bold text-[color:var(--primary)] hover:bg-[color-mix(in_oklab,var(--primary)_18%,transparent)]"
-          >
-            view profile
-          </button>
-          <button
-            onClick={onEdit}
-            className="flex-1 rounded-md border border-[color-mix(in_oklab,var(--primary)_40%,transparent)] bg-white/60 px-2 py-1.5 text-[11px] font-bold text-foreground hover:bg-white/90 dark:bg-white/10 dark:hover:bg-white/20"
-          >
-            edit
-          </button>
-        </div>
+      <div className="grid grid-cols-3 gap-px border-t border-[#d6e0ee] bg-[#d6e0ee] text-center">
+        <MiniStat label="fans" value={fansCount} />
+        <MiniStat label="cool" value={Math.min(99, fansCount * 2)} />
+        <MiniStat label="trusty" value={Math.min(99, (user.level ?? 1) * 5)} />
+      </div>
+
+      <div className="flex gap-1.5 border-t border-[#d6e0ee] bg-[#f5f8fc] p-2">
+        <button onClick={onProfile} className="orkut-btn-blue flex-1 px-2 py-1 text-[11px]">view profile</button>
+        <button onClick={onEdit} className="orkut-btn-light flex-1 px-2 py-1 text-[11px]">edit</button>
       </div>
     </div>
   );
 }
 
-function Stat({ label, value, icon: Icon }: { label: string; value: number; icon: typeof Heart }) {
+function StatLine({ icon: Icon, label, value }: { icon: typeof Heart; label: string; value: string }) {
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <Icon className="h-3.5 w-3.5 text-[#db2777]" />
-      <span className="text-sm font-black tabular-nums text-[color:var(--primary)]">{value}</span>
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+    <div className="flex items-center justify-between gap-2">
+      <span className="flex items-center gap-1.5">
+        <Icon className="h-3 w-3 text-[#ff66aa]" />
+        <span className="text-[10px] uppercase tracking-wider text-[#5a6b85]">{label}</span>
+      </span>
+      <span className="font-bold tabular-nums text-[#1d4488]">{value}</span>
     </div>
   );
 }
 
-/* ============================ Recent visitors ============================ */
+function MiniStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex flex-col gap-0 bg-white py-2">
+      <span className="text-[13px] font-black tabular-nums text-[#1d4488]">{value}</span>
+      <span className="text-[9px] uppercase tracking-wider text-[#5a6b85]">{label}</span>
+    </div>
+  );
+}
 
-function OrkutRecentVisitors({ visitors, onOpenProfile }: { visitors: User[]; onOpenProfile: (u: string) => void }) {
+/* ============================ Profile stats widget ============================ */
+
+function OrkutProfileStats({ fans }: { fans: number }) {
+  // Stable per-day "fortune" so it doesn't shuffle on every render.
+  const fortunes = [
+    "Lucky day ahead 🌟",
+    "A new friend awaits 💌",
+    "Sweet scraps in store 💖",
+    "Smile, you're cool 😎",
+    "Music will find you 🎵",
+    "Reconnect with someone 📞",
+    "Adventure incoming ✨",
+  ];
+  const day = new Date();
+  const fortune = fortunes[(day.getDate() + day.getMonth()) % fortunes.length];
+
   return (
     <div className="orkut-card">
       <div className="orkut-card-header">
-        <Eye className="h-4 w-4" />
-        <span>Recent Visitors</span>
+        <Eye className="h-3.5 w-3.5" />
+        <span>profile stats</span>
       </div>
-      <div className="p-3">
-        {visitors.length === 0 ? (
-          <p className="text-[11px] italic text-muted-foreground">No visitors yet today.</p>
-        ) : (
-          <div className="grid grid-cols-3 gap-2">
-            {visitors.map((v) => (
-              <button
-                key={v.id}
-                onClick={() => onOpenProfile(v.name)}
-                className="group flex flex-col items-center gap-1 rounded-md border border-transparent p-1 text-center hover:border-[color-mix(in_oklab,var(--primary)_35%,transparent)] hover:bg-[color-mix(in_oklab,var(--primary)_8%,transparent)]"
-                title={v.name}
-              >
-                <span className="rounded-sm border-2 border-white bg-white p-0.5 shadow-sm">
-                  <Avatar user={v} size={40} />
-                </span>
-                <span className="line-clamp-1 text-[10px] font-semibold">{v.name}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <ul className="divide-y divide-[#d6e0ee] bg-white text-[11px]">
+        <li className="flex items-center justify-between px-3 py-1.5">
+          <span className="text-[#5a6b85]">profile views</span>
+          <span className="font-bold tabular-nums text-[#1d4488]">{280 + fans * 4}</span>
+        </li>
+        <li className="flex items-center justify-between px-3 py-1.5">
+          <span className="text-[#5a6b85]">recent visitors</span>
+          <span className="font-bold tabular-nums text-[#1d4488]">{Math.max(1, Math.min(fans, 9))}</span>
+        </li>
+        <li className="flex items-start justify-between gap-2 px-3 py-1.5">
+          <span className="text-[#5a6b85]">today's fortune</span>
+          <span className="text-right font-bold text-[#d6336c]">{fortune}</span>
+        </li>
+      </ul>
     </div>
   );
 }
@@ -341,20 +426,25 @@ function OrkutRecentVisitors({ visitors, onOpenProfile }: { visitors: User[]; on
 /* ============================ Quick links ============================ */
 
 function OrkutQuickLinks({
+  onProfile,
   onFindFriends,
   onMessages,
   onAccount,
   onThemes,
 }: {
+  onProfile: () => void;
   onFindFriends: () => void;
   onMessages: () => void;
   onAccount: () => void;
   onThemes: () => void;
 }) {
   const items: { icon: typeof Heart; label: string; onClick: () => void }[] = [
-    { icon: UserPlus, label: "find friends", onClick: onFindFriends },
+    { icon: Smile, label: "profile", onClick: onProfile },
+    { icon: ScrollText, label: "scrapbook", onClick: () => {} },
+    { icon: ImageIcon, label: "photos", onClick: () => {} },
+    { icon: Users, label: "friends", onClick: onFindFriends },
+    { icon: Star, label: "communities", onClick: () => {} },
     { icon: MessageCircle, label: "messages", onClick: onMessages },
-    { icon: Bookmark, label: "scraps", onClick: () => {} },
     { icon: Palette, label: "themes", onClick: onThemes },
     { icon: Settings, label: "account", onClick: onAccount },
     { icon: LogOut, label: "logout", onClick: () => {} },
@@ -362,19 +452,19 @@ function OrkutQuickLinks({
   return (
     <div className="orkut-card">
       <div className="orkut-card-header">
-        <Sparkles className="h-4 w-4" />
-        <span>Quick Links</span>
+        <Bookmark className="h-3.5 w-3.5" />
+        <span>quick links</span>
       </div>
-      <ul className="p-2 text-xs">
+      <ul className="bg-white p-1.5 text-[11px]">
         {items.map((it) => {
           const Icon = it.icon;
           return (
             <li key={it.label}>
               <button
                 onClick={it.onClick}
-                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-foreground transition hover:bg-[color-mix(in_oklab,var(--primary)_10%,transparent)] hover:text-[color:var(--primary)]"
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left text-[#3b4a66] transition hover:bg-[#eef3fa] hover:text-[#1d4488]"
               >
-                <Icon className="h-3.5 w-3.5 text-[#db2777]" />
+                <Icon className="h-3 w-3 text-[#ff66aa]" />
                 <span className="font-semibold">{it.label}</span>
               </button>
             </li>
@@ -385,24 +475,240 @@ function OrkutQuickLinks({
   );
 }
 
-/* ============================ Welcome banner ============================ */
+/* ============================ Status box ============================ */
 
-function OrkutWelcomeBanner({ name, fans }: { name: string; fans: number }) {
-  const hour = new Date().getHours();
-  const greet = hour < 12 ? "good morning" : hour < 18 ? "good afternoon" : "good evening";
+function OrkutStatusBox({ name }: { name: string }) {
+  const [text, setText] = useState("");
+  const [posting, setPosting] = useState(false);
+  const submit = () => {
+    if (!text.trim()) return;
+    setPosting(true);
+    // Status update is a presentational widget — clear locally.
+    setTimeout(() => {
+      setText("");
+      setPosting(false);
+    }, 350);
+  };
   return (
-    <div className="orkut-card overflow-hidden">
-      <div className="flex items-center gap-3 bg-gradient-to-r from-[#fce7f3] via-[#f3e8ff] to-[#e0e7ff] p-4 dark:from-[#3b0764]/60 dark:via-[#581c87]/60 dark:to-[#831843]/60">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#9333ea] to-[#db2777] text-2xl shadow-md">
-          🌸
+    <div className="orkut-card">
+      <div className="orkut-card-header">
+        <Smile className="h-3.5 w-3.5" />
+        <span>what are you doing, {name.toLowerCase()}?</span>
+      </div>
+      <div className="space-y-2 bg-white p-3">
+        <div className="flex items-start gap-2 rounded-sm border border-[#b5c7e0] bg-[#fbfcfe] p-2">
+          <button
+            type="button"
+            className="grid h-6 w-6 shrink-0 place-items-center rounded-sm border border-[#d6e0ee] bg-white text-base hover:bg-[#fff8e0]"
+            title="emoji"
+          >
+            🙂
+          </button>
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
+            placeholder="share a quick update… (e.g. listening to old hindi songs 🎶)"
+            className="w-full bg-transparent text-[12px] text-[#1d2942] outline-none placeholder:text-[#7d8da5]"
+            maxLength={140}
+          />
+          <span className="text-[10px] text-[#7d8da5] tabular-nums">{text.length}/140</span>
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-bold text-[#6b21a8] dark:text-pink-200">{greet}, {name}!</div>
-          <div className="text-[11px] text-muted-foreground">
-            You have <span className="font-bold text-[#db2777]">{fans}</span> fans · Welcome back to the scrapbook.
-          </div>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={() => setText("")}
+            className="orkut-btn-light px-3 py-1 text-[11px]"
+            disabled={!text}
+          >
+            cancel
+          </button>
+          <button
+            onClick={submit}
+            className="orkut-btn-blue px-3 py-1 text-[11px]"
+            disabled={!text.trim() || posting}
+          >
+            {posting ? "updating…" : "update status"}
+          </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ============================ Social counters ============================ */
+
+function OrkutSocialCounters({
+  posts,
+  photos,
+  fans,
+  messages,
+  friends,
+}: {
+  posts: number;
+  photos: number;
+  fans: number;
+  messages: number;
+  friends: number;
+}) {
+  const items = [
+    { icon: ScrollText, label: "posts", value: posts },
+    { icon: ImageIcon, label: "photos", value: photos },
+    { icon: Heart, label: "fans", value: fans },
+    { icon: MessageCircle, label: "messages", value: messages },
+    { icon: Users, label: "friends", value: friends },
+  ];
+  return (
+    <div className="orkut-card">
+      <div className="grid grid-cols-5 divide-x divide-[#d6e0ee] bg-white">
+        {items.map((it) => {
+          const Icon = it.icon;
+          return (
+            <div key={it.label} className="flex flex-col items-center gap-0.5 px-2 py-2.5 text-center">
+              <Icon className="h-3.5 w-3.5 text-[#ff66aa]" />
+              <span className="text-sm font-black tabular-nums text-[#1d4488]">{it.value}</span>
+              <span className="text-[9px] uppercase tracking-wider text-[#5a6b85]">{it.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ============================ Friend suggestions ============================ */
+
+function OrkutFriendSuggestions({
+  users,
+  onOpenProfile,
+}: {
+  users: User[];
+  onOpenProfile: (u: string) => void;
+}) {
+  if (users.length === 0) return null;
+  return (
+    <div className="orkut-card">
+      <div className="orkut-card-header">
+        <UserPlus className="h-3.5 w-3.5" />
+        <span>friend suggestions by BooBubble</span>
+      </div>
+      <div className="flex gap-2 overflow-x-auto bg-white p-3">
+        {users.map((u) => (
+          <div
+            key={u.id}
+            className="min-w-[110px] shrink-0 rounded-sm border border-[#d6e0ee] bg-[#fbfcfe] p-2 text-center transition hover:border-[#1d4488] hover:bg-white"
+          >
+            <button
+              onClick={() => onOpenProfile(u.name)}
+              className="mx-auto block rounded-sm border border-[#b5c7e0] bg-white p-0.5"
+            >
+              <Avatar user={u} size={52} />
+            </button>
+            <button
+              onClick={() => onOpenProfile(u.name)}
+              className="mt-1.5 block w-full truncate text-[11px] font-bold text-[#1d4488] hover:underline"
+            >
+              {u.name}
+            </button>
+            <button className="orkut-btn-blue mt-1.5 w-full px-1 py-0.5 text-[10px]">+ add friend</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================ Right: friends grid ============================ */
+
+function OrkutFriendsPanel({
+  friends,
+  onOpenProfile,
+  onFindFriends,
+}: {
+  friends: User[];
+  onOpenProfile: (u: string) => void;
+  onFindFriends: () => void;
+}) {
+  const [q, setQ] = useState("");
+  const filtered = friends.filter((f) => f.name.toLowerCase().includes(q.toLowerCase())).slice(0, 9);
+  return (
+    <div className="orkut-card">
+      <div className="orkut-card-header">
+        <Users className="h-3.5 w-3.5" />
+        <span>my friends ({friends.length})</span>
+      </div>
+      <div className="space-y-2 bg-white p-3">
+        <div className="flex items-center gap-1 rounded-sm border border-[#b5c7e0] bg-[#fbfcfe] px-1.5 py-0.5">
+          <Search className="h-3 w-3 text-[#7d8da5]" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="search friends"
+            className="w-full bg-transparent py-0.5 text-[11px] outline-none placeholder:text-[#7d8da5]"
+          />
+        </div>
+        {filtered.length === 0 ? (
+          <div className="rounded-sm border border-dashed border-[#b5c7e0] p-3 text-center text-[10px] italic text-[#5a6b85]">
+            {friends.length === 0 ? "no friends yet — add some!" : "no matches"}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-1.5">
+            {filtered.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => onOpenProfile(f.name)}
+                className="group flex flex-col items-center gap-1 rounded-sm border border-transparent p-1 text-center hover:border-[#b5c7e0] hover:bg-[#eef3fa]"
+                title={f.name}
+              >
+                <span className="rounded-sm border border-[#b5c7e0] bg-white p-0.5">
+                  <Avatar user={f} size={44} />
+                </span>
+                <span className="line-clamp-1 w-full text-[10px] font-bold text-[#1d4488]">{f.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <button onClick={onFindFriends} className="orkut-btn-light w-full px-2 py-1 text-[11px]">
+          find more friends
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ Promoted users ============================ */
+
+function OrkutPromotedUsers({
+  users,
+  onOpenProfile,
+}: {
+  users: User[];
+  onOpenProfile: (u: string) => void;
+}) {
+  if (users.length === 0) return null;
+  return (
+    <div className="orkut-card">
+      <div className="orkut-card-header">
+        <Gift className="h-3.5 w-3.5" />
+        <span>promoted users</span>
+      </div>
+      <ul className="divide-y divide-[#d6e0ee] bg-white">
+        {users.map((u) => (
+          <li key={u.id}>
+            <button
+              onClick={() => onOpenProfile(u.name)}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[#eef3fa]"
+            >
+              <span className="rounded-sm border border-[#b5c7e0] bg-white p-0.5">
+                <Avatar user={u} size={28} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[11px] font-bold text-[#1d4488]">{u.name}</span>
+                <span className="text-[9px] uppercase tracking-wider text-[#5a6b85]">featured · lvl {u.level ?? 1}</span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -410,41 +716,38 @@ function OrkutWelcomeBanner({ name, fans }: { name: string; fans: number }) {
 /* ============================ Testimonials ============================ */
 
 function OrkutTestimonials({ friends, onOpenProfile }: { friends: User[]; onOpenProfile: (u: string) => void }) {
-  // Showcase entries — empty/placeholder until users write real testimonials.
   const sample = friends.slice(0, 2);
   return (
     <div className="orkut-card">
       <div className="orkut-card-header">
-        <Quote className="h-4 w-4" />
-        <span>Testimonials</span>
+        <Quote className="h-3.5 w-3.5" />
+        <span>testimonials</span>
       </div>
-      <div className="space-y-3 p-3 text-xs">
+      <div className="space-y-2 bg-white p-3 text-[11px]">
         {sample.length === 0 ? (
-          <div className="rounded-md border border-dashed border-[color-mix(in_oklab,var(--primary)_35%,transparent)] p-3 text-center italic text-muted-foreground">
-            No testimonials yet. Add friends to receive your first scrap of love.
+          <div className="rounded-sm border border-dashed border-[#b5c7e0] p-2 text-center italic text-[#5a6b85]">
+            no testimonials yet. add friends to receive scraps of love.
           </div>
         ) : (
           sample.map((u, i) => (
             <button
               key={u.id}
               onClick={() => onOpenProfile(u.name)}
-              className="block w-full rounded-md border border-[color-mix(in_oklab,var(--primary)_25%,transparent)] bg-white/60 p-2.5 text-left transition hover:bg-white/90 dark:bg-white/5 dark:hover:bg-white/10"
+              className="block w-full rounded-sm border border-[#d6e0ee] bg-[#fbfcfe] p-2 text-left transition hover:border-[#1d4488] hover:bg-white"
             >
               <div className="flex items-center gap-2">
-                <Avatar user={u} size={28} />
-                <span className="text-[11px] font-bold text-[color:var(--primary)]">{u.name}</span>
+                <Avatar user={u} size={24} />
+                <span className="text-[11px] font-bold text-[#1d4488]">{u.name}</span>
               </div>
-              <p className="mt-1.5 italic leading-snug text-foreground/85">
+              <p className="mt-1 italic leading-snug text-[#3b4a66]">
                 {i === 0
-                  ? "the coolest person on this feed — always brings the vibes ✨💜"
+                  ? "the coolest person on this feed — always brings the vibes 💖"
                   : "old school internet friend, 10/10 would scrap again 🌸"}
               </p>
             </button>
           ))
         )}
-        <button className="w-full rounded-md bg-gradient-to-r from-[#9333ea] to-[#db2777] py-1.5 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm hover:opacity-95">
-          + write a testimonial
-        </button>
+        <button className="orkut-btn-pink w-full px-2 py-1 text-[11px]">+ write a testimonial</button>
       </div>
     </div>
   );
@@ -453,31 +756,31 @@ function OrkutTestimonials({ friends, onOpenProfile }: { friends: User[]; onOpen
 /* ============================ Communities ============================ */
 
 const ORKUT_COMMUNITIES = [
-  { name: "I love early 2000s internet", members: "2.4k", color: "from-fuchsia-500 to-pink-500", emoji: "💾" },
-  { name: "Nostalgia Lovers", members: "1.8k", color: "from-violet-500 to-purple-500", emoji: "📼" },
-  { name: "Friendship Goals", members: "5.1k", color: "from-pink-500 to-rose-500", emoji: "💖" },
-  { name: "Scrapbook Artists", members: "920", color: "from-purple-500 to-indigo-500", emoji: "🎨" },
+  { name: "Music Lovers", members: "12.4k", emoji: "🎵" },
+  { name: "SEO Masters", members: "3.1k", emoji: "🔎" },
+  { name: "Movie Club", members: "8.7k", emoji: "🎬" },
+  { name: "I love early 2000s internet", members: "2.4k", emoji: "💾" },
+  { name: "Scrapbook Artists", members: "920", emoji: "🎨" },
 ];
 
 function OrkutCommunities() {
   return (
     <div className="orkut-card">
       <div className="orkut-card-header">
-        <Users className="h-4 w-4" />
-        <span>Your Communities</span>
+        <Star className="h-3.5 w-3.5" />
+        <span>top communities</span>
       </div>
-      <ul className="space-y-2 p-3 text-xs">
+      <ul className="divide-y divide-[#d6e0ee] bg-white">
         {ORKUT_COMMUNITIES.map((c) => (
-          <li key={c.name}>
-            <button className="group flex w-full items-center gap-2.5 rounded-md border border-[color-mix(in_oklab,var(--primary)_18%,transparent)] bg-white/50 p-2 text-left transition hover:bg-white/90 dark:bg-white/5 dark:hover:bg-white/10">
-              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-sm bg-gradient-to-br ${c.color} text-base shadow-sm`}>
-                {c.emoji}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12px] font-bold text-[color:var(--primary)]">{c.name}</span>
-                <span className="text-[10px] text-muted-foreground">{c.members} members</span>
-              </span>
-            </button>
+          <li key={c.name} className="flex items-center gap-2 px-3 py-2">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-sm border border-[#b5c7e0] bg-[#eef3fa] text-base">
+              {c.emoji}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[11px] font-bold text-[#1d4488]">{c.name}</span>
+              <span className="text-[10px] text-[#5a6b85]">{c.members} members</span>
+            </span>
+            <button className="orkut-btn-blue px-2 py-0.5 text-[10px]">join</button>
           </li>
         ))}
       </ul>
@@ -490,10 +793,13 @@ function OrkutCommunities() {
 function OrkutFanCounter({ fans }: { fans: number }) {
   return (
     <div className="orkut-card">
-      <div className="bg-gradient-to-r from-[#fb7185] to-[#db2777] p-3 text-center text-white">
-        <Flame className="mx-auto h-5 w-5" />
-        <div className="mt-1 text-2xl font-black tabular-nums">{fans}</div>
-        <div className="text-[10px] uppercase tracking-[0.2em]">total fans</div>
+      <div className="orkut-card-header" style={{ background: "linear-gradient(180deg, #ff85b8, #ff66aa 50%, #e64f93)" }}>
+        <Heart className="h-3.5 w-3.5" />
+        <span>fan counter</span>
+      </div>
+      <div className="bg-gradient-to-b from-[#fff0f6] to-white p-3 text-center">
+        <div className="text-2xl font-black tabular-nums text-[#d6336c]">{fans}</div>
+        <div className="text-[9px] uppercase tracking-[0.2em] text-[#7d8da5]">total fans</div>
       </div>
     </div>
   );
@@ -505,16 +811,16 @@ function OrkutMusicScrap() {
   return (
     <div className="orkut-card">
       <div className="orkut-card-header">
-        <Music className="h-4 w-4" />
-        <span>Currently Listening</span>
+        <Music className="h-3.5 w-3.5" />
+        <span>currently listening</span>
       </div>
-      <div className="flex items-center gap-2 p-3 text-xs">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-sm bg-gradient-to-br from-purple-500 to-pink-500 text-base shadow-sm">
+      <div className="flex items-center gap-2 bg-white p-3 text-[11px]">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-sm border border-[#b5c7e0] bg-gradient-to-br from-[#eef3fa] to-white text-base">
           🎵
         </span>
         <div className="min-w-0">
-          <div className="truncate font-bold text-[color:var(--primary)]">Mr. Brightside</div>
-          <div className="truncate text-[10px] text-muted-foreground">The Killers · 2003</div>
+          <div className="truncate font-bold text-[#1d4488]">Mr. Brightside</div>
+          <div className="truncate text-[10px] text-[#5a6b85]">The Killers · 2003</div>
         </div>
       </div>
     </div>
@@ -524,35 +830,114 @@ function OrkutMusicScrap() {
 /* ============================ Inline theme CSS ============================ */
 
 const ORKUT_CSS = `
-.orkut-retro-root { font-family: "Georgia", "Times New Roman", serif; }
-.orkut-retro-root .orkut-card {
-  background: var(--card);
-  border: 1px solid color-mix(in oklab, var(--primary) 30%, transparent);
-  border-radius: 6px;
-  box-shadow: 0 1px 0 color-mix(in oklab, var(--primary) 18%, transparent), 0 2px 6px rgba(0,0,0,0.06);
+.orkut-classic-root {
+  font-family: Verdana, Tahoma, Geneva, "DejaVu Sans", Arial, sans-serif;
+  background: #e8eef5;
+  color: #1d2942;
+}
+.dark .orkut-classic-root { background: #0f1a2e; color: #e6eaf2; }
+
+.orkut-classic-root .orkut-card {
+  background: #ffffff;
+  border: 1px solid #b5c7e0;
+  border-radius: 4px;
+  box-shadow: 0 1px 0 #e6ecf5;
   overflow: hidden;
 }
-.orkut-retro-root .orkut-card-header {
+.dark .orkut-classic-root .orkut-card { background: #16223a; border-color: #2a3a5c; box-shadow: 0 1px 0 #0b1426; }
+
+.orkut-classic-root .orkut-card-header {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
+  padding: 5px 10px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: white;
-  background: linear-gradient(90deg, #6b21a8, #9333ea 60%, #db2777);
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  background: linear-gradient(180deg, ${ORKUT_BLUE_LIGHT} 0%, ${ORKUT_BLUE} 55%, ${ORKUT_BLUE_DARK} 100%);
+  border-bottom: 1px solid ${ORKUT_BLUE_DARK};
+  text-shadow: 0 1px 0 rgba(0,0,0,0.2);
 }
-.orkut-retro-root .orkut-post-wrap > * {
-  border-radius: 4px !important;
-  border: 1px solid color-mix(in oklab, var(--primary) 22%, transparent) !important;
+
+/* Glossy navbar */
+.orkut-classic-root .orkut-navbar {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 50%),
+    linear-gradient(180deg, ${ORKUT_BLUE_LIGHT} 0%, ${ORKUT_BLUE} 55%, ${ORKUT_BLUE_DARK} 100%);
+  border-bottom: 1px solid ${ORKUT_BLUE_DARK};
 }
-.orkut-brand { font-weight: 800; color: #9333ea; }
+.orkut-classic-root .orkut-logo {
+  font-family: Verdana, Tahoma, Arial, sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: -1px;
+  color: #ffffff;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+  padding: 0 2px;
+}
+.orkut-classic-root .orkut-tab {
+  border-radius: 3px 3px 0 0;
+  font-size: 11px;
+}
+.orkut-classic-root .orkut-tab:active { transform: translateY(1px); }
+
+/* Buttons — glossy classic */
+.orkut-classic-root .orkut-btn-blue {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid ${ORKUT_BLUE_DARK};
+  background: linear-gradient(180deg, #6f93cf 0%, ${ORKUT_BLUE_LIGHT} 50%, ${ORKUT_BLUE} 100%);
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 3px;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.2);
+  transition: filter 120ms ease, transform 80ms ease;
+}
+.orkut-classic-root .orkut-btn-blue:hover { filter: brightness(1.08); }
+.orkut-classic-root .orkut-btn-blue:active { transform: translateY(1px); filter: brightness(0.95); }
+.orkut-classic-root .orkut-btn-blue:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.orkut-classic-root .orkut-btn-light {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid #b5c7e0;
+  background: linear-gradient(180deg, #ffffff 0%, #eef3fa 100%);
+  color: #1d4488;
+  font-weight: 700;
+  border-radius: 3px;
+  transition: background 120ms ease, transform 80ms ease;
+}
+.orkut-classic-root .orkut-btn-light:hover { background: linear-gradient(180deg, #ffffff 0%, #dfe8f5 100%); }
+.orkut-classic-root .orkut-btn-light:active { transform: translateY(1px); }
+.orkut-classic-root .orkut-btn-light:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.orkut-classic-root .orkut-btn-pink {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid #c0327a;
+  background: linear-gradient(180deg, #ff9bc4 0%, ${ORKUT_PINK} 55%, #e64f93 100%);
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 3px;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.2);
+  transition: filter 120ms ease, transform 80ms ease;
+}
+.orkut-classic-root .orkut-btn-pink:hover { filter: brightness(1.06); }
+.orkut-classic-root .orkut-btn-pink:active { transform: translateY(1px); }
+
+/* Re-skin nested PostCard to feel like an Orkut scrap */
+.orkut-classic-root .orkut-post-wrap > * {
+  border-radius: 3px !important;
+  border: 1px solid #d6e0ee !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 0 #eef3fa !important;
+}
+.dark .orkut-classic-root .orkut-post-wrap > * {
+  background: #16223a !important;
+  border-color: #2a3a5c !important;
+  box-shadow: 0 1px 0 #0b1426 !important;
+}
+
+.orkut-brand { font-weight: 900; color: ${ORKUT_BLUE}; letter-spacing: -0.5px; }
 `;
 
-/* keep eslint happy on unused import in some builds */
+/* keep eslint happy on unused imports if a section is trimmed */
 void Camera;
-void Calendar;
-void useState;
-void useEffect;
