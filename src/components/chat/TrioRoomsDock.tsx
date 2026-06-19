@@ -239,7 +239,7 @@ export function TrioRoomsDock() {
     <>
       {/* Private rooms panel (opens via right-side header icon or pending invites) */}
       <div className="pointer-events-auto fixed bottom-4 left-4 z-40 flex flex-col items-start gap-2 max-w-[calc(100vw-2rem)]">
-        {(showPanel || invites.length > 0) && (
+        {(showPanel || invites.length > 0) && openRooms.length === 0 && (
           <div className="animate-scale-in w-72 rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
