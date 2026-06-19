@@ -339,7 +339,11 @@ export const deleteUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context.userId);
     if (data.user_id === context.userId) throw new Error("Cannot delete your own account");
-    const { error } = await (await getSupabaseAdmin()).auth.admin.deleteUser(data.user_id);
+    const admin = await getSupabaseAdmin();
+    // Wipe all user-related rows from public tables first.
+    const { error: cascadeErr } = await admin.rpc("delete_user_cascade", { _user: data.user_id });
+    if (cascadeErr) throw new Error(cascadeErr.message);
+    const { error } = await admin.auth.admin.deleteUser(data.user_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
