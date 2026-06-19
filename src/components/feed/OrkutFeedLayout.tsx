@@ -94,7 +94,7 @@ export function OrkutFeedLayout(props: Props) {
   return (
     <div className="min-h-screen bg-[oklch(0.97_0.02_310)] text-foreground dark:bg-[oklch(0.18_0.04_295)] orkut-retro-root">
       <style>{ORKUT_CSS}</style>
-      <OrkutTopBar username={username} onOpenProfile={onOpenProfile} onOpenMessages={onOpenMessages} onOpenThemeStore={onOpenThemeStore} />
+      <OrkutTopBar username={username} onOpenProfile={onOpenProfile} onOpenMessages={onOpenMessages} onOpenThemeStore={onOpenThemeStore} headerSlot={props.headerSlot} />
 
       <div className="mx-auto grid max-w-[1180px] gap-4 px-3 py-5 md:grid-cols-[260px_minmax(0,1fr)_280px] md:gap-5 md:px-4">
         {/* LEFT: Profile sidebar */}
