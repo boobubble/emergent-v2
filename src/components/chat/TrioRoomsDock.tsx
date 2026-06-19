@@ -561,6 +561,9 @@ function TrioRoomWindow({
 }) {
   const chat = useChat();
   const channelId = trio.trioChannel(room.id);
+  const me = chat.state.users.me;
+  const meForTyping = me && !me.isGuest ? { id: me.id, name: me.name } : null;
+  const { typers, sendTyping } = useTyping(channelId, meForTyping, !!meForTyping);
   const [messages, setMessages] = useState<RoomMsg[]>([]);
   const [members, setMembers] = useState<trio.TrioMember[]>([]);
   const [text, setText] = useState("");
