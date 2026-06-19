@@ -582,12 +582,39 @@ function OrkutSocialCounters({
 
 function OrkutFriendSuggestions({
   users,
+  friendIds,
+  meId,
   onOpenProfile,
 }: {
   users: User[];
+  friendIds: Set<string>;
+  meId: string;
   onOpenProfile: (u: string) => void;
 }) {
-  if (users.length === 0) return null;
+  const [pending, setPending] = useState<Set<string>>(new Set());
+  const [sent, setSent] = useState<Set<string>>(new Set());
+
+  async function addFriend(otherId: string) {
+    if (!otherId || otherId === meId) return;
+    setPending((p) => new Set(p).add(otherId));
+    const { error } = await supabase
+      .from("friendships")
+      .insert({ sender_id: meId, receiver_id: otherId, status: "pending" });
+    setPending((p) => {
+      const n = new Set(p);
+      n.delete(otherId);
+      return n;
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Friend request sent ✨");
+    setSent((s) => new Set(s).add(otherId));
+  }
+
+  const visible = users.filter((u) => !friendIds.has(u.id));
+  if (visible.length === 0) return null;
   return (
     <div className="orkut-card">
       <div className="orkut-card-header">
@@ -595,26 +622,38 @@ function OrkutFriendSuggestions({
         <span>friend suggestions by BooBubble</span>
       </div>
       <div className="flex gap-2 overflow-x-auto bg-white p-3">
-        {users.map((u) => (
-          <div
-            key={u.id}
-            className="min-w-[110px] shrink-0 rounded-sm border border-[#d6e0ee] bg-[#fbfcfe] p-2 text-center transition hover:border-[#1d4488] hover:bg-white"
-          >
-            <button
-              onClick={() => onOpenProfile(u.name)}
-              className="mx-auto block rounded-sm border border-[#b5c7e0] bg-white p-0.5"
+        {visible.map((u) => {
+          const isPending = pending.has(u.id);
+          const isSent = sent.has(u.id);
+          return (
+            <div
+              key={u.id}
+              className="orkut-tip min-w-[110px] shrink-0 rounded-sm border border-[#d6e0ee] bg-[#fbfcfe] p-2 text-center transition hover:border-[#1d4488] hover:bg-white"
+              data-tip={`view ${u.name}'s profile`}
             >
-              <Avatar user={u} size={52} />
-            </button>
-            <button
-              onClick={() => onOpenProfile(u.name)}
-              className="mt-1.5 block w-full truncate text-[11px] font-bold text-[#1d4488] hover:underline"
-            >
-              {u.name}
-            </button>
-            <button className="orkut-btn-blue mt-1.5 w-full px-1 py-0.5 text-[10px]">+ add friend</button>
-          </div>
-        ))}
+              <button
+                onClick={() => onOpenProfile(u.name)}
+                className="mx-auto block rounded-sm border border-[#b5c7e0] bg-white p-0.5"
+              >
+                <Avatar user={u} size={52} />
+              </button>
+              <button
+                onClick={() => onOpenProfile(u.name)}
+                className="mt-1.5 block w-full truncate text-[11px] font-bold text-[#1d4488] hover:underline"
+              >
+                {u.name}
+              </button>
+              <button
+                onClick={() => addFriend(u.id)}
+                disabled={isPending || isSent}
+                className={`orkut-tip mt-1.5 w-full px-1 py-0.5 text-[10px] ${isSent ? "orkut-btn-light" : "orkut-btn-blue"}`}
+                data-tip={isSent ? "request sent" : "send friend request"}
+              >
+                {isPending ? "sending…" : isSent ? "✓ sent" : "+ add friend"}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
