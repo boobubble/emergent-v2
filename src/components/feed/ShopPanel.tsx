@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Coins, Check, Lock, ArrowLeft } from "lucide-react";
+import { Coins, Check, Lock, ArrowLeft, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { SHOP_BY_CATEGORY, CATEGORY_LABEL, stickerGifUrl, type ShopCategory, type ShopItem } from "@/lib/shop-catalog";
 import { getMyInventory, purchaseItem, equipItem } from "@/lib/rewards.functions";
@@ -12,7 +12,8 @@ const CATS: ShopCategory[] = ["frame", "username_effect", "theme", "emoji_pack",
 
 interface InventoryRow { item_id: string; category: string; equipped: boolean; acquired_at: string }
 
-export function ShopPanel({ onBack }: { onBack: () => void }) {
+export function ShopPanel({ onBack, onOpenFeedThemes }: { onBack: () => void; onOpenFeedThemes?: () => void }) {
+
   const fetchInv = useServerFn(getMyInventory);
   const buy = useServerFn(purchaseItem);
   const equip = useServerFn(equipItem);
