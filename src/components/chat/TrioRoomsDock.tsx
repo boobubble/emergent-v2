@@ -932,6 +932,8 @@ function TrioRoomWindow({
           </div>
         )}
 
+        <TypingIndicator typers={typers} />
+
         {/* Composer */}
         <div className="relative flex items-center gap-1.5 border-t border-border bg-card/70 px-2 py-2">
           {showEmoji && (
