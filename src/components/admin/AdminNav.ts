@@ -70,6 +70,7 @@ export const ADMIN_NAV: AdminGroup[] = [
   {
     label: "Community", icon: MessageSquare, children: [
       { to: "/admin/chatrooms",   label: "Chatrooms",    icon: MessageSquare, keywords: ["chat", "rooms"] },
+      { to: "/admin/chat-themes", label: "Chat Themes",  icon: Palette,       keywords: ["chatroom", "skins", "themes", "store", "coins", "premium", "override", "event"] },
       { to: "/admin/social-feed", label: "Feed",         icon: Newspaper,     keywords: ["posts", "social"] },
       { to: "/admin/feed-themes", label: "Feed Themes",  icon: Palette,       keywords: ["feed", "skins", "themes", "store", "coins", "premium"] },
       { to: "/admin/poll-widget", label: "Poll Widget",   icon: Vote,          keywords: ["poll", "polls", "vote", "voting", "chatroom widget", "discovery", "trending poll", "poll of the day"] },

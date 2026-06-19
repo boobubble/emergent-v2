@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate } from "@tanstack/react-router";
 import { Flame, Award, PanelLeftOpen } from "lucide-react";
+import { ChatThemeStore } from "@/components/chat/ChatThemeStore";
+import { useActiveChatTheme } from "@/lib/chat-themes";
 import { useOptionalChat } from "@/lib/chat-store";
 import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
