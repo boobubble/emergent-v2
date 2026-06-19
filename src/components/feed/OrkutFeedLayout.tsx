@@ -168,11 +168,13 @@ function OrkutTopBar({
   onOpenProfile,
   onOpenMessages,
   onOpenThemeStore,
+  headerSlot,
 }: {
   username: string;
   onOpenProfile: (u: string) => void;
   onOpenMessages: () => void;
   onOpenThemeStore: () => void;
+  headerSlot?: React.ReactNode;
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-[color-mix(in_oklab,var(--primary)_30%,transparent)] bg-gradient-to-r from-[#6b21a8] via-[#9333ea] to-[#db2777] text-white shadow-md">
@@ -193,6 +195,7 @@ function OrkutTopBar({
           <TopLink label="friends" />
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          {headerSlot}
           <button
             onClick={onOpenThemeStore}
             className="hidden items-center gap-1 rounded-md bg-white/15 px-2.5 py-1 text-xs font-bold uppercase tracking-wider hover:bg-white/25 md:inline-flex"
