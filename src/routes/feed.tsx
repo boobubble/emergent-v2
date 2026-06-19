@@ -1146,3 +1146,58 @@ function MobileSpeedDial({ open, onToggle, onClose, actions, extraActions = [] }
 }
 
 
+
+function LayoutSwitcher({
+  activeTheme,
+  onChanged,
+  onNeedsUnlock,
+  variant = "default",
+}: {
+  activeTheme: FeedThemeKey;
+  onChanged: () => void;
+  onNeedsUnlock: () => void;
+  variant?: "default" | "orkut";
+}) {
+  const isOrkut = activeTheme === "orkut_retro";
+  const switchTo = async (key: FeedThemeKey) => {
+    if (key === activeTheme) return;
+    try {
+      await activateFeedTheme(key);
+      onChanged();
+    } catch {
+      onNeedsUnlock();
+    }
+  };
+  const baseBtn = variant === "orkut"
+    ? "px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider transition"
+    : "px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider transition";
+  const wrap = variant === "orkut"
+    ? "hidden md:inline-flex items-center rounded-md bg-white/15 p-0.5 text-white"
+    : "hidden md:inline-flex items-center rounded-full bg-muted p-0.5 mr-1";
+  const activeCls = variant === "orkut"
+    ? "bg-white text-[#9333ea] rounded"
+    : "bg-card text-foreground rounded-full shadow-sm";
+  const idleCls = variant === "orkut"
+    ? "text-white/85 hover:text-white rounded"
+    : "text-muted-foreground hover:text-foreground rounded-full";
+  return (
+    <div className={wrap} role="group" aria-label="Feed layout">
+      <button
+        type="button"
+        onClick={() => switchTo("boobubble_default")}
+        className={`${baseBtn} ${!isOrkut ? activeCls : idleCls}`}
+        title="Default feed layout"
+      >
+        Default
+      </button>
+      <button
+        type="button"
+        onClick={() => switchTo("orkut_retro")}
+        className={`${baseBtn} ${isOrkut ? activeCls : idleCls}`}
+        title="Orkut Retro premium layout"
+      >
+        Orkut ✨
+      </button>
+    </div>
+  );
+}
