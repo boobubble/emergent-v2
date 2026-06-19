@@ -735,7 +735,10 @@ function TrioRoomWindow({
   }
 
   return (
-    <div className="flex h-[440px] w-[min(320px,calc(100vw-1rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl origin-bottom-right animate-scale-in">
+    <div className={fullscreen
+      ? "fixed inset-0 z-[60] flex flex-col overflow-hidden rounded-none border-0 bg-card/95 shadow-2xl backdrop-blur-xl animate-scale-in"
+      : "flex h-[440px] w-[min(320px,calc(100vw-1rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl origin-bottom-right animate-scale-in"
+    }>
       <div className="flex h-full w-full flex-col overflow-hidden bg-card/70">
         {/* Header */}
         <div className="flex items-center gap-2 border-b border-border bg-gradient-to-r from-primary/15 to-transparent px-3 py-2">
