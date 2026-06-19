@@ -1,4 +1,4 @@
-import { MessageCircle, X, Bot, BotOff, Search, Users } from "lucide-react";
+import { MessageCircle, X, Bot, BotOff, Search, Users, Palette } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
