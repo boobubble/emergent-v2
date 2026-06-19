@@ -1,4 +1,4 @@
-import { MessageCircle, X, Bot, BotOff, Search, Users, Palette } from "lucide-react";
+import { MessageCircle, X, Bot, BotOff, Search, Users, Palette, Minus } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
@@ -6,7 +6,7 @@ import { LoyaltyChip } from "./LoyaltyChip";
 import { BrandMark } from "@/components/BrandMark";
 
 export function ChatHeader() {
-  const { state, isDM, dmUser, channelLabel, closeDM } = useChat();
+  const { state, isDM, dmUser, channelLabel, closeDM, setActive } = useChat();
   const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
   const id = state.activeChannel;
 
@@ -34,13 +34,27 @@ export function ChatHeader() {
             </div>
           </div>
         </div>
-        <button
-          onClick={() => closeDM(u.id)}
-          aria-label="Close DM"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-destructive/15 hover:text-destructive"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("palrgo:minimizeMobileDM", { detail: { peerId: u.id } }));
+              const fallback = state.roomOrder?.[0] || "lobby";
+              setActive(fallback);
+            }}
+            aria-label="Minimize DM"
+            title="Minimize"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-white/5 hover:text-foreground lg:hidden"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => closeDM(u.id)}
+            aria-label="Close DM"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-destructive/15 hover:text-destructive"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </header>
     );
   }
