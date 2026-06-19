@@ -38,10 +38,10 @@ export const FrameAvatar = memo(function FrameAvatar({
 
 /** Compact rank+level pill for use beside usernames. */
 export function RankChip({ level, compact = false }: { level: number; compact?: boolean }) {
-  // Hide the "Newcomer" rank label globally — only show named ranks after it.
+  // Hide the starter rank label globally — only show named ranks after it.
   if (!level || level <= 1) return null;
   const r = rankFor(level);
-  const showRankTitle = r.title !== "Newcomer";
+  const showRankTitle = r.minLevel > 1;
   return (
     <span
       title={showRankTitle ? `${r.title} · Level ${level}` : `Level ${level}`}
