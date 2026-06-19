@@ -41,7 +41,6 @@ export function TrioRoomsDock() {
   const [minimized, setMinimized] = useState<OpenRoom[]>([]);
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [showCreate, setShowCreate] = useState(false);
-  const [showPanel, setShowPanel] = useState(false);
   const [unread, setUnread] = useState<Record<string, number>>({});
   const [acceptedRooms, setAcceptedRooms] = useState<OpenRoom[]>([]);
   const openRoomIdRef = useRef<string | null>(null);
@@ -115,7 +114,6 @@ export function TrioRoomsDock() {
               ? prev
               : [...prev, { roomId: r.id, roomName: r.name, ownerId: r.owner_id, passwordRequired: false }],
           );
-          setShowPanel(true);
         },
       )
       .subscribe();
@@ -164,7 +162,6 @@ export function TrioRoomsDock() {
             setUnread(u => ({ ...u, [room.id]: (u[room.id] ?? 0) + 1 }));
             // Surface the room in the dock so the badge is visible.
             setMinimized(m => (m.some(r => r.id === room.id) ? m : [...m, room]));
-            setShowPanel(true);
           },
         )
         .subscribe();
@@ -216,7 +213,6 @@ export function TrioRoomsDock() {
   const minimizeWindow = (room: OpenRoom) => {
     setOpenRooms(o => o.filter(r => r.id !== room.id));
     setMinimized(m => (m.some(r => r.id === room.id) ? m : [...m, room]));
-    setShowPanel(true);
   };
 
   async function handleAccept(inv: PendingInvite, password?: string) {
