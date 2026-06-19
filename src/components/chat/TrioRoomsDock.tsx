@@ -317,6 +317,7 @@ export function TrioRoomsDock() {
           onClose={() => setShowCreate(false)}
           onCreated={(r) => {
             setShowCreate(false);
+            setShowPanel(false);
             openRoom({ id: r.id, name: r.name, ownerId: r.owner_id });
           }}
         />
