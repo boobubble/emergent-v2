@@ -161,7 +161,7 @@ export function MissionsPanel() {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            {rank && (
+            {rank && rank.title !== "Newcomer" && (
               <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500/20 to-fuchsia-500/20 px-2.5 py-1 text-[10px] font-bold text-amber-200 ring-1 ring-amber-400/30">
                 <Trophy className="h-3 w-3" /> {rank.title}
               </span>
