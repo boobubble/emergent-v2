@@ -800,7 +800,7 @@ function TrioRoomWindow({
         {showGif && (
           <div className="absolute bottom-12 left-2 z-10">
             <GiphyPicker onPick={(gif) => {
-              setPending({ kind: "image", name: `${gif.title || "gif"}.gif`, mime: "image/gif", size: 0, dataUrl: gif.url });
+              setPending({ kind: "image", name: `${gif.title || "gif"}.gif`, mime: "image/gif", size: 0, dataUrl: gif.fullUrl });
               setShowGif(false);
             }} />
           </div>
