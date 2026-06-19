@@ -598,18 +598,40 @@ function TrioRoomWindow({
 
   async function send() {
     const t = text.trim();
-    if (!t || closed) return;
+    if ((!t && !pending) || closed) return;
+    const att = pending;
     setText("");
+    setPending(null);
     const { error } = await supabase.from("messages").insert({
       channel_id: channelId,
       author_id: meId,
       text: t,
-      kind: "text",
+      kind: att?.kind === "image" ? "image" : "text",
+      attachment: att ? (att as unknown as Record<string, unknown>) : null,
     });
     if (error) {
       setText(t);
+      setPending(att ?? null);
       alert(error.message);
     }
+  }
+
+  function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (e.target) e.target.value = "";
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("Max 5MB"); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPending({
+        kind: file.type.startsWith("image/") ? "image" : "file",
+        name: file.name,
+        mime: file.type,
+        size: file.size,
+        dataUrl: String(reader.result),
+      });
+    };
+    reader.readAsDataURL(file);
   }
 
   async function doInvite() {
