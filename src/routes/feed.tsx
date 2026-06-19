@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useMyRoles } from "@/lib/use-my-role";
 import chatroomIcon from "@/assets/chatroom-icon.jpg";
 import { supabase } from "@/integrations/supabase/client";
+import { postsSafe } from "@/lib/posts-safe";
 import { useAuth } from "@/lib/auth-store";
 import { useChat } from "@/lib/chat-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
@@ -178,7 +179,7 @@ function FeedPage() {
   // Load posts
   async function loadPosts() {
     setLoading(true);
-    const { data } = await supabase.from("posts").select("*").order("created_at", { ascending: false }).limit(50);
+    const { data } = await postsSafe().select("*").order("created_at", { ascending: false }).limit(50);
     setPosts(((data ?? []) as Partial<FeedPost>[]).map(normalizePost));
     setLoading(false);
   }

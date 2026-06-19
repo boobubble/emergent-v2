@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Megaphone, Star, Users2, Flame, Activity, UserPlus, Check, Heart, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { postsSafe } from "@/lib/posts-safe";
 import { Avatar } from "@/components/chat/Avatar";
 import { PremiumCard } from "@/components/feed/SideWidgets";
 import type { User } from "@/lib/chat-types";
@@ -16,8 +17,7 @@ export function PromotedPostsWidget({ profiles }: { profiles: Record<string, Use
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data } = await supabase
-        .from("posts")
+      const { data } = await postsSafe()
         .select("*")
         .eq("privacy", "public")
         .order("created_at", { ascending: false })

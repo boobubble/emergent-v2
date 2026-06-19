@@ -11,7 +11,9 @@ export interface RemoteProfile {
   avatar_color: string;
   xp: number;
   level: number;
-  coins: number;
+  /** Other users' coin balances are not exposed; only the signed-in user's
+   *  own balance is readable, via the `my_coin_balance` RPC. */
+  coins?: number;
   streak: number;
   longest_streak: number;
   status: string;
@@ -58,7 +60,7 @@ function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User 
     bio: p.bio ?? undefined,
     xp: p.xp,
     level: p.level,
-    coins: p.coins,
+    coins: p.coins ?? 0,
     streak: p.streak ?? 0,
     longestStreak: p.longest_streak ?? 0,
     lastSeen: isBot ? nowMs : lastSeenMs,
@@ -145,7 +147,7 @@ async function refetchAll() {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, username, bio, avatar_url, avatar_color, xp, level, coins, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year, is_bot, is_official",
+      "id, username, bio, avatar_url, avatar_color, xp, level, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year, is_bot, is_official",
     )
     .order("username", { ascending: true });
   if (error) return;

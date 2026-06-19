@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { postsSafe } from "@/lib/posts-safe";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { PostCard } from "@/components/feed/PostCard";
@@ -10,7 +11,7 @@ import type { FeedPost } from "@/lib/feed-types";
 const SITE_URL = "https://holo-chat-quest.lovable.app";
 
 async function fetchPostForHead(slug: string) {
-  const { data: post } = await supabase.from("posts").select("*").eq("slug", slug).maybeSingle();
+  const { data: post } = await postsSafe().select("*").eq("slug", slug).maybeSingle();
   if (!post) return null;
   let authorName = "Someone";
   if (!post.is_anonymous && post.author_id) {
@@ -90,7 +91,7 @@ function PostPage() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data } = await supabase.from("posts").select("*").eq("slug", slug).maybeSingle();
+      const { data } = await postsSafe().select("*").eq("slug", slug).maybeSingle();
       if (!alive) return;
       if (!data) setNotFound(true);
       else setPost(data as FeedPost);

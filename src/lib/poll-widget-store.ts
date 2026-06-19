@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { postsSafe } from "@/lib/posts-safe";
 import {
   POLL_WIDGET_DEFAULTS,
   mergePollWidgetConfig,
@@ -77,8 +78,7 @@ export function usePollPreviews(config: PollWidgetConfig): {
     let mounted = true;
     (async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("posts")
+      const { data } = await postsSafe()
         .select("id, slug, owner_id, is_anonymous, poll, reaction_count, trending_score, created_at")
         .eq("kind", "poll")
         .eq("privacy", "public")
