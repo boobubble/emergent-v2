@@ -40,6 +40,7 @@ import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncem
 import { FeedThemeStore } from "@/components/feed/FeedThemeStore";
 import { useActiveFeedTheme } from "@/lib/feed-themes";
 import { feedVariantFor } from "@/lib/theme-variants";
+import { OrkutFeedLayout } from "@/components/feed/OrkutFeedLayout";
 import { Palette } from "lucide-react";
 
 // Lazy-loaded panels — only fetched when the user navigates to them, keeping
