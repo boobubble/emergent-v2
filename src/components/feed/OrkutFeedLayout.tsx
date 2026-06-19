@@ -105,8 +105,8 @@ export function OrkutFeedLayout(props: Props) {
   const me: User = profiles[meId] ?? synthUser(username, meId);
 
   // Counter approximations from existing data — no backend changes.
-  const myPosts = useMemo(() => posts.filter((p) => p.authorId === meId).length, [posts, meId]);
-  const photos = useMemo(() => posts.filter((p) => p.authorId === meId && (p.imageUrl || p.images?.length)).length, [posts, meId]);
+  const myPosts = useMemo(() => posts.filter((p) => p.author_id === meId).length, [posts, meId]);
+  const photos = useMemo(() => posts.filter((p) => p.author_id === meId && (p.media_urls?.length ?? 0) > 0).length, [posts, meId]);
   const fans = friendList.length;
 
   return (
