@@ -147,6 +147,19 @@ function AdminFeedThemesPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="min-w-[200px]">
+                  <Label className="text-xs">Brand label (in-theme header/footer)</Label>
+                  <Input
+                    className="w-full"
+                    defaultValue={brandLabels[t.theme_key] ?? ""}
+                    placeholder={t.theme_key === "orkut_retro" ? "boobubble" : "(use theme default)"}
+                    onBlur={(e) => {
+                      const v = e.target.value;
+                      if (v !== (brandLabels[t.theme_key] ?? "")) saveBrandLabel(t.theme_key, v);
+                    }}
+                  />
+                </div>
               </div>
             </Card>
           ))}
