@@ -141,7 +141,7 @@ export function OrkutFeedLayout(props: Props) {
 
         {/* CENTER: Status box + counters + feed */}
         <main className="min-w-0 space-y-3">
-          <OrkutStatusBox name={me.name || username} />
+          <OrkutStatusBox name={me.name || username} authorId={meId} onPosted={onReload} />
 
           <OrkutSocialCounters
             posts={myPosts}
