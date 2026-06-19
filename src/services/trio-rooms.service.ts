@@ -39,10 +39,10 @@ export const TRIO_JOIN_COST = 50;
 
 export async function getMyCoins(): Promise<number> {
   const { data: auth } = await supabase.auth.getUser();
-  const uid = auth.user?.id;
-  if (!uid) return 0;
-  const { data } = await supabase.from("profiles").select("coins").eq("id", uid).maybeSingle();
-  return data?.coins ?? 0;
+  if (!auth.user?.id) return 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any).rpc("my_coin_balance");
+  return typeof data === "number" ? data : 0;
 }
 
 export async function createRoom(opts: {
