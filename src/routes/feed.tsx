@@ -473,6 +473,14 @@ function FeedPage() {
           onOpenProfile={(uname) => { setProfileUsername(uname); setView("profile"); }}
           onOpenFindFriends={() => setView("findFriends")}
           onOpenMessages={() => setDmOpenKey(k => k + 1)}
+          headerSlot={
+            <LayoutSwitcher
+              activeTheme={feedTheme}
+              onChanged={refreshFeedTheme}
+              onNeedsUnlock={() => setThemeStoreOpen(true)}
+              variant="orkut"
+            />
+          }
         />
         {dmOpenKey > 0 && (
           <Suspense fallback={null}>
