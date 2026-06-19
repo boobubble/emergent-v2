@@ -11,7 +11,7 @@ import type { FeedPost } from "@/lib/feed-types";
 const SITE_URL = "https://holo-chat-quest.lovable.app";
 
 async function fetchPostForHead(slug: string) {
-  const { data: post } = await supabase.from("posts").select("*").eq("slug", slug).maybeSingle();
+  const { data: post } = await postsSafe().select("*").eq("slug", slug).maybeSingle();
   if (!post) return null;
   let authorName = "Someone";
   if (!post.is_anonymous && post.author_id) {
