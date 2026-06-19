@@ -402,6 +402,18 @@ export function ProfilePopup({
             </Link>
           </div>
         )}
+        {!isMe && user && !user.isBot && (
+          <div className="flex gap-2 border-t border-border bg-card px-4 py-3">
+            <Link
+              to="/u/$username"
+              params={{ username: user.name }}
+              onClick={() => onOpenChange(false)}
+              className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
+            >
+              <ExternalLink className="h-4 w-4 shrink-0" /> View full profile
+            </Link>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
