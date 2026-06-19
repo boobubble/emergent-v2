@@ -149,7 +149,8 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
         if (error) throw new Error(error.message);
       } else {
         const media_urls = await uploadFiles();
-        const kind = files.length ? "image" : "text";
+        const hasMedia = files.length > 0;
+        const kind = hasMedia ? "image" : "text";
         const { error } = await supabase.from("posts").insert({
           author_id: authorId,
           owner_id: authorId,
@@ -283,8 +284,12 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
       {files.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {files.map((f, i) => (
-            <div key={i} className="relative h-24 w-24 overflow-hidden rounded-xl border border-border">
-              <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
+            <div key={i} className="relative h-24 w-24 overflow-hidden rounded-xl border border-border bg-black">
+              {f.type.startsWith("video/") ? (
+                <video src={URL.createObjectURL(f)} className="h-full w-full object-cover" muted playsInline />
+              ) : (
+                <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
+              )}
               <button onClick={() => setFiles(files.filter((_, j) => j !== i))} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white" aria-label="Remove file">
                 <X className="h-3 w-3" />
               </button>
