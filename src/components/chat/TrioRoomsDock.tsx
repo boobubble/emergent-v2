@@ -607,7 +607,7 @@ function TrioRoomWindow({
       author_id: meId,
       text: t,
       kind: att?.kind === "image" ? "image" : "text",
-      attachment: att ? (att as unknown as Record<string, unknown>) : null,
+      attachment: att ? JSON.parse(JSON.stringify(att)) : null,
     });
     if (error) {
       setText(t);
