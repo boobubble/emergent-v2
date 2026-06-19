@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Coins, Check, Lock, ArrowLeft, Palette } from "lucide-react";
+import { Coins, Check, Lock, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { SHOP_BY_CATEGORY, CATEGORY_LABEL, stickerGifUrl, type ShopCategory, type ShopItem } from "@/lib/shop-catalog";
 import { getMyInventory, purchaseItem, equipItem } from "@/lib/rewards.functions";
@@ -12,7 +12,7 @@ const CATS: ShopCategory[] = ["frame", "username_effect", "theme", "emoji_pack",
 
 interface InventoryRow { item_id: string; category: string; equipped: boolean; acquired_at: string }
 
-export function ShopPanel({ onBack, onOpenFeedThemes }: { onBack: () => void; onOpenFeedThemes?: () => void }) {
+export function ShopPanel({ onBack }: { onBack: () => void }) {
 
   const fetchInv = useServerFn(getMyInventory);
   const buy = useServerFn(purchaseItem);
@@ -94,24 +94,6 @@ export function ShopPanel({ onBack, onOpenFeedThemes }: { onBack: () => void; on
       </div>
       <p className="mt-1 text-xs text-muted-foreground">Cosmetics only — show off your style. No gambling, no trading.</p>
 
-      {onOpenFeedThemes && (
-        <button
-          onClick={onOpenFeedThemes}
-          aria-label="Open Feed Themes store"
-          className="group mt-3 grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-fuchsia-500/30 bg-gradient-to-r from-fuchsia-500/15 via-purple-500/10 to-pink-500/15 p-3 text-left transition hover:border-fuchsia-500/60 hover:from-fuchsia-500/25 hover:to-pink-500/25 active:scale-[0.99]"
-        >
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-600 text-white shadow-md">
-            <Palette className="h-5 w-5" />
-          </div>
-          <div className="min-w-0">
-            <div className="truncate text-sm font-bold">Feed Themes</div>
-            <div className="truncate text-[11px] text-muted-foreground">Unlock premium skins for your feed</div>
-          </div>
-          <span className="shrink-0 rounded-full bg-fuchsia-500/20 px-2.5 py-1 text-[11px] font-bold text-fuchsia-600 dark:text-fuchsia-300">
-            Open
-          </span>
-        </button>
-      )}
 
 
 
