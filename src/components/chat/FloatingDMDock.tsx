@@ -231,6 +231,9 @@ function MiniDMWindow({
   const unread = chat.isDmUnread(peerId);
   const u = state.users[peerId];
   const channelId = dmChannelFor(peerId);
+  const me = state.users.me;
+  const meForTyping = me && !me.isGuest ? { id: me.id, name: me.name } : null;
+  const { typers, sendTyping } = useTyping(channelId, meForTyping, !!meForTyping);
   const [text, setText] = useState("");
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
