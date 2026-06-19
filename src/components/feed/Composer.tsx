@@ -10,6 +10,7 @@ import { createConfession } from "@/lib/confessions.functions";
 import { extractHashtags } from "@/lib/feed-types";
 import { slugify } from "@/lib/post-slug";
 import { EmojiPicker } from "@/components/chat/EmojiPicker";
+import { VideoThumb } from "@/components/feed/VideoThumb";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useFocusComposerConfig } from "@/lib/focus-composer-config";
 import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
