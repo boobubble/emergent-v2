@@ -81,9 +81,17 @@ function AdminFeedThemesPage() {
           {rows.map((t) => (
             <Card key={t.id} className="p-4">
               <div className="flex flex-wrap items-center gap-4">
-                <div className="min-w-[200px]">
-                  <div className="font-semibold">{t.name}</div>
-                  <div className="font-mono text-xs text-muted-foreground">{t.theme_key}</div>
+                <div className="min-w-[220px]">
+                  <Label className="text-xs">Name</Label>
+                  <Input
+                    className="w-full"
+                    defaultValue={t.name}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v && v !== t.name) update(t.id, { name: v });
+                    }}
+                  />
+                  <div className="mt-1 font-mono text-[10px] text-muted-foreground">{t.theme_key}</div>
                 </div>
 
                 <div className="flex items-center gap-2">
