@@ -147,7 +147,7 @@ async function refetchAll() {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, username, bio, avatar_url, avatar_color, xp, level, coins, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year, is_bot, is_official",
+      "id, username, bio, avatar_url, avatar_color, xp, level, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year, is_bot, is_official",
     )
     .order("username", { ascending: true });
   if (error) return;
