@@ -577,6 +577,57 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_themes: {
+        Row: {
+          accent_hex: string | null
+          created_at: string
+          description: string | null
+          duration_days: number | null
+          enabled: boolean
+          id: string
+          is_default: boolean
+          name: string
+          preview_url: string | null
+          price_coins: number
+          sort_order: number
+          theme_key: string
+          unlock_mode: string
+          updated_at: string
+        }
+        Insert: {
+          accent_hex?: string | null
+          created_at?: string
+          description?: string | null
+          duration_days?: number | null
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
+          name: string
+          preview_url?: string | null
+          price_coins?: number
+          sort_order?: number
+          theme_key: string
+          unlock_mode?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_hex?: string | null
+          created_at?: string
+          description?: string | null
+          duration_days?: number | null
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
+          name?: string
+          preview_url?: string | null
+          price_coins?: number
+          sort_order?: number
+          theme_key?: string
+          unlock_mode?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       feedback_comments: {
         Row: {
           author_id: string
@@ -1286,6 +1337,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_feed_theme: string | null
           avatar_color: string
           avatar_url: string | null
           bio: string | null
@@ -1314,6 +1366,7 @@ export type Database = {
           xp: number
         }
         Insert: {
+          active_feed_theme?: string | null
           avatar_color?: string
           avatar_url?: string | null
           bio?: string | null
@@ -1342,6 +1395,7 @@ export type Database = {
           xp?: number
         }
         Update: {
+          active_feed_theme?: string | null
           avatar_color?: string
           avatar_url?: string | null
           bio?: string | null
@@ -1978,6 +2032,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feed_themes: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          source: string
+          theme_key: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          source?: string
+          theme_key: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          source?: string
+          theme_key?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_feed_themes_theme_key_fkey"
+            columns: ["theme_key"]
+            isOneToOne: false
+            referencedRelation: "feed_themes"
+            referencedColumns: ["theme_key"]
+          },
+        ]
+      }
       user_inventory: {
         Row: {
           acquired_at: string
@@ -2160,6 +2252,25 @@ export type Database = {
         Args: { _password?: string; _room: string }
         Returns: undefined
       }
+      activate_feed_theme: { Args: { _theme_key: string }; Returns: string }
+      admin_grant_feed_theme: {
+        Args: { _days?: number; _theme_key: string; _user: string }
+        Returns: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          source: string
+          theme_key: string
+          unlocked_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_feed_themes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
       create_trio_room: {
         Args: { _hidden?: boolean; _name: string; _password?: string }
@@ -2181,6 +2292,7 @@ export type Database = {
         }
       }
       delete_user_cascade: { Args: { _user: string }; Returns: undefined }
+      get_active_feed_theme: { Args: { _user: string }; Returns: string }
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -2216,6 +2328,24 @@ export type Database = {
       my_coin_balance: { Args: never; Returns: number }
       slugify: { Args: { input: string }; Returns: string }
       trio_channel_room: { Args: { _channel: string }; Returns: string }
+      unlock_feed_theme: {
+        Args: { _theme_key: string }
+        Returns: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          source: string
+          theme_key: string
+          unlocked_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_feed_themes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "moderator" | "user" | "dj" | "rj"
