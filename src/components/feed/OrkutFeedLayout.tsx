@@ -53,6 +53,7 @@ type Props = {
   onOpenProfile: (username: string) => void;
   onOpenFindFriends: () => void;
   onOpenMessages: () => void;
+  headerSlot?: React.ReactNode;
 };
 
 function synthUser(username: string, id: string): User {
@@ -93,7 +94,7 @@ export function OrkutFeedLayout(props: Props) {
   return (
     <div className="min-h-screen bg-[oklch(0.97_0.02_310)] text-foreground dark:bg-[oklch(0.18_0.04_295)] orkut-retro-root">
       <style>{ORKUT_CSS}</style>
-      <OrkutTopBar username={username} onOpenProfile={onOpenProfile} onOpenMessages={onOpenMessages} onOpenThemeStore={onOpenThemeStore} />
+      <OrkutTopBar username={username} onOpenProfile={onOpenProfile} onOpenMessages={onOpenMessages} onOpenThemeStore={onOpenThemeStore} headerSlot={props.headerSlot} />
 
       <div className="mx-auto grid max-w-[1180px] gap-4 px-3 py-5 md:grid-cols-[260px_minmax(0,1fr)_280px] md:gap-5 md:px-4">
         {/* LEFT: Profile sidebar */}
@@ -167,11 +168,13 @@ function OrkutTopBar({
   onOpenProfile,
   onOpenMessages,
   onOpenThemeStore,
+  headerSlot,
 }: {
   username: string;
   onOpenProfile: (u: string) => void;
   onOpenMessages: () => void;
   onOpenThemeStore: () => void;
+  headerSlot?: React.ReactNode;
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-[color-mix(in_oklab,var(--primary)_30%,transparent)] bg-gradient-to-r from-[#6b21a8] via-[#9333ea] to-[#db2777] text-white shadow-md">
@@ -192,6 +195,7 @@ function OrkutTopBar({
           <TopLink label="friends" />
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          {headerSlot}
           <button
             onClick={onOpenThemeStore}
             className="hidden items-center gap-1 rounded-md bg-white/15 px-2.5 py-1 text-xs font-bold uppercase tracking-wider hover:bg-white/25 md:inline-flex"

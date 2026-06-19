@@ -38,7 +38,7 @@ import { BrandMark, BrandText } from "@/components/BrandMark";
 import { PostSkeleton, WidgetSkeleton, RewardsWidgetSkeleton } from "@/components/feed/FeedSkeletons";
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
 import { FeedThemeStore } from "@/components/feed/FeedThemeStore";
-import { useActiveFeedTheme } from "@/lib/feed-themes";
+import { useActiveFeedTheme, activateFeedTheme, type FeedThemeKey } from "@/lib/feed-themes";
 import { feedVariantFor } from "@/lib/theme-variants";
 import { OrkutFeedLayout } from "@/components/feed/OrkutFeedLayout";
 import { Palette } from "lucide-react";
@@ -473,6 +473,14 @@ function FeedPage() {
           onOpenProfile={(uname) => { setProfileUsername(uname); setView("profile"); }}
           onOpenFindFriends={() => setView("findFriends")}
           onOpenMessages={() => setDmOpenKey(k => k + 1)}
+          headerSlot={
+            <LayoutSwitcher
+              activeTheme={feedTheme}
+              onChanged={refreshFeedTheme}
+              onNeedsUnlock={() => setThemeStoreOpen(true)}
+              variant="orkut"
+            />
+          }
         />
         {dmOpenKey > 0 && (
           <Suspense fallback={null}>
@@ -589,6 +597,11 @@ function FeedPage() {
           </div>
 
           <div className="ml-auto flex items-center gap-1">
+            <LayoutSwitcher
+              activeTheme={feedTheme}
+              onChanged={refreshFeedTheme}
+              onNeedsUnlock={() => setThemeStoreOpen(true)}
+            />
             <FeedNotifications meId={meId} profiles={profiles} />
             <button
               onClick={() => setDmOpenKey(k => k + 1)}
@@ -1141,3 +1154,58 @@ function MobileSpeedDial({ open, onToggle, onClose, actions, extraActions = [] }
 }
 
 
+
+function LayoutSwitcher({
+  activeTheme,
+  onChanged,
+  onNeedsUnlock,
+  variant = "default",
+}: {
+  activeTheme: FeedThemeKey;
+  onChanged: () => void;
+  onNeedsUnlock: () => void;
+  variant?: "default" | "orkut";
+}) {
+  const isOrkut = activeTheme === "orkut_retro";
+  const switchTo = async (key: FeedThemeKey) => {
+    if (key === activeTheme) return;
+    try {
+      await activateFeedTheme(key);
+      onChanged();
+    } catch {
+      onNeedsUnlock();
+    }
+  };
+  const baseBtn = variant === "orkut"
+    ? "px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider transition"
+    : "px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider transition";
+  const wrap = variant === "orkut"
+    ? "hidden md:inline-flex items-center rounded-md bg-white/15 p-0.5 text-white"
+    : "hidden md:inline-flex items-center rounded-full bg-muted p-0.5 mr-1";
+  const activeCls = variant === "orkut"
+    ? "bg-white text-[#9333ea] rounded"
+    : "bg-card text-foreground rounded-full shadow-sm";
+  const idleCls = variant === "orkut"
+    ? "text-white/85 hover:text-white rounded"
+    : "text-muted-foreground hover:text-foreground rounded-full";
+  return (
+    <div className={wrap} role="group" aria-label="Feed layout">
+      <button
+        type="button"
+        onClick={() => switchTo("boobubble_default")}
+        className={`${baseBtn} ${!isOrkut ? activeCls : idleCls}`}
+        title="Default feed layout"
+      >
+        Default
+      </button>
+      <button
+        type="button"
+        onClick={() => switchTo("orkut_retro")}
+        className={`${baseBtn} ${isOrkut ? activeCls : idleCls}`}
+        title="Orkut Retro premium layout"
+      >
+        Orkut ✨
+      </button>
+    </div>
+  );
+}
