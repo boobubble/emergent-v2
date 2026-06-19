@@ -26,6 +26,7 @@ import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import * as trio from "@/services/trio-rooms.service";
 import { useTyping } from "@/lib/use-typing";
 import { TypingIndicator } from "./TypingIndicator";
+import { linkify } from "@/lib/linkify";
 
 interface OpenRoom {
   id: string;
@@ -890,7 +891,7 @@ function TrioRoomWindow({
                       <Paperclip className="h-3 w-3" /> {m.attachment.name}
                     </a>
                   )}
-                  {m.text && <div className="whitespace-pre-wrap break-words">{m.text}</div>}
+                  {m.text && <div className="whitespace-pre-wrap break-words">{linkify(m.text, m.id)}</div>}
                 </div>
               </div>
             );
