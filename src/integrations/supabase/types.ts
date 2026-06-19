@@ -2117,6 +2117,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      delete_user_cascade: { Args: { _user: string }; Returns: undefined }
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
       has_role: {
         Args: {
