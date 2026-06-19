@@ -38,6 +38,8 @@ export const FrameAvatar = memo(function FrameAvatar({
 
 /** Compact rank+level pill for use beside usernames. */
 export function RankChip({ level, compact = false }: { level: number; compact?: boolean }) {
+  // Hide the "Newcomer" rank (level 1) globally — only show once user has ranked up.
+  if (!level || level <= 1) return null;
   const r = rankFor(level);
   return (
     <span
