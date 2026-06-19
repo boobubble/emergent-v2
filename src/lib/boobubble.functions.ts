@@ -1236,7 +1236,7 @@ async function callGemini(apiKey: string, model: string, systemPrompt: string, u
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-      generationConfig: { temperature: 0.8, maxOutputTokens: 300 },
+      generationConfig: { temperature: 0.8, maxOutputTokens: 800 },
     }),
   });
   if (!res.ok) {
