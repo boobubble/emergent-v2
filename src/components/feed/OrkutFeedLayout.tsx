@@ -466,7 +466,8 @@ function OrkutQuickLinks({
             <li key={it.label}>
               <button
                 onClick={it.onClick}
-                className="flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left text-[#3b4a66] transition hover:bg-[#eef3fa] hover:text-[#1d4488]"
+                data-tip={`go to ${it.label}`}
+                className="orkut-tip flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left text-[#3b4a66] transition hover:bg-[#eef3fa] hover:text-[#1d4488]"
               >
                 <Icon className="h-3 w-3 text-[#ff66aa]" />
                 <span className="font-semibold">{it.label}</span>
