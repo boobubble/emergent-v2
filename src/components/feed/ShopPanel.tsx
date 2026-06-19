@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Coins, Check, Lock, ArrowLeft } from "lucide-react";
+import { Coins, Check, Lock, ArrowLeft, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { SHOP_BY_CATEGORY, CATEGORY_LABEL, stickerGifUrl, type ShopCategory, type ShopItem } from "@/lib/shop-catalog";
 import { getMyInventory, purchaseItem, equipItem } from "@/lib/rewards.functions";
@@ -12,7 +12,8 @@ const CATS: ShopCategory[] = ["frame", "username_effect", "theme", "emoji_pack",
 
 interface InventoryRow { item_id: string; category: string; equipped: boolean; acquired_at: string }
 
-export function ShopPanel({ onBack }: { onBack: () => void }) {
+export function ShopPanel({ onBack, onOpenFeedThemes }: { onBack: () => void; onOpenFeedThemes?: () => void }) {
+
   const fetchInv = useServerFn(getMyInventory);
   const buy = useServerFn(purchaseItem);
   const equip = useServerFn(equipItem);
@@ -92,6 +93,25 @@ export function ShopPanel({ onBack }: { onBack: () => void }) {
         </div>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">Cosmetics only — show off your style. No gambling, no trading.</p>
+
+      {onOpenFeedThemes && (
+        <button
+          onClick={onOpenFeedThemes}
+          className="mt-3 group flex w-full items-center justify-between gap-3 rounded-2xl border border-fuchsia-500/30 bg-gradient-to-r from-fuchsia-500/15 via-purple-500/10 to-pink-500/15 p-3 text-left transition hover:border-fuchsia-500/60 hover:from-fuchsia-500/25 hover:to-pink-500/25"
+        >
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-600 text-white shadow-md">
+              <Palette className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-sm font-bold">Feed Themes</div>
+              <div className="text-[11px] text-muted-foreground">Unlock premium skins for your feed</div>
+            </div>
+          </div>
+          <span className="rounded-full bg-fuchsia-500/20 px-2.5 py-1 text-[11px] font-bold text-fuchsia-600 dark:text-fuchsia-300">Open</span>
+        </button>
+      )}
+
 
       <div className="mt-4 flex gap-1 overflow-x-auto rounded-full border border-border bg-background/50 p-1">
         {CATS.map(c => (

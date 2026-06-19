@@ -666,7 +666,7 @@ function FeedPage() {
           ) : view === "spin" ? (
             <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><SpinWheelPanel onBack={() => setView("feed")} /></Suspense></div>
           ) : view === "shop" ? (
-            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><ShopPanel onBack={() => setView("feed")} /></Suspense></div>
+            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><ShopPanel onBack={() => setView("feed")} onOpenFeedThemes={() => setThemeStoreOpen(true)} /></Suspense></div>
           ) : view === "profile" ? (
             <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></Suspense></div>
           ) : view === "explore" ? (
