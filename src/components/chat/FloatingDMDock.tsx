@@ -393,7 +393,7 @@ function MiniDMWindow({
         <input
           ref={inputRef}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => { setText(e.target.value); sendTyping(); }}
           onFocus={onActivity}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
