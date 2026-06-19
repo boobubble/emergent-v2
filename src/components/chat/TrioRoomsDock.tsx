@@ -891,7 +891,7 @@ function TrioRoomWindow({
                       <Paperclip className="h-3 w-3" /> {m.attachment.name}
                     </a>
                   )}
-                  {m.text && <div className="whitespace-pre-wrap break-words">{m.text}</div>}
+                  {m.text && <div className="whitespace-pre-wrap break-words">{linkify(m.text, m.id)}</div>}
                 </div>
               </div>
             );
