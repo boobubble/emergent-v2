@@ -240,7 +240,7 @@ export function TrioRoomsDock() {
   return (
     <>
       {(openRooms.length > 0 || visibleMinimized.length > 0 || moreMinimized > 0) && (
-        <div className="pointer-events-none fixed bottom-0 right-4 z-40 hidden items-end gap-3 lg:flex">
+        <div className="pointer-events-none fixed bottom-0 right-4 z-40 flex max-w-[calc(100vw-1rem)] items-end gap-3">
           {(visibleMinimized.length > 0 || moreMinimized > 0) && (
             <div className="pointer-events-auto mb-3 flex items-end gap-2">
               {visibleMinimized.map(room => {
@@ -625,9 +625,9 @@ function TrioRoomWindow({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-background animate-fade-in">
+    <div className="flex h-[440px] w-[min(320px,calc(100vw-1rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl origin-bottom-right animate-scale-in">
       <div
-        className="flex h-full w-full flex-col overflow-hidden bg-card animate-scale-in"
+        className="flex h-full w-full flex-col overflow-hidden bg-card/70"
       >
 
 
