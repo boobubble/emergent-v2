@@ -217,6 +217,20 @@ function OrkutTopBar({
   headerSlot?: React.ReactNode;
 }) {
   const [q, setQ] = useState("");
+  const navigate = useNavigate();
+
+  const goHome = () => {
+    navigate({ to: "/feed" });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const goScrapbook = () => {
+    if (typeof window !== "undefined") {
+      const el = document.querySelector('[data-orkut-scrapbook]') as HTMLElement | null;
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+  const goCommunities = () => navigate({ to: "/groups" });
+
   return (
     <header className="orkut-navbar sticky top-0 z-30 text-white shadow-[0_2px_0_rgba(0,0,0,0.08)]">
       {/* Top strip — logo + search + actions */}
@@ -268,11 +282,11 @@ function OrkutTopBar({
       {/* Nav strip — classic Orkut blue tabs */}
       <nav className="border-t border-white/15 bg-[color-mix(in_oklab,#15356b_55%,transparent)]">
         <div className="mx-auto flex max-w-[1180px] items-center gap-0.5 px-4 text-[12px]">
-          <TopLink icon={Home} label="home" />
+          <TopLink icon={Home} label="home" onClick={goHome} />
           <TopLink icon={Smile} label="profile" onClick={() => onOpenProfile(username)} />
-          <TopLink icon={ScrollText} label="scrapbook" />
+          <TopLink icon={ScrollText} label="scrapbook" onClick={goScrapbook} />
           <TopLink icon={Users} label="friends" onClick={onOpenFindFriends} />
-          <TopLink icon={Star} label="communities" />
+          <TopLink icon={Star} label="communities" onClick={goCommunities} />
           <TopLink icon={MessageCircle} label="messages" onClick={onOpenMessages} />
         </div>
       </nav>
