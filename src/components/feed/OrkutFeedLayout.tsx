@@ -26,6 +26,8 @@ import {
   Crown,
   Gift,
 } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
 import { PostCard } from "@/components/feed/PostCard";
 import { Composer } from "@/components/feed/Composer";
@@ -149,7 +151,7 @@ export function OrkutFeedLayout(props: Props) {
             friends={fans}
           />
 
-          <OrkutFriendSuggestions users={allProfiles.slice(0, 6)} onOpenProfile={onOpenProfile} />
+          <OrkutFriendSuggestions users={allProfiles.slice(0, 6)} friendIds={friendIds} meId={meId} onOpenProfile={onOpenProfile} />
 
           <div className="orkut-card">
             <div className="orkut-card-header">
@@ -180,6 +182,7 @@ export function OrkutFeedLayout(props: Props) {
         <aside className="space-y-3">
           <OrkutFriendsPanel friends={friendList} onOpenProfile={onOpenProfile} onFindFriends={onOpenFindFriends} />
           <OrkutPromotedUsers users={allProfiles.slice(0, 4)} onOpenProfile={onOpenProfile} />
+          <OrkutPromotedGroups />
           <OrkutCommunities />
           <OrkutTestimonials onOpenProfile={onOpenProfile} friends={friendList} />
           <OrkutFanCounter fans={fans} />
@@ -289,7 +292,8 @@ function TopLink({
   return (
     <button
       onClick={onClick}
-      className="orkut-tab flex items-center gap-1.5 px-2.5 py-1.5 font-bold uppercase tracking-wide text-white/90 transition hover:bg-white/15 hover:text-white"
+      data-tip={label}
+      className="orkut-tab orkut-tip flex items-center gap-1.5 px-2.5 py-1.5 font-bold uppercase tracking-wide text-white/90 transition hover:bg-white/15 hover:text-white"
     >
       <Icon className="h-3 w-3" />
       <span>{label}</span>
@@ -462,7 +466,8 @@ function OrkutQuickLinks({
             <li key={it.label}>
               <button
                 onClick={it.onClick}
-                className="flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left text-[#3b4a66] transition hover:bg-[#eef3fa] hover:text-[#1d4488]"
+                data-tip={`go to ${it.label}`}
+                className="orkut-tip flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left text-[#3b4a66] transition hover:bg-[#eef3fa] hover:text-[#1d4488]"
               >
                 <Icon className="h-3 w-3 text-[#ff66aa]" />
                 <span className="font-semibold">{it.label}</span>
@@ -579,12 +584,39 @@ function OrkutSocialCounters({
 
 function OrkutFriendSuggestions({
   users,
+  friendIds,
+  meId,
   onOpenProfile,
 }: {
   users: User[];
+  friendIds: Set<string>;
+  meId: string;
   onOpenProfile: (u: string) => void;
 }) {
-  if (users.length === 0) return null;
+  const [pending, setPending] = useState<Set<string>>(new Set());
+  const [sent, setSent] = useState<Set<string>>(new Set());
+
+  async function addFriend(otherId: string) {
+    if (!otherId || otherId === meId) return;
+    setPending((p) => new Set(p).add(otherId));
+    const { error } = await supabase
+      .from("friendships")
+      .insert({ sender_id: meId, receiver_id: otherId, status: "pending" });
+    setPending((p) => {
+      const n = new Set(p);
+      n.delete(otherId);
+      return n;
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Friend request sent ✨");
+    setSent((s) => new Set(s).add(otherId));
+  }
+
+  const visible = users.filter((u) => !friendIds.has(u.id));
+  if (visible.length === 0) return null;
   return (
     <div className="orkut-card">
       <div className="orkut-card-header">
@@ -592,26 +624,38 @@ function OrkutFriendSuggestions({
         <span>friend suggestions by BooBubble</span>
       </div>
       <div className="flex gap-2 overflow-x-auto bg-white p-3">
-        {users.map((u) => (
-          <div
-            key={u.id}
-            className="min-w-[110px] shrink-0 rounded-sm border border-[#d6e0ee] bg-[#fbfcfe] p-2 text-center transition hover:border-[#1d4488] hover:bg-white"
-          >
-            <button
-              onClick={() => onOpenProfile(u.name)}
-              className="mx-auto block rounded-sm border border-[#b5c7e0] bg-white p-0.5"
+        {visible.map((u) => {
+          const isPending = pending.has(u.id);
+          const isSent = sent.has(u.id);
+          return (
+            <div
+              key={u.id}
+              className="orkut-tip min-w-[110px] shrink-0 rounded-sm border border-[#d6e0ee] bg-[#fbfcfe] p-2 text-center transition hover:border-[#1d4488] hover:bg-white"
+              data-tip={`view ${u.name}'s profile`}
             >
-              <Avatar user={u} size={52} />
-            </button>
-            <button
-              onClick={() => onOpenProfile(u.name)}
-              className="mt-1.5 block w-full truncate text-[11px] font-bold text-[#1d4488] hover:underline"
-            >
-              {u.name}
-            </button>
-            <button className="orkut-btn-blue mt-1.5 w-full px-1 py-0.5 text-[10px]">+ add friend</button>
-          </div>
-        ))}
+              <button
+                onClick={() => onOpenProfile(u.name)}
+                className="mx-auto block rounded-sm border border-[#b5c7e0] bg-white p-0.5"
+              >
+                <Avatar user={u} size={52} />
+              </button>
+              <button
+                onClick={() => onOpenProfile(u.name)}
+                className="mt-1.5 block w-full truncate text-[11px] font-bold text-[#1d4488] hover:underline"
+              >
+                {u.name}
+              </button>
+              <button
+                onClick={() => addFriend(u.id)}
+                disabled={isPending || isSent}
+                className={`orkut-tip mt-1.5 w-full px-1 py-0.5 text-[10px] ${isSent ? "orkut-btn-light" : "orkut-btn-blue"}`}
+                data-tip={isSent ? "request sent" : "send friend request"}
+              >
+                {isPending ? "sending…" : isSent ? "✓ sent" : "+ add friend"}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -686,25 +730,66 @@ function OrkutPromotedUsers({
 }) {
   if (users.length === 0) return null;
   return (
-    <div className="orkut-card">
-      <div className="orkut-card-header">
+    <div className="orkut-card orkut-promoted">
+      <div className="orkut-card-header orkut-header-glossy">
         <Gift className="h-3.5 w-3.5" />
         <span>promoted users</span>
+        <span className="ml-auto text-[9px] font-bold uppercase tracking-wider opacity-90">★ sponsored</span>
       </div>
       <ul className="divide-y divide-[#d6e0ee] bg-white">
         {users.map((u) => (
           <li key={u.id}>
             <button
               onClick={() => onOpenProfile(u.name)}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[#eef3fa]"
+              className="orkut-tip flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[#eef3fa]"
+              data-tip={`visit ${u.name}'s profile`}
             >
-              <span className="rounded-sm border border-[#b5c7e0] bg-white p-0.5">
+              <span className="rounded-sm border-2 border-[#b5c7e0] bg-white p-0.5 shadow-[0_1px_2px_rgba(29,68,136,0.15)]">
                 <Avatar user={u} size={28} />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[11px] font-bold text-[#1d4488]">{u.name}</span>
                 <span className="text-[9px] uppercase tracking-wider text-[#5a6b85]">featured · lvl {u.level ?? 1}</span>
               </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/* ============================ Promoted groups ============================ */
+
+const ORKUT_PROMOTED_GROUPS = [
+  { name: "Retro Web Lovers", members: "5.2k", emoji: "💾", tag: "nostalgia" },
+  { name: "Bollywood Classics", members: "9.1k", emoji: "🎬", tag: "movies" },
+  { name: "Late Night Scrappers", members: "1.7k", emoji: "🌙", tag: "chill" },
+];
+
+function OrkutPromotedGroups() {
+  return (
+    <div className="orkut-card orkut-promoted">
+      <div className="orkut-card-header orkut-header-glossy">
+        <Star className="h-3.5 w-3.5" />
+        <span>promoted groups</span>
+        <span className="ml-auto text-[9px] font-bold uppercase tracking-wider opacity-90">★ sponsored</span>
+      </div>
+      <ul className="divide-y divide-[#d6e0ee] bg-white">
+        {ORKUT_PROMOTED_GROUPS.map((g) => (
+          <li key={g.name} className="flex items-center gap-2 px-3 py-2">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-sm border-2 border-[#b5c7e0] bg-gradient-to-br from-[#eef3fa] to-white text-base shadow-[0_1px_2px_rgba(29,68,136,0.15)]">
+              {g.emoji}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[11px] font-bold text-[#1d4488]">{g.name}</span>
+              <span className="text-[9px] uppercase tracking-wider text-[#5a6b85]">{g.tag} · {g.members}</span>
+            </span>
+            <button
+              className="orkut-btn-blue orkut-tip px-2 py-0.5 text-[10px]"
+              data-tip={`join ${g.name}`}
+            >
+              join
             </button>
           </li>
         ))}
@@ -937,6 +1022,66 @@ const ORKUT_CSS = `
 }
 
 .orkut-brand { font-weight: 900; color: ${ORKUT_BLUE}; letter-spacing: -0.5px; }
+
+/* Glossy header variant for promoted cards */
+.orkut-classic-root .orkut-header-glossy {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 48%),
+    linear-gradient(180deg, #ffd76b 0%, #f0a91a 55%, #c87b00 100%);
+  color: #4a2d00;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+  border-bottom: 1px solid #a86a00;
+}
+.orkut-classic-root .orkut-promoted {
+  border-color: #d0a64a;
+  box-shadow: 0 1px 0 #f5e7c2, 0 0 0 1px #fff5d6 inset;
+}
+
+/* Classic nostalgic tooltip — yellow note with thin black border */
+.orkut-classic-root .orkut-tip { position: relative; }
+.orkut-classic-root .orkut-tip[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%) translateY(2px);
+  background: #fffbcc;
+  color: #3b2a00;
+  border: 1px solid #806600;
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+  font-family: Verdana, Tahoma, Geneva, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 3px 7px;
+  border-radius: 2px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease, transform 120ms ease;
+  z-index: 60;
+}
+.orkut-classic-root .orkut-tip[data-tip]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 2px);
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #806600;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  z-index: 60;
+}
+.orkut-classic-root .orkut-tip:hover[data-tip]::after,
+.orkut-classic-root .orkut-tip:focus-visible[data-tip]::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.orkut-classic-root .orkut-tip:hover[data-tip]::before,
+.orkut-classic-root .orkut-tip:focus-visible[data-tip]::before {
+  opacity: 1;
+}
 `;
 
 /* keep eslint happy on unused imports if a section is trimmed */
