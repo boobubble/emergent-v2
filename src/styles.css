@@ -649,6 +649,10 @@
   --card: color-mix(in oklab, var(--background) 96%, white);
 }
 
+/* POC: single self-contained theme block (tokens + skin via CSS nesting).
+   Identical output to the previous split-block pattern, but every theme
+   is now one cohesive unit. Apply the same shape to remaining themes
+   once this POC is approved. */
 [data-feed-theme="orkut_retro"] {
   --primary: oklch(0.55 0.22 295);
   --primary-foreground: oklch(0.99 0 0);
@@ -658,12 +662,14 @@
   --gradient-primary: linear-gradient(135deg, #7c3aed, #c084fc 60%, #f0abfc);
   --radius: 0.375rem;
   font-family: "Georgia", "Times New Roman", serif;
+
+  & article,
+  & .feed-card {
+    border: 1px solid color-mix(in oklab, var(--primary) 35%, transparent);
+    box-shadow: 0 2px 0 color-mix(in oklab, var(--primary) 25%, transparent);
+  }
 }
-[data-feed-theme="orkut_retro"] article,
-[data-feed-theme="orkut_retro"] .feed-card {
-  border: 1px solid color-mix(in oklab, var(--primary) 35%, transparent);
-  box-shadow: 0 2px 0 color-mix(in oklab, var(--primary) 25%, transparent);
-}
+
 
 [data-feed-theme="neon_glass"] {
   --primary: oklch(0.85 0.18 200);
@@ -710,6 +716,7 @@
   --radius: 0.5rem;
 }
 
+/* POC: single self-contained theme block (tokens + skin via CSS nesting). */
 [data-chat-theme="yahoo_messenger"] {
   --background: oklch(0.97 0.02 295);
   --foreground: oklch(0.2 0.05 295);
@@ -724,11 +731,13 @@
   --gradient-primary: linear-gradient(135deg, #7b0099, #c200a0 60%, #ff9100);
   --radius: 0.375rem;
   font-family: "Trebuchet MS", "Verdana", sans-serif;
+
+  & header {
+    background: var(--gradient-primary) !important;
+    color: white;
+  }
 }
-[data-chat-theme="yahoo_messenger"] header {
-  background: var(--gradient-primary) !important;
-  color: white;
-}
+
 
 [data-chat-theme="whatsapp"] {
   --background: oklch(0.96 0.005 145);
