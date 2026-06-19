@@ -104,7 +104,7 @@ export function ChatApp() {
 
   return (
     <>
-      <div ref={rootRef} data-chat-theme={chatTheme} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+      <div ref={rootRef} data-chat-theme={chatTheme} data-theme-variant={chatVariantFor(chatTheme)} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
         {sidebarOpen && (
           <Sidebar
             onOpenProfile={() => setProfileOpen(true)}

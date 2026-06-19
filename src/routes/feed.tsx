@@ -449,7 +449,7 @@ function FeedPage() {
   const [themeStoreOpen, setThemeStoreOpen] = useState(false);
 
   return (
-    <div data-feed-theme={feedTheme} className="min-h-screen overflow-x-hidden bg-background text-foreground pb-24 lg:pb-0">
+    <div data-feed-theme={feedTheme} data-theme-variant={feedVariantFor(feedTheme)} className="min-h-screen overflow-x-hidden bg-background text-foreground pb-24 lg:pb-0">
       <FeedThemeStore
         open={themeStoreOpen}
         onOpenChange={setThemeStoreOpen}
