@@ -697,16 +697,232 @@
   }
 }
 
+/* ====================================================================
+   REDDIT THEME — discussion-first, utility focused, compact.
+   Light: Reddit grey backgrounds + white cards. Dark: charcoal cards.
+   Reuses existing feed components — only visual reskin via tokens + tint.
+   ==================================================================== */
 [data-feed-theme="reddit"] {
+  --background: oklch(0.965 0.003 250);
+  --foreground: oklch(0.18 0.01 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.01 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.01 250);
+  --muted: oklch(0.95 0.005 250);
+  --muted-foreground: oklch(0.46 0.012 250);
+  --border: oklch(0.88 0.005 250);
+  --input: oklch(0.88 0.005 250);
+  --secondary: oklch(0.95 0.005 250);
+  --secondary-foreground: oklch(0.22 0.01 250);
+  --accent: oklch(0.95 0.005 250);
+  --accent-foreground: oklch(0.22 0.01 250);
   --primary: oklch(0.66 0.22 35);
   --primary-foreground: oklch(0.99 0 0);
-  --accent: oklch(0.66 0.22 35);
   --ring: oklch(0.66 0.22 35);
-  --primary-glow: oklch(0.66 0.22 35 / 0.35);
+  --primary-glow: oklch(0.66 0.22 35 / 0.28);
   --gradient-primary: linear-gradient(135deg, #ff4500, #ff8717);
   --radius: 0.5rem;
-  --card: color-mix(in oklab, var(--background) 96%, white);
+  --feed-card-radius: 6px;
+  --feed-card-padding: 12px;
+  --avatar-size: 32px;
+  font-family: "IBM Plex Sans", "Noto Sans", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
 }
+
+.dark [data-feed-theme="reddit"],
+[data-feed-theme="reddit"].dark,
+.dark[data-feed-theme="reddit"] {
+  --background: oklch(0.15 0.005 250);
+  --foreground: oklch(0.94 0.005 250);
+  --card: oklch(0.2 0.006 250);
+  --card-foreground: oklch(0.94 0.005 250);
+  --popover: oklch(0.2 0.006 250);
+  --popover-foreground: oklch(0.94 0.005 250);
+  --muted: oklch(0.24 0.006 250);
+  --muted-foreground: oklch(0.66 0.008 250);
+  --border: oklch(0.3 0.008 250);
+  --input: oklch(0.3 0.008 250);
+  --secondary: oklch(0.24 0.006 250);
+  --secondary-foreground: oklch(0.94 0.005 250);
+  --accent: oklch(0.26 0.008 250);
+  --accent-foreground: oklch(0.96 0.005 250);
+}
+
+/* Sticky header — compact, thin border, no glass blur */
+[data-feed-theme="reddit"] header.feed-glass,
+[data-feed-theme="reddit"] > header {
+  background: var(--card) !important;
+  backdrop-filter: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+/* Cards — thin border, no inset gloss, minimal shadow */
+[data-feed-theme="reddit"] .feed-card,
+[data-feed-theme="reddit"] article {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  border-radius: var(--feed-card-radius) !important;
+}
+[data-feed-theme="reddit"] .feed-card:hover {
+  border-color: color-mix(in oklab, var(--muted-foreground) 35%, var(--border)) !important;
+  transform: none !important;
+}
+
+/* Compact left rail sidebar — Reddit-style flat rows + orange active indicator */
+[data-feed-theme="reddit"] nav.feed-card {
+  padding: 4px !important;
+}
+[data-feed-theme="reddit"] .feed-section-label {
+  font-size: 0.62rem;
+  margin: 0.5rem 0 0.15rem;
+  color: var(--muted-foreground);
+}
+[data-feed-theme="reddit"] .feed-section-label::before {
+  display: none;
+}
+[data-feed-theme="reddit"] .feed-side-item {
+  border-radius: 2px !important;
+  padding: 0.4rem 0.6rem !important;
+  font-size: 0.82rem !important;
+  font-weight: 500 !important;
+  gap: 0.55rem !important;
+  position: relative;
+  border-left: 3px solid transparent;
+}
+[data-feed-theme="reddit"] .feed-side-item:hover {
+  background: var(--muted) !important;
+}
+[data-feed-theme="reddit"] .feed-side-item-active {
+  background: color-mix(in oklab, #ff4500 10%, transparent) !important;
+  color: var(--foreground) !important;
+  border-left-color: #ff4500;
+  font-weight: 700 !important;
+}
+[data-feed-theme="reddit"] .feed-side-item-active svg {
+  color: #ff4500 !important;
+}
+[data-feed-theme="reddit"] .feed-icon-chip {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 4px;
+  background: transparent;
+}
+
+/* Pill tabs — flat, compact, Reddit-grey */
+[data-feed-theme="reddit"] .feed-pill-tab {
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+[data-feed-theme="reddit"] .feed-pill-tab-active {
+  background: var(--muted) !important;
+  color: var(--foreground) !important;
+  box-shadow: none !important;
+}
+
+/* Search bar — Reddit-style rounded pill, light grey */
+[data-feed-theme="reddit"] header input[type="text"] {
+  font-size: 0.85rem;
+}
+[data-feed-theme="reddit"] header [class*="rounded-full"][class*="bg-muted"] {
+  background: var(--muted) !important;
+  border-radius: 999px !important;
+  padding: 0.4rem 0.85rem !important;
+}
+
+/* Composer — discussion-first, compact */
+[data-feed-theme="reddit"] textarea {
+  font-size: 0.9rem !important;
+}
+
+/* Post cards: title emphasis, denser metadata, tight engagement row */
+[data-feed-theme="reddit"] .feed-card h2,
+[data-feed-theme="reddit"] .feed-card h3,
+[data-feed-theme="reddit"] article h2,
+[data-feed-theme="reddit"] article h3 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+[data-feed-theme="reddit"] .feed-card p,
+[data-feed-theme="reddit"] article p {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+[data-feed-theme="reddit"] .feed-card img,
+[data-feed-theme="reddit"] article img:not(.feed-avatar):not([class*="rounded-full"]) {
+  border-radius: 4px !important;
+}
+
+/* Reaction row → vote-style: orange selected, compact pills, score nearby */
+[data-feed-theme="reddit"] button[aria-pressed="true"] {
+  color: #ff4500 !important;
+}
+[data-feed-theme="reddit"] .feed-card button[class*="rounded-full"],
+[data-feed-theme="reddit"] article button[class*="rounded-full"] {
+  border-radius: 4px !important;
+}
+
+/* Comments — nesting guides + tight indentation */
+[data-feed-theme="reddit"] [class*="ml-"][class*="border-l"],
+[data-feed-theme="reddit"] [data-comment-children],
+[data-feed-theme="reddit"] .comment-thread {
+  border-left: 2px solid var(--border) !important;
+  padding-left: 0.65rem !important;
+  margin-left: 0.5rem !important;
+}
+[data-feed-theme="reddit"] [data-comment-children]:hover,
+[data-feed-theme="reddit"] .comment-thread:hover {
+  border-left-color: #ff4500 !important;
+}
+
+/* Right rail widgets — Reddit community panel style */
+[data-feed-theme="reddit"] aside .feed-card {
+  padding: 0 !important;
+  overflow: hidden;
+}
+[data-feed-theme="reddit"] aside .feed-card > * {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+[data-feed-theme="reddit"] aside .feed-card > *:first-child {
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+}
+[data-feed-theme="reddit"] aside .feed-card > *:last-child {
+  padding-bottom: 12px;
+}
+
+/* Avatars stay round but smaller in dense rows */
+[data-feed-theme="reddit"] .feed-avatar {
+  border-radius: 999px !important;
+}
+
+/* Mobile: sticky compact header, tighter padding */
+@media (max-width: 1023px) {
+  [data-feed-theme="reddit"] main {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+  [data-feed-theme="reddit"] .feed-card {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+}
+
 
 [data-feed-theme="orkut_retro"] {
   --primary: oklch(0.55 0.22 295);

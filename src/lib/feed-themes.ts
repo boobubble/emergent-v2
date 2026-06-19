@@ -84,9 +84,41 @@ export async function activateFeedTheme(themeKey: FeedThemeKey) {
 }
 
 const FEED_THEME_CACHE_KEY = "palrgo:active-feed-theme";
+const FEED_THEME_PREVIEW_KEY = "palrgo:feed-theme-preview";
+
+function readPreviewTheme(): FeedThemeKey | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = localStorage.getItem(FEED_THEME_PREVIEW_KEY) as FeedThemeKey | null;
+    return v || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Set or clear an in-browser theme preview override. While an override is
+ * present, useActiveFeedTheme returns it instead of the saved theme. Pass
+ * null to clear the preview (revert to saved theme). The change is local
+ * only — nothing is persisted to the database.
+ */
+export function setFeedThemePreview(themeKey: FeedThemeKey | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (themeKey) localStorage.setItem(FEED_THEME_PREVIEW_KEY, themeKey);
+    else localStorage.removeItem(FEED_THEME_PREVIEW_KEY);
+    window.dispatchEvent(new CustomEvent("palrgo:feed-theme-preview-changed", { detail: themeKey }));
+  } catch {}
+}
+
+export function getFeedThemePreview(): FeedThemeKey | null {
+  return readPreviewTheme();
+}
 
 function readCachedFeedTheme(): FeedThemeKey {
   if (typeof window === "undefined") return DEFAULT_FEED_THEME;
+  const preview = readPreviewTheme();
+  if (preview) return preview;
   try {
     const v = localStorage.getItem(FEED_THEME_CACHE_KEY) as FeedThemeKey | null;
     return v || DEFAULT_FEED_THEME;
@@ -98,47 +130,74 @@ function readCachedFeedTheme(): FeedThemeKey {
 /**
  * Resolves the active feed theme for the current user. Returns the cached
  * theme for instant paint, then reconciles with the database on mount, and
- * stays in sync via the palrgo:feed-theme-changed event.
+ * stays in sync via the palrgo:feed-theme-changed event. If a preview
+ * override is set (setFeedThemePreview), the override always wins.
  */
 export function useActiveFeedTheme() {
   const { user } = useAuth();
   const [theme, setTheme] = useState<FeedThemeKey>(readCachedFeedTheme);
   const [version, setVersion] = useState(0);
+  const [preview, setPreview] = useState<FeedThemeKey | null>(readPreviewTheme);
 
   useEffect(() => {
     let cancelled = false;
     if (!user?.id) {
-      setTheme(DEFAULT_FEED_THEME);
+      if (!preview) setTheme(DEFAULT_FEED_THEME);
       try { localStorage.removeItem(FEED_THEME_CACHE_KEY); } catch {}
       return;
     }
     getMyActiveFeedTheme(user.id).then((t) => {
       if (cancelled) return;
-      setTheme(t);
       try { localStorage.setItem(FEED_THEME_CACHE_KEY, t); } catch {}
+      if (!preview) setTheme(t);
     });
     return () => {
       cancelled = true;
     };
-  }, [user?.id, version]);
+  }, [user?.id, version, preview]);
 
   useEffect(() => {
     const onChanged = (e: Event) => {
       const next = (e as CustomEvent<FeedThemeKey>).detail;
+      if (preview) return; // preview overrides saved theme
       if (next) setTheme(next);
       else setVersion((v) => v + 1);
     };
+    const onPreview = (e: Event) => {
+      const next = (e as CustomEvent<FeedThemeKey | null>).detail ?? null;
+      setPreview(next);
+      if (next) setTheme(next);
+      else {
+        // revert to cached/saved theme
+        try {
+          const cached = localStorage.getItem(FEED_THEME_CACHE_KEY) as FeedThemeKey | null;
+          setTheme(cached || DEFAULT_FEED_THEME);
+        } catch {
+          setTheme(DEFAULT_FEED_THEME);
+        }
+        setVersion((v) => v + 1);
+      }
+    };
     const onStorage = (e: StorageEvent) => {
-      if (e.key === FEED_THEME_CACHE_KEY && e.newValue) setTheme(e.newValue as FeedThemeKey);
+      if (e.key === FEED_THEME_PREVIEW_KEY) {
+        const next = (e.newValue as FeedThemeKey | null) || null;
+        setPreview(next);
+        if (next) setTheme(next);
+        else setVersion((v) => v + 1);
+        return;
+      }
+      if (e.key === FEED_THEME_CACHE_KEY && e.newValue && !preview) setTheme(e.newValue as FeedThemeKey);
     };
     window.addEventListener("palrgo:feed-theme-changed", onChanged as EventListener);
+    window.addEventListener("palrgo:feed-theme-preview-changed", onPreview as EventListener);
     window.addEventListener("storage", onStorage);
     return () => {
       window.removeEventListener("palrgo:feed-theme-changed", onChanged as EventListener);
+      window.removeEventListener("palrgo:feed-theme-preview-changed", onPreview as EventListener);
       window.removeEventListener("storage", onStorage);
     };
-  }, []);
+  }, [preview]);
 
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
-  return { theme, refresh };
+  return { theme, refresh, preview };
 }
