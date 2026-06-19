@@ -307,7 +307,7 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           {files.map((f, i) => (
             <div key={i} className="relative h-24 w-24 overflow-hidden rounded-xl border border-border bg-black">
               {f.type.startsWith("video/") ? (
-                <video src={URL.createObjectURL(f)} className="h-full w-full object-cover" muted playsInline />
+                <VideoThumb file={f} />
               ) : (
                 <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
               )}
