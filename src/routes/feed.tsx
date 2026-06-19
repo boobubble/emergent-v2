@@ -589,6 +589,11 @@ function FeedPage() {
           </div>
 
           <div className="ml-auto flex items-center gap-1">
+            <LayoutSwitcher
+              activeTheme={feedTheme}
+              onChanged={refreshFeedTheme}
+              onNeedsUnlock={() => setThemeStoreOpen(true)}
+            />
             <FeedNotifications meId={meId} profiles={profiles} />
             <button
               onClick={() => setDmOpenKey(k => k + 1)}
