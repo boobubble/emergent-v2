@@ -10,6 +10,7 @@ import { createConfession } from "@/lib/confessions.functions";
 import { extractHashtags } from "@/lib/feed-types";
 import { slugify } from "@/lib/post-slug";
 import { EmojiPicker } from "@/components/chat/EmojiPicker";
+import { VideoThumb } from "@/components/feed/VideoThumb";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useFocusComposerConfig } from "@/lib/focus-composer-config";
 import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
@@ -25,6 +26,26 @@ const PRIVACY: { id: PostPrivacy; label: string; icon: typeof Globe }[] = [
 ];
 
 const DRAFT_KEY = "feed-composer-draft";
+
+const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
+const ALLOWED_VIDEO_EXTS = ["mp4", "webm"];
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024; // 100 MB
+
+function validateAndFilter(incoming: File[]): { ok: File[]; rejected: string[] } {
+  const ok: File[] = [];
+  const rejected: string[] = [];
+  for (const f of incoming) {
+    const ext = (f.name.split(".").pop() || "").toLowerCase();
+    const isVideoLike = f.type.startsWith("video/") || ["mp4", "webm", "mov", "m4v", "ogg", "avi", "mkv"].includes(ext);
+    if (isVideoLike) {
+      const typeOk = ALLOWED_VIDEO_TYPES.includes(f.type) || ALLOWED_VIDEO_EXTS.includes(ext);
+      if (!typeOk) { rejected.push(`${f.name} — only MP4 or WebM videos are allowed`); continue; }
+      if (f.size > MAX_VIDEO_BYTES) { rejected.push(`${f.name} — video exceeds 100 MB`); continue; }
+    }
+    ok.push(f);
+  }
+  return { ok, rejected };
+}
 
 type ComposerMode = "post" | "poll" | "confession";
 
@@ -286,7 +307,7 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           {files.map((f, i) => (
             <div key={i} className="relative h-24 w-24 overflow-hidden rounded-xl border border-border bg-black">
               {f.type.startsWith("video/") ? (
-                <video src={URL.createObjectURL(f)} className="h-full w-full object-cover" muted playsInline />
+                <VideoThumb file={f} />
               ) : (
                 <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
               )}
@@ -302,7 +323,20 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
         <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-emerald-400 hover:bg-emerald-400/10 transition">
           <ImageIcon className="h-4 w-4" /> <span className="hidden sm:inline">Photo</span>
         </button>
-        <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e) => setFiles([...files, ...Array.from(e.target.files ?? [])])} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*,video/mp4,video/webm,.mp4,.webm"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            const picked = Array.from(e.target.files ?? []);
+            const { ok, rejected } = validateAndFilter(picked);
+            if (rejected.length) toast.error("Some files were skipped", { description: rejected.join("\n") });
+            if (ok.length) setFiles([...files, ...ok]);
+            if (fileRef.current) fileRef.current.value = "";
+          }}
+        />
         <Popover>
           <PopoverTrigger asChild>
             <button className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-amber-400 hover:bg-amber-400/10 transition">
