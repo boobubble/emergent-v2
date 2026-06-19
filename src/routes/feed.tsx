@@ -39,6 +39,7 @@ import { PostSkeleton, WidgetSkeleton, RewardsWidgetSkeleton } from "@/component
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
 import { FeedThemeStore } from "@/components/feed/FeedThemeStore";
 import { useActiveFeedTheme } from "@/lib/feed-themes";
+import { feedVariantFor } from "@/lib/theme-variants";
 import { Palette } from "lucide-react";
 
 // Lazy-loaded panels — only fetched when the user navigates to them, keeping

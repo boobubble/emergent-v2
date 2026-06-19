@@ -17,6 +17,7 @@ import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
 import { ScheduledAnnouncementsRunner } from "@/components/chat/ScheduledAnnouncements";
 import { BADGE_MAP } from "@/lib/achievements";
+import { chatVariantFor } from "@/lib/theme-variants";
 
 interface EngageToast { key: number; kind: "buzz" | "streak" | "badge"; title: string; body: string; }
 
