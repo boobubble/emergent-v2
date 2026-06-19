@@ -505,7 +505,7 @@ function FeedPage() {
                   {view === "settings" && <FeedSettingsPanel />}
                   {view === "dailyChest" && <DailyChestPanel onBack={() => setView("feed")} />}
                   {view === "spin" && <SpinWheelPanel onBack={() => setView("feed")} />}
-                  {view === "shop" && <ShopPanel onBack={() => setView("feed")} />}
+                  {view === "shop" && <ShopPanel onBack={() => setView("feed")} onOpenThemes={() => setThemeStoreOpen(true)} />}
                 </Suspense>
               </div>
             </div>
