@@ -5,6 +5,8 @@ import { useAuth } from "@/lib/auth-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { MessageList } from "./MessageList";
+import { TypingIndicator } from "./TypingIndicator";
+import { useTyping } from "@/lib/use-typing";
 import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import type { Attachment } from "@/lib/chat-types";
 
