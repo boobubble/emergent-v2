@@ -1167,6 +1167,18 @@ function LayoutSwitcher({
   variant?: "default" | "orkut";
 }) {
   const isOrkut = activeTheme === "orkut_retro";
+  const [orkutName, setOrkutName] = useState<string>("Orkut");
+  useEffect(() => {
+    let cancelled = false;
+    import("@/lib/feed-themes").then(({ listFeedThemes }) => {
+      listFeedThemes().then((rows) => {
+        if (cancelled) return;
+        const row = rows.find((r) => r.theme_key === "orkut_retro");
+        if (row?.name) setOrkutName(row.name);
+      }).catch(() => {});
+    });
+    return () => { cancelled = true; };
+  }, []);
   const switchTo = async (key: FeedThemeKey) => {
     if (key === activeTheme) return;
     try {
@@ -1176,9 +1188,7 @@ function LayoutSwitcher({
       onNeedsUnlock();
     }
   };
-  const baseBtn = variant === "orkut"
-    ? "px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider transition"
-    : "px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider transition";
+  const baseBtn = "px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider transition";
   const wrap = variant === "orkut"
     ? "hidden md:inline-flex items-center rounded-md bg-white/15 p-0.5 text-white"
     : "hidden md:inline-flex items-center rounded-full bg-muted p-0.5 mr-1";
@@ -1202,10 +1212,11 @@ function LayoutSwitcher({
         type="button"
         onClick={() => switchTo("orkut_retro")}
         className={`${baseBtn} ${isOrkut ? activeCls : idleCls}`}
-        title="Orkut Retro premium layout"
+        title={`${orkutName} premium layout`}
       >
-        Orkut ✨
+        {orkutName} ✨
       </button>
     </div>
   );
 }
+
