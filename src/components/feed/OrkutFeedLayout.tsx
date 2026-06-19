@@ -32,6 +32,8 @@ import { Avatar } from "@/components/chat/Avatar";
 import { PostCard } from "@/components/feed/PostCard";
 import { Composer } from "@/components/feed/Composer";
 import { PostSkeleton } from "@/components/feed/FeedSkeletons";
+import { EmojiPicker } from "@/components/chat/EmojiPicker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { FeedPost } from "@/lib/feed-types";
 import type { User } from "@/lib/chat-types";
 
