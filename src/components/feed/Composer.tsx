@@ -27,6 +27,26 @@ const PRIVACY: { id: PostPrivacy; label: string; icon: typeof Globe }[] = [
 
 const DRAFT_KEY = "feed-composer-draft";
 
+const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
+const ALLOWED_VIDEO_EXTS = ["mp4", "webm"];
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024; // 100 MB
+
+function validateAndFilter(incoming: File[]): { ok: File[]; rejected: string[] } {
+  const ok: File[] = [];
+  const rejected: string[] = [];
+  for (const f of incoming) {
+    const ext = (f.name.split(".").pop() || "").toLowerCase();
+    const isVideoLike = f.type.startsWith("video/") || ["mp4", "webm", "mov", "m4v", "ogg", "avi", "mkv"].includes(ext);
+    if (isVideoLike) {
+      const typeOk = ALLOWED_VIDEO_TYPES.includes(f.type) || ALLOWED_VIDEO_EXTS.includes(ext);
+      if (!typeOk) { rejected.push(`${f.name} — only MP4 or WebM videos are allowed`); continue; }
+      if (f.size > MAX_VIDEO_BYTES) { rejected.push(`${f.name} — video exceeds 100 MB`); continue; }
+    }
+    ok.push(f);
+  }
+  return { ok, rejected };
+}
+
 type ComposerMode = "post" | "poll" | "confession";
 
 export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: () => void }) {
