@@ -178,7 +178,7 @@ function FeedPage() {
   // Load posts
   async function loadPosts() {
     setLoading(true);
-    const { data } = await supabase.from("posts").select("*").order("created_at", { ascending: false }).limit(50);
+    const { data } = await (supabase as unknown as { from: (t: string) => { select: (c: string) => { order: (k: string, o: { ascending: boolean }) => { limit: (n: number) => Promise<{ data: unknown[] | null }> } } } }).from("posts_safe").select("*").order("created_at", { ascending: false }).limit(50);
     setPosts(((data ?? []) as Partial<FeedPost>[]).map(normalizePost));
     setLoading(false);
   }
