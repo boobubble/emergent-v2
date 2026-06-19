@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Coins, Check, Lock, ArrowLeft } from "lucide-react";
+import { Coins, Check, Lock, ArrowLeft, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { SHOP_BY_CATEGORY, CATEGORY_LABEL, stickerGifUrl, type ShopCategory, type ShopItem } from "@/lib/shop-catalog";
 import { getMyInventory, purchaseItem, equipItem } from "@/lib/rewards.functions";
@@ -12,7 +12,7 @@ const CATS: ShopCategory[] = ["frame", "username_effect", "theme", "emoji_pack",
 
 interface InventoryRow { item_id: string; category: string; equipped: boolean; acquired_at: string }
 
-export function ShopPanel({ onBack }: { onBack: () => void }) {
+export function ShopPanel({ onBack, onOpenThemes }: { onBack: () => void; onOpenThemes?: () => void }) {
 
   const fetchInv = useServerFn(getMyInventory);
   const buy = useServerFn(purchaseItem);
@@ -93,6 +93,15 @@ export function ShopPanel({ onBack }: { onBack: () => void }) {
         </div>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">Cosmetics only — show off your style. No gambling, no trading.</p>
+
+      {onOpenThemes && (
+        <button
+          onClick={onOpenThemes}
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-500 to-purple-600 px-4 py-2 text-sm font-bold text-white hover:opacity-90"
+        >
+          <Palette className="h-4 w-4" /> Browse Feed Themes
+        </button>
+      )}
 
 
 

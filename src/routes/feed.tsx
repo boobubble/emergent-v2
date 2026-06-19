@@ -505,7 +505,7 @@ function FeedPage() {
                   {view === "settings" && <FeedSettingsPanel />}
                   {view === "dailyChest" && <DailyChestPanel onBack={() => setView("feed")} />}
                   {view === "spin" && <SpinWheelPanel onBack={() => setView("feed")} />}
-                  {view === "shop" && <ShopPanel onBack={() => setView("feed")} />}
+                  {view === "shop" && <ShopPanel onBack={() => setView("feed")} onOpenThemes={() => setThemeStoreOpen(true)} />}
                 </Suspense>
               </div>
             </div>
@@ -695,7 +695,7 @@ function FeedPage() {
               <SideItem onClick={() => setView("dailyChest")} active={view === "dailyChest"} icon={Gift} label="Daily Chest" color="text-rose-400" />
               <SideItem onClick={() => setView("spin")} active={view === "spin"} icon={Sparkles} label="Daily Spin" color="text-violet-400" />
               <SideItem onClick={() => setView("shop")} active={view === "shop"} icon={Coins} label="Shop" color="text-emerald-400" />
-              <SideItem onClick={() => setThemeStoreOpen(true)} active={false} icon={Palette} label="Feed Themes" color="text-fuchsia-400" />
+              
 
               
 
@@ -735,7 +735,7 @@ function FeedPage() {
           ) : view === "spin" ? (
             <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><SpinWheelPanel onBack={() => setView("feed")} /></Suspense></div>
           ) : view === "shop" ? (
-            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><ShopPanel onBack={() => setView("feed")} /></Suspense></div>
+            <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><ShopPanel onBack={() => setView("feed")} onOpenThemes={() => setThemeStoreOpen(true)} /></Suspense></div>
           ) : view === "profile" ? (
             <div className="feed-card p-5"><Suspense fallback={<PanelFallback />}><ProfilePanel username={profileUsername} onBack={() => setView("feed")} /></Suspense></div>
           ) : view === "explore" ? (
