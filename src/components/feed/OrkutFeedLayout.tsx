@@ -1020,6 +1020,66 @@ const ORKUT_CSS = `
 }
 
 .orkut-brand { font-weight: 900; color: ${ORKUT_BLUE}; letter-spacing: -0.5px; }
+
+/* Glossy header variant for promoted cards */
+.orkut-classic-root .orkut-header-glossy {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 48%),
+    linear-gradient(180deg, #ffd76b 0%, #f0a91a 55%, #c87b00 100%);
+  color: #4a2d00;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+  border-bottom: 1px solid #a86a00;
+}
+.orkut-classic-root .orkut-promoted {
+  border-color: #d0a64a;
+  box-shadow: 0 1px 0 #f5e7c2, 0 0 0 1px #fff5d6 inset;
+}
+
+/* Classic nostalgic tooltip — yellow note with thin black border */
+.orkut-classic-root .orkut-tip { position: relative; }
+.orkut-classic-root .orkut-tip[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%) translateY(2px);
+  background: #fffbcc;
+  color: #3b2a00;
+  border: 1px solid #806600;
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+  font-family: Verdana, Tahoma, Geneva, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 3px 7px;
+  border-radius: 2px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease, transform 120ms ease;
+  z-index: 60;
+}
+.orkut-classic-root .orkut-tip[data-tip]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 2px);
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #806600;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  z-index: 60;
+}
+.orkut-classic-root .orkut-tip:hover[data-tip]::after,
+.orkut-classic-root .orkut-tip:focus-visible[data-tip]::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.orkut-classic-root .orkut-tip:hover[data-tip]::before,
+.orkut-classic-root .orkut-tip:focus-visible[data-tip]::before {
+  opacity: 1;
+}
 `;
 
 /* keep eslint happy on unused imports if a section is trimmed */
