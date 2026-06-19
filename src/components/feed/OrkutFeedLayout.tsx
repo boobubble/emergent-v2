@@ -214,6 +214,7 @@ export function OrkutFeedLayout(props: Props) {
 function OrkutTopBar({
   username,
   me,
+  brandLabel,
   onOpenProfile,
   onOpenMessages,
   onOpenThemeStore,
@@ -222,6 +223,7 @@ function OrkutTopBar({
 }: {
   username: string;
   me: User;
+  brandLabel: string;
   onOpenProfile: (u: string) => void;
   onOpenMessages: () => void;
   onOpenThemeStore: () => void;
