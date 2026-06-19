@@ -365,6 +365,8 @@ function MiniDMWindow({
       )}
       {attachError && <div className="px-3 pb-1 text-[11px] text-destructive">{attachError}</div>}
 
+      <TypingIndicator typers={typers} />
+
       {/* Footer */}
       <div className="flex items-center gap-1.5 border-t border-border bg-card/70 px-2 py-2">
         <input
