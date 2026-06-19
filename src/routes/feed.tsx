@@ -38,7 +38,7 @@ import { BrandMark, BrandText } from "@/components/BrandMark";
 import { PostSkeleton, WidgetSkeleton, RewardsWidgetSkeleton } from "@/components/feed/FeedSkeletons";
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
 import { FeedThemeStore } from "@/components/feed/FeedThemeStore";
-import { useActiveFeedTheme } from "@/lib/feed-themes";
+import { useActiveFeedTheme, activateFeedTheme, type FeedThemeKey } from "@/lib/feed-themes";
 import { feedVariantFor } from "@/lib/theme-variants";
 import { OrkutFeedLayout } from "@/components/feed/OrkutFeedLayout";
 import { Palette } from "lucide-react";
