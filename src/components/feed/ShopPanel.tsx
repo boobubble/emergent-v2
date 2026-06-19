@@ -12,7 +12,7 @@ const CATS: ShopCategory[] = ["frame", "username_effect", "theme", "emoji_pack",
 
 interface InventoryRow { item_id: string; category: string; equipped: boolean; acquired_at: string }
 
-export function ShopPanel({ onBack }: { onBack: () => void }) {
+export function ShopPanel({ onBack, onOpenThemes }: { onBack: () => void; onOpenThemes?: () => void }) {
 
   const fetchInv = useServerFn(getMyInventory);
   const buy = useServerFn(purchaseItem);
