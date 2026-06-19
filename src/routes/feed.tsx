@@ -450,6 +450,39 @@ function FeedPage() {
   const { theme: feedTheme, refresh: refreshFeedTheme } = useActiveFeedTheme();
   const [themeStoreOpen, setThemeStoreOpen] = useState(false);
 
+  // Premium flagship layout: Orkut Retro replaces the entire feed UI.
+  if (feedTheme === "orkut_retro") {
+    return (
+      <div data-feed-theme={feedTheme} data-theme-variant={feedVariantFor(feedTheme)}>
+        <FeedThemeStore
+          open={themeStoreOpen}
+          onOpenChange={setThemeStoreOpen}
+          activeTheme={feedTheme}
+          onThemeChange={refreshFeedTheme}
+        />
+        <OrkutFeedLayout
+          meId={meId}
+          user={{ username: user.username }}
+          profiles={profiles}
+          posts={filtered}
+          friendIds={friendIds}
+          loading={loading}
+          onReload={loadPosts}
+          onOpenThemeStore={() => setThemeStoreOpen(true)}
+          onOpenAccount={() => setView("account")}
+          onOpenProfile={(uname) => { setProfileUsername(uname); setView("profile"); }}
+          onOpenFindFriends={() => setView("findFriends")}
+          onOpenMessages={() => setDmOpenKey(k => k + 1)}
+        />
+        {dmOpenKey > 0 && (
+          <Suspense fallback={null}>
+            <FeedDMDock key={dmOpenKey} meId={meId} profiles={profiles} initialOpen={true} />
+          </Suspense>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div data-feed-theme={feedTheme} data-theme-variant={feedVariantFor(feedTheme)} className="min-h-screen overflow-x-hidden bg-background text-foreground pb-24 lg:pb-0">
       <FeedThemeStore
