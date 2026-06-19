@@ -11,7 +11,9 @@ export interface RemoteProfile {
   avatar_color: string;
   xp: number;
   level: number;
-  coins: number;
+  /** Other users' coin balances are not exposed; only the signed-in user's
+   *  own balance is readable, via the `my_coin_balance` RPC. */
+  coins?: number;
   streak: number;
   longest_streak: number;
   status: string;
