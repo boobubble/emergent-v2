@@ -21,9 +21,11 @@ export function LoyaltyChip({ channelId }: { channelId: string }) {
 
   if (!data) return null;
   const lvl = roomLoyaltyFor(data.total);
+  const showLoyaltyName = lvl.name !== "Newcomer";
+  if (!showLoyaltyName && data.streak <= 1) return null;
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${lvl.chip}`} title={`${lvl.name} · ${data.total} msgs`}>
-      {lvl.name}
+      {showLoyaltyName && lvl.name}
       {data.streak > 1 && (
         <span className="inline-flex items-center gap-0.5 text-orange-500">
           <Flame className="h-2.5 w-2.5" />{data.streak}

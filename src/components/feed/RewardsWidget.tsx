@@ -67,7 +67,7 @@ export function RewardsWidget({ meId, onOpenChest, onOpenSpin, onOpenShop }: Pro
               <p className="text-[10px] font-medium uppercase tracking-wider text-amber-300/80">Your treasury</p>
             </div>
           </div>
-          {lp.level > 1 && (
+          {lp.level > 1 && rank.title !== "Newcomer" && (
             <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ring-1 ring-white/10 ${rank.chip}`}>{rank.title}</span>
           )}
         </div>

@@ -38,12 +38,13 @@ export const FrameAvatar = memo(function FrameAvatar({
 
 /** Compact rank+level pill for use beside usernames. */
 export function RankChip({ level, compact = false }: { level: number; compact?: boolean }) {
-  // Hide the "Newcomer" rank (level 1) globally — only show once user has ranked up.
+  // Hide the "Newcomer" rank label globally — only show named ranks after it.
   if (!level || level <= 1) return null;
   const r = rankFor(level);
+  const showRankTitle = r.title !== "Newcomer";
   return (
     <span
-      title={`${r.title} · Level ${level}`}
+      title={showRankTitle ? `${r.title} · Level ${level}` : `Level ${level}`}
       className={cn(
         "inline-flex items-center gap-1 rounded-full font-semibold tracking-wide",
         compact ? "px-1.5 py-[1px] text-[9px]" : "px-2 py-0.5 text-[10px]",
@@ -51,8 +52,12 @@ export function RankChip({ level, compact = false }: { level: number; compact?: 
       )}
     >
       <span className="opacity-80">Lv {level}</span>
-      <span className="opacity-50">·</span>
-      <span className="uppercase">{r.title}</span>
+      {showRankTitle && (
+        <>
+          <span className="opacity-50">·</span>
+          <span className="uppercase">{r.title}</span>
+        </>
+      )}
     </span>
   );
 }
