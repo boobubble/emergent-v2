@@ -261,14 +261,6 @@ function OrkutTopBar({
         </form>
 
         <div className="ml-auto flex items-center gap-2 text-[11px]">
-          {headerSlot}
-          <button
-            onClick={onOpenThemeStore}
-            className="hidden items-center gap-1 rounded-sm bg-white/15 px-2 py-0.5 font-bold hover:bg-white/25 md:inline-flex"
-            title="Themes"
-          >
-            <Palette className="h-3 w-3" /> themes
-          </button>
           <button
             onClick={() => onOpenProfile(username)}
             className="flex items-center gap-1.5 rounded-sm bg-white/15 pl-1 pr-2 py-0.5 hover:bg-white/25"
