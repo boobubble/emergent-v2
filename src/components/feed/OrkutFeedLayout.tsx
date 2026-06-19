@@ -546,13 +546,20 @@ function OrkutStatusBox({ name, authorId, onPosted }: { name: string; authorId: 
       </div>
       <div className="space-y-2 bg-white p-3">
         <div className="flex items-start gap-2 rounded-sm border border-[#b5c7e0] bg-[#fbfcfe] p-2">
-          <button
-            type="button"
-            className="grid h-6 w-6 shrink-0 place-items-center rounded-sm border border-[#d6e0ee] bg-white text-base hover:bg-[#fff8e0]"
-            title="emoji"
-          >
-            🙂
-          </button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-sm border border-[#d6e0ee] bg-white text-base hover:bg-[#fff8e0]"
+                title="add emoji"
+              >
+                🙂
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-0" align="start">
+              <EmojiPicker onPick={(e) => setText((t) => (t + e).slice(0, 140))} />
+            </PopoverContent>
+          </Popover>
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
