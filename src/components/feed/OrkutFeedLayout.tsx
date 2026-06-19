@@ -120,6 +120,7 @@ export function OrkutFeedLayout(props: Props) {
   const myPosts = useMemo(() => posts.filter((p) => p.author_id === meId).length, [posts, meId]);
   const photos = useMemo(() => posts.filter((p) => p.author_id === meId && (p.media_urls?.length ?? 0) > 0).length, [posts, meId]);
   const fans = friendList.length;
+  const brandLabel = useThemeBrandLabel("orkut_retro", "boobubble");
 
   return (
     <div className="min-h-screen orkut-classic-root">
