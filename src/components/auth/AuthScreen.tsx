@@ -139,6 +139,7 @@ export function AuthScreen() {
       </div>
 
       <AuthDialogs popup={popup} setPopup={setPopup} guestEnabled={guestCfg.enabled} />
+    </LiveCommunityBackground>
   );
 }
 
