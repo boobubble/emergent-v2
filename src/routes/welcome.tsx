@@ -14,6 +14,7 @@ import {
   type LandingTrendingPost, type LandingDiscussion, type LandingFeaturedMember,
   type LandingConfessionItem, type LandingBlogPost, type LandingActivity,
 } from "@/lib/landing-config";
+import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
 
 interface LandingStats {
   members: number; online: number; activeRooms: number;
@@ -100,6 +101,7 @@ function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pollChoice, setPollChoice] = useState<number | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [authPopup, setAuthPopup] = useState<AuthPopup>(null);
 
   useEffect(() => {
     try {
@@ -303,13 +305,13 @@ function LandingPage() {
             <button className="hidden grid h-9 w-9 sm:grid place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white/70 hover:text-white" aria-label="Search">
               <Search className="h-4 w-4" />
             </button>
-            <Link to="/login" className="hidden rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/[0.08] sm:inline-flex">
+            <button type="button" onClick={() => setAuthPopup("signin")} className="hidden rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/[0.08] sm:inline-flex">
               Login
-            </Link>
-            <Link to="/login" className="rounded-full px-4 py-2 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
+            </button>
+            <button type="button" onClick={() => setAuthPopup("signup")} className="rounded-full px-4 py-2 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
                   style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 8px 24px -8px rgba(139,92,246,0.7)" }}>
               Sign Up
-            </Link>
+            </button>
             <button onClick={() => setMenuOpen((v) => !v)}
                     className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 lg:hidden" aria-label="Toggle menu">
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -355,15 +357,15 @@ function LandingPage() {
             </div>
 
             <div className="mt-7 flex flex-wrap gap-3">
-              <Link to={cfg.primaryCtaHref}
+              <button type="button" onClick={() => setAuthPopup("signin")}
                     className="group inline-flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
                     style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 12px 32px -8px rgba(139,92,246,0.65)" }}>
                 <Rocket className="h-4 w-4" /> {cfg.primaryCtaLabel}
-              </Link>
-              <Link to={cfg.secondaryCtaHref}
+              </button>
+              <button type="button" onClick={() => setAuthPopup("signup")}
                     className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3.5 text-sm font-bold text-white backdrop-blur hover:bg-white/[0.08]">
                 ✨ {cfg.secondaryCtaLabel}
-              </Link>
+              </button>
             </div>
 
             <div className="mt-6 flex items-center gap-3">
@@ -970,10 +972,10 @@ function LandingPage() {
               <div className="max-w-md">
                 <h3 className="text-2xl font-black sm:text-3xl">{cfg.finalCtaTitle}</h3>
                 <p className="mt-2 text-sm text-white/80">{cfg.finalCtaSubtitle}</p>
-                <Link to="/login"
+                <button type="button" onClick={() => setAuthPopup("signup")}
                       className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#1a0b2e] shadow-lg hover:scale-[1.03] transition-transform">
                   Create Free Account <ArrowRight className="h-4 w-4" />
-                </Link>
+                </button>
               </div>
               {cfg.finalCtaImageUrl && (
                 <img
@@ -1049,6 +1051,7 @@ function LandingPage() {
           </div>
         </div>
       </footer>
+      <AuthDialogs popup={authPopup} setPopup={setAuthPopup} />
     </div>
   );
 }
