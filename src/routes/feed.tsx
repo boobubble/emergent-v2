@@ -353,7 +353,7 @@ function FeedPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Guests can chat in the lobby only. Create an account to post, react, and follow friends in the feed.
           </p>
-          <Link to="/chat" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+          <Link to="/chatroom" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
             <ArrowLeft className="h-4 w-4" /> Back to chat
           </Link>
         </div>
@@ -683,7 +683,7 @@ function FeedPage() {
               />
 
               <div className="feed-section-label">Explore</div>
-              <SideLink to="/chat" iconSrc={chatroomIcon} label="Chatrooms" />
+              <SideLink to="/chatroom" iconSrc={chatroomIcon} label="Chatrooms" />
               <SideNavLink to="/reels" icon={Film} label="Reels" badge="Soon" color="text-pink-400" />
               <SideNavLink to="/pages" icon={FileText} label="Pages" badge="Soon" color="text-cyan-400" />
               <SideNavLink to="/groups" icon={Users2} label="Groups" badge="Soon" color="text-indigo-400" />
@@ -869,7 +869,7 @@ function FeedPage() {
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 flex items-end feed-glass border-t border-border lg:hidden pb-[env(safe-area-inset-bottom)]">
         <button onClick={() => setView("feed")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "feed" ? "text-primary" : "text-muted-foreground"}`}><Sparkles className="h-5 w-5" /> Feed</button>
-        <Link to="/chat" className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted-foreground"><img src={chatroomIcon} alt="Chatrooms" className="h-5 w-5 rounded-full bg-white object-contain p-0.5" /> Rooms</Link>
+        <Link to="/chatroom" className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted-foreground"><img src={chatroomIcon} alt="Chatrooms" className="h-5 w-5 rounded-full bg-white object-contain p-0.5" /> Rooms</Link>
         <div className="flex flex-1 justify-center">
           <button
             onClick={() => {
@@ -915,7 +915,7 @@ function FeedPage() {
         ]}
         extraActions={[
           { label: "Create Post", icon: Plus, color: "from-primary to-primary/70", onClick: focusComposer },
-          { label: "Public Chat", icon: Users, color: "from-sky-500 to-cyan-500", onClick: () => navigate({ to: "/chat" }) },
+          { label: "Public Chat", icon: Users, color: "from-sky-500 to-cyan-500", onClick: () => navigate({ to: "/chatroom" }) },
           { label: "Private Chat", icon: MessageCircle, color: "from-indigo-500 to-violet-500", onClick: () => setDmOpenKey(k => k + 1) },
         ]}
       />
