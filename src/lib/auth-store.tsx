@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { loginWithIdentifier, deleteGuestAccount } from "@/lib/auth.functions";
+import { deleteDemoAccount } from "@/lib/demo-account.functions";
 import { checkDeviceBan, recordDevice } from "@/lib/device.functions";
 import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
