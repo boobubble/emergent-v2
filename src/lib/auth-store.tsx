@@ -296,6 +296,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = useCallback(async (email: string, password: string, username: string, gender: "male" | "female" | "other", extras?: SignupExtras) => {
     email = email.trim();
     username = username.trim();
+    const cfg = await loadSignupAccess();
+    if (!cfg.signupEnabled) throw new Error(cfg.disabledMessage || "New sign-ups are temporarily disabled.");
     const letterCount = username.replace(/[^a-zA-Z]/g, "").length;
     if (letterCount < 2 || letterCount > 10) throw new Error("Username must contain 2 to 10 letters.");
     if (password.length < 4) throw new Error("Password must be at least 4 characters");
