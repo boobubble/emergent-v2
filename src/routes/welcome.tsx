@@ -357,15 +357,15 @@ function LandingPage() {
             </div>
 
             <div className="mt-7 flex flex-wrap gap-3">
-              <Link to={cfg.primaryCtaHref}
+              <button type="button" onClick={() => setAuthPopup("signin")}
                     className="group inline-flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
                     style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 12px 32px -8px rgba(139,92,246,0.65)" }}>
                 <Rocket className="h-4 w-4" /> {cfg.primaryCtaLabel}
-              </Link>
-              <Link to={cfg.secondaryCtaHref}
+              </button>
+              <button type="button" onClick={() => setAuthPopup("signup")}
                     className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3.5 text-sm font-bold text-white backdrop-blur hover:bg-white/[0.08]">
                 ✨ {cfg.secondaryCtaLabel}
-              </Link>
+              </button>
             </div>
 
             <div className="mt-6 flex items-center gap-3">
