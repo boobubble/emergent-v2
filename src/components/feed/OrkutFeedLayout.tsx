@@ -481,6 +481,7 @@ function OrkutQuickLinks({
     { icon: Users, label: "friends", onClick: onFindFriends },
     { icon: Star, label: "communities", onClick: () => navigate({ to: "/groups" }) },
     { icon: MessageCircle, label: "messages", onClick: onMessages },
+    { icon: MessagesSquare, label: "chatrooms", onClick: () => navigate({ to: "/chatroom" }) },
     { icon: Palette, label: "themes", onClick: onThemes },
     { icon: Settings, label: "account", onClick: onAccount },
     { icon: LogOut, label: "logout", onClick: logout },
