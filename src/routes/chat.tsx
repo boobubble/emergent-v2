@@ -1,16 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ChatApp } from "@/components/chat/ChatApp";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-// Dedicated chatroom route. `/` may redirect to `/feed` when admins set
-// "feed first", which would loop any chatroom button on the feed page back
-// to feed. This route always renders the chatroom regardless of layout
-// priority so the feed → chatrooms navigation works in both modes.
+// Back-compat alias. The canonical chatroom route is /chatroom.
 export const Route = createFileRoute("/chat")({
-  head: () => ({
-    meta: [
-      { title: "Chatrooms — BooBubble" },
-      { name: "description", content: "Public chat rooms, DMs, and games." },
-    ],
-  }),
-  component: () => <ChatApp />,
+  beforeLoad: () => {
+    throw redirect({ to: "/chatroom", replace: true });
+  },
 });
