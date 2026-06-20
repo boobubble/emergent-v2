@@ -81,6 +81,9 @@ export function ProfilePopup({
     let cancel = false;
     (async () => {
       if (realId && realId !== "me") {
+        if (!isMe && !user.isBot && authUser?.id && realId !== authUser.id) {
+          recordProfileView(realId);
+        }
         const { data: prof } = await supabase
           .from("profiles")
           .select("created_at")
