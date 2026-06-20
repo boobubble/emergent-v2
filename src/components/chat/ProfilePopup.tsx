@@ -20,6 +20,7 @@ import { Avatar } from "./Avatar";
 import { NameEmojiBadge, CountryFlag, UserKindBadge } from "@/lib/name-emoji";
 import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
 import { banUser, muteUser } from "@/lib/moderation.functions";
+import { recordProfileView } from "@/lib/use-profile-views";
 import type { Role } from "@/lib/chat-types";
 
 type Tab = "info" | "about" | "friends" | "activity" | "daily";
