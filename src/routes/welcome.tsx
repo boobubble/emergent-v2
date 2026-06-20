@@ -382,7 +382,14 @@ function LandingPage() {
                     className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3.5 text-sm font-bold text-white backdrop-blur hover:bg-white/[0.08]">
                 ✨ {cfg.secondaryCtaLabel}
               </button>
+              <button type="button" onClick={startDemo} disabled={demoBusy}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-amber-400/40 bg-gradient-to-r from-amber-500/20 to-yellow-400/20 px-6 py-3.5 text-sm font-bold text-amber-200 backdrop-blur hover:from-amber-500/30 hover:to-yellow-400/30 disabled:opacity-60">
+                🎟️ {demoBusy ? "Preparing demo…" : "Try demo (1000 coins)"}
+              </button>
             </div>
+            {demoErr && (
+              <div className="mt-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs text-red-300">{demoErr}</div>
+            )}
 
             <div className="mt-6 flex items-center gap-3">
               <div className="flex -space-x-2">
