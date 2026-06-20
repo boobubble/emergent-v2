@@ -25,6 +25,7 @@ import { Route as FeedRouteImport } from './routes/feed'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as ChatroomsRouteImport } from './routes/chatrooms'
 import { Route as ChatroomRouteImport } from './routes/chatroom'
+import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BroadcasterRouteImport } from './routes/broadcaster'
 import { Route as BannedRouteImport } from './routes/banned'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -182,6 +183,11 @@ const ChatroomsRoute = ChatroomsRouteImport.update({
 const ChatroomRoute = ChatroomRouteImport.update({
   id: '/chatroom',
   path: '/chatroom',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BroadcasterRoute = BroadcasterRouteImport.update({
@@ -585,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/banned': typeof BannedRoute
   '/broadcaster': typeof BroadcasterRouteWithChildren
+  '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
   '/confessions': typeof ConfessionsRoute
@@ -679,6 +686,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
   '/banned': typeof BannedRoute
+  '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
   '/confessions': typeof ConfessionsRoute
@@ -776,6 +784,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/banned': typeof BannedRoute
   '/broadcaster': typeof BroadcasterRouteWithChildren
+  '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
   '/confessions': typeof ConfessionsRoute
@@ -874,6 +883,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/banned'
     | '/broadcaster'
+    | '/chat'
     | '/chatroom'
     | '/chatrooms'
     | '/confessions'
@@ -968,6 +978,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/achievements'
     | '/banned'
+    | '/chat'
     | '/chatroom'
     | '/chatrooms'
     | '/confessions'
@@ -1064,6 +1075,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/banned'
     | '/broadcaster'
+    | '/chat'
     | '/chatroom'
     | '/chatrooms'
     | '/confessions'
@@ -1161,6 +1173,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   BannedRoute: typeof BannedRoute
   BroadcasterRoute: typeof BroadcasterRouteWithChildren
+  ChatRoute: typeof ChatRoute
   ChatroomRoute: typeof ChatroomRoute
   ChatroomsRoute: typeof ChatroomsRoute
   ConfessionsRoute: typeof ConfessionsRoute
@@ -1298,6 +1311,13 @@ declare module '@tanstack/react-router' {
       path: '/chatroom'
       fullPath: '/chatroom'
       preLoaderRoute: typeof ChatroomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/broadcaster': {
@@ -2021,6 +2041,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   BannedRoute: BannedRoute,
   BroadcasterRoute: BroadcasterRouteWithChildren,
+  ChatRoute: ChatRoute,
   ChatroomRoute: ChatroomRoute,
   ChatroomsRoute: ChatroomsRoute,
   ConfessionsRoute: ConfessionsRoute,
