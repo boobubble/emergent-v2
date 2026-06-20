@@ -5,7 +5,7 @@ import {
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
   Rocket, Flame, Radio, Trophy, Youtube, Disc3, UserCircle2, MessageSquareHeart, Vote,
   Bug, Home, Wand2, Database, ScrollText, History, Bell, MousePointerClick, Mail,
-  PowerOff, RefreshCw, Gift, Download, Languages, Link2,
+  PowerOff, RefreshCw, Gift, Download, Languages, Link2, UserPlus,
 } from "lucide-react";
 
 export interface AdminLeaf {
