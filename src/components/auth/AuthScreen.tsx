@@ -4,6 +4,7 @@ import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check"
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-config";
+import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
 import { LiveCommunityBackground } from "@/components/auth/LiveCommunityBackground";
 
@@ -26,10 +27,12 @@ export function AuthDialogs({
   popup,
   setPopup,
   guestEnabled = true,
+  signupEnabled = true,
 }: {
   popup: AuthPopup;
   setPopup: (p: AuthPopup) => void;
   guestEnabled?: boolean;
+  signupEnabled?: boolean;
 }) {
   return (
     <>
@@ -37,13 +40,15 @@ export function AuthDialogs({
         open={popup === "signin"}
         onOpenChange={(v) => setPopup(v ? "signin" : null)}
         onForgot={() => setPopup("forgot")}
-        onSwitchSignup={() => setPopup("signup")}
+        onSwitchSignup={() => signupEnabled && setPopup("signup")}
       />
-      <SignUpDialog
-        open={popup === "signup"}
-        onOpenChange={(v) => setPopup(v ? "signup" : null)}
-        onSwitchSignin={() => setPopup("signin")}
-      />
+      {signupEnabled && (
+        <SignUpDialog
+          open={popup === "signup"}
+          onOpenChange={(v) => setPopup(v ? "signup" : null)}
+          onSwitchSignin={() => setPopup("signin")}
+        />
+      )}
       {guestEnabled && (
         <GuestDialog
           open={popup === "guest"}
