@@ -130,13 +130,19 @@ export function AuthScreen() {
           >
             Sign in
           </button>
-          <button
-            onClick={() => setPopup("signup")}
-            className="w-full rounded-full border border-primary/50 bg-primary/10 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/20"
-          >
-            Create account
-          </button>
-          {guestCfg.enabled && (
+          {signupAvailable ? (
+            <button
+              onClick={() => setPopup("signup")}
+              className="w-full rounded-full border border-primary/50 bg-primary/10 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/20"
+            >
+              Create account
+            </button>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground">
+              {signupCfg.disabledMessage}
+            </div>
+          )}
+          {guestAvailable && (
             <button
               onClick={() => setPopup("guest")}
               className="w-full rounded-full border border-dashed border-border bg-background px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -149,7 +155,7 @@ export function AuthScreen() {
         <FeedbackShowcase surface="signup" />
       </div>
 
-      <AuthDialogs popup={popup} setPopup={setPopup} guestEnabled={guestCfg.enabled} />
+      <AuthDialogs popup={popup} setPopup={setPopup} guestEnabled={guestAvailable} signupEnabled={signupAvailable} />
     </LiveCommunityBackground>
   );
 }
