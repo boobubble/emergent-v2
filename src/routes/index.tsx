@@ -16,8 +16,16 @@ export const Route = createFileRoute("/")({
 
 function HomeRouter() {
   const { layoutPriority, ready } = useAppSettings();
-  // While settings load, render chat (the default) to avoid a flash of nothing.
-  if (ready && layoutPriority === "feed_first") {
+  // Wait for settings before deciding home target so feed_first users
+  // aren't briefly dropped into the chatroom while settings load.
+  if (!ready) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">
+        <p>Loading…</p>
+      </div>
+    );
+  }
+  if (layoutPriority === "feed_first") {
     return <Navigate to="/feed" replace />;
   }
   return <ChatApp />;
