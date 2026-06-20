@@ -1,8 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X, Trophy, Flame, Award, Lock } from "lucide-react";
+import { toast } from "sonner";
 import { useChat } from "@/lib/chat-store";
+import { useAuth } from "@/lib/auth-store";
+import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "./Avatar";
 import { BADGES, BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
+
+const ABOUT_WORD_LIMIT = 100;
+function countWords(s: string): number {
+  const t = s.trim();
+  if (!t) return 0;
+  return t.split(/\s+/u).length;
+}
 
 function Backdrop({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
@@ -19,17 +29,60 @@ function Backdrop({ onClose, children }: { onClose: () => void; children: React.
 
 export function ProfileModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { state, updateMe } = useChat();
+  const { user: authUser } = useAuth();
   const [name, setName] = useState(state.me.name);
   const [bio, setBio] = useState(state.me.bio || "");
+  const [aboutMe, setAboutMe] = useState(state.me.aboutMe || "");
   const [status, setStatus] = useState(state.me.status);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => { if (open) { setName(state.me.name); setBio(state.me.bio || ""); setStatus(state.me.status); } }, [open, state.me]);
+  useEffect(() => {
+    if (open) {
+      setName(state.me.name);
+      setBio(state.me.bio || "");
+      setAboutMe(state.me.aboutMe || "");
+      setStatus(state.me.status);
+    }
+  }, [open, state.me]);
+
+  const wordCount = useMemo(() => countWords(aboutMe), [aboutMe]);
+  const overLimit = wordCount > ABOUT_WORD_LIMIT;
 
   if (!open) return null;
   const earnedBadges = (state.me.badges || []).map(id => BADGE_MAP[id]).filter(Boolean);
   const xpForLevel = state.me.level * 50;
   const xpThisLevel = state.me.xp - (state.me.level - 1) * 50;
   const pct = Math.min(100, Math.round((xpThisLevel / 50) * 100));
+
+  const handleAboutChange = (val: string) => {
+    // Soft-cap by words: allow typing but block save when over limit.
+    // Also hard-cap chars at 1000 to match DB constraint.
+    setAboutMe(val.slice(0, 1000));
+  };
+
+  const handleSave = async () => {
+    if (overLimit) {
+      toast.error(`About me must be ${ABOUT_WORD_LIMIT} words or fewer`);
+      return;
+    }
+    const cleanName = name.trim() || state.me.name;
+    const cleanBio = bio.trim();
+    const cleanAbout = aboutMe.trim();
+    updateMe({ name: cleanName, bio: cleanBio, aboutMe: cleanAbout, status });
+    if (authUser?.id) {
+      setSaving(true);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ bio: cleanBio || null, about_me: cleanAbout || null })
+        .eq("id", authUser.id);
+      setSaving(false);
+      if (error) {
+        toast.error(error.message || "Couldn't save profile");
+        return;
+      }
+    }
+    onClose();
+  };
 
   return (
     <Backdrop onClose={onClose}>
