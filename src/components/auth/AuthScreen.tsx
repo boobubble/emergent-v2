@@ -7,6 +7,7 @@ import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-confi
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
 import { LiveCommunityBackground } from "@/components/auth/LiveCommunityBackground";
+import { createDemoAccount } from "@/lib/demo-account.functions";
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
   if (status.state === "idle") return null;
