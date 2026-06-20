@@ -972,10 +972,10 @@ function LandingPage() {
               <div className="max-w-md">
                 <h3 className="text-2xl font-black sm:text-3xl">{cfg.finalCtaTitle}</h3>
                 <p className="mt-2 text-sm text-white/80">{cfg.finalCtaSubtitle}</p>
-                <Link to="/login"
+                <button type="button" onClick={() => setAuthPopup("signup")}
                       className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-[#1a0b2e] shadow-lg hover:scale-[1.03] transition-transform">
                   Create Free Account <ArrowRight className="h-4 w-4" />
-                </Link>
+                </button>
               </div>
               {cfg.finalCtaImageUrl && (
                 <img
