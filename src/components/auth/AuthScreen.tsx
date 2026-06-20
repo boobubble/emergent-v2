@@ -138,27 +138,7 @@ export function AuthScreen() {
         <FeedbackShowcase surface="signup" />
       </div>
 
-      <SignInDialog
-        open={popup === "signin"}
-        onOpenChange={(v) => setPopup(v ? "signin" : null)}
-        onForgot={() => setPopup("forgot")}
-        onSwitchSignup={() => setPopup("signup")}
-      />
-      <SignUpDialog
-        open={popup === "signup"}
-        onOpenChange={(v) => setPopup(v ? "signup" : null)}
-        onSwitchSignin={() => setPopup("signin")}
-      />
-      <GuestDialog
-        open={popup === "guest"}
-        onOpenChange={(v) => setPopup(v ? "guest" : null)}
-      />
-      <ForgotDialog
-        open={popup === "forgot"}
-        onOpenChange={(v) => setPopup(v ? "forgot" : null)}
-        onBack={() => setPopup("signin")}
-      />
-    </LiveCommunityBackground>
+      <AuthDialogs popup={popup} setPopup={setPopup} guestEnabled={guestCfg.enabled} />
   );
 }
 
