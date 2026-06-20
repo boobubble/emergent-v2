@@ -4,6 +4,7 @@ import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
+import { useRecordProfileView } from "@/lib/use-profile-views";
 
 export function ProfilePanel({ username, onBack }: { username: string; onBack: () => void }) {
   const navigate = useNavigate();
