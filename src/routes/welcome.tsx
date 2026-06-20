@@ -305,13 +305,13 @@ function LandingPage() {
             <button className="hidden grid h-9 w-9 sm:grid place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white/70 hover:text-white" aria-label="Search">
               <Search className="h-4 w-4" />
             </button>
-            <Link to="/login" className="hidden rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/[0.08] sm:inline-flex">
+            <button type="button" onClick={() => setAuthPopup("signin")} className="hidden rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/[0.08] sm:inline-flex">
               Login
-            </Link>
-            <Link to="/login" className="rounded-full px-4 py-2 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
+            </button>
+            <button type="button" onClick={() => setAuthPopup("signup")} className="rounded-full px-4 py-2 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
                   style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 8px 24px -8px rgba(139,92,246,0.7)" }}>
               Sign Up
-            </Link>
+            </button>
             <button onClick={() => setMenuOpen((v) => !v)}
                     className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 lg:hidden" aria-label="Toggle menu">
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
