@@ -57,3 +57,29 @@ export const createDemoAccount = createServerFn({ method: "POST" }).handler(asyn
 
   return { email, password, username };
 });
+
+/**
+ * Wipes the currently signed-in demo account (created via createDemoAccount).
+ * Refuses if the user is not flagged as a demo in their auth metadata.
+ * Uses the existing delete_user_cascade RPC to remove all related rows, then
+ * deletes the auth user. Called automatically when a demo account logs out.
+ */
+export const deleteDemoAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context as { userId: string };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: userRes, error: gErr } = await supabaseAdmin.auth.admin.getUserById(userId);
+    if (gErr || !userRes?.user) throw new Error("User not found");
+    const meta = (userRes.user.user_metadata ?? {}) as { is_demo?: boolean };
+    if (!meta.is_demo) throw new Error("Not a demo account");
+
+    // Cascade-delete all rows owned by this user across the schema.
+    const { error: rpcErr } = await supabaseAdmin.rpc("delete_user_cascade", { _user: userId });
+    if (rpcErr) throw new Error(rpcErr.message);
+
+    const { error: dErr } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (dErr) throw new Error(dErr.message);
+    return { ok: true };
+  });
