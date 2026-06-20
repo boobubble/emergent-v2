@@ -68,42 +68,48 @@ export function AuthScreen() {
   const [popup, setPopup] = useState<Popup>(null);
   const { loginAsGuest } = useAuth();
   const [guestCfg, setGuestCfg] = useState<GuestAccessConfig>(GUEST_ACCESS_DEFAULTS);
+  const [signupCfg, setSignupCfg] = useState<SignupAccessConfig>(SIGNUP_ACCESS_DEFAULTS);
   const [cfgReady, setCfgReady] = useState(false);
   const autoTriedRef = useRef(false);
 
-  // Load guest-access config directly from app_settings — AuthScreen runs
-  // outside AppSettingsProvider (which is mounted after login).
+  // Load guest-access + signup-access config directly from app_settings —
+  // AuthScreen runs outside AppSettingsProvider (which mounts after login).
   useEffect(() => {
     let cancel = false;
     (async () => {
       try {
         const { data } = await supabase
           .from("app_settings")
-          .select("value")
-          .eq("key", "guest_access")
-          .maybeSingle();
+          .select("key, value")
+          .in("key", ["guest_access", "signup_access"]);
         if (cancel) return;
-        const persisted = (data?.value as Partial<GuestAccessConfig> | null) ?? {};
+        const byKey = new Map((data ?? []).map((r) => [r.key, r.value as Record<string, unknown> | null]));
+        const guest = (byKey.get("guest_access") as Partial<GuestAccessConfig> | null) ?? {};
+        const signup = (byKey.get("signup_access") as Partial<SignupAccessConfig> | null) ?? {};
         setGuestCfg({
           ...GUEST_ACCESS_DEFAULTS,
-          ...persisted,
-          permissions: { ...GUEST_ACCESS_DEFAULTS.permissions, ...(persisted.permissions ?? {}) },
+          ...guest,
+          permissions: { ...GUEST_ACCESS_DEFAULTS.permissions, ...(guest.permissions ?? {}) },
         });
+        setSignupCfg({ ...SIGNUP_ACCESS_DEFAULTS, ...signup });
       } catch { /* keep defaults */ }
       finally { if (!cancel) setCfgReady(true); }
     })();
     return () => { cancel = true; };
   }, []);
 
+  const guestAvailable = guestCfg.enabled && signupCfg.guestEnabled;
+  const signupAvailable = signupCfg.signupEnabled;
+
   // Auto Guest Login — opt-in via admin settings.
   useEffect(() => {
     if (!cfgReady || autoTriedRef.current) return;
-    if (!guestCfg.enabled || !guestCfg.autoLogin) return;
+    if (!guestAvailable || !guestCfg.autoLogin) return;
     // Honor an explicit opt-out (e.g. after a guest logs out and wants the choice screen).
     try { if (sessionStorage.getItem("guest-auto-skip") === "1") return; } catch { /* ignore */ }
     autoTriedRef.current = true;
     loginAsGuest().catch(() => { /* fall back to the manual screen */ });
-  }, [cfgReady, guestCfg.enabled, guestCfg.autoLogin, loginAsGuest]);
+  }, [cfgReady, guestAvailable, guestCfg.autoLogin, loginAsGuest]);
 
   return (
     <LiveCommunityBackground>
