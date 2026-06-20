@@ -7,6 +7,7 @@ export interface RemoteProfile {
   id: string;
   username: string;
   bio: string | null;
+  about_me: string | null;
   avatar_url: string | null;
   avatar_color: string;
   xp: number;
@@ -58,6 +59,7 @@ function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User 
     avatarUrl: p.avatar_url ?? undefined,
     status,
     bio: p.bio ?? undefined,
+    aboutMe: p.about_me ?? undefined,
     xp: p.xp,
     level: p.level,
     coins: p.coins ?? 0,
@@ -147,7 +149,7 @@ async function refetchAll() {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, username, bio, avatar_url, avatar_color, xp, level, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year, is_bot, is_official",
+      "id, username, bio, about_me, avatar_url, avatar_color, xp, level, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year, is_bot, is_official",
     )
     .order("username", { ascending: true });
   if (error) return;
