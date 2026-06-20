@@ -200,6 +200,11 @@ export function AccountPanel() {
 
 
       <section>
+      <RecentVisitorsWidget />
+
+      <ProfileViewPrivacySettings />
+
+      <section>
         <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Friends ({friends.length})</h3>
         {friends.length === 0 ? (
           <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">No friends yet.</p>
