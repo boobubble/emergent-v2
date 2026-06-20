@@ -244,6 +244,13 @@ function AuthGate() {
     return <Navigate to="/welcome" replace />;
   }
 
+  // Authenticated users shouldn't sit on the public landing or login pages —
+  // send them to the app home (chatroom/feed) automatically after sign in.
+  if (path === "/welcome" || path === "/login") {
+    return <Navigate to="/" replace />;
+  }
+
+
   return (
     <AppSettingsProvider>
       <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
