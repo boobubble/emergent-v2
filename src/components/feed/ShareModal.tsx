@@ -14,7 +14,7 @@ type Target = {
   name: string;
   href: string;
   bg: string;
-  icon: JSX.Element;
+  icon: ReactElement;
 };
 
 export function ShareModal({ payload, onClose }: { payload: SharePayload; onClose: () => void }) {
