@@ -527,7 +527,7 @@ function FeedPage() {
       {/* Top bar */}
       <header className="sticky top-0 z-30 feed-glass border-b border-border">
         <div className="mx-auto flex max-w-[1360px] items-center gap-3 px-3 py-2.5 sm:gap-4 sm:px-5">
-          <Link to="/" className="flex items-center gap-2 text-primary">
+          <Link to="/feed" className="flex items-center gap-2 text-primary">
             <span className="inline-grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-xl [&_img]:!h-9 [&_img]:!w-9 [&_img]:!max-h-9 [&_img]:!max-w-9 [&_img]:object-contain">
               <BrandMark
                 slot="feed"
