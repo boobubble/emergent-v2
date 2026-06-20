@@ -338,6 +338,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginAsGuest = useCallback(async (username?: string, gender?: "male" | "female" | "other") => {
+    const [signupCfg, guestCfg] = await Promise.all([loadSignupAccess(), loadGuestAccess()]);
+    if (!signupCfg.guestEnabled || !guestCfg.enabled) {
+      throw new Error(signupCfg.disabledMessage || "Guest logins are temporarily disabled.");
+    }
     const cleaned = (username ?? "").trim();
     const letterCount = cleaned.replace(/[^a-zA-Z]/g, "").length;
     if (cleaned && (letterCount < 2 || letterCount > 10)) {
