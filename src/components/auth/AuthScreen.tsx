@@ -165,6 +165,18 @@ export function AuthScreen() {
               👤 Continue as guest
             </button>
           )}
+          {signupAvailable && (
+            <button
+              onClick={startDemo}
+              disabled={demoBusy}
+              className="w-full rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-500/15 to-yellow-400/15 px-4 py-3 text-sm font-bold text-amber-300 hover:from-amber-500/25 hover:to-yellow-400/25 disabled:opacity-60"
+            >
+              {demoBusy ? "Preparing demo…" : "🎟️ Try demo account (1000 coins)"}
+            </button>
+          )}
+          {demoErr && (
+            <div className="rounded-lg bg-destructive/15 px-3 py-2 text-[11px] text-destructive">{demoErr}</div>
+          )}
           </div>
         </div>
         <FeedbackShowcase surface="signup" />
