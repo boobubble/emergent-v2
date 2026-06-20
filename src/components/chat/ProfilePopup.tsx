@@ -226,7 +226,16 @@ export function ProfilePopup({
 
           {activeTab === "about" && (
             <div className="space-y-3">
-              <p className="text-foreground/90">{user.bio || <span className="text-muted-foreground italic">No bio yet.</span>}</p>
+              {user.aboutMe ? (
+                <p className="whitespace-pre-wrap break-words text-foreground/90">{user.aboutMe}</p>
+              ) : user.bio ? (
+                <p className="text-foreground/90">{user.bio}</p>
+              ) : (
+                <p className="italic text-muted-foreground">No about me yet.</p>
+              )}
+              {user.aboutMe && user.bio && (
+                <p className="border-t border-border pt-2 text-xs text-muted-foreground">{user.bio}</p>
+              )}
               {(user.badges || []).length > 0 && (
                 <div>
                   <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Badges</div>
