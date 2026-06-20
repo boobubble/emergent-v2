@@ -138,7 +138,22 @@ export function ProfileModal({ open, onClose }: { open: boolean; onClose: () => 
         </div>
         <div>
           <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Bio</label>
-          <textarea value={bio} onChange={e => setBio(e.target.value)} rows={2} className="w-full resize-none rounded bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" />
+          <textarea value={bio} onChange={e => setBio(e.target.value.slice(0, 160))} rows={2} placeholder="Short tagline shown next to your name" className="w-full resize-none rounded bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" />
+        </div>
+        <div>
+          <div className="mb-1 flex items-center justify-between">
+            <label className="block text-xs font-semibold uppercase text-muted-foreground">About me</label>
+            <span className={`text-[10px] font-semibold ${overLimit ? "text-destructive" : "text-muted-foreground"}`}>
+              {wordCount}/{ABOUT_WORD_LIMIT} words
+            </span>
+          </div>
+          <textarea
+            value={aboutMe}
+            onChange={e => handleAboutChange(e.target.value)}
+            rows={5}
+            placeholder="Tell others about yourself ✨ (emojis welcome, up to 100 words)"
+            className={`w-full resize-none rounded bg-input px-3 py-2 text-sm outline-none focus:ring-1 ${overLimit ? "ring-1 ring-destructive focus:ring-destructive" : "focus:ring-ring"}`}
+          />
         </div>
         <div>
           <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Status</label>
@@ -152,11 +167,12 @@ export function ProfileModal({ open, onClose }: { open: boolean; onClose: () => 
       <div className="flex justify-end gap-2 border-t border-border p-3">
         <button onClick={onClose} className="rounded px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
         <button
-          onClick={() => { updateMe({ name: name.trim() || state.me.name, bio, status }); onClose(); }}
-          className="rounded px-4 py-1.5 text-sm font-semibold text-primary-foreground"
+          onClick={handleSave}
+          disabled={saving || overLimit}
+          className="rounded px-4 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           style={{ background: "var(--gradient-accent)" }}
         >
-          Save
+          {saving ? "Saving…" : "Save"}
         </button>
       </div>
     </Backdrop>
