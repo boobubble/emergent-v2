@@ -1051,6 +1051,7 @@ function LandingPage() {
           </div>
         </div>
       </footer>
+      <AuthDialogs popup={authPopup} setPopup={setAuthPopup} />
     </div>
   );
 }
