@@ -353,7 +353,7 @@ function FeedPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Guests can chat in the lobby only. Create an account to post, react, and follow friends in the feed.
           </p>
-          <Link to="/" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+          <Link to="/chat" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
             <ArrowLeft className="h-4 w-4" /> Back to chat
           </Link>
         </div>
