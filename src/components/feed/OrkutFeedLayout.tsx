@@ -6,6 +6,7 @@ import {
   Eye,
   Star,
   MessageCircle,
+  MessagesSquare,
   Sparkles,
   Camera,
   UserPlus,
@@ -294,6 +295,7 @@ function OrkutTopBar({
           <TopLink icon={Users} label="friends" onClick={onOpenFindFriends} />
           <TopLink icon={Star} label="communities" onClick={goCommunities} />
           <TopLink icon={MessageCircle} label="messages" onClick={onOpenMessages} />
+          <TopLink icon={MessagesSquare} label="chatrooms" onClick={() => navigate({ to: "/chatroom" })} />
         </div>
       </nav>
     </header>
@@ -479,6 +481,7 @@ function OrkutQuickLinks({
     { icon: Users, label: "friends", onClick: onFindFriends },
     { icon: Star, label: "communities", onClick: () => navigate({ to: "/groups" }) },
     { icon: MessageCircle, label: "messages", onClick: onMessages },
+    { icon: MessagesSquare, label: "chatrooms", onClick: () => navigate({ to: "/chatroom" }) },
     { icon: Palette, label: "themes", onClick: onThemes },
     { icon: Settings, label: "account", onClick: onAccount },
     { icon: LogOut, label: "logout", onClick: logout },
