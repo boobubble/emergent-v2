@@ -51,6 +51,7 @@ import { Route as AdminSystemRouteImport } from './routes/admin.system'
 import { Route as AdminStaffPermissionsRouteImport } from './routes/admin.staff-permissions'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
 import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
+import { Route as AdminSignupAccessRouteImport } from './routes/admin.signup-access'
 import { Route as AdminSetupWizardRouteImport } from './routes/admin.setup-wizard'
 import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminSecurityRouteImport } from './routes/admin.security'
@@ -314,6 +315,11 @@ const AdminSocialLayoutRoute = AdminSocialLayoutRouteImport.update({
 const AdminSocialFeedRoute = AdminSocialFeedRouteImport.update({
   id: '/social-feed',
   path: '/social-feed',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSignupAccessRoute = AdminSignupAccessRouteImport.update({
+  id: '/signup-access',
+  path: '/signup-access',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSetupWizardRoute = AdminSetupWizardRouteImport.update({
@@ -656,6 +662,7 @@ export interface FileRoutesByFullPath {
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
+  '/admin/signup-access': typeof AdminSignupAccessRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -751,6 +758,7 @@ export interface FileRoutesByTo {
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
+  '/admin/signup-access': typeof AdminSignupAccessRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -849,6 +857,7 @@ export interface FileRoutesById {
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
+  '/admin/signup-access': typeof AdminSignupAccessRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -948,6 +957,7 @@ export interface FileRouteTypes {
     | '/admin/security'
     | '/admin/seo'
     | '/admin/setup-wizard'
+    | '/admin/signup-access'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -1043,6 +1053,7 @@ export interface FileRouteTypes {
     | '/admin/security'
     | '/admin/seo'
     | '/admin/setup-wizard'
+    | '/admin/signup-access'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -1140,6 +1151,7 @@ export interface FileRouteTypes {
     | '/admin/security'
     | '/admin/seo'
     | '/admin/setup-wizard'
+    | '/admin/signup-access'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -1493,6 +1505,13 @@ declare module '@tanstack/react-router' {
       path: '/social-feed'
       fullPath: '/admin/social-feed'
       preLoaderRoute: typeof AdminSocialFeedRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/signup-access': {
+      id: '/admin/signup-access'
+      path: '/signup-access'
+      fullPath: '/admin/signup-access'
+      preLoaderRoute: typeof AdminSignupAccessRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/setup-wizard': {
@@ -1930,6 +1949,7 @@ interface AdminRouteChildren {
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSeoRoute: typeof AdminSeoRoute
   AdminSetupWizardRoute: typeof AdminSetupWizardRoute
+  AdminSignupAccessRoute: typeof AdminSignupAccessRoute
   AdminSocialFeedRoute: typeof AdminSocialFeedRoute
   AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
   AdminStaffPermissionsRoute: typeof AdminStaffPermissionsRoute
@@ -1988,6 +2008,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSecurityRoute: AdminSecurityRoute,
   AdminSeoRoute: AdminSeoRoute,
   AdminSetupWizardRoute: AdminSetupWizardRoute,
+  AdminSignupAccessRoute: AdminSignupAccessRoute,
   AdminSocialFeedRoute: AdminSocialFeedRoute,
   AdminSocialLayoutRoute: AdminSocialLayoutRoute,
   AdminStaffPermissionsRoute: AdminStaffPermissionsRoute,

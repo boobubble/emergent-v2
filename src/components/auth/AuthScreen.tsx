@@ -4,6 +4,7 @@ import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check"
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-config";
+import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
 import { LiveCommunityBackground } from "@/components/auth/LiveCommunityBackground";
 
@@ -26,10 +27,12 @@ export function AuthDialogs({
   popup,
   setPopup,
   guestEnabled = true,
+  signupEnabled = true,
 }: {
   popup: AuthPopup;
   setPopup: (p: AuthPopup) => void;
   guestEnabled?: boolean;
+  signupEnabled?: boolean;
 }) {
   return (
     <>
@@ -37,13 +40,15 @@ export function AuthDialogs({
         open={popup === "signin"}
         onOpenChange={(v) => setPopup(v ? "signin" : null)}
         onForgot={() => setPopup("forgot")}
-        onSwitchSignup={() => setPopup("signup")}
+        onSwitchSignup={() => signupEnabled && setPopup("signup")}
       />
-      <SignUpDialog
-        open={popup === "signup"}
-        onOpenChange={(v) => setPopup(v ? "signup" : null)}
-        onSwitchSignin={() => setPopup("signin")}
-      />
+      {signupEnabled && (
+        <SignUpDialog
+          open={popup === "signup"}
+          onOpenChange={(v) => setPopup(v ? "signup" : null)}
+          onSwitchSignin={() => setPopup("signin")}
+        />
+      )}
       {guestEnabled && (
         <GuestDialog
           open={popup === "guest"}
@@ -63,42 +68,48 @@ export function AuthScreen() {
   const [popup, setPopup] = useState<Popup>(null);
   const { loginAsGuest } = useAuth();
   const [guestCfg, setGuestCfg] = useState<GuestAccessConfig>(GUEST_ACCESS_DEFAULTS);
+  const [signupCfg, setSignupCfg] = useState<SignupAccessConfig>(SIGNUP_ACCESS_DEFAULTS);
   const [cfgReady, setCfgReady] = useState(false);
   const autoTriedRef = useRef(false);
 
-  // Load guest-access config directly from app_settings — AuthScreen runs
-  // outside AppSettingsProvider (which is mounted after login).
+  // Load guest-access + signup-access config directly from app_settings —
+  // AuthScreen runs outside AppSettingsProvider (which mounts after login).
   useEffect(() => {
     let cancel = false;
     (async () => {
       try {
         const { data } = await supabase
           .from("app_settings")
-          .select("value")
-          .eq("key", "guest_access")
-          .maybeSingle();
+          .select("key, value")
+          .in("key", ["guest_access", "signup_access"]);
         if (cancel) return;
-        const persisted = (data?.value as Partial<GuestAccessConfig> | null) ?? {};
+        const byKey = new Map((data ?? []).map((r) => [r.key, r.value as Record<string, unknown> | null]));
+        const guest = (byKey.get("guest_access") as Partial<GuestAccessConfig> | null) ?? {};
+        const signup = (byKey.get("signup_access") as Partial<SignupAccessConfig> | null) ?? {};
         setGuestCfg({
           ...GUEST_ACCESS_DEFAULTS,
-          ...persisted,
-          permissions: { ...GUEST_ACCESS_DEFAULTS.permissions, ...(persisted.permissions ?? {}) },
+          ...guest,
+          permissions: { ...GUEST_ACCESS_DEFAULTS.permissions, ...(guest.permissions ?? {}) },
         });
+        setSignupCfg({ ...SIGNUP_ACCESS_DEFAULTS, ...signup });
       } catch { /* keep defaults */ }
       finally { if (!cancel) setCfgReady(true); }
     })();
     return () => { cancel = true; };
   }, []);
 
+  const guestAvailable = guestCfg.enabled && signupCfg.guestEnabled;
+  const signupAvailable = signupCfg.signupEnabled;
+
   // Auto Guest Login — opt-in via admin settings.
   useEffect(() => {
     if (!cfgReady || autoTriedRef.current) return;
-    if (!guestCfg.enabled || !guestCfg.autoLogin) return;
+    if (!guestAvailable || !guestCfg.autoLogin) return;
     // Honor an explicit opt-out (e.g. after a guest logs out and wants the choice screen).
     try { if (sessionStorage.getItem("guest-auto-skip") === "1") return; } catch { /* ignore */ }
     autoTriedRef.current = true;
     loginAsGuest().catch(() => { /* fall back to the manual screen */ });
-  }, [cfgReady, guestCfg.enabled, guestCfg.autoLogin, loginAsGuest]);
+  }, [cfgReady, guestAvailable, guestCfg.autoLogin, loginAsGuest]);
 
   return (
     <LiveCommunityBackground>
@@ -119,13 +130,19 @@ export function AuthScreen() {
           >
             Sign in
           </button>
-          <button
-            onClick={() => setPopup("signup")}
-            className="w-full rounded-full border border-primary/50 bg-primary/10 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/20"
-          >
-            Create account
-          </button>
-          {guestCfg.enabled && (
+          {signupAvailable ? (
+            <button
+              onClick={() => setPopup("signup")}
+              className="w-full rounded-full border border-primary/50 bg-primary/10 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/20"
+            >
+              Create account
+            </button>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground">
+              {signupCfg.disabledMessage}
+            </div>
+          )}
+          {guestAvailable && (
             <button
               onClick={() => setPopup("guest")}
               className="w-full rounded-full border border-dashed border-border bg-background px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -138,7 +155,7 @@ export function AuthScreen() {
         <FeedbackShowcase surface="signup" />
       </div>
 
-      <AuthDialogs popup={popup} setPopup={setPopup} guestEnabled={guestCfg.enabled} />
+      <AuthDialogs popup={popup} setPopup={setPopup} guestEnabled={guestAvailable} signupEnabled={signupAvailable} />
     </LiveCommunityBackground>
   );
 }

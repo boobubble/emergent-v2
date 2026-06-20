@@ -3,6 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { loginWithIdentifier, deleteGuestAccount } from "@/lib/auth.functions";
 import { checkDeviceBan, recordDevice } from "@/lib/device.functions";
 import { getDeviceFingerprint } from "@/lib/device-fingerprint";
+import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
+import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-config";
+
+async function loadSignupAccess(): Promise<SignupAccessConfig> {
+  try {
+    const { data } = await supabase.from("app_settings").select("value").eq("key", "signup_access").maybeSingle();
+    const v = (data?.value as Partial<SignupAccessConfig> | null) ?? {};
+    return { ...SIGNUP_ACCESS_DEFAULTS, ...v };
+  } catch { return SIGNUP_ACCESS_DEFAULTS; }
+}
+async function loadGuestAccess(): Promise<GuestAccessConfig> {
+  try {
+    const { data } = await supabase.from("app_settings").select("value").eq("key", "guest_access").maybeSingle();
+    const v = (data?.value as Partial<GuestAccessConfig> | null) ?? {};
+    return { ...GUEST_ACCESS_DEFAULTS, ...v };
+  } catch { return GUEST_ACCESS_DEFAULTS; }
+}
 
 import type { Session } from "@supabase/supabase-js";
 
@@ -279,6 +296,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = useCallback(async (email: string, password: string, username: string, gender: "male" | "female" | "other", extras?: SignupExtras) => {
     email = email.trim();
     username = username.trim();
+    const cfg = await loadSignupAccess();
+    if (!cfg.signupEnabled) throw new Error(cfg.disabledMessage || "New sign-ups are temporarily disabled.");
     const letterCount = username.replace(/[^a-zA-Z]/g, "").length;
     if (letterCount < 2 || letterCount > 10) throw new Error("Username must contain 2 to 10 letters.");
     if (password.length < 4) throw new Error("Password must be at least 4 characters");
@@ -319,6 +338,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginAsGuest = useCallback(async (username?: string, gender?: "male" | "female" | "other") => {
+    const [signupCfg, guestCfg] = await Promise.all([loadSignupAccess(), loadGuestAccess()]);
+    if (!signupCfg.guestEnabled || !guestCfg.enabled) {
+      throw new Error(signupCfg.disabledMessage || "Guest logins are temporarily disabled.");
+    }
     const cleaned = (username ?? "").trim();
     const letterCount = cleaned.replace(/[^a-zA-Z]/g, "").length;
     if (cleaned && (letterCount < 2 || letterCount > 10)) {
