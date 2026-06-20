@@ -14,7 +14,50 @@ function UsernameHint({ status }: { status: UsernameStatus }) {
   return <p className="mt-1 text-[10px] font-semibold text-destructive">{status.message}</p>;
 }
 
-type Popup = null | "signin" | "signup" | "guest" | "forgot";
+export type AuthPopup = null | "signin" | "signup" | "guest" | "forgot";
+type Popup = AuthPopup;
+
+/**
+ * Embeddable auth dialogs. Use from any page (e.g. the Welcome landing) to
+ * provide sign in / sign up / forgot password / guest entry without sending
+ * users to a separate /login page.
+ */
+export function AuthDialogs({
+  popup,
+  setPopup,
+  guestEnabled = true,
+}: {
+  popup: AuthPopup;
+  setPopup: (p: AuthPopup) => void;
+  guestEnabled?: boolean;
+}) {
+  return (
+    <>
+      <SignInDialog
+        open={popup === "signin"}
+        onOpenChange={(v) => setPopup(v ? "signin" : null)}
+        onForgot={() => setPopup("forgot")}
+        onSwitchSignup={() => setPopup("signup")}
+      />
+      <SignUpDialog
+        open={popup === "signup"}
+        onOpenChange={(v) => setPopup(v ? "signup" : null)}
+        onSwitchSignin={() => setPopup("signin")}
+      />
+      {guestEnabled && (
+        <GuestDialog
+          open={popup === "guest"}
+          onOpenChange={(v) => setPopup(v ? "guest" : null)}
+        />
+      )}
+      <ForgotDialog
+        open={popup === "forgot"}
+        onOpenChange={(v) => setPopup(v ? "forgot" : null)}
+        onBack={() => setPopup("signin")}
+      />
+    </>
+  );
+}
 
 export function AuthScreen() {
   const [popup, setPopup] = useState<Popup>(null);
