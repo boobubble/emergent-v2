@@ -6,6 +6,7 @@ import {
   Eye,
   Star,
   MessageCircle,
+  MessagesSquare,
   Sparkles,
   Camera,
   UserPlus,
