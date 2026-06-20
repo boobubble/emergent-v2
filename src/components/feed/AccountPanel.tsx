@@ -8,6 +8,8 @@ import { ACCENTS, useAccent } from "@/lib/use-accent";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { useUsernameCheck } from "@/lib/use-username-check";
+import { RecentVisitorsWidget } from "@/components/feed/RecentVisitorsWidget";
+import { ProfileViewPrivacySettings } from "@/components/feed/ProfileViewPrivacySettings";
 
 export function AccountPanel() {
   const navigate = useNavigate();
