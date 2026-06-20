@@ -1139,8 +1139,20 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
         users: { ...s.users, me: meNext },
         messages: { ...s.messages, [channelId]: [...existing, userMsg] },
       };
+      // Block ALL bot commands inside user DMs (non-bot) — commands only work in chatrooms
+      const dmPeerId = channelId.startsWith("dm:") ? channelId.slice(3) : null;
+      const dmPeer = dmPeerId ? next.users[dmPeerId] : null;
+      const inUserDm = !!dmPeer && !dmPeer.isBot;
+      if (isCmd && inUserDm) {
+        const sysMsg: Message = {
+          id: uid(), channelId, authorId: "bot-gamebot", ts: Date.now() + 200,
+          text: `🚫 Bot commands like **!help** aren't available in private messages. Head to a chatroom to use them.`,
+          kind: "system",
+        };
+        return { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], sysMsg] } };
+      }
       // Block game commands inside bot DMs — games are chatroom-only
-      const inBotDm = channelId.startsWith("dm:") && !!next.users[channelId.slice(3)]?.isBot;
+      const inBotDm = !!dmPeer && dmPeer.isBot;
       const allowedInDm = /^!(help|stats|nick|me)\b/i.test(trimmed);
       if (isCmd && inBotDm && !allowedInDm) {
         const targetId = channelId.slice(3);
