@@ -7,6 +7,7 @@ export interface User {
   avatarUrl?: string;         // optional uploaded avatar (data URL)
   status: "online" | "away" | "offline";
   bio?: string;
+  aboutMe?: string;
   isBot?: boolean;
   isGuest?: boolean;
   gender?: "male" | "female" | "other";

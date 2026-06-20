@@ -1,8 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X, Trophy, Flame, Award, Lock } from "lucide-react";
+import { toast } from "sonner";
 import { useChat } from "@/lib/chat-store";
+import { useAuth } from "@/lib/auth-store";
+import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "./Avatar";
 import { BADGES, BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
+
+const ABOUT_WORD_LIMIT = 100;
+function countWords(s: string): number {
+  const t = s.trim();
+  if (!t) return 0;
+  return t.split(/\s+/u).length;
+}
 
 function Backdrop({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
@@ -19,17 +29,60 @@ function Backdrop({ onClose, children }: { onClose: () => void; children: React.
 
 export function ProfileModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { state, updateMe } = useChat();
+  const { user: authUser } = useAuth();
   const [name, setName] = useState(state.me.name);
   const [bio, setBio] = useState(state.me.bio || "");
+  const [aboutMe, setAboutMe] = useState(state.me.aboutMe || "");
   const [status, setStatus] = useState(state.me.status);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => { if (open) { setName(state.me.name); setBio(state.me.bio || ""); setStatus(state.me.status); } }, [open, state.me]);
+  useEffect(() => {
+    if (open) {
+      setName(state.me.name);
+      setBio(state.me.bio || "");
+      setAboutMe(state.me.aboutMe || "");
+      setStatus(state.me.status);
+    }
+  }, [open, state.me]);
+
+  const wordCount = useMemo(() => countWords(aboutMe), [aboutMe]);
+  const overLimit = wordCount > ABOUT_WORD_LIMIT;
 
   if (!open) return null;
   const earnedBadges = (state.me.badges || []).map(id => BADGE_MAP[id]).filter(Boolean);
   const xpForLevel = state.me.level * 50;
   const xpThisLevel = state.me.xp - (state.me.level - 1) * 50;
   const pct = Math.min(100, Math.round((xpThisLevel / 50) * 100));
+
+  const handleAboutChange = (val: string) => {
+    // Soft-cap by words: allow typing but block save when over limit.
+    // Also hard-cap chars at 1000 to match DB constraint.
+    setAboutMe(val.slice(0, 1000));
+  };
+
+  const handleSave = async () => {
+    if (overLimit) {
+      toast.error(`About me must be ${ABOUT_WORD_LIMIT} words or fewer`);
+      return;
+    }
+    const cleanName = name.trim() || state.me.name;
+    const cleanBio = bio.trim();
+    const cleanAbout = aboutMe.trim();
+    updateMe({ name: cleanName, bio: cleanBio, aboutMe: cleanAbout, status });
+    if (authUser?.id) {
+      setSaving(true);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ bio: cleanBio || null, about_me: cleanAbout || null })
+        .eq("id", authUser.id);
+      setSaving(false);
+      if (error) {
+        toast.error(error.message || "Couldn't save profile");
+        return;
+      }
+    }
+    onClose();
+  };
 
   return (
     <Backdrop onClose={onClose}>
@@ -85,7 +138,22 @@ export function ProfileModal({ open, onClose }: { open: boolean; onClose: () => 
         </div>
         <div>
           <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Bio</label>
-          <textarea value={bio} onChange={e => setBio(e.target.value)} rows={2} className="w-full resize-none rounded bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" />
+          <textarea value={bio} onChange={e => setBio(e.target.value.slice(0, 160))} rows={2} placeholder="Short tagline shown next to your name" className="w-full resize-none rounded bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" />
+        </div>
+        <div>
+          <div className="mb-1 flex items-center justify-between">
+            <label className="block text-xs font-semibold uppercase text-muted-foreground">About me</label>
+            <span className={`text-[10px] font-semibold ${overLimit ? "text-destructive" : "text-muted-foreground"}`}>
+              {wordCount}/{ABOUT_WORD_LIMIT} words
+            </span>
+          </div>
+          <textarea
+            value={aboutMe}
+            onChange={e => handleAboutChange(e.target.value)}
+            rows={5}
+            placeholder="Tell others about yourself ✨ (emojis welcome, up to 100 words)"
+            className={`w-full resize-none rounded bg-input px-3 py-2 text-sm outline-none focus:ring-1 ${overLimit ? "ring-1 ring-destructive focus:ring-destructive" : "focus:ring-ring"}`}
+          />
         </div>
         <div>
           <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Status</label>
@@ -99,11 +167,12 @@ export function ProfileModal({ open, onClose }: { open: boolean; onClose: () => 
       <div className="flex justify-end gap-2 border-t border-border p-3">
         <button onClick={onClose} className="rounded px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
         <button
-          onClick={() => { updateMe({ name: name.trim() || state.me.name, bio, status }); onClose(); }}
-          className="rounded px-4 py-1.5 text-sm font-semibold text-primary-foreground"
+          onClick={handleSave}
+          disabled={saving || overLimit}
+          className="rounded px-4 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           style={{ background: "var(--gradient-accent)" }}
         >
-          Save
+          {saving ? "Saving…" : "Save"}
         </button>
       </div>
     </Backdrop>

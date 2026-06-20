@@ -1412,6 +1412,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          about_me: string | null
           active_chat_theme: string | null
           active_feed_theme: string | null
           avatar_color: string
@@ -1446,6 +1447,7 @@ export type Database = {
           xp: number
         }
         Insert: {
+          about_me?: string | null
           active_chat_theme?: string | null
           active_feed_theme?: string | null
           avatar_color?: string
@@ -1480,6 +1482,7 @@ export type Database = {
           xp?: number
         }
         Update: {
+          about_me?: string | null
           active_chat_theme?: string | null
           active_feed_theme?: string | null
           avatar_color?: string
