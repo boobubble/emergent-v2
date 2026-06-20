@@ -199,7 +199,6 @@ export function AccountPanel() {
       </section>
 
 
-      <section>
       <RecentVisitorsWidget />
 
       <ProfileViewPrivacySettings />
