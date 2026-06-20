@@ -357,6 +357,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     const wasGuest = user?.isGuest === true;
+    // Detect demo accounts by their auth metadata flag before we sign out.
+    let wasDemo = false;
+    try {
+      const { data } = await supabase.auth.getSession();
+      const meta = (data.session?.user?.user_metadata ?? {}) as { is_demo?: boolean };
+      wasDemo = Boolean(meta.is_demo);
+    } catch { /* ignore */ }
     // End any Ludo games this user is hosting so other players aren't stuck.
     try {
       const endFn = (window as unknown as { __lovableEndMyLudoGames?: () => Promise<void> }).__lovableEndMyLudoGames;
@@ -364,6 +371,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (e) { console.error("end-ludo-on-logout failed", e); }
     if (wasGuest) {
       try { await deleteGuestAccount(); } catch (e) { console.error("Guest cleanup failed", e); }
+    }
+    if (wasDemo) {
+      try { await deleteDemoAccount(); } catch (e) { console.error("Demo cleanup failed", e); }
     }
     await supabase.auth.signOut();
     setUser(null);
