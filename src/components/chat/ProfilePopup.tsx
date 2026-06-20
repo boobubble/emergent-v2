@@ -20,6 +20,7 @@ import { Avatar } from "./Avatar";
 import { NameEmojiBadge, CountryFlag, UserKindBadge } from "@/lib/name-emoji";
 import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
 import { banUser, muteUser } from "@/lib/moderation.functions";
+import { recordProfileView } from "@/lib/use-profile-views";
 import type { Role } from "@/lib/chat-types";
 
 type Tab = "info" | "about" | "friends" | "activity" | "daily";
@@ -80,6 +81,9 @@ export function ProfilePopup({
     let cancel = false;
     (async () => {
       if (realId && realId !== "me") {
+        if (!isMe && !user.isBot && authUser?.id && realId !== authUser.id) {
+          recordProfileView(realId);
+        }
         const { data: prof } = await supabase
           .from("profiles")
           .select("created_at")

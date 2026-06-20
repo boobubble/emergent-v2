@@ -1386,6 +1386,30 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_views: {
+        Row: {
+          anonymous: boolean
+          id: string
+          profile_owner_id: string
+          viewed_at: string
+          viewer_id: string
+        }
+        Insert: {
+          anonymous?: boolean
+          id?: string
+          profile_owner_id: string
+          viewed_at?: string
+          viewer_id: string
+        }
+        Update: {
+          anonymous?: boolean
+          id?: string
+          profile_owner_id?: string
+          viewed_at?: string
+          viewer_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           active_chat_theme: string | null
@@ -1408,6 +1432,10 @@ export type Database = {
           last_seen: string
           level: number
           longest_streak: number
+          profile_views_anonymous: boolean
+          profile_views_enabled: boolean
+          profile_views_friends_only: boolean
+          profile_views_unlocked_full: boolean
           show_country_flag: boolean
           show_guest_badge: boolean
           sound_prefs: Json
@@ -1438,6 +1466,10 @@ export type Database = {
           last_seen?: string
           level?: number
           longest_streak?: number
+          profile_views_anonymous?: boolean
+          profile_views_enabled?: boolean
+          profile_views_friends_only?: boolean
+          profile_views_unlocked_full?: boolean
           show_country_flag?: boolean
           show_guest_badge?: boolean
           sound_prefs?: Json
@@ -1468,6 +1500,10 @@ export type Database = {
           last_seen?: string
           level?: number
           longest_streak?: number
+          profile_views_anonymous?: boolean
+          profile_views_enabled?: boolean
+          profile_views_friends_only?: boolean
+          profile_views_unlocked_full?: boolean
           show_country_flag?: boolean
           show_guest_badge?: boolean
           sound_prefs?: Json
@@ -2409,6 +2445,19 @@ export type Database = {
       delete_user_cascade: { Args: { _user: string }; Returns: undefined }
       get_active_chat_theme: { Args: { _user: string }; Returns: string }
       get_active_feed_theme: { Args: { _user: string }; Returns: string }
+      get_my_profile_visitors: {
+        Args: { _limit?: number }
+        Returns: {
+          anonymous: boolean
+          avatar_color: string
+          avatar_url: string
+          id: string
+          locked: boolean
+          username: string
+          viewed_at: string
+          viewer_id: string
+        }[]
+      }
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -2442,6 +2491,7 @@ export type Database = {
         Returns: boolean
       }
       my_coin_balance: { Args: never; Returns: number }
+      record_profile_view: { Args: { _owner_id: string }; Returns: undefined }
       slugify: { Args: { input: string }; Returns: string }
       trio_channel_room: { Args: { _channel: string }; Returns: string }
       unlock_chat_theme: {
@@ -2480,6 +2530,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      unlock_profile_visitor_history: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "moderator" | "user" | "dj" | "rj"

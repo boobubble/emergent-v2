@@ -4,12 +4,14 @@ import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
+import { useRecordProfileView } from "@/lib/use-profile-views";
 
 export function ProfilePanel({ username, onBack }: { username: string; onBack: () => void }) {
   const navigate = useNavigate();
   const { state, startDM, addFriend, removeFriend, blockUser, unblockUser, isFriend, isBlocked } = useChat();
 
   const user = Object.values(state.users).find(u => u.name.toLowerCase() === username.toLowerCase());
+  useRecordProfileView(user && !user.isBot && user.id !== "me" ? user.id : null);
   const ranked = Object.values(state.users).sort((a, b) => b.xp - a.xp);
   const rank = user ? ranked.findIndex(u => u.id === user.id) + 1 : 0;
   const sharedRooms = user ? Object.values(state.rooms).filter(r => r.members.includes(user.id)) : [];
