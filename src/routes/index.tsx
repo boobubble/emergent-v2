@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { ChatApp } from "@/components/chat/ChatApp";
+import { useAppSettings } from "@/lib/app-settings";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -10,5 +11,14 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Hang out in public rooms, DM friends, share files, earn badges, and play games with chat commands." },
     ],
   }),
-  component: ChatApp,
+  component: HomeRouter,
 });
+
+function HomeRouter() {
+  const { layoutPriority, ready } = useAppSettings();
+  // While settings load, render chat (the default) to avoid a flash of nothing.
+  if (ready && layoutPriority === "feed_first") {
+    return <Navigate to="/feed" replace />;
+  }
+  return <ChatApp />;
+}
