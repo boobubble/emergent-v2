@@ -67,11 +67,25 @@ export function AuthDialogs({
 
 export function AuthScreen() {
   const [popup, setPopup] = useState<Popup>(null);
-  const { loginAsGuest } = useAuth();
+  const { loginAsGuest, login } = useAuth();
   const [guestCfg, setGuestCfg] = useState<GuestAccessConfig>(GUEST_ACCESS_DEFAULTS);
   const [signupCfg, setSignupCfg] = useState<SignupAccessConfig>(SIGNUP_ACCESS_DEFAULTS);
   const [cfgReady, setCfgReady] = useState(false);
+  const [demoBusy, setDemoBusy] = useState(false);
+  const [demoErr, setDemoErr] = useState("");
   const autoTriedRef = useRef(false);
+
+  async function startDemo() {
+    setDemoErr(""); setDemoBusy(true);
+    try {
+      const creds = await createDemoAccount();
+      await login(creds.email, creds.password);
+    } catch (e) {
+      setDemoErr(e instanceof Error ? e.message : "Could not start demo");
+    } finally {
+      setDemoBusy(false);
+    }
+  }
 
   // Load guest-access + signup-access config directly from app_settings —
   // AuthScreen runs outside AppSettingsProvider (which mounts after login).
