@@ -295,6 +295,7 @@ function OrkutTopBar({
           <TopLink icon={Users} label="friends" onClick={onOpenFindFriends} />
           <TopLink icon={Star} label="communities" onClick={goCommunities} />
           <TopLink icon={MessageCircle} label="messages" onClick={onOpenMessages} />
+          <TopLink icon={MessagesSquare} label="chatrooms" onClick={() => navigate({ to: "/chatroom" })} />
         </div>
       </nav>
     </header>
