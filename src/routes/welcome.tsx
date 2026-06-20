@@ -101,6 +101,7 @@ function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pollChoice, setPollChoice] = useState<number | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [authPopup, setAuthPopup] = useState<AuthPopup>(null);
 
   useEffect(() => {
     try {
