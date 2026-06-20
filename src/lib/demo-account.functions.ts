@@ -72,8 +72,29 @@ export const deleteDemoAccount = createServerFn({ method: "POST" })
 
     const { data: userRes, error: gErr } = await supabaseAdmin.auth.admin.getUserById(userId);
     if (gErr || !userRes?.user) throw new Error("User not found");
-    const meta = (userRes.user.user_metadata ?? {}) as { is_demo?: boolean };
-    if (!meta.is_demo) throw new Error("Not a demo account");
+    const u = userRes.user;
+    const meta = (u.user_metadata ?? {}) as { is_demo?: boolean };
+
+    // Defense in depth: every condition below must be true or we refuse.
+    // 1) Auth metadata must explicitly flag this as a demo account.
+    // 2) Email must match the demo provisioning pattern (demo+xxx@palrgo.test).
+    // 3) Account must NOT be an anonymous/guest user (handled by deleteGuestAccount).
+    // 4) Account must NOT hold any role in user_roles (no admins/mods ever).
+    const isDemoFlag = meta.is_demo === true;
+    const emailOk = typeof u.email === "string" && /^demo\+[a-z0-9]+@palrgo\.test$/i.test(u.email);
+    const notAnon = u.is_anonymous !== true;
+
+    const { count: roleCount, error: roleErr } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id", { count: "exact", head: true })
+      .eq("user_id", userId);
+    if (roleErr) throw new Error(roleErr.message);
+    const hasNoRoles = (roleCount ?? 0) === 0;
+
+    if (!isDemoFlag || !emailOk || !notAnon || !hasNoRoles) {
+      throw new Error("Refusing to delete: account does not match demo profile");
+    }
+
 
     // Cascade-delete all rows owned by this user across the schema.
     const { error: rpcErr } = await supabaseAdmin.rpc("delete_user_cascade", { _user: userId });
