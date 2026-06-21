@@ -26,8 +26,6 @@ import { SessionConflictBanner } from "@/components/SessionConflictBanner";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { HeadFootScripts } from "@/components/HeadFootScripts";
 import { AdsAutoLoader } from "@/components/AdSlot";
-import { GlobalThemeToggle } from "@/components/GlobalThemeToggle";
-import { GlobalLanguageToggle } from "@/components/GlobalLanguageToggle";
 import { BroadcasterAnnouncementsRunner } from "@/components/broadcaster/BroadcasterAnnouncements";
 import "@/i18n";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
