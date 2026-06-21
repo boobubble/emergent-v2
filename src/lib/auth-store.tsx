@@ -275,6 +275,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("pagehide", onExit);
   }, [user?.isGuest]);
 
+  // Flush demo accounts when the tab closes / page hides so all their
+  // posts/friendships/etc. are wiped even if the user never clicks Logout.
+  useEffect(() => {
+    if (!user?.isDemo) return;
+    const onExit = () => {
+      supabase.auth.getSession().then(({ data }) => {
+        const token = data.session?.access_token;
+        if (!token) return;
+        const body = new Blob([JSON.stringify({ access_token: token })], { type: "application/json" });
+        try {
+          if (navigator.sendBeacon) navigator.sendBeacon("/api/public/demo-cleanup", body);
+          else fetch("/api/public/demo-cleanup", { method: "POST", body, keepalive: true });
+        } catch { /* noop */ }
+      });
+    };
+    window.addEventListener("pagehide", onExit);
+    return () => window.removeEventListener("pagehide", onExit);
+  }, [user?.isDemo]);
+
+
+
 
   const login = useCallback(async (identifier: string, password: string) => {
     const id = identifier.trim();
