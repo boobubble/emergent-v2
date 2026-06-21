@@ -154,14 +154,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     function userFromSession(session: Session): AuthUser {
       const u = session.user;
       const isGuest = Boolean((u as { is_anonymous?: boolean }).is_anonymous);
-      const meta = (u.user_metadata ?? {}) as { username?: string };
+      const meta = (u.user_metadata ?? {}) as { username?: string; is_demo?: boolean };
+      const isDemo = meta.is_demo === true;
       const placeholder =
         getCachedUsername(u.id) ||
         meta.username?.trim() ||
         u.email?.split("@")[0] ||
         (isGuest ? "guest" : "user");
-      return { id: u.id, email: u.email ?? "", username: placeholder, isGuest };
+      return { id: u.id, email: u.email ?? "", username: placeholder, isGuest, isDemo };
     }
+
 
     // Background side effects + real username fetch. Never blocks `ready`.
     function hydrateProfileBackground(session: Session) {
