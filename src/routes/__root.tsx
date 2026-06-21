@@ -205,7 +205,6 @@ function AuthGate() {
         <AdsAutoLoader />
         <SessionConflictBanner />
         <Outlet />
-        <GlobalThemeToggle />
         <Sonner />
         <RealtimeDebugOverlay />
       </>
@@ -234,7 +233,6 @@ function AuthGate() {
           <AdsAutoLoader />
           <SessionConflictBanner />
           <Outlet />
-          <GlobalThemeToggle />
           <Sonner />
           <RealtimeDebugOverlay />
         </>
@@ -263,8 +261,6 @@ function AuthGate() {
             <SessionConflictBanner />
             <FaviconSwitcher />
             <Outlet />
-            <GlobalThemeToggle />
-            <GlobalLanguageToggle />
             <Sonner />
             <RealtimeDebugOverlay />
           </IgnoreProvider>
