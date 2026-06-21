@@ -29,7 +29,9 @@ export interface AuthUser {
   email: string;
   username: string;
   isGuest: boolean;
+  isDemo: boolean;
 }
+
 
 interface SignupExtras {
   birthday?: string;        // yyyy-mm-dd
@@ -152,14 +154,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     function userFromSession(session: Session): AuthUser {
       const u = session.user;
       const isGuest = Boolean((u as { is_anonymous?: boolean }).is_anonymous);
-      const meta = (u.user_metadata ?? {}) as { username?: string };
+      const meta = (u.user_metadata ?? {}) as { username?: string; is_demo?: boolean };
+      const isDemo = meta.is_demo === true;
       const placeholder =
         getCachedUsername(u.id) ||
         meta.username?.trim() ||
         u.email?.split("@")[0] ||
         (isGuest ? "guest" : "user");
-      return { id: u.id, email: u.email ?? "", username: placeholder, isGuest };
+      return { id: u.id, email: u.email ?? "", username: placeholder, isGuest, isDemo };
     }
+
 
     // Background side effects + real username fetch. Never blocks `ready`.
     function hydrateProfileBackground(session: Session) {
@@ -270,6 +274,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener("pagehide", onExit);
     return () => window.removeEventListener("pagehide", onExit);
   }, [user?.isGuest]);
+
+  // Flush demo accounts when the tab closes / page hides so all their
+  // posts/friendships/etc. are wiped even if the user never clicks Logout.
+  useEffect(() => {
+    if (!user?.isDemo) return;
+    const onExit = () => {
+      supabase.auth.getSession().then(({ data }) => {
+        const token = data.session?.access_token;
+        if (!token) return;
+        const body = new Blob([JSON.stringify({ access_token: token })], { type: "application/json" });
+        try {
+          if (navigator.sendBeacon) navigator.sendBeacon("/api/public/demo-cleanup", body);
+          else fetch("/api/public/demo-cleanup", { method: "POST", body, keepalive: true });
+        } catch { /* noop */ }
+      });
+    };
+    window.addEventListener("pagehide", onExit);
+    return () => window.removeEventListener("pagehide", onExit);
+  }, [user?.isDemo]);
+
+
 
 
   const login = useCallback(async (identifier: string, password: string) => {
