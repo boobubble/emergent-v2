@@ -29,7 +29,9 @@ export interface AuthUser {
   email: string;
   username: string;
   isGuest: boolean;
+  isDemo: boolean;
 }
+
 
 interface SignupExtras {
   birthday?: string;        // yyyy-mm-dd

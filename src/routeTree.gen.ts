@@ -103,6 +103,7 @@ import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-l
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
 import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
+import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 
@@ -578,6 +579,11 @@ const ApiPublicFeedbackShowcaseRoute =
     path: '/api/public/feedback-showcase',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicDemoCleanupRoute = ApiPublicDemoCleanupRouteImport.update({
+  id: '/api/public/demo-cleanup',
+  path: '/api/public/demo-cleanup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCommunityBgRoute = ApiPublicCommunityBgRouteImport.update({
   id: '/api/public/community-bg',
   path: '/api/public/community-bg',
@@ -683,6 +689,7 @@ export interface FileRoutesByFullPath {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
+  '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
@@ -779,6 +786,7 @@ export interface FileRoutesByTo {
   '/broadcaster': typeof BroadcasterIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
+  '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
@@ -878,6 +886,7 @@ export interface FileRoutesById {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
+  '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
@@ -978,6 +987,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/admin/upcoming/$key'
     | '/api/public/community-bg'
+    | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
@@ -1074,6 +1084,7 @@ export interface FileRouteTypes {
     | '/broadcaster'
     | '/admin/upcoming/$key'
     | '/api/public/community-bg'
+    | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
@@ -1172,6 +1183,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/admin/upcoming/$key'
     | '/api/public/community-bg'
+    | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
@@ -1206,6 +1218,7 @@ export interface RootRouteChildren {
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
+  ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
   ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
   ApiPublicLandingRoute: typeof ApiPublicLandingRoute
@@ -1871,6 +1884,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFeedbackShowcaseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/demo-cleanup': {
+      id: '/api/public/demo-cleanup'
+      path: '/api/public/demo-cleanup'
+      fullPath: '/api/public/demo-cleanup'
+      preLoaderRoute: typeof ApiPublicDemoCleanupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/community-bg': {
       id: '/api/public/community-bg'
       path: '/api/public/community-bg'
@@ -2083,6 +2103,7 @@ const rootRouteChildren: RootRouteChildren = {
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
+  ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
   ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,
   ApiPublicLandingRoute: ApiPublicLandingRoute,
@@ -2090,13 +2111,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
