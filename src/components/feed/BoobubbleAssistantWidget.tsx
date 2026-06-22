@@ -229,7 +229,7 @@ export function BoobubbleAssistantWidget() {
         {items.length > 0 && (
           <div className="space-y-2">
             {items.slice(0, 5).map((it, idx) => (
-              <RecCard key={`${it.kind}:${it.id}`} item={it} index={idx} />
+              <RecCard key={`${refreshTick}:${it.kind}:${it.id}`} item={it} index={idx} />
             ))}
           </div>
         )}
