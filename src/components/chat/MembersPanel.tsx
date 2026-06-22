@@ -323,9 +323,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
         <button
           type="button"
-          title="Create 3 Some Room"
-          aria-label="Create 3 Some Room"
-          onClick={() => window.dispatchEvent(new CustomEvent("trio:open-create"))}
+          title="3 Some Rooms"
+          aria-label="Open 3 Some Rooms"
+          onClick={() => window.dispatchEvent(new CustomEvent("trio:open-launcher"))}
           className="relative grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-fuchsia-500 via-pink-500 to-amber-400 text-white shadow-[0_0_12px_-2px_rgba(236,72,153,0.7)] ring-1 ring-white/20 transition-transform hover:scale-110 hover:shadow-[0_0_16px_-1px_rgba(236,72,153,0.9)]"
         >
           <Sparkles className="h-4 w-4 drop-shadow" />
