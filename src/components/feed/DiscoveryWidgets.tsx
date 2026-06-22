@@ -141,7 +141,7 @@ export function FeaturedMembersWidget({
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const featured = useMemo(() => {
     return Object.values(profiles)
-      .filter((u) => u.id !== meId && !u.isBot && !u.isGuest)
+      .filter((u) => u.id !== meId && !u.isBot && !u.isGuest && !isDemoUser(u))
       .sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0))
       .slice(0, 4);
   }, [profiles, meId]);
