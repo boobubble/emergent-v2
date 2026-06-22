@@ -1066,6 +1066,26 @@ function UserMenu({ username, onProfile, onSettings }: { username: string; onPro
 
 
 
+function RailSection({ label, tone }: { label: string; tone: "primary" | "sky" | "amber" }) {
+  const toneClass = {
+    primary: "from-primary/80 to-primary/0",
+    sky: "from-sky-400/80 to-sky-400/0",
+    amber: "from-amber-400/80 to-amber-400/0",
+  }[tone];
+  const dot = {
+    primary: "bg-primary",
+    sky: "bg-sky-400",
+    amber: "bg-amber-400",
+  }[tone];
+  return (
+    <div className="flex items-center gap-2 px-1 pt-1 first:pt-0">
+      <span className={`h-1.5 w-1.5 rounded-full ${dot} shadow-[0_0_8px_currentColor]`} aria-hidden />
+      <span className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/80">{label}</span>
+      <span className={`h-px flex-1 bg-gradient-to-r ${toneClass}`} aria-hidden />
+    </div>
+  );
+}
+
 function NavLink({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active?: boolean }) {
   return (
     <Link to={to} className={`flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
