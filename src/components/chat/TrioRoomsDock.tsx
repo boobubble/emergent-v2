@@ -346,7 +346,125 @@ export function TrioRoomsDock() {
           }}
         />
       )}
+
+      {showLauncher && (
+        <LauncherDialog
+          rooms={acceptedRooms}
+          invites={invites}
+          unread={unread}
+          onClose={() => setShowLauncher(false)}
+          onOpenRoom={(r) => {
+            setShowLauncher(false);
+            openRoom(r);
+          }}
+          onCreate={() => {
+            setShowLauncher(false);
+            setShowCreate(true);
+          }}
+          onAccept={async (inv, pwd) => {
+            await handleAccept(inv, pwd);
+            setShowLauncher(false);
+          }}
+          onReject={handleReject}
+        />
+      )}
     </>
+  );
+}
+
+function LauncherDialog({
+  rooms,
+  invites,
+  unread,
+  onClose,
+  onOpenRoom,
+  onCreate,
+  onAccept,
+  onReject,
+}: {
+  rooms: OpenRoom[];
+  invites: PendingInvite[];
+  unread: Record<string, number>;
+  onClose: () => void;
+  onOpenRoom: (r: OpenRoom) => void;
+  onCreate: () => void;
+  onAccept: (inv: PendingInvite, password?: string) => void;
+  onReject: (inv: PendingInvite) => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-[22rem] max-w-[calc(100vw-2rem)] max-h-[80vh] overflow-y-auto rounded-2xl border border-border bg-card p-4 shadow-2xl animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-fuchsia-500" />
+            <div className="text-sm font-bold">3 Some Rooms</div>
+          </div>
+          <button
+            onClick={onClose}
+            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <button
+          onClick={onCreate}
+          className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-amber-400 px-3 py-2.5 text-sm font-semibold text-white shadow-md transition hover:opacity-95"
+        >
+          <Plus className="h-4 w-4" />
+          Create new room
+        </button>
+
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Your rooms
+        </div>
+        {rooms.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-4 text-center text-xs text-muted-foreground">
+            You're not in any private rooms yet.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            {rooms.map((r) => {
+              const count = unread[r.id] ?? 0;
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => onOpenRoom(r)}
+                  className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-left text-sm transition hover:border-primary/50 hover:bg-primary/5"
+                >
+                  <span className="flex items-center gap-2 truncate">
+                    <Sparkles className="h-3.5 w-3.5 text-fuchsia-500" />
+                    <span className="truncate font-medium">{r.name}</span>
+                  </span>
+                  {count > 0 && (
+                    <span className="grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                      {count > 99 ? "99+" : count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {invites.length > 0 && (
+          <>
+            <div className="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Pending invites
+            </div>
+            {invites.map((inv) => (
+              <InviteCard key={inv.roomId} inv={inv} onAccept={onAccept} onReject={onReject} />
+            ))}
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
