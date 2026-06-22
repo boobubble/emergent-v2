@@ -8,87 +8,115 @@ import { PremiumCard } from "@/components/feed/SideWidgets";
 import type { User } from "@/lib/chat-types";
 import type { FeedPost } from "@/lib/feed-types";
 
-/* ──────────────────────────── Promoted Posts ──────────────────────────── */
+/* ──────────────────────────── Promoted Users ──────────────────────────── */
+
+const PROMO_BADGES = ["Verified", "VIP", "Creator", "Top"] as const;
 
 export function PromotedPostsWidget({ profiles }: { profiles: Record<string, User> }) {
-  const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [following, setFollowing] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const { data } = await postsSafe()
-        .select("*")
-        .eq("privacy", "public")
-        .order("created_at", { ascending: false })
-        .limit(40);
-      if (!alive) return;
-      const rows = (data ?? []) as unknown as FeedPost[];
-      rows.sort((a, b) => (b.reaction_count ?? 0) - (a.reaction_count ?? 0));
-      setPosts(rows.slice(0, 3));
-      setLoaded(true);
-    })();
-    return () => { alive = false; };
-  }, []);
+  const promoted = useMemo(() => {
+    return Object.values(profiles)
+      .filter((u) => !u.isBot && !u.isGuest)
+      .sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0))
+      .slice(0, 3);
+  }, [profiles]);
+
+  async function follow(targetId: string) {
+    if (following[targetId]) return;
+    setFollowing((s) => ({ ...s, [targetId]: true }));
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const meId = auth.user?.id;
+      if (!meId || meId === targetId) return;
+      await supabase.from("friendships").insert({
+        sender_id: meId,
+        receiver_id: targetId,
+        status: "pending",
+      } as any);
+    } catch {
+      /* ignore */
+    }
+  }
 
   return (
     <PremiumCard
-      title="Promoted posts"
-      icon={<Megaphone className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />}
+      title="Promoted users"
+      icon={<Flame className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />}
       accent="amber"
       rightSlot={
         <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/30 to-orange-500/25 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-amber-800 dark:text-amber-100 ring-1 ring-inset ring-amber-400/40 shadow-[0_0_14px_-4px_rgba(245,158,11,0.55)]">
-          <Sparkles className="h-2.5 w-2.5" /> Sponsored
+          <Sparkles className="h-2.5 w-2.5" /> Featured
         </span>
       }
     >
-      <div
-        className="relative -mx-1 rounded-2xl bg-gradient-to-br from-amber-500/[0.08] via-orange-500/[0.04] to-transparent p-2 ring-1 ring-inset ring-amber-400/15"
-      >
-        <div className="space-y-2">
-          {!loaded && Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="h-16 rounded-xl skeleton-shimmer" />
-          ))}
-          {loaded && posts.length === 0 && (
-            <p className="px-1 py-2 text-xs text-muted-foreground">No featured posts yet.</p>
+      <div className="relative -mx-1 rounded-2xl bg-gradient-to-br from-amber-500/[0.08] via-orange-500/[0.04] to-transparent p-2 ring-1 ring-inset ring-amber-400/15">
+        <ul className="space-y-2">
+          {promoted.length === 0 && (
+            <li className="px-1 py-2 text-xs text-muted-foreground">No featured members yet.</li>
           )}
-          {loaded && posts.map((p) => {
-            const author = profiles[p.author_id];
-            const snippet = (p.text ?? "").replace(/\s+/g, " ").trim().slice(0, 70);
-            const thumb = (p as any).media_urls?.[0] as string | undefined;
+          {promoted.map((u, idx) => {
+            const isFollowing = !!following[u.id];
+            const badge = PROMO_BADGES[idx % PROMO_BADGES.length];
+            const mutuals = ((u.xp ?? 0) % 9) + 1;
+            const tagline = u.bio?.trim() || `Level ${u.level ?? 1} · ${(u.xp ?? 0).toLocaleString()} XP`;
             return (
-              <Link
-                key={p.id}
-                to="/feed/$slug"
-                params={{ slug: p.id }}
-                className="group flex gap-2.5 rounded-xl bg-background/60 dark:bg-white/[0.03] p-2 ring-1 ring-inset ring-border/50 transition hover:bg-background hover:ring-amber-400/40 hover:shadow-[0_8px_24px_-14px_rgba(245,158,11,0.55)] active:scale-[0.99]"
+              <li
+                key={u.id}
+                className="group relative overflow-hidden rounded-2xl bg-background/70 dark:bg-white/[0.035] p-2.5 ring-1 ring-inset ring-border/50 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:ring-amber-400/45 hover:shadow-[0_14px_30px_-18px_rgba(245,158,11,0.7)] chat-bubble-in"
+                style={{ animationDelay: `${idx * 70}ms` }}
               >
-                {thumb ? (
-                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg ring-1 ring-inset ring-border/60">
-                    <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
+                <span
+                  className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent opacity-70"
+                  aria-hidden
+                />
+                <div className="flex items-start gap-2.5">
+                  <div className="relative shrink-0">
+                    <div className="rounded-full p-[2px] bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 shadow-[0_0_18px_-4px_rgba(245,158,11,0.6)]">
+                      <div className="rounded-full bg-background p-[1.5px]">
+                        <Avatar user={u} size={48} />
+                      </div>
+                    </div>
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-background"
+                      aria-hidden
+                    />
                   </div>
-                ) : (
-                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-amber-500/25 to-orange-500/15 ring-1 ring-inset ring-amber-400/30">
-                    {author ? <Avatar user={author} size={32} /> : <ImageIcon className="h-4 w-4 text-amber-700/70 dark:text-amber-300/70" />}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate text-[13px] font-bold text-foreground">{u.name}</span>
+                      <span className="shrink-0 rounded-md bg-gradient-to-r from-amber-500/25 to-orange-500/20 px-1.5 py-px text-[9px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-100 ring-1 ring-inset ring-amber-400/40">
+                        {badge}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 line-clamp-1 text-[11px] leading-snug text-muted-foreground">
+                      {tagline}
+                    </p>
+                    <div className="mt-1.5 flex items-center gap-2 text-[10px] font-medium text-muted-foreground tabular-nums">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-violet-500/12 px-1.5 py-px text-violet-700 dark:text-violet-200 ring-1 ring-inset ring-violet-400/25">
+                        <Award className="h-2.5 w-2.5" />Lv {u.level ?? 1}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Users2 className="h-2.5 w-2.5" />{mutuals} mutual
+                      </span>
+                    </div>
                   </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/80">
-                    <span className="truncate">{author?.name ?? "Member"}</span>
-                    <span className="rounded bg-amber-500/20 px-1 py-px text-[9px] font-black uppercase text-amber-800 dark:text-amber-200 ring-1 ring-inset ring-amber-400/30">Ad</span>
-                  </div>
-                  <p className="line-clamp-2 text-[12px] leading-snug text-foreground/90">
-                    {snippet || "Featured community post"}
-                  </p>
-                  <div className="mt-1 flex items-center gap-3 text-[10px] font-medium tabular-nums text-muted-foreground">
-                    <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" />{(p as any).reaction_count ?? 0}</span>
-                    <span className="inline-flex items-center gap-1"><MessageCircle className="h-3 w-3" />{(p as any).comment_count ?? 0}</span>
-                  </div>
+                  <button
+                    onClick={() => follow(u.id)}
+                    disabled={isFollowing}
+                    className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition active:scale-95 ${
+                      isFollowing
+                        ? "bg-amber-500/15 text-amber-700 dark:text-amber-200 ring-1 ring-inset ring-amber-400/40"
+                        : "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-[0_6px_18px_-6px_rgba(245,158,11,0.75)] hover:brightness-110"
+                    }`}
+                  >
+                    {isFollowing ? <><Check className="h-3 w-3" />Added</> : <><UserPlus className="h-3 w-3" />Follow</>}
+                  </button>
                 </div>
-              </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </div>
     </PremiumCard>
   );
