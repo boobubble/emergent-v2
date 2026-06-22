@@ -113,13 +113,16 @@ export function TrioRoomsDock() {
     };
   }, [uid]);
 
-  // Allow other UI (e.g. members panel header icon) to open the create dialog
+  // Allow other UI (e.g. members panel header icon) to open the launcher / create dialog
   useEffect(() => {
-    const onOpenCreate = () => {
-      setShowCreate(true);
-    };
+    const onOpenCreate = () => setShowCreate(true);
+    const onOpenLauncher = () => setShowLauncher(true);
     window.addEventListener("trio:open-create", onOpenCreate);
-    return () => window.removeEventListener("trio:open-create", onOpenCreate);
+    window.addEventListener("trio:open-launcher", onOpenLauncher);
+    return () => {
+      window.removeEventListener("trio:open-create", onOpenCreate);
+      window.removeEventListener("trio:open-launcher", onOpenLauncher);
+    };
   }, []);
 
   // Realtime: listen for new invites for me
