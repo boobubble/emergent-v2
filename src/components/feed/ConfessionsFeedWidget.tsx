@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { VenetianMask, ArrowRight, Sparkles, BarChart3 } from "lucide-react";
+import { VenetianMask, ArrowRight, Sparkles, BarChart3, Users, Radio } from "lucide-react";
+import { postsSafe } from "@/lib/posts-safe";
 import { listConfessions } from "@/lib/confessions.functions";
 
 interface Item {
