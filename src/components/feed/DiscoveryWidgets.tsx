@@ -356,22 +356,63 @@ export function CommunityActivityWidget({
   meId: string;
   profiles: Record<string, User>;
 }) {
-  const items = useMemo<ActivityItem[]>(() => {
-    const pool = Object.values(profiles).filter((u) => u.id !== meId && !u.isBot).slice(0, 16);
-    if (pool.length === 0) return [];
+  const pool = useMemo<ActivityItem[]>(() => {
+    const users = Object.values(profiles).filter((u) => u.id !== meId && !u.isBot).slice(0, 16);
+    if (users.length === 0) return [];
     const verbs: Array<Pick<ActivityItem, "verb" | "target" | "tint" | "Icon">> = [
       { verb: "reached", target: "a new level", tint: "violet", Icon: Sparkles },
       { verb: "earned", target: "a new badge", tint: "amber", Icon: Award },
       { verb: "joined", target: "a group", tint: "emerald", Icon: Users2 },
       { verb: "created", target: "a trending post", tint: "rose", Icon: TrendingUp },
+      { verb: "reacted to", target: "a hot post", tint: "rose", Icon: Flame },
+      { verb: "starred", target: "a creator", tint: "amber", Icon: Star },
     ];
-    return pool.slice(0, 4).map((u, i) => ({
-      id: u.id,
+    return users.map((u, i) => ({
+      id: u.id + ":" + i,
       user: u,
       ...verbs[i % verbs.length],
-      time: ["just now", "2m", "8m", "15m"][i] ?? "now",
+      time: "now",
     }));
   }, [profiles, meId]);
+
+  // Rotating live feed: keep 4 visible, occasionally push a fresh one on top
+  const [head, setHead] = useState(0);
+  const [tick, setTick] = useState(0); // bumps when a new item slides in
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      ([e]) => setInView(e.isIntersecting),
+      { threshold: 0.2 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (pool.length <= 4 || !inView) return;
+    const id = window.setInterval(() => {
+      if (document.hidden) return;
+      setHead((h) => (h + 1) % pool.length);
+      setTick((t) => t + 1);
+    }, 9000);
+    return () => window.clearInterval(id);
+  }, [pool.length, inView]);
+
+  const items = useMemo(() => {
+    if (pool.length === 0) return [];
+    const out: ActivityItem[] = [];
+    const labels = ["just now", "2m", "8m", "15m"];
+    for (let i = 0; i < Math.min(4, pool.length); i++) {
+      const src = pool[(head + i) % pool.length];
+      out.push({ ...src, id: `${src.id}:${tick}:${i}`, time: labels[i] ?? "now" });
+    }
+    return out;
+  }, [pool, head, tick]);
+
 
   return (
     <PremiumCard
