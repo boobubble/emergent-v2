@@ -834,11 +834,42 @@ function FeedPage() {
                     <p className="text-sm text-muted-foreground">No posts yet. Be the first to share something!</p>
                   </div>
                 )}
-                {!loading && filtered.map((post) => (
-                  <div key={post.id} data-feed-post={post.id} className="rounded-3xl transition-shadow outline-none">
-                    <PostCard post={post} profiles={profiles} meId={meId} />
+                {!loading && filtered.map((post, idx) => (
+                  <div key={post.id} className="contents">
+                    <div data-feed-post={post.id} className="rounded-3xl transition-shadow outline-none">
+                      <PostCard post={post} profiles={profiles} meId={meId} />
+                    </div>
+                    {idx === 2 && (
+                      <div className="lg:hidden"><PromotedPostsWidget profiles={profiles} /></div>
+                    )}
+                    {idx === 4 && (
+                      <div className="lg:hidden"><SuggestedGroupsWidget /></div>
+                    )}
+                    {idx === 6 && (
+                      <div className="lg:hidden"><CommunityActivityWidget meId={meId} profiles={profiles} /></div>
+                    )}
+                    {idx === 8 && (
+                      <div className="lg:hidden"><TrendingCommunitiesWidget /></div>
+                    )}
+                    {idx === 11 && (
+                      <div className="lg:hidden"><FeaturedMembersWidget meId={meId} profiles={profiles} /></div>
+                    )}
+                    {idx === 14 && (
+                      <div className="lg:hidden"><ActivePollsWidget /></div>
+                    )}
+                    {idx === 17 && (
+                      <div className="lg:hidden"><FriendsWidget meId={meId} profiles={profiles} /></div>
+                    )}
                   </div>
                 ))}
+                {!loading && filtered.length > 0 && filtered.length <= 2 && (
+                  <div className="space-y-4 lg:hidden">
+                    <PromotedPostsWidget profiles={profiles} />
+                    <SuggestedGroupsWidget />
+                    <CommunityActivityWidget meId={meId} profiles={profiles} />
+                    <TrendingCommunitiesWidget />
+                  </div>
+                )}
                 </>)}
               </div>
 
