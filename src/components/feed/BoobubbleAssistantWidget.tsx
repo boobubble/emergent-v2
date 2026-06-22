@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -115,10 +115,47 @@ export function BoobubbleAssistantWidget() {
 
   const refresh = useCallback(() => {
     setRefreshing(true);
-    setLoading(true);
     load();
     setTimeout(() => setRefreshing(false), 800);
   }, [load]);
+
+  // Auto-refresh on a timer, paused when off-screen or tab hidden
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [inView, setInView] = useState(false);
+  const [tabVisible, setTabVisible] = useState(
+    typeof document !== "undefined" ? !document.hidden : true,
+  );
+  const REFRESH_MS = 60_000;
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.15 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [dismissed, enabled, loading]);
+
+  useEffect(() => {
+    const onVis = () => setTabVisible(!document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  useEffect(() => {
+    if (!inView || !tabVisible || dismissed || !enabled) return;
+    if (!user?.id || user.isGuest) return;
+    const id = window.setInterval(() => {
+      if (document.hidden) return;
+      setRefreshing(true);
+      load();
+      window.setTimeout(() => setRefreshing(false), 800);
+    }, REFRESH_MS);
+    return () => window.clearInterval(id);
+  }, [inView, tabVisible, dismissed, enabled, user?.id, user?.isGuest, load]);
+
 
   if (!user?.id || user.isGuest || dismissed || !enabled) return null;
   if (loading && items.length === 0 && friends.length === 0) return null;
@@ -130,7 +167,7 @@ export function BoobubbleAssistantWidget() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-violet-950 via-purple-950 to-slate-950 p-[1px] shadow-[0_20px_60px_-15px_rgba(139,92,246,0.45)]">
+    <div ref={containerRef} className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-violet-950 via-purple-950 to-slate-950 p-[1px] shadow-[0_20px_60px_-15px_rgba(139,92,246,0.45)]">
       {/* Glow orbs */}
       <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-fuchsia-500/25 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-violet-500/25 blur-3xl" />
@@ -141,13 +178,22 @@ export function BoobubbleAssistantWidget() {
           <div className="flex items-center gap-2.5">
             <div className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-400 via-fuchsia-400 to-purple-500 shadow-lg shadow-fuchsia-500/30">
               <Wand2 className="h-4.5 w-4.5 text-white" />
-              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-pulse" />
+              <span
+                className={`absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full ring-2 ring-slate-950 ${
+                  inView && tabVisible
+                    ? refreshing
+                      ? "bg-fuchsia-400 animate-ping"
+                      : "bg-emerald-400 animate-pulse"
+                    : "bg-white/30"
+                }`}
+              />
             </div>
             <div>
               <h3 className="text-sm font-extrabold tracking-tight text-white">AI Picks For You</h3>
               <p className="text-[10px] font-medium uppercase tracking-wider text-violet-300/80">
-                Live refresh
+                {inView && tabVisible ? (refreshing ? "Refreshing…" : "Live · auto-refresh") : "Paused"}
               </p>
+
             </div>
           </div>
           <div className="flex items-center gap-1.5">
