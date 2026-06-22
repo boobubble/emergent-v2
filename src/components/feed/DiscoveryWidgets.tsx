@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Megaphone, Star, Users2, Flame, Activity, UserPlus, Check, Heart, MessageCircle, TrendingUp, Award, Sparkles } from "lucide-react";
+import { Megaphone, Star, Users2, Flame, Activity, UserPlus, Check, Heart, MessageCircle, TrendingUp, Award, Sparkles, ArrowRight, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { postsSafe } from "@/lib/posts-safe";
 import { Avatar } from "@/components/chat/Avatar";
@@ -36,46 +36,59 @@ export function PromotedPostsWidget({ profiles }: { profiles: Record<string, Use
       title="Promoted posts"
       icon={<Megaphone className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />}
       accent="amber"
-      rightSlot={<span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 ring-1 ring-inset ring-amber-400/30">Sponsored</span>}
+      rightSlot={
+        <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/30 to-orange-500/25 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-amber-800 dark:text-amber-100 ring-1 ring-inset ring-amber-400/40 shadow-[0_0_14px_-4px_rgba(245,158,11,0.55)]">
+          <Sparkles className="h-2.5 w-2.5" /> Sponsored
+        </span>
+      }
     >
-      <div className="space-y-2 pt-1">
-        {!loaded && Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="h-14 rounded-xl skeleton-shimmer" />
-        ))}
-        {loaded && posts.length === 0 && (
-          <p className="px-1 py-2 text-xs text-muted-foreground">No featured posts yet.</p>
-        )}
-        {loaded && posts.map((p) => {
-          const author = profiles[p.author_id];
-          const snippet = (p.text ?? "").replace(/\s+/g, " ").trim().slice(0, 70);
-          return (
-            <Link
-              key={p.id}
-              to="/feed/$slug"
-              params={{ slug: p.id }}
-              className="group flex gap-2.5 rounded-xl p-2 -mx-1 transition hover:bg-foreground/[0.04] active:scale-[0.99]"
-            >
-              {author ? (
-                <Avatar user={author} size={36} />
-              ) : (
-                <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/80">
-                  <span className="truncate">{author?.name ?? "Member"}</span>
-                  <span className="rounded bg-amber-500/15 px-1 py-px text-[9px] font-bold uppercase text-amber-700 dark:text-amber-300">Ad</span>
+      <div
+        className="relative -mx-1 rounded-2xl bg-gradient-to-br from-amber-500/[0.08] via-orange-500/[0.04] to-transparent p-2 ring-1 ring-inset ring-amber-400/15"
+      >
+        <div className="space-y-2">
+          {!loaded && Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="h-16 rounded-xl skeleton-shimmer" />
+          ))}
+          {loaded && posts.length === 0 && (
+            <p className="px-1 py-2 text-xs text-muted-foreground">No featured posts yet.</p>
+          )}
+          {loaded && posts.map((p) => {
+            const author = profiles[p.author_id];
+            const snippet = (p.text ?? "").replace(/\s+/g, " ").trim().slice(0, 70);
+            const thumb = (p as any).media_urls?.[0] as string | undefined;
+            return (
+              <Link
+                key={p.id}
+                to="/feed/$slug"
+                params={{ slug: p.id }}
+                className="group flex gap-2.5 rounded-xl bg-background/60 dark:bg-white/[0.03] p-2 ring-1 ring-inset ring-border/50 transition hover:bg-background hover:ring-amber-400/40 hover:shadow-[0_8px_24px_-14px_rgba(245,158,11,0.55)] active:scale-[0.99]"
+              >
+                {thumb ? (
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg ring-1 ring-inset ring-border/60">
+                    <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
+                  </div>
+                ) : (
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-amber-500/25 to-orange-500/15 ring-1 ring-inset ring-amber-400/30">
+                    {author ? <Avatar user={author} size={32} /> : <ImageIcon className="h-4 w-4 text-amber-700/70 dark:text-amber-300/70" />}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/80">
+                    <span className="truncate">{author?.name ?? "Member"}</span>
+                    <span className="rounded bg-amber-500/20 px-1 py-px text-[9px] font-black uppercase text-amber-800 dark:text-amber-200 ring-1 ring-inset ring-amber-400/30">Ad</span>
+                  </div>
+                  <p className="line-clamp-2 text-[12px] leading-snug text-foreground/90">
+                    {snippet || "Featured community post"}
+                  </p>
+                  <div className="mt-1 flex items-center gap-3 text-[10px] font-medium tabular-nums text-muted-foreground">
+                    <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" />{(p as any).reaction_count ?? 0}</span>
+                    <span className="inline-flex items-center gap-1"><MessageCircle className="h-3 w-3" />{(p as any).comment_count ?? 0}</span>
+                  </div>
                 </div>
-                <p className="line-clamp-2 text-[12px] leading-snug text-foreground/90">
-                  {snippet || "Featured community post"}
-                </p>
-                <div className="mt-0.5 flex items-center gap-3 text-[10px] text-muted-foreground">
-                  <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" />{(p as any).reaction_count ?? 0}</span>
-                  <span className="inline-flex items-center gap-1"><MessageCircle className="h-3 w-3" />{(p as any).comment_count ?? 0}</span>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </PremiumCard>
   );
@@ -154,14 +167,16 @@ type GroupSuggestion = {
   name: string;
   members: number;
   emoji: string;
+  category: string;
+  cover: string;
   tint: string;
 };
 
 const SUGGESTED_GROUPS: GroupSuggestion[] = [
-  { id: "g-night", name: "Night Owls", members: 1284, emoji: "🦉", tint: "from-indigo-500/30 to-violet-600/20" },
-  { id: "g-music", name: "Vibe Lounge", members: 982, emoji: "🎧", tint: "from-fuchsia-500/30 to-pink-600/20" },
-  { id: "g-gamers", name: "Pro Gamers Hub", members: 2317, emoji: "🎮", tint: "from-emerald-500/30 to-teal-600/20" },
-  { id: "g-art", name: "Daily Sketch", members: 548, emoji: "🎨", tint: "from-amber-500/30 to-orange-600/20" },
+  { id: "g-night", name: "Night Owls", members: 1284, emoji: "🦉", category: "Lifestyle", cover: "radial-gradient(120% 80% at 20% 20%, rgba(139,92,246,0.55), transparent 60%), linear-gradient(135deg, #4c1d95, #1e1b4b)", tint: "from-indigo-500/30 to-violet-600/20" },
+  { id: "g-music", name: "Vibe Lounge", members: 982, emoji: "🎧", category: "Music", cover: "radial-gradient(120% 80% at 80% 20%, rgba(244,114,182,0.6), transparent 60%), linear-gradient(135deg, #831843, #4a044e)", tint: "from-fuchsia-500/30 to-pink-600/20" },
+  { id: "g-gamers", name: "Pro Gamers Hub", members: 2317, emoji: "🎮", category: "Gaming", cover: "radial-gradient(120% 80% at 30% 80%, rgba(16,185,129,0.55), transparent 60%), linear-gradient(135deg, #064e3b, #022c22)", tint: "from-emerald-500/30 to-teal-600/20" },
+  { id: "g-art", name: "Daily Sketch", members: 548, emoji: "🎨", category: "Creative", cover: "radial-gradient(120% 80% at 70% 30%, rgba(251,146,60,0.6), transparent 60%), linear-gradient(135deg, #7c2d12, #431407)", tint: "from-amber-500/30 to-orange-600/20" },
 ];
 
 export function SuggestedGroupsWidget() {
@@ -171,31 +186,51 @@ export function SuggestedGroupsWidget() {
       title="Suggested groups"
       icon={<Users2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />}
       accent="emerald"
+      rightSlot={
+        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
+          For you
+        </span>
+      }
     >
-      <ul className="space-y-1.5 pt-1">
-        {SUGGESTED_GROUPS.map((g) => (
-          <li key={g.id} className="flex items-center gap-2.5 rounded-xl p-1.5 -mx-1 transition hover:bg-foreground/[0.04]">
-            <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${g.tint} text-base ring-1 ring-inset ring-border`}>
-              {g.emoji}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[12px] font-semibold text-foreground">{g.name}</div>
-              <div className="text-[10px] text-muted-foreground tabular-nums">
-                {g.members.toLocaleString()} members
-              </div>
-            </div>
-            <button
-              onClick={() => setJoined((s) => ({ ...s, [g.id]: !s[g.id] }))}
-              className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition active:scale-95 ${
-                joined[g.id]
-                  ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-400/30"
-                  : "bg-foreground text-background hover:opacity-90"
-              }`}
+      <ul className="space-y-2 pt-1">
+        {SUGGESTED_GROUPS.map((g) => {
+          const isJoined = !!joined[g.id];
+          return (
+            <li
+              key={g.id}
+              className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl p-1.5 -mx-1 ring-1 ring-inset ring-transparent transition hover:ring-emerald-400/25 hover:bg-foreground/[0.03]"
             >
-              {joined[g.id] ? "Joined" : "Join"}
-            </button>
-          </li>
-        ))}
+              <div
+                className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl text-lg ring-1 ring-inset ring-white/10 shadow-[0_4px_14px_-6px_rgba(0,0,0,0.55)]"
+                style={{ backgroundImage: g.cover }}
+                aria-hidden
+              >
+                <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{g.emoji}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[12px] font-semibold text-foreground">{g.name}</div>
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  <span className={`rounded-full bg-gradient-to-r ${g.tint} px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-foreground/80 ring-1 ring-inset ring-border/60`}>
+                    {g.category}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                    {g.members.toLocaleString()} members
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setJoined((s) => ({ ...s, [g.id]: !s[g.id] }))}
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition active:scale-95 ${
+                  isJoined
+                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-200 ring-1 ring-inset ring-emerald-400/40"
+                    : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-[0_4px_14px_-4px_rgba(16,185,129,0.7)] hover:brightness-110"
+                }`}
+              >
+                {isJoined ? <span className="inline-flex items-center gap-1"><Check className="h-3 w-3" />Joined</span> : "Join"}
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </PremiumCard>
   );
@@ -327,7 +362,9 @@ export function CommunityActivityWidget({
           return (
             <li
               key={it.id + it.verb}
-              className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-transparent p-1.5 -mx-1 transition-all duration-300 hover:-translate-y-px hover:border-foreground/10 hover:bg-gradient-to-r hover:from-foreground/[0.05] hover:to-foreground/[0.02] hover:shadow-sm chat-bubble-in"
+              className={`group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-transparent p-1.5 -mx-1 transition-all duration-300 hover:-translate-y-px hover:border-foreground/10 hover:bg-gradient-to-r hover:from-foreground/[0.06] hover:to-foreground/[0.02] hover:shadow-sm chat-bubble-in ${
+                idx % 2 === 1 ? "bg-foreground/[0.025] dark:bg-white/[0.02]" : ""
+              }`}
               style={{ animationDelay: `${idx * 60}ms` }}
             >
               <span
@@ -362,6 +399,14 @@ export function CommunityActivityWidget({
           );
         })}
       </ul>
+      {items.length > 0 && (
+        <Link
+          to="/feed"
+          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-500/15 via-violet-500/15 to-fuchsia-500/15 px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-foreground/80 ring-1 ring-inset ring-border/60 transition hover:text-foreground hover:ring-sky-400/40 hover:shadow-[0_8px_22px_-14px_rgba(56,189,248,0.65)]"
+        >
+          View all activity <ArrowRight className="h-3 w-3" />
+        </Link>
+      )}
     </PremiumCard>
   );
 }

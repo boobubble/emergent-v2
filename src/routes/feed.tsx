@@ -849,16 +849,21 @@ function FeedPage() {
         {/* Right rail */}
         <aside className="hidden lg:block">
           <div ref={rightRailRef} className="space-y-4 pl-1 will-change-transform">
+            <RailSection label="For you" tone="primary" />
             <BoobubbleAssistantWidget />
-            <PromotedPostsWidget profiles={profiles} />
-            <FeaturedMembersWidget meId={meId} profiles={profiles} />
-            <SuggestedGroupsWidget />
-            <TrendingCommunitiesWidget />
-            <CommunityActivityWidget meId={meId} profiles={profiles} />
             <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
-            <ConfessionsFeedWidget />
+
+            <RailSection label="Community" tone="sky" />
+            <FeaturedMembersWidget meId={meId} profiles={profiles} />
+            <CommunityActivityWidget meId={meId} profiles={profiles} />
+            <TrendingCommunitiesWidget />
+
+            <RailSection label="Discover" tone="amber" />
+            <PromotedPostsWidget profiles={profiles} />
+            <SuggestedGroupsWidget />
             <ActivePollsWidget />
+            <ConfessionsFeedWidget />
             <BirthdaysWidget />
             <FriendsWidget meId={meId} profiles={profiles} />
             <HashtagsWidget />
@@ -1060,6 +1065,26 @@ function UserMenu({ username, onProfile, onSettings }: { username: string; onPro
 }
 
 
+
+function RailSection({ label, tone }: { label: string; tone: "primary" | "sky" | "amber" }) {
+  const toneClass = {
+    primary: "from-primary/80 to-primary/0",
+    sky: "from-sky-400/80 to-sky-400/0",
+    amber: "from-amber-400/80 to-amber-400/0",
+  }[tone];
+  const dot = {
+    primary: "bg-primary",
+    sky: "bg-sky-400",
+    amber: "bg-amber-400",
+  }[tone];
+  return (
+    <div className="flex items-center gap-2 px-1 pt-1 first:pt-0">
+      <span className={`h-1.5 w-1.5 rounded-full ${dot} shadow-[0_0_8px_currentColor]`} aria-hidden />
+      <span className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/80">{label}</span>
+      <span className={`h-px flex-1 bg-gradient-to-r ${toneClass}`} aria-hidden />
+    </div>
+  );
+}
 
 function NavLink({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active?: boolean }) {
   return (

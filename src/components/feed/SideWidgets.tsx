@@ -80,9 +80,28 @@ export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Reco
         badge={friends.length}
       >
         {friends.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border/60 dark:border-white/10 bg-foreground/[0.02] dark:bg-white/[0.02] px-3 py-4 text-center">
-            <Sparkles className="mx-auto h-4 w-4 text-amber-700 dark:text-amber-600/80 dark:text-amber-300/70" />
-            <p className="mt-1.5 text-xs text-muted-foreground">No friends yet — send a request below.</p>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-fuchsia-500/10 p-3 ring-1 ring-inset ring-amber-400/25">
+            <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-amber-400/25 blur-2xl" aria-hidden />
+            <div className="flex items-center gap-2">
+              <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_6px_18px_-6px_rgba(245,158,11,0.7)]">
+                <UserPlus className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[12px] font-bold text-foreground">Build your circle</p>
+                <p className="text-[10.5px] text-muted-foreground">Add friends to unlock chats &amp; gifts.</p>
+              </div>
+            </div>
+            <Link
+              to="/find-friends"
+              className="mt-2.5 inline-flex w-full items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-white shadow-[0_6px_18px_-8px_rgba(245,158,11,0.75)] transition hover:brightness-110 active:scale-95"
+            >
+              <Sparkles className="h-3 w-3" /> Find friends
+            </Link>
+            {suggestions.length > 0 && (
+              <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+                {suggestions.length} suggestions below ↓
+              </p>
+            )}
           </div>
         ) : friends.slice(0, 6).map((u) => (
           <Link
