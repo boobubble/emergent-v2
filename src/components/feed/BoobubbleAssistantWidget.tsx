@@ -115,10 +115,47 @@ export function BoobubbleAssistantWidget() {
 
   const refresh = useCallback(() => {
     setRefreshing(true);
-    setLoading(true);
     load();
     setTimeout(() => setRefreshing(false), 800);
   }, [load]);
+
+  // Auto-refresh on a timer, paused when off-screen or tab hidden
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [inView, setInView] = useState(false);
+  const [tabVisible, setTabVisible] = useState(
+    typeof document !== "undefined" ? !document.hidden : true,
+  );
+  const REFRESH_MS = 60_000;
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.15 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [dismissed, enabled, loading]);
+
+  useEffect(() => {
+    const onVis = () => setTabVisible(!document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  useEffect(() => {
+    if (!inView || !tabVisible || dismissed || !enabled) return;
+    if (!user?.id || user.isGuest) return;
+    const id = window.setInterval(() => {
+      if (document.hidden) return;
+      setRefreshing(true);
+      load();
+      window.setTimeout(() => setRefreshing(false), 800);
+    }, REFRESH_MS);
+    return () => window.clearInterval(id);
+  }, [inView, tabVisible, dismissed, enabled, user?.id, user?.isGuest, load]);
+
 
   if (!user?.id || user.isGuest || dismissed || !enabled) return null;
   if (loading && items.length === 0 && friends.length === 0) return null;
