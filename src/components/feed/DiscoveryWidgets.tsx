@@ -366,7 +366,7 @@ export function CommunityActivityWidget({
   profiles: Record<string, User>;
 }) {
   const pool = useMemo<ActivityItem[]>(() => {
-    const users = Object.values(profiles).filter((u) => u.id !== meId && !u.isBot).slice(0, 16);
+    const users = Object.values(profiles).filter((u) => u.id !== meId && !u.isBot && !isDemoUser(u)).slice(0, 16);
     if (users.length === 0) return [];
     const verbs: Array<Pick<ActivityItem, "verb" | "target" | "tint" | "Icon">> = [
       { verb: "reached", target: "a new level", tint: "violet", Icon: Sparkles },
