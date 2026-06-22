@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Megaphone, Star, Users2, Flame, Activity, UserPlus, Check, Heart, MessageCircle } from "lucide-react";
+import { Megaphone, Star, Users2, Flame, Activity, UserPlus, Check, Heart, MessageCircle, TrendingUp, Award, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { postsSafe } from "@/lib/posts-safe";
 import { Avatar } from "@/components/chat/Avatar";
@@ -241,20 +241,42 @@ export function TrendingCommunitiesWidget() {
 
 /* ──────────────────────────── Community Activity ──────────────────────────── */
 
+type ActivityTint = "violet" | "amber" | "emerald" | "rose";
 type ActivityItem = {
   id: string;
   user: User;
   verb: string;
   target: string;
   time: string;
-  tint: "violet" | "amber" | "emerald" | "rose";
+  tint: ActivityTint;
+  Icon: typeof Activity;
 };
 
-const TINT_BG = {
-  violet: "bg-violet-500/15 text-violet-700 dark:text-violet-300 ring-violet-400/25",
-  amber: "bg-amber-500/15 text-amber-700 dark:text-amber-300 ring-amber-400/25",
-  emerald: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 ring-emerald-400/25",
-  rose: "bg-rose-500/15 text-rose-600 dark:text-rose-300 ring-rose-400/25",
+const TINT_STYLES: Record<ActivityTint, { chip: string; ring: string; glow: string; iconWrap: string }> = {
+  violet: {
+    chip: "bg-gradient-to-r from-violet-500/20 to-fuchsia-500/15 text-violet-700 dark:text-violet-200 ring-violet-400/30",
+    ring: "ring-violet-400/50",
+    glow: "shadow-[0_0_18px_-6px_rgba(139,92,246,0.55)]",
+    iconWrap: "bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white",
+  },
+  amber: {
+    chip: "bg-gradient-to-r from-amber-500/20 to-orange-500/15 text-amber-700 dark:text-amber-200 ring-amber-400/30",
+    ring: "ring-amber-400/50",
+    glow: "shadow-[0_0_18px_-6px_rgba(245,158,11,0.55)]",
+    iconWrap: "bg-gradient-to-br from-amber-400 to-orange-500 text-white",
+  },
+  emerald: {
+    chip: "bg-gradient-to-r from-emerald-500/20 to-teal-500/15 text-emerald-700 dark:text-emerald-200 ring-emerald-400/30",
+    ring: "ring-emerald-400/50",
+    glow: "shadow-[0_0_18px_-6px_rgba(16,185,129,0.55)]",
+    iconWrap: "bg-gradient-to-br from-emerald-400 to-teal-500 text-white",
+  },
+  rose: {
+    chip: "bg-gradient-to-r from-rose-500/20 to-pink-500/15 text-rose-600 dark:text-rose-200 ring-rose-400/30",
+    ring: "ring-rose-400/50",
+    glow: "shadow-[0_0_18px_-6px_rgba(244,63,94,0.55)]",
+    iconWrap: "bg-gradient-to-br from-rose-500 to-pink-500 text-white",
+  },
 };
 
 export function CommunityActivityWidget({
@@ -267,11 +289,11 @@ export function CommunityActivityWidget({
   const items = useMemo<ActivityItem[]>(() => {
     const pool = Object.values(profiles).filter((u) => u.id !== meId && !u.isBot).slice(0, 16);
     if (pool.length === 0) return [];
-    const verbs: Array<Pick<ActivityItem, "verb" | "target" | "tint">> = [
-      { verb: "reached", target: "a new level", tint: "violet" },
-      { verb: "earned", target: "a new badge", tint: "amber" },
-      { verb: "joined", target: "a group", tint: "emerald" },
-      { verb: "created", target: "a trending post", tint: "rose" },
+    const verbs: Array<Pick<ActivityItem, "verb" | "target" | "tint" | "Icon">> = [
+      { verb: "reached", target: "a new level", tint: "violet", Icon: Sparkles },
+      { verb: "earned", target: "a new badge", tint: "amber", Icon: Award },
+      { verb: "joined", target: "a group", tint: "emerald", Icon: Users2 },
+      { verb: "created", target: "a trending post", tint: "rose", Icon: TrendingUp },
     ];
     return pool.slice(0, 4).map((u, i) => ({
       id: u.id,
@@ -286,25 +308,61 @@ export function CommunityActivityWidget({
       title="Community activity"
       icon={<Activity className="h-3.5 w-3.5 text-sky-600 dark:text-sky-300" />}
       accent="sky"
+      rightSlot={
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          </span>
+          Live
+        </span>
+      }
     >
-      <ul className="space-y-1 pt-1">
+      <ul className="space-y-1.5 pt-1">
         {items.length === 0 && (
           <li className="px-1 py-2 text-xs text-muted-foreground">Quiet for now — check back soon.</li>
         )}
-        {items.map((it) => (
-          <li key={it.id + it.verb} className="flex items-center gap-2.5 rounded-xl p-1.5 -mx-1 transition hover:bg-foreground/[0.04]">
-            <Avatar user={it.user} size={28} />
-            <div className="min-w-0 flex-1 text-[12px] leading-snug">
-              <span className="font-semibold text-foreground">{it.user.name}</span>{" "}
-              <span className="text-muted-foreground">{it.verb}</span>{" "}
-              <span className={`rounded px-1.5 py-px text-[10px] font-semibold ring-1 ring-inset ${TINT_BG[it.tint]}`}>
-                {it.target}
+        {items.map((it, idx) => {
+          const t = TINT_STYLES[it.tint];
+          return (
+            <li
+              key={it.id + it.verb}
+              className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-transparent p-1.5 -mx-1 transition-all duration-300 hover:-translate-y-px hover:border-foreground/10 hover:bg-gradient-to-r hover:from-foreground/[0.05] hover:to-foreground/[0.02] hover:shadow-sm chat-bubble-in"
+              style={{ animationDelay: `${idx * 60}ms` }}
+            >
+              <span
+                className="pointer-events-none absolute inset-y-1 left-0 w-[3px] rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                style={{ background: "linear-gradient(180deg, var(--primary), color-mix(in oklab, var(--primary) 40%, transparent))" }}
+                aria-hidden
+              />
+              <div className="relative shrink-0">
+                <div className={`rounded-full p-[1.5px] bg-gradient-to-br ring-1 ${t.ring} transition-transform duration-300 group-hover:scale-105 ${t.glow}`}>
+                  <Avatar user={it.user} size={32} />
+                </div>
+                <span
+                  className={`absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full ring-2 ring-background ${t.iconWrap}`}
+                  aria-hidden
+                >
+                  <it.Icon className="h-2.5 w-2.5" />
+                </span>
+              </div>
+              <div className="min-w-0 flex-1 text-[12px] leading-snug">
+                <div className="truncate">
+                  <span className="font-semibold text-foreground">{it.user.name}</span>{" "}
+                  <span className="text-muted-foreground">{it.verb}</span>
+                </div>
+                <span className={`mt-0.5 inline-block rounded-md px-1.5 py-px text-[10px] font-semibold ring-1 ring-inset ${t.chip}`}>
+                  {it.target}
+                </span>
+              </div>
+              <span className="shrink-0 text-[10px] font-medium tabular-nums text-muted-foreground/80">
+                {it.time}
               </span>
-            </div>
-            <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">{it.time}</span>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
     </PremiumCard>
   );
 }
+
