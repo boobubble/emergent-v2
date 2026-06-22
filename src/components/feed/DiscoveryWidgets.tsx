@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Megaphone, Star, Users2, Flame, Activity, UserPlus, Check, Heart, MessageCircle } from "lucide-react";
+import { Megaphone, Star, Users2, Flame, Activity, UserPlus, Check, Heart, MessageCircle, TrendingUp, Award, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { postsSafe } from "@/lib/posts-safe";
 import { Avatar } from "@/components/chat/Avatar";
