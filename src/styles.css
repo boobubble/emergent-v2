@@ -1159,3 +1159,55 @@
     animation: vip-gold-shimmer 3s ease-in-out infinite;
   }
 }
+
+/* ── Right-sidebar premium micro-interactions ─────────────────────────── */
+
+/* Ambient violet border glow for the BooBubble Assistant card */
+@keyframes ai-border-glow {
+  0%, 100% {
+    box-shadow:
+      0 20px 60px -15px rgba(139, 92, 246, 0.35),
+      0 0 0 1px rgba(167, 139, 250, 0.10),
+      0 0 22px -6px rgba(217, 70, 239, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 22px 70px -15px rgba(139, 92, 246, 0.55),
+      0 0 0 1px rgba(217, 139, 250, 0.22),
+      0 0 38px -4px rgba(217, 70, 239, 0.42);
+  }
+}
+.ai-border-glow { animation: ai-border-glow 3.6s ease-in-out infinite; }
+
+/* Breathing AI orb */
+@keyframes ai-orb-breathe {
+  0%, 100% { transform: scale(1); filter: brightness(1) saturate(1); }
+  50%      { transform: scale(1.06); filter: brightness(1.12) saturate(1.18); }
+}
+.ai-orb-breathe { animation: ai-orb-breathe 3.4s ease-in-out infinite; }
+
+/* New activity row insertion */
+@keyframes activity-slide-in {
+  0%   { opacity: 0; transform: translateY(-6px) scale(0.985); filter: blur(2px); }
+  100% { opacity: 1; transform: translateY(0)    scale(1);     filter: blur(0); }
+}
+.activity-slide-in { animation: activity-slide-in .42s cubic-bezier(.2,.8,.2,1) both; }
+
+/* Soft sweep highlight for unread activity */
+@keyframes activity-unread-sweep {
+  0%   { background-position: -120% 0; }
+  100% { background-position: 220% 0; }
+}
+.activity-unread {
+  position: relative;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--primary) 10%, transparent) 45%,
+    color-mix(in oklab, var(--primary) 16%, transparent) 50%,
+    color-mix(in oklab, var(--primary) 10%, transparent) 55%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  animation: activity-unread-sweep 2.6s ease-in-out 1;
+}

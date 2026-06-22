@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Star, Users2, Flame, Activity, UserPlus, Check, TrendingUp, Award, Sparkles, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -356,24 +356,66 @@ export function CommunityActivityWidget({
   meId: string;
   profiles: Record<string, User>;
 }) {
-  const items = useMemo<ActivityItem[]>(() => {
-    const pool = Object.values(profiles).filter((u) => u.id !== meId && !u.isBot).slice(0, 16);
-    if (pool.length === 0) return [];
+  const pool = useMemo<ActivityItem[]>(() => {
+    const users = Object.values(profiles).filter((u) => u.id !== meId && !u.isBot).slice(0, 16);
+    if (users.length === 0) return [];
     const verbs: Array<Pick<ActivityItem, "verb" | "target" | "tint" | "Icon">> = [
       { verb: "reached", target: "a new level", tint: "violet", Icon: Sparkles },
       { verb: "earned", target: "a new badge", tint: "amber", Icon: Award },
       { verb: "joined", target: "a group", tint: "emerald", Icon: Users2 },
       { verb: "created", target: "a trending post", tint: "rose", Icon: TrendingUp },
+      { verb: "reacted to", target: "a hot post", tint: "rose", Icon: Flame },
+      { verb: "starred", target: "a creator", tint: "amber", Icon: Star },
     ];
-    return pool.slice(0, 4).map((u, i) => ({
-      id: u.id,
+    return users.map((u, i) => ({
+      id: u.id + ":" + i,
       user: u,
       ...verbs[i % verbs.length],
-      time: ["just now", "2m", "8m", "15m"][i] ?? "now",
+      time: "now",
     }));
   }, [profiles, meId]);
 
+  // Rotating live feed: keep 4 visible, occasionally push a fresh one on top
+  const [head, setHead] = useState(0);
+  const [tick, setTick] = useState(0); // bumps when a new item slides in
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      ([e]) => setInView(e.isIntersecting),
+      { threshold: 0.2 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (pool.length <= 4 || !inView) return;
+    const id = window.setInterval(() => {
+      if (document.hidden) return;
+      setHead((h) => (h + 1) % pool.length);
+      setTick((t) => t + 1);
+    }, 9000);
+    return () => window.clearInterval(id);
+  }, [pool.length, inView]);
+
+  const items = useMemo(() => {
+    if (pool.length === 0) return [];
+    const out: ActivityItem[] = [];
+    const labels = ["just now", "2m", "8m", "15m"];
+    for (let i = 0; i < Math.min(4, pool.length); i++) {
+      const src = pool[(head + i) % pool.length];
+      out.push({ ...src, id: `${src.id}:${tick}:${i}`, time: labels[i] ?? "now" });
+    }
+    return out;
+  }, [pool, head, tick]);
+
+
   return (
+    <div ref={containerRef}>
     <PremiumCard
       title="Community activity"
       icon={<Activity className="h-3.5 w-3.5 text-sky-600 dark:text-sky-300" />}
@@ -381,10 +423,10 @@ export function CommunityActivityWidget({
       rightSlot={
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
           <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+            <span className={`absolute inline-flex h-full w-full rounded-full bg-emerald-400/70 ${inView ? "animate-ping" : ""}`} />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
           </span>
-          Live
+          {inView ? "Live" : "Paused"}
         </span>
       }
     >
@@ -394,13 +436,16 @@ export function CommunityActivityWidget({
         )}
         {items.map((it, idx) => {
           const t = TINT_STYLES[it.tint];
+          const isFresh = idx === 0 && tick > 0;
           return (
             <li
               key={it.id + it.verb}
-              className={`group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-transparent p-1.5 -mx-1 transition-all duration-300 hover:-translate-y-px hover:border-foreground/10 hover:bg-gradient-to-r hover:from-foreground/[0.06] hover:to-foreground/[0.02] hover:shadow-sm chat-bubble-in ${
+              className={`group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-transparent p-1.5 -mx-1 transition-all duration-300 hover:-translate-y-px hover:border-foreground/10 hover:bg-gradient-to-r hover:from-foreground/[0.06] hover:to-foreground/[0.02] hover:shadow-sm ${
+                idx === 0 ? "activity-slide-in" : "chat-bubble-in"
+              } ${isFresh ? "activity-unread" : ""} ${
                 idx % 2 === 1 ? "bg-foreground/[0.025] dark:bg-white/[0.02]" : ""
               }`}
-              style={{ animationDelay: `${idx * 60}ms` }}
+              style={{ animationDelay: idx === 0 ? "0ms" : `${idx * 60}ms` }}
             >
               <span
                 className="pointer-events-none absolute inset-y-1 left-0 w-[3px] rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
@@ -443,6 +488,8 @@ export function CommunityActivityWidget({
         </Link>
       )}
     </PremiumCard>
+    </div>
   );
 }
+
 
