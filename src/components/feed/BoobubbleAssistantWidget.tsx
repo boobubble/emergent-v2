@@ -167,7 +167,7 @@ export function BoobubbleAssistantWidget() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-violet-950 via-purple-950 to-slate-950 p-[1px] shadow-[0_20px_60px_-15px_rgba(139,92,246,0.45)]">
+    <div ref={containerRef} className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-violet-950 via-purple-950 to-slate-950 p-[1px] shadow-[0_20px_60px_-15px_rgba(139,92,246,0.45)]">
       {/* Glow orbs */}
       <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-fuchsia-500/25 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-violet-500/25 blur-3xl" />
