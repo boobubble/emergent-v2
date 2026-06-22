@@ -137,7 +137,7 @@ export function MessageInput() {
   async function handleClearChannel() {
     const channelId = state.activeChannel;
     if (!me) {
-      toast.error("Admins only", { description: "/clear is restricted to admins and room moderators." });
+      toast.error("Admins only", { description: "/clear (or /delete) is restricted to admins and room moderators." });
       return;
     }
     // Client-side pre-check (server still enforces per-room permission)
@@ -160,7 +160,7 @@ export function MessageInput() {
       canClear = true; // let the server make the final call
     }
     if (!canClear) {
-      toast.error("Admins only", { description: "/clear is restricted to admins and room moderators." });
+      toast.error("Admins only", { description: "/clear (or /delete) is restricted to admins and room moderators." });
       return;
     }
     toast.loading("Clearing chat…", { id: "clearchat" });
