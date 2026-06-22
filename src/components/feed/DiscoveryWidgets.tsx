@@ -24,7 +24,7 @@ export function PromotedPostsWidget({ profiles }: { profiles: Record<string, Use
 
   const promoted = useMemo(() => {
     return Object.values(profiles)
-      .filter((u) => !u.isBot && !u.isGuest)
+      .filter((u) => !u.isBot && !u.isGuest && !isDemoUser(u))
       .sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0))
       .slice(0, 3);
   }, [profiles]);
