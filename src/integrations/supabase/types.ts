@@ -333,6 +333,13 @@ export type Database = {
             referencedRelation: "confessions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "confession_reactions_confession_id_fkey"
+            columns: ["confession_id"]
+            isOneToOne: false
+            referencedRelation: "confessions_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       confession_replies: {
@@ -372,6 +379,13 @@ export type Database = {
             columns: ["confession_id"]
             isOneToOne: false
             referencedRelation: "confessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "confession_replies_confession_id_fkey"
+            columns: ["confession_id"]
+            isOneToOne: false
+            referencedRelation: "confessions_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2353,6 +2367,75 @@ export type Database = {
       }
     }
     Views: {
+      confessions_public: {
+        Row: {
+          alias: string | null
+          author_id: string | null
+          avatar_emoji: string | null
+          category: string | null
+          created_at: string | null
+          display_mode:
+            | Database["public"]["Enums"]["confession_display_mode"]
+            | null
+          expires_at: string | null
+          id: string | null
+          image_url: string | null
+          is_featured: boolean | null
+          is_pinned: boolean | null
+          kind: Database["public"]["Enums"]["confession_kind"] | null
+          like_count: number | null
+          poll: Json | null
+          reply_count: number | null
+          status: Database["public"]["Enums"]["confession_status"] | null
+          text: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          alias?: string | null
+          author_id?: never
+          avatar_emoji?: string | null
+          category?: string | null
+          created_at?: string | null
+          display_mode?:
+            | Database["public"]["Enums"]["confession_display_mode"]
+            | null
+          expires_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_featured?: boolean | null
+          is_pinned?: boolean | null
+          kind?: Database["public"]["Enums"]["confession_kind"] | null
+          like_count?: number | null
+          poll?: Json | null
+          reply_count?: number | null
+          status?: Database["public"]["Enums"]["confession_status"] | null
+          text?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          alias?: string | null
+          author_id?: never
+          avatar_emoji?: string | null
+          category?: string | null
+          created_at?: string | null
+          display_mode?:
+            | Database["public"]["Enums"]["confession_display_mode"]
+            | null
+          expires_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_featured?: boolean | null
+          is_pinned?: boolean | null
+          kind?: Database["public"]["Enums"]["confession_kind"] | null
+          like_count?: number | null
+          poll?: Json | null
+          reply_count?: number | null
+          status?: Database["public"]["Enums"]["confession_status"] | null
+          text?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       posts_safe: {
         Row: {
           author_id: string | null
@@ -2417,6 +2500,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_bans_self: {
+        Row: {
+          active: boolean | null
+          ban_type: Database["public"]["Enums"]["ban_type"] | null
+          created_at: string | null
+          expires_at: string | null
+          id: string | null
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          ban_type?: Database["public"]["Enums"]["ban_type"] | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          ban_type?: Database["public"]["Enums"]["ban_type"] | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
