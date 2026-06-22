@@ -431,6 +431,7 @@ export interface AssistantRecommendation {
   author_avatar_url: string | null;
   thumbnail_url: string | null;
   score: number;
+  reaction_count: number | null;
 }
 
 export const getAssistantFeedRecommendations = createServerFn({ method: "GET" })
@@ -481,6 +482,7 @@ export const getAssistantFeedRecommendations = createServerFn({ method: "GET" })
         author_avatar_url: prof?.avatar_url ?? null,
         thumbnail_url: media[0] ?? null,
         score: Number(p.trending_score ?? 0),
+        reaction_count: Number(p.reaction_count ?? 0),
       });
     }
 
@@ -504,6 +506,7 @@ export const getAssistantFeedRecommendations = createServerFn({ method: "GET" })
         author_avatar_url: prof?.avatar_url ?? null,
         thumbnail_url: null,
         score: Number(p.trending_score ?? 0),
+        reaction_count: Number(p.reaction_count ?? 0),
       });
     }
 
@@ -524,6 +527,7 @@ export const getAssistantFeedRecommendations = createServerFn({ method: "GET" })
         author_avatar_url: null,
         thumbnail_url: null,
         score: Number(c.like_count ?? 0),
+        reaction_count: Number(c.like_count ?? 0),
       });
     }
 
