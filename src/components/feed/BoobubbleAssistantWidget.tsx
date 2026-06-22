@@ -302,7 +302,7 @@ function RecCard({ item, index }: { item: AssistantRecommendation; index: number
   return (
     <Link
       to={href}
-      className="group flex items-center gap-3 rounded-2xl border border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent p-2.5 transition hover:-translate-y-0.5 hover:border-white/10 hover:shadow-lg hover:shadow-violet-500/10 hover:bg-white/[0.05]"
+      className="chat-bubble-in group flex items-center gap-3 rounded-2xl border border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent p-2.5 transition hover:-translate-y-0.5 hover:border-white/10 hover:shadow-lg hover:shadow-violet-500/10 hover:bg-white/[0.05]"
       style={{ animationDelay: `${index * 70}ms` }}
     >
       {/* Thumbnail or icon */}
