@@ -415,6 +415,7 @@ export function CommunityActivityWidget({
 
 
   return (
+    <div ref={containerRef}>
     <PremiumCard
       title="Community activity"
       icon={<Activity className="h-3.5 w-3.5 text-sky-600 dark:text-sky-300" />}
@@ -422,10 +423,10 @@ export function CommunityActivityWidget({
       rightSlot={
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
           <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+            <span className={`absolute inline-flex h-full w-full rounded-full bg-emerald-400/70 ${inView ? "animate-ping" : ""}`} />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
           </span>
-          Live
+          {inView ? "Live" : "Paused"}
         </span>
       }
     >
@@ -435,13 +436,16 @@ export function CommunityActivityWidget({
         )}
         {items.map((it, idx) => {
           const t = TINT_STYLES[it.tint];
+          const isFresh = idx === 0 && tick > 0;
           return (
             <li
               key={it.id + it.verb}
-              className={`group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-transparent p-1.5 -mx-1 transition-all duration-300 hover:-translate-y-px hover:border-foreground/10 hover:bg-gradient-to-r hover:from-foreground/[0.06] hover:to-foreground/[0.02] hover:shadow-sm chat-bubble-in ${
+              className={`group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-transparent p-1.5 -mx-1 transition-all duration-300 hover:-translate-y-px hover:border-foreground/10 hover:bg-gradient-to-r hover:from-foreground/[0.06] hover:to-foreground/[0.02] hover:shadow-sm ${
+                idx === 0 ? "activity-slide-in" : "chat-bubble-in"
+              } ${isFresh ? "activity-unread" : ""} ${
                 idx % 2 === 1 ? "bg-foreground/[0.025] dark:bg-white/[0.02]" : ""
               }`}
-              style={{ animationDelay: `${idx * 60}ms` }}
+              style={{ animationDelay: idx === 0 ? "0ms" : `${idx * 60}ms` }}
             >
               <span
                 className="pointer-events-none absolute inset-y-1 left-0 w-[3px] rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
@@ -484,6 +488,8 @@ export function CommunityActivityWidget({
         </Link>
       )}
     </PremiumCard>
+    </div>
   );
 }
+
 
