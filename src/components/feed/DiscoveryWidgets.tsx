@@ -220,42 +220,51 @@ export function SuggestedGroupsWidget() {
         </span>
       }
     >
-      <ul className="space-y-2 pt-1">
-        {SUGGESTED_GROUPS.map((g) => {
+      <ul className="grid gap-2.5 pt-1">
+        {SUGGESTED_GROUPS.map((g, idx) => {
           const isJoined = !!joined[g.id];
           return (
             <li
               key={g.id}
-              className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl p-1.5 -mx-1 ring-1 ring-inset ring-transparent transition hover:ring-emerald-400/25 hover:bg-foreground/[0.03]"
+              className="group relative overflow-hidden rounded-2xl bg-background/70 dark:bg-white/[0.035] ring-1 ring-inset ring-border/50 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:ring-emerald-400/45 hover:shadow-[0_14px_30px_-18px_rgba(16,185,129,0.7)] chat-bubble-in"
+              style={{ animationDelay: `${idx * 70}ms` }}
             >
+              {/* Banner */}
               <div
-                className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl text-lg ring-1 ring-inset ring-white/10 shadow-[0_4px_14px_-6px_rgba(0,0,0,0.55)]"
+                className="relative h-14 w-full"
                 style={{ backgroundImage: g.cover }}
                 aria-hidden
               >
-                <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{g.emoji}</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[12px] font-semibold text-foreground">{g.name}</div>
-                <div className="mt-0.5 flex items-center gap-1.5">
-                  <span className={`rounded-full bg-gradient-to-r ${g.tint} px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-foreground/80 ring-1 ring-inset ring-border/60`}>
-                    {g.category}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground tabular-nums">
-                    {g.members.toLocaleString()} members
-                  </span>
+                <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/20 to-transparent" />
+                <span className="absolute right-2 top-2 rounded-full bg-black/40 px-1.5 py-px text-[9px] font-black uppercase tracking-wider text-white/90 ring-1 ring-inset ring-white/20 backdrop-blur-sm">
+                  {g.category}
+                </span>
+                <div className="absolute -bottom-4 left-3 grid h-10 w-10 place-items-center rounded-xl text-xl ring-2 ring-background shadow-[0_6px_18px_-6px_rgba(0,0,0,0.5)]"
+                  style={{ backgroundImage: g.cover }}
+                >
+                  <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.55)]">{g.emoji}</span>
                 </div>
               </div>
-              <button
-                onClick={() => setJoined((s) => ({ ...s, [g.id]: !s[g.id] }))}
-                className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition active:scale-95 ${
-                  isJoined
-                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-200 ring-1 ring-inset ring-emerald-400/40"
-                    : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-[0_4px_14px_-4px_rgba(16,185,129,0.7)] hover:brightness-110"
-                }`}
-              >
-                {isJoined ? <span className="inline-flex items-center gap-1"><Check className="h-3 w-3" />Joined</span> : "Join"}
-              </button>
+              {/* Body */}
+              <div className="flex items-end justify-between gap-2 px-3 pb-2.5 pt-5">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13px] font-bold text-foreground">{g.name}</div>
+                  <div className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground tabular-nums">
+                    <Users2 className="h-2.5 w-2.5" />
+                    {g.members.toLocaleString()} members
+                  </div>
+                </div>
+                <button
+                  onClick={() => setJoined((s) => ({ ...s, [g.id]: !s[g.id] }))}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition active:scale-95 ${
+                    isJoined
+                      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-200 ring-1 ring-inset ring-emerald-400/40"
+                      : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-[0_6px_18px_-6px_rgba(16,185,129,0.75)] hover:brightness-110"
+                  }`}
+                >
+                  {isJoined ? <span className="inline-flex items-center gap-1"><Check className="h-3 w-3" />Joined</span> : "Join"}
+                </button>
+              </div>
             </li>
           );
         })}
