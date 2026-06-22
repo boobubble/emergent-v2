@@ -849,16 +849,21 @@ function FeedPage() {
         {/* Right rail */}
         <aside className="hidden lg:block">
           <div ref={rightRailRef} className="space-y-4 pl-1 will-change-transform">
+            <RailSection label="For you" tone="primary" />
             <BoobubbleAssistantWidget />
-            <PromotedPostsWidget profiles={profiles} />
-            <FeaturedMembersWidget meId={meId} profiles={profiles} />
-            <SuggestedGroupsWidget />
-            <TrendingCommunitiesWidget />
-            <CommunityActivityWidget meId={meId} profiles={profiles} />
             <MissionsPanel />
             <DailyChallengesWidget meId={meId} />
-            <ConfessionsFeedWidget />
+
+            <RailSection label="Community" tone="sky" />
+            <FeaturedMembersWidget meId={meId} profiles={profiles} />
+            <CommunityActivityWidget meId={meId} profiles={profiles} />
+            <TrendingCommunitiesWidget />
+
+            <RailSection label="Discover" tone="amber" />
+            <PromotedPostsWidget profiles={profiles} />
+            <SuggestedGroupsWidget />
             <ActivePollsWidget />
+            <ConfessionsFeedWidget />
             <BirthdaysWidget />
             <FriendsWidget meId={meId} profiles={profiles} />
             <HashtagsWidget />
