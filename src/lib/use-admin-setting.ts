@@ -26,7 +26,7 @@ export function useAdminSetting<T extends Record<string, any>>(key: string, defa
 
   const mut = useMutation({
     mutationFn: () => saveSetting({ data: { key, value: values } }),
-    onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["admin-settings"] }); },
+    onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["admin-settings-full"] }); qc.invalidateQueries({ queryKey: ["admin-settings"] }); },
     onError: (e: any) => toast.error(e?.message ?? "Failed to save"),
   });
 
