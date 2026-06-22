@@ -47,14 +47,38 @@ export const getMyRoles = createServerFn({ method: "GET" })
     };
   });
 
-// -------- Settings (public read; admin write) --------
+// Keys that hold secrets or staff-only configuration. Mirrors the
+// app_settings RLS exclusion list. NEVER include these in the public reader.
+const SENSITIVE_SETTING_KEYS = new Set<string>([
+  "bots", "automation", "fake_activity", "moderation", "security",
+  "word_filters", "ai_chatbots", "admin_modules", "staff_permissions",
+  "admin_roles", "filters", "boobubble_openai_key", "boobubble_gemini_key",
+  "ai_chat",
+]);
+
+// -------- Settings (public read; sensitive keys stripped) --------
 export const getAllSettings = createServerFn({ method: "GET" }).handler(async () => {
   const { data, error } = await (await getSupabaseAdmin()).from("app_settings").select("*");
   if (error) throw new Error(error.message);
   const map: Record<string, any> = {};
-  for (const row of data ?? []) map[row.key] = row.value;
+  for (const row of data ?? []) {
+    if (SENSITIVE_SETTING_KEYS.has(row.key)) continue;
+    map[row.key] = row.value;
+  }
   return map as Record<string, any>;
 });
+
+// -------- Settings (admin-only; returns everything including secrets) --------
+export const getAllSettingsAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await (await getSupabaseAdmin()).from("app_settings").select("*");
+    if (error) throw new Error(error.message);
+    const map: Record<string, any> = {};
+    for (const row of data ?? []) map[row.key] = row.value;
+    return map as Record<string, any>;
+  });
 
 export const updateSetting = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

@@ -2,18 +2,19 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { getAllSettings, updateSetting } from "@/lib/admin.functions";
+import { getAllSettingsAdmin, updateSetting } from "@/lib/admin.functions";
 
 /**
  * Lightweight hook to read/write a single JSON key in app_settings.
- * Keeps admin modules schema-free and lazy.
+ * Keeps admin modules schema-free and lazy. Uses the admin-only reader
+ * so sensitive keys (bots, moderation, AI keys, etc.) are available.
  */
 export function useAdminSetting<T extends Record<string, any>>(key: string, defaults: T) {
-  const fetchSettings = useServerFn(getAllSettings);
+  const fetchSettings = useServerFn(getAllSettingsAdmin);
   const saveSetting = useServerFn(updateSetting);
   const qc = useQueryClient();
 
-  const { data } = useQuery({ queryKey: ["admin-settings"], queryFn: () => fetchSettings({}) });
+  const { data } = useQuery({ queryKey: ["admin-settings-full"], queryFn: () => fetchSettings({}) });
   const [values, setValues] = useState<T>(defaults);
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export function useAdminSetting<T extends Record<string, any>>(key: string, defa
 
   const mut = useMutation({
     mutationFn: () => saveSetting({ data: { key, value: values } }),
-    onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["admin-settings"] }); },
+    onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["admin-settings-full"] }); qc.invalidateQueries({ queryKey: ["admin-settings"] }); },
     onError: (e: any) => toast.error(e?.message ?? "Failed to save"),
   });
 
