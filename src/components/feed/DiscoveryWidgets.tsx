@@ -36,46 +36,59 @@ export function PromotedPostsWidget({ profiles }: { profiles: Record<string, Use
       title="Promoted posts"
       icon={<Megaphone className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />}
       accent="amber"
-      rightSlot={<span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 ring-1 ring-inset ring-amber-400/30">Sponsored</span>}
+      rightSlot={
+        <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/30 to-orange-500/25 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-amber-800 dark:text-amber-100 ring-1 ring-inset ring-amber-400/40 shadow-[0_0_14px_-4px_rgba(245,158,11,0.55)]">
+          <Sparkles className="h-2.5 w-2.5" /> Sponsored
+        </span>
+      }
     >
-      <div className="space-y-2 pt-1">
-        {!loaded && Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="h-14 rounded-xl skeleton-shimmer" />
-        ))}
-        {loaded && posts.length === 0 && (
-          <p className="px-1 py-2 text-xs text-muted-foreground">No featured posts yet.</p>
-        )}
-        {loaded && posts.map((p) => {
-          const author = profiles[p.author_id];
-          const snippet = (p.text ?? "").replace(/\s+/g, " ").trim().slice(0, 70);
-          return (
-            <Link
-              key={p.id}
-              to="/feed/$slug"
-              params={{ slug: p.id }}
-              className="group flex gap-2.5 rounded-xl p-2 -mx-1 transition hover:bg-foreground/[0.04] active:scale-[0.99]"
-            >
-              {author ? (
-                <Avatar user={author} size={36} />
-              ) : (
-                <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/80">
-                  <span className="truncate">{author?.name ?? "Member"}</span>
-                  <span className="rounded bg-amber-500/15 px-1 py-px text-[9px] font-bold uppercase text-amber-700 dark:text-amber-300">Ad</span>
+      <div
+        className="relative -mx-1 rounded-2xl bg-gradient-to-br from-amber-500/[0.08] via-orange-500/[0.04] to-transparent p-2 ring-1 ring-inset ring-amber-400/15"
+      >
+        <div className="space-y-2">
+          {!loaded && Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="h-16 rounded-xl skeleton-shimmer" />
+          ))}
+          {loaded && posts.length === 0 && (
+            <p className="px-1 py-2 text-xs text-muted-foreground">No featured posts yet.</p>
+          )}
+          {loaded && posts.map((p) => {
+            const author = profiles[p.author_id];
+            const snippet = (p.text ?? "").replace(/\s+/g, " ").trim().slice(0, 70);
+            const thumb = (p as any).media_urls?.[0] as string | undefined;
+            return (
+              <Link
+                key={p.id}
+                to="/feed/$slug"
+                params={{ slug: p.id }}
+                className="group flex gap-2.5 rounded-xl bg-background/60 dark:bg-white/[0.03] p-2 ring-1 ring-inset ring-border/50 transition hover:bg-background hover:ring-amber-400/40 hover:shadow-[0_8px_24px_-14px_rgba(245,158,11,0.55)] active:scale-[0.99]"
+              >
+                {thumb ? (
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg ring-1 ring-inset ring-border/60">
+                    <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
+                  </div>
+                ) : (
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-amber-500/25 to-orange-500/15 ring-1 ring-inset ring-amber-400/30">
+                    {author ? <Avatar user={author} size={32} /> : <ImageIcon className="h-4 w-4 text-amber-700/70 dark:text-amber-300/70" />}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/80">
+                    <span className="truncate">{author?.name ?? "Member"}</span>
+                    <span className="rounded bg-amber-500/20 px-1 py-px text-[9px] font-black uppercase text-amber-800 dark:text-amber-200 ring-1 ring-inset ring-amber-400/30">Ad</span>
+                  </div>
+                  <p className="line-clamp-2 text-[12px] leading-snug text-foreground/90">
+                    {snippet || "Featured community post"}
+                  </p>
+                  <div className="mt-1 flex items-center gap-3 text-[10px] font-medium tabular-nums text-muted-foreground">
+                    <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" />{(p as any).reaction_count ?? 0}</span>
+                    <span className="inline-flex items-center gap-1"><MessageCircle className="h-3 w-3" />{(p as any).comment_count ?? 0}</span>
+                  </div>
                 </div>
-                <p className="line-clamp-2 text-[12px] leading-snug text-foreground/90">
-                  {snippet || "Featured community post"}
-                </p>
-                <div className="mt-0.5 flex items-center gap-3 text-[10px] text-muted-foreground">
-                  <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" />{(p as any).reaction_count ?? 0}</span>
-                  <span className="inline-flex items-center gap-1"><MessageCircle className="h-3 w-3" />{(p as any).comment_count ?? 0}</span>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </PremiumCard>
   );
