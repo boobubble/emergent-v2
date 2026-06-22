@@ -1,7 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, Sparkles, Vote, VenetianMask, Newspaper, ArrowRight, BellOff, X, UserPlus } from "lucide-react";
+import {
+  Sparkles,
+  ArrowRight,
+  X,
+  RefreshCw,
+  Heart,
+  Flame,
+  Wand2,
+  SlidersHorizontal,
+  Newspaper,
+  Vote,
+  VenetianMask,
+} from "lucide-react";
 import {
   getAssistantFeedRecommendations,
   triggerWelcomeIfNeeded,
@@ -17,6 +29,36 @@ import {
 import { useAuth } from "@/lib/auth-store";
 
 const DISMISS_KEY = "boobubble:feed-rec:dismissed-at";
+
+const CATEGORY_META: Record<
+  AssistantRecommendation["kind"],
+  { label: string; icon: React.ReactNode; tone: string; bg: string; text: string; ring: string }
+> = {
+  post: {
+    label: "Post",
+    icon: <Newspaper className="h-3 w-3" />,
+    tone: "from-violet-500/20 via-fuchsia-500/10 to-transparent",
+    bg: "bg-violet-500/10",
+    text: "text-violet-300",
+    ring: "ring-violet-500/20",
+  },
+  poll: {
+    label: "Poll",
+    icon: <Vote className="h-3 w-3" />,
+    tone: "from-amber-500/20 via-orange-500/10 to-transparent",
+    bg: "bg-amber-500/10",
+    text: "text-amber-300",
+    ring: "ring-amber-500/20",
+  },
+  confession: {
+    label: "Confession",
+    icon: <VenetianMask className="h-3 w-3" />,
+    tone: "from-emerald-500/20 via-teal-500/10 to-transparent",
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-300",
+    ring: "ring-emerald-500/20",
+  },
+};
 
 export function BoobubbleAssistantWidget() {
   const { user } = useAuth();
@@ -34,6 +76,7 @@ export function BoobubbleAssistantWidget() {
   const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fire all idempotent triggers on first authenticated mount
   useEffect(() => {
@@ -53,7 +96,7 @@ export function BoobubbleAssistantWidget() {
     } catch { /* ignore */ }
   }, []);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!user?.id || user.isGuest || dismissed) { setLoading(false); return; }
     let alive = true;
     Promise.all([fetchPublic({}), fetchRecs({}), fetchFriends({})])
@@ -68,8 +111,17 @@ export function BoobubbleAssistantWidget() {
     return () => { alive = false; };
   }, [user?.id, user?.isGuest, dismissed, fetchPublic, fetchRecs, fetchFriends]);
 
+  useEffect(() => { load(); }, [load]);
+
+  const refresh = useCallback(() => {
+    setRefreshing(true);
+    setLoading(true);
+    load();
+    setTimeout(() => setRefreshing(false), 800);
+  }, [load]);
+
   if (!user?.id || user.isGuest || dismissed || !enabled) return null;
-  if (loading) return null;
+  if (loading && items.length === 0 && friends.length === 0) return null;
   if (items.length === 0 && friends.length === 0) return null;
 
   const dismiss = () => {
@@ -78,96 +130,182 @@ export function BoobubbleAssistantWidget() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-3 shadow-[0_8px_24px_-16px_oklch(0_0_0/0.4)]">
-      <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/20 blur-2xl" aria-hidden />
-      <div className="mb-2 flex items-center gap-2">
-        <span className="grid h-7 w-7 place-items-center rounded-lg bg-primary/20 text-primary">
-          <Sparkles className="h-4 w-4" />
-        </span>
-        <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-primary">
-          BooBubble Assistant
-          <BadgeCheck className="h-3.5 w-3.5 text-sky-400" aria-label="Official" />
-        </span>
-        <button
-          type="button"
-          onClick={dismiss}
-          className="ml-auto rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-          aria-label="Dismiss recommendations"
-          title="Hide for today"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
-      </div>
-      {items.length > 0 && (
-        <>
-          <p className="mb-2 text-[11px] text-muted-foreground">Real picks from the community — refreshed for you.</p>
-          <ul className="space-y-1.5">
-            {items.slice(0, 5).map((it) => (
-              <RecItem key={`${it.kind}:${it.id}`} item={it} />
+    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-violet-950 via-purple-950 to-slate-950 p-[1px] shadow-[0_20px_60px_-15px_rgba(139,92,246,0.45)]">
+      {/* Glow orbs */}
+      <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-fuchsia-500/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-violet-500/25 blur-3xl" />
+
+      <div className="relative rounded-[calc(1.5rem-1px)] bg-gradient-to-br from-slate-950/80 via-violet-950/70 to-slate-950/80 p-4 backdrop-blur-xl">
+        {/* Header */}
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-400 via-fuchsia-400 to-purple-500 shadow-lg shadow-fuchsia-500/30">
+              <Wand2 className="h-4.5 w-4.5 text-white" />
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-sm font-extrabold tracking-tight text-white">AI Picks For You</h3>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-violet-300/80">
+                Live refresh
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={refresh}
+              title="Refresh picks"
+              aria-label="Refresh picks"
+              className="grid h-7 w-7 place-items-center rounded-full bg-white/5 text-white/70 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            </button>
+            <button
+              type="button"
+              onClick={dismiss}
+              className="grid h-7 w-7 place-items-center rounded-full bg-white/5 text-white/70 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white"
+              aria-label="Dismiss recommendations"
+              title="Hide for today"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Subtitle */}
+        <p className="mb-3 text-[11px] text-white/50">
+          Real picks from the community — refreshed for you.
+        </p>
+
+        {/* Recommendation cards */}
+        {items.length > 0 && (
+          <div className="space-y-2">
+            {items.slice(0, 5).map((it, idx) => (
+              <RecCard key={`${it.kind}:${it.id}`} item={it} index={idx} />
             ))}
-          </ul>
-        </>
-      )}
-      {friends.length > 0 && (
-        <div className="mt-3 border-t border-border/60 pt-2">
-          <p className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-            <UserPlus className="h-3 w-3" /> People you may know
-          </p>
-          <ul className="space-y-1">
-            {friends.slice(0, 3).map((f) => (
-              <li key={f.id}>
+          </div>
+        )}
+
+        {/* Friend suggestions */}
+        {friends.length > 0 && (
+          <div className="mt-3 border-t border-white/10 pt-3">
+            <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-white/60">
+              <Sparkles className="h-3 w-3 text-violet-400" /> People you may know
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {friends.slice(0, 4).map((f) => (
                 <Link
+                  key={f.id}
                   to="/u/$username"
                   params={{ username: f.username }}
-                  className="flex items-center gap-2 rounded-lg bg-background/40 px-2 py-1.5 text-xs hover:bg-background"
+                  className="group flex min-w-[140px] flex-col items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3 transition hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-lg hover:shadow-violet-500/10"
                 >
-                  {f.avatar_url
-                    ? <img src={f.avatar_url} alt="" loading="lazy" className="h-6 w-6 rounded-full object-cover" />
-                    : <span className="grid h-6 w-6 place-items-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">{f.username.slice(0, 1).toUpperCase()}</span>}
-                  <span className="min-w-0 flex-1 truncate font-medium">@{f.username}</span>
-                  <span className="text-[10px] text-muted-foreground">{f.mutual_count} mutual</span>
+                  {f.avatar_url ? (
+                    <img
+                      src={f.avatar_url}
+                      alt=""
+                      loading="lazy"
+                      className="h-10 w-10 rounded-full object-cover ring-2 ring-white/10 group-hover:ring-violet-400/40 transition"
+                    />
+                  ) : (
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-[11px] font-bold text-white">
+                      {f.username.slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="max-w-[100px] truncate text-[11px] font-semibold text-white/90">
+                    @{f.username}
+                  </span>
+                  <span className="text-[10px] text-white/40">{f.mutual_count} mutual</span>
                 </Link>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
+          <Link
+            to="/feed"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-white/50 transition hover:text-violet-300"
+          >
+            See more picks <ArrowRight className="h-3 w-3" />
+          </Link>
+          <Link
+            to="/account"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-white/50 transition hover:text-violet-300"
+          >
+            <SlidersHorizontal className="h-3 w-3" /> Personalize feed
+          </Link>
         </div>
-      )}
-      <div className="mt-2 flex items-center justify-between text-[11px]">
-        <Link to="/account" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <BellOff className="h-3 w-3" /> Manage assistant
-        </Link>
       </div>
     </div>
   );
 }
 
-function RecItem({ item }: { item: AssistantRecommendation }) {
-  const Icon =
-    item.kind === "poll" ? Vote : item.kind === "confession" ? VenetianMask : Newspaper;
+function RecCard({ item, index }: { item: AssistantRecommendation; index: number }) {
+  const meta = CATEGORY_META[item.kind];
   const href =
     item.kind === "confession"
       ? "/confessions"
       : item.slug
       ? `/feed/${item.slug}`
       : `/feed`;
+
   return (
-    <li>
-      <Link
-        to={href}
-        className="group flex items-center gap-2 rounded-lg border border-transparent bg-background/40 px-2 py-1.5 text-xs hover:border-primary/30 hover:bg-background"
-      >
-        <Icon className="h-3.5 w-3.5 shrink-0 text-primary/70" />
-        <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate font-medium text-foreground">{item.title || "View"}</span>
-          {item.author_username && (
-            <span className="truncate text-[10px] text-muted-foreground">@{item.author_username}</span>
+    <Link
+      to={href}
+      className="group flex items-center gap-3 rounded-2xl border border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent p-2.5 transition hover:-translate-y-0.5 hover:border-white/10 hover:shadow-lg hover:shadow-violet-500/10 hover:bg-white/[0.05]"
+      style={{ animationDelay: `${index * 70}ms` }}
+    >
+      {/* Thumbnail or icon */}
+      {item.thumbnail_url ? (
+        <div className="relative shrink-0">
+          <img
+            src={item.thumbnail_url}
+            alt=""
+            loading="lazy"
+            className="h-12 w-12 rounded-xl object-cover ring-1 ring-white/10 group-hover:ring-violet-400/30 transition"
+          />
+          <div className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-slate-950 ring-1 ring-white/20">
+            <span className="text-[9px] leading-none">{meta.icon}</span>
+          </div>
+        </div>
+      ) : (
+        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${meta.tone} ring-1 ${meta.ring}`}>
+          <span className={meta.text}>{meta.icon}</span>
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <div className="flex items-center gap-1.5">
+          <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${meta.bg} ${meta.text}`}>
+            {meta.icon}
+            {meta.label}
+          </span>
+          {item.reaction_count !== null && item.reaction_count > 0 && (
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-white/40">
+              <Heart className="h-2.5 w-2.5 text-rose-400/70" /> {item.reaction_count}
+            </span>
           )}
+          {item.score > 0 && (
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-white/40">
+              <Flame className="h-2.5 w-2.5 text-amber-400/70" /> {Math.round(item.score)}
+            </span>
+          )}
+        </div>
+        <span className="truncate text-[12px] font-semibold text-white/90 group-hover:text-white transition">
+          {item.title || "View"}
         </span>
-        {item.thumbnail_url && (
-          <img src={item.thumbnail_url} alt="" loading="lazy" className="h-7 w-7 shrink-0 rounded object-cover" />
+        {item.author_username && (
+          <span className="truncate text-[10px] text-white/40">
+            @{item.author_username}
+          </span>
         )}
-        <ArrowRight className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-      </Link>
-    </li>
+      </div>
+
+      {/* Arrow */}
+      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-white/20 opacity-0 transition group-hover:translate-x-0.5 group-hover:text-white/60 group-hover:opacity-100" />
+    </Link>
   );
 }
