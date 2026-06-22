@@ -176,7 +176,7 @@ export function BoobubbleAssistantWidget() {
         {/* Header */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-400 via-fuchsia-400 to-purple-500 shadow-lg shadow-fuchsia-500/30">
+            <div className="ai-orb-breathe relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-400 via-fuchsia-400 to-purple-500 shadow-lg shadow-fuchsia-500/30">
               <Wand2 className="h-4.5 w-4.5 text-white" />
               <span
                 className={`absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full ring-2 ring-slate-950 ${
