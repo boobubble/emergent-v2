@@ -362,7 +362,9 @@ export function CommunityActivityWidget({
           return (
             <li
               key={it.id + it.verb}
-              className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-transparent p-1.5 -mx-1 transition-all duration-300 hover:-translate-y-px hover:border-foreground/10 hover:bg-gradient-to-r hover:from-foreground/[0.05] hover:to-foreground/[0.02] hover:shadow-sm chat-bubble-in"
+              className={`group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-transparent p-1.5 -mx-1 transition-all duration-300 hover:-translate-y-px hover:border-foreground/10 hover:bg-gradient-to-r hover:from-foreground/[0.06] hover:to-foreground/[0.02] hover:shadow-sm chat-bubble-in ${
+                idx % 2 === 1 ? "bg-foreground/[0.025] dark:bg-white/[0.02]" : ""
+              }`}
               style={{ animationDelay: `${idx * 60}ms` }}
             >
               <span
@@ -397,6 +399,14 @@ export function CommunityActivityWidget({
           );
         })}
       </ul>
+      {items.length > 0 && (
+        <Link
+          to="/feed"
+          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-500/15 via-violet-500/15 to-fuchsia-500/15 px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-foreground/80 ring-1 ring-inset ring-border/60 transition hover:text-foreground hover:ring-sky-400/40 hover:shadow-[0_8px_22px_-14px_rgba(56,189,248,0.65)]"
+        >
+          View all activity <ArrowRight className="h-3 w-3" />
+        </Link>
+      )}
     </PremiumCard>
   );
 }
