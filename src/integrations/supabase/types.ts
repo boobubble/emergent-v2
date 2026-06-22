@@ -1996,6 +1996,7 @@ export type Database = {
       }
       trio_room_members: {
         Row: {
+          expires_at: string | null
           invited_at: string
           invited_by: string | null
           joined_at: string | null
@@ -2004,6 +2005,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          expires_at?: string | null
           invited_at?: string
           invited_by?: string | null
           joined_at?: string | null
@@ -2012,6 +2014,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          expires_at?: string | null
           invited_at?: string
           invited_by?: string | null
           joined_at?: string | null
