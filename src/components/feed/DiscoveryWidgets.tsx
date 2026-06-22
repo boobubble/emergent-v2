@@ -6,6 +6,15 @@ import { Avatar } from "@/components/chat/Avatar";
 import { PremiumCard } from "@/components/feed/SideWidgets";
 import type { User } from "@/lib/chat-types";
 
+/* ──────────────────────────── Helpers ──────────────────────────── */
+
+/** Hide seeded demo accounts (names like "demo4li2tg") from public-facing widgets. */
+function isDemoUser(u: User): boolean {
+  const name = (u.name ?? "").trim().toLowerCase();
+  const handle = ((u as any).username ?? "").toString().trim().toLowerCase();
+  return name.startsWith("demo") || handle.startsWith("demo");
+}
+
 /* ──────────────────────────── Promoted Users ──────────────────────────── */
 
 const PROMO_BADGES = ["Verified", "VIP", "Creator", "Top"] as const;
@@ -15,7 +24,7 @@ export function PromotedPostsWidget({ profiles }: { profiles: Record<string, Use
 
   const promoted = useMemo(() => {
     return Object.values(profiles)
-      .filter((u) => !u.isBot && !u.isGuest)
+      .filter((u) => !u.isBot && !u.isGuest && !isDemoUser(u))
       .sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0))
       .slice(0, 3);
   }, [profiles]);
@@ -132,7 +141,7 @@ export function FeaturedMembersWidget({
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const featured = useMemo(() => {
     return Object.values(profiles)
-      .filter((u) => u.id !== meId && !u.isBot && !u.isGuest)
+      .filter((u) => u.id !== meId && !u.isBot && !u.isGuest && !isDemoUser(u))
       .sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0))
       .slice(0, 4);
   }, [profiles, meId]);
@@ -357,7 +366,7 @@ export function CommunityActivityWidget({
   profiles: Record<string, User>;
 }) {
   const pool = useMemo<ActivityItem[]>(() => {
-    const users = Object.values(profiles).filter((u) => u.id !== meId && !u.isBot).slice(0, 16);
+    const users = Object.values(profiles).filter((u) => u.id !== meId && !u.isBot && !isDemoUser(u)).slice(0, 16);
     if (users.length === 0) return [];
     const verbs: Array<Pick<ActivityItem, "verb" | "target" | "tint" | "Icon">> = [
       { verb: "reached", target: "a new level", tint: "violet", Icon: Sparkles },
