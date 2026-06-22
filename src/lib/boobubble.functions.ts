@@ -431,6 +431,7 @@ export interface AssistantRecommendation {
   author_avatar_url: string | null;
   thumbnail_url: string | null;
   score: number;
+  reaction_count: number | null;
 }
 
 export const getAssistantFeedRecommendations = createServerFn({ method: "GET" })
