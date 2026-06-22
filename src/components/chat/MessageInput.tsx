@@ -203,7 +203,7 @@ export function MessageInput() {
       void handleClearCache();
       return;
     }
-    if (/^\/clear\b/i.test(trimmed)) {
+    if (/^\/(clear|delete)\b/i.test(trimmed)) {
       setText(""); setAttachment(null); setAttachError("");
       void handleClearChannel();
       return;
