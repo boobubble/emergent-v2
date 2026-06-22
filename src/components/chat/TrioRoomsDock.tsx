@@ -66,6 +66,7 @@ export function TrioRoomsDock() {
   const [minimized, setMinimized] = useState<OpenRoom[]>([]);
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [showCreate, setShowCreate] = useState(false);
+  const [showLauncher, setShowLauncher] = useState(false);
   const [unread, setUnread] = useState<Record<string, number>>({});
   const [acceptedRooms, setAcceptedRooms] = useState<OpenRoom[]>([]);
   const openRoomIdRef = useRef<string | null>(null);
