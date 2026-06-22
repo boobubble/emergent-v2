@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Megaphone, Star, Users2, Flame, Activity, UserPlus, Check, Heart, MessageCircle, TrendingUp, Award, Sparkles, ArrowRight, ImageIcon } from "lucide-react";
+import { Star, Users2, Flame, Activity, UserPlus, Check, TrendingUp, Award, Sparkles, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { postsSafe } from "@/lib/posts-safe";
 import { Avatar } from "@/components/chat/Avatar";
 import { PremiumCard } from "@/components/feed/SideWidgets";
 import type { User } from "@/lib/chat-types";
-import type { FeedPost } from "@/lib/feed-types";
 
 /* ──────────────────────────── Promoted Users ──────────────────────────── */
 
