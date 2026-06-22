@@ -106,6 +106,7 @@ export function BoobubbleAssistantWidget() {
         setEnabled(Boolean(pub?.enabled && pub?.feed_recs_enabled));
         setItems(recs.items ?? []);
         setFriends(fr.items ?? []);
+        setRefreshTick((t) => t + 1);
       })
       .catch(() => { if (alive) { setItems([]); setFriends([]); } })
       .finally(() => { if (alive) setLoading(false); });
