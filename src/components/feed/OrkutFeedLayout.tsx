@@ -858,8 +858,69 @@ function OrkutPromotedGroups() {
 
 /* ============================ Testimonials ============================ */
 
-function OrkutTestimonials({ friends, onOpenProfile }: { friends: User[]; onOpenProfile: (u: string) => void }) {
-  const sample = friends.slice(0, 2);
+function OrkutTestimonials({
+  meId,
+  friends,
+  onOpenProfile,
+}: {
+  meId: string;
+  friends: User[];
+  onOpenProfile: (u: string) => void;
+}) {
+  const qc = useQueryClient();
+  const list = useServerFn(listTestimonialsForUser);
+  const write = useServerFn(writeTestimonial);
+  const remove = useServerFn(deleteTestimonial);
+
+  const { data: testimonials = [], isLoading } = useQuery({
+    queryKey: ["testimonials", meId],
+    queryFn: () => list({ data: { targetUserId: meId, limit: 10 } }),
+    enabled: !!meId,
+  });
+
+  const [open, setOpen] = useState(false);
+  const [targetId, setTargetId] = useState<string>("");
+  const [body, setBody] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const eligibleTargets = useMemo(
+    () => friends.filter((f) => f && f.id && f.id !== meId),
+    [friends, meId],
+  );
+
+  async function submit() {
+    if (!targetId) {
+      toast.error("Pick a friend to write about");
+      return;
+    }
+    if (body.trim().length < 1) {
+      toast.error("Write a few words");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await write({ data: { targetUserId: targetId, body: body.trim() } });
+      toast.success("Testimonial sent 💖");
+      setOpen(false);
+      setBody("");
+      setTargetId("");
+      qc.invalidateQueries({ queryKey: ["testimonials"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not send testimonial");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function onDelete(id: string) {
+    try {
+      await remove({ data: { id } });
+      qc.invalidateQueries({ queryKey: ["testimonials"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete");
+    }
+  }
+
   return (
     <div className="orkut-card">
       <div className="orkut-card-header">
@@ -867,30 +928,114 @@ function OrkutTestimonials({ friends, onOpenProfile }: { friends: User[]; onOpen
         <span>testimonials</span>
       </div>
       <div className="space-y-2 bg-white p-3 text-[11px]">
-        {sample.length === 0 ? (
+        {isLoading ? (
+          <div className="rounded-sm border border-dashed border-[#b5c7e0] p-2 text-center italic text-[#5a6b85]">
+            loading testimonials…
+          </div>
+        ) : testimonials.length === 0 ? (
           <div className="rounded-sm border border-dashed border-[#b5c7e0] p-2 text-center italic text-[#5a6b85]">
             no testimonials yet. add friends to receive scraps of love.
           </div>
         ) : (
-          sample.map((u, i) => (
-            <button
-              key={u.id}
-              onClick={() => onOpenProfile(u.name)}
-              className="block w-full rounded-sm border border-[#d6e0ee] bg-[#fbfcfe] p-2 text-left transition hover:border-[#1d4488] hover:bg-white"
-            >
-              <div className="flex items-center gap-2">
-                <Avatar user={u} size={24} />
-                <span className="text-[11px] font-bold text-[#1d4488]">{u.name}</span>
+          testimonials.map((t) => {
+            const author: User = {
+              id: t.author_id,
+              name: t.author_username || "friend",
+              avatarColor: t.author_avatar_color || "#1d4488",
+              status: "offline",
+              xp: 0,
+              level: 1,
+            };
+            return (
+              <div
+                key={t.id}
+                className="rounded-sm border border-[#d6e0ee] bg-[#fbfcfe] p-2 transition hover:border-[#1d4488] hover:bg-white"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => t.author_username && onOpenProfile(t.author_username)}
+                    className="flex items-center gap-2 text-left"
+                  >
+                    <Avatar user={author} size={24} />
+                    <span className="text-[11px] font-bold text-[#1d4488]">
+                      {t.author_username || "friend"}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => onDelete(t.id)}
+                    className="text-[10px] text-[#5a6b85] hover:text-[#c91a4a]"
+                    title="Remove testimonial"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="mt-1 italic leading-snug text-[#3b4a66]">{t.body}</p>
               </div>
-              <p className="mt-1 italic leading-snug text-[#3b4a66]">
-                {i === 0
-                  ? "the coolest person on this feed — always brings the vibes 💖"
-                  : "old school internet friend, 10/10 would scrap again 🌸"}
-              </p>
-            </button>
-          ))
+            );
+          })
         )}
-        <button className="orkut-btn-pink w-full px-2 py-1 text-[11px]">+ write a testimonial</button>
+
+        {!open ? (
+          <button
+            onClick={() => {
+              if (eligibleTargets.length === 0) {
+                toast.info("Add some friends first to write testimonials about them.");
+                return;
+              }
+              setTargetId(eligibleTargets[0]?.id ?? "");
+              setOpen(true);
+            }}
+            className="orkut-btn-pink w-full px-2 py-1 text-[11px]"
+          >
+            + write a testimonial
+          </button>
+        ) : (
+          <div className="space-y-2 rounded-sm border border-[#d6e0ee] bg-[#f5f8fc] p-2">
+            <label className="block text-[10px] font-bold uppercase text-[#1d4488]">
+              About
+            </label>
+            <select
+              value={targetId}
+              onChange={(e) => setTargetId(e.target.value)}
+              className="w-full rounded-sm border border-[#b5c7e0] bg-white px-1 py-1 text-[11px] text-[#1d4488]"
+            >
+              {eligibleTargets.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value.slice(0, 500))}
+              placeholder="say something nice…"
+              rows={3}
+              className="w-full resize-none rounded-sm border border-[#b5c7e0] bg-white px-2 py-1 text-[11px] text-[#3b4a66] outline-none focus:border-[#1d4488]"
+            />
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] text-[#5a6b85]">{body.length}/500</span>
+              <div className="flex gap-1">
+                <button
+                  disabled={submitting}
+                  onClick={() => {
+                    setOpen(false);
+                    setBody("");
+                  }}
+                  className="rounded-sm border border-[#b5c7e0] bg-white px-2 py-1 text-[10px] text-[#1d4488] hover:bg-[#f0f4fa]"
+                >
+                  cancel
+                </button>
+                <button
+                  disabled={submitting}
+                  onClick={submit}
+                  className="orkut-btn-pink px-2 py-1 text-[10px] disabled:opacity-60"
+                >
+                  {submitting ? "sending…" : "send"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
