@@ -131,7 +131,7 @@ export function OrkutFeedLayout(props: Props) {
   const brandLabel = useThemeBrandLabel("orkut_retro", "boobubble");
 
   return (
-    <div className="min-h-screen orkut-classic-root">
+    <div className="min-h-screen overflow-x-hidden orkut-classic-root">
       <style>{ORKUT_CSS}</style>
 
       <OrkutTopBar
@@ -295,7 +295,7 @@ function OrkutTopBar({
 
       {/* Nav strip — classic Orkut blue tabs */}
       <nav className="border-t border-white/15 bg-[color-mix(in_oklab,#15356b_55%,transparent)]">
-        <div className="mx-auto flex max-w-[1180px] items-center gap-0.5 px-4 text-[12px]">
+        <div className="mx-auto flex max-w-[1180px] items-center gap-0.5 overflow-x-auto px-2 text-[12px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-4">
           <TopLink icon={Home} label="home" onClick={goHome} />
           <TopLink icon={Smile} label="profile" onClick={() => onOpenProfile(username)} />
           <TopLink icon={ScrollText} label="scrapbook" onClick={goScrapbook} />
@@ -322,7 +322,7 @@ function TopLink({
     <button
       onClick={onClick}
       data-tip={label}
-      className="orkut-tab orkut-tip flex items-center gap-1.5 px-2.5 py-1.5 font-bold uppercase tracking-wide text-white/90 transition hover:bg-white/15 hover:text-white"
+      className="orkut-tab orkut-tip flex shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 font-bold uppercase tracking-wide text-white/90 transition hover:bg-white/15 hover:text-white"
     >
       <Icon className="h-3 w-3" />
       <span>{label}</span>
