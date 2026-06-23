@@ -2008,6 +2008,36 @@ export type Database = {
         }
         Relationships: []
       }
+      testimonials: {
+        Row: {
+          approved: boolean
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          target_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved?: boolean
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          target_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved?: boolean
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          target_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       trio_room_members: {
         Row: {
           expires_at: string | null
