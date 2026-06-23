@@ -295,7 +295,7 @@ function OrkutTopBar({
 
       {/* Nav strip — classic Orkut blue tabs */}
       <nav className="border-t border-white/15 bg-[color-mix(in_oklab,#15356b_55%,transparent)]">
-        <div className="mx-auto flex max-w-[1180px] items-center gap-0.5 px-4 text-[12px]">
+        <div className="mx-auto flex max-w-[1180px] items-center gap-0.5 overflow-x-auto px-2 text-[12px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-4">
           <TopLink icon={Home} label="home" onClick={goHome} />
           <TopLink icon={Smile} label="profile" onClick={() => onOpenProfile(username)} />
           <TopLink icon={ScrollText} label="scrapbook" onClick={goScrapbook} />
