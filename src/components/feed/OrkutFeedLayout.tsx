@@ -197,7 +197,7 @@ export function OrkutFeedLayout(props: Props) {
           <OrkutPromotedUsers users={allProfiles.slice(0, 4)} onOpenProfile={onOpenProfile} />
           <OrkutPromotedGroups />
           <OrkutCommunities />
-          <OrkutTestimonials onOpenProfile={onOpenProfile} friends={friendList} />
+          <OrkutTestimonials meId={meId} onOpenProfile={onOpenProfile} friends={friendList} />
           <OrkutFanCounter fans={fans} />
           <OrkutMusicScrap />
         </aside>
