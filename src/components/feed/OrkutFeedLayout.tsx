@@ -131,7 +131,7 @@ export function OrkutFeedLayout(props: Props) {
   const brandLabel = useThemeBrandLabel("orkut_retro", "boobubble");
 
   return (
-    <div className="min-h-screen orkut-classic-root">
+    <div className="min-h-screen overflow-x-hidden orkut-classic-root">
       <style>{ORKUT_CSS}</style>
 
       <OrkutTopBar
