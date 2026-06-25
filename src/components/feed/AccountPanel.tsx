@@ -21,6 +21,9 @@ export function AccountPanel() {
   const me = state.me;
   const fileRef = useRef<HTMLInputElement>(null);
   const { accent, setAccent } = useAccent();
+  const deleteAccountFn = useServerFn(deleteMyAccount);
+  const [deleting, setDeleting] = useState(false);
+
 
   const [name, setName] = useState(me.name);
   const [bio, setBio] = useState(me.bio ?? "");
