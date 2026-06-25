@@ -120,9 +120,32 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
             <div className="flex-1 text-sm font-bold">Messages</div>
           </>
         )}
+        {view === "chat" && activePeer && (
+          <button
+            disabled={deletingDm}
+            onClick={async () => {
+              if (!window.confirm(`Delete the entire chat with ${activePeer.name}? This removes messages for both of you and cannot be undone.`)) return;
+              setDeletingDm(true);
+              try {
+                await deleteDm({ data: { peerId: activePeer.id } });
+                setView("list");
+              } catch (e) {
+                alert((e as Error).message || 'Failed to delete chat');
+              } finally {
+                setDeletingDm(false);
+              }
+            }}
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-destructive/15 hover:text-destructive disabled:opacity-50"
+            aria-label="Delete chat"
+            title="Delete chat"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
         <button onClick={handleClose} className="grid h-8 w-8 place-items-center rounded-full hover:bg-accent" aria-label="Close">
           <X className="h-4 w-4" />
         </button>
+
       </div>
 
       {view === "list" ? (
