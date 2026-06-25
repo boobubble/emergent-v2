@@ -246,9 +246,41 @@ export function AccountPanel() {
           </ul>
         )}
       </section>
+
+      <section className="rounded-3xl border border-destructive/30 bg-destructive/5 p-5">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-bold text-destructive">Delete account</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Permanently delete your account and all associated data — posts, messages, friends, coins. This cannot be undone.
+            </p>
+            <button
+              disabled={deleting || !auth?.id}
+              onClick={async () => {
+                const confirm1 = window.prompt('Type DELETE to permanently remove your account:');
+                if (confirm1 !== 'DELETE') return;
+                setDeleting(true);
+                try {
+                  await deleteAccountFn({});
+                  await logout();
+                  navigate({ to: '/' });
+                } catch (e) {
+                  alert((e as Error).message || 'Failed to delete account');
+                  setDeleting(false);
+                }
+              }}
+              className="mt-3 flex items-center gap-2 rounded-full bg-destructive px-4 py-2 text-xs font-bold text-destructive-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> {deleting ? 'Deleting…' : 'Delete my account'}
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
+
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
