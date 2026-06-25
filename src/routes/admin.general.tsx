@@ -16,6 +16,8 @@ export const Route = createFileRoute("/admin/general")({
   component: GeneralSettings,
 });
 
+type DmDeleteRole = "user" | "moderator" | "admin" | "super_admin";
+
 interface GeneralValues {
   site_name: string;
   site_tagline: string;
@@ -31,6 +33,9 @@ const DEFAULTS: GeneralValues = {
   signups_open: true,
   maintenance_mode: false,
 };
+
+const DM_DELETE_DEFAULT: { min_role: DmDeleteRole } = { min_role: "user" };
+
 
 function GeneralSettings() {
   const fetchSettings = useServerFn(getAllSettings);
