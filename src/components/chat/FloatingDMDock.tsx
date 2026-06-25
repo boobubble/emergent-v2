@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
-import { Minus, X, MessageCircle, Send, Smile, Paperclip } from "lucide-react";
+import { Minus, X, MessageCircle, Send, Smile, Paperclip, Trash2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteMyDmConversation } from "@/lib/account-dm.functions";
+
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useIsMobile } from "@/hooks/use-mobile";
