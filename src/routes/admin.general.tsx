@@ -43,16 +43,27 @@ function GeneralSettings() {
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["admin-settings"], queryFn: () => fetchSettings({}) });
   const [values, setValues] = useState<GeneralValues>(DEFAULTS);
+  const [dmDeleteRole, setDmDeleteRole] = useState<DmDeleteRole>(DM_DELETE_DEFAULT.min_role);
 
   useEffect(() => {
     if (!data) return;
     const g = (data.general as Partial<GeneralValues>) || {};
     setValues({ ...DEFAULTS, ...g });
+    const dd = (data.dm_chat_delete as { min_role?: DmDeleteRole } | undefined)?.min_role;
+    if (dd === "user" || dd === "moderator" || dd === "admin" || dd === "super_admin") {
+      setDmDeleteRole(dd);
+    }
   }, [data]);
 
   const mut = useMutation({
     mutationFn: () => saveSetting({ data: { key: "general", value: values } }),
     onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["admin-settings"] }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed to save"),
+  });
+
+  const dmMut = useMutation({
+    mutationFn: () => saveSetting({ data: { key: "dm_chat_delete", value: { min_role: dmDeleteRole } } }),
+    onSuccess: () => { toast.success("DM permission saved"); qc.invalidateQueries({ queryKey: ["admin-settings"] }); },
     onError: (e: any) => toast.error(e?.message ?? "Failed to save"),
   });
 
@@ -87,9 +98,36 @@ function GeneralSettings() {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="mt-5">
+        <CardContent className="space-y-4 p-5">
+          <div>
+            <div className="text-sm font-bold">DM chat deletion</div>
+            <div className="text-xs text-muted-foreground">Minimum rank required to delete an entire direct-message conversation (removes messages for both sides).</div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Label htmlFor="dm_delete_role" className="text-xs">Minimum rank</Label>
+            <select
+              id="dm_delete_role"
+              value={dmDeleteRole}
+              onChange={(e) => setDmDeleteRole(e.target.value as DmDeleteRole)}
+              className="rounded-md border border-border bg-background px-3 py-1.5 text-sm"
+            >
+              <option value="user">User (everyone)</option>
+              <option value="moderator">Moderator+</option>
+              <option value="admin">Admin+</option>
+              <option value="super_admin">Super Admin only</option>
+            </select>
+            <Button size="sm" onClick={() => dmMut.mutate()} disabled={dmMut.isPending}>
+              {dmMut.isPending ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
 
 function ToggleRow({ label, desc, value, onChange }: { label: string; desc: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
