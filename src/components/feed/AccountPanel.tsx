@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Upload, Trash2, Save, LogOut, Coins, Flame, Trophy, Award, UserX, UserMinus, MessageCircle } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Upload, Trash2, Save, LogOut, Coins, Flame, Trophy, Award, UserX, UserMinus, MessageCircle, AlertTriangle } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
@@ -10,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUsernameCheck } from "@/lib/use-username-check";
 import { RecentVisitorsWidget } from "@/components/feed/RecentVisitorsWidget";
 import { ProfileViewPrivacySettings } from "@/components/feed/ProfileViewPrivacySettings";
+import { deleteMyAccount } from "@/lib/account-dm.functions";
+
 
 export function AccountPanel() {
   const navigate = useNavigate();
