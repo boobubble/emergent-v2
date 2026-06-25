@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, X, ChevronLeft, Search } from "lucide-react";
+import { MessageCircle, X, ChevronLeft, Search, Trash2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
+import { deleteMyDmConversation } from "@/lib/account-dm.functions";
 import type { User } from "@/lib/chat-types";
 import type { FeedFriendship } from "@/lib/feed-types";
+
 
 interface Props {
   meId: string;
