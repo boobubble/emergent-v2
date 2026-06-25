@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, X, ChevronLeft, Search } from "lucide-react";
+import { MessageCircle, X, ChevronLeft, Search, Trash2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
+import { deleteMyDmConversation } from "@/lib/account-dm.functions";
 import type { User } from "@/lib/chat-types";
 import type { FeedFriendship } from "@/lib/feed-types";
+
 
 interface Props {
   meId: string;
@@ -22,6 +25,9 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
   const [friendIds, setFriendIds] = useState<string[]>([]);
   const [view, setView] = useState<"list" | "chat">("list");
   const [q, setQ] = useState("");
+  const [deletingDm, setDeletingDm] = useState(false);
+  const deleteDm = useServerFn(deleteMyDmConversation);
+
 
   useEffect(() => { if (initialOpen) setOpen(true); }, [initialOpen]);
 
@@ -114,9 +120,32 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
             <div className="flex-1 text-sm font-bold">Messages</div>
           </>
         )}
+        {view === "chat" && activePeer && (
+          <button
+            disabled={deletingDm}
+            onClick={async () => {
+              if (!window.confirm(`Delete the entire chat with ${activePeer.name}? This removes messages for both of you and cannot be undone.`)) return;
+              setDeletingDm(true);
+              try {
+                await deleteDm({ data: { peerId: activePeer.id } });
+                setView("list");
+              } catch (e) {
+                alert((e as Error).message || 'Failed to delete chat');
+              } finally {
+                setDeletingDm(false);
+              }
+            }}
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-destructive/15 hover:text-destructive disabled:opacity-50"
+            aria-label="Delete chat"
+            title="Delete chat"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
         <button onClick={handleClose} className="grid h-8 w-8 place-items-center rounded-full hover:bg-accent" aria-label="Close">
           <X className="h-4 w-4" />
         </button>
+
       </div>
 
       {view === "list" ? (

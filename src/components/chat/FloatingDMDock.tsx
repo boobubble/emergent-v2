@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
-import { Minus, X, MessageCircle, Send, Smile, Paperclip } from "lucide-react";
+import { Minus, X, MessageCircle, Send, Smile, Paperclip, Trash2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteMyDmConversation } from "@/lib/account-dm.functions";
+
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -237,8 +240,11 @@ function MiniDMWindow({
   const [text, setText] = useState("");
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const deleteDm = useServerFn(deleteMyDmConversation);
+
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -322,12 +328,32 @@ function MiniDMWindow({
           </div>
         </button>
         <button
+          disabled={deleting}
+          onClick={async () => {
+            if (!window.confirm(`Delete the entire chat with ${u.name}? This removes messages for both of you and cannot be undone.`)) return;
+            setDeleting(true);
+            try {
+              await deleteDm({ data: { peerId: u.id } });
+              onClose();
+            } catch (e) {
+              alert((e as Error).message || 'Failed to delete chat');
+            } finally {
+              setDeleting(false);
+            }
+          }}
+          title="Delete chat"
+          className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/15 hover:text-destructive disabled:opacity-50"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+        <button
           onClick={onMinimize}
           title="Minimize"
           className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
         >
           <Minus className="h-4 w-4" />
         </button>
+
         <button
           onClick={onClose}
           title="Close"
