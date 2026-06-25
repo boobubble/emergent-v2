@@ -25,6 +25,9 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
   const [friendIds, setFriendIds] = useState<string[]>([]);
   const [view, setView] = useState<"list" | "chat">("list");
   const [q, setQ] = useState("");
+  const [deletingDm, setDeletingDm] = useState(false);
+  const deleteDm = useServerFn(deleteMyDmConversation);
+
 
   useEffect(() => { if (initialOpen) setOpen(true); }, [initialOpen]);
 
