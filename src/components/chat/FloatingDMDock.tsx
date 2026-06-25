@@ -240,8 +240,11 @@ function MiniDMWindow({
   const [text, setText] = useState("");
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const deleteDm = useServerFn(deleteMyDmConversation);
+
 
   useEffect(() => {
     inputRef.current?.focus();
