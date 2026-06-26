@@ -28,6 +28,7 @@ import { HeadFootScripts } from "@/components/HeadFootScripts";
 import { AdsAutoLoader } from "@/components/AdSlot";
 import { BroadcasterAnnouncementsRunner } from "@/components/broadcaster/BroadcasterAnnouncements";
 import { TrioInvitesListener } from "@/components/chat/TrioInvitesListener";
+import { useHomePageMode } from "@/lib/use-home-page-mode";
 import "@/i18n";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 
