@@ -89,18 +89,65 @@ function InstallerPage() {
 
   async function runRequirementsCheck() {
     setBusy(true);
+    setHealth({
+      db: { state: "pending" }, storage: { state: "pending" },
+      realtime: { state: "pending" }, smtp: { state: "pending" },
+    });
+    // Database
     try {
-      // Ping DB via a harmless RPC
       const { error } = await supabase.rpc("get_install_status");
       if (error) throw error;
-      setReqsOk(true);
-      toast.success("All requirements met");
-      go(1);
+      setHealth((h) => ({ ...h, db: { state: "ok" } }));
     } catch (e: any) {
-      toast.error("Database unreachable: " + (e?.message ?? "unknown"));
-    } finally {
-      setBusy(false);
+      setHealth((h) => ({ ...h, db: { state: "fail", msg: e?.message ?? "Unreachable" } }));
     }
+    // Storage
+    try {
+      const { error } = await supabase.storage.listBuckets();
+      if (error) throw error;
+      setHealth((h) => ({ ...h, storage: { state: "ok" } }));
+    } catch (e: any) {
+      setHealth((h) => ({ ...h, storage: { state: "fail", msg: e?.message ?? "Unavailable" } }));
+    }
+    // Realtime (connect + timeout)
+    await new Promise<void>((resolve) => {
+      const ch = supabase.channel("installer-health-" + Math.random().toString(36).slice(2));
+      const timer = setTimeout(() => {
+        setHealth((h) => ({ ...h, realtime: { state: "fail", msg: "Connection timeout" } }));
+        supabase.removeChannel(ch); resolve();
+      }, 4000);
+      ch.subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          clearTimeout(timer);
+          setHealth((h) => ({ ...h, realtime: { state: "ok" } }));
+          supabase.removeChannel(ch); resolve();
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          clearTimeout(timer);
+          setHealth((h) => ({ ...h, realtime: { state: "fail", msg: status } }));
+          supabase.removeChannel(ch); resolve();
+        }
+      });
+    });
+    // Email / SMTP — best-effort; admin email send happens via Supabase Auth.
+    // Mark as warn (configured by provider, not directly probeable from client).
+    try {
+      const { data } = await supabase.from("app_settings").select("value").eq("key", "email").maybeSingle();
+      const cfg = (data?.value as any) ?? null;
+      if (cfg && cfg.smtp_host) setHealth((h) => ({ ...h, smtp: { state: "ok" } }));
+      else setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Using default provider — configure SMTP in Admin → Email" } }));
+    } catch {
+      setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Not configured" } }));
+    }
+
+    // Pass if DB + Storage + Realtime ok (SMTP warn is acceptable)
+    setHealth((h) => {
+      const pass = h.db.state === "ok" && h.storage.state === "ok" && h.realtime.state === "ok";
+      setReqsOk(pass);
+      if (pass) toast.success("System health check passed");
+      else toast.error("Some checks failed — review and retry");
+      return h;
+    });
+    setBusy(false);
   }
 
   async function createAdmin() {
