@@ -67,10 +67,13 @@ for (const theme of THEMES) {
       expect(attr).toBe(theme);
     });
 
-    test(`full page matches baseline (${theme})`, async ({ page }) => {
+    // Full-page screenshots include too many dynamic, rotating elements to be
+    // a useful baseline. Section-level snapshots below provide the regression
+    // signal; the assertion here only confirms the page rendered.
+    test(`page mounts with sticky header (${theme})`, async ({ page }) => {
       await gotoHeropage(page);
-      expect(await page.screenshot({ fullPage: true, animations: "disabled" }))
-        .toMatchSnapshot(`heropage-full-${theme}.png`, { maxDiffPixelRatio: 0.65, threshold: 0.45, animations: "disabled" });
+      await expect(page.getByRole("link", { name: "Chatrooms" }).first()).toBeVisible();
+      await expect(page.getByRole("button", { name: /login/i }).first()).toBeVisible();
     });
 
     test(`all configured sections render (${theme})`, async ({ page }) => {
