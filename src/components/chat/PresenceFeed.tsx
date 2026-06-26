@@ -17,10 +17,10 @@ import { useAppSettings } from "@/lib/app-settings";
  * - Toggle via app_settings.presence_messages (boolean, default true).
  */
 
-const JOIN_DELAY_MS = 10_000;
-const LEAVE_DELAY_MS = 15_000;
+const JOIN_DELAY_MS = 2_500;
+const LEAVE_DELAY_MS = 8_000;
 const COOLDOWN_MS = 60_000;
-const VISIBLE_MS = 6_000;
+const VISIBLE_MS = 12_000;
 const MAX_VISIBLE = 5;
 
 interface PresenceEvent {
