@@ -20,8 +20,7 @@ import { useAppSettings } from "@/lib/app-settings";
 const JOIN_DELAY_MS = 2_500;
 const LEAVE_DELAY_MS = 8_000;
 const COOLDOWN_MS = 60_000;
-const VISIBLE_MS = 12_000;
-const MAX_VISIBLE = 5;
+const MAX_VISIBLE = 30;
 
 interface PresenceEvent {
   id: string;
@@ -65,10 +64,6 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
         const next = [...prev, ev];
         return next.length > MAX_VISIBLE ? next.slice(next.length - MAX_VISIBLE) : next;
       });
-      setTimeout(() => {
-        if (cancelled) return;
-        setEvents(prev => prev.filter(e => e.id !== id));
-      }, VISIBLE_MS);
     }
 
     async function start() {
