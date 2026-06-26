@@ -197,6 +197,8 @@ function AuthGate() {
   const location = useLocation();
   const path = location.pathname;
   const hasStoredSession = hasStoredAuthSession();
+  const { mode: homeMode, ready: homeReady } = useHomePageMode();
+  const landingPath = homeMode === "hero" ? "/heropage" : "/welcome";
 
   if (!user && isPublicPath(path)) {
     return (
