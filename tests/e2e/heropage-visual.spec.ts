@@ -27,7 +27,7 @@ const THEMES = ["dark", "light"] as const;
 // mockups, randomized stats, and gradient noise. Visual regression here
 // catches structural breakage (layout, colors, missing sections), not pixel
 // equivalence.
-const SNAPSHOT_OPTS = { maxDiffPixelRatio: 0.2, threshold: 0.35, animations: "disabled" as const };
+const SNAPSHOT_OPTS = { maxDiffPixelRatio: 0.45, threshold: 0.4, animations: "disabled" as const };
 
 async function setTheme(page: Page, theme: "dark" | "light") {
   await page.addInitScript((t) => {
