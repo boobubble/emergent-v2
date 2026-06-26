@@ -291,7 +291,8 @@ function HeroHomepage() {
   };
 
   return (
-    <div className={`min-h-screen ${bg} relative overflow-x-hidden`}>
+    <div data-hero-theme={dark ? "dark" : "light"} className={`min-h-screen ${bg} relative overflow-x-hidden`}>
+
       {/* Decorative gradient orbs */}
       <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-fuchsia-500/20 blur-3xl" />
       <div className="pointer-events-none absolute top-40 -right-32 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
