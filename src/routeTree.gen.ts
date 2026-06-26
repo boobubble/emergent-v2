@@ -45,6 +45,7 @@ import { Route as BroadcasterQueueRouteImport } from './routes/broadcaster.queue
 import { Route as BroadcasterMicRouteImport } from './routes/broadcaster.mic'
 import { Route as BroadcasterAnnouncementsRouteImport } from './routes/broadcaster.announcements'
 import { Route as BroadcasterAnalyticsRouteImport } from './routes/broadcaster.analytics'
+import { Route as AdminVoiceNotesRouteImport } from './routes/admin.voice-notes'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminUpcomingRouteImport } from './routes/admin.upcoming'
 import { Route as AdminSystemRouteImport } from './routes/admin.system'
@@ -288,6 +289,11 @@ const BroadcasterAnalyticsRoute = BroadcasterAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
   getParentRoute: () => BroadcasterRoute,
+} as any)
+const AdminVoiceNotesRoute = AdminVoiceNotesRouteImport.update({
+  id: '/voice-notes',
+  path: '/voice-notes',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
@@ -682,6 +688,7 @@ export interface FileRoutesByFullPath {
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
+  '/admin/voice-notes': typeof AdminVoiceNotesRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -780,6 +787,7 @@ export interface FileRoutesByTo {
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
+  '/admin/voice-notes': typeof AdminVoiceNotesRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -881,6 +889,7 @@ export interface FileRoutesById {
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
+  '/admin/voice-notes': typeof AdminVoiceNotesRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -983,6 +992,7 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
+    | '/admin/voice-notes'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -1081,6 +1091,7 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
+    | '/admin/voice-notes'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -1181,6 +1192,7 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
+    | '/admin/voice-notes'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -1489,6 +1501,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/broadcaster/analytics'
       preLoaderRoute: typeof BroadcasterAnalyticsRouteImport
       parentRoute: typeof BroadcasterRoute
+    }
+    '/admin/voice-notes': {
+      id: '/admin/voice-notes'
+      path: '/voice-notes'
+      fullPath: '/admin/voice-notes'
+      preLoaderRoute: typeof AdminVoiceNotesRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/users': {
       id: '/admin/users'
@@ -1996,6 +2015,7 @@ interface AdminRouteChildren {
   AdminSystemRoute: typeof AdminSystemRoute
   AdminUpcomingRoute: typeof AdminUpcomingRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
+  AdminVoiceNotesRoute: typeof AdminVoiceNotesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -2056,6 +2076,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSystemRoute: AdminSystemRoute,
   AdminUpcomingRoute: AdminUpcomingRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,
+  AdminVoiceNotesRoute: AdminVoiceNotesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

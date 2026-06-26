@@ -55,7 +55,7 @@ function VoiceNotesPage() {
                 When off, the microphone button is hidden in the chat composer everywhere.
               </p>
             </div>
-            <AdminToggle checked={values.enabled} onChange={(v) => set("enabled", v)} />
+            <AdminToggle checked={values.enabled} onCheckedChange={(v: boolean) => set("enabled", v)} />
           </div>
         </CardContent>
       </Card>
