@@ -249,16 +249,19 @@ function InstallerPage() {
 
 
   async function createAdmin() {
-    if (!adminEmail || !adminPass || !adminUser) { toast.error("Fill all fields"); return; }
+    if (!adminEmail || !adminPass || !adminUser) { pushLog("error", "admin", "Missing required fields"); toast.error("Fill all fields"); return; }
     const strength = passwordStrength(adminPass);
     if (strength.score < 4) {
+      pushLog("error", "admin", `Password too weak (${strength.label})`);
       toast.error("Password must be strong: 12+ chars, upper/lower, number, symbol");
       return;
     }
     if (adminRecovery && !adminRecovery.includes("@")) {
+      pushLog("error", "admin", "Recovery email invalid");
       toast.error("Recovery email looks invalid"); return;
     }
     setBusy(true);
+    pushLog("info", "admin", `Creating admin account for ${adminEmail}…`);
     try {
       const { error } = await supabase.auth.signUp({
         email: adminEmail,
@@ -273,8 +276,11 @@ function InstallerPage() {
         },
       });
       if (error) throw error;
+      pushLog("ok", "admin", "Auth user created");
       await supabase.auth.signInWithPassword({ email: adminEmail, password: adminPass });
+      pushLog("ok", "admin", "Signed in");
       await bootstrapFirstAdmin();
+      pushLog("ok", "admin", "Granted super_admin role");
       // Persist security prefs on profile (best-effort)
       try {
         const { data: u } = await supabase.auth.getUser();
@@ -284,11 +290,13 @@ function InstallerPage() {
             recovery_email: adminRecovery || null,
             two_factor_opt_in: admin2FA,
           } as any).eq("id", u.user.id);
+          pushLog("ok", "admin", "Saved recovery email + 2FA preference");
         }
-      } catch { /* non-fatal */ }
+      } catch (e: any) { pushLog("warn", "admin", `Profile prefs: ${e?.message ?? "skipped"}`); }
       toast.success("Admin account created");
       go(1);
     } catch (e: any) {
+      pushLog("error", "admin", e?.message ?? "Failed to create admin");
       toast.error(e?.message ?? "Failed to create admin");
     } finally {
       setBusy(false);
@@ -297,11 +305,14 @@ function InstallerPage() {
 
   async function finish() {
     setBusy(true);
+    pushLog("info", "finish", "Finalizing installation…");
     try {
       await completeInstallation({ license_type: licenseType, license_key: licenseKey, site_name: siteName, mode });
+      pushLog("ok", "finish", "Installer lock written");
       try {
         await supabase.from("app_settings").upsert({ key: "general", value: { site_name: siteName } }, { onConflict: "key" });
-      } catch { /* non-fatal */ }
+        pushLog("ok", "finish", `Site name saved: ${siteName}`);
+      } catch (e: any) { pushLog("warn", "finish", `Site name save: ${e?.message ?? "skipped"}`); }
       // Load post-install dashboard stats
       try {
         const { data } = await supabase.rpc("installer_get_extras");
@@ -311,9 +322,12 @@ function InstallerPage() {
           buckets: d.storage_buckets ?? 0,
           cron: d.cron_jobs ?? 0,
         });
-      } catch { setPostStats({ users: 0, buckets: 0, cron: 0 }); }
+        pushLog("ok", "finish", `Stats — users:${d.users ?? 0} buckets:${d.storage_buckets ?? 0} cron:${d.cron_jobs ?? 0}`);
+      } catch (e: any) { pushLog("warn", "finish", `Stats: ${e?.message ?? "unavailable"}`); setPostStats({ users: 0, buckets: 0, cron: 0 }); }
+      pushLog("ok", "finish", "Installation complete 🎉");
       toast.success("Installation complete!");
     } catch (e: any) {
+      pushLog("error", "finish", e?.message ?? "Failed to finalize install");
       toast.error(e?.message ?? "Failed to finalize install");
     } finally {
       setBusy(false);
@@ -321,8 +335,10 @@ function InstallerPage() {
   }
 
   async function importDemoData() {
+    pushLog("info", "demo", "Demo seeding requested — handle via Admin → Seed Data");
     toast.info("Demo content can be added from Admin → Seed Data after install.");
   }
+
 
 
   return (
