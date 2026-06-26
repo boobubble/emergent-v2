@@ -255,6 +255,7 @@ function AuthGate() {
           <IgnoreProvider>
             <AuthenticatedHooks userId={user.id} />
             <BroadcasterAnnouncementsRunner />
+            <TrioInvitesListener />
             <HeadFootScripts />
             <AdsAutoLoader />
             <SessionConflictBanner />
