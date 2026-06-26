@@ -26,7 +26,7 @@ const COMMANDS = [
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 export function MessageInput() {
-  const { send, state, replyingTo, setReplyingTo, pushSystem } = useChat();
+  const { send, state, replyingTo, setReplyingTo, pushSystem, wipeChannel } = useChat();
   const { user } = useAuth();
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
   const { typers, sendTyping } = useTyping(state.activeChannel, me, !!me);
