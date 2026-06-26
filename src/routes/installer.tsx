@@ -61,6 +61,24 @@ function InstallerPage() {
   const [smtpTesting, setSmtpTesting] = useState(false);
   const [postStats, setPostStats] = useState<{ users: number; buckets: number; cron: number } | null>(null);
 
+  type LogLevel = "info" | "ok" | "warn" | "error";
+  type LogEntry = { ts: string; level: LogLevel; step: string; msg: string };
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [logsOpen, setLogsOpen] = useState(true);
+  function pushLog(level: LogLevel, step: string, msg: string) {
+    const ts = new Date().toISOString().slice(11, 19);
+    setLogs((prev) => [...prev, { ts, level, step, msg }].slice(-300));
+    // also mirror to console for power users
+    const fn = level === "error" ? console.error : level === "warn" ? console.warn : console.log;
+    fn(`[installer:${step}] ${msg}`);
+  }
+  function clearLogs() { setLogs([]); }
+  async function copyLogs() {
+    const text = logs.map((l) => `[${l.ts}] ${l.level.toUpperCase().padEnd(5)} ${l.step.padEnd(10)} ${l.msg}`).join("\n");
+    try { await navigator.clipboard.writeText(text); toast.success("Logs copied"); }
+    catch { toast.error("Copy failed"); }
+  }
+
   useEffect(() => {
     (async () => {
       const detected = detectInstallMode();
