@@ -52,6 +52,8 @@ function InstallerPage() {
   const [adminUser, setAdminUser] = useState("");
   const [siteName, setSiteName] = useState("BooBubble");
   const [busy, setBusy] = useState(false);
+  const [smtpTestEmail, setSmtpTestEmail] = useState("");
+  const [smtpTesting, setSmtpTesting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -292,6 +294,40 @@ function InstallerPage() {
                     <HealthRow label="Storage" state={health.storage.state} msg={health.storage.msg} />
                     <HealthRow label="Realtime" state={health.realtime.state} msg={health.realtime.msg} />
                     <HealthRow label="Email / SMTP" state={health.smtp.state} msg={health.smtp.msg} />
+                  </div>
+                  <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-3 sm:flex-row">
+                    <Input
+                      type="email"
+                      value={smtpTestEmail}
+                      onChange={(e) => setSmtpTestEmail(e.target.value)}
+                      placeholder="admin@yourdomain.com"
+                      className="flex-1 text-xs"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={smtpTesting || !smtpTestEmail.includes("@")}
+                      onClick={async () => {
+                        setSmtpTesting(true);
+                        setHealth((h) => ({ ...h, smtp: { state: "pending", msg: "Sending test email…" } }));
+                        try {
+                          const { error } = await supabase.auth.resetPasswordForEmail(smtpTestEmail.trim(), {
+                            redirectTo: `${window.location.origin}/auth`,
+                          });
+                          if (error) throw error;
+                          setHealth((h) => ({ ...h, smtp: { state: "ok", msg: `Test email sent to ${smtpTestEmail}` } }));
+                          toast.success("Test email dispatched — check your inbox");
+                        } catch (e: any) {
+                          setHealth((h) => ({ ...h, smtp: { state: "fail", msg: e?.message || "Send failed" } }));
+                          toast.error(e?.message || "Failed to send test email");
+                        } finally {
+                          setSmtpTesting(false);
+                        }
+                      }}
+                    >
+                      {smtpTesting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Send Test Email"}
+                    </Button>
                   </div>
                 </div>
                 <div className="flex gap-2">
