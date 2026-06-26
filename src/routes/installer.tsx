@@ -627,6 +627,56 @@ function InstallerPage() {
           </CardContent>
         </Card>
 
+        {/* Installation Logs Viewer */}
+        <Card className="mt-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3">
+            <div className="flex items-center gap-2">
+              <Terminal className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm">Installation Logs</CardTitle>
+              <Badge variant="secondary" className="text-[10px]">{logs.length}</Badge>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button type="button" variant="ghost" size="sm" onClick={copyLogs} disabled={logs.length === 0} title="Copy logs">
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={clearLogs} disabled={logs.length === 0} title="Clear logs">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setLogsOpen((v) => !v)} title={logsOpen ? "Collapse" : "Expand"}>
+                {logsOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </Button>
+            </div>
+          </CardHeader>
+          {logsOpen && (
+            <CardContent className="pt-0">
+              {logs.length === 0 ? (
+                <div className="rounded-md border border-dashed bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                  No logs yet. Each installer step's output and errors will appear here in real time.
+                </div>
+              ) : (
+                <div className="max-h-64 overflow-auto rounded-md border bg-black/90 p-2 font-mono text-[11px] leading-relaxed text-emerald-200">
+                  {logs.map((l, i) => {
+                    const color =
+                      l.level === "error" ? "text-red-400" :
+                      l.level === "warn"  ? "text-amber-300" :
+                      l.level === "ok"    ? "text-emerald-300" :
+                                            "text-sky-300";
+                    return (
+                      <div key={i} className="whitespace-pre-wrap break-words">
+                        <span className="text-zinc-500">[{l.ts}]</span>{" "}
+                        <span className={`font-semibold ${color}`}>{l.level.toUpperCase().padEnd(5)}</span>{" "}
+                        <span className="text-zinc-400">{l.step}</span>{" "}
+                        <span className="text-zinc-100">{l.msg}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          )}
+        </Card>
+
+
         <p className="mt-4 text-center text-xs text-muted-foreground">
           Need help? See <a href="/SELF_HOSTING.md" className="underline">self-hosting docs</a> or contact support.
         </p>
