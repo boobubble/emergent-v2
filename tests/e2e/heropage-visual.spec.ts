@@ -74,9 +74,21 @@ for (const theme of THEMES) {
         await gotoHeropage(page);
         const locator = page.locator(`#${section.id}`).first();
         await expect(locator).toBeVisible();
-        await locator.scrollIntoViewIfNeeded();
-        await page.waitForTimeout(200);
-        expect(await locator.screenshot({ animations: "disabled" }))
+        if (section.id !== "top") {
+          await locator.evaluate((el) => el.scrollIntoView({ block: "start" }));
+          await page.waitForTimeout(250);
+        }
+        // Capture via bounding box to tolerate sections that re-render frequently
+        // (e.g. the hero rotates its chatroom mockup).
+        const box = await locator.boundingBox();
+        if (!box) throw new Error(`No bounding box for #${section.id}`);
+        const clip = {
+          x: Math.max(0, box.x),
+          y: Math.max(0, box.y),
+          width: Math.min(box.width, 1280),
+          height: Math.min(box.height, 2000),
+        };
+        expect(await page.screenshot({ clip, animations: "disabled" }))
           .toMatchSnapshot(`heropage-${section.name}-${theme}.png`, SNAPSHOT_OPTS);
       });
     }
