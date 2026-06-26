@@ -20,8 +20,7 @@ import { useAppSettings } from "@/lib/app-settings";
 const JOIN_DELAY_MS = 2_500;
 const LEAVE_DELAY_MS = 8_000;
 const COOLDOWN_MS = 60_000;
-const VISIBLE_MS = 12_000;
-const MAX_VISIBLE = 5;
+const MAX_VISIBLE = 30;
 
 interface PresenceEvent {
   id: string;
