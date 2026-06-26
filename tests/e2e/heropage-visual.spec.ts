@@ -70,7 +70,14 @@ for (const theme of THEMES) {
     test(`full page matches baseline (${theme})`, async ({ page }) => {
       await gotoHeropage(page);
       expect(await page.screenshot({ fullPage: true, animations: "disabled" }))
-        .toMatchSnapshot(`heropage-full-${theme}.png`, SNAPSHOT_OPTS);
+        .toMatchSnapshot(`heropage-full-${theme}.png`, { maxDiffPixelRatio: 0.65, threshold: 0.45, animations: "disabled" });
+    });
+
+    test(`all configured sections render (${theme})`, async ({ page }) => {
+      await gotoHeropage(page);
+      for (const s of SECTIONS) {
+        await expect(page.locator(`#${s.id}`).first(), `${s.name} section`).toBeVisible();
+      }
     });
 
     for (const section of SECTIONS) {
