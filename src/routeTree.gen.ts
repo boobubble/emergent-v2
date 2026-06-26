@@ -86,6 +86,7 @@ import { Route as AdminDemoRouteImport } from './routes/admin.demo'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
 import { Route as AdminChatThemesRouteImport } from './routes/admin.chat-themes'
+import { Route as AdminCallsRouteImport } from './routes/admin.calls'
 import { Route as AdminCacheRouteImport } from './routes/admin.cache'
 import { Route as AdminBotsRouteImport } from './routes/admin.bots'
 import { Route as AdminBoobubbleRouteImport } from './routes/admin.boobubble'
@@ -493,6 +494,11 @@ const AdminChatThemesRoute = AdminChatThemesRouteImport.update({
   path: '/chat-themes',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCallsRoute = AdminCallsRouteImport.update({
+  id: '/calls',
+  path: '/calls',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCacheRoute = AdminCacheRouteImport.update({
   id: '/cache',
   path: '/cache',
@@ -634,6 +640,7 @@ export interface FileRoutesByFullPath {
   '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
+  '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
@@ -731,6 +738,7 @@ export interface FileRoutesByTo {
   '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
+  '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
@@ -831,6 +839,7 @@ export interface FileRoutesById {
   '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
+  '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
@@ -932,6 +941,7 @@ export interface FileRouteTypes {
     | '/admin/boobubble'
     | '/admin/bots'
     | '/admin/cache'
+    | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
     | '/admin/confessions'
@@ -1029,6 +1039,7 @@ export interface FileRouteTypes {
     | '/admin/boobubble'
     | '/admin/bots'
     | '/admin/cache'
+    | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
     | '/admin/confessions'
@@ -1128,6 +1139,7 @@ export interface FileRouteTypes {
     | '/admin/boobubble'
     | '/admin/bots'
     | '/admin/cache'
+    | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
     | '/admin/confessions'
@@ -1765,6 +1777,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminChatThemesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/calls': {
+      id: '/admin/calls'
+      path: '/calls'
+      fullPath: '/admin/calls'
+      preLoaderRoute: typeof AdminCallsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/cache': {
       id: '/admin/cache'
       path: '/cache'
@@ -1935,6 +1954,7 @@ interface AdminRouteChildren {
   AdminBoobubbleRoute: typeof AdminBoobubbleRoute
   AdminBotsRoute: typeof AdminBotsRoute
   AdminCacheRoute: typeof AdminCacheRoute
+  AdminCallsRoute: typeof AdminCallsRoute
   AdminChatThemesRoute: typeof AdminChatThemesRoute
   AdminChatroomsRoute: typeof AdminChatroomsRoute
   AdminConfessionsRoute: typeof AdminConfessionsRoute
@@ -1994,6 +2014,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBoobubbleRoute: AdminBoobubbleRoute,
   AdminBotsRoute: AdminBotsRoute,
   AdminCacheRoute: AdminCacheRoute,
+  AdminCallsRoute: AdminCallsRoute,
   AdminChatThemesRoute: AdminChatThemesRoute,
   AdminChatroomsRoute: AdminChatroomsRoute,
   AdminConfessionsRoute: AdminConfessionsRoute,
