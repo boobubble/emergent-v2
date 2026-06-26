@@ -132,7 +132,16 @@ function HeroHomepage() {
   const cfg = useHeroConfig();
   const stats = useLiveStats();
   const { user } = useAuth();
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const stored = window.localStorage.getItem("heropage-theme");
+    return stored ? stored === "dark" : true;
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("heropage-theme", dark ? "dark" : "light");
+    }
+  }, [dark]);
   const [popup, setPopup] = useState<AuthPopup>(null);
   const [demoLoading, setDemoLoading] = useState(false);
 
