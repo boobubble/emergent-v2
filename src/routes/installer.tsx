@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Circle, AlertCircle, Loader2, Rocket, Cloud, Server, Shield, KeyRound, Database, UserPlus, Palette, PartyPopper } from "lucide-react";
+import { CheckCircle2, Circle, AlertCircle, Loader2, Rocket, Cloud, Server, Shield, KeyRound, Database, UserPlus, Palette, PartyPopper, Terminal, Copy, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   detectInstallMode, fetchInstallStatus, isValidEnvatoCode, isValidOfflineKey,
@@ -61,6 +61,24 @@ function InstallerPage() {
   const [smtpTesting, setSmtpTesting] = useState(false);
   const [postStats, setPostStats] = useState<{ users: number; buckets: number; cron: number } | null>(null);
 
+  type LogLevel = "info" | "ok" | "warn" | "error";
+  type LogEntry = { ts: string; level: LogLevel; step: string; msg: string };
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [logsOpen, setLogsOpen] = useState(true);
+  function pushLog(level: LogLevel, step: string, msg: string) {
+    const ts = new Date().toISOString().slice(11, 19);
+    setLogs((prev) => [...prev, { ts, level, step, msg }].slice(-300));
+    // also mirror to console for power users
+    const fn = level === "error" ? console.error : level === "warn" ? console.warn : console.log;
+    fn(`[installer:${step}] ${msg}`);
+  }
+  function clearLogs() { setLogs([]); }
+  async function copyLogs() {
+    const text = logs.map((l) => `[${l.ts}] ${l.level.toUpperCase().padEnd(5)} ${l.step.padEnd(10)} ${l.msg}`).join("\n");
+    try { await navigator.clipboard.writeText(text); toast.success("Logs copied"); }
+    catch { toast.error("Copy failed"); }
+  }
+
   useEffect(() => {
     (async () => {
       const detected = detectInstallMode();
@@ -83,20 +101,25 @@ function InstallerPage() {
   const go = (delta: number) => setStep((s) => Math.max(0, Math.min(visibleSteps.length - 1, s + delta)));
 
   async function verifyLicense() {
+    pushLog("info", "license", `Verifying ${licenseType} key…`);
     const ok = licenseType === "envato" ? isValidEnvatoCode(licenseKey) : isValidOfflineKey(licenseKey);
     if (!ok) {
-      toast.error(licenseType === "envato"
+      const m = licenseType === "envato"
         ? "Invalid Envato purchase code (format: 8-4-4-4-12 hex)"
-        : "Invalid offline key (format: BOOB-XXXX-XXXX-XXXX-XXXX)");
+        : "Invalid offline key (format: BOOB-XXXX-XXXX-XXXX-XXXX)";
+      pushLog("error", "license", m);
+      toast.error(m);
       return;
     }
     setLicenseOk(true);
+    pushLog("ok", "license", "License accepted");
     toast.success("License accepted");
     go(1);
   }
 
   async function runRequirementsCheck() {
     setBusy(true);
+    pushLog("info", "health", "Running system health check…");
     setHealth({
       db: { state: "pending" }, storage: { state: "pending" },
       realtime: { state: "pending" }, smtp: { state: "pending" },
@@ -106,19 +129,22 @@ function InstallerPage() {
     // Env vars (client-visible)
     const hasUrl = !!import.meta.env.VITE_SUPABASE_URL;
     const hasKey = !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    setHealth((h) => ({
-      ...h,
-      env: hasUrl && hasKey
-        ? { state: "ok", msg: "VITE_SUPABASE_URL & PUBLISHABLE_KEY found" }
-        : { state: "fail", msg: "Missing VITE_SUPABASE_URL or PUBLISHABLE_KEY" },
-    }));
+    if (hasUrl && hasKey) {
+      pushLog("ok", "health", "env: VITE_SUPABASE_URL & PUBLISHABLE_KEY present");
+      setHealth((h) => ({ ...h, env: { state: "ok", msg: "VITE_SUPABASE_URL & PUBLISHABLE_KEY found" } }));
+    } else {
+      pushLog("error", "health", "env: Missing VITE_SUPABASE_URL or PUBLISHABLE_KEY");
+      setHealth((h) => ({ ...h, env: { state: "fail", msg: "Missing VITE_SUPABASE_URL or PUBLISHABLE_KEY" } }));
+    }
 
     // Database
     try {
       const { error } = await supabase.rpc("get_install_status");
       if (error) throw error;
+      pushLog("ok", "health", "database: reachable (get_install_status OK)");
       setHealth((h) => ({ ...h, db: { state: "ok" } }));
     } catch (e: any) {
+      pushLog("error", "health", `database: ${e?.message ?? "Unreachable"}`);
       setHealth((h) => ({ ...h, db: { state: "fail", msg: e?.message ?? "Unreachable" } }));
     }
     // Storage
@@ -127,24 +153,29 @@ function InstallerPage() {
       const { data, error } = await supabase.storage.listBuckets();
       if (error) throw error;
       bucketsOk = data?.length ?? 0;
+      pushLog(bucketsOk > 0 ? "ok" : "warn", "health", `storage: ${bucketsOk} bucket(s)`);
       setHealth((h) => ({ ...h, storage: { state: bucketsOk > 0 ? "ok" : "warn", msg: `${bucketsOk} bucket(s) configured` } }));
     } catch (e: any) {
+      pushLog("error", "health", `storage: ${e?.message ?? "Unavailable"}`);
       setHealth((h) => ({ ...h, storage: { state: "fail", msg: e?.message ?? "Unavailable" } }));
     }
     // Realtime
     await new Promise<void>((resolve) => {
       const ch = supabase.channel("installer-health-" + Math.random().toString(36).slice(2));
       const timer = setTimeout(() => {
+        pushLog("error", "health", "realtime: connection timeout (4s)");
         setHealth((h) => ({ ...h, realtime: { state: "fail", msg: "Connection timeout" } }));
         supabase.removeChannel(ch); resolve();
       }, 4000);
       ch.subscribe((status) => {
         if (status === "SUBSCRIBED") {
           clearTimeout(timer);
+          pushLog("ok", "health", "realtime: SUBSCRIBED");
           setHealth((h) => ({ ...h, realtime: { state: "ok" } }));
           supabase.removeChannel(ch); resolve();
         } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
           clearTimeout(timer);
+          pushLog("error", "health", `realtime: ${status}`);
           setHealth((h) => ({ ...h, realtime: { state: "fail", msg: status } }));
           supabase.removeChannel(ch); resolve();
         }
@@ -154,16 +185,23 @@ function InstallerPage() {
     try {
       const { data } = await supabase.from("app_settings").select("value").eq("key", "email").maybeSingle();
       const cfg = (data?.value as any) ?? null;
-      if (cfg && cfg.smtp_host) setHealth((h) => ({ ...h, smtp: { state: "ok" } }));
-      else setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Using default provider — configure SMTP in Admin → Email" } }));
-    } catch {
+      if (cfg && cfg.smtp_host) {
+        pushLog("ok", "health", `smtp: configured (${cfg.smtp_host})`);
+        setHealth((h) => ({ ...h, smtp: { state: "ok" } }));
+      } else {
+        pushLog("warn", "health", "smtp: using default provider");
+        setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Using default provider — configure SMTP in Admin → Email" } }));
+      }
+    } catch (e: any) {
+      pushLog("warn", "health", `smtp: ${e?.message ?? "not configured"}`);
       setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Not configured" } }));
     }
-    // Cron / Scheduled jobs (streak reset, daily rewards, XP, cleanup)
+    // Cron / Scheduled jobs
     try {
       const { data, error } = await supabase.rpc("installer_get_extras");
       if (error) throw error;
       const cronCount = (data as any)?.cron_jobs ?? 0;
+      pushLog(cronCount > 0 ? "ok" : "warn", "health", `cron: ${cronCount} scheduled job(s)`);
       setHealth((h) => ({
         ...h,
         cron: cronCount > 0
@@ -171,6 +209,7 @@ function InstallerPage() {
           : { state: "warn", msg: "No scheduled jobs detected — daily rewards/cleanup may not run" },
       }));
     } catch (e: any) {
+      pushLog("warn", "health", `cron: ${e?.message ?? "query failed"}`);
       setHealth((h) => ({ ...h, cron: { state: "warn", msg: e?.message ?? "Could not query cron" } }));
     }
 
@@ -182,6 +221,7 @@ function InstallerPage() {
         (h.storage.state === "ok" || h.storage.state === "warn") &&
         h.realtime.state === "ok";
       setReqsOk(pass);
+      pushLog(pass ? "ok" : "error", "health", pass ? "Compatibility check passed" : "Some checks failed");
       if (pass) toast.success("Compatibility check passed");
       else toast.error("Some checks failed — review and retry");
       return h;
@@ -209,16 +249,19 @@ function InstallerPage() {
 
 
   async function createAdmin() {
-    if (!adminEmail || !adminPass || !adminUser) { toast.error("Fill all fields"); return; }
+    if (!adminEmail || !adminPass || !adminUser) { pushLog("error", "admin", "Missing required fields"); toast.error("Fill all fields"); return; }
     const strength = passwordStrength(adminPass);
     if (strength.score < 4) {
+      pushLog("error", "admin", `Password too weak (${strength.label})`);
       toast.error("Password must be strong: 12+ chars, upper/lower, number, symbol");
       return;
     }
     if (adminRecovery && !adminRecovery.includes("@")) {
+      pushLog("error", "admin", "Recovery email invalid");
       toast.error("Recovery email looks invalid"); return;
     }
     setBusy(true);
+    pushLog("info", "admin", `Creating admin account for ${adminEmail}…`);
     try {
       const { error } = await supabase.auth.signUp({
         email: adminEmail,
@@ -233,8 +276,11 @@ function InstallerPage() {
         },
       });
       if (error) throw error;
+      pushLog("ok", "admin", "Auth user created");
       await supabase.auth.signInWithPassword({ email: adminEmail, password: adminPass });
+      pushLog("ok", "admin", "Signed in");
       await bootstrapFirstAdmin();
+      pushLog("ok", "admin", "Granted super_admin role");
       // Persist security prefs on profile (best-effort)
       try {
         const { data: u } = await supabase.auth.getUser();
@@ -244,11 +290,13 @@ function InstallerPage() {
             recovery_email: adminRecovery || null,
             two_factor_opt_in: admin2FA,
           } as any).eq("id", u.user.id);
+          pushLog("ok", "admin", "Saved recovery email + 2FA preference");
         }
-      } catch { /* non-fatal */ }
+      } catch (e: any) { pushLog("warn", "admin", `Profile prefs: ${e?.message ?? "skipped"}`); }
       toast.success("Admin account created");
       go(1);
     } catch (e: any) {
+      pushLog("error", "admin", e?.message ?? "Failed to create admin");
       toast.error(e?.message ?? "Failed to create admin");
     } finally {
       setBusy(false);
@@ -257,11 +305,14 @@ function InstallerPage() {
 
   async function finish() {
     setBusy(true);
+    pushLog("info", "finish", "Finalizing installation…");
     try {
       await completeInstallation({ license_type: licenseType, license_key: licenseKey, site_name: siteName, mode });
+      pushLog("ok", "finish", "Installer lock written");
       try {
         await supabase.from("app_settings").upsert({ key: "general", value: { site_name: siteName } }, { onConflict: "key" });
-      } catch { /* non-fatal */ }
+        pushLog("ok", "finish", `Site name saved: ${siteName}`);
+      } catch (e: any) { pushLog("warn", "finish", `Site name save: ${e?.message ?? "skipped"}`); }
       // Load post-install dashboard stats
       try {
         const { data } = await supabase.rpc("installer_get_extras");
@@ -271,9 +322,12 @@ function InstallerPage() {
           buckets: d.storage_buckets ?? 0,
           cron: d.cron_jobs ?? 0,
         });
-      } catch { setPostStats({ users: 0, buckets: 0, cron: 0 }); }
+        pushLog("ok", "finish", `Stats — users:${d.users ?? 0} buckets:${d.storage_buckets ?? 0} cron:${d.cron_jobs ?? 0}`);
+      } catch (e: any) { pushLog("warn", "finish", `Stats: ${e?.message ?? "unavailable"}`); setPostStats({ users: 0, buckets: 0, cron: 0 }); }
+      pushLog("ok", "finish", "Installation complete 🎉");
       toast.success("Installation complete!");
     } catch (e: any) {
+      pushLog("error", "finish", e?.message ?? "Failed to finalize install");
       toast.error(e?.message ?? "Failed to finalize install");
     } finally {
       setBusy(false);
@@ -281,8 +335,10 @@ function InstallerPage() {
   }
 
   async function importDemoData() {
+    pushLog("info", "demo", "Demo seeding requested — handle via Admin → Seed Data");
     toast.info("Demo content can be added from Admin → Seed Data after install.");
   }
+
 
 
   return (
@@ -402,15 +458,18 @@ function InstallerPage() {
                       disabled={smtpTesting || !smtpTestEmail.includes("@")}
                       onClick={async () => {
                         setSmtpTesting(true);
+                        pushLog("info", "smtp", `Sending test email to ${smtpTestEmail}…`);
                         setHealth((h) => ({ ...h, smtp: { state: "pending", msg: "Sending test email…" } }));
                         try {
                           const { error } = await supabase.auth.resetPasswordForEmail(smtpTestEmail.trim(), {
                             redirectTo: `${window.location.origin}/auth`,
                           });
                           if (error) throw error;
+                          pushLog("ok", "smtp", `Test email dispatched to ${smtpTestEmail}`);
                           setHealth((h) => ({ ...h, smtp: { state: "ok", msg: `Test email sent to ${smtpTestEmail}` } }));
                           toast.success("Test email dispatched — check your inbox");
                         } catch (e: any) {
+                          pushLog("error", "smtp", e?.message || "Send failed");
                           setHealth((h) => ({ ...h, smtp: { state: "fail", msg: e?.message || "Send failed" } }));
                           toast.error(e?.message || "Failed to send test email");
                         } finally {
@@ -567,6 +626,56 @@ function InstallerPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Installation Logs Viewer */}
+        <Card className="mt-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3">
+            <div className="flex items-center gap-2">
+              <Terminal className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm">Installation Logs</CardTitle>
+              <Badge variant="secondary" className="text-[10px]">{logs.length}</Badge>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button type="button" variant="ghost" size="sm" onClick={copyLogs} disabled={logs.length === 0} title="Copy logs">
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={clearLogs} disabled={logs.length === 0} title="Clear logs">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setLogsOpen((v) => !v)} title={logsOpen ? "Collapse" : "Expand"}>
+                {logsOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </Button>
+            </div>
+          </CardHeader>
+          {logsOpen && (
+            <CardContent className="pt-0">
+              {logs.length === 0 ? (
+                <div className="rounded-md border border-dashed bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                  No logs yet. Each installer step's output and errors will appear here in real time.
+                </div>
+              ) : (
+                <div className="max-h-64 overflow-auto rounded-md border bg-black/90 p-2 font-mono text-[11px] leading-relaxed text-emerald-200">
+                  {logs.map((l, i) => {
+                    const color =
+                      l.level === "error" ? "text-red-400" :
+                      l.level === "warn"  ? "text-amber-300" :
+                      l.level === "ok"    ? "text-emerald-300" :
+                                            "text-sky-300";
+                    return (
+                      <div key={i} className="whitespace-pre-wrap break-words">
+                        <span className="text-zinc-500">[{l.ts}]</span>{" "}
+                        <span className={`font-semibold ${color}`}>{l.level.toUpperCase().padEnd(5)}</span>{" "}
+                        <span className="text-zinc-400">{l.step}</span>{" "}
+                        <span className="text-zinc-100">{l.msg}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          )}
+        </Card>
+
 
         <p className="mt-4 text-center text-xs text-muted-foreground">
           Need help? See <a href="/SELF_HOSTING.md" className="underline">self-hosting docs</a> or contact support.
