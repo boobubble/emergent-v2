@@ -254,7 +254,7 @@ function CallsAdmin() {
         {/* ============ PROVIDERS ============ */}
         <TabsContent value="providers" className="space-y-4">
           <GlassCard title="Smart Provider Routing" icon={Zap}>
-            <AdminToggle
+            <ToggleRow
               label="Enable smart routing"
               description="Auto-select provider based on participant count. 1–3 → LiveKit, 4+ → Agora."
               checked={values.smart_routing}
