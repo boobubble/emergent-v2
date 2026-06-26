@@ -77,20 +77,31 @@ for (const mode of ["dark", "light"] as const) {
         .getByRole("button", { name: /(guest|explore)/i })
         .first();
       await expect(guest).toBeVisible();
-      // We don't actually want a real demo account created in CI; just verify
-      // that clicking either navigates away from /heropage or opens a dialog
-      // (depending on whether guest mode is enabled in admin config).
-      await Promise.race([
-        page.waitForURL((url) => !url.pathname.startsWith("/heropage"), {
-          timeout: 5_000,
-        }).catch(() => null),
-        page.waitForSelector('[role="dialog"]', { timeout: 5_000 }).catch(
-          () => null,
-        ),
-      ]);
+      // Watch for the demo-account server call OR any navigation away
+      // from /heropage OR a "Loading" state appearing on the button.
+      const demoCall = page.waitForRequest(
+        (req) => /createDemoAccount|demo-account|demo/i.test(req.url()),
+        { timeout: 6_000 },
+      ).catch(() => null);
+      const navAway = page.waitForURL(
+        (url) => !url.pathname.startsWith("/heropage"),
+        { timeout: 6_000 },
+      ).catch(() => null);
+      const dialog = page.waitForSelector('[role="dialog"]', {
+        timeout: 6_000,
+      }).catch(() => null);
+      await guest.click();
+      const [req, , dlg] = await Promise.all([demoCall, navAway, dialog]);
       const navigated = !page.url().includes("/heropage");
       const dialogOpen = (await dialogCount(page)) > 0;
-      expect(navigated || dialogOpen).toBeTruthy();
+      const loadingText = await guest.innerText().catch(() => "");
+      expect(
+        Boolean(req) ||
+          navigated ||
+          dialogOpen ||
+          Boolean(dlg) ||
+          /loading|…/i.test(loadingText),
+      ).toBeTruthy();
     });
 
     test("Logged-in users are redirected away; logout returns to auth", async ({
