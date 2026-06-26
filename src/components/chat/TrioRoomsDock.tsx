@@ -15,6 +15,8 @@ import {
   Maximize2,
   Minimize2,
   Sparkles,
+  Check,
+  CheckCheck,
 } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphyPicker } from "./GiphyPicker";
@@ -701,6 +703,60 @@ function TrioRoomWindow({
   const fileRef = useRef<HTMLInputElement>(null);
   const isOwner = room.ownerId === meId;
   const [fullscreen, setFullscreen] = useState(false);
+  // delivery / read receipts: user_id -> last_read_at (ms)
+  const [reads, setReads] = useState<Record<string, number>>({});
+
+  // mark this channel as read (debounced via simple ref)
+  const markRead = useCallback(async () => {
+    try {
+      await supabase
+        .from("dm_reads")
+        .upsert(
+          { user_id: meId, channel_id: channelId, last_read_at: new Date().toISOString() },
+          { onConflict: "user_id,channel_id" },
+        );
+    } catch {
+      /* ignore */
+    }
+  }, [channelId, meId]);
+
+  // load reads + subscribe
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("dm_reads")
+        .select("user_id,last_read_at")
+        .eq("channel_id", channelId);
+      if (cancelled) return;
+      const next: Record<string, number> = {};
+      (data ?? []).forEach((r: { user_id: string; last_read_at: string }) => {
+        next[r.user_id] = new Date(r.last_read_at).getTime();
+      });
+      setReads(next);
+    })();
+    const ch = supabase
+      .channel(`trio-reads-${room.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "dm_reads", filter: `channel_id=eq.${channelId}` },
+        (payload) => {
+          const r = (payload.new ?? payload.old) as { user_id: string; last_read_at: string } | null;
+          if (!r) return;
+          setReads((prev) => ({ ...prev, [r.user_id]: new Date(r.last_read_at).getTime() }));
+        },
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      void supabase.removeChannel(ch);
+    };
+  }, [channelId, room.id]);
+
+  // mark read whenever the window is visible and new messages arrive
+  useEffect(() => {
+    if (document.visibilityState === "visible") void markRead();
+  }, [messages.length, markRead]);
 
   // initial fetch
   useEffect(() => {
@@ -986,6 +1042,20 @@ function TrioRoomWindow({
           {messages.map((m) => {
             const u = chat.state.users[m.authorId];
             const mine = m.authorId === meId;
+            // receipts (only meaningful for my own messages)
+            const others = activeMembers
+              .filter((mm) => mm.status === "accepted" && mm.user_id !== meId)
+              .map((mm) => mm.user_id);
+            const readers = others.filter((uid) => (reads[uid] ?? 0) >= m.ts);
+            const allRead = others.length > 0 && readers.length === others.length;
+            const anyRead = readers.length > 0;
+            const tickTitle = others.length === 0
+              ? "Sent"
+              : allRead
+                ? "Read by everyone"
+                : anyRead
+                  ? `Read by ${readers.length}/${others.length}`
+                  : "Delivered";
             return (
               <div key={m.id} className={`flex gap-1.5 ${mine ? "flex-row-reverse" : ""}`}>
                 {u && <FrameAvatar user={u} size={20} />}
@@ -1014,6 +1084,21 @@ function TrioRoomWindow({
                     </a>
                   )}
                   {m.text && <div className="whitespace-pre-wrap break-words">{linkify(m.text, m.id)}</div>}
+                  {mine && (
+                    <div
+                      className="mt-0.5 flex items-center justify-end gap-1 text-[9px] opacity-80"
+                      title={tickTitle}
+                    >
+                      <span>{new Date(m.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                      {anyRead ? (
+                        <CheckCheck className={`h-3 w-3 ${allRead ? "text-sky-300" : ""}`} />
+                      ) : others.length > 0 ? (
+                        <CheckCheck className="h-3 w-3 opacity-60" />
+                      ) : (
+                        <Check className="h-3 w-3 opacity-60" />
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );
