@@ -2784,6 +2784,7 @@ export type Database = {
           viewer_id: string
         }[]
       }
+      get_trio_room_password: { Args: { _room: string }; Returns: string }
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
       has_role: {
         Args: {
