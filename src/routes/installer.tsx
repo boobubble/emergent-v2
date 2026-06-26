@@ -505,24 +505,55 @@ function InstallerPage() {
             )}
 
             {current.id === "finish" && (
-              <div className="space-y-4 text-center">
-                <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10">
-                  <PartyPopper className="h-8 w-8 text-primary" />
+              postStats ? (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500/15 mb-2">
+                      <PartyPopper className="h-8 w-8 text-emerald-500" />
+                    </div>
+                    <h3 className="text-xl font-bold">🎉 Installation Complete</h3>
+                    <p className="text-sm text-muted-foreground">Your BooBubble site is live and ready.</p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-lg border bg-muted/40 p-3 text-center">
+                      <div className="text-2xl font-bold">{postStats.users}</div>
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Users</div>
+                    </div>
+                    <div className="rounded-lg border bg-muted/40 p-3 text-center">
+                      <div className="text-lg font-bold text-emerald-500">Connected</div>
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Storage · {postStats.buckets}</div>
+                    </div>
+                    <div className="rounded-lg border bg-muted/40 p-3 text-center">
+                      <div className="text-lg font-bold text-emerald-500">Active</div>
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Realtime · Cron {postStats.cron}</div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <Button onClick={() => navigate({ to: "/admin" as any })} className="w-full">Go to Admin</Button>
+                    <Button onClick={() => navigate({ to: "/" })} variant="outline" className="w-full">Open Site</Button>
+                    <Button onClick={importDemoData} variant="secondary" className="w-full">Import Demo</Button>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold">Ready to install</h3>
-                  <p className="text-sm text-muted-foreground">Clicking Finish locks the installer and takes you to your new site.</p>
+              ) : (
+                <div className="space-y-4 text-center">
+                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10">
+                    <PartyPopper className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Ready to install</h3>
+                    <p className="text-sm text-muted-foreground">Clicking Finish locks the installer and shows your dashboard.</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/40 p-3 text-left text-xs space-y-1">
+                    <div><span className="text-muted-foreground">Mode:</span> {mode === "cloud" ? "Lovable Cloud" : "Self-Hosted"}</div>
+                    <div><span className="text-muted-foreground">License:</span> {licenseType === "envato" ? "Envato" : "Offline"}</div>
+                    <div><span className="text-muted-foreground">Admin:</span> {adminUser || "—"}</div>
+                    <div><span className="text-muted-foreground">Site:</span> {siteName}</div>
+                  </div>
+                  <Button onClick={finish} disabled={busy} size="lg" className="w-full">
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Finish Installation"}
+                  </Button>
                 </div>
-                <div className="rounded-lg border bg-muted/40 p-3 text-left text-xs space-y-1">
-                  <div><span className="text-muted-foreground">Mode:</span> {mode === "cloud" ? "Lovable Cloud" : "Self-Hosted"}</div>
-                  <div><span className="text-muted-foreground">License:</span> {licenseType === "envato" ? "Envato" : "Offline"}</div>
-                  <div><span className="text-muted-foreground">Admin:</span> {adminUser || "—"}</div>
-                  <div><span className="text-muted-foreground">Site:</span> {siteName}</div>
-                </div>
-                <Button onClick={finish} disabled={busy} size="lg" className="w-full">
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Finish Installation"}
-                </Button>
-              </div>
+              )
             )}
 
             {/* Back button (not on welcome or finish) */}
