@@ -405,6 +405,35 @@ function RequirementItem({ ok, label, pending }: { ok: boolean; label: string; p
   );
 }
 
+function HealthRow({ label, state, msg }: { label: string; state: "pending"|"ok"|"fail"|"warn"; msg?: string }) {
+  const icon =
+    state === "ok"   ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> :
+    state === "fail" ? <AlertCircle  className="h-4 w-4 text-destructive" /> :
+    state === "warn" ? <AlertCircle  className="h-4 w-4 text-amber-500" /> :
+                       <Loader2      className="h-4 w-4 animate-spin text-muted-foreground" />;
+  const tag =
+    state === "ok"   ? "OK" :
+    state === "fail" ? "FAIL" :
+    state === "warn" ? "WARN" : "…";
+  const tagClass =
+    state === "ok"   ? "bg-emerald-500/15 text-emerald-600" :
+    state === "fail" ? "bg-destructive/15 text-destructive" :
+    state === "warn" ? "bg-amber-500/15 text-amber-600" :
+                       "bg-muted text-muted-foreground";
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="font-medium">{label}</span>
+      </div>
+      <div className="flex flex-col items-end gap-0.5">
+        <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${tagClass}`}>{tag}</span>
+        {msg && <span className="text-[10px] text-muted-foreground text-right max-w-[180px]">{msg}</span>}
+      </div>
+    </div>
+  );
+}
+
 function stepDescription(id: string, mode: InstallMode): string {
   switch (id) {
     case "welcome":  return "Let's get your BooBubble site running.";
