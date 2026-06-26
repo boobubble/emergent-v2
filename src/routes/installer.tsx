@@ -461,9 +461,32 @@ function InstallerPage() {
                   <Input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} placeholder="you@example.com" />
                 </div>
                 <div>
-                  <Label>Password</Label>
-                  <Input type="password" value={adminPass} onChange={(e) => setAdminPass(e.target.value)} placeholder="Min 8 characters" />
+                  <Label>Password <span className="text-xs text-muted-foreground">(strong required)</span></Label>
+                  <Input type="password" value={adminPass} onChange={(e) => setAdminPass(e.target.value)} placeholder="12+ chars, upper/lower, number, symbol" />
+                  {adminPass && (() => {
+                    const s = passwordStrength(adminPass);
+                    return (
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div className={`h-full transition-all ${s.color}`} style={{ width: `${(s.score / 5) * 100}%` }} />
+                        </div>
+                        <span className="text-[10px] font-medium text-muted-foreground">{s.label}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
+                <div>
+                  <Label>Recovery Email <span className="text-xs text-muted-foreground">(optional but recommended)</span></Label>
+                  <Input type="email" value={adminRecovery} onChange={(e) => setAdminRecovery(e.target.value)} placeholder="backup@example.com" />
+                  <p className="mt-1 text-xs text-muted-foreground">Used to regain access if you lose your main email.</p>
+                </div>
+                <label className="flex items-start gap-2 rounded-lg border bg-muted/30 p-3 text-sm cursor-pointer">
+                  <input type="checkbox" checked={admin2FA} onChange={(e) => setAdmin2FA(e.target.checked)} className="mt-0.5" />
+                  <div>
+                    <div className="font-medium">Enable Two-Factor Authentication (optional)</div>
+                    <div className="text-xs text-muted-foreground">You'll be prompted to set up TOTP on first sign-in. Strongly recommended for admins.</div>
+                  </div>
+                </label>
                 <Button onClick={createAdmin} disabled={busy} className="w-full">
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Super Admin"}
                 </Button>
