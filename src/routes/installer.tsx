@@ -380,9 +380,11 @@ function InstallerPage() {
                 <div className="rounded-lg border bg-muted/30 p-3">
                   <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">System Health Check</div>
                   <div className="space-y-2 text-sm">
-                    <HealthRow label="Database" state={health.db.state} msg={health.db.msg} />
-                    <HealthRow label="Storage" state={health.storage.state} msg={health.storage.msg} />
-                    <HealthRow label="Realtime" state={health.realtime.state} msg={health.realtime.msg} />
+                    <HealthRow label="Required env vars" state={health.env.state} msg={health.env.msg} />
+                    <HealthRow label="Database reachable" state={health.db.state} msg={health.db.msg} />
+                    <HealthRow label="Storage buckets" state={health.storage.state} msg={health.storage.msg} />
+                    <HealthRow label="Realtime enabled" state={health.realtime.state} msg={health.realtime.msg} />
+                    <HealthRow label="Scheduled jobs (cron)" state={health.cron.state} msg={health.cron.msg} />
                     <HealthRow label="Email / SMTP" state={health.smtp.state} msg={health.smtp.msg} />
                   </div>
                   <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-3 sm:flex-row">
