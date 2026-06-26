@@ -2419,7 +2419,9 @@ export type Database = {
     Views: {
       confession_replies_public: {
         Row: {
+          alias: string | null
           author_id: string | null
+          avatar_emoji: string | null
           confession_id: string | null
           created_at: string | null
           id: string | null
@@ -2427,7 +2429,9 @@ export type Database = {
           text: string | null
         }
         Insert: {
+          alias?: string | null
           author_id?: never
+          avatar_emoji?: string | null
           confession_id?: string | null
           created_at?: string | null
           id?: string | null
@@ -2435,7 +2439,9 @@ export type Database = {
           text?: string | null
         }
         Update: {
+          alias?: string | null
           author_id?: never
+          avatar_emoji?: string | null
           confession_id?: string | null
           created_at?: string | null
           id?: string | null
