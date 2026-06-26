@@ -1042,6 +1042,20 @@ function TrioRoomWindow({
           {messages.map((m) => {
             const u = chat.state.users[m.authorId];
             const mine = m.authorId === meId;
+            // receipts (only meaningful for my own messages)
+            const others = activeMembers
+              .filter((mm) => mm.status === "accepted" && mm.user_id !== meId)
+              .map((mm) => mm.user_id);
+            const readers = others.filter((uid) => (reads[uid] ?? 0) >= m.ts);
+            const allRead = others.length > 0 && readers.length === others.length;
+            const anyRead = readers.length > 0;
+            const tickTitle = others.length === 0
+              ? "Sent"
+              : allRead
+                ? "Read by everyone"
+                : anyRead
+                  ? `Read by ${readers.length}/${others.length}`
+                  : "Delivered";
             return (
               <div key={m.id} className={`flex gap-1.5 ${mine ? "flex-row-reverse" : ""}`}>
                 {u && <FrameAvatar user={u} size={20} />}
@@ -1070,6 +1084,21 @@ function TrioRoomWindow({
                     </a>
                   )}
                   {m.text && <div className="whitespace-pre-wrap break-words">{linkify(m.text, m.id)}</div>}
+                  {mine && (
+                    <div
+                      className="mt-0.5 flex items-center justify-end gap-1 text-[9px] opacity-80"
+                      title={tickTitle}
+                    >
+                      <span>{new Date(m.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                      {anyRead ? (
+                        <CheckCheck className={`h-3 w-3 ${allRead ? "text-sky-300" : ""}`} />
+                      ) : others.length > 0 ? (
+                        <CheckCheck className="h-3 w-3 opacity-60" />
+                      ) : (
+                        <Check className="h-3 w-3 opacity-60" />
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );
