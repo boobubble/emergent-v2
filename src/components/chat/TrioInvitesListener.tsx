@@ -19,7 +19,14 @@ import * as trio from "@/services/trio-rooms.service";
  */
 export function TrioInvitesListener() {
   const { user } = useAuth();
-  const seen = useRef<Set<string>>(new Set());
+  // Invites that currently have a visible toast (suppresses duplicates).
+  const shown = useRef<Set<string>>(new Set());
+  // notifyInvite() calls currently mid-flight (suppresses concurrent races
+  // between realtime INSERT/UPDATE and the catch-up poll firing in the same tick).
+  const inflight = useRef<Set<string>>(new Set());
+  // Invites the user has already actioned (accept/decline) in this session —
+  // never re-toast even if a stale catch-up still sees them as "invited".
+  const actioned = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const uid = user?.id;
@@ -32,64 +39,84 @@ export function TrioInvitesListener() {
 
     async function notifyInvite(roomId: string) {
       if (cancelled) return;
-      const key = `${roomId}`;
-      if (seen.current.has(key)) return;
-      seen.current.add(key);
+      const key = roomId;
+      // Three-layer dedup: already visible, already actioned, or already being fetched.
+      if (shown.current.has(key)) return;
+      if (actioned.current.has(key)) return;
+      if (inflight.current.has(key)) return;
+      inflight.current.add(key);
 
-      const { data: room } = await supabase
-        .from("trio_rooms")
-        .select("id,name,owner_id")
-        .eq("id", roomId)
-        .maybeSingle();
-      if (!room || cancelled) {
-        // Allow another attempt later if room metadata is not visible yet (RLS lag).
-        if (!room) seen.current.delete(key);
-        return;
-      }
-
-      let inviterName = "Someone";
-      if (room.owner_id) {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("username")
-          .eq("id", room.owner_id)
+      try {
+        const { data: room } = await supabase
+          .from("trio_rooms")
+          .select("id,name,owner_id")
+          .eq("id", roomId)
           .maybeSingle();
-        inviterName = prof?.username || inviterName;
-      }
+        if (!room || cancelled) return;
+        // Re-check after await — another caller may have shown it while we were fetching.
+        if (shown.current.has(key) || actioned.current.has(key)) return;
 
-      toast(`💬 ${inviterName} invited you to "${room.name}"`, {
-        duration: 30_000,
-        description: "3some private room invitation",
-        action: {
-          label: "Accept",
-          onClick: async () => {
-            try {
-              await trio.acceptInvite(room.id);
-              toast.success(`Joined ${room.name}`);
-              window.dispatchEvent(new CustomEvent("trio:open-launcher"));
-            } catch (e) {
-              toast.error((e as Error).message);
-            }
+        let inviterName = "Someone";
+        if (room.owner_id) {
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("username")
+            .eq("id", room.owner_id)
+            .maybeSingle();
+          inviterName = prof?.username || inviterName;
+        }
+
+        shown.current.add(key);
+        toast(`💬 ${inviterName} invited you to "${room.name}"`, {
+          // Sonner-level dedup: same id replaces instead of stacking.
+          id: `trio-invite-${room.id}`,
+          duration: 30_000,
+          description: "3some private room invitation",
+          onDismiss: () => { shown.current.delete(key); },
+          onAutoClose: () => { shown.current.delete(key); },
+          action: {
+            label: "Accept",
+            onClick: async () => {
+              actioned.current.add(key);
+              shown.current.delete(key);
+              try {
+                await trio.acceptInvite(room.id);
+                toast.success(`Joined ${room.name}`);
+                window.dispatchEvent(new CustomEvent("trio:open-launcher"));
+              } catch (e) {
+                toast.error((e as Error).message);
+              }
+            },
           },
-        },
-        cancel: {
-          label: "Decline",
-          onClick: async () => {
-            try { await trio.rejectInvite(room.id); } catch { /* ignore */ }
+          cancel: {
+            label: "Decline",
+            onClick: async () => {
+              actioned.current.add(key);
+              shown.current.delete(key);
+              try { await trio.rejectInvite(room.id); } catch { /* ignore */ }
+            },
           },
-        },
-      });
+        });
+      } finally {
+        inflight.current.delete(key);
+      }
     }
 
     async function catchUp() {
       if (cancelled) return;
       try {
         const mine = await trio.listMyMemberships();
+        const stillInvited = new Set<string>();
         for (const m of mine) {
           if (m.status === "invited") {
-            // Skip invites the user already actioned in another tab/session.
+            stillInvited.add(m.room_id);
             void notifyInvite(m.room_id);
           }
+        }
+        // Clear actioned entries the server no longer reports as invited, so a
+        // genuinely new invite for the same room later can still toast.
+        for (const id of Array.from(actioned.current)) {
+          if (!stillInvited.has(id)) actioned.current.delete(id);
         }
       } catch {
         /* swallow — RLS may filter, retry on next interval */
