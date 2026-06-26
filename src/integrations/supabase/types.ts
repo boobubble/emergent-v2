@@ -2397,6 +2397,48 @@ export type Database = {
       }
     }
     Views: {
+      confession_replies_public: {
+        Row: {
+          author_id: string | null
+          confession_id: string | null
+          created_at: string | null
+          id: string | null
+          is_anonymous: boolean | null
+          text: string | null
+        }
+        Insert: {
+          author_id?: never
+          confession_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_anonymous?: boolean | null
+          text?: string | null
+        }
+        Update: {
+          author_id?: never
+          confession_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_anonymous?: boolean | null
+          text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "confession_replies_confession_id_fkey"
+            columns: ["confession_id"]
+            isOneToOne: false
+            referencedRelation: "confessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "confession_replies_confession_id_fkey"
+            columns: ["confession_id"]
+            isOneToOne: false
+            referencedRelation: "confessions_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       confessions_public: {
         Row: {
           alias: string | null
