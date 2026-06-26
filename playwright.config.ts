@@ -1,0 +1,26 @@
+import { defineConfig, devices } from "@playwright/test";
+
+export default defineConfig({
+  testDir: "./tests/e2e",
+  timeout: 30_000,
+  expect: { timeout: 5_000 },
+  fullyParallel: true,
+  reporter: [["list"]],
+  use: {
+    baseURL: process.env.E2E_BASE_URL ?? "http://localhost:8080",
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
+    viewport: { width: 1280, height: 900 },
+  },
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH
+          ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH }
+          : undefined,
+      },
+    },
+  ],
+});
