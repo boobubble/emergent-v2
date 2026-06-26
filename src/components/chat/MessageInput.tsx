@@ -167,6 +167,7 @@ export function MessageInput() {
     try {
       const res = await clearChannelFn({ data: { channel_id: channelId } });
       const count = res?.deleted ?? 0;
+      wipeChannel(channelId);
       toast.success("Chat cleared", { id: "clearchat", description: `${count} messages removed.` });
       const who = user?.username ? `@${user.username}` : "An admin";
       pushSystem(channelId, `🧹 Chat history cleared by ${who} — ${count} message${count === 1 ? "" : "s"} removed.`);
