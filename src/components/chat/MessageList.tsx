@@ -14,6 +14,13 @@ import { linkify } from "@/lib/linkify";
 import { MediaEmbed } from "./MediaEmbed";
 
 function AttachmentView({ a }: { a: Attachment }) {
+  if (a.mime?.startsWith("audio/")) {
+    return (
+      <div className="mt-1 flex max-w-[320px] items-center gap-2 rounded-2xl border border-border bg-white/5 px-2 py-1.5">
+        <audio src={a.dataUrl} controls preload="metadata" className="h-9 flex-1" />
+      </div>
+    );
+  }
   if (a.kind === "image") {
     const isSticker = a.mime === "image/gif" || /\.gif$/i.test(a.name || "");
     if (isSticker) {
