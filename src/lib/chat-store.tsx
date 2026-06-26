@@ -1543,7 +1543,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
     adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
-    pushSystem,
+    pushSystem, wipeChannel,
 
     isFriend: (id) => (state.me.friends ?? []).includes(id),
     isBlocked: (id) => (state.me.blocked ?? []).includes(id),
