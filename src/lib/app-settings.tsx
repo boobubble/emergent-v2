@@ -67,8 +67,18 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
+// Safe fallback so components rendered outside the provider (e.g. during
+// SSR / prerender of the "/" route before AuthGate mounts the provider)
+// don't crash the whole build. They'll just see defaults + ready=false.
+const FALLBACK: AppSettings = {
+  layoutPriority: DEFAULTS.layoutPriority,
+  modules: DEFAULTS.modules,
+  raw: {},
+  ready: false,
+  refresh: async () => {},
+};
+
 export function useAppSettings() {
   const ctx = useContext(Ctx);
-  if (!ctx) throw new Error("useAppSettings must be used inside AppSettingsProvider");
-  return ctx;
+  return ctx ?? FALLBACK;
 }
