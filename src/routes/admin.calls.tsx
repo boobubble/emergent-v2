@@ -358,9 +358,9 @@ function CallsAdmin() {
 
           <GlassCard title="Moderator controls" icon={ShieldCheck}>
             <div className="grid gap-3 md:grid-cols-3">
-              <AdminToggle label="Allow screen share" checked={values.group.allow_screen_share} onCheckedChange={(v) => patch({ group: { ...values.group, allow_screen_share: v } })} />
-              <AdminToggle label="Allow recording" checked={values.group.allow_recording} onCheckedChange={(v) => patch({ group: { ...values.group, allow_recording: v } })} />
-              <AdminToggle label="Auto-mute new users" checked={values.group.auto_mute_new} onCheckedChange={(v) => patch({ group: { ...values.group, auto_mute_new: v } })} />
+              <ToggleRow label="Allow screen share" checked={values.group.allow_screen_share} onCheckedChange={(v) => patch({ group: { ...values.group, allow_screen_share: v } })} />
+              <ToggleRow label="Allow recording" checked={values.group.allow_recording} onCheckedChange={(v) => patch({ group: { ...values.group, allow_recording: v } })} />
+              <ToggleRow label="Auto-mute new users" checked={values.group.auto_mute_new} onCheckedChange={(v) => patch({ group: { ...values.group, auto_mute_new: v } })} />
             </div>
           </GlassCard>
         </TabsContent>
