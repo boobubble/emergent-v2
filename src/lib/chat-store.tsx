@@ -1533,6 +1533,11 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     }));
   }, []);
 
+  const wipeChannel = useCallback((channelId: string) => {
+    setState(s => ({ ...s, messages: { ...s.messages, [channelId]: [] } }));
+  }, []);
+
+
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
     adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
