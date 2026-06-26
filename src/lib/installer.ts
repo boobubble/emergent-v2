@@ -29,7 +29,7 @@ export function detectInstallMode(): InstallMode {
 export async function fetchInstallStatus(): Promise<InstallStatus> {
   const { data, error } = await supabase.rpc("get_install_status");
   if (error) return { installed: false };
-  return (data as InstallStatus) ?? { installed: false };
+  return ((data as unknown) as InstallStatus) ?? { installed: false };
 }
 
 /** Envato purchase code format: 8-4-4-4-12 hex (UUID-shape). */
