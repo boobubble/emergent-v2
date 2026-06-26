@@ -88,7 +88,7 @@ for (const theme of THEMES) {
           width: Math.min(box.width, 1280),
           height: Math.min(box.height, 2000),
         };
-        expect(await page.screenshot({ clip, animations: "disabled" }))
+        expect(await page.screenshot({ clip, animations: "disabled", fullPage: true }))
           .toMatchSnapshot(`heropage-${section.name}-${theme}.png`, SNAPSHOT_OPTS);
       });
     }
