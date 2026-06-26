@@ -152,25 +152,21 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
   if (!enabled || isDM(channelId) || events.length === 0) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-2 z-10 flex flex-col items-center gap-1 px-3">
+    <div className="pointer-events-none absolute inset-x-0 bottom-1 z-10 flex flex-col items-stretch gap-0.5 px-3">
       {events.map(ev => (
         <div
           key={ev.id}
-          className="presence-msg pointer-events-none rounded-full border border-white/10 bg-background/60 px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm backdrop-blur-md"
+          className="presence-msg pointer-events-none flex items-center gap-2 px-1 py-0.5 text-[12px] text-muted-foreground"
         >
-          {ev.kind === "join" ? (
-            <>
-              <span className="mr-1">🟢</span>
-              <span className="text-foreground/90">{ev.name}</span>{" "}
-              <span className="opacity-75">joined the room</span>
-            </>
-          ) : (
-            <>
-              <span className="mr-1">👋</span>
-              <span className="text-foreground/90">{ev.name}</span>{" "}
-              <span className="opacity-75">left the room</span>
-            </>
-          )}
+          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-muted text-[10px] text-muted-foreground/80">
+            {ev.kind === "join" ? "👤" : "👋"}
+          </span>
+          <span>
+            <span className="font-semibold text-foreground/80">{ev.name}</span>
+            <span className="opacity-75">
+              {ev.kind === "join" ? " has joined the room" : " has left the room"}
+            </span>
+          </span>
         </div>
       ))}
     </div>
