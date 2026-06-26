@@ -163,8 +163,8 @@ function RootComponent() {
 }
 
 // Paths an unauthenticated visitor can reach directly (no AuthScreen takeover).
-const PUBLIC_PATH_PREFIXES = ["/welcome", "/login", "/reset-password", "/banned", "/p/", "/api/", "/installer"];
-const PUBLIC_EXACT = new Set(["/welcome", "/login", "/reset-password", "/banned", "/installer"]);
+const PUBLIC_PATH_PREFIXES = ["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/p/", "/api/", "/installer"];
+const PUBLIC_EXACT = new Set(["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/installer"]);
 
 function isPublicPath(pathname: string) {
   if (PUBLIC_EXACT.has(pathname)) return true;
