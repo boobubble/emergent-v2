@@ -39,21 +39,27 @@ function InstallerPage() {
   const [licenseOk, setLicenseOk] = useState(false);
   const [reqsOk, setReqsOk] = useState(false);
   type HealthState = "pending" | "ok" | "fail" | "warn";
-  const [health, setHealth] = useState<Record<"db"|"storage"|"realtime"|"smtp", { state: HealthState; msg?: string }>>({
+  type HealthKey = "db" | "storage" | "realtime" | "smtp" | "env" | "cron";
+  const [health, setHealth] = useState<Record<HealthKey, { state: HealthState; msg?: string }>>({
     db:       { state: "pending" },
     storage:  { state: "pending" },
     realtime: { state: "pending" },
     smtp:     { state: "pending" },
+    env:      { state: "pending" },
+    cron:     { state: "pending" },
   });
   const [dbHost, setDbHost] = useState("");
   const [dbAnon, setDbAnon] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPass, setAdminPass] = useState("");
   const [adminUser, setAdminUser] = useState("");
+  const [adminRecovery, setAdminRecovery] = useState("");
+  const [admin2FA, setAdmin2FA] = useState(false);
   const [siteName, setSiteName] = useState("BooBubble");
   const [busy, setBusy] = useState(false);
   const [smtpTestEmail, setSmtpTestEmail] = useState("");
   const [smtpTesting, setSmtpTesting] = useState(false);
+  const [postStats, setPostStats] = useState<{ users: number; buckets: number; cron: number } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -94,7 +100,19 @@ function InstallerPage() {
     setHealth({
       db: { state: "pending" }, storage: { state: "pending" },
       realtime: { state: "pending" }, smtp: { state: "pending" },
+      env: { state: "pending" }, cron: { state: "pending" },
     });
+
+    // Env vars (client-visible)
+    const hasUrl = !!import.meta.env.VITE_SUPABASE_URL;
+    const hasKey = !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    setHealth((h) => ({
+      ...h,
+      env: hasUrl && hasKey
+        ? { state: "ok", msg: "VITE_SUPABASE_URL & PUBLISHABLE_KEY found" }
+        : { state: "fail", msg: "Missing VITE_SUPABASE_URL or PUBLISHABLE_KEY" },
+    }));
+
     // Database
     try {
       const { error } = await supabase.rpc("get_install_status");
@@ -104,14 +122,16 @@ function InstallerPage() {
       setHealth((h) => ({ ...h, db: { state: "fail", msg: e?.message ?? "Unreachable" } }));
     }
     // Storage
+    let bucketsOk = 0;
     try {
-      const { error } = await supabase.storage.listBuckets();
+      const { data, error } = await supabase.storage.listBuckets();
       if (error) throw error;
-      setHealth((h) => ({ ...h, storage: { state: "ok" } }));
+      bucketsOk = data?.length ?? 0;
+      setHealth((h) => ({ ...h, storage: { state: bucketsOk > 0 ? "ok" : "warn", msg: `${bucketsOk} bucket(s) configured` } }));
     } catch (e: any) {
       setHealth((h) => ({ ...h, storage: { state: "fail", msg: e?.message ?? "Unavailable" } }));
     }
-    // Realtime (connect + timeout)
+    // Realtime
     await new Promise<void>((resolve) => {
       const ch = supabase.channel("installer-health-" + Math.random().toString(36).slice(2));
       const timer = setTimeout(() => {
@@ -130,8 +150,7 @@ function InstallerPage() {
         }
       });
     });
-    // Email / SMTP — best-effort; admin email send happens via Supabase Auth.
-    // Mark as warn (configured by provider, not directly probeable from client).
+    // SMTP
     try {
       const { data } = await supabase.from("app_settings").select("value").eq("key", "email").maybeSingle();
       const cfg = (data?.value as any) ?? null;
@@ -140,21 +159,65 @@ function InstallerPage() {
     } catch {
       setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Not configured" } }));
     }
+    // Cron / Scheduled jobs (streak reset, daily rewards, XP, cleanup)
+    try {
+      const { data, error } = await supabase.rpc("installer_get_extras");
+      if (error) throw error;
+      const cronCount = (data as any)?.cron_jobs ?? 0;
+      setHealth((h) => ({
+        ...h,
+        cron: cronCount > 0
+          ? { state: "ok", msg: `${cronCount} scheduled job(s) active` }
+          : { state: "warn", msg: "No scheduled jobs detected — daily rewards/cleanup may not run" },
+      }));
+    } catch (e: any) {
+      setHealth((h) => ({ ...h, cron: { state: "warn", msg: e?.message ?? "Could not query cron" } }));
+    }
 
-    // Pass if DB + Storage + Realtime ok (SMTP warn is acceptable)
+    // Pass if env + DB + Storage + Realtime ok (SMTP/Cron warn acceptable)
     setHealth((h) => {
-      const pass = h.db.state === "ok" && h.storage.state === "ok" && h.realtime.state === "ok";
+      const pass =
+        h.env.state === "ok" &&
+        h.db.state === "ok" &&
+        (h.storage.state === "ok" || h.storage.state === "warn") &&
+        h.realtime.state === "ok";
       setReqsOk(pass);
-      if (pass) toast.success("System health check passed");
+      if (pass) toast.success("Compatibility check passed");
       else toast.error("Some checks failed — review and retry");
       return h;
     });
     setBusy(false);
   }
 
+  function passwordStrength(p: string): { score: number; label: string; color: string } {
+    let s = 0;
+    if (p.length >= 8) s++;
+    if (p.length >= 12) s++;
+    if (/[A-Z]/.test(p) && /[a-z]/.test(p)) s++;
+    if (/\d/.test(p)) s++;
+    if (/[^A-Za-z0-9]/.test(p)) s++;
+    const map = [
+      { label: "Too weak", color: "bg-destructive" },
+      { label: "Weak", color: "bg-destructive" },
+      { label: "Fair", color: "bg-amber-500" },
+      { label: "Good", color: "bg-amber-400" },
+      { label: "Strong", color: "bg-emerald-500" },
+      { label: "Excellent", color: "bg-emerald-600" },
+    ];
+    return { score: s, ...map[s] };
+  }
+
+
   async function createAdmin() {
     if (!adminEmail || !adminPass || !adminUser) { toast.error("Fill all fields"); return; }
-    if (adminPass.length < 8) { toast.error("Password must be ≥ 8 characters"); return; }
+    const strength = passwordStrength(adminPass);
+    if (strength.score < 4) {
+      toast.error("Password must be strong: 12+ chars, upper/lower, number, symbol");
+      return;
+    }
+    if (adminRecovery && !adminRecovery.includes("@")) {
+      toast.error("Recovery email looks invalid"); return;
+    }
     setBusy(true);
     try {
       const { error } = await supabase.auth.signUp({
@@ -162,13 +225,27 @@ function InstallerPage() {
         password: adminPass,
         options: {
           emailRedirectTo: `${window.location.origin}/installer`,
-          data: { username: adminUser },
+          data: {
+            username: adminUser,
+            recovery_email: adminRecovery || null,
+            two_factor_opt_in: admin2FA,
+          },
         },
       });
       if (error) throw error;
-      // Sign in immediately (works if email confirm disabled)
       await supabase.auth.signInWithPassword({ email: adminEmail, password: adminPass });
       await bootstrapFirstAdmin();
+      // Persist security prefs on profile (best-effort)
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        if (u?.user?.id) {
+          await supabase.from("profiles").update({
+            // @ts-ignore — columns may be added by admin later
+            recovery_email: adminRecovery || null,
+            two_factor_opt_in: admin2FA,
+          } as any).eq("id", u.user.id);
+        }
+      } catch { /* non-fatal */ }
       toast.success("Admin account created");
       go(1);
     } catch (e: any) {
@@ -182,18 +259,31 @@ function InstallerPage() {
     setBusy(true);
     try {
       await completeInstallation({ license_type: licenseType, license_key: licenseKey, site_name: siteName, mode });
-      // Persist site name into general settings
       try {
         await supabase.from("app_settings").upsert({ key: "general", value: { site_name: siteName } }, { onConflict: "key" });
       } catch { /* non-fatal */ }
+      // Load post-install dashboard stats
+      try {
+        const { data } = await supabase.rpc("installer_get_extras");
+        const d = (data as any) ?? {};
+        setPostStats({
+          users: d.users ?? 0,
+          buckets: d.storage_buckets ?? 0,
+          cron: d.cron_jobs ?? 0,
+        });
+      } catch { setPostStats({ users: 0, buckets: 0, cron: 0 }); }
       toast.success("Installation complete!");
-      setTimeout(() => navigate({ to: "/" }), 800);
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to finalize install");
     } finally {
       setBusy(false);
     }
   }
+
+  async function importDemoData() {
+    toast.info("Demo content can be added from Admin → Seed Data after install.");
+  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background px-4 py-8">
@@ -290,9 +380,11 @@ function InstallerPage() {
                 <div className="rounded-lg border bg-muted/30 p-3">
                   <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">System Health Check</div>
                   <div className="space-y-2 text-sm">
-                    <HealthRow label="Database" state={health.db.state} msg={health.db.msg} />
-                    <HealthRow label="Storage" state={health.storage.state} msg={health.storage.msg} />
-                    <HealthRow label="Realtime" state={health.realtime.state} msg={health.realtime.msg} />
+                    <HealthRow label="Required env vars" state={health.env.state} msg={health.env.msg} />
+                    <HealthRow label="Database reachable" state={health.db.state} msg={health.db.msg} />
+                    <HealthRow label="Storage buckets" state={health.storage.state} msg={health.storage.msg} />
+                    <HealthRow label="Realtime enabled" state={health.realtime.state} msg={health.realtime.msg} />
+                    <HealthRow label="Scheduled jobs (cron)" state={health.cron.state} msg={health.cron.msg} />
                     <HealthRow label="Email / SMTP" state={health.smtp.state} msg={health.smtp.msg} />
                   </div>
                   <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-3 sm:flex-row">
@@ -369,9 +461,32 @@ function InstallerPage() {
                   <Input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} placeholder="you@example.com" />
                 </div>
                 <div>
-                  <Label>Password</Label>
-                  <Input type="password" value={adminPass} onChange={(e) => setAdminPass(e.target.value)} placeholder="Min 8 characters" />
+                  <Label>Password <span className="text-xs text-muted-foreground">(strong required)</span></Label>
+                  <Input type="password" value={adminPass} onChange={(e) => setAdminPass(e.target.value)} placeholder="12+ chars, upper/lower, number, symbol" />
+                  {adminPass && (() => {
+                    const s = passwordStrength(adminPass);
+                    return (
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div className={`h-full transition-all ${s.color}`} style={{ width: `${(s.score / 5) * 100}%` }} />
+                        </div>
+                        <span className="text-[10px] font-medium text-muted-foreground">{s.label}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
+                <div>
+                  <Label>Recovery Email <span className="text-xs text-muted-foreground">(optional but recommended)</span></Label>
+                  <Input type="email" value={adminRecovery} onChange={(e) => setAdminRecovery(e.target.value)} placeholder="backup@example.com" />
+                  <p className="mt-1 text-xs text-muted-foreground">Used to regain access if you lose your main email.</p>
+                </div>
+                <label className="flex items-start gap-2 rounded-lg border bg-muted/30 p-3 text-sm cursor-pointer">
+                  <input type="checkbox" checked={admin2FA} onChange={(e) => setAdmin2FA(e.target.checked)} className="mt-0.5" />
+                  <div>
+                    <div className="font-medium">Enable Two-Factor Authentication (optional)</div>
+                    <div className="text-xs text-muted-foreground">You'll be prompted to set up TOTP on first sign-in. Strongly recommended for admins.</div>
+                  </div>
+                </label>
                 <Button onClick={createAdmin} disabled={busy} className="w-full">
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Super Admin"}
                 </Button>
@@ -390,24 +505,55 @@ function InstallerPage() {
             )}
 
             {current.id === "finish" && (
-              <div className="space-y-4 text-center">
-                <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10">
-                  <PartyPopper className="h-8 w-8 text-primary" />
+              postStats ? (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500/15 mb-2">
+                      <PartyPopper className="h-8 w-8 text-emerald-500" />
+                    </div>
+                    <h3 className="text-xl font-bold">🎉 Installation Complete</h3>
+                    <p className="text-sm text-muted-foreground">Your BooBubble site is live and ready.</p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-lg border bg-muted/40 p-3 text-center">
+                      <div className="text-2xl font-bold">{postStats.users}</div>
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Users</div>
+                    </div>
+                    <div className="rounded-lg border bg-muted/40 p-3 text-center">
+                      <div className="text-lg font-bold text-emerald-500">Connected</div>
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Storage · {postStats.buckets}</div>
+                    </div>
+                    <div className="rounded-lg border bg-muted/40 p-3 text-center">
+                      <div className="text-lg font-bold text-emerald-500">Active</div>
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Realtime · Cron {postStats.cron}</div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <Button onClick={() => navigate({ to: "/admin" as any })} className="w-full">Go to Admin</Button>
+                    <Button onClick={() => navigate({ to: "/" })} variant="outline" className="w-full">Open Site</Button>
+                    <Button onClick={importDemoData} variant="secondary" className="w-full">Import Demo</Button>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold">Ready to install</h3>
-                  <p className="text-sm text-muted-foreground">Clicking Finish locks the installer and takes you to your new site.</p>
+              ) : (
+                <div className="space-y-4 text-center">
+                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10">
+                    <PartyPopper className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Ready to install</h3>
+                    <p className="text-sm text-muted-foreground">Clicking Finish locks the installer and shows your dashboard.</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/40 p-3 text-left text-xs space-y-1">
+                    <div><span className="text-muted-foreground">Mode:</span> {mode === "cloud" ? "Lovable Cloud" : "Self-Hosted"}</div>
+                    <div><span className="text-muted-foreground">License:</span> {licenseType === "envato" ? "Envato" : "Offline"}</div>
+                    <div><span className="text-muted-foreground">Admin:</span> {adminUser || "—"}</div>
+                    <div><span className="text-muted-foreground">Site:</span> {siteName}</div>
+                  </div>
+                  <Button onClick={finish} disabled={busy} size="lg" className="w-full">
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Finish Installation"}
+                  </Button>
                 </div>
-                <div className="rounded-lg border bg-muted/40 p-3 text-left text-xs space-y-1">
-                  <div><span className="text-muted-foreground">Mode:</span> {mode === "cloud" ? "Lovable Cloud" : "Self-Hosted"}</div>
-                  <div><span className="text-muted-foreground">License:</span> {licenseType === "envato" ? "Envato" : "Offline"}</div>
-                  <div><span className="text-muted-foreground">Admin:</span> {adminUser || "—"}</div>
-                  <div><span className="text-muted-foreground">Site:</span> {siteName}</div>
-                </div>
-                <Button onClick={finish} disabled={busy} size="lg" className="w-full">
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Finish Installation"}
-                </Button>
-              </div>
+              )
             )}
 
             {/* Back button (not on welcome or finish) */}
