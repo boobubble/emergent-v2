@@ -1422,10 +1422,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "posts_author_id_profiles_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_directory"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "posts_owner_id_profiles_fkey"
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_owner_id_profiles_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -1481,7 +1495,9 @@ export type Database = {
           profile_views_enabled: boolean
           profile_views_friends_only: boolean
           profile_views_unlocked_full: boolean
+          show_birthday: boolean
           show_country_flag: boolean
+          show_gender: boolean
           show_guest_badge: boolean
           sound_prefs: Json
           status: string
@@ -1516,7 +1532,9 @@ export type Database = {
           profile_views_enabled?: boolean
           profile_views_friends_only?: boolean
           profile_views_unlocked_full?: boolean
+          show_birthday?: boolean
           show_country_flag?: boolean
+          show_gender?: boolean
           show_guest_badge?: boolean
           sound_prefs?: Json
           status?: string
@@ -1551,7 +1569,9 @@ export type Database = {
           profile_views_enabled?: boolean
           profile_views_friends_only?: boolean
           profile_views_unlocked_full?: boolean
+          show_birthday?: boolean
           show_country_flag?: boolean
+          show_gender?: boolean
           show_guest_badge?: boolean
           sound_prefs?: Json
           status?: string
@@ -2571,7 +2591,83 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "posts_author_id_profiles_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_directory"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      profiles_directory: {
+        Row: {
+          about_me: string | null
+          avatar_color: string | null
+          avatar_url: string | null
+          bio: string | null
+          birthday: string | null
+          country_code: string | null
+          gender: string | null
+          hide_birth_year: boolean | null
+          id: string | null
+          is_bot: boolean | null
+          is_official: boolean | null
+          last_seen: string | null
+          level: number | null
+          longest_streak: number | null
+          show_country_flag: boolean | null
+          show_guest_badge: boolean | null
+          status: string | null
+          streak: number | null
+          username: string | null
+          xp: number | null
+        }
+        Insert: {
+          about_me?: string | null
+          avatar_color?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          birthday?: never
+          country_code?: never
+          gender?: never
+          hide_birth_year?: boolean | null
+          id?: string | null
+          is_bot?: boolean | null
+          is_official?: boolean | null
+          last_seen?: string | null
+          level?: number | null
+          longest_streak?: number | null
+          show_country_flag?: boolean | null
+          show_guest_badge?: boolean | null
+          status?: string | null
+          streak?: number | null
+          username?: string | null
+          xp?: number | null
+        }
+        Update: {
+          about_me?: string | null
+          avatar_color?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          birthday?: never
+          country_code?: never
+          gender?: never
+          hide_birth_year?: boolean | null
+          id?: string | null
+          is_bot?: boolean | null
+          is_official?: boolean | null
+          last_seen?: string | null
+          level?: number | null
+          longest_streak?: number | null
+          show_country_flag?: boolean | null
+          show_guest_badge?: boolean | null
+          status?: string | null
+          streak?: number | null
+          username?: string | null
+          xp?: number | null
+        }
+        Relationships: []
       }
       user_bans_self: {
         Row: {
