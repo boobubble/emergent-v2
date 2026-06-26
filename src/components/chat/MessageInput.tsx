@@ -37,8 +37,11 @@ export function MessageInput() {
   const [showStickers, setShowStickers] = useState(false);
   const [showGiphy, setShowGiphy] = useState(false);
   const [showYoutube, setShowYoutube] = useState(false);
+  const [showVoice, setShowVoice] = useState(false);
   const { raw: appRaw } = useAppSettings();
   const media = mergeMediaConfig((appRaw as any).media);
+  const voiceCfg: VoiceNotesConfig = { ...VOICE_NOTES_DEFAULTS, ...((appRaw as any).voice_notes || {}) };
+  const voiceMax = maxDurationForChannel(state.activeChannel, voiceCfg);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
   const [caret, setCaret] = useState(0);
