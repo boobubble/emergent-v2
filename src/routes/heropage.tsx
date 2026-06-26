@@ -12,7 +12,7 @@ import { createDemoAccount } from "@/lib/demo-account.functions";
 import {
   HERO_DEFAULTS, HERO_SETTINGS_KEY, mergeHeroConfig,
   type HeroConfig, type HeroSection, type HeroShowcaseItem,
-  type FamousChatroom, type LiveUserCard, type DailyMissionCard,
+  type FamousChatroom, type LiveUserCard,
 } from "@/lib/hero-page-config";
 
 export const Route = createFileRoute("/heropage")({
