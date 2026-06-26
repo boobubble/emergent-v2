@@ -458,15 +458,18 @@ function InstallerPage() {
                       disabled={smtpTesting || !smtpTestEmail.includes("@")}
                       onClick={async () => {
                         setSmtpTesting(true);
+                        pushLog("info", "smtp", `Sending test email to ${smtpTestEmail}…`);
                         setHealth((h) => ({ ...h, smtp: { state: "pending", msg: "Sending test email…" } }));
                         try {
                           const { error } = await supabase.auth.resetPasswordForEmail(smtpTestEmail.trim(), {
                             redirectTo: `${window.location.origin}/auth`,
                           });
                           if (error) throw error;
+                          pushLog("ok", "smtp", `Test email dispatched to ${smtpTestEmail}`);
                           setHealth((h) => ({ ...h, smtp: { state: "ok", msg: `Test email sent to ${smtpTestEmail}` } }));
                           toast.success("Test email dispatched — check your inbox");
                         } catch (e: any) {
+                          pushLog("error", "smtp", e?.message || "Send failed");
                           setHealth((h) => ({ ...h, smtp: { state: "fail", msg: e?.message || "Send failed" } }));
                           toast.error(e?.message || "Failed to send test email");
                         } finally {
