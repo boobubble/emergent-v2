@@ -214,7 +214,16 @@ function AuthGate() {
   }
 
   // No stored session at all → send guests to landing immediately.
-  if (!ready && !hasStoredSession) return <Navigate to="/welcome" replace />;
+  if (!ready && !hasStoredSession) {
+    if (!homeReady) {
+      return (
+        <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">
+          <p>Loading…</p>
+        </div>
+      );
+    }
+    return <Navigate to={landingPath} replace />;
+  }
 
   if (!ready) {
     // Stored session is being restored — wait without auto-redirecting.
