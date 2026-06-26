@@ -17,10 +17,10 @@ import { useAppSettings } from "@/lib/app-settings";
  * - Toggle via app_settings.presence_messages (boolean, default true).
  */
 
-const JOIN_DELAY_MS = 10_000;
-const LEAVE_DELAY_MS = 15_000;
+const JOIN_DELAY_MS = 2_500;
+const LEAVE_DELAY_MS = 8_000;
 const COOLDOWN_MS = 60_000;
-const VISIBLE_MS = 6_000;
+const VISIBLE_MS = 12_000;
 const MAX_VISIBLE = 5;
 
 interface PresenceEvent {
@@ -54,6 +54,8 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
     const lastJoinAt = new Map<string, number>();
     const lastLeaveAt = new Map<string, number>();
     let knownPresent = new Set<string>();
+    let firstSyncDone = false;
+    let userId = "anon-" + Math.random().toString(36).slice(2, 9);
 
     function push(kind: "join" | "leave", name: string) {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -69,75 +71,87 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
       }, VISIBLE_MS);
     }
 
-    let userId = "anon-" + Math.random().toString(36).slice(2, 9);
-    void supabase.auth.getUser().then(({ data }) => {
-      if (data.user?.id) userId = data.user.id;
-    });
+    async function start() {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (data.user?.id) userId = data.user.id;
+      } catch {}
+      if (cancelled) return;
 
-    const channel = supabase.channel(`room-presence:${channelId}`, {
-      config: { presence: { key: meRef.current.id } },
-    });
+      const channel = supabase.channel(`room-presence:${channelId}`, {
+        config: { presence: { key: userId } },
+      });
 
-    channel
-      .on("presence", { event: "sync" }, () => {
-        const stateMap = channel.presenceState<TrackPayload>();
-        const presentNow = new Set<string>();
-        const nameMap = new Map<string, string>();
-        for (const key of Object.keys(stateMap)) {
-          const metas = stateMap[key];
-          if (!metas || !metas.length) continue;
-          const uid = metas[0].user_id || key;
-          presentNow.add(uid);
-          if (metas[0].name) nameMap.set(uid, metas[0].name);
-        }
+      channel
+        .on("presence", { event: "sync" }, () => {
+          const stateMap = channel.presenceState<TrackPayload>();
+          const presentNow = new Set<string>();
+          const nameMap = new Map<string, string>();
+          for (const key of Object.keys(stateMap)) {
+            const metas = stateMap[key];
+            if (!metas || !metas.length) continue;
+            const uid = metas[0].user_id || key;
+            presentNow.add(uid);
+            if (metas[0].name) nameMap.set(uid, metas[0].name);
+          }
 
-        // Arrivals
-        presentNow.forEach(uid => {
-          if (uid === userId) return; // self
-          if (knownPresent.has(uid)) {
-            // Cancel pending leave if any
-            const t = pendingLeave.get(uid);
-            if (t) { clearTimeout(t); pendingLeave.delete(uid); }
+          if (!firstSyncDone) {
+            // Seed known set without announcing existing members.
+            knownPresent = presentNow;
+            firstSyncDone = true;
             return;
           }
-          // newly present
-          if (pendingJoin.has(uid)) return;
-          const t = setTimeout(() => {
-            pendingJoin.delete(uid);
-            const last = lastJoinAt.get(uid) || 0;
-            if (Date.now() - last < COOLDOWN_MS) return;
-            lastJoinAt.set(uid, Date.now());
-            push("join", nameMap.get(uid) || "Someone");
-          }, JOIN_DELAY_MS);
-          pendingJoin.set(uid, t);
+
+          // Arrivals
+          presentNow.forEach(uid => {
+            if (uid === userId) return; // self
+            if (knownPresent.has(uid)) {
+              const t = pendingLeave.get(uid);
+              if (t) { clearTimeout(t); pendingLeave.delete(uid); }
+              return;
+            }
+            if (pendingJoin.has(uid)) return;
+            const nm = nameMap.get(uid) || "Someone";
+            const t = setTimeout(() => {
+              pendingJoin.delete(uid);
+              const last = lastJoinAt.get(uid) || 0;
+              if (Date.now() - last < COOLDOWN_MS) return;
+              lastJoinAt.set(uid, Date.now());
+              push("join", nm);
+            }, JOIN_DELAY_MS);
+            pendingJoin.set(uid, t);
+          });
+
+          // Departures
+          knownPresent.forEach(uid => {
+            if (presentNow.has(uid)) return;
+            if (uid === userId) return;
+            const tj = pendingJoin.get(uid);
+            if (tj) { clearTimeout(tj); pendingJoin.delete(uid); }
+            if (pendingLeave.has(uid)) return;
+            const nameForUid = nameMap.get(uid) || "Someone";
+            const t = setTimeout(() => {
+              pendingLeave.delete(uid);
+              const last = lastLeaveAt.get(uid) || 0;
+              if (Date.now() - last < COOLDOWN_MS) return;
+              lastLeaveAt.set(uid, Date.now());
+              push("leave", nameForUid);
+            }, LEAVE_DELAY_MS);
+            pendingLeave.set(uid, t);
+          });
+
+          knownPresent = presentNow;
+        })
+        .subscribe(async (status) => {
+          if (status === "SUBSCRIBED") {
+            await channel.track({ user_id: userId, name: meRef.current.name });
+          }
         });
 
-        // Departures
-        knownPresent.forEach(uid => {
-          if (presentNow.has(uid)) return;
-          if (uid === userId) return;
-          // Cancel pending join if they never met the threshold
-          const tj = pendingJoin.get(uid);
-          if (tj) { clearTimeout(tj); pendingJoin.delete(uid); }
-          if (pendingLeave.has(uid)) return;
-          const nameForUid = nameMap.get(uid) || "Someone";
-          const t = setTimeout(() => {
-            pendingLeave.delete(uid);
-            const last = lastLeaveAt.get(uid) || 0;
-            if (Date.now() - last < COOLDOWN_MS) return;
-            lastLeaveAt.set(uid, Date.now());
-            push("leave", nameForUid);
-          }, LEAVE_DELAY_MS);
-          pendingLeave.set(uid, t);
-        });
+      return channel;
+    }
 
-        knownPresent = presentNow;
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await channel.track({ user_id: userId, name: meRef.current.name });
-        }
-      });
+    const channelPromise = start();
 
     return () => {
       cancelled = true;
@@ -145,7 +159,7 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
       pendingLeave.forEach(t => clearTimeout(t));
       pendingJoin = new Map();
       pendingLeave = new Map();
-      void supabase.removeChannel(channel);
+      void channelPromise.then(ch => { if (ch) void supabase.removeChannel(ch); });
     };
   }, [channelId, enabled, isDM]);
 
