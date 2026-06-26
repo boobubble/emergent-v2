@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Circle, AlertCircle, Loader2, Rocket, Cloud, Server, Shield, KeyRound, Database, UserPlus, Palette, PartyPopper, Terminal, Copy, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle2, Circle, AlertCircle, Loader2, Rocket, Cloud, Server, Shield, KeyRound, Database, UserPlus, Palette, PartyPopper, Terminal, Copy, Trash2, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   detectInstallMode, fetchInstallStatus, isValidEnvatoCode, isValidOfflineKey,
@@ -352,10 +352,17 @@ function InstallerPage() {
               <p className="text-xs text-muted-foreground">v1.0.0 • Setup Wizard</p>
             </div>
           </div>
-          <Badge variant={mode === "cloud" ? "default" : "secondary"} className="gap-1">
-            {mode === "cloud" ? <Cloud className="h-3 w-3" /> : <Server className="h-3 w-3" />}
-            {mode === "cloud" ? "Lovable Cloud" : "Self-Hosted"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="gap-1.5">
+              <a href="/installation-walkthrough.pdf" download>
+                <Download className="h-3.5 w-3.5" /> Guide PDF
+              </a>
+            </Button>
+            <Badge variant={mode === "cloud" ? "default" : "secondary"} className="gap-1">
+              {mode === "cloud" ? <Cloud className="h-3 w-3" /> : <Server className="h-3 w-3" />}
+              {mode === "cloud" ? "Lovable Cloud" : "Self-Hosted"}
+            </Badge>
+          </div>
         </div>
 
         {/* Stepper */}
