@@ -28,6 +28,7 @@ import { HeadFootScripts } from "@/components/HeadFootScripts";
 import { AdsAutoLoader } from "@/components/AdSlot";
 import { BroadcasterAnnouncementsRunner } from "@/components/broadcaster/BroadcasterAnnouncements";
 import { TrioInvitesListener } from "@/components/chat/TrioInvitesListener";
+import { useHomePageMode } from "@/lib/use-home-page-mode";
 import "@/i18n";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 
@@ -162,8 +163,8 @@ function RootComponent() {
 }
 
 // Paths an unauthenticated visitor can reach directly (no AuthScreen takeover).
-const PUBLIC_PATH_PREFIXES = ["/welcome", "/login", "/reset-password", "/banned", "/p/", "/api/", "/installer"];
-const PUBLIC_EXACT = new Set(["/welcome", "/login", "/reset-password", "/banned", "/installer"]);
+const PUBLIC_PATH_PREFIXES = ["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/p/", "/api/", "/installer"];
+const PUBLIC_EXACT = new Set(["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/installer"]);
 
 function isPublicPath(pathname: string) {
   if (PUBLIC_EXACT.has(pathname)) return true;
@@ -196,6 +197,8 @@ function AuthGate() {
   const location = useLocation();
   const path = location.pathname;
   const hasStoredSession = hasStoredAuthSession();
+  const { mode: homeMode, ready: homeReady } = useHomePageMode();
+  const landingPath = homeMode === "hero" ? "/heropage" : "/welcome";
 
   if (!user && isPublicPath(path)) {
     return (
@@ -211,7 +214,16 @@ function AuthGate() {
   }
 
   // No stored session at all → send guests to landing immediately.
-  if (!ready && !hasStoredSession) return <Navigate to="/welcome" replace />;
+  if (!ready && !hasStoredSession) {
+    if (!homeReady) {
+      return (
+        <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">
+          <p>Loading…</p>
+        </div>
+      );
+    }
+    return <Navigate to={landingPath} replace />;
+  }
 
   if (!ready) {
     // Stored session is being restored — wait without auto-redirecting.
@@ -237,13 +249,13 @@ function AuthGate() {
         </>
       );
     }
-    // Everything else → send guests to the landing page first.
-    return <Navigate to="/welcome" replace />;
+    // Everything else → send guests to the configured landing page first.
+    return <Navigate to={landingPath} replace />;
   }
 
   // Authenticated users shouldn't sit on the public landing or login pages —
   // send them to the app home (chatroom/feed) automatically after sign in.
-  if (path === "/welcome" || path === "/login") {
+  if (path === "/welcome" || path === "/heropage" || path === "/login") {
     return <Navigate to="/" replace />;
   }
 

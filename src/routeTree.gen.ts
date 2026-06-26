@@ -18,6 +18,7 @@ import { Route as PagesRouteImport } from './routes/pages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as InstallerRouteImport } from './routes/installer'
+import { Route as HeropageRouteImport } from './routes/heropage'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
@@ -74,6 +75,7 @@ import { Route as AdminMaintenanceRouteImport } from './routes/admin.maintenance
 import { Route as AdminLanguagesRouteImport } from './routes/admin.languages'
 import { Route as AdminInternalLinkingRouteImport } from './routes/admin.internal-linking'
 import { Route as AdminHomepageRouteImport } from './routes/admin.homepage'
+import { Route as AdminHeroPageRouteImport } from './routes/admin.hero-page'
 import { Route as AdminGuestAccessRouteImport } from './routes/admin.guest-access'
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
@@ -154,6 +156,11 @@ const LeaderboardRoute = LeaderboardRouteImport.update({
 const InstallerRoute = InstallerRouteImport.update({
   id: '/installer',
   path: '/installer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HeropageRoute = HeropageRouteImport.update({
+  id: '/heropage',
+  path: '/heropage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GroupsRoute = GroupsRouteImport.update({
@@ -437,6 +444,11 @@ const AdminHomepageRoute = AdminHomepageRouteImport.update({
   path: '/homepage',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminHeroPageRoute = AdminHeroPageRouteImport.update({
+  id: '/hero-page',
+  path: '/hero-page',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminGuestAccessRoute = AdminGuestAccessRouteImport.update({
   id: '/guest-access',
   path: '/guest-access',
@@ -636,6 +648,7 @@ export interface FileRoutesByFullPath {
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
+  '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
@@ -675,6 +688,7 @@ export interface FileRoutesByFullPath {
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
+  '/admin/hero-page': typeof AdminHeroPageRoute
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/languages': typeof AdminLanguagesRoute
@@ -737,6 +751,7 @@ export interface FileRoutesByTo {
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
+  '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
@@ -776,6 +791,7 @@ export interface FileRoutesByTo {
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
+  '/admin/hero-page': typeof AdminHeroPageRoute
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/languages': typeof AdminLanguagesRoute
@@ -841,6 +857,7 @@ export interface FileRoutesById {
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
+  '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
@@ -880,6 +897,7 @@ export interface FileRoutesById {
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
+  '/admin/hero-page': typeof AdminHeroPageRoute
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/languages': typeof AdminLanguagesRoute
@@ -946,6 +964,7 @@ export interface FileRouteTypes {
     | '/find-friends'
     | '/games'
     | '/groups'
+    | '/heropage'
     | '/installer'
     | '/leaderboard'
     | '/login'
@@ -985,6 +1004,7 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
+    | '/admin/hero-page'
     | '/admin/homepage'
     | '/admin/internal-linking'
     | '/admin/languages'
@@ -1047,6 +1067,7 @@ export interface FileRouteTypes {
     | '/find-friends'
     | '/games'
     | '/groups'
+    | '/heropage'
     | '/installer'
     | '/leaderboard'
     | '/login'
@@ -1086,6 +1107,7 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
+    | '/admin/hero-page'
     | '/admin/homepage'
     | '/admin/internal-linking'
     | '/admin/languages'
@@ -1150,6 +1172,7 @@ export interface FileRouteTypes {
     | '/find-friends'
     | '/games'
     | '/groups'
+    | '/heropage'
     | '/installer'
     | '/leaderboard'
     | '/login'
@@ -1189,6 +1212,7 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
+    | '/admin/hero-page'
     | '/admin/homepage'
     | '/admin/internal-linking'
     | '/admin/languages'
@@ -1254,6 +1278,7 @@ export interface RootRouteChildren {
   FindFriendsRoute: typeof FindFriendsRoute
   GamesRoute: typeof GamesRoute
   GroupsRoute: typeof GroupsRoute
+  HeropageRoute: typeof HeropageRoute
   InstallerRoute: typeof InstallerRoute
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
@@ -1336,6 +1361,13 @@ declare module '@tanstack/react-router' {
       path: '/installer'
       fullPath: '/installer'
       preLoaderRoute: typeof InstallerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/heropage': {
+      id: '/heropage'
+      path: '/heropage'
+      fullPath: '/heropage'
+      preLoaderRoute: typeof HeropageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/groups': {
@@ -1730,6 +1762,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminHomepageRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/hero-page': {
+      id: '/admin/hero-page'
+      path: '/hero-page'
+      fullPath: '/admin/hero-page'
+      preLoaderRoute: typeof AdminHeroPageRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/guest-access': {
       id: '/admin/guest-access'
       path: '/guest-access'
@@ -2028,6 +2067,7 @@ interface AdminRouteChildren {
   AdminGamesRoute: typeof AdminGamesRoute
   AdminGeneralRoute: typeof AdminGeneralRoute
   AdminGuestAccessRoute: typeof AdminGuestAccessRoute
+  AdminHeroPageRoute: typeof AdminHeroPageRoute
   AdminHomepageRoute: typeof AdminHomepageRoute
   AdminInternalLinkingRoute: typeof AdminInternalLinkingRoute
   AdminLanguagesRoute: typeof AdminLanguagesRoute
@@ -2090,6 +2130,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGamesRoute: AdminGamesRoute,
   AdminGeneralRoute: AdminGeneralRoute,
   AdminGuestAccessRoute: AdminGuestAccessRoute,
+  AdminHeroPageRoute: AdminHeroPageRoute,
   AdminHomepageRoute: AdminHomepageRoute,
   AdminInternalLinkingRoute: AdminInternalLinkingRoute,
   AdminLanguagesRoute: AdminLanguagesRoute,
@@ -2174,6 +2215,7 @@ const rootRouteChildren: RootRouteChildren = {
   FindFriendsRoute: FindFriendsRoute,
   GamesRoute: GamesRoute,
   GroupsRoute: GroupsRoute,
+  HeropageRoute: HeropageRoute,
   InstallerRoute: InstallerRoute,
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
