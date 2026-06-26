@@ -18,6 +18,7 @@ import { Route as PagesRouteImport } from './routes/pages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as InstallerRouteImport } from './routes/installer'
+import { Route as HeropageRouteImport } from './routes/heropage'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
@@ -154,6 +155,11 @@ const LeaderboardRoute = LeaderboardRouteImport.update({
 const InstallerRoute = InstallerRouteImport.update({
   id: '/installer',
   path: '/installer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HeropageRoute = HeropageRouteImport.update({
+  id: '/heropage',
+  path: '/heropage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GroupsRoute = GroupsRouteImport.update({
@@ -636,6 +642,7 @@ export interface FileRoutesByFullPath {
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
+  '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
@@ -737,6 +744,7 @@ export interface FileRoutesByTo {
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
+  '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
@@ -841,6 +849,7 @@ export interface FileRoutesById {
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
   '/groups': typeof GroupsRoute
+  '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
@@ -946,6 +955,7 @@ export interface FileRouteTypes {
     | '/find-friends'
     | '/games'
     | '/groups'
+    | '/heropage'
     | '/installer'
     | '/leaderboard'
     | '/login'
@@ -1047,6 +1057,7 @@ export interface FileRouteTypes {
     | '/find-friends'
     | '/games'
     | '/groups'
+    | '/heropage'
     | '/installer'
     | '/leaderboard'
     | '/login'
@@ -1150,6 +1161,7 @@ export interface FileRouteTypes {
     | '/find-friends'
     | '/games'
     | '/groups'
+    | '/heropage'
     | '/installer'
     | '/leaderboard'
     | '/login'
@@ -1254,6 +1266,7 @@ export interface RootRouteChildren {
   FindFriendsRoute: typeof FindFriendsRoute
   GamesRoute: typeof GamesRoute
   GroupsRoute: typeof GroupsRoute
+  HeropageRoute: typeof HeropageRoute
   InstallerRoute: typeof InstallerRoute
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
@@ -1336,6 +1349,13 @@ declare module '@tanstack/react-router' {
       path: '/installer'
       fullPath: '/installer'
       preLoaderRoute: typeof InstallerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/heropage': {
+      id: '/heropage'
+      path: '/heropage'
+      fullPath: '/heropage'
+      preLoaderRoute: typeof HeropageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/groups': {
@@ -2174,6 +2194,7 @@ const rootRouteChildren: RootRouteChildren = {
   FindFriendsRoute: FindFriendsRoute,
   GamesRoute: GamesRoute,
   GroupsRoute: GroupsRoute,
+  HeropageRoute: HeropageRoute,
   InstallerRoute: InstallerRoute,
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
