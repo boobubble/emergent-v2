@@ -52,6 +52,8 @@ function InstallerPage() {
   const [adminUser, setAdminUser] = useState("");
   const [siteName, setSiteName] = useState("BooBubble");
   const [busy, setBusy] = useState(false);
+  const [smtpTestEmail, setSmtpTestEmail] = useState("");
+  const [smtpTesting, setSmtpTesting] = useState(false);
 
   useEffect(() => {
     (async () => {
