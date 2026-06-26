@@ -249,13 +249,13 @@ function AuthGate() {
         </>
       );
     }
-    // Everything else → send guests to the landing page first.
-    return <Navigate to="/welcome" replace />;
+    // Everything else → send guests to the configured landing page first.
+    return <Navigate to={landingPath} replace />;
   }
 
   // Authenticated users shouldn't sit on the public landing or login pages —
   // send them to the app home (chatroom/feed) automatically after sign in.
-  if (path === "/welcome" || path === "/login") {
+  if (path === "/welcome" || path === "/heropage" || path === "/login") {
     return <Navigate to="/" replace />;
   }
 
