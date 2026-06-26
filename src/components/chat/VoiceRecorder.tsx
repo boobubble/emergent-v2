@@ -92,6 +92,7 @@ export function VoiceRecorder({ maxSeconds, onSend, onClose }: Props) {
       mime: "audio/webm",
       size: preview.size,
       dataUrl: preview.dataUrl,
+      duration: preview.duration,
     });
     onClose();
   }
