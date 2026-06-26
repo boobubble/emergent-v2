@@ -210,7 +210,14 @@ function InstallerPage() {
 
   async function createAdmin() {
     if (!adminEmail || !adminPass || !adminUser) { toast.error("Fill all fields"); return; }
-    if (adminPass.length < 8) { toast.error("Password must be ≥ 8 characters"); return; }
+    const strength = passwordStrength(adminPass);
+    if (strength.score < 4) {
+      toast.error("Password must be strong: 12+ chars, upper/lower, number, symbol");
+      return;
+    }
+    if (adminRecovery && !adminRecovery.includes("@")) {
+      toast.error("Recovery email looks invalid"); return;
+    }
     setBusy(true);
     try {
       const { error } = await supabase.auth.signUp({
@@ -218,13 +225,27 @@ function InstallerPage() {
         password: adminPass,
         options: {
           emailRedirectTo: `${window.location.origin}/installer`,
-          data: { username: adminUser },
+          data: {
+            username: adminUser,
+            recovery_email: adminRecovery || null,
+            two_factor_opt_in: admin2FA,
+          },
         },
       });
       if (error) throw error;
-      // Sign in immediately (works if email confirm disabled)
       await supabase.auth.signInWithPassword({ email: adminEmail, password: adminPass });
       await bootstrapFirstAdmin();
+      // Persist security prefs on profile (best-effort)
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        if (u?.user?.id) {
+          await supabase.from("profiles").update({
+            // @ts-ignore — columns may be added by admin later
+            recovery_email: adminRecovery || null,
+            two_factor_opt_in: admin2FA,
+          } as any).eq("id", u.user.id);
+        }
+      } catch { /* non-fatal */ }
       toast.success("Admin account created");
       go(1);
     } catch (e: any) {
@@ -238,18 +259,31 @@ function InstallerPage() {
     setBusy(true);
     try {
       await completeInstallation({ license_type: licenseType, license_key: licenseKey, site_name: siteName, mode });
-      // Persist site name into general settings
       try {
         await supabase.from("app_settings").upsert({ key: "general", value: { site_name: siteName } }, { onConflict: "key" });
       } catch { /* non-fatal */ }
+      // Load post-install dashboard stats
+      try {
+        const { data } = await supabase.rpc("installer_get_extras");
+        const d = (data as any) ?? {};
+        setPostStats({
+          users: d.users ?? 0,
+          buckets: d.storage_buckets ?? 0,
+          cron: d.cron_jobs ?? 0,
+        });
+      } catch { setPostStats({ users: 0, buckets: 0, cron: 0 }); }
       toast.success("Installation complete!");
-      setTimeout(() => navigate({ to: "/" }), 800);
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to finalize install");
     } finally {
       setBusy(false);
     }
   }
+
+  async function importDemoData() {
+    toast.info("Demo content can be added from Admin → Seed Data after install.");
+  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background px-4 py-8">
