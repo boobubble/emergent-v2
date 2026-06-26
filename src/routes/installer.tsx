@@ -38,6 +38,13 @@ function InstallerPage() {
   const [licenseKey, setLicenseKey] = useState("");
   const [licenseOk, setLicenseOk] = useState(false);
   const [reqsOk, setReqsOk] = useState(false);
+  type HealthState = "pending" | "ok" | "fail" | "warn";
+  const [health, setHealth] = useState<Record<"db"|"storage"|"realtime"|"smtp", { state: HealthState; msg?: string }>>({
+    db:       { state: "pending" },
+    storage:  { state: "pending" },
+    realtime: { state: "pending" },
+    smtp:     { state: "pending" },
+  });
   const [dbHost, setDbHost] = useState("");
   const [dbAnon, setDbAnon] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
@@ -82,18 +89,65 @@ function InstallerPage() {
 
   async function runRequirementsCheck() {
     setBusy(true);
+    setHealth({
+      db: { state: "pending" }, storage: { state: "pending" },
+      realtime: { state: "pending" }, smtp: { state: "pending" },
+    });
+    // Database
     try {
-      // Ping DB via a harmless RPC
       const { error } = await supabase.rpc("get_install_status");
       if (error) throw error;
-      setReqsOk(true);
-      toast.success("All requirements met");
-      go(1);
+      setHealth((h) => ({ ...h, db: { state: "ok" } }));
     } catch (e: any) {
-      toast.error("Database unreachable: " + (e?.message ?? "unknown"));
-    } finally {
-      setBusy(false);
+      setHealth((h) => ({ ...h, db: { state: "fail", msg: e?.message ?? "Unreachable" } }));
     }
+    // Storage
+    try {
+      const { error } = await supabase.storage.listBuckets();
+      if (error) throw error;
+      setHealth((h) => ({ ...h, storage: { state: "ok" } }));
+    } catch (e: any) {
+      setHealth((h) => ({ ...h, storage: { state: "fail", msg: e?.message ?? "Unavailable" } }));
+    }
+    // Realtime (connect + timeout)
+    await new Promise<void>((resolve) => {
+      const ch = supabase.channel("installer-health-" + Math.random().toString(36).slice(2));
+      const timer = setTimeout(() => {
+        setHealth((h) => ({ ...h, realtime: { state: "fail", msg: "Connection timeout" } }));
+        supabase.removeChannel(ch); resolve();
+      }, 4000);
+      ch.subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          clearTimeout(timer);
+          setHealth((h) => ({ ...h, realtime: { state: "ok" } }));
+          supabase.removeChannel(ch); resolve();
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          clearTimeout(timer);
+          setHealth((h) => ({ ...h, realtime: { state: "fail", msg: status } }));
+          supabase.removeChannel(ch); resolve();
+        }
+      });
+    });
+    // Email / SMTP — best-effort; admin email send happens via Supabase Auth.
+    // Mark as warn (configured by provider, not directly probeable from client).
+    try {
+      const { data } = await supabase.from("app_settings").select("value").eq("key", "email").maybeSingle();
+      const cfg = (data?.value as any) ?? null;
+      if (cfg && cfg.smtp_host) setHealth((h) => ({ ...h, smtp: { state: "ok" } }));
+      else setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Using default provider — configure SMTP in Admin → Email" } }));
+    } catch {
+      setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Not configured" } }));
+    }
+
+    // Pass if DB + Storage + Realtime ok (SMTP warn is acceptable)
+    setHealth((h) => {
+      const pass = h.db.state === "ok" && h.storage.state === "ok" && h.realtime.state === "ok";
+      setReqsOk(pass);
+      if (pass) toast.success("System health check passed");
+      else toast.error("Some checks failed — review and retry");
+      return h;
+    });
+    setBusy(false);
   }
 
   async function createAdmin() {
@@ -229,12 +283,25 @@ function InstallerPage() {
                 <div className="space-y-2 text-sm">
                   <RequirementItem ok label="Browser supports modern JavaScript" />
                   <RequirementItem ok label="HTTPS / secure context" />
-                  <RequirementItem ok={reqsOk} label="Database connectivity" pending={!reqsOk} />
                   <RequirementItem ok label="Local storage available" />
                 </div>
-                <Button onClick={runRequirementsCheck} disabled={busy} className="w-full">
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Run Check"}
-                </Button>
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">System Health Check</div>
+                  <div className="space-y-2 text-sm">
+                    <HealthRow label="Database" state={health.db.state} msg={health.db.msg} />
+                    <HealthRow label="Storage" state={health.storage.state} msg={health.storage.msg} />
+                    <HealthRow label="Realtime" state={health.realtime.state} msg={health.realtime.msg} />
+                    <HealthRow label="Email / SMTP" state={health.smtp.state} msg={health.smtp.msg} />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={runRequirementsCheck} disabled={busy} className="flex-1">
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Run Health Check"}
+                  </Button>
+                  <Button onClick={() => go(1)} disabled={!reqsOk} variant={reqsOk ? "default" : "outline"} className="flex-1">
+                    Continue
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -334,6 +401,35 @@ function RequirementItem({ ok, label, pending }: { ok: boolean; label: string; p
         ok ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> :
         <AlertCircle className="h-4 w-4 text-destructive" />}
       <span className={ok ? "" : "text-muted-foreground"}>{label}</span>
+    </div>
+  );
+}
+
+function HealthRow({ label, state, msg }: { label: string; state: "pending"|"ok"|"fail"|"warn"; msg?: string }) {
+  const icon =
+    state === "ok"   ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> :
+    state === "fail" ? <AlertCircle  className="h-4 w-4 text-destructive" /> :
+    state === "warn" ? <AlertCircle  className="h-4 w-4 text-amber-500" /> :
+                       <Loader2      className="h-4 w-4 animate-spin text-muted-foreground" />;
+  const tag =
+    state === "ok"   ? "OK" :
+    state === "fail" ? "FAIL" :
+    state === "warn" ? "WARN" : "…";
+  const tagClass =
+    state === "ok"   ? "bg-emerald-500/15 text-emerald-600" :
+    state === "fail" ? "bg-destructive/15 text-destructive" :
+    state === "warn" ? "bg-amber-500/15 text-amber-600" :
+                       "bg-muted text-muted-foreground";
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="font-medium">{label}</span>
+      </div>
+      <div className="flex flex-col items-end gap-0.5">
+        <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${tagClass}`}>{tag}</span>
+        {msg && <span className="text-[10px] text-muted-foreground text-right max-w-[180px]">{msg}</span>}
+      </div>
     </div>
   );
 }
