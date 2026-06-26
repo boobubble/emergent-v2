@@ -443,6 +443,18 @@ function GlassCard({ title, icon: Icon, right, children }: { title: string; icon
   );
 }
 
+function ToggleRow({ label, description, checked, onCheckedChange }: { label: string; description?: string; checked: boolean; onCheckedChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
+      <div className="min-w-0">
+        <div className="text-sm font-medium">{label}</div>
+        {description && <div className="text-xs text-muted-foreground">{description}</div>}
+      </div>
+      <AdminToggle checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  );
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
