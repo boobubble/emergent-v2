@@ -38,6 +38,13 @@ function InstallerPage() {
   const [licenseKey, setLicenseKey] = useState("");
   const [licenseOk, setLicenseOk] = useState(false);
   const [reqsOk, setReqsOk] = useState(false);
+  type HealthState = "pending" | "ok" | "fail" | "warn";
+  const [health, setHealth] = useState<Record<"db"|"storage"|"realtime"|"smtp", { state: HealthState; msg?: string }>>({
+    db:       { state: "pending" },
+    storage:  { state: "pending" },
+    realtime: { state: "pending" },
+    smtp:     { state: "pending" },
+  });
   const [dbHost, setDbHost] = useState("");
   const [dbAnon, setDbAnon] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
