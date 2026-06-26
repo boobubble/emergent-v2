@@ -92,6 +92,7 @@ import { Route as AdminCallsRouteImport } from './routes/admin.calls'
 import { Route as AdminCacheRouteImport } from './routes/admin.cache'
 import { Route as AdminBotsRouteImport } from './routes/admin.bots'
 import { Route as AdminBoobubbleRouteImport } from './routes/admin.boobubble'
+import { Route as AdminBackupRouteImport } from './routes/admin.backup'
 import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
 import { Route as AdminAuthBackgroundRouteImport } from './routes/admin.auth-background'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
@@ -526,6 +527,11 @@ const AdminBoobubbleRoute = AdminBoobubbleRouteImport.update({
   path: '/boobubble',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBackupRoute = AdminBackupRouteImport.update({
+  id: '/backup',
+  path: '/backup',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAutomationRoute = AdminAutomationRouteImport.update({
   id: '/automation',
   path: '/automation',
@@ -650,6 +656,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
@@ -750,6 +757,7 @@ export interface FileRoutesByTo {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
@@ -853,6 +861,7 @@ export interface FileRoutesById {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
@@ -957,6 +966,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/backup'
     | '/admin/boobubble'
     | '/admin/bots'
     | '/admin/cache'
@@ -1057,6 +1067,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/backup'
     | '/admin/boobubble'
     | '/admin/bots'
     | '/admin/cache'
@@ -1159,6 +1170,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/backup'
     | '/admin/boobubble'
     | '/admin/bots'
     | '/admin/cache'
@@ -1844,6 +1856,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBoobubbleRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/backup': {
+      id: '/admin/backup'
+      path: '/backup'
+      fullPath: '/admin/backup'
+      preLoaderRoute: typeof AdminBackupRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/automation': {
       id: '/admin/automation'
       path: '/automation'
@@ -1990,6 +2009,7 @@ interface AdminRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminAuthBackgroundRoute: typeof AdminAuthBackgroundRoute
   AdminAutomationRoute: typeof AdminAutomationRoute
+  AdminBackupRoute: typeof AdminBackupRoute
   AdminBoobubbleRoute: typeof AdminBoobubbleRoute
   AdminBotsRoute: typeof AdminBotsRoute
   AdminCacheRoute: typeof AdminCacheRoute
@@ -2051,6 +2071,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminAuthBackgroundRoute: AdminAuthBackgroundRoute,
   AdminAutomationRoute: AdminAutomationRoute,
+  AdminBackupRoute: AdminBackupRoute,
   AdminBoobubbleRoute: AdminBoobubbleRoute,
   AdminBotsRoute: AdminBotsRoute,
   AdminCacheRoute: AdminCacheRoute,
