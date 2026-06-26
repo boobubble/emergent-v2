@@ -39,6 +39,7 @@ export interface Attachment {
   mime: string;
   size: number;
   dataUrl: string;
+  duration?: number; // seconds, for audio/voice notes
 }
 
 export interface Message {
