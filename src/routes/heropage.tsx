@@ -932,6 +932,3 @@ function LiveUsersSection({ users }: { users: LiveUserCard[] }) {
   );
 }
 
-/* satisfy lints if these icons are unused above */
-void Coins; void Trophy; void DailyMissionsSectionUnused;
-function DailyMissionsSectionUnused(_: { missions: DailyMissionCard[] }) { return null; }
