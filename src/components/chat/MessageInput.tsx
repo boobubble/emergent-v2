@@ -374,6 +374,16 @@ export function MessageInput() {
           />
         </div>
       )}
+      {showVoice && (
+        <VoiceRecorder
+          maxSeconds={voiceMax}
+          onClose={() => setShowVoice(false)}
+          onSend={(a) => {
+            send("", { attachment: a, replyToId: replyingTo?.id });
+            setShowVoice(false);
+          }}
+        />
+      )}
       {attachment && (
         <div className="mb-2 flex items-center gap-2 rounded-2xl border border-border bg-white/5 px-3 py-2">
           {attachment.kind === "image" ? (
