@@ -283,12 +283,25 @@ function InstallerPage() {
                 <div className="space-y-2 text-sm">
                   <RequirementItem ok label="Browser supports modern JavaScript" />
                   <RequirementItem ok label="HTTPS / secure context" />
-                  <RequirementItem ok={reqsOk} label="Database connectivity" pending={!reqsOk} />
                   <RequirementItem ok label="Local storage available" />
                 </div>
-                <Button onClick={runRequirementsCheck} disabled={busy} className="w-full">
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Run Check"}
-                </Button>
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">System Health Check</div>
+                  <div className="space-y-2 text-sm">
+                    <HealthRow label="Database" state={health.db.state} msg={health.db.msg} />
+                    <HealthRow label="Storage" state={health.storage.state} msg={health.storage.msg} />
+                    <HealthRow label="Realtime" state={health.realtime.state} msg={health.realtime.msg} />
+                    <HealthRow label="Email / SMTP" state={health.smtp.state} msg={health.smtp.msg} />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={runRequirementsCheck} disabled={busy} className="flex-1">
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Run Health Check"}
+                  </Button>
+                  <Button onClick={() => go(1)} disabled={!reqsOk} variant={reqsOk ? "default" : "outline"} className="flex-1">
+                    Continue
+                  </Button>
+                </div>
               </div>
             )}
 
