@@ -39,21 +39,27 @@ function InstallerPage() {
   const [licenseOk, setLicenseOk] = useState(false);
   const [reqsOk, setReqsOk] = useState(false);
   type HealthState = "pending" | "ok" | "fail" | "warn";
-  const [health, setHealth] = useState<Record<"db"|"storage"|"realtime"|"smtp", { state: HealthState; msg?: string }>>({
+  type HealthKey = "db" | "storage" | "realtime" | "smtp" | "env" | "cron";
+  const [health, setHealth] = useState<Record<HealthKey, { state: HealthState; msg?: string }>>({
     db:       { state: "pending" },
     storage:  { state: "pending" },
     realtime: { state: "pending" },
     smtp:     { state: "pending" },
+    env:      { state: "pending" },
+    cron:     { state: "pending" },
   });
   const [dbHost, setDbHost] = useState("");
   const [dbAnon, setDbAnon] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPass, setAdminPass] = useState("");
   const [adminUser, setAdminUser] = useState("");
+  const [adminRecovery, setAdminRecovery] = useState("");
+  const [admin2FA, setAdmin2FA] = useState(false);
   const [siteName, setSiteName] = useState("BooBubble");
   const [busy, setBusy] = useState(false);
   const [smtpTestEmail, setSmtpTestEmail] = useState("");
   const [smtpTesting, setSmtpTesting] = useState(false);
+  const [postStats, setPostStats] = useState<{ users: number; buckets: number; cron: number } | null>(null);
 
   useEffect(() => {
     (async () => {
