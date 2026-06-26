@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
-import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker, Youtube, ImagePlay } from "lucide-react";
+import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker, Youtube, ImagePlay, Mic } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -17,6 +17,8 @@ import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-
 import { clearChannelMessages } from "@/lib/moderation.functions";
 import type { Attachment } from "@/lib/chat-types";
 import { supabase } from "@/integrations/supabase/client";
+import { VoiceRecorder } from "./VoiceRecorder";
+import { VOICE_NOTES_DEFAULTS, maxDurationForChannel, type VoiceNotesConfig } from "@/lib/voice-notes-config";
 
 
 const COMMANDS = [
@@ -35,8 +37,11 @@ export function MessageInput() {
   const [showStickers, setShowStickers] = useState(false);
   const [showGiphy, setShowGiphy] = useState(false);
   const [showYoutube, setShowYoutube] = useState(false);
+  const [showVoice, setShowVoice] = useState(false);
   const { raw: appRaw } = useAppSettings();
   const media = mergeMediaConfig((appRaw as any).media);
+  const voiceCfg: VoiceNotesConfig = { ...VOICE_NOTES_DEFAULTS, ...((appRaw as any).voice_notes || {}) };
+  const voiceMax = maxDurationForChannel(state.activeChannel, voiceCfg);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
   const [caret, setCaret] = useState(0);
@@ -369,6 +374,16 @@ export function MessageInput() {
           />
         </div>
       )}
+      {showVoice && (
+        <VoiceRecorder
+          maxSeconds={voiceMax}
+          onClose={() => setShowVoice(false)}
+          onSend={(a) => {
+            send("", { attachment: a, replyToId: replyingTo?.id });
+            setShowVoice(false);
+          }}
+        />
+      )}
       {attachment && (
         <div className="mb-2 flex items-center gap-2 rounded-2xl border border-border bg-white/5 px-3 py-2">
           {attachment.kind === "image" ? (
@@ -434,6 +449,15 @@ export function MessageInput() {
             title="Share a YouTube video"
           >
             <Youtube className="h-5 w-5" />
+          </button>
+        )}
+        {voiceCfg.enabled && (
+          <button
+            onClick={() => { setShowVoice(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }}
+            className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-red-400"
+            title={`Voice note (max ${voiceMax}s)`}
+          >
+            <Mic className="h-5 w-5" />
           </button>
         )}
         <button onClick={() => { setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground" title="Emoji">
