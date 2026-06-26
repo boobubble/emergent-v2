@@ -103,23 +103,35 @@ export function VoiceRecorder({ maxSeconds, onSend, onClose }: Props) {
 
   return (
     <div className="mb-2 rounded-2xl border border-border bg-card/80 p-3 shadow-lg backdrop-blur-md">
-      {phase === "recording" && (
-        <div className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-red-500/20 text-red-500">
-            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
-          </span>
-          <div className="flex-1">
-            <div className="text-sm font-semibold">Recording… {mm}:{ss}</div>
-            <div className="text-xs text-muted-foreground">{remaining}s left (max {maxSeconds}s)</div>
+      {phase === "recording" && (() => {
+        const pct = Math.min(100, (elapsed / Math.max(1, maxSeconds)) * 100);
+        const ring = `conic-gradient(hsl(var(--primary)) ${pct}%, hsl(var(--muted)) ${pct}% 100%)`;
+        const warn = remaining <= 5;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="relative grid h-12 w-12 place-items-center rounded-full" style={{ background: ring }} aria-label={`Recording, ${remaining} seconds left`}>
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-card">
+                <span className={`h-2.5 w-2.5 rounded-full bg-red-500 ${warn ? "animate-ping" : "animate-pulse"}`} />
+              </span>
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-semibold tabular-nums">Recording… {mm}:{ss}</div>
+              <div className={`text-xs tabular-nums ${warn ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
+                {remaining}s left (max {maxSeconds}s)
+              </div>
+              <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-full bg-primary transition-[width] duration-200" style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+            <button onClick={onClose} className="rounded-full p-2 text-muted-foreground hover:text-destructive" title="Cancel">
+              <X className="h-4 w-4" />
+            </button>
+            <button onClick={stop} className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform" title="Stop">
+              <Square className="h-4 w-4" />
+            </button>
           </div>
-          <button onClick={onClose} className="rounded-full p-2 text-muted-foreground hover:text-destructive" title="Cancel">
-            <X className="h-4 w-4" />
-          </button>
-          <button onClick={stop} className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform" title="Stop">
-            <Square className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+        );
+      })()}
       {phase === "preview" && preview && (
         <div className="flex items-center gap-3">
           <Mic className="h-5 w-5 text-primary" />
