@@ -146,15 +146,15 @@ async function joinPresence(userId: string) {
 }
 
 async function refetchAll() {
-  const { data, error } = await supabase
-    .from("profiles")
+  const { data, error } = await (supabase as any)
+    .from("profiles_directory")
     .select(
       "id, username, bio, about_me, avatar_url, avatar_color, xp, level, streak, longest_streak, status, last_seen, gender, country_code, show_country_flag, show_guest_badge, birthday, hide_birth_year, is_bot, is_official",
     )
     .order("username", { ascending: true });
   if (error) return;
   const map: Record<string, RemoteProfile> = {};
-  (data ?? []).forEach((p) => { map[p.id] = p as RemoteProfile; });
+  (data ?? []).forEach((p: RemoteProfile) => { map[p.id] = p; });
   setSnap({ rawProfiles: map, loading: false });
 }
 
