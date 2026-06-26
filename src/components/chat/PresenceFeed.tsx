@@ -64,10 +64,6 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
         const next = [...prev, ev];
         return next.length > MAX_VISIBLE ? next.slice(next.length - MAX_VISIBLE) : next;
       });
-      setTimeout(() => {
-        if (cancelled) return;
-        setEvents(prev => prev.filter(e => e.id !== id));
-      }, VISIBLE_MS);
     }
 
     async function start() {
