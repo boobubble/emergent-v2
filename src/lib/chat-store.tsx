@@ -377,6 +377,8 @@ interface Ctx {
   staffKick: (targetId: string, channelId: string, targetName: string) => void;
   staffLocalMute: (targetId: string, channelId: string, minutes: number, targetName: string) => void;
   pushSystem: (channelId: string, text: string) => void;
+  wipeChannel: (channelId: string) => void;
+
 }
 
 
