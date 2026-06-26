@@ -2747,8 +2747,10 @@ export type Database = {
         Args: { _theme_key: string; _user: string }
         Returns: undefined
       }
+      bootstrap_first_admin: { Args: never; Returns: undefined }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
       close_inactive_trio_rooms: { Args: never; Returns: undefined }
+      complete_installation: { Args: { _payload: Json }; Returns: Json }
       create_trio_room: {
         Args: { _hidden?: boolean; _name: string; _password?: string }
         Returns: {
@@ -2771,6 +2773,7 @@ export type Database = {
       delete_user_cascade: { Args: { _user: string }; Returns: undefined }
       get_active_chat_theme: { Args: { _user: string }; Returns: string }
       get_active_feed_theme: { Args: { _user: string }; Returns: string }
+      get_install_status: { Args: never; Returns: Json }
       get_my_profile_visitors: {
         Args: { _limit?: number }
         Returns: {
@@ -2819,6 +2822,7 @@ export type Database = {
       }
       my_coin_balance: { Args: never; Returns: number }
       record_profile_view: { Args: { _owner_id: string }; Returns: undefined }
+      reset_installation: { Args: never; Returns: undefined }
       slugify: { Args: { input: string }; Returns: string }
       trio_channel_room: { Args: { _channel: string }; Returns: string }
       unlock_chat_theme: {
