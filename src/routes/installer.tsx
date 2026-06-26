@@ -119,6 +119,7 @@ function InstallerPage() {
 
   async function runRequirementsCheck() {
     setBusy(true);
+    pushLog("info", "health", "Running system health check…");
     setHealth({
       db: { state: "pending" }, storage: { state: "pending" },
       realtime: { state: "pending" }, smtp: { state: "pending" },
@@ -128,19 +129,22 @@ function InstallerPage() {
     // Env vars (client-visible)
     const hasUrl = !!import.meta.env.VITE_SUPABASE_URL;
     const hasKey = !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    setHealth((h) => ({
-      ...h,
-      env: hasUrl && hasKey
-        ? { state: "ok", msg: "VITE_SUPABASE_URL & PUBLISHABLE_KEY found" }
-        : { state: "fail", msg: "Missing VITE_SUPABASE_URL or PUBLISHABLE_KEY" },
-    }));
+    if (hasUrl && hasKey) {
+      pushLog("ok", "health", "env: VITE_SUPABASE_URL & PUBLISHABLE_KEY present");
+      setHealth((h) => ({ ...h, env: { state: "ok", msg: "VITE_SUPABASE_URL & PUBLISHABLE_KEY found" } }));
+    } else {
+      pushLog("error", "health", "env: Missing VITE_SUPABASE_URL or PUBLISHABLE_KEY");
+      setHealth((h) => ({ ...h, env: { state: "fail", msg: "Missing VITE_SUPABASE_URL or PUBLISHABLE_KEY" } }));
+    }
 
     // Database
     try {
       const { error } = await supabase.rpc("get_install_status");
       if (error) throw error;
+      pushLog("ok", "health", "database: reachable (get_install_status OK)");
       setHealth((h) => ({ ...h, db: { state: "ok" } }));
     } catch (e: any) {
+      pushLog("error", "health", `database: ${e?.message ?? "Unreachable"}`);
       setHealth((h) => ({ ...h, db: { state: "fail", msg: e?.message ?? "Unreachable" } }));
     }
     // Storage
@@ -149,24 +153,29 @@ function InstallerPage() {
       const { data, error } = await supabase.storage.listBuckets();
       if (error) throw error;
       bucketsOk = data?.length ?? 0;
+      pushLog(bucketsOk > 0 ? "ok" : "warn", "health", `storage: ${bucketsOk} bucket(s)`);
       setHealth((h) => ({ ...h, storage: { state: bucketsOk > 0 ? "ok" : "warn", msg: `${bucketsOk} bucket(s) configured` } }));
     } catch (e: any) {
+      pushLog("error", "health", `storage: ${e?.message ?? "Unavailable"}`);
       setHealth((h) => ({ ...h, storage: { state: "fail", msg: e?.message ?? "Unavailable" } }));
     }
     // Realtime
     await new Promise<void>((resolve) => {
       const ch = supabase.channel("installer-health-" + Math.random().toString(36).slice(2));
       const timer = setTimeout(() => {
+        pushLog("error", "health", "realtime: connection timeout (4s)");
         setHealth((h) => ({ ...h, realtime: { state: "fail", msg: "Connection timeout" } }));
         supabase.removeChannel(ch); resolve();
       }, 4000);
       ch.subscribe((status) => {
         if (status === "SUBSCRIBED") {
           clearTimeout(timer);
+          pushLog("ok", "health", "realtime: SUBSCRIBED");
           setHealth((h) => ({ ...h, realtime: { state: "ok" } }));
           supabase.removeChannel(ch); resolve();
         } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
           clearTimeout(timer);
+          pushLog("error", "health", `realtime: ${status}`);
           setHealth((h) => ({ ...h, realtime: { state: "fail", msg: status } }));
           supabase.removeChannel(ch); resolve();
         }
@@ -176,16 +185,23 @@ function InstallerPage() {
     try {
       const { data } = await supabase.from("app_settings").select("value").eq("key", "email").maybeSingle();
       const cfg = (data?.value as any) ?? null;
-      if (cfg && cfg.smtp_host) setHealth((h) => ({ ...h, smtp: { state: "ok" } }));
-      else setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Using default provider — configure SMTP in Admin → Email" } }));
-    } catch {
+      if (cfg && cfg.smtp_host) {
+        pushLog("ok", "health", `smtp: configured (${cfg.smtp_host})`);
+        setHealth((h) => ({ ...h, smtp: { state: "ok" } }));
+      } else {
+        pushLog("warn", "health", "smtp: using default provider");
+        setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Using default provider — configure SMTP in Admin → Email" } }));
+      }
+    } catch (e: any) {
+      pushLog("warn", "health", `smtp: ${e?.message ?? "not configured"}`);
       setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Not configured" } }));
     }
-    // Cron / Scheduled jobs (streak reset, daily rewards, XP, cleanup)
+    // Cron / Scheduled jobs
     try {
       const { data, error } = await supabase.rpc("installer_get_extras");
       if (error) throw error;
       const cronCount = (data as any)?.cron_jobs ?? 0;
+      pushLog(cronCount > 0 ? "ok" : "warn", "health", `cron: ${cronCount} scheduled job(s)`);
       setHealth((h) => ({
         ...h,
         cron: cronCount > 0
@@ -193,6 +209,7 @@ function InstallerPage() {
           : { state: "warn", msg: "No scheduled jobs detected — daily rewards/cleanup may not run" },
       }));
     } catch (e: any) {
+      pushLog("warn", "health", `cron: ${e?.message ?? "query failed"}`);
       setHealth((h) => ({ ...h, cron: { state: "warn", msg: e?.message ?? "Could not query cron" } }));
     }
 
@@ -204,6 +221,7 @@ function InstallerPage() {
         (h.storage.state === "ok" || h.storage.state === "warn") &&
         h.realtime.state === "ok";
       setReqsOk(pass);
+      pushLog(pass ? "ok" : "error", "health", pass ? "Compatibility check passed" : "Some checks failed");
       if (pass) toast.success("Compatibility check passed");
       else toast.error("Some checks failed — review and retry");
       return h;
