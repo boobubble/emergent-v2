@@ -26,7 +26,7 @@ const COMMANDS = [
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 export function MessageInput() {
-  const { send, state, replyingTo, setReplyingTo, pushSystem } = useChat();
+  const { send, state, replyingTo, setReplyingTo, pushSystem, wipeChannel } = useChat();
   const { user } = useAuth();
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
   const { typers, sendTyping } = useTyping(state.activeChannel, me, !!me);
@@ -167,6 +167,7 @@ export function MessageInput() {
     try {
       const res = await clearChannelFn({ data: { channel_id: channelId } });
       const count = res?.deleted ?? 0;
+      wipeChannel(channelId);
       toast.success("Chat cleared", { id: "clearchat", description: `${count} messages removed.` });
       const who = user?.username ? `@${user.username}` : "An admin";
       pushSystem(channelId, `🧹 Chat history cleared by ${who} — ${count} message${count === 1 ? "" : "s"} removed.`);

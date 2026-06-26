@@ -377,6 +377,8 @@ interface Ctx {
   staffKick: (targetId: string, channelId: string, targetName: string) => void;
   staffLocalMute: (targetId: string, channelId: string, minutes: number, targetName: string) => void;
   pushSystem: (channelId: string, text: string) => void;
+  wipeChannel: (channelId: string) => void;
+
 }
 
 
@@ -1533,10 +1535,15 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     }));
   }, []);
 
+  const wipeChannel = useCallback((channelId: string) => {
+    setState(s => ({ ...s, messages: { ...s.messages, [channelId]: [] } }));
+  }, []);
+
+
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
     adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
-    pushSystem,
+    pushSystem, wipeChannel,
 
     isFriend: (id) => (state.me.friends ?? []).includes(id),
     isBlocked: (id) => (state.me.blocked ?? []).includes(id),
@@ -1594,7 +1601,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     })(),
     staffKick,
     staffLocalMute,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem]);
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, wipeChannel]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
