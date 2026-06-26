@@ -75,6 +75,7 @@ import { Route as AdminMaintenanceRouteImport } from './routes/admin.maintenance
 import { Route as AdminLanguagesRouteImport } from './routes/admin.languages'
 import { Route as AdminInternalLinkingRouteImport } from './routes/admin.internal-linking'
 import { Route as AdminHomepageRouteImport } from './routes/admin.homepage'
+import { Route as AdminHeroPageRouteImport } from './routes/admin.hero-page'
 import { Route as AdminGuestAccessRouteImport } from './routes/admin.guest-access'
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
@@ -443,6 +444,11 @@ const AdminHomepageRoute = AdminHomepageRouteImport.update({
   path: '/homepage',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminHeroPageRoute = AdminHeroPageRouteImport.update({
+  id: '/hero-page',
+  path: '/hero-page',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminGuestAccessRoute = AdminGuestAccessRouteImport.update({
   id: '/guest-access',
   path: '/guest-access',
@@ -682,6 +688,7 @@ export interface FileRoutesByFullPath {
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
+  '/admin/hero-page': typeof AdminHeroPageRoute
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/languages': typeof AdminLanguagesRoute
@@ -784,6 +791,7 @@ export interface FileRoutesByTo {
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
+  '/admin/hero-page': typeof AdminHeroPageRoute
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/languages': typeof AdminLanguagesRoute
@@ -889,6 +897,7 @@ export interface FileRoutesById {
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
+  '/admin/hero-page': typeof AdminHeroPageRoute
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/languages': typeof AdminLanguagesRoute
@@ -995,6 +1004,7 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
+    | '/admin/hero-page'
     | '/admin/homepage'
     | '/admin/internal-linking'
     | '/admin/languages'
@@ -1097,6 +1107,7 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
+    | '/admin/hero-page'
     | '/admin/homepage'
     | '/admin/internal-linking'
     | '/admin/languages'
@@ -1201,6 +1212,7 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/general'
     | '/admin/guest-access'
+    | '/admin/hero-page'
     | '/admin/homepage'
     | '/admin/internal-linking'
     | '/admin/languages'
@@ -1750,6 +1762,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminHomepageRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/hero-page': {
+      id: '/admin/hero-page'
+      path: '/hero-page'
+      fullPath: '/admin/hero-page'
+      preLoaderRoute: typeof AdminHeroPageRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/guest-access': {
       id: '/admin/guest-access'
       path: '/guest-access'
@@ -2048,6 +2067,7 @@ interface AdminRouteChildren {
   AdminGamesRoute: typeof AdminGamesRoute
   AdminGeneralRoute: typeof AdminGeneralRoute
   AdminGuestAccessRoute: typeof AdminGuestAccessRoute
+  AdminHeroPageRoute: typeof AdminHeroPageRoute
   AdminHomepageRoute: typeof AdminHomepageRoute
   AdminInternalLinkingRoute: typeof AdminInternalLinkingRoute
   AdminLanguagesRoute: typeof AdminLanguagesRoute
@@ -2110,6 +2130,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGamesRoute: AdminGamesRoute,
   AdminGeneralRoute: AdminGeneralRoute,
   AdminGuestAccessRoute: AdminGuestAccessRoute,
+  AdminHeroPageRoute: AdminHeroPageRoute,
   AdminHomepageRoute: AdminHomepageRoute,
   AdminInternalLinkingRoute: AdminInternalLinkingRoute,
   AdminLanguagesRoute: AdminLanguagesRoute,

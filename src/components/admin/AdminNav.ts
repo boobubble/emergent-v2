@@ -42,6 +42,7 @@ export const ADMIN_NAV: AdminGroup[] = [
     label: "Settings", icon: Settings, children: [
       { to: "/admin/general",       label: "General",       icon: SlidersHorizontal, keywords: ["site name", "tagline", "basics"] },
       { to: "/admin/homepage",      label: "Homepage",      icon: Home,              keywords: ["landing", "home", "marketing", "hero", "welcome", "public"] },
+      { to: "/admin/hero-page",     label: "Hero Homepage", icon: Sparkles,          keywords: ["hero", "landing", "homepage selector", "community", "premium", "heropage"] },
       { to: "/admin/appearance",    label: "Themes",        icon: Palette,           keywords: ["theme", "colors", "logo", "favicon"] },
       { to: "/admin/social-layout", label: "Layout",        icon: LayoutGrid,        keywords: ["layout", "sidebar", "widgets"] },
       { to: "/admin/feed-themes",   label: "Feed Themes",   icon: Palette,           keywords: ["feed", "skins", "themes", "store", "coins", "premium", "layout"] },
