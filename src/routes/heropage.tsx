@@ -2,8 +2,8 @@ import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight, MessageCircle, Newspaper, Radio, Gamepad2, Users,
-  Flame, Sparkles, Trophy, Heart, Sun, Moon, LogIn, UserPlus, Eye, Target,
-  Send, Mic, Play, Hash, Star, Zap, Crown, Award, Coins,
+  Flame, Sparkles, Heart, Sun, Moon, LogIn, UserPlus, Target,
+  Send, Mic, Play, Hash, Star, Zap, Crown, Award,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
