@@ -47,7 +47,7 @@ export const backupDatabase = createServerFn({ method: "POST" })
     for (const t of BACKUP_TABLES) {
       try {
         const { data, error, count } = await supabaseAdmin
-          .from(t as string)
+          .from(t as any)
           .select("*", { count: "exact" })
           .limit(MAX_ROWS);
         if (error) {
