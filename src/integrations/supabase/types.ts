@@ -2652,6 +2652,7 @@ export type Database = {
         Returns: undefined
       }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
+      close_inactive_trio_rooms: { Args: never; Returns: undefined }
       create_trio_room: {
         Args: { _hidden?: boolean; _name: string; _password?: string }
         Returns: {
