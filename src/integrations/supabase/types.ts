@@ -2796,6 +2796,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      installer_get_extras: { Args: never; Returns: Json }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_device_banned: { Args: { _fp: string }; Returns: boolean }
       is_dm_channel_allowed: {
