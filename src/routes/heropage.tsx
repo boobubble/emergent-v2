@@ -179,7 +179,7 @@ function HeroHomepage() {
         <div className="flex items-center gap-2">
           <ThemeToggle dark={dark} setDark={setDark} />
           <button
-            onClick={() => setPopup("login")}
+            onClick={() => setPopup("signin")}
             className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium backdrop-blur-xl hover:bg-white/10"
           >
             Login
@@ -209,7 +209,7 @@ function HeroHomepage() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
               <button
-                onClick={() => setPopup("login")}
+                onClick={() => setPopup("signin")}
                 className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold backdrop-blur-xl hover:bg-white/10"
               >
                 <LogIn className="h-4 w-4" /> {cfg.ctaLoginLabel}
@@ -321,7 +321,7 @@ function HeroHomepage() {
               className="rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-lg">
               Sign Up
             </button>
-            <button onClick={() => setPopup("login")}
+            <button onClick={() => setPopup("signin")}
               className="rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold backdrop-blur-xl hover:bg-white/10">
               Login
             </button>
@@ -339,7 +339,7 @@ function HeroHomepage() {
         © {new Date().getFullYear()} {cfg.brandName}
       </footer>
 
-      <AuthDialogs popup={popup} onChange={setPopup} />
+      <AuthDialogs popup={popup} setPopup={setPopup} />
     </div>
   );
 }
