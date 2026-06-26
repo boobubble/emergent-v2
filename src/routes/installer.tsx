@@ -101,14 +101,18 @@ function InstallerPage() {
   const go = (delta: number) => setStep((s) => Math.max(0, Math.min(visibleSteps.length - 1, s + delta)));
 
   async function verifyLicense() {
+    pushLog("info", "license", `Verifying ${licenseType} key…`);
     const ok = licenseType === "envato" ? isValidEnvatoCode(licenseKey) : isValidOfflineKey(licenseKey);
     if (!ok) {
-      toast.error(licenseType === "envato"
+      const m = licenseType === "envato"
         ? "Invalid Envato purchase code (format: 8-4-4-4-12 hex)"
-        : "Invalid offline key (format: BOOB-XXXX-XXXX-XXXX-XXXX)");
+        : "Invalid offline key (format: BOOB-XXXX-XXXX-XXXX-XXXX)";
+      pushLog("error", "license", m);
+      toast.error(m);
       return;
     }
     setLicenseOk(true);
+    pushLog("ok", "license", "License accepted");
     toast.success("License accepted");
     go(1);
   }
