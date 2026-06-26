@@ -27,6 +27,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { HeadFootScripts } from "@/components/HeadFootScripts";
 import { AdsAutoLoader } from "@/components/AdSlot";
 import { BroadcasterAnnouncementsRunner } from "@/components/broadcaster/BroadcasterAnnouncements";
+import { TrioInvitesListener } from "@/components/chat/TrioInvitesListener";
 import "@/i18n";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 
