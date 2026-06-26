@@ -15,6 +15,8 @@ import {
   Maximize2,
   Minimize2,
   Sparkles,
+  Check,
+  CheckCheck,
 } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphyPicker } from "./GiphyPicker";
