@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Circle, AlertCircle, Loader2, Rocket, Cloud, Server, Shield, KeyRound, Database, UserPlus, Palette, PartyPopper } from "lucide-react";
+import { CheckCircle2, Circle, AlertCircle, Loader2, Rocket, Cloud, Server, Shield, KeyRound, Database, UserPlus, Palette, PartyPopper, Terminal, Copy, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   detectInstallMode, fetchInstallStatus, isValidEnvatoCode, isValidOfflineKey,
