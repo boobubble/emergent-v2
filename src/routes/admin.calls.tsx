@@ -207,7 +207,7 @@ function CallsAdmin() {
               right={<StatusPill ok={values.enabled} okText="Active" badText="Disabled" />}
             >
               <div className="grid gap-4 md:grid-cols-2">
-                <AdminToggle
+                <ToggleRow
                   label="Enable call system"
                   description="Master switch for all audio & video calls"
                   checked={values.enabled}
