@@ -703,6 +703,60 @@ function TrioRoomWindow({
   const fileRef = useRef<HTMLInputElement>(null);
   const isOwner = room.ownerId === meId;
   const [fullscreen, setFullscreen] = useState(false);
+  // delivery / read receipts: user_id -> last_read_at (ms)
+  const [reads, setReads] = useState<Record<string, number>>({});
+
+  // mark this channel as read (debounced via simple ref)
+  const markRead = useCallback(async () => {
+    try {
+      await supabase
+        .from("dm_reads")
+        .upsert(
+          { user_id: meId, channel_id: channelId, last_read_at: new Date().toISOString() },
+          { onConflict: "user_id,channel_id" },
+        );
+    } catch {
+      /* ignore */
+    }
+  }, [channelId, meId]);
+
+  // load reads + subscribe
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("dm_reads")
+        .select("user_id,last_read_at")
+        .eq("channel_id", channelId);
+      if (cancelled) return;
+      const next: Record<string, number> = {};
+      (data ?? []).forEach((r: { user_id: string; last_read_at: string }) => {
+        next[r.user_id] = new Date(r.last_read_at).getTime();
+      });
+      setReads(next);
+    })();
+    const ch = supabase
+      .channel(`trio-reads-${room.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "dm_reads", filter: `channel_id=eq.${channelId}` },
+        (payload) => {
+          const r = (payload.new ?? payload.old) as { user_id: string; last_read_at: string } | null;
+          if (!r) return;
+          setReads((prev) => ({ ...prev, [r.user_id]: new Date(r.last_read_at).getTime() }));
+        },
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      void supabase.removeChannel(ch);
+    };
+  }, [channelId, room.id]);
+
+  // mark read whenever the window is visible and new messages arrive
+  useEffect(() => {
+    if (document.visibilityState === "visible") void markRead();
+  }, [messages.length, markRead]);
 
   // initial fetch
   useEffect(() => {
