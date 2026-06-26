@@ -34,27 +34,21 @@ async function setTheme(page: Page, theme: "dark" | "light") {
 }
 
 async function gotoHeropage(page: Page) {
-  await page.goto("/heropage", { waitUntil: "networkidle" });
+  await page.goto("/heropage", { waitUntil: "domcontentloaded" });
+  await page.waitForSelector("[data-hero-theme]", { timeout: 10_000 });
   // Disable transitions/animations for stable screenshots.
   await page.addStyleTag({
-    content: `*,*::before,*::after{transition:none!important;animation:none!important;}`,
+    content: `*,*::before,*::after{transition:none!important;animation:none!important;caret-color:transparent!important;}`,
   });
-  // Allow reveal-on-scroll observers to fire by scrolling to bottom and back.
-  await page.evaluate(async () => {
-    await new Promise<void>((resolve) => {
-      const step = () => {
-        window.scrollBy(0, window.innerHeight);
-        if (window.scrollY + window.innerHeight >= document.body.scrollHeight) {
-          window.scrollTo(0, 0);
-          requestAnimationFrame(() => resolve());
-        } else {
-          requestAnimationFrame(step);
-        }
-      };
-      step();
-    });
-  });
-  await page.waitForTimeout(400);
+  // Allow reveal-on-scroll observers to fire by stepping through the page.
+  const total = await page.evaluate(() => document.body.scrollHeight);
+  const step = 800;
+  for (let y = 0; y < total; y += step) {
+    await page.evaluate((y) => window.scrollTo(0, y), y);
+    await page.waitForTimeout(80);
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(500);
 }
 
 for (const theme of THEMES) {
