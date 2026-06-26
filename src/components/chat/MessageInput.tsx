@@ -451,6 +451,15 @@ export function MessageInput() {
             <Youtube className="h-5 w-5" />
           </button>
         )}
+        {voiceCfg.enabled && (
+          <button
+            onClick={() => { setShowVoice(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }}
+            className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-red-400"
+            title={`Voice note (max ${voiceMax}s)`}
+          >
+            <Mic className="h-5 w-5" />
+          </button>
+        )}
         <button onClick={() => { setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground" title="Emoji">
           <Smile className="h-5 w-5" />
         </button>
