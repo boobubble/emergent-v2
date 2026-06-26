@@ -100,7 +100,19 @@ function InstallerPage() {
     setHealth({
       db: { state: "pending" }, storage: { state: "pending" },
       realtime: { state: "pending" }, smtp: { state: "pending" },
+      env: { state: "pending" }, cron: { state: "pending" },
     });
+
+    // Env vars (client-visible)
+    const hasUrl = !!import.meta.env.VITE_SUPABASE_URL;
+    const hasKey = !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    setHealth((h) => ({
+      ...h,
+      env: hasUrl && hasKey
+        ? { state: "ok", msg: "VITE_SUPABASE_URL & PUBLISHABLE_KEY found" }
+        : { state: "fail", msg: "Missing VITE_SUPABASE_URL or PUBLISHABLE_KEY" },
+    }));
+
     // Database
     try {
       const { error } = await supabase.rpc("get_install_status");
@@ -110,14 +122,16 @@ function InstallerPage() {
       setHealth((h) => ({ ...h, db: { state: "fail", msg: e?.message ?? "Unreachable" } }));
     }
     // Storage
+    let bucketsOk = 0;
     try {
-      const { error } = await supabase.storage.listBuckets();
+      const { data, error } = await supabase.storage.listBuckets();
       if (error) throw error;
-      setHealth((h) => ({ ...h, storage: { state: "ok" } }));
+      bucketsOk = data?.length ?? 0;
+      setHealth((h) => ({ ...h, storage: { state: bucketsOk > 0 ? "ok" : "warn", msg: `${bucketsOk} bucket(s) configured` } }));
     } catch (e: any) {
       setHealth((h) => ({ ...h, storage: { state: "fail", msg: e?.message ?? "Unavailable" } }));
     }
-    // Realtime (connect + timeout)
+    // Realtime
     await new Promise<void>((resolve) => {
       const ch = supabase.channel("installer-health-" + Math.random().toString(36).slice(2));
       const timer = setTimeout(() => {
@@ -136,8 +150,7 @@ function InstallerPage() {
         }
       });
     });
-    // Email / SMTP — best-effort; admin email send happens via Supabase Auth.
-    // Mark as warn (configured by provider, not directly probeable from client).
+    // SMTP
     try {
       const { data } = await supabase.from("app_settings").select("value").eq("key", "email").maybeSingle();
       const cfg = (data?.value as any) ?? null;
@@ -146,17 +159,54 @@ function InstallerPage() {
     } catch {
       setHealth((h) => ({ ...h, smtp: { state: "warn", msg: "Not configured" } }));
     }
+    // Cron / Scheduled jobs (streak reset, daily rewards, XP, cleanup)
+    try {
+      const { data, error } = await supabase.rpc("installer_get_extras");
+      if (error) throw error;
+      const cronCount = (data as any)?.cron_jobs ?? 0;
+      setHealth((h) => ({
+        ...h,
+        cron: cronCount > 0
+          ? { state: "ok", msg: `${cronCount} scheduled job(s) active` }
+          : { state: "warn", msg: "No scheduled jobs detected — daily rewards/cleanup may not run" },
+      }));
+    } catch (e: any) {
+      setHealth((h) => ({ ...h, cron: { state: "warn", msg: e?.message ?? "Could not query cron" } }));
+    }
 
-    // Pass if DB + Storage + Realtime ok (SMTP warn is acceptable)
+    // Pass if env + DB + Storage + Realtime ok (SMTP/Cron warn acceptable)
     setHealth((h) => {
-      const pass = h.db.state === "ok" && h.storage.state === "ok" && h.realtime.state === "ok";
+      const pass =
+        h.env.state === "ok" &&
+        h.db.state === "ok" &&
+        (h.storage.state === "ok" || h.storage.state === "warn") &&
+        h.realtime.state === "ok";
       setReqsOk(pass);
-      if (pass) toast.success("System health check passed");
+      if (pass) toast.success("Compatibility check passed");
       else toast.error("Some checks failed — review and retry");
       return h;
     });
     setBusy(false);
   }
+
+  function passwordStrength(p: string): { score: number; label: string; color: string } {
+    let s = 0;
+    if (p.length >= 8) s++;
+    if (p.length >= 12) s++;
+    if (/[A-Z]/.test(p) && /[a-z]/.test(p)) s++;
+    if (/\d/.test(p)) s++;
+    if (/[^A-Za-z0-9]/.test(p)) s++;
+    const map = [
+      { label: "Too weak", color: "bg-destructive" },
+      { label: "Weak", color: "bg-destructive" },
+      { label: "Fair", color: "bg-amber-500" },
+      { label: "Good", color: "bg-amber-400" },
+      { label: "Strong", color: "bg-emerald-500" },
+      { label: "Excellent", color: "bg-emerald-600" },
+    ];
+    return { score: s, ...map[s] };
+  }
+
 
   async function createAdmin() {
     if (!adminEmail || !adminPass || !adminUser) { toast.error("Fill all fields"); return; }
