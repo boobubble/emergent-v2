@@ -129,6 +129,18 @@ function UsersPage() {
     onSuccess: () => { toast.success("Username updated"); invalidate(); setEditing(null); },
     onError: (e: Error) => toast.error(e.message),
   });
+  const pwMut = useMutation({
+    mutationFn: (vars: { user_id: string; new_password?: string }) => resetPwFn({ data: vars }),
+    onSuccess: (res) => {
+      const name = pwTarget?.username ?? "user";
+      setPwResult({ username: name, password: res.password });
+      setPwTarget(null);
+      setPwInput("");
+      toast.success("Password reset");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   const users = usersQ.data ?? [];
   const totals = useMemo(() => {
