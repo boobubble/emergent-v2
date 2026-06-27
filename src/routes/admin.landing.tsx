@@ -137,11 +137,9 @@ function LandingAdmin() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="welcome" className="mt-6">
-          <SetAsHomeBanner mode="welcome" label="Welcome Page" />
           <HomepagePage />
         </TabsContent>
         <TabsContent value="hero" className="mt-6">
-          <SetAsHomeBanner mode="hero" label="Hero Homepage" />
           <HeroPageAdmin />
         </TabsContent>
       </Tabs>
