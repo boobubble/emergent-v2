@@ -462,16 +462,6 @@ function HeroHomepage() {
 
   if (user) return <Navigate to="/" replace />;
 
-  const handleDemo = async () => {
-    try {
-      setDemoLoading(true);
-      const result = await createDemoAccount({});
-      if (result?.email && result?.password) {
-        await supabase.auth.signInWithPassword({ email: result.email, password: result.password });
-        window.location.href = "/";
-      }
-    } catch {/* ignore */} finally { setDemoLoading(false); }
-  };
 
   const bg = dark
     ? "bg-[radial-gradient(ellipse_at_top,_#1e1b4b_0%,_#0b0b1a_45%,_#000_100%)] text-white"
