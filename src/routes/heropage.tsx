@@ -8,7 +8,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
-import { createDemoAccount } from "@/lib/demo-account.functions";
+
 import {
   HERO_DEFAULTS, HERO_SETTINGS_KEY, mergeHeroConfig,
   type HeroConfig, type HeroSection, type HeroShowcaseItem,
