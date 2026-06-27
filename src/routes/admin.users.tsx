@@ -552,7 +552,55 @@ function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Send coins dialog */}
+      <Dialog open={!!coinTarget} onOpenChange={(o) => !o && setCoinTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send coins to @{coinTarget?.username}</DialogTitle>
+            <DialogDescription>
+              Positive amount grants coins, negative deducts. Logged in moderation audit.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="coin-amount">Amount</Label>
+              <Input
+                id="coin-amount"
+                type="number"
+                value={coinAmount}
+                onChange={(e) => setCoinAmount(e.target.value)}
+                placeholder="e.g. 100 or -50"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="coin-reason">Reason (optional)</Label>
+              <Input
+                id="coin-reason"
+                value={coinReason}
+                onChange={(e) => setCoinReason(e.target.value)}
+                placeholder="e.g. Event reward"
+                maxLength={200}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCoinTarget(null)}>Cancel</Button>
+            <Button
+              disabled={coinMut.isPending || !coinAmount || Number.isNaN(parseInt(coinAmount, 10)) || parseInt(coinAmount, 10) === 0}
+              onClick={() => {
+                if (!coinTarget) return;
+                const amt = parseInt(coinAmount, 10);
+                coinMut.mutate({ user_id: coinTarget.user_id, amount: amt, reason: coinReason.trim() || undefined });
+              }}
+            >
+              {coinMut.isPending ? "Sending…" : "Send coins"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
 
   );
 }
