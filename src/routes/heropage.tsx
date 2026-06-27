@@ -516,10 +516,6 @@ function HeroHomepage() {
                     className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold backdrop-blur-xl hover:bg-white/10">
                     <LogIn className="h-4 w-4" /> {cfg.ctaLoginLabel}
                   </button>
-                  <button onClick={handleDemo} disabled={demoLoading}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-transparent px-7 py-3.5 text-sm font-semibold hover:bg-white/5 disabled:opacity-50">
-                    <Play className="h-4 w-4 fill-current" /> {demoLoading ? "Loading…" : cfg.ctaGuestLabel}
-                  </button>
                 </div>
                 <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
                   {statCards.slice(0, 4).map((sc) => (
