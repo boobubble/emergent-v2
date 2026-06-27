@@ -25,6 +25,7 @@ interface EngageToast { key: number; kind: "buzz" | "streak" | "badge"; title: s
 
 export function ChatApp() {
   const chat = useOptionalChat();
+  const { mode: homeMode } = useHomePageMode();
   const [profileOpen, setProfileOpen] = useState(false);
   const [lbOpen, setLbOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
