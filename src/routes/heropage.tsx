@@ -403,10 +403,10 @@ function XPMockup() {
 
 function GamesMockup({ items }: { items: HeroShowcaseItem[] }) {
   const games = [
-    { emoji: "🎱", name: "8 Ball Pool", players: "1.2k playing", grad: "from-emerald-500/30 to-teal-500/30" },
-    { emoji: "🎲", name: "Ludo", players: "900 playing", grad: "from-amber-500/30 to-rose-500/30" },
-    { emoji: "🎯", name: "Carrom", players: "640 playing", grad: "from-indigo-500/30 to-fuchsia-500/30" },
-    { emoji: "♟️", name: "Chess", players: "540 playing", grad: "from-slate-500/30 to-cyan-500/30" },
+    { emoji: "🎣", name: "Fishing", players: "1.1k playing", grad: "from-sky-500/30 to-cyan-500/30" },
+    { emoji: "🔤", name: "Hangman", players: "820 playing", grad: "from-amber-500/30 to-rose-500/30" },
+    { emoji: "🧠", name: "Trivia", players: "950 playing", grad: "from-indigo-500/30 to-fuchsia-500/30" },
+    { emoji: "⛏️", name: "Dig Gold", players: "670 playing", grad: "from-yellow-500/30 to-orange-500/30" },
   ];
   return (
     <div className="space-y-4">
