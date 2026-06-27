@@ -427,7 +427,7 @@ export const adminGrantCoins = createServerFn({ method: "POST" })
     } as never);
     await admin.from("mod_logs").insert({
       actor_id: context.userId,
-      action: data.amount >= 0 ? "grant_coins" : "deduct_coins",
+      action: "note",
       target_user_id: data.user_id,
       target_type: "user",
       target_id: data.user_id,
