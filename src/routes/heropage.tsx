@@ -774,10 +774,6 @@ function HeroHomepage() {
                     className="rounded-full bg-white px-7 py-3.5 text-sm font-bold text-slate-900 shadow-xl transition hover:scale-105">{cfg.ctaJoinLabel}</button>
                   <button onClick={() => setPopup("signin")}
                     className="rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-7 py-3.5 text-sm font-bold text-white shadow-xl transition hover:scale-105">{cfg.ctaLoginLabel}</button>
-                  <button onClick={handleDemo} disabled={demoLoading}
-                    className="rounded-full border border-white/30 bg-white/10 px-7 py-3.5 text-sm font-bold backdrop-blur hover:bg-white/15 disabled:opacity-50">
-                    {demoLoading ? "Loading…" : cfg.ctaGuestLabel}
-                  </button>
                 </div>
               </div>
             </Reveal>
