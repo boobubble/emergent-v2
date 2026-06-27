@@ -76,7 +76,12 @@ function UsersPage() {
   const unbanFn = useServerFn(unbanUser);
   const deleteFn = useServerFn(deleteUser);
   const renameFn = useServerFn(updateUserUsername);
+  const resetPwFn = useServerFn(adminResetUserPassword);
   const [editing, setEditing] = useState<{ id: string; value: string } | null>(null);
+  const [pwTarget, setPwTarget] = useState<{ user_id: string; username: string } | null>(null);
+  const [pwInput, setPwInput] = useState("");
+  const [pwResult, setPwResult] = useState<{ username: string; password: string } | null>(null);
+
 
   const myRoles = useQuery({ queryKey: ["my-roles"], queryFn: () => myRolesFn() });
   const isSuperAdmin = myRoles.data?.isSuperAdmin ?? false;
