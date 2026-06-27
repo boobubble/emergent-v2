@@ -249,6 +249,15 @@ function AuthGate() {
         </>
       );
     }
+    // Wait for the home_page setting before redirecting so guests don't get
+    // briefly sent to /welcome while the admin-selected mode is still loading.
+    if (!homeReady) {
+      return (
+        <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">
+          <p>Loading…</p>
+        </div>
+      );
+    }
     // Everything else → send guests to the configured landing page first.
     return <Navigate to={landingPath} replace />;
   }
