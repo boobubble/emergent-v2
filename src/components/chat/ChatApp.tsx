@@ -4,6 +4,7 @@ import { Flame, Award, PanelLeftOpen } from "lucide-react";
 import { ChatThemeStore } from "@/components/chat/ChatThemeStore";
 import { useActiveChatTheme } from "@/lib/chat-themes";
 import { useOptionalChat } from "@/lib/chat-store";
+import { useHomePageMode } from "@/lib/use-home-page-mode";
 import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
