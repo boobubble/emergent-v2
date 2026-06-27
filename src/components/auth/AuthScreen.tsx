@@ -7,7 +7,7 @@ import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-confi
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
 import { LiveCommunityBackground } from "@/components/auth/LiveCommunityBackground";
-import { createDemoAccount } from "@/lib/demo-account.functions";
+
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
   if (status.state === "idle") return null;
@@ -67,25 +67,12 @@ export function AuthDialogs({
 
 export function AuthScreen() {
   const [popup, setPopup] = useState<Popup>(null);
-  const { loginAsGuest, login } = useAuth();
+  const { loginAsGuest } = useAuth();
   const [guestCfg, setGuestCfg] = useState<GuestAccessConfig>(GUEST_ACCESS_DEFAULTS);
   const [signupCfg, setSignupCfg] = useState<SignupAccessConfig>(SIGNUP_ACCESS_DEFAULTS);
   const [cfgReady, setCfgReady] = useState(false);
-  const [demoBusy, setDemoBusy] = useState(false);
-  const [demoErr, setDemoErr] = useState("");
   const autoTriedRef = useRef(false);
 
-  async function startDemo() {
-    setDemoErr(""); setDemoBusy(true);
-    try {
-      const creds = await createDemoAccount();
-      await login(creds.email, creds.password);
-    } catch (e) {
-      setDemoErr(e instanceof Error ? e.message : "Could not start demo");
-    } finally {
-      setDemoBusy(false);
-    }
-  }
 
   // Load guest-access + signup-access config directly from app_settings —
   // AuthScreen runs outside AppSettingsProvider (which mounts after login).
@@ -165,19 +152,8 @@ export function AuthScreen() {
               👤 Continue as guest
             </button>
           )}
-          {signupAvailable && (
-            <button
-              onClick={startDemo}
-              disabled={demoBusy}
-              className="w-full rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-500/15 to-yellow-400/15 px-4 py-3 text-sm font-bold text-amber-300 hover:from-amber-500/25 hover:to-yellow-400/25 disabled:opacity-60"
-            >
-              {demoBusy ? "Preparing demo…" : "🎟️ Try demo account (1000 coins)"}
-            </button>
-          )}
-          {demoErr && (
-            <div className="rounded-lg bg-destructive/15 px-3 py-2 text-[11px] text-destructive">{demoErr}</div>
-          )}
           </div>
+
         </div>
         <FeedbackShowcase surface="signup" />
       </div>

@@ -8,7 +8,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
-import { createDemoAccount } from "@/lib/demo-account.functions";
+
 import {
   HERO_DEFAULTS, HERO_SETTINGS_KEY, mergeHeroConfig,
   type HeroConfig, type HeroSection, type HeroShowcaseItem,
@@ -451,7 +451,7 @@ function HeroHomepage() {
     }
   }, [dark]);
   const [popup, setPopup] = useState<AuthPopup>(null);
-  const [demoLoading, setDemoLoading] = useState(false);
+  
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -462,16 +462,6 @@ function HeroHomepage() {
 
   if (user) return <Navigate to="/" replace />;
 
-  const handleDemo = async () => {
-    try {
-      setDemoLoading(true);
-      const result = await createDemoAccount({});
-      if (result?.email && result?.password) {
-        await supabase.auth.signInWithPassword({ email: result.email, password: result.password });
-        window.location.href = "/";
-      }
-    } catch {/* ignore */} finally { setDemoLoading(false); }
-  };
 
   const bg = dark
     ? "bg-[radial-gradient(ellipse_at_top,_#1e1b4b_0%,_#0b0b1a_45%,_#000_100%)] text-white"
@@ -515,10 +505,6 @@ function HeroHomepage() {
                   <button onClick={() => setPopup("signin")}
                     className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold backdrop-blur-xl hover:bg-white/10">
                     <LogIn className="h-4 w-4" /> {cfg.ctaLoginLabel}
-                  </button>
-                  <button onClick={handleDemo} disabled={demoLoading}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-transparent px-7 py-3.5 text-sm font-semibold hover:bg-white/5 disabled:opacity-50">
-                    <Play className="h-4 w-4 fill-current" /> {demoLoading ? "Loading…" : cfg.ctaGuestLabel}
                   </button>
                 </div>
                 <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -778,10 +764,6 @@ function HeroHomepage() {
                     className="rounded-full bg-white px-7 py-3.5 text-sm font-bold text-slate-900 shadow-xl transition hover:scale-105">{cfg.ctaJoinLabel}</button>
                   <button onClick={() => setPopup("signin")}
                     className="rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-7 py-3.5 text-sm font-bold text-white shadow-xl transition hover:scale-105">{cfg.ctaLoginLabel}</button>
-                  <button onClick={handleDemo} disabled={demoLoading}
-                    className="rounded-full border border-white/30 bg-white/10 px-7 py-3.5 text-sm font-bold backdrop-blur hover:bg-white/15 disabled:opacity-50">
-                    {demoLoading ? "Loading…" : cfg.ctaGuestLabel}
-                  </button>
                 </div>
               </div>
             </Reveal>

@@ -15,8 +15,6 @@ import {
   type LandingConfessionItem, type LandingBlogPost, type LandingActivity,
 } from "@/lib/landing-config";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
-import { createDemoAccount } from "@/lib/demo-account.functions";
-import { useAuth } from "@/lib/auth-store";
 
 interface LandingStats {
   members: number; online: number; activeRooms: number;
@@ -104,20 +102,6 @@ function LandingPage() {
   const [pollChoice, setPollChoice] = useState<number | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [authPopup, setAuthPopup] = useState<AuthPopup>(null);
-  const { login } = useAuth();
-  const [demoBusy, setDemoBusy] = useState(false);
-  const [demoErr, setDemoErr] = useState("");
-  async function startDemo() {
-    setDemoErr(""); setDemoBusy(true);
-    try {
-      const creds = await createDemoAccount();
-      await login(creds.email, creds.password);
-    } catch (e) {
-      setDemoErr(e instanceof Error ? e.message : "Could not start demo");
-    } finally {
-      setDemoBusy(false);
-    }
-  }
 
   useEffect(() => {
     try {
