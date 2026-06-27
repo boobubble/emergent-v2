@@ -2,6 +2,7 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { supabase } from "@/integrations/supabase/client";
+import { useHomePageMode } from "@/lib/use-home-page-mode";
 
 /**
  * The Welcome page is the primary public landing for auth.
@@ -16,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
  */
 function LoginRoute() {
   const [state, setState] = useState<"loading" | "enabled" | "disabled">("loading");
+  const { mode: homeMode } = useHomePageMode();
 
   useEffect(() => {
     let cancel = false;
@@ -43,7 +45,7 @@ function LoginRoute() {
       </div>
     );
   }
-  if (state === "disabled") return <Navigate to="/welcome" replace />;
+  if (state === "disabled") return <Navigate to={homeMode === "hero" ? "/heropage" : "/welcome"} replace />;
   return <AuthScreen />;
 }
 

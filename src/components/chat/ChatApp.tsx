@@ -4,6 +4,7 @@ import { Flame, Award, PanelLeftOpen } from "lucide-react";
 import { ChatThemeStore } from "@/components/chat/ChatThemeStore";
 import { useActiveChatTheme } from "@/lib/chat-themes";
 import { useOptionalChat } from "@/lib/chat-store";
+import { useHomePageMode } from "@/lib/use-home-page-mode";
 import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
@@ -24,6 +25,7 @@ interface EngageToast { key: number; kind: "buzz" | "streak" | "badge"; title: s
 
 export function ChatApp() {
   const chat = useOptionalChat();
+  const { mode: homeMode } = useHomePageMode();
   const [profileOpen, setProfileOpen] = useState(false);
   const [lbOpen, setLbOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
@@ -92,7 +94,7 @@ export function ChatApp() {
     };
   }, []);
 
-  if (!chat) return <Navigate to="/welcome" replace />;
+  if (!chat) return <Navigate to={homeMode === "hero" ? "/heropage" : "/welcome"} replace />;
 
   const { state, isDM } = chat;
   const { theme: chatTheme, refresh: refreshChatTheme } = useActiveChatTheme();
