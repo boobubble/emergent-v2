@@ -146,6 +146,18 @@ function UsersPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+  const coinMut = useMutation({
+    mutationFn: (vars: { user_id: string; amount: number; reason?: string }) => grantCoinsFn({ data: vars }),
+    onSuccess: (res) => {
+      toast.success(`New balance: ${res.new_balance} coins`);
+      setCoinTarget(null);
+      setCoinAmount("100");
+      setCoinReason("");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
 
   const users = usersQ.data ?? [];
