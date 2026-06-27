@@ -22,11 +22,12 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X, KeyRound, Copy } from "lucide-react";
+import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X, KeyRound, Copy, Coins } from "lucide-react";
 import {
   getMyRoles, listUsersWithRoles, setUserRole,
-  banUser, unbanUser, deleteUser, updateUserUsername, adminResetUserPassword,
+  banUser, unbanUser, deleteUser, updateUserUsername, adminResetUserPassword, adminGrantCoins,
 } from "@/lib/admin.functions";
+
 
 
 export const Route = createFileRoute("/admin/users")({ component: UsersPage });
@@ -77,10 +78,15 @@ function UsersPage() {
   const deleteFn = useServerFn(deleteUser);
   const renameFn = useServerFn(updateUserUsername);
   const resetPwFn = useServerFn(adminResetUserPassword);
+  const grantCoinsFn = useServerFn(adminGrantCoins);
   const [editing, setEditing] = useState<{ id: string; value: string } | null>(null);
   const [pwTarget, setPwTarget] = useState<{ user_id: string; username: string } | null>(null);
   const [pwInput, setPwInput] = useState("");
   const [pwResult, setPwResult] = useState<{ username: string; password: string } | null>(null);
+  const [coinTarget, setCoinTarget] = useState<{ user_id: string; username: string } | null>(null);
+  const [coinAmount, setCoinAmount] = useState("100");
+  const [coinReason, setCoinReason] = useState("");
+
 
 
   const myRoles = useQuery({ queryKey: ["my-roles"], queryFn: () => myRolesFn() });
@@ -140,6 +146,18 @@ function UsersPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+  const coinMut = useMutation({
+    mutationFn: (vars: { user_id: string; amount: number; reason?: string }) => grantCoinsFn({ data: vars }),
+    onSuccess: (res) => {
+      toast.success(`New balance: ${res.new_balance} coins`);
+      setCoinTarget(null);
+      setCoinAmount("100");
+      setCoinReason("");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
 
   const users = usersQ.data ?? [];
@@ -344,6 +362,14 @@ function UsersPage() {
                             <Ban className="mr-1 h-3.5 w-3.5" /> Ban
                           </Button>
                         )}
+                        <Button
+                          size="sm" variant="outline"
+                          onClick={() => { setCoinTarget({ user_id: u.id, username: u.username ?? u.id }); setCoinAmount("100"); setCoinReason(""); }}
+                          title="Send coins"
+                        >
+                          <Coins className="h-3.5 w-3.5 text-amber-500" />
+                        </Button>
+
                         {isSuperAdmin && (
                           <>
                             <Button
@@ -526,7 +552,55 @@ function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Send coins dialog */}
+      <Dialog open={!!coinTarget} onOpenChange={(o) => !o && setCoinTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send coins to @{coinTarget?.username}</DialogTitle>
+            <DialogDescription>
+              Positive amount grants coins, negative deducts. Logged in moderation audit.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="coin-amount">Amount</Label>
+              <Input
+                id="coin-amount"
+                type="number"
+                value={coinAmount}
+                onChange={(e) => setCoinAmount(e.target.value)}
+                placeholder="e.g. 100 or -50"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="coin-reason">Reason (optional)</Label>
+              <Input
+                id="coin-reason"
+                value={coinReason}
+                onChange={(e) => setCoinReason(e.target.value)}
+                placeholder="e.g. Event reward"
+                maxLength={200}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCoinTarget(null)}>Cancel</Button>
+            <Button
+              disabled={coinMut.isPending || !coinAmount || Number.isNaN(parseInt(coinAmount, 10)) || parseInt(coinAmount, 10) === 0}
+              onClick={() => {
+                if (!coinTarget) return;
+                const amt = parseInt(coinAmount, 10);
+                coinMut.mutate({ user_id: coinTarget.user_id, amount: amt, reason: coinReason.trim() || undefined });
+              }}
+            >
+              {coinMut.isPending ? "Sending…" : "Send coins"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
 
   );
 }
