@@ -15,8 +15,6 @@ import {
   type LandingConfessionItem, type LandingBlogPost, type LandingActivity,
 } from "@/lib/landing-config";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
-import { createDemoAccount } from "@/lib/demo-account.functions";
-import { useAuth } from "@/lib/auth-store";
 
 interface LandingStats {
   members: number; online: number; activeRooms: number;
