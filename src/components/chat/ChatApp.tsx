@@ -94,7 +94,7 @@ export function ChatApp() {
     };
   }, []);
 
-  if (!chat) return <Navigate to="/welcome" replace />;
+  if (!chat) return <Navigate to={homeMode === "hero" ? "/heropage" : "/welcome"} replace />;
 
   const { state, isDM } = chat;
   const { theme: chatTheme, refresh: refreshChatTheme } = useActiveChatTheme();
