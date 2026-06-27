@@ -278,7 +278,7 @@ export function HeroPageAdmin() {
         }
       />
 
-      <HomeSelector />
+
 
       <SectionsArranger sections={sections} onChange={(next) => patch({ sections: next })} />
 
