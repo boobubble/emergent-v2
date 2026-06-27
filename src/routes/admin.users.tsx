@@ -458,6 +458,75 @@ function UsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reset password dialog */}
+      <Dialog open={!!pwTarget} onOpenChange={(o) => !o && setPwTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset password for @{pwTarget?.username}</DialogTitle>
+            <DialogDescription>
+              Set a new password, or leave blank to auto-generate a secure one. The user will need this to sign in.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="new-pw">New password (optional)</Label>
+            <Input
+              id="new-pw"
+              type="text"
+              value={pwInput}
+              onChange={(e) => setPwInput(e.target.value)}
+              placeholder="Leave blank to auto-generate"
+              minLength={8}
+              maxLength={72}
+            />
+            <p className="text-xs text-muted-foreground">Min 8 characters. Share securely with the user.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPwTarget(null)}>Cancel</Button>
+            <Button
+              disabled={pwMut.isPending || (pwInput.length > 0 && pwInput.length < 8)}
+              onClick={() => {
+                if (!pwTarget) return;
+                pwMut.mutate({ user_id: pwTarget.user_id, new_password: pwInput.trim() || undefined });
+              }}
+            >
+              {pwMut.isPending ? "Resetting…" : "Reset password"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Password result dialog */}
+      <Dialog open={!!pwResult} onOpenChange={(o) => !o && setPwResult(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Password reset for @{pwResult?.username}</DialogTitle>
+            <DialogDescription>
+              Copy and share this password securely. It won&apos;t be shown again.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-2">
+            <code className="flex-1 break-all font-mono text-sm">{pwResult?.password}</code>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (!pwResult) return;
+                navigator.clipboard.writeText(pwResult.password).then(
+                  () => toast.success("Copied"),
+                  () => toast.error("Copy failed"),
+                );
+              }}
+            >
+              <Copy className="mr-1 h-3.5 w-3.5" /> Copy
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setPwResult(null)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
