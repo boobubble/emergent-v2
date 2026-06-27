@@ -17,6 +17,7 @@ import { useHomePageMode } from "@/lib/use-home-page-mode";
  */
 function LoginRoute() {
   const [state, setState] = useState<"loading" | "enabled" | "disabled">("loading");
+  const { mode: homeMode } = useHomePageMode();
 
   useEffect(() => {
     let cancel = false;
