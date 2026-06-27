@@ -2,6 +2,7 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { supabase } from "@/integrations/supabase/client";
+import { useHomePageMode } from "@/lib/use-home-page-mode";
 
 /**
  * The Welcome page is the primary public landing for auth.
