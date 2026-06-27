@@ -372,6 +372,31 @@ export const deleteUser = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// -------- Reset a user's password (super admin only) --------
+export const adminResetUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      user_id: z.string().uuid(),
+      new_password: z.string().min(8).max(72).optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.userId);
+    const admin = await getSupabaseAdmin();
+    let pwd = data.new_password?.trim();
+    if (!pwd) {
+      // Generate a strong temporary password
+      const bytes = new Uint8Array(12);
+      crypto.getRandomValues(bytes);
+      pwd = Array.from(bytes, (b) => "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$"[b % 60]).join("");
+    }
+    const { error } = await admin.auth.admin.updateUserById(data.user_id, { password: pwd });
+    if (error) throw new Error(error.message);
+    return { ok: true, password: pwd, generated: !data.new_password };
+  });
+
+
 // -------- Users + role mgmt --------
 export const listUsersWithRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
