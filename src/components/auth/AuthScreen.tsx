@@ -67,7 +67,7 @@ export function AuthDialogs({
 
 export function AuthScreen() {
   const [popup, setPopup] = useState<Popup>(null);
-  const { loginAsGuest, login } = useAuth();
+  const { loginAsGuest } = useAuth();
   const [guestCfg, setGuestCfg] = useState<GuestAccessConfig>(GUEST_ACCESS_DEFAULTS);
   const [signupCfg, setSignupCfg] = useState<SignupAccessConfig>(SIGNUP_ACCESS_DEFAULTS);
   const [cfgReady, setCfgReady] = useState(false);
