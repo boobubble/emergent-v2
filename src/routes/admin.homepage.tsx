@@ -41,7 +41,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function HomepagePage() {
+export function HomepagePage() {
   const { values, set, patch, save, saving } = useAdminSetting<LandingConfig>(
     LANDING_SETTINGS_KEY,
     LANDING_DEFAULTS,
