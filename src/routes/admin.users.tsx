@@ -22,11 +22,12 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X, KeyRound, Copy } from "lucide-react";
+import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X, KeyRound, Copy, Coins } from "lucide-react";
 import {
   getMyRoles, listUsersWithRoles, setUserRole,
-  banUser, unbanUser, deleteUser, updateUserUsername, adminResetUserPassword,
+  banUser, unbanUser, deleteUser, updateUserUsername, adminResetUserPassword, adminGrantCoins,
 } from "@/lib/admin.functions";
+
 
 
 export const Route = createFileRoute("/admin/users")({ component: UsersPage });
