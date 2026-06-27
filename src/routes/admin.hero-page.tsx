@@ -6,13 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { useAdminSetting } from "@/lib/use-admin-setting";
 import {
-  HERO_DEFAULTS, HERO_SETTINGS_KEY, HERO_SECTION_LABELS, HOME_PAGE_KEY,
+  HERO_DEFAULTS, HERO_SETTINGS_KEY, HERO_SECTION_LABELS,
   type HeroConfig, type HeroSection, type HeroShowcaseItem,
-  type HomePageMode, type FamousChatroom, type LiveUserCard, type DailyMissionCard,
+  type FamousChatroom, type LiveUserCard, type DailyMissionCard,
 } from "@/lib/hero-page-config";
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
@@ -255,49 +254,8 @@ function SectionsArranger({
   );
 }
 
-function HomeSelector() {
-  const { values, set, save, saving } = useAdminSetting<{ mode: HomePageMode }>(
-    HOME_PAGE_KEY, { mode: "welcome" },
-  );
-  return (
-    <Card>
-      <CardContent className="space-y-4 p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm font-semibold">Active Landing Page</div>
-            <div className="text-xs text-muted-foreground">
-              Choose which page unauthenticated visitors see at <code>/</code>. Only one can be active at a time.
-              Chatroom and Feed cannot be selected as homepage.
-            </div>
-          </div>
-          <Button onClick={save} disabled={saving} className="gap-2">
-            <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save"}
-          </Button>
-        </div>
-        <RadioGroup
-          value={values.mode}
-          onValueChange={(v) => set("mode", v as HomePageMode)}
-          className="grid gap-3 sm:grid-cols-2"
-        >
-          <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 ${values.mode === "welcome" ? "border-primary bg-primary/5" : ""}`}>
-            <RadioGroupItem value="welcome" className="mt-1" />
-            <div>
-              <div className="text-sm font-semibold">Welcome Page</div>
-              <div className="text-xs text-muted-foreground">Existing landing at <code>/welcome</code>.</div>
-            </div>
-          </label>
-          <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 ${values.mode === "hero" ? "border-primary bg-primary/5" : ""}`}>
-            <RadioGroupItem value="hero" className="mt-1" />
-            <div>
-              <div className="text-sm font-semibold">Hero Homepage ✨</div>
-              <div className="text-xs text-muted-foreground">Premium community landing at <code>/heropage</code>.</div>
-            </div>
-          </label>
-        </RadioGroup>
-      </CardContent>
-    </Card>
-  );
-}
+
+
 
 export function HeroPageAdmin() {
   const { values, set, patch, save, saving } = useAdminSetting<HeroConfig>(
@@ -319,7 +277,7 @@ export function HeroPageAdmin() {
         }
       />
 
-      <HomeSelector />
+
 
       <SectionsArranger sections={sections} onChange={(next) => patch({ sections: next })} />
 
