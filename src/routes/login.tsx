@@ -45,7 +45,7 @@ function LoginRoute() {
       </div>
     );
   }
-  if (state === "disabled") return <Navigate to="/welcome" replace />;
+  if (state === "disabled") return <Navigate to={homeMode === "hero" ? "/heropage" : "/welcome"} replace />;
   return <AuthScreen />;
 }
 
