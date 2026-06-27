@@ -451,7 +451,7 @@ function HeroHomepage() {
     }
   }, [dark]);
   const [popup, setPopup] = useState<AuthPopup>(null);
-  const [demoLoading, setDemoLoading] = useState(false);
+  
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
