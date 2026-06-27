@@ -299,7 +299,7 @@ function HomeSelector() {
   );
 }
 
-function HeroPageAdmin() {
+export function HeroPageAdmin() {
   const { values, set, patch, save, saving } = useAdminSetting<HeroConfig>(
     HERO_SETTINGS_KEY, HERO_DEFAULTS,
   );
