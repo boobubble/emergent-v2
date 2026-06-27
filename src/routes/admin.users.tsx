@@ -362,6 +362,14 @@ function UsersPage() {
                             <Ban className="mr-1 h-3.5 w-3.5" /> Ban
                           </Button>
                         )}
+                        <Button
+                          size="sm" variant="outline"
+                          onClick={() => { setCoinTarget({ user_id: u.id, username: u.username ?? u.id }); setCoinAmount("100"); setCoinReason(""); }}
+                          title="Send coins"
+                        >
+                          <Coins className="h-3.5 w-3.5 text-amber-500" />
+                        </Button>
+
                         {isSuperAdmin && (
                           <>
                             <Button
