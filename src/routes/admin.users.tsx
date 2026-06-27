@@ -345,14 +345,24 @@ function UsersPage() {
                           </Button>
                         )}
                         {isSuperAdmin && (
-                          <Button
-                            size="sm" variant="destructive"
-                            disabled={delMut.isPending}
-                            onClick={() => setConfirm({ kind: "delete", user_id: u.id, username: u.username ?? u.id })}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                          <>
+                            <Button
+                              size="sm" variant="outline"
+                              onClick={() => { setPwTarget({ user_id: u.id, username: u.username ?? u.id }); setPwInput(""); }}
+                              title="Reset password"
+                            >
+                              <KeyRound className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm" variant="destructive"
+                              disabled={delMut.isPending}
+                              onClick={() => setConfirm({ kind: "delete", user_id: u.id, username: u.username ?? u.id })}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
                         )}
+
                       </div>
                     </td>
                   </tr>
