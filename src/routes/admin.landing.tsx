@@ -77,32 +77,46 @@ function ActivePageToggle() {
 }
 
 
+function LandingSettingsTabs() {
+  const { values } = useAdminSetting<{ mode: HomePageMode }>(
+    HOME_PAGE_KEY,
+    { mode: "welcome" },
+  );
+  const activeMode = values.mode === "hero" ? "hero" : "welcome";
+  return (
+    <Tabs value={activeMode} className="w-full">
+      <TabsList className="grid w-full grid-cols-1">
+        {activeMode === "welcome" ? (
+          <TabsTrigger value="welcome" className="gap-2">
+            <Home className="h-4 w-4" /> Welcome Page
+          </TabsTrigger>
+        ) : (
+          <TabsTrigger value="hero" className="gap-2">
+            <Sparkles className="h-4 w-4" /> Hero Homepage
+          </TabsTrigger>
+        )}
+      </TabsList>
+      <TabsContent value="welcome" className="mt-6">
+        <HomepagePage />
+      </TabsContent>
+      <TabsContent value="hero" className="mt-6">
+        <HeroPageAdmin />
+      </TabsContent>
+    </Tabs>
+  );
+}
+
 function LandingAdmin() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
         title="Landing Pages"
-        description="Manage both the Welcome page and the Hero Homepage from one place. Pick which one is active, edit settings for either in its own tab."
+        description="Pick which page unauthenticated visitors see. Settings for the active page appear below."
       />
 
       <ActivePageToggle />
 
-      <Tabs defaultValue="welcome" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="welcome" className="gap-2">
-            <Home className="h-4 w-4" /> Welcome Page
-          </TabsTrigger>
-          <TabsTrigger value="hero" className="gap-2">
-            <Sparkles className="h-4 w-4" /> Hero Homepage
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="welcome" className="mt-6">
-          <HomepagePage />
-        </TabsContent>
-        <TabsContent value="hero" className="mt-6">
-          <HeroPageAdmin />
-        </TabsContent>
-      </Tabs>
+      <LandingSettingsTabs />
     </div>
   );
 }
