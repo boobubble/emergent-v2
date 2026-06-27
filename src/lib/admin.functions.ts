@@ -396,6 +396,47 @@ export const adminResetUserPassword = createServerFn({ method: "POST" })
     return { ok: true, password: pwd, generated: !data.new_password };
   });
 
+// -------- Grant coins to a user (admin) --------
+export const adminGrantCoins = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      user_id: z.string().uuid(),
+      amount: z.number().int().refine((n) => n !== 0 && n >= -1_000_000 && n <= 1_000_000, "Amount out of range"),
+      reason: z.string().trim().max(200).optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const admin = await getSupabaseAdmin();
+    const { data: prof, error: pErr } = await admin
+      .from("profiles").select("coins").eq("id", data.user_id).maybeSingle();
+    if (pErr) throw new Error(pErr.message);
+    if (!prof) throw new Error("User not found");
+    const next = Math.max(0, (prof.coins ?? 0) + data.amount);
+    const { error: uErr } = await admin
+      .from("profiles").update({ coins: next }).eq("id", data.user_id);
+    if (uErr) throw new Error(uErr.message);
+    await admin.from("coin_transactions").insert({
+      user_id: data.user_id,
+      kind: "coins",
+      amount: data.amount,
+      reason: data.reason?.trim() || (data.amount >= 0 ? "admin_grant" : "admin_deduct"),
+      ref_type: "admin",
+      ref_id: context.userId,
+    } as never);
+    await admin.from("mod_logs").insert({
+      actor_id: context.userId,
+      action: data.amount >= 0 ? "grant_coins" : "deduct_coins",
+      target_user_id: data.user_id,
+      target_type: "user",
+      target_id: data.user_id,
+      payload: { amount: data.amount, new_balance: next, reason: data.reason ?? null },
+    });
+    return { ok: true, new_balance: next };
+  });
+
+
 
 // -------- Users + role mgmt --------
 export const listUsersWithRoles = createServerFn({ method: "GET" })
