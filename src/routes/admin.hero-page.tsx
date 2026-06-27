@@ -6,13 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { useAdminSetting } from "@/lib/use-admin-setting";
 import {
-  HERO_DEFAULTS, HERO_SETTINGS_KEY, HERO_SECTION_LABELS, HOME_PAGE_KEY,
+  HERO_DEFAULTS, HERO_SETTINGS_KEY, HERO_SECTION_LABELS,
   type HeroConfig, type HeroSection, type HeroShowcaseItem,
-  type HomePageMode, type FamousChatroom, type LiveUserCard, type DailyMissionCard,
+  type FamousChatroom, type LiveUserCard, type DailyMissionCard,
 } from "@/lib/hero-page-config";
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
