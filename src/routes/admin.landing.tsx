@@ -76,46 +76,6 @@ function ActivePageToggle() {
   );
 }
 
-function SetAsHomeBanner({ mode, label }: { mode: HomePageMode; label: string }) {
-  const { values, set, save, saving } = useAdminSetting<{ mode: HomePageMode }>(
-    HOME_PAGE_KEY,
-    { mode: "welcome" },
-  );
-  const isActive = values.mode === mode;
-  const handleClick = () => {
-    if (isActive) return;
-    set("mode", mode);
-    // Save on next tick so state update is committed before mutation reads it.
-    setTimeout(() => save(), 0);
-  };
-  return (
-    <div
-      className={`mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 ${
-        isActive ? "border-primary/40 bg-primary/5" : "bg-muted/30"
-      }`}
-    >
-      <div className="text-sm">
-        {isActive ? (
-          <span className="font-medium text-primary">✓ {label} is the active landing page</span>
-        ) : (
-          <span className="text-muted-foreground">
-            {label} is not active. Visitors currently see the other page.
-          </span>
-        )}
-      </div>
-      <Button
-        size="sm"
-        variant={isActive ? "outline" : "default"}
-        onClick={handleClick}
-        disabled={isActive || saving}
-        className="gap-2"
-      >
-        <Home className="h-4 w-4" />
-        {isActive ? "Currently Home" : saving ? "Setting…" : "Set as Home"}
-      </Button>
-    </div>
-  );
-}
 
 function LandingAdmin() {
   return (
@@ -137,11 +97,9 @@ function LandingAdmin() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="welcome" className="mt-6">
-          <SetAsHomeBanner mode="welcome" label="Welcome Page" />
           <HomepagePage />
         </TabsContent>
         <TabsContent value="hero" className="mt-6">
-          <SetAsHomeBanner mode="hero" label="Hero Homepage" />
           <HeroPageAdmin />
         </TabsContent>
       </Tabs>
