@@ -17,7 +17,7 @@ import { Copy, KeyRound, Plus, RefreshCw, Send, Trash2, Webhook } from "lucide-r
 import {
   listApiKeys, createApiKey, revokeApiKey, deleteApiKey,
   listWebhooks, createWebhook, updateWebhook, deleteWebhook,
-  rotateWebhookSecret, testWebhook, getWebhookSecret, listDeliveries,
+  rotateWebhookSecret, testWebhook, listDeliveries,
   WEBHOOK_EVENTS,
 } from "@/lib/api-webhooks.functions";
 
@@ -145,7 +145,6 @@ function WebhooksPanel() {
   const del = useServerFn(deleteWebhook);
   const rotate = useServerFn(rotateWebhookSecret);
   const test = useServerFn(testWebhook);
-  const getSecret = useServerFn(getWebhookSecret);
   const qc = useQueryClient();
   const { data = [], isLoading } = useQuery({ queryKey: ["webhooks"], queryFn: () => list() });
 
@@ -183,7 +182,6 @@ function WebhooksPanel() {
                   toast[r.ok ? "success" : "error"](r.ok ? `Delivered (${r.status})` : `Failed: ${r.error ?? r.status}`);
                   refresh();
                 }}
-                onShowSecret={async () => { const r = await getSecret({ data: { id: w.id } }); copy(r.secret, "Secret copied"); }}
               />
             ))}
           </div>
@@ -247,13 +245,12 @@ function WebhooksPanel() {
   );
 }
 
-function WebhookRow({ w, onToggle, onDelete, onRotate, onTest, onShowSecret }: {
+function WebhookRow({ w, onToggle, onDelete, onRotate, onTest }: {
   w: any;
   onToggle: (active: boolean) => void;
   onDelete: () => void;
   onRotate: () => void;
   onTest: () => void;
-  onShowSecret: () => void;
 }) {
   const listDel = useServerFn(listDeliveries);
   const [deliveries, setDeliveries] = useState<any[]>([]);
@@ -282,7 +279,6 @@ function WebhookRow({ w, onToggle, onDelete, onRotate, onTest, onShowSecret }: {
         <div className="flex items-center gap-2">
           <Switch checked={!!w.active} onCheckedChange={onToggle} />
           <Button size="sm" variant="outline" onClick={onTest}><Send className="mr-1 h-3.5 w-3.5" />Test</Button>
-          <Button size="sm" variant="outline" onClick={onShowSecret}><Copy className="mr-1 h-3.5 w-3.5" />Secret</Button>
           <Button size="sm" variant="outline" onClick={onRotate}><RefreshCw className="mr-1 h-3.5 w-3.5" />Rotate</Button>
           <Button size="icon" variant="ghost" onClick={onDelete}><Trash2 className="h-4 w-4" /></Button>
         </div>

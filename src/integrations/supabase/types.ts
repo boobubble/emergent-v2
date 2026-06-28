@@ -1530,8 +1530,6 @@ export type Database = {
           last_seen: string
           level: number
           longest_streak: number
-          phone: string | null
-          phone_verified: boolean
           profile_completed: boolean
           profile_views_anonymous: boolean
           profile_views_enabled: boolean
@@ -1573,8 +1571,6 @@ export type Database = {
           last_seen?: string
           level?: number
           longest_streak?: number
-          phone?: string | null
-          phone_verified?: boolean
           profile_completed?: boolean
           profile_views_anonymous?: boolean
           profile_views_enabled?: boolean
@@ -1616,8 +1612,6 @@ export type Database = {
           last_seen?: string
           level?: number
           longest_streak?: number
-          phone?: string | null
-          phone_verified?: boolean
           profile_completed?: boolean
           profile_views_anonymous?: boolean
           profile_views_enabled?: boolean
@@ -2415,6 +2409,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_phones: {
+        Row: {
+          created_at: string
+          phone: string | null
+          phone_verified: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          phone?: string | null
+          phone_verified?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          phone?: string | null
+          phone_verified?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2488,7 +2506,7 @@ export type Database = {
           last_delivery_at: string | null
           last_status: number | null
           name: string
-          secret: string
+          secret_ciphertext: string | null
           updated_at: string
           url: string
         }
@@ -2502,7 +2520,7 @@ export type Database = {
           last_delivery_at?: string | null
           last_status?: number | null
           name: string
-          secret: string
+          secret_ciphertext?: string | null
           updated_at?: string
           url: string
         }
@@ -2516,7 +2534,7 @@ export type Database = {
           last_delivery_at?: string | null
           last_status?: number | null
           name?: string
-          secret?: string
+          secret_ciphertext?: string | null
           updated_at?: string
           url?: string
         }
