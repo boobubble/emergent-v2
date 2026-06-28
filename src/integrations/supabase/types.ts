@@ -59,6 +59,42 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          revoked_at: string | null
+          scopes: string[]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          revoked_at?: string | null
+          scopes?: string[]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          scopes?: string[]
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -2397,6 +2433,92 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_deliveries: {
+        Row: {
+          created_at: string
+          endpoint_id: string
+          error: string | null
+          event: string
+          id: string
+          ok: boolean
+          payload: Json | null
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint_id: string
+          error?: string | null
+          event: string
+          id?: string
+          ok?: boolean
+          payload?: Json | null
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string
+          endpoint_id?: string
+          error?: string | null
+          event?: string
+          id?: string
+          ok?: boolean
+          payload?: Json | null
+          status_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_endpoint_id_fkey"
+            columns: ["endpoint_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_endpoints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_endpoints: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          events: string[]
+          failure_count: number
+          id: string
+          last_delivery_at: string | null
+          last_status: number | null
+          name: string
+          secret: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          events?: string[]
+          failure_count?: number
+          id?: string
+          last_delivery_at?: string | null
+          last_status?: number | null
+          name: string
+          secret: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          events?: string[]
+          failure_count?: number
+          id?: string
+          last_delivery_at?: string | null
+          last_status?: number | null
+          name?: string
+          secret?: string
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
