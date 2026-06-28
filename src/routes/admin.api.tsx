@@ -17,7 +17,7 @@ import { Copy, KeyRound, Plus, RefreshCw, Send, Trash2, Webhook } from "lucide-r
 import {
   listApiKeys, createApiKey, revokeApiKey, deleteApiKey,
   listWebhooks, createWebhook, updateWebhook, deleteWebhook,
-  rotateWebhookSecret, testWebhook, getWebhookSecret, listDeliveries,
+  rotateWebhookSecret, testWebhook, listDeliveries,
   WEBHOOK_EVENTS,
 } from "@/lib/api-webhooks.functions";
 
