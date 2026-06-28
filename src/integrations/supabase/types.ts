@@ -2798,6 +2798,13 @@ export type Database = {
       get_active_chat_theme: { Args: { _user: string }; Returns: string }
       get_active_feed_theme: { Args: { _user: string }; Returns: string }
       get_install_status: { Args: never; Returns: Json }
+      get_my_phone: {
+        Args: never
+        Returns: {
+          phone: string
+          phone_verified: boolean
+        }[]
+      }
       get_my_profile_visitors: {
         Args: { _limit?: number }
         Returns: {
