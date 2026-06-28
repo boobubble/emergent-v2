@@ -283,6 +283,7 @@ function AuthGate() {
             <AdsAutoLoader />
             <SessionConflictBanner />
             <FaviconSwitcher />
+            <SubscriptionGate />
             <Outlet />
             <Sonner />
             <RealtimeDebugOverlay />
