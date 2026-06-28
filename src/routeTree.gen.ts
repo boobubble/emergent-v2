@@ -52,6 +52,7 @@ import { Route as AdminVoiceNotesRouteImport } from './routes/admin.voice-notes'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminUpcomingRouteImport } from './routes/admin.upcoming'
 import { Route as AdminSystemRouteImport } from './routes/admin.system'
+import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
 import { Route as AdminStaffPermissionsRouteImport } from './routes/admin.staff-permissions'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
 import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
@@ -329,6 +330,11 @@ const AdminUpcomingRoute = AdminUpcomingRouteImport.update({
 const AdminSystemRoute = AdminSystemRouteImport.update({
   id: '/system',
   path: '/system',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminStaffPermissionsRoute = AdminStaffPermissionsRouteImport.update({
@@ -727,6 +733,7 @@ export interface FileRoutesByFullPath {
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
@@ -832,6 +839,7 @@ export interface FileRoutesByTo {
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
@@ -940,6 +948,7 @@ export interface FileRoutesById {
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
@@ -1049,6 +1058,7 @@ export interface FileRouteTypes {
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
+    | '/admin/subscriptions'
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
@@ -1154,6 +1164,7 @@ export interface FileRouteTypes {
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
+    | '/admin/subscriptions'
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
@@ -1261,6 +1272,7 @@ export interface FileRouteTypes {
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
+    | '/admin/subscriptions'
     | '/admin/system'
     | '/admin/upcoming'
     | '/admin/users'
@@ -1624,6 +1636,13 @@ declare module '@tanstack/react-router' {
       path: '/system'
       fullPath: '/admin/system'
       preLoaderRoute: typeof AdminSystemRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/subscriptions': {
+      id: '/admin/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/admin/subscriptions'
+      preLoaderRoute: typeof AdminSubscriptionsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/staff-permissions': {
@@ -2132,6 +2151,7 @@ interface AdminRouteChildren {
   AdminSocialFeedRoute: typeof AdminSocialFeedRoute
   AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
   AdminStaffPermissionsRoute: typeof AdminStaffPermissionsRoute
+  AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminSystemRoute: typeof AdminSystemRoute
   AdminUpcomingRoute: typeof AdminUpcomingRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
@@ -2196,6 +2216,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSocialFeedRoute: AdminSocialFeedRoute,
   AdminSocialLayoutRoute: AdminSocialLayoutRoute,
   AdminStaffPermissionsRoute: AdminStaffPermissionsRoute,
+  AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminSystemRoute: AdminSystemRoute,
   AdminUpcomingRoute: AdminUpcomingRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,

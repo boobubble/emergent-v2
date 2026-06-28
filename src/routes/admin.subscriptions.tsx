@@ -41,7 +41,6 @@ function AdminSubscriptions() {
       <AdminPageHeader
         title="Subscriptions & Membership"
         description="Manage plans, approve manual payments, and configure subscription mode."
-        icon={Crown}
       />
       <Tabs defaultValue="plans">
         <TabsList>
