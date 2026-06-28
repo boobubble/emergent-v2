@@ -182,7 +182,6 @@ function WebhooksPanel() {
                   toast[r.ok ? "success" : "error"](r.ok ? `Delivered (${r.status})` : `Failed: ${r.error ?? r.status}`);
                   refresh();
                 }}
-                onShowSecret={async () => { const r = await getSecret({ data: { id: w.id } }); copy(r.secret, "Secret copied"); }}
               />
             ))}
           </div>
