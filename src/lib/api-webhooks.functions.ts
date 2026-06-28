@@ -95,7 +95,8 @@ export const createWebhook = createServerFn({ method: "POST" })
     let url: URL;
     try { url = new URL(data.url); } catch { throw new Error("Invalid URL"); }
     if (!/^https?:$/.test(url.protocol)) throw new Error("URL must be http(s)");
-    const secret = "whsec_" + randomBytes(24).toString("hex");
+    const { newWebhookSecret } = await import("./api-webhooks.server");
+    const secret = newWebhookSecret();
     const { data: row, error } = await context.supabase.from("webhook_endpoints").insert({
       name, url: url.toString(), secret,
       events: data.events ?? [],
