@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth-store";
 import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-config";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
@@ -333,7 +334,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Password</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="••••••" />
-            <p className="mt-1 text-[10px] text-muted-foreground">At least 6 characters — any simple password works (e.g. "hello123").</p>
+            <PasswordStrength value={password} />
           </div>
           {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
           {info && <div className="rounded-lg bg-primary/15 px-3 py-2 text-xs text-primary">{info}</div>}
