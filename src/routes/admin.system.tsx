@@ -48,36 +48,41 @@ function SystemPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {status?.installed ? (
-            <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1">
+            <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-2">
               <div className="flex items-center gap-2 text-emerald-600"><CheckCircle2 className="h-4 w-4" /> Installed</div>
               <div className="text-xs text-muted-foreground">
                 {status.installed_at && <>At: {new Date(status.installed_at).toLocaleString()}<br /></>}
                 License: {status.license_type ?? "—"} • Mode: {status.mode ?? "—"} • Version: {status.version ?? "—"}
               </div>
+
+              {confirm && (
+                <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs">
+                  This will clear the installer lock. Anyone with the URL can run /installer again — including creating a new super admin if none exists. Continue?
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-1">
+                <Button
+                  variant={confirm ? "destructive" : "outline"}
+                  onClick={onReset}
+                  disabled={busy}
+                  size="sm"
+                >
+                  <RotateCcw className="mr-2 h-3.5 w-3.5" />
+                  {confirm ? "Yes, Reset Installer" : "Reset Installer Lock"}
+                </Button>
+                {confirm && (
+                  <Button variant="ghost" size="sm" onClick={() => setConfirm(false)}>Cancel</Button>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
-              <AlertTriangle className="mr-1 inline h-4 w-4 text-amber-600" /> Installer is unlocked.
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm space-y-2">
+              <div className="flex items-center gap-2 text-amber-600"><AlertTriangle className="h-4 w-4" /> Installer is unlocked</div>
+              <p className="text-xs text-muted-foreground">
+                The setup wizard has not been locked yet. Complete installation at /installer to enable this control.
+              </p>
             </div>
-          )}
-
-          {confirm && (
-            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs">
-              This will clear the installer lock. Anyone with the URL can run /installer again — including creating a new super admin if none exists. Continue?
-            </div>
-          )}
-
-          <Button
-            variant={confirm ? "destructive" : "outline"}
-            onClick={onReset}
-            disabled={busy}
-            size="sm"
-          >
-            <RotateCcw className="mr-2 h-3.5 w-3.5" />
-            {confirm ? "Yes, Reset Installer" : "Reset Installer Lock"}
-          </Button>
-          {confirm && (
-            <Button variant="ghost" size="sm" onClick={() => setConfirm(false)} className="ml-2">Cancel</Button>
           )}
         </CardContent>
       </Card>
