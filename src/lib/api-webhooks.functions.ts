@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createHash, createHmac, randomBytes, randomUUID } from "crypto";
-// createHash retained for api_key hashing below.
 
 /**
  * Outbound webhook signing (Stripe-style):
