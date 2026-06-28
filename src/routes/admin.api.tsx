@@ -145,7 +145,6 @@ function WebhooksPanel() {
   const del = useServerFn(deleteWebhook);
   const rotate = useServerFn(rotateWebhookSecret);
   const test = useServerFn(testWebhook);
-  const getSecret = useServerFn(getWebhookSecret);
   const qc = useQueryClient();
   const { data = [], isLoading } = useQuery({ queryKey: ["webhooks"], queryFn: () => list() });
 
