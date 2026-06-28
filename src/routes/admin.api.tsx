@@ -279,7 +279,6 @@ function WebhookRow({ w, onToggle, onDelete, onRotate, onTest }: {
         <div className="flex items-center gap-2">
           <Switch checked={!!w.active} onCheckedChange={onToggle} />
           <Button size="sm" variant="outline" onClick={onTest}><Send className="mr-1 h-3.5 w-3.5" />Test</Button>
-          <Button size="sm" variant="outline" onClick={onShowSecret}><Copy className="mr-1 h-3.5 w-3.5" />Secret</Button>
           <Button size="sm" variant="outline" onClick={onRotate}><RefreshCw className="mr-1 h-3.5 w-3.5" />Rotate</Button>
           <Button size="icon" variant="ghost" onClick={onDelete}><Trash2 className="h-4 w-4" /></Button>
         </div>
