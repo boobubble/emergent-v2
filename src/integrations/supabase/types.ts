@@ -1477,13 +1477,16 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           birthday: string | null
+          city: string | null
           coins: number
           country_code: string | null
           cover_url: string | null
           created_at: string
+          display_name: string | null
           gender: string | null
           hide_birth_year: boolean
           id: string
+          interests: string[]
           is_bot: boolean
           is_official: boolean
           is_private: boolean
@@ -1491,6 +1494,9 @@ export type Database = {
           last_seen: string
           level: number
           longest_streak: number
+          phone: string | null
+          phone_verified: boolean
+          profile_completed: boolean
           profile_views_anonymous: boolean
           profile_views_enabled: boolean
           profile_views_friends_only: boolean
@@ -1514,13 +1520,16 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birthday?: string | null
+          city?: string | null
           coins?: number
           country_code?: string | null
           cover_url?: string | null
           created_at?: string
+          display_name?: string | null
           gender?: string | null
           hide_birth_year?: boolean
           id: string
+          interests?: string[]
           is_bot?: boolean
           is_official?: boolean
           is_private?: boolean
@@ -1528,6 +1537,9 @@ export type Database = {
           last_seen?: string
           level?: number
           longest_streak?: number
+          phone?: string | null
+          phone_verified?: boolean
+          profile_completed?: boolean
           profile_views_anonymous?: boolean
           profile_views_enabled?: boolean
           profile_views_friends_only?: boolean
@@ -1551,13 +1563,16 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birthday?: string | null
+          city?: string | null
           coins?: number
           country_code?: string | null
           cover_url?: string | null
           created_at?: string
+          display_name?: string | null
           gender?: string | null
           hide_birth_year?: boolean
           id?: string
+          interests?: string[]
           is_bot?: boolean
           is_official?: boolean
           is_private?: boolean
@@ -1565,6 +1580,9 @@ export type Database = {
           last_seen?: string
           level?: number
           longest_streak?: number
+          phone?: string | null
+          phone_verified?: boolean
+          profile_completed?: boolean
           profile_views_anonymous?: boolean
           profile_views_enabled?: boolean
           profile_views_friends_only?: boolean

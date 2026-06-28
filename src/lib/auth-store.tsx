@@ -37,6 +37,7 @@ interface SignupExtras {
   birthday?: string;        // yyyy-mm-dd
   hide_birth_year?: boolean;
   country_code?: string;    // ISO 3166-1 alpha-2
+  phone?: string;           // optional phone number
 }
 
 interface Ctx {
@@ -344,6 +345,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (extras?.birthday) meta.birthday = extras.birthday;
     if (extras?.hide_birth_year != null) meta.hide_birth_year = extras.hide_birth_year ? "true" : "false";
     if (extras?.country_code) meta.country_code = extras.country_code.toUpperCase();
+    if (extras?.phone) {
+      const trimmed = extras.phone.trim();
+      if (trimmed && !/^\+?[0-9 .\-()]{6,20}$/.test(trimmed)) {
+        throw new Error("Please enter a valid phone number.");
+      }
+      if (trimmed) meta.phone = trimmed;
+    }
     const { error } = await supabase.auth.signUp({
       email,
       password,

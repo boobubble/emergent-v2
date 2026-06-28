@@ -223,6 +223,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
   const [birthday, setBirthday] = useState("");
   const [hideYear, setHideYear] = useState(false);
   const [country, setCountry] = useState("");
+  const [phone, setPhone] = useState("");
   const [avatarDataUrl, setAvatarDataUrl] = useState("");
   const [err, setErr] = useState("");
   const [info, setInfo] = useState("");
@@ -263,6 +264,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
         birthday: birthday || undefined,
         hide_birth_year: hideYear,
         country_code: country || undefined,
+        phone: phone.trim() || undefined,
       });
       setInfo("Account created! You're being signed in…");
     } catch (e) {
@@ -330,6 +332,11 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} maxLength={255} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="you@example.com" />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Mobile number (optional)</label>
+            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} maxLength={20} className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="+1 555 123 4567" />
+            <p className="mt-1 text-[10px] text-muted-foreground">Used only if you ever lose access. We never share it.</p>
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Password</label>
