@@ -1,24 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createHash, createHmac, randomBytes, randomUUID } from "crypto";
+// Crypto helpers live in api-webhooks.server.ts and are imported dynamically
+// inside handlers so the Node `crypto` module never reaches the client bundle.
 
-/**
- * Outbound webhook signing (Stripe-style):
- *   x-webhook-timestamp: <unix seconds>
- *   x-webhook-id:        <uuid, unique per delivery — for receiver replay-cache>
- *   x-webhook-signature: t=<ts>,v1=<hmac_sha256_hex(secret, `${ts}.${id}.${body}`)>
- *
- * Receivers MUST:
- *   1. Reject if |now - t| > 5 minutes (replay window).
- *   2. Reject if x-webhook-id was already processed (idempotency).
- *   3. Recompute the HMAC with a timing-safe compare before trusting the body.
- */
-export function signWebhookDelivery(secret: string, body: string) {
-  const ts = Math.floor(Date.now() / 1000).toString();
-  const id = randomUUID();
-  const mac = createHmac("sha256", secret).update(`${ts}.${id}.${body}`).digest("hex");
-  return { ts, id, signature: `t=${ts},v1=${mac}` };
-}
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
   const { data, error } = await ctx.supabase.rpc("is_admin", { _user_id: ctx.userId });
@@ -45,9 +29,9 @@ export const createApiKey = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const name = data.name.trim().slice(0, 80);
     if (!name) throw new Error("Name required");
-    const raw = "bk_" + randomBytes(24).toString("hex");
-    const prefix = raw.slice(0, 10);
-    const hash = createHash("sha256").update(raw).digest("hex");
+    const { newApiKey } = await import("./api-webhooks.server");
+    const { raw, prefix, hash } = newApiKey();
+
     const { error } = await context.supabase.from("api_keys").insert({
       name,
       key_prefix: prefix,
@@ -111,7 +95,8 @@ export const createWebhook = createServerFn({ method: "POST" })
     let url: URL;
     try { url = new URL(data.url); } catch { throw new Error("Invalid URL"); }
     if (!/^https?:$/.test(url.protocol)) throw new Error("URL must be http(s)");
-    const secret = "whsec_" + randomBytes(24).toString("hex");
+    const { newWebhookSecret } = await import("./api-webhooks.server");
+    const secret = newWebhookSecret();
     const { data: row, error } = await context.supabase.from("webhook_endpoints").insert({
       name, url: url.toString(), secret,
       events: data.events ?? [],
@@ -165,7 +150,8 @@ export const rotateWebhookSecret = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const secret = "whsec_" + randomBytes(24).toString("hex");
+    const { newWebhookSecret } = await import("./api-webhooks.server");
+    const secret = newWebhookSecret();
     const { error } = await context.supabase
       .from("webhook_endpoints").update({ secret }).eq("id", data.id);
     if (error) throw new Error(error.message);
@@ -183,6 +169,7 @@ export const testWebhook = createServerFn({ method: "POST" })
 
     const payload = { event: "test.ping", at: new Date().toISOString(), data: { hello: "world" } };
     const body = JSON.stringify(payload);
+    const { signWebhookDelivery } = await import("./api-webhooks.server");
     const { ts, id, signature } = signWebhookDelivery(row.secret, body);
     let status: number | null = null;
     let ok = false;
