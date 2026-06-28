@@ -95,15 +95,16 @@ export const createWebhook = createServerFn({ method: "POST" })
     let url: URL;
     try { url = new URL(data.url); } catch { throw new Error("Invalid URL"); }
     if (!/^https?:$/.test(url.protocol)) throw new Error("URL must be http(s)");
-    const { newWebhookSecret } = await import("./api-webhooks.server");
+    const { newWebhookSecret, encryptSecret } = await import("./api-webhooks.server");
     const secret = newWebhookSecret();
+    const secret_ciphertext = encryptSecret(secret);
     const { data: row, error } = await context.supabase.from("webhook_endpoints").insert({
-      name, url: url.toString(), secret,
+      name, url: url.toString(), secret_ciphertext,
       events: data.events ?? [],
       created_by: context.userId,
-    }).select("id").single();
+    } as never).select("id").single();
     if (error) throw new Error(error.message);
-    return { id: row.id, secret };
+    return { id: (row as { id: string }).id, secret };
   });
 
 export const updateWebhook = createServerFn({ method: "POST" })
@@ -134,26 +135,19 @@ export const deleteWebhook = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const getWebhookSecret = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string }) => d)
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
-    const { data: row, error } = await context.supabase
-      .from("webhook_endpoints").select("secret").eq("id", data.id).single();
-    if (error) throw new Error(error.message);
-    return { secret: row.secret as string };
-  });
+// NOTE: getWebhookSecret was removed. Signing secrets are stored encrypted at
+// rest and only ever returned to the admin once at creation or rotation time.
 
 export const rotateWebhookSecret = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { newWebhookSecret } = await import("./api-webhooks.server");
+    const { newWebhookSecret, encryptSecret } = await import("./api-webhooks.server");
     const secret = newWebhookSecret();
+    const secret_ciphertext = encryptSecret(secret);
     const { error } = await context.supabase
-      .from("webhook_endpoints").update({ secret }).eq("id", data.id);
+      .from("webhook_endpoints").update({ secret_ciphertext } as never).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { secret };
   });
@@ -164,18 +158,21 @@ export const testWebhook = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { data: row, error } = await context.supabase
-      .from("webhook_endpoints").select("url, secret").eq("id", data.id).single();
+      .from("webhook_endpoints").select("url, secret_ciphertext").eq("id", data.id).single();
     if (error || !row) throw new Error(error?.message ?? "Webhook not found");
+    const r = row as { url: string; secret_ciphertext: string | null };
+    if (!r.secret_ciphertext) throw new Error("This webhook has no signing secret yet — rotate to generate one.");
 
+    const { signWebhookDelivery, decryptSecret } = await import("./api-webhooks.server");
+    const secret = decryptSecret(r.secret_ciphertext);
     const payload = { event: "test.ping", at: new Date().toISOString(), data: { hello: "world" } };
     const body = JSON.stringify(payload);
-    const { signWebhookDelivery } = await import("./api-webhooks.server");
-    const { ts, id, signature } = signWebhookDelivery(row.secret, body);
+    const { ts, id, signature } = signWebhookDelivery(secret, body);
     let status: number | null = null;
     let ok = false;
     let errMsg: string | null = null;
     try {
-      const res = await fetch(row.url, {
+      const res = await fetch(r.url, {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -195,15 +192,16 @@ export const testWebhook = createServerFn({ method: "POST" })
 
     await context.supabase.from("webhook_deliveries").insert({
       endpoint_id: data.id, event: "test.ping", status_code: status, ok, error: errMsg, payload,
-    });
+    } as never);
     await context.supabase.from("webhook_endpoints").update({
       last_delivery_at: new Date().toISOString(),
       last_status: status,
       failure_count: ok ? 0 : undefined,
-    }).eq("id", data.id);
+    } as never).eq("id", data.id);
 
     return { ok, status, error: errMsg };
   });
+
 
 export const listDeliveries = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
