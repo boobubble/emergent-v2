@@ -31,9 +31,7 @@ const BACKUP_TABLES = [
 type TableSnapshot = { table: string; rows: any[]; count: number; truncated: boolean };
 
 async function requireAdmin(context: any) {
-  const { data: ok } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId, _role: "admin",
-  });
+  const { data: ok } = await context.supabase.rpc("is_admin", { _user_id: context.userId });
   if (!ok) throw new Error("Forbidden");
 }
 
