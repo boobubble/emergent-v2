@@ -257,6 +257,75 @@ export type Database = {
         }
         Relationships: []
       }
+      chatrooms: {
+        Row: {
+          age_restricted: boolean
+          archived_at: string | null
+          avatar_url: string | null
+          background_image_url: string | null
+          category: string | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          featured: boolean
+          id: string
+          member_count: number
+          name: string
+          owner_id: string
+          password: string | null
+          rules: string | null
+          slug: string
+          theme_color: string | null
+          updated_at: string
+          visibility: string
+          welcome_message: string | null
+        }
+        Insert: {
+          age_restricted?: boolean
+          archived_at?: string | null
+          avatar_url?: string | null
+          background_image_url?: string | null
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          id?: string
+          member_count?: number
+          name: string
+          owner_id: string
+          password?: string | null
+          rules?: string | null
+          slug: string
+          theme_color?: string | null
+          updated_at?: string
+          visibility?: string
+          welcome_message?: string | null
+        }
+        Update: {
+          age_restricted?: boolean
+          archived_at?: string | null
+          avatar_url?: string | null
+          background_image_url?: string | null
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          id?: string
+          member_count?: number
+          name?: string
+          owner_id?: string
+          password?: string | null
+          rules?: string | null
+          slug?: string
+          theme_color?: string | null
+          updated_at?: string
+          visibility?: string
+          welcome_message?: string | null
+        }
+        Relationships: []
+      }
       coin_transactions: {
         Row: {
           amount: number
@@ -2076,6 +2145,134 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_payments: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          billing_cycle: string
+          created_at: string
+          currency_code: string
+          id: string
+          plan_id: string
+          proof_reference: string | null
+          provider: string
+          provider_payment_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          billing_cycle?: string
+          created_at?: string
+          currency_code?: string
+          id?: string
+          plan_id: string
+          proof_reference?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          billing_cycle?: string
+          created_at?: string
+          currency_code?: string
+          id?: string
+          plan_id?: string
+          proof_reference?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          active: boolean
+          badge: string | null
+          created_at: string
+          currency_code: string
+          currency_symbol: string
+          description: string | null
+          features: Json
+          id: string
+          is_default: boolean
+          max_personal_chatrooms: number
+          monthly_price: number
+          name: string
+          perks: Json
+          slug: string
+          sort_order: number
+          tier: string
+          trial_days: number
+          updated_at: string
+          yearly_price: number
+        }
+        Insert: {
+          active?: boolean
+          badge?: string | null
+          created_at?: string
+          currency_code?: string
+          currency_symbol?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_default?: boolean
+          max_personal_chatrooms?: number
+          monthly_price?: number
+          name: string
+          perks?: Json
+          slug: string
+          sort_order?: number
+          tier?: string
+          trial_days?: number
+          updated_at?: string
+          yearly_price?: number
+        }
+        Update: {
+          active?: boolean
+          badge?: string | null
+          created_at?: string
+          currency_code?: string
+          currency_symbol?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_default?: boolean
+          max_personal_chatrooms?: number
+          monthly_price?: number
+          name?: string
+          perks?: Json
+          slug?: string
+          sort_order?: number
+          tier?: string
+          trial_days?: number
+          updated_at?: string
+          yearly_price?: number
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           approved: boolean
@@ -2453,6 +2650,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          auto_renew: boolean
+          billing_cycle: string
+          cancelled_at: string | null
+          created_at: string
+          expiry_date: string | null
+          id: string
+          last_payment_id: string | null
+          plan_id: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_renew?: boolean
+          billing_cycle?: string
+          cancelled_at?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          last_payment_id?: string | null
+          plan_id?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_renew?: boolean
+          billing_cycle?: string
+          cancelled_at?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          last_payment_id?: string | null
+          plan_id?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       webhook_deliveries: {
         Row: {
@@ -2991,6 +3241,20 @@ export type Database = {
       is_user_muted: {
         Args: { _channel: string; _user_id: string }
         Returns: boolean
+      }
+      my_active_plan: {
+        Args: never
+        Returns: {
+          billing_cycle: string
+          expiry_date: string
+          max_personal_chatrooms: number
+          name: string
+          perks: Json
+          plan_id: string
+          slug: string
+          status: string
+          tier: string
+        }[]
       }
       my_coin_balance: { Args: never; Returns: number }
       record_profile_view: { Args: { _owner_id: string }; Returns: undefined }
