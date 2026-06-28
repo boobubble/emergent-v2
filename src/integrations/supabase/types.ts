@@ -3187,6 +3187,7 @@ export type Database = {
       delete_user_cascade: { Args: { _user: string }; Returns: undefined }
       get_active_chat_theme: { Args: { _user: string }; Returns: string }
       get_active_feed_theme: { Args: { _user: string }; Returns: string }
+      get_chatroom_password: { Args: { _room: string }; Returns: string }
       get_install_status: { Args: never; Returns: Json }
       get_my_phone: {
         Args: never
@@ -3298,6 +3299,10 @@ export type Database = {
         }
       }
       unlock_profile_visitor_history: { Args: never; Returns: boolean }
+      verify_chatroom_password: {
+        Args: { _password: string; _room: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "moderator" | "user" | "dj" | "rj"
