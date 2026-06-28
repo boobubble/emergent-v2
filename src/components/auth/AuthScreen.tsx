@@ -223,6 +223,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
   const [birthday, setBirthday] = useState("");
   const [hideYear, setHideYear] = useState(false);
   const [country, setCountry] = useState("");
+  const [phone, setPhone] = useState("");
   const [avatarDataUrl, setAvatarDataUrl] = useState("");
   const [err, setErr] = useState("");
   const [info, setInfo] = useState("");
@@ -263,6 +264,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
         birthday: birthday || undefined,
         hide_birth_year: hideYear,
         country_code: country || undefined,
+        phone: phone.trim() || undefined,
       });
       setInfo("Account created! You're being signed in…");
     } catch (e) {
