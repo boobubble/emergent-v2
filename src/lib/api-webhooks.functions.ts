@@ -169,6 +169,7 @@ export const testWebhook = createServerFn({ method: "POST" })
 
     const payload = { event: "test.ping", at: new Date().toISOString(), data: { hello: "world" } };
     const body = JSON.stringify(payload);
+    const { signWebhookDelivery } = await import("./api-webhooks.server");
     const { ts, id, signature } = signWebhookDelivery(row.secret, body);
     let status: number | null = null;
     let ok = false;
