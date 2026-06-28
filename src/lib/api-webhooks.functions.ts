@@ -150,7 +150,8 @@ export const rotateWebhookSecret = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const secret = "whsec_" + randomBytes(24).toString("hex");
+    const { newWebhookSecret } = await import("./api-webhooks.server");
+    const secret = newWebhookSecret();
     const { error } = await context.supabase
       .from("webhook_endpoints").update({ secret }).eq("id", data.id);
     if (error) throw new Error(error.message);
