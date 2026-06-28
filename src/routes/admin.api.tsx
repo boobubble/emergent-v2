@@ -245,13 +245,12 @@ function WebhooksPanel() {
   );
 }
 
-function WebhookRow({ w, onToggle, onDelete, onRotate, onTest, onShowSecret }: {
+function WebhookRow({ w, onToggle, onDelete, onRotate, onTest }: {
   w: any;
   onToggle: (active: boolean) => void;
   onDelete: () => void;
   onRotate: () => void;
   onTest: () => void;
-  onShowSecret: () => void;
 }) {
   const listDel = useServerFn(listDeliveries);
   const [deliveries, setDeliveries] = useState<any[]>([]);
