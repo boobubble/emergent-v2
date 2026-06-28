@@ -171,12 +171,13 @@ export const adminUpsertPlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { id, ...rest } = data;
+    const payload = rest as unknown as Record<string, unknown>;
     if (id) {
-      const { error } = await context.supabase.from("subscription_plans").update(rest).eq("id", id);
+      const { error } = await context.supabase.from("subscription_plans").update(payload as any).eq("id", id);
       if (error) throw new Error(error.message);
       return { ok: true, id };
     }
-    const { data: row, error } = await context.supabase.from("subscription_plans").insert(rest).select("id").single();
+    const { data: row, error } = await context.supabase.from("subscription_plans").insert(payload as any).select("id").single();
     if (error) throw new Error(error.message);
     return { ok: true, id: row.id };
   });
