@@ -183,14 +183,20 @@ export const testWebhook = createServerFn({ method: "POST" })
 
     const payload = { event: "test.ping", at: new Date().toISOString(), data: { hello: "world" } };
     const body = JSON.stringify(payload);
-    const sig = createHash("sha256").update(row.secret + body).digest("hex");
+    const { ts, id, signature } = signWebhookDelivery(row.secret, body);
     let status: number | null = null;
     let ok = false;
     let errMsg: string | null = null;
     try {
       const res = await fetch(row.url, {
         method: "POST",
-        headers: { "content-type": "application/json", "x-webhook-signature": sig, "x-webhook-event": "test.ping" },
+        headers: {
+          "content-type": "application/json",
+          "x-webhook-event": "test.ping",
+          "x-webhook-id": id,
+          "x-webhook-timestamp": ts,
+          "x-webhook-signature": signature,
+        },
         body,
         signal: AbortSignal.timeout(10000),
       });
