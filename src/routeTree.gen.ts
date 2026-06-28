@@ -14,6 +14,7 @@ import { Route as TrustRouteImport } from './routes/trust'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as RadioRouteImport } from './routes/radio'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PagesRouteImport } from './routes/pages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
@@ -137,6 +138,11 @@ const ReelsRoute = ReelsRouteImport.update({
 const RadioRoute = RadioRouteImport.update({
   id: '/radio',
   path: '/radio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PagesRoute = PagesRouteImport.update({
@@ -659,6 +665,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
+  '/pricing': typeof PricingRoute
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -763,6 +770,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
+  '/pricing': typeof PricingRoute
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -870,6 +878,7 @@ export interface FileRoutesById {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
+  '/pricing': typeof PricingRoute
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -978,6 +987,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/pages'
+    | '/pricing'
     | '/radio'
     | '/reels'
     | '/reset-password'
@@ -1082,6 +1092,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/pages'
+    | '/pricing'
     | '/radio'
     | '/reels'
     | '/reset-password'
@@ -1188,6 +1199,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/pages'
+    | '/pricing'
     | '/radio'
     | '/reels'
     | '/reset-password'
@@ -1295,6 +1307,7 @@ export interface RootRouteChildren {
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
   PagesRoute: typeof PagesRoute
+  PricingRoute: typeof PricingRoute
   RadioRoute: typeof RadioRoute
   ReelsRoute: typeof ReelsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -1345,6 +1358,13 @@ declare module '@tanstack/react-router' {
       path: '/radio'
       fullPath: '/radio'
       preLoaderRoute: typeof RadioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pages': {
@@ -2241,6 +2261,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
   PagesRoute: PagesRoute,
+  PricingRoute: PricingRoute,
   RadioRoute: RadioRoute,
   ReelsRoute: ReelsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
