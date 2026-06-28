@@ -108,7 +108,7 @@ export const updateWebhook = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; name?: string; url?: string; events?: string[]; active?: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const patch: Record<string, unknown> = {};
+    const patch: { name?: string; url?: string; events?: string[]; active?: boolean } = {};
     if (data.name !== undefined) patch.name = data.name.trim().slice(0, 80);
     if (data.url !== undefined) {
       try { new URL(data.url); } catch { throw new Error("Invalid URL"); }
@@ -116,7 +116,7 @@ export const updateWebhook = createServerFn({ method: "POST" })
     }
     if (data.events !== undefined) patch.events = data.events;
     if (data.active !== undefined) patch.active = data.active;
-    const { error } = await context.supabase.from("webhook_endpoints").update(patch).eq("id", data.id);
+    const { error } = await context.supabase.from("webhook_endpoints").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
