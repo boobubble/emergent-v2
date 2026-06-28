@@ -196,7 +196,10 @@ function WebhooksPanel() {
           {createdSecret ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Signing secret — copy now. Verify with <code>sha256(secret + body)</code> in the <code>x-webhook-signature</code> header.
+                Signing secret — copy now. Each delivery sends headers <code>x-webhook-timestamp</code>, <code>x-webhook-id</code>,
+                and <code>x-webhook-signature: t=&lt;ts&gt;,v1=&lt;hex&gt;</code> where the signature is
+                <code>HMAC-SHA256(secret, `${"{ts}"}.${"{id}"}.${"{body}"}`)</code>.
+                Reject deliveries older than 5 minutes and dedupe by <code>x-webhook-id</code> to prevent replay.
               </p>
               <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 p-2">
                 <code className="flex-1 truncate font-mono text-xs">{createdSecret}</code>

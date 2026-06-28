@@ -1,6 +1,24 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createHash, randomBytes } from "crypto";
+import { createHash, createHmac, randomBytes, randomUUID } from "crypto";
+
+/**
+ * Outbound webhook signing (Stripe-style):
+ *   x-webhook-timestamp: <unix seconds>
+ *   x-webhook-id:        <uuid, unique per delivery — for receiver replay-cache>
+ *   x-webhook-signature: t=<ts>,v1=<hmac_sha256_hex(secret, `${ts}.${id}.${body}`)>
+ *
+ * Receivers MUST:
+ *   1. Reject if |now - t| > 5 minutes (replay window).
+ *   2. Reject if x-webhook-id was already processed (idempotency).
+ *   3. Recompute the HMAC with a timing-safe compare before trusting the body.
+ */
+export function signWebhookDelivery(secret: string, body: string) {
+  const ts = Math.floor(Date.now() / 1000).toString();
+  const id = randomUUID();
+  const mac = createHmac("sha256", secret).update(`${ts}.${id}.${body}`).digest("hex");
+  return { ts, id, signature: `t=${ts},v1=${mac}` };
+}
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
   const { data, error } = await ctx.supabase.rpc("is_admin", { _user_id: ctx.userId });
@@ -165,14 +183,20 @@ export const testWebhook = createServerFn({ method: "POST" })
 
     const payload = { event: "test.ping", at: new Date().toISOString(), data: { hello: "world" } };
     const body = JSON.stringify(payload);
-    const sig = createHash("sha256").update(row.secret + body).digest("hex");
+    const { ts, id, signature } = signWebhookDelivery(row.secret, body);
     let status: number | null = null;
     let ok = false;
     let errMsg: string | null = null;
     try {
       const res = await fetch(row.url, {
         method: "POST",
-        headers: { "content-type": "application/json", "x-webhook-signature": sig, "x-webhook-event": "test.ping" },
+        headers: {
+          "content-type": "application/json",
+          "x-webhook-event": "test.ping",
+          "x-webhook-id": id,
+          "x-webhook-timestamp": ts,
+          "x-webhook-signature": signature,
+        },
         body,
         signal: AbortSignal.timeout(10000),
       });
