@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth-store";
 import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-config";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
