@@ -29,9 +29,9 @@ export const createApiKey = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const name = data.name.trim().slice(0, 80);
     if (!name) throw new Error("Name required");
-    const raw = "bk_" + randomBytes(24).toString("hex");
-    const prefix = raw.slice(0, 10);
-    const hash = createHash("sha256").update(raw).digest("hex");
+    const { newApiKey } = await import("./api-webhooks.server");
+    const { raw, prefix, hash } = newApiKey();
+
     const { error } = await context.supabase.from("api_keys").insert({
       name,
       key_prefix: prefix,
