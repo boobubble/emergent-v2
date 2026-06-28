@@ -5,7 +5,7 @@ import {
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
   Rocket, Flame, Radio, Trophy, Youtube, Disc3, UserCircle2, MessageSquareHeart, Vote,
   Bug, Home, Wand2, Database, ScrollText, History, Bell, MousePointerClick, Mail,
-  PowerOff, RefreshCw, Gift, Download, Languages, Link2, UserPlus, PhoneCall,
+  PowerOff, RefreshCw, Gift, Download, Languages, Link2, UserPlus, PhoneCall, Crown,
 } from "lucide-react";
 
 export interface AdminLeaf {
@@ -59,6 +59,7 @@ export const ADMIN_NAV: AdminGroup[] = [
   {
     label: "Manage Features", icon: Puzzle, children: [
       { to: "/admin/modules",     label: "Modules",     icon: Puzzle,    keywords: ["features", "toggles"] },
+      { to: "/admin/subscriptions", label: "Subscriptions", icon: Crown,  keywords: ["membership", "plans", "vip", "creator", "premium", "monetize", "pricing", "payments", "billing"] },
       { to: "/admin/economy",     label: "Rewards",     icon: Coins,     keywords: ["xp", "coins", "shop", "missions", "streaks"] },
       { to: "/admin/progression", label: "Progression", icon: Trophy,    keywords: ["levels", "unlocks", "permissions", "reputation", "creator", "ranks", "tiers", "gifting"] },
       { to: "/admin/retention",   label: "Retention",   icon: Flame,     keywords: ["streaks", "momentum", "loyalty", "energy", "decay", "engagement"] },
