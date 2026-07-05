@@ -179,8 +179,11 @@ export const getMyVote = createServerFn({ method: "GET" })
 // ---------- Admin ----------
 
 async function assertAdmin(supabase: any, userId: string) {
-  const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-  if (!data) throw new Error("Forbidden");
+  const [{ data: isAdmin }, { data: isSuper }] = await Promise.all([
+    supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+    supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" }),
+  ]);
+  if (!isAdmin && !isSuper) throw new Error("Forbidden");
 }
 
 export const adminSaveCategory = createServerFn({ method: "POST" })
