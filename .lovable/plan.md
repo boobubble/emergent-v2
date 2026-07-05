@@ -1,67 +1,80 @@
-# Broadcaster Studio — Phase 2 Build
+# Community Competitions System
 
-Continue the previously approved Broadcaster build, with two additions. **No existing chatroom, feed, auth, XP, streak, notification, or radio playback code is modified.** Only new files and additive integrations.
+A new engagement hub at `/competitions` with admin-managed categories, unlimited competitions, live voting, countdowns, rankings, rewards, and integrations into Feed, Chatrooms, Notifications, and Profiles. Existing Feed / Chatrooms / Radio / XP / Streak / Friends / Notifications logic stays untouched — this is purely additive.
 
----
+## Scope
 
-## New: Announcements Tab
+### New user-facing surfaces
+- `/competitions` — browse Live / Upcoming / Ended competitions (glassmorphism cards, mobile-first).
+- `/competitions/$id` — detail page: banner, rules, countdown, participants grid, Top-3 live ranking, Vote / Join buttons.
+- `/competitions/leaderboard` — Most Wins / Most Votes / Most Joined, with Weekly / Monthly / All-Time tabs.
+- Feed nav: add a **Competitions** tab/button linking to `/competitions` (nav config only — no Feed logic changes).
+- Profile: new "Competition Achievements" section showing winner badges, total wins, joined count, live entries.
 
-### Database (migration)
+### New admin surfaces (under existing Admin panel)
+- `/admin/competitions` — analytics + list, create/edit/delete competitions, manage participants (approve/remove/disqualify), announce winners, configure per-competition rewards, choose chatrooms for announcements.
+- `/admin/competition-categories` — unlimited categories: create/edit/delete, enable/disable, icon, banner, color. Seeds the default set on first migration.
+- AdminNav: add both entries under the **Community** group.
 
-New table `radio_announcements`:
-- `id uuid pk`, `widget_id uuid null` (null = global), `author_id uuid`
-- `kind text check in ('upcoming_show','ticker','community')`
-- `title text`, `body text`, `link text null`
-- `starts_at timestamptz null`, `ends_at timestamptz null`
-- `pinned bool default false`, `active bool default true`
-- `target jsonb default '{"widget":true,"chatbar":true,"notifications":true,"feed":true}'`
-- `created_at`, `updated_at` + trigger
+### Behavior
+- **Voting**: 1 vote per user per competition; login required; admin toggle to allow vote-change before deadline; auto-close after end time; admin toggle to hide/show live counts.
+- **Countdown**: computed client-side from `end_at`; server enforces close via RLS + status transition.
+- **Live rankings**: Supabase Realtime on `competition_votes` + `competition_participants` to refresh Top-3.
+- **Rewards**: coins / XP / winner badge / premium days / custom text — applied by admin "Finalize winners" server fn (uses existing coin & subscription tables; no changes to XP engine core).
+- **Feed integration**: on competition create / start / ending-soon / winner announced, insert a system post via existing posts table (author = boobubble system account) — read-only side effect, no Feed code changes.
+- **Chatroom integration**: admin-selected chatrooms receive system messages via existing `messages` table.
+- **Notifications**: insert into existing `notifications` table for join / vote-received / ending-soon / winner.
 
-RLS: read = anyone authenticated; insert/update/delete = `admin | dj | rj` (role check via `has_role`). GRANT to `authenticated` + `service_role`. Added to `supabase_realtime` publication.
+## Data model (new tables only)
 
-### Server fns (append to `src/lib/broadcaster.functions.ts`)
-- `listAnnouncements({ widgetId?, kind?, activeOnly? })`
-- `createAnnouncement(...)` / `updateAnnouncement` / `deleteAnnouncement`
-- `togglePin`, `setActive`
-- Internally, on `create`/`update` of a `community`-kind announcement → also insert a row into existing `notifications` table (additive; reuses existing notification surface, no schema changes) and into existing scheduled-announcements config if `kind='ticker'` and `target.feed=true`.
+```text
+competition_categories   id, slug, name, description, icon_url, banner_url, color, enabled, sort_order, is_default
+competitions             id, category_id, name, slug, description, banner_url, rules,
+                         start_at, end_at, max_participants, winner_count,
+                         status ('draft'|'upcoming'|'live'|'completed'),
+                         allow_vote_change, show_live_counts,
+                         rewards jsonb, announce_channels text[], created_by
+competition_participants id, competition_id, user_id, status ('pending'|'approved'|'removed'|'disqualified'),
+                         vote_count (denorm), rank (denorm), joined_at
+competition_votes        id, competition_id, participant_id, voter_id, created_at
+                         UNIQUE (competition_id, voter_id)
+competition_awards       id, competition_id, participant_id, user_id, place, badge_label, rewards jsonb, awarded_at
+```
 
-### Routes
-- `src/routes/_authenticated/broadcaster.announcements.tsx`
-  - Tabs by kind: Upcoming Show · Ticker · Community
-  - List + create/edit modal (title, body, link, schedule window, pin, per-channel target switches)
-  - Reuses existing UI primitives (Card, Dialog, Switch, Button, Input, Textarea)
+All tables: full GRANTs, RLS on, indexes on hot paths. Triggers keep `vote_count` / `rank` in sync and enforce voting window + one-vote rule. Realtime enabled on `competition_votes`, `competition_participants`, `competitions`.
 
-### Auto-surface integrations (read-only consumers; no existing files edited)
-- **Radio Widgets**: `RadioWidgetCard` (new) renders top-pinned announcement banner from `listAnnouncements({ widgetId, kind:'upcoming_show', activeOnly:true })`.
-- **Chatroom Radio Bar**: new sibling component `BroadcasterTicker` that subscribes to `radio_announcements` where `kind='ticker' AND target->>'chatbar'='true'`. Mounted only inside the new `/broadcaster` and `/radio` surfaces and inside `DjFooter`'s **existing** slot via a non-invasive portal — actually, to avoid touching `DjFooter.tsx`, mount it inside `__root.tsx`-level overlay container already present (existing toaster wrapper). If no slot exists without edit, render ticker inside `/radio` directory only and skip chatroom injection this turn (documented in code comment as TODO).
-- **Community Notifications**: `kind='community'` writes a row into existing `notifications` table → consumed automatically by existing notifications UI.
-- **Feed Bot Updates**: piggyback existing `ScheduledAnnouncementsRunner` config by appending entries via existing `useAppSettings` API (read + write same keys). No edits to `ScheduledAnnouncements.tsx`.
+## Server functions (`src/lib/competitions.functions.ts`)
 
----
+Public (server publishable client): `listCompetitions`, `getCompetition`, `getLeaderboard`, `getUserAchievements`.
+Authenticated (`requireSupabaseAuth`): `joinCompetition`, `castVote`, `changeVote`, `leaveCompetition`.
+Admin-only (auth + `has_role('admin')`): category CRUD, competition CRUD, `approveParticipant`, `disqualifyParticipant`, `finalizeWinners` (writes awards, grants rewards, posts to Feed + selected chatrooms + notifications).
 
-## Enhanced Analytics
+## Files
 
-`src/routes/_authenticated/broadcaster.analytics.tsx` gains 5 derived stat cards, computed client-side from existing tables:
+**Created**
+- `supabase/migrations/<ts>_competitions.sql` — tables, RLS, GRANTs, triggers, seed defaults, realtime publication.
+- `src/lib/competitions.functions.ts` — all server fns.
+- `src/lib/use-competitions.ts` — query hooks + realtime subscription.
+- `src/components/competitions/CompetitionCard.tsx`
+- `src/components/competitions/Countdown.tsx`
+- `src/components/competitions/TopThree.tsx`
+- `src/components/competitions/VoteButton.tsx`
+- `src/components/competitions/ParticipantGrid.tsx`
+- `src/components/profile/CompetitionAchievements.tsx`
+- `src/routes/competitions.tsx` (list) + `competitions.$id.tsx` (detail) + `competitions.leaderboard.tsx`
+- `src/routes/admin.competitions.tsx`
+- `src/routes/admin.competition-categories.tsx`
 
-| Card | Source |
-|---|---|
-| Top Host | `radio_schedules` GROUP BY `host_id`, count where `status='completed'` |
-| Top Show | `radio_schedules` GROUP BY `title`, sum duration |
-| Peak Listener Time | `radio_widget_state.listener_count` snapshots bucketed by hour |
-| Most Active Radio Widget | `radio_widget_state` GROUP BY `widget_id`, max `listener_count` + live_minutes |
-| Most Played Track | `radio_queue_items` where `played=true` GROUP BY `youtube_id`, count |
+**Edited (nav only, no logic changes)**
+- `src/components/admin/AdminNav.ts` — add Competitions + Categories under Community.
+- The Feed navigation component — add a Competitions tab link. (I'll locate the exact file when implementing; it's a nav-only tweak.)
+- Profile route — mount `<CompetitionAchievements userId={...} />` in an existing section.
 
-Implemented as 5 small `useQuery` hooks reading via authenticated server fns (`getAnalyticsTopHost`, etc.) added to `broadcaster.functions.ts`. Read-only, no schema changes.
+## Notes / constraints
 
----
+- All defaults seed in the migration; admins can add unlimited categories + competitions with zero code changes.
+- No changes to existing auth, chat message pipeline internals, feed composer, XP engine, streaks, or notifications transport — we only insert rows into the existing tables through admin-triggered server fns.
+- Manual finalization by admin (also supports a future cron via `/api/public/competitions-cron` — not built in v1).
+- Payment / premium-days rewards reuse the existing subscription tables added in the Subscription System.
 
-## Order
-
-1. Migration (new `radio_announcements` table, RLS, GRANT, realtime).
-2. Extend `broadcaster.functions.ts` with announcement CRUD + analytics fns.
-3. New route `_authenticated/broadcaster.announcements.tsx` + tab entry in broadcaster shell.
-4. New `RadioWidgetCard` banner + `/radio` ticker consumer.
-5. Enhanced `broadcaster.analytics.tsx` cards.
-6. Smoke check (`bunx tsc --noEmit`).
-
-**Untouched:** `DjFooter.tsx`, `ScheduledAnnouncements.tsx`, `MessageList.tsx`, `feed.tsx`, `chatroom.tsx`, auth, XP, streaks, notifications schema, radio playback, YouTube playback.
+Confirm and I'll ship it.

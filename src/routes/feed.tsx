@@ -692,6 +692,7 @@ function FeedPage() {
               <div className="feed-section-label">Rewards</div>
               <SideItem onClick={() => setView("achievements")} active={view === "achievements"} icon={Award} label="Achievements" color="text-yellow-400" />
               <SideItem onClick={() => setView("leaderboard")} active={view === "leaderboard"} icon={Trophy} label="Leaderboard" color="text-amber-400" />
+              <SideNavLink to="/competitions" icon={Trophy} label="Competitions" color="text-amber-300" />
               <SideItem onClick={() => setView("dailyChest")} active={view === "dailyChest"} icon={Gift} label="Daily Chest" color="text-rose-400" />
               <SideItem onClick={() => setView("spin")} active={view === "spin"} icon={Sparkles} label="Daily Spin" color="text-violet-400" />
               <SideItem onClick={() => setView("shop")} active={view === "shop"} icon={Coins} label="Shop" color="text-emerald-400" />
@@ -945,6 +946,7 @@ function FeedPage() {
           { label: "Notifications", icon: Bell, color: "from-rose-500 to-red-500", onClick: () => { setView("feed"); setTab("notifications"); } },
           { label: "Achievements", icon: Award, color: "from-yellow-500 to-amber-500", onClick: () => setView("achievements") },
           { label: "Leaderboard", icon: Trophy, color: "from-amber-500 to-orange-500", onClick: () => setView("leaderboard") },
+          { label: "Competitions", icon: Trophy, color: "from-amber-400 to-yellow-500", onClick: () => navigate({ to: "/competitions" }) },
           { label: "Daily Chest", icon: Gift, color: "from-rose-500 to-fuchsia-500", onClick: () => setView("dailyChest") },
           { label: "Daily Spin", icon: Sparkles, color: "from-violet-500 to-purple-500", onClick: () => setView("spin") },
           { label: "Shop", icon: Coins, color: "from-emerald-500 to-green-500", onClick: () => setView("shop") },

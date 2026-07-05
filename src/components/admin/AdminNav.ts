@@ -83,6 +83,8 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/confessions", label: "Confessions",  icon: MessageSquareHeart, keywords: ["confess", "anonymous", "secrets", "community"] },
       { to: "/broadcaster",      label: "Broadcaster Studio", icon: Disc3,         keywords: ["broadcaster", "studio", "music", "dj", "rj", "player", "radio", "live", "audio", "stream", "youtube", "widgets", "queue", "mic", "schedule", "announcements"] },
       { to: "/admin/pages",       label: "Custom Pages", icon: FileText,      keywords: ["cms", "landing"] },
+      { to: "/admin/competitions", label: "Competitions", icon: Trophy, keywords: ["competitions", "voting", "contest", "winners", "rewards"] },
+      { to: "/admin/competition-categories", label: "Competition Categories", icon: Trophy, keywords: ["competition", "category", "categories"] },
       { to: "/admin/feedback",    label: "Feedback",     icon: Bug,           keywords: ["bug", "bugs", "feedback", "feature request", "ui issue", "performance", "security", "reports"] },
     ],
   },

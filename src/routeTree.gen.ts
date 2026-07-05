@@ -26,6 +26,7 @@ import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
+import { Route as CompetitionsRouteImport } from './routes/competitions'
 import { Route as ChatroomsRouteImport } from './routes/chatrooms'
 import { Route as ChatroomRouteImport } from './routes/chatroom'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -42,6 +43,8 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
+import { Route as CompetitionsLeaderboardRouteImport } from './routes/competitions.leaderboard'
+import { Route as CompetitionsIdRouteImport } from './routes/competitions.$id'
 import { Route as BroadcasterWidgetsRouteImport } from './routes/broadcaster.widgets'
 import { Route as BroadcasterScheduleRouteImport } from './routes/broadcaster.schedule'
 import { Route as BroadcasterQueueRouteImport } from './routes/broadcaster.queue'
@@ -91,6 +94,8 @@ import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
 import { Route as AdminDjRouteImport } from './routes/admin.dj'
 import { Route as AdminDemoRouteImport } from './routes/admin.demo'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
+import { Route as AdminCompetitionsRouteImport } from './routes/admin.competitions'
+import { Route as AdminCompetitionCategoriesRouteImport } from './routes/admin.competition-categories'
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
 import { Route as AdminChatThemesRouteImport } from './routes/admin.chat-themes'
 import { Route as AdminCallsRouteImport } from './routes/admin.calls'
@@ -201,6 +206,11 @@ const ConfessionsRoute = ConfessionsRouteImport.update({
   path: '/confessions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompetitionsRoute = CompetitionsRouteImport.update({
+  id: '/competitions',
+  path: '/competitions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatroomsRoute = ChatroomsRouteImport.update({
   id: '/chatrooms',
   path: '/chatrooms',
@@ -280,6 +290,16 @@ const FeedSlugRoute = FeedSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => FeedRoute,
+} as any)
+const CompetitionsLeaderboardRoute = CompetitionsLeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => CompetitionsRoute,
+} as any)
+const CompetitionsIdRoute = CompetitionsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CompetitionsRoute,
 } as any)
 const BroadcasterWidgetsRoute = BroadcasterWidgetsRouteImport.update({
   id: '/widgets',
@@ -527,6 +547,17 @@ const AdminConfessionsRoute = AdminConfessionsRouteImport.update({
   path: '/confessions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCompetitionsRoute = AdminCompetitionsRouteImport.update({
+  id: '/competitions',
+  path: '/competitions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCompetitionCategoriesRoute =
+  AdminCompetitionCategoriesRouteImport.update({
+    id: '/competition-categories',
+    path: '/competition-categories',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminChatroomsRoute = AdminChatroomsRouteImport.update({
   id: '/chatrooms',
   path: '/chatrooms',
@@ -660,6 +691,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
+  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -695,6 +727,8 @@ export interface FileRoutesByFullPath {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
+  '/admin/competitions': typeof AdminCompetitionsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -744,6 +778,8 @@ export interface FileRoutesByFullPath {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
+  '/competitions/$id': typeof CompetitionsIdRoute
+  '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -766,6 +802,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
+  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -801,6 +838,8 @@ export interface FileRoutesByTo {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
+  '/admin/competitions': typeof AdminCompetitionsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -850,6 +889,8 @@ export interface FileRoutesByTo {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
+  '/competitions/$id': typeof CompetitionsIdRoute
+  '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -875,6 +916,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
+  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -910,6 +952,8 @@ export interface FileRoutesById {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
+  '/admin/competitions': typeof AdminCompetitionsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -959,6 +1003,8 @@ export interface FileRoutesById {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
+  '/competitions/$id': typeof CompetitionsIdRoute
+  '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -985,6 +1031,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
+    | '/competitions'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -1020,6 +1067,8 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/competition-categories'
+    | '/admin/competitions'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -1069,6 +1118,8 @@ export interface FileRouteTypes {
     | '/broadcaster/queue'
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
+    | '/competitions/$id'
+    | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1091,6 +1142,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
+    | '/competitions'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -1126,6 +1178,8 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/competition-categories'
+    | '/admin/competitions'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -1175,6 +1229,8 @@ export interface FileRouteTypes {
     | '/broadcaster/queue'
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
+    | '/competitions/$id'
+    | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1199,6 +1255,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
+    | '/competitions'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -1234,6 +1291,8 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/competition-categories'
+    | '/admin/competitions'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -1283,6 +1342,8 @@ export interface FileRouteTypes {
     | '/broadcaster/queue'
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
+    | '/competitions/$id'
+    | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1308,6 +1369,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   ChatroomRoute: typeof ChatroomRoute
   ChatroomsRoute: typeof ChatroomsRoute
+  CompetitionsRoute: typeof CompetitionsRouteWithChildren
   ConfessionsRoute: typeof ConfessionsRoute
   FeedRoute: typeof FeedRouteWithChildren
   FeedbackRoute: typeof FeedbackRoute
@@ -1456,6 +1518,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/competitions': {
+      id: '/competitions'
+      path: '/competitions'
+      fullPath: '/competitions'
+      preLoaderRoute: typeof CompetitionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chatrooms': {
       id: '/chatrooms'
       path: '/chatrooms'
@@ -1567,6 +1636,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/feed/$slug'
       preLoaderRoute: typeof FeedSlugRouteImport
       parentRoute: typeof FeedRoute
+    }
+    '/competitions/leaderboard': {
+      id: '/competitions/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/competitions/leaderboard'
+      preLoaderRoute: typeof CompetitionsLeaderboardRouteImport
+      parentRoute: typeof CompetitionsRoute
+    }
+    '/competitions/$id': {
+      id: '/competitions/$id'
+      path: '/$id'
+      fullPath: '/competitions/$id'
+      preLoaderRoute: typeof CompetitionsIdRouteImport
+      parentRoute: typeof CompetitionsRoute
     }
     '/broadcaster/widgets': {
       id: '/broadcaster/widgets'
@@ -1911,6 +1994,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConfessionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/competitions': {
+      id: '/admin/competitions'
+      path: '/competitions'
+      fullPath: '/admin/competitions'
+      preLoaderRoute: typeof AdminCompetitionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/competition-categories': {
+      id: '/admin/competition-categories'
+      path: '/competition-categories'
+      fullPath: '/admin/competition-categories'
+      preLoaderRoute: typeof AdminCompetitionCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/chatrooms': {
       id: '/admin/chatrooms'
       path: '/chatrooms'
@@ -2113,6 +2210,8 @@ interface AdminRouteChildren {
   AdminCallsRoute: typeof AdminCallsRoute
   AdminChatThemesRoute: typeof AdminChatThemesRoute
   AdminChatroomsRoute: typeof AdminChatroomsRoute
+  AdminCompetitionCategoriesRoute: typeof AdminCompetitionCategoriesRoute
+  AdminCompetitionsRoute: typeof AdminCompetitionsRoute
   AdminConfessionsRoute: typeof AdminConfessionsRoute
   AdminDemoRoute: typeof AdminDemoRoute
   AdminDjRoute: typeof AdminDjRoute
@@ -2178,6 +2277,8 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCallsRoute: AdminCallsRoute,
   AdminChatThemesRoute: AdminChatThemesRoute,
   AdminChatroomsRoute: AdminChatroomsRoute,
+  AdminCompetitionCategoriesRoute: AdminCompetitionCategoriesRoute,
+  AdminCompetitionsRoute: AdminCompetitionsRoute,
   AdminConfessionsRoute: AdminConfessionsRoute,
   AdminDemoRoute: AdminDemoRoute,
   AdminDjRoute: AdminDjRoute,
@@ -2250,6 +2351,20 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
   BroadcasterRouteChildren,
 )
 
+interface CompetitionsRouteChildren {
+  CompetitionsIdRoute: typeof CompetitionsIdRoute
+  CompetitionsLeaderboardRoute: typeof CompetitionsLeaderboardRoute
+}
+
+const CompetitionsRouteChildren: CompetitionsRouteChildren = {
+  CompetitionsIdRoute: CompetitionsIdRoute,
+  CompetitionsLeaderboardRoute: CompetitionsLeaderboardRoute,
+}
+
+const CompetitionsRouteWithChildren = CompetitionsRoute._addFileChildren(
+  CompetitionsRouteChildren,
+)
+
 interface FeedRouteChildren {
   FeedSlugRoute: typeof FeedSlugRoute
 }
@@ -2271,6 +2386,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   ChatroomRoute: ChatroomRoute,
   ChatroomsRoute: ChatroomsRoute,
+  CompetitionsRoute: CompetitionsRouteWithChildren,
   ConfessionsRoute: ConfessionsRoute,
   FeedRoute: FeedRouteWithChildren,
   FeedbackRoute: FeedbackRoute,
@@ -2300,13 +2416,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
