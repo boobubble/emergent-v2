@@ -94,10 +94,11 @@ export const provisionFeedbot = createServerFn({ method: "POST" })
       user_metadata: { username: FEEDBOT_BOT_USERNAME, gender: "other" },
     });
     if (cErr || !created?.user) {
-      throw new Error(`Failed to provision FeedBot: ${cErr?.message ?? "no user"}`);
+      console.error("[FeedBot] createUser failed", cErr);
+      throw new Error(`Failed to provision FeedBot: ${cErr?.message ?? "no user returned"}`);
     }
     const userId = created.user.id;
-    await supabaseAdmin
+    const { error: pErr } = await supabaseAdmin
       .from("profiles")
       .update({
         username: FEEDBOT_BOT_USERNAME,
@@ -106,10 +107,18 @@ export const provisionFeedbot = createServerFn({ method: "POST" })
         is_verified: true,
       })
       .eq("id", userId);
-    await supabaseAdmin
+    if (pErr) {
+      console.error("[FeedBot] profile update failed", pErr);
+      throw new Error(`FeedBot profile update failed: ${pErr.message}`);
+    }
+    const { error: sErr } = await supabaseAdmin
       .from("feedbot_settings")
       .update({ bot_user_id: userId })
       .eq("id", true);
+    if (sErr) {
+      console.error("[FeedBot] settings update failed", sErr);
+      throw new Error(`FeedBot settings update failed: ${sErr.message}`);
+    }
     return { ok: true, user_id: userId, existed: false };
   });
 
