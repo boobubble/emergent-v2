@@ -408,6 +408,259 @@ export type Database = {
           },
         ]
       }
+      competition_awards: {
+        Row: {
+          awarded_at: string
+          badge_label: string | null
+          competition_id: string
+          id: string
+          participant_id: string | null
+          place: number
+          rewards: Json
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          badge_label?: string | null
+          competition_id: string
+          id?: string
+          participant_id?: string | null
+          place: number
+          rewards?: Json
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          badge_label?: string | null
+          competition_id?: string
+          id?: string
+          participant_id?: string | null
+          place?: number
+          rewards?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_awards_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_awards_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "competition_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_categories: {
+        Row: {
+          banner_url: string | null
+          color: string | null
+          created_at: string
+          description: string | null
+          enabled: boolean
+          icon_url: string | null
+          id: string
+          is_default: boolean
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          icon_url?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          icon_url?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      competition_participants: {
+        Row: {
+          competition_id: string
+          id: string
+          joined_at: string
+          rank: number | null
+          status: string
+          user_id: string
+          vote_count: number
+        }
+        Insert: {
+          competition_id: string
+          id?: string
+          joined_at?: string
+          rank?: number | null
+          status?: string
+          user_id: string
+          vote_count?: number
+        }
+        Update: {
+          competition_id?: string
+          id?: string
+          joined_at?: string
+          rank?: number | null
+          status?: string
+          user_id?: string
+          vote_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_participants_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_votes: {
+        Row: {
+          competition_id: string
+          created_at: string
+          id: string
+          participant_id: string
+          voter_id: string
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          id?: string
+          participant_id: string
+          voter_id: string
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          id?: string
+          participant_id?: string
+          voter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_votes_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_votes_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "competition_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitions: {
+        Row: {
+          allow_vote_change: boolean
+          announce_channels: string[]
+          banner_url: string | null
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_at: string
+          id: string
+          max_participants: number | null
+          name: string
+          require_approval: boolean
+          rewards: Json
+          rules: string | null
+          show_live_counts: boolean
+          slug: string
+          start_at: string
+          status: string
+          total_participants: number
+          total_votes: number
+          updated_at: string
+          winner_count: number
+        }
+        Insert: {
+          allow_vote_change?: boolean
+          announce_channels?: string[]
+          banner_url?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_at: string
+          id?: string
+          max_participants?: number | null
+          name: string
+          require_approval?: boolean
+          rewards?: Json
+          rules?: string | null
+          show_live_counts?: boolean
+          slug: string
+          start_at: string
+          status?: string
+          total_participants?: number
+          total_votes?: number
+          updated_at?: string
+          winner_count?: number
+        }
+        Update: {
+          allow_vote_change?: boolean
+          announce_channels?: string[]
+          banner_url?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_at?: string
+          id?: string
+          max_participants?: number | null
+          name?: string
+          require_approval?: boolean
+          rewards?: Json
+          rules?: string | null
+          show_live_counts?: boolean
+          slug?: string
+          start_at?: string
+          status?: string
+          total_participants?: number
+          total_votes?: number
+          updated_at?: string
+          winner_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "competition_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       confession_reactions: {
         Row: {
           confession_id: string
@@ -3163,6 +3416,10 @@ export type Database = {
       }
       bootstrap_first_admin: { Args: never; Returns: undefined }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
+      cast_competition_vote: {
+        Args: { _competition: string; _participant: string }
+        Returns: undefined
+      }
       close_inactive_trio_rooms: { Args: never; Returns: undefined }
       complete_installation: { Args: { _payload: Json }; Returns: Json }
       create_trio_room: {
@@ -3258,6 +3515,7 @@ export type Database = {
         }[]
       }
       my_coin_balance: { Args: never; Returns: number }
+      my_competition_vote: { Args: { _competition: string }; Returns: string }
       record_profile_view: { Args: { _owner_id: string }; Returns: undefined }
       reset_installation: { Args: never; Returns: undefined }
       slugify: { Args: { input: string }; Returns: string }
@@ -3299,6 +3557,14 @@ export type Database = {
         }
       }
       unlock_profile_visitor_history: { Args: never; Returns: boolean }
+      user_competition_achievements: {
+        Args: { _user: string }
+        Returns: {
+          live_count: number
+          total_joined: number
+          total_wins: number
+        }[]
+      }
       verify_chatroom_password: {
         Args: { _password: string; _room: string }
         Returns: boolean
