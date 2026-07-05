@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
+import { requireFeedbotHookAuth } from "@/lib/feedbot-auth.server";
 
 // Nightly AI-generated community summary. Runs once per day (21:00 IST via pg_cron).
 // Aggregates 24h of activity counts and asks Lovable AI to produce a short
@@ -8,7 +9,9 @@ import type { Json } from "@/integrations/supabase/types";
 export const Route = createFileRoute("/api/public/hooks/feedbot-summary")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const denied = await requireFeedbotHookAuth(request);
+        if (denied) return denied;
         try {
           const { data: settings } = await supabaseAdmin
             .from("feedbot_settings")

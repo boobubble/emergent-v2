@@ -3547,6 +3547,7 @@ export type Database = {
         }
       }
       delete_user_cascade: { Args: { _user: string }; Returns: undefined }
+      feedbot_dispatch_run: { Args: never; Returns: undefined }
       feedbot_enqueue: {
         Args: {
           _actor: string
@@ -3559,6 +3560,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      feedbot_summary_run: { Args: never; Returns: undefined }
       get_active_chat_theme: { Args: { _user: string }; Returns: string }
       get_active_feed_theme: { Args: { _user: string }; Returns: string }
       get_chatroom_password: { Args: { _room: string }; Returns: string }

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
 import { formatFeedbotEvent, type FeedbotEvent } from "@/lib/feedbot-format";
+import { requireFeedbotHookAuth } from "@/lib/feedbot-auth.server";
 
 // FeedBot dispatcher — called every minute by pg_cron.
 // Drains pending feedbot_events, fans them out to configured chatrooms with
@@ -9,7 +10,9 @@ import { formatFeedbotEvent, type FeedbotEvent } from "@/lib/feedbot-format";
 export const Route = createFileRoute("/api/public/hooks/feedbot-dispatch")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const denied = await requireFeedbotHookAuth(request);
+        if (denied) return denied;
         try {
           const { data: settings } = await supabaseAdmin
             .from("feedbot_settings")
