@@ -120,6 +120,7 @@ import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/publ
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
+import { Route as ApiPublicHooksFeedbotSummaryRouteImport } from './routes/api/public/hooks/feedbot-summary'
 import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/public/hooks/feedbot-dispatch'
 
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -680,6 +681,12 @@ const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   path: '/$key',
   getParentRoute: () => AdminUpcomingRoute,
 } as any)
+const ApiPublicHooksFeedbotSummaryRoute =
+  ApiPublicHooksFeedbotSummaryRouteImport.update({
+    id: '/api/public/hooks/feedbot-summary',
+    path: '/api/public/hooks/feedbot-summary',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksFeedbotDispatchRoute =
   ApiPublicHooksFeedbotDispatchRouteImport.update({
     id: '/api/public/hooks/feedbot-dispatch',
@@ -800,6 +807,7 @@ export interface FileRoutesByFullPath {
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
+  '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -912,6 +920,7 @@ export interface FileRoutesByTo {
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
+  '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1027,6 +1036,7 @@ export interface FileRoutesById {
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
+  '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1143,6 +1153,7 @@ export interface FileRouteTypes {
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
     | '/api/public/hooks/feedbot-dispatch'
+    | '/api/public/hooks/feedbot-summary'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1255,6 +1266,7 @@ export interface FileRouteTypes {
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
     | '/api/public/hooks/feedbot-dispatch'
+    | '/api/public/hooks/feedbot-summary'
   id:
     | '__root__'
     | '/'
@@ -1369,6 +1381,7 @@ export interface FileRouteTypes {
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
     | '/api/public/hooks/feedbot-dispatch'
+    | '/api/public/hooks/feedbot-summary'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1409,6 +1422,7 @@ export interface RootRouteChildren {
   ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
   ApiPublicLandingRoute: typeof ApiPublicLandingRoute
   ApiPublicHooksFeedbotDispatchRoute: typeof ApiPublicHooksFeedbotDispatchRoute
+  ApiPublicHooksFeedbotSummaryRoute: typeof ApiPublicHooksFeedbotSummaryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2190,6 +2204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUpcomingKeyRouteImport
       parentRoute: typeof AdminUpcomingRoute
     }
+    '/api/public/hooks/feedbot-summary': {
+      id: '/api/public/hooks/feedbot-summary'
+      path: '/api/public/hooks/feedbot-summary'
+      fullPath: '/api/public/hooks/feedbot-summary'
+      preLoaderRoute: typeof ApiPublicHooksFeedbotSummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/feedbot-dispatch': {
       id: '/api/public/hooks/feedbot-dispatch'
       path: '/api/public/hooks/feedbot-dispatch'
@@ -2434,6 +2455,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,
   ApiPublicLandingRoute: ApiPublicLandingRoute,
   ApiPublicHooksFeedbotDispatchRoute: ApiPublicHooksFeedbotDispatchRoute,
+  ApiPublicHooksFeedbotSummaryRoute: ApiPublicHooksFeedbotSummaryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
