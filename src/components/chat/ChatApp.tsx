@@ -35,6 +35,8 @@ export function ChatApp() {
   // has never expressed a preference.
   const [sidebarOpen, setSidebarOpenState] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
+    // Mobile users keep the sidebar permanently off.
+    if (window.matchMedia("(max-width: 768px)").matches) return false;
     try {
       const saved = window.localStorage.getItem("palrgo:sidebarOpen");
       if (saved === "1") return true;
@@ -42,9 +44,14 @@ export function ChatApp() {
     } catch {
       // ignore storage errors (private mode, etc.)
     }
-    return !window.matchMedia("(max-width: 640px)").matches;
+    return true;
   });
   const setSidebarOpen = (next: boolean) => {
+    // Don't allow opening the sidebar on mobile.
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches) {
+      setSidebarOpenState(false);
+      return;
+    }
     setSidebarOpenState(next);
     try {
       window.localStorage.setItem("palrgo:sidebarOpen", next ? "1" : "0");
@@ -52,6 +59,7 @@ export function ChatApp() {
       // ignore
     }
   };
+
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
