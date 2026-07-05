@@ -106,6 +106,8 @@ export function BoobubbleAssistantWidget() {
       .then(([pub, recs, fr]) => {
         if (!alive) return;
         setEnabled(Boolean(pub?.enabled && pub?.feed_recs_enabled));
+        setBotAvatar(pub?.bot_avatar_url ?? null);
+        setBotUsername(pub?.bot_username ?? null);
         setItems(recs.items ?? []);
         setFriends(fr.items ?? []);
         setRefreshTick((t) => t + 1);
