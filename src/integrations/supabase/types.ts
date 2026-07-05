@@ -1195,6 +1195,105 @@ export type Database = {
           },
         ]
       }
+      feedbot_dispatch_log: {
+        Row: {
+          category: string
+          chatroom_id: string
+          last_dispatched_at: string
+        }
+        Insert: {
+          category: string
+          chatroom_id: string
+          last_dispatched_at?: string
+        }
+        Update: {
+          category?: string
+          chatroom_id?: string
+          last_dispatched_at?: string
+        }
+        Relationships: []
+      }
+      feedbot_events: {
+        Row: {
+          actor_id: string | null
+          category: string
+          created_at: string
+          dedupe_key: string | null
+          dispatched_at: string | null
+          id: string
+          image_url: string | null
+          kind: string
+          payload: Json
+          target_url: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          category: string
+          created_at?: string
+          dedupe_key?: string | null
+          dispatched_at?: string | null
+          id?: string
+          image_url?: string | null
+          kind: string
+          payload?: Json
+          target_url?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          category?: string
+          created_at?: string
+          dedupe_key?: string | null
+          dispatched_at?: string | null
+          id?: string
+          image_url?: string | null
+          kind?: string
+          payload?: Json
+          target_url?: string | null
+        }
+        Relationships: []
+      }
+      feedbot_settings: {
+        Row: {
+          bot_user_id: string | null
+          daily_summary_enabled: boolean
+          daily_summary_time: string
+          digest_mode: boolean
+          enabled: boolean
+          event_flags: Json
+          id: boolean
+          min_interval_seconds: number
+          target_chatrooms: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          bot_user_id?: string | null
+          daily_summary_enabled?: boolean
+          daily_summary_time?: string
+          digest_mode?: boolean
+          enabled?: boolean
+          event_flags?: Json
+          id?: boolean
+          min_interval_seconds?: number
+          target_chatrooms?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          bot_user_id?: string | null
+          daily_summary_enabled?: boolean
+          daily_summary_time?: string
+          digest_mode?: boolean
+          enabled?: boolean
+          event_flags?: Json
+          id?: boolean
+          min_interval_seconds?: number
+          target_chatrooms?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           created_at: string
@@ -1531,6 +1630,7 @@ export type Database = {
         Row: {
           attachment: Json | null
           author_id: string
+          bot_payload: Json | null
           channel_id: string
           created_at: string
           id: string
@@ -1541,6 +1641,7 @@ export type Database = {
         Insert: {
           attachment?: Json | null
           author_id: string
+          bot_payload?: Json | null
           channel_id: string
           created_at?: string
           id?: string
@@ -1551,6 +1652,7 @@ export type Database = {
         Update: {
           attachment?: Json | null
           author_id?: string
+          bot_payload?: Json | null
           channel_id?: string
           created_at?: string
           id?: string
@@ -1848,6 +1950,7 @@ export type Database = {
           is_bot: boolean
           is_official: boolean
           is_private: boolean
+          is_verified: boolean
           last_active_day: string | null
           last_seen: string
           level: number
@@ -1889,6 +1992,7 @@ export type Database = {
           is_bot?: boolean
           is_official?: boolean
           is_private?: boolean
+          is_verified?: boolean
           last_active_day?: string | null
           last_seen?: string
           level?: number
@@ -1930,6 +2034,7 @@ export type Database = {
           is_bot?: boolean
           is_official?: boolean
           is_private?: boolean
+          is_verified?: boolean
           last_active_day?: string | null
           last_seen?: string
           level?: number
@@ -3442,6 +3547,18 @@ export type Database = {
         }
       }
       delete_user_cascade: { Args: { _user: string }; Returns: undefined }
+      feedbot_enqueue: {
+        Args: {
+          _actor: string
+          _category: string
+          _dedupe: string
+          _image_url: string
+          _kind: string
+          _payload: Json
+          _target_url: string
+        }
+        Returns: undefined
+      }
       get_active_chat_theme: { Args: { _user: string }; Returns: string }
       get_active_feed_theme: { Args: { _user: string }; Returns: string }
       get_chatroom_password: { Args: { _room: string }; Returns: string }

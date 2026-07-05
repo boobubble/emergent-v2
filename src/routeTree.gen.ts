@@ -86,6 +86,7 @@ import { Route as AdminGuestAccessRouteImport } from './routes/admin.guest-acces
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
 import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
+import { Route as AdminFeedbotRouteImport } from './routes/admin.feedbot'
 import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
 import { Route as AdminFeedThemesRouteImport } from './routes/admin.feed-themes'
 import { Route as AdminExportRouteImport } from './routes/admin.export'
@@ -120,6 +121,8 @@ import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/publ
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
+import { Route as ApiPublicHooksFeedbotSummaryRouteImport } from './routes/api/public/hooks/feedbot-summary'
+import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/public/hooks/feedbot-dispatch'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -507,6 +510,11 @@ const AdminFiltersRoute = AdminFiltersRouteImport.update({
   path: '/filters',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFeedbotRoute = AdminFeedbotRouteImport.update({
+  id: '/feedbot',
+  path: '/feedbot',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
   id: '/feedback',
   path: '/feedback',
@@ -679,6 +687,18 @@ const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   path: '/$key',
   getParentRoute: () => AdminUpcomingRoute,
 } as any)
+const ApiPublicHooksFeedbotSummaryRoute =
+  ApiPublicHooksFeedbotSummaryRouteImport.update({
+    id: '/api/public/hooks/feedbot-summary',
+    path: '/api/public/hooks/feedbot-summary',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksFeedbotDispatchRoute =
+  ApiPublicHooksFeedbotDispatchRouteImport.update({
+    id: '/api/public/hooks/feedbot-dispatch',
+    path: '/api/public/hooks/feedbot-dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -737,6 +757,7 @@ export interface FileRoutesByFullPath {
   '/admin/export': typeof AdminExportRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/feedbot': typeof AdminFeedbotRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
@@ -792,6 +813,8 @@ export interface FileRoutesByFullPath {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
+  '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -848,6 +871,7 @@ export interface FileRoutesByTo {
   '/admin/export': typeof AdminExportRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/feedbot': typeof AdminFeedbotRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
@@ -903,6 +927,8 @@ export interface FileRoutesByTo {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
+  '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -962,6 +988,7 @@ export interface FileRoutesById {
   '/admin/export': typeof AdminExportRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/feedbot': typeof AdminFeedbotRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
   '/admin/general': typeof AdminGeneralRoute
@@ -1017,6 +1044,8 @@ export interface FileRoutesById {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
+  '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1077,6 +1106,7 @@ export interface FileRouteTypes {
     | '/admin/export'
     | '/admin/feed-themes'
     | '/admin/feedback'
+    | '/admin/feedbot'
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
@@ -1132,6 +1162,8 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
+    | '/api/public/hooks/feedbot-dispatch'
+    | '/api/public/hooks/feedbot-summary'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1188,6 +1220,7 @@ export interface FileRouteTypes {
     | '/admin/export'
     | '/admin/feed-themes'
     | '/admin/feedback'
+    | '/admin/feedbot'
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
@@ -1243,6 +1276,8 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
+    | '/api/public/hooks/feedbot-dispatch'
+    | '/api/public/hooks/feedbot-summary'
   id:
     | '__root__'
     | '/'
@@ -1301,6 +1336,7 @@ export interface FileRouteTypes {
     | '/admin/export'
     | '/admin/feed-themes'
     | '/admin/feedback'
+    | '/admin/feedbot'
     | '/admin/filters'
     | '/admin/games'
     | '/admin/general'
@@ -1356,6 +1392,8 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/guest-cleanup'
     | '/api/public/landing'
+    | '/api/public/hooks/feedbot-dispatch'
+    | '/api/public/hooks/feedbot-summary'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1395,6 +1433,8 @@ export interface RootRouteChildren {
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
   ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
   ApiPublicLandingRoute: typeof ApiPublicLandingRoute
+  ApiPublicHooksFeedbotDispatchRoute: typeof ApiPublicHooksFeedbotDispatchRoute
+  ApiPublicHooksFeedbotSummaryRoute: typeof ApiPublicHooksFeedbotSummaryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1938,6 +1978,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFiltersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/feedbot': {
+      id: '/admin/feedbot'
+      path: '/feedbot'
+      fullPath: '/admin/feedbot'
+      preLoaderRoute: typeof AdminFeedbotRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/feedback': {
       id: '/admin/feedback'
       path: '/feedback'
@@ -2176,6 +2223,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUpcomingKeyRouteImport
       parentRoute: typeof AdminUpcomingRoute
     }
+    '/api/public/hooks/feedbot-summary': {
+      id: '/api/public/hooks/feedbot-summary'
+      path: '/api/public/hooks/feedbot-summary'
+      fullPath: '/api/public/hooks/feedbot-summary'
+      preLoaderRoute: typeof ApiPublicHooksFeedbotSummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/feedbot-dispatch': {
+      id: '/api/public/hooks/feedbot-dispatch'
+      path: '/api/public/hooks/feedbot-dispatch'
+      fullPath: '/api/public/hooks/feedbot-dispatch'
+      preLoaderRoute: typeof ApiPublicHooksFeedbotDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -2220,6 +2281,7 @@ interface AdminRouteChildren {
   AdminExportRoute: typeof AdminExportRoute
   AdminFeedThemesRoute: typeof AdminFeedThemesRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
+  AdminFeedbotRoute: typeof AdminFeedbotRoute
   AdminFiltersRoute: typeof AdminFiltersRoute
   AdminGamesRoute: typeof AdminGamesRoute
   AdminGeneralRoute: typeof AdminGeneralRoute
@@ -2287,6 +2349,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminExportRoute: AdminExportRoute,
   AdminFeedThemesRoute: AdminFeedThemesRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
+  AdminFeedbotRoute: AdminFeedbotRoute,
   AdminFiltersRoute: AdminFiltersRoute,
   AdminGamesRoute: AdminGamesRoute,
   AdminGeneralRoute: AdminGeneralRoute,
@@ -2412,6 +2475,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
   ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,
   ApiPublicLandingRoute: ApiPublicLandingRoute,
+  ApiPublicHooksFeedbotDispatchRoute: ApiPublicHooksFeedbotDispatchRoute,
+  ApiPublicHooksFeedbotSummaryRoute: ApiPublicHooksFeedbotSummaryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
