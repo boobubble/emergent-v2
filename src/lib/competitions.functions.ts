@@ -195,7 +195,7 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
     const payload = { ...data };
     if (data.id) {
       const { id, ...rest } = payload;
-      const { error } = await context.supabase.from("competition_categories").update(rest).eq("id", id);
+      const { error } = await context.supabase.from("competition_categories").update(rest).eq("id", id as string);
       if (error) throw new Error(error.message);
     } else {
       const { error } = await context.supabase.from("competition_categories").insert(payload);
