@@ -19,7 +19,7 @@ export interface FeedbotSettings {
 
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.rpc("has_role", { _user_id: userId, _role: "admin" });
+  const { data } = await supabaseAdmin.rpc("is_admin", { _user_id: userId });
   if (!data) throw new Error("Forbidden");
 }
 
