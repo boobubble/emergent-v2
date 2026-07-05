@@ -233,13 +233,14 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
   }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    const sb = context.supabase as any;
     if (data.id) {
       const { id, ...rest } = data;
-      const { error } = await context.supabase.from("competitions").update(rest).eq("id", id);
+      const { error } = await sb.from("competitions").update(rest).eq("id", id);
       if (error) throw new Error(error.message);
       return { ok: true, id };
     }
-    const { data: row, error } = await context.supabase
+    const { data: row, error } = await sb
       .from("competitions")
       .insert({ ...data, created_by: context.userId })
       .select("id")
