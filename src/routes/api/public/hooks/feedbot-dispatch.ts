@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Json } from "@/integrations/supabase/types";
 import { formatFeedbotEvent, type FeedbotEvent } from "@/lib/feedbot-format";
 
 // FeedBot dispatcher — called every minute by pg_cron.
