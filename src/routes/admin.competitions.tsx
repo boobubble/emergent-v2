@@ -101,7 +101,7 @@ function AdminCompetitions() {
     <div className="space-y-6 p-6">
       <AdminPageHeader
         title="Competitions"
-        subtitle="Create and manage community voting competitions."
+        description="Create and manage community voting competitions."
         actions={
           <Button onClick={() => setEditing(empty())}><Plus className="h-4 w-4" /> New Competition</Button>
         }

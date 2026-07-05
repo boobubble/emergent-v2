@@ -42,7 +42,7 @@ function AdminCategories() {
     <div className="space-y-6 p-6">
       <AdminPageHeader
         title="Competition Categories"
-        subtitle="Unlimited categories for community competitions."
+        description="Unlimited categories for community competitions."
         actions={
           <Button onClick={() => setEditing({ slug: "", name: "", enabled: true, color: "#8b5cf6", sort_order: 100 })}>
             <Plus className="h-4 w-4" /> New Category

@@ -94,6 +94,8 @@ import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
 import { Route as AdminDjRouteImport } from './routes/admin.dj'
 import { Route as AdminDemoRouteImport } from './routes/admin.demo'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
+import { Route as AdminCompetitionsRouteImport } from './routes/admin.competitions'
+import { Route as AdminCompetitionCategoriesRouteImport } from './routes/admin.competition-categories'
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
 import { Route as AdminChatThemesRouteImport } from './routes/admin.chat-themes'
 import { Route as AdminCallsRouteImport } from './routes/admin.calls'
@@ -545,6 +547,17 @@ const AdminConfessionsRoute = AdminConfessionsRouteImport.update({
   path: '/confessions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCompetitionsRoute = AdminCompetitionsRouteImport.update({
+  id: '/competitions',
+  path: '/competitions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCompetitionCategoriesRoute =
+  AdminCompetitionCategoriesRouteImport.update({
+    id: '/competition-categories',
+    path: '/competition-categories',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminChatroomsRoute = AdminChatroomsRouteImport.update({
   id: '/chatrooms',
   path: '/chatrooms',
@@ -714,6 +727,8 @@ export interface FileRoutesByFullPath {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
+  '/admin/competitions': typeof AdminCompetitionsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -823,6 +838,8 @@ export interface FileRoutesByTo {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
+  '/admin/competitions': typeof AdminCompetitionsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -935,6 +952,8 @@ export interface FileRoutesById {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
+  '/admin/competitions': typeof AdminCompetitionsRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -1048,6 +1067,8 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/competition-categories'
+    | '/admin/competitions'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -1157,6 +1178,8 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/competition-categories'
+    | '/admin/competitions'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -1268,6 +1291,8 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/competition-categories'
+    | '/admin/competitions'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -1969,6 +1994,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConfessionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/competitions': {
+      id: '/admin/competitions'
+      path: '/competitions'
+      fullPath: '/admin/competitions'
+      preLoaderRoute: typeof AdminCompetitionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/competition-categories': {
+      id: '/admin/competition-categories'
+      path: '/competition-categories'
+      fullPath: '/admin/competition-categories'
+      preLoaderRoute: typeof AdminCompetitionCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/chatrooms': {
       id: '/admin/chatrooms'
       path: '/chatrooms'
@@ -2171,6 +2210,8 @@ interface AdminRouteChildren {
   AdminCallsRoute: typeof AdminCallsRoute
   AdminChatThemesRoute: typeof AdminChatThemesRoute
   AdminChatroomsRoute: typeof AdminChatroomsRoute
+  AdminCompetitionCategoriesRoute: typeof AdminCompetitionCategoriesRoute
+  AdminCompetitionsRoute: typeof AdminCompetitionsRoute
   AdminConfessionsRoute: typeof AdminConfessionsRoute
   AdminDemoRoute: typeof AdminDemoRoute
   AdminDjRoute: typeof AdminDjRoute
@@ -2236,6 +2277,8 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCallsRoute: AdminCallsRoute,
   AdminChatThemesRoute: AdminChatThemesRoute,
   AdminChatroomsRoute: AdminChatroomsRoute,
+  AdminCompetitionCategoriesRoute: AdminCompetitionCategoriesRoute,
+  AdminCompetitionsRoute: AdminCompetitionsRoute,
   AdminConfessionsRoute: AdminConfessionsRoute,
   AdminDemoRoute: AdminDemoRoute,
   AdminDjRoute: AdminDjRoute,
