@@ -151,7 +151,7 @@ export function ChatApp() {
           {!sidebarOpen && (
             <button
               onClick={() => setSidebarOpen(true)}
-              className="absolute left-3 top-3.5 z-30 grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/30 transition-all hover:scale-110 hover:shadow-xl hover:ring-primary/50"
+              className="hidden md:grid absolute left-3 top-3.5 z-30 h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/30 transition-all hover:scale-110 hover:shadow-xl hover:ring-primary/50"
               style={{ boxShadow: "var(--shadow-glow)" }}
               title="Show sidebar"
               aria-label="Show sidebar"
