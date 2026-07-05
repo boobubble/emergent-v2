@@ -63,6 +63,18 @@ export function ChatApp() {
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Keep the sidebar permanently off for mobile users.
+    const mql = window.matchMedia("(max-width: 768px)");
+    const enforceMobile = () => {
+      if (mql.matches) setSidebarOpenState(false);
+    };
+    enforceMobile();
+    mql.addEventListener("change", enforceMobile);
+    return () => mql.removeEventListener("change", enforceMobile);
+  }, []);
+
+
+  useEffect(() => {
     function show(t: EngageToast, buzz = false) {
       setToast(t);
       if (buzz) {
