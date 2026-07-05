@@ -35,8 +35,7 @@ export function ChatApp() {
   // has never expressed a preference.
   const [sidebarOpen, setSidebarOpenState] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
-    // Mobile users keep the sidebar permanently off.
-    if (window.matchMedia("(max-width: 768px)").matches) return false;
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
     try {
       const saved = window.localStorage.getItem("palrgo:sidebarOpen");
       if (saved === "1") return true;
@@ -44,14 +43,10 @@ export function ChatApp() {
     } catch {
       // ignore storage errors (private mode, etc.)
     }
-    return true;
+    // Default: closed on mobile, open on desktop.
+    return !isMobile;
   });
   const setSidebarOpen = (next: boolean) => {
-    // Don't allow opening the sidebar on mobile.
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches) {
-      setSidebarOpenState(false);
-      return;
-    }
     setSidebarOpenState(next);
     try {
       window.localStorage.setItem("palrgo:sidebarOpen", next ? "1" : "0");
@@ -62,16 +57,6 @@ export function ChatApp() {
 
   const rootRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // Keep the sidebar permanently off for mobile users.
-    const mql = window.matchMedia("(max-width: 768px)");
-    const enforceMobile = () => {
-      if (mql.matches) setSidebarOpenState(false);
-    };
-    enforceMobile();
-    mql.addEventListener("change", enforceMobile);
-    return () => mql.removeEventListener("change", enforceMobile);
-  }, []);
 
 
   useEffect(() => {
@@ -151,7 +136,7 @@ export function ChatApp() {
           {!sidebarOpen && (
             <button
               onClick={() => setSidebarOpen(true)}
-              className="hidden md:grid absolute left-3 top-3.5 z-30 h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/30 transition-all hover:scale-110 hover:shadow-xl hover:ring-primary/50"
+              className="absolute left-3 top-3.5 z-30 grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/30 transition-all hover:scale-110 hover:shadow-xl hover:ring-primary/50"
               style={{ boxShadow: "var(--shadow-glow)" }}
               title="Show sidebar"
               aria-label="Show sidebar"
@@ -159,6 +144,7 @@ export function ChatApp() {
               <PanelLeftOpen className="h-5 w-5" />
             </button>
           )}
+
           <ChatHeader />
           <div className="relative flex min-h-0 flex-1 flex-col">
             <MessageList channelId={state.activeChannel} />
