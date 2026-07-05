@@ -57,7 +57,7 @@ export const Route = createFileRoute("/api/public/hooks/feedbot-dispatch")({
               author_id: string;
               text: string;
               kind: string;
-              attachment: Record<string, unknown> | null;
+              attachment: Json;
             }> = [];
             for (const chatroomId of targets) {
               const key = `${chatroomId}::${ev.category}`;
