@@ -692,6 +692,7 @@ function FeedPage() {
               <div className="feed-section-label">Rewards</div>
               <SideItem onClick={() => setView("achievements")} active={view === "achievements"} icon={Award} label="Achievements" color="text-yellow-400" />
               <SideItem onClick={() => setView("leaderboard")} active={view === "leaderboard"} icon={Trophy} label="Leaderboard" color="text-amber-400" />
+              <SideNavLink to="/competitions" icon={Trophy} label="Competitions" color="text-amber-300" />
               <SideItem onClick={() => setView("dailyChest")} active={view === "dailyChest"} icon={Gift} label="Daily Chest" color="text-rose-400" />
               <SideItem onClick={() => setView("spin")} active={view === "spin"} icon={Sparkles} label="Daily Spin" color="text-violet-400" />
               <SideItem onClick={() => setView("shop")} active={view === "shop"} icon={Coins} label="Shop" color="text-emerald-400" />
