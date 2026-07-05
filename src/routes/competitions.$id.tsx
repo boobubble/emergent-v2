@@ -30,8 +30,8 @@ function CompetitionDetail() {
   const join = useServerFn(joinCompetition);
   const leave = useServerFn(leaveCompetition);
   const qc = useQueryClient();
-  const auth = useAuth();
-  const userId = auth?.user?.id ?? null;
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
 
   const { data } = useQuery({
     queryKey: ["competition", id],
