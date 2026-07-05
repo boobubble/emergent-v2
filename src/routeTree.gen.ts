@@ -26,6 +26,7 @@ import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
+import { Route as CompetitionsRouteImport } from './routes/competitions'
 import { Route as ChatroomsRouteImport } from './routes/chatrooms'
 import { Route as ChatroomRouteImport } from './routes/chatroom'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -42,6 +43,8 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
+import { Route as CompetitionsLeaderboardRouteImport } from './routes/competitions.leaderboard'
+import { Route as CompetitionsIdRouteImport } from './routes/competitions.$id'
 import { Route as BroadcasterWidgetsRouteImport } from './routes/broadcaster.widgets'
 import { Route as BroadcasterScheduleRouteImport } from './routes/broadcaster.schedule'
 import { Route as BroadcasterQueueRouteImport } from './routes/broadcaster.queue'
@@ -201,6 +204,11 @@ const ConfessionsRoute = ConfessionsRouteImport.update({
   path: '/confessions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompetitionsRoute = CompetitionsRouteImport.update({
+  id: '/competitions',
+  path: '/competitions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatroomsRoute = ChatroomsRouteImport.update({
   id: '/chatrooms',
   path: '/chatrooms',
@@ -280,6 +288,16 @@ const FeedSlugRoute = FeedSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => FeedRoute,
+} as any)
+const CompetitionsLeaderboardRoute = CompetitionsLeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => CompetitionsRoute,
+} as any)
+const CompetitionsIdRoute = CompetitionsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CompetitionsRoute,
 } as any)
 const BroadcasterWidgetsRoute = BroadcasterWidgetsRouteImport.update({
   id: '/widgets',
@@ -660,6 +678,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
+  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -744,6 +763,8 @@ export interface FileRoutesByFullPath {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
+  '/competitions/$id': typeof CompetitionsIdRoute
+  '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -766,6 +787,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
+  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -850,6 +872,8 @@ export interface FileRoutesByTo {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
+  '/competitions/$id': typeof CompetitionsIdRoute
+  '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -875,6 +899,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
+  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
@@ -959,6 +984,8 @@ export interface FileRoutesById {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
+  '/competitions/$id': typeof CompetitionsIdRoute
+  '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -985,6 +1012,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
+    | '/competitions'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -1069,6 +1097,8 @@ export interface FileRouteTypes {
     | '/broadcaster/queue'
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
+    | '/competitions/$id'
+    | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1091,6 +1121,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
+    | '/competitions'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -1175,6 +1206,8 @@ export interface FileRouteTypes {
     | '/broadcaster/queue'
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
+    | '/competitions/$id'
+    | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1199,6 +1232,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
+    | '/competitions'
     | '/confessions'
     | '/feed'
     | '/feedback'
@@ -1283,6 +1317,8 @@ export interface FileRouteTypes {
     | '/broadcaster/queue'
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
+    | '/competitions/$id'
+    | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1308,6 +1344,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   ChatroomRoute: typeof ChatroomRoute
   ChatroomsRoute: typeof ChatroomsRoute
+  CompetitionsRoute: typeof CompetitionsRouteWithChildren
   ConfessionsRoute: typeof ConfessionsRoute
   FeedRoute: typeof FeedRouteWithChildren
   FeedbackRoute: typeof FeedbackRoute
@@ -1456,6 +1493,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/competitions': {
+      id: '/competitions'
+      path: '/competitions'
+      fullPath: '/competitions'
+      preLoaderRoute: typeof CompetitionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chatrooms': {
       id: '/chatrooms'
       path: '/chatrooms'
@@ -1567,6 +1611,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/feed/$slug'
       preLoaderRoute: typeof FeedSlugRouteImport
       parentRoute: typeof FeedRoute
+    }
+    '/competitions/leaderboard': {
+      id: '/competitions/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/competitions/leaderboard'
+      preLoaderRoute: typeof CompetitionsLeaderboardRouteImport
+      parentRoute: typeof CompetitionsRoute
+    }
+    '/competitions/$id': {
+      id: '/competitions/$id'
+      path: '/$id'
+      fullPath: '/competitions/$id'
+      preLoaderRoute: typeof CompetitionsIdRouteImport
+      parentRoute: typeof CompetitionsRoute
     }
     '/broadcaster/widgets': {
       id: '/broadcaster/widgets'
@@ -2250,6 +2308,20 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
   BroadcasterRouteChildren,
 )
 
+interface CompetitionsRouteChildren {
+  CompetitionsIdRoute: typeof CompetitionsIdRoute
+  CompetitionsLeaderboardRoute: typeof CompetitionsLeaderboardRoute
+}
+
+const CompetitionsRouteChildren: CompetitionsRouteChildren = {
+  CompetitionsIdRoute: CompetitionsIdRoute,
+  CompetitionsLeaderboardRoute: CompetitionsLeaderboardRoute,
+}
+
+const CompetitionsRouteWithChildren = CompetitionsRoute._addFileChildren(
+  CompetitionsRouteChildren,
+)
+
 interface FeedRouteChildren {
   FeedSlugRoute: typeof FeedSlugRoute
 }
@@ -2271,6 +2343,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   ChatroomRoute: ChatroomRoute,
   ChatroomsRoute: ChatroomsRoute,
+  CompetitionsRoute: CompetitionsRouteWithChildren,
   ConfessionsRoute: ConfessionsRoute,
   FeedRoute: FeedRouteWithChildren,
   FeedbackRoute: FeedbackRoute,
