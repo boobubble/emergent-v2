@@ -110,12 +110,22 @@ export function ChatApp() {
     <>
       <div ref={rootRef} data-chat-theme={chatTheme} data-theme-variant={chatVariantFor(chatTheme)} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
         {sidebarOpen && (
-          <Sidebar
-            onOpenProfile={() => setProfileOpen(true)}
-            onOpenLeaderboard={() => setLbOpen(true)}
-            onOpenAchievements={() => setAchOpen(true)}
-            onCollapse={() => setSidebarOpen(false)}
-          />
+          <>
+            <button
+              type="button"
+              aria-label="Close sidebar"
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
+            />
+            <div className="fixed inset-y-0 left-0 z-40 w-[85vw] max-w-xs shadow-2xl md:static md:z-auto md:w-auto md:max-w-none md:shadow-none">
+              <Sidebar
+                onOpenProfile={() => setProfileOpen(true)}
+                onOpenLeaderboard={() => setLbOpen(true)}
+                onOpenAchievements={() => setAchOpen(true)}
+                onCollapse={() => setSidebarOpen(false)}
+              />
+            </div>
+          </>
         )}
         <main className="relative flex h-full min-w-0 flex-1 flex-col">
           {!sidebarOpen && (
