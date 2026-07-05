@@ -78,6 +78,8 @@ export function BoobubbleAssistantWidget() {
   const [dismissed, setDismissed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [botAvatar, setBotAvatar] = useState<string | null>(null);
+  const [botUsername, setBotUsername] = useState<string | null>(null);
 
   // Fire all idempotent triggers on first authenticated mount
   useEffect(() => {
@@ -104,6 +106,8 @@ export function BoobubbleAssistantWidget() {
       .then(([pub, recs, fr]) => {
         if (!alive) return;
         setEnabled(Boolean(pub?.enabled && pub?.feed_recs_enabled));
+        setBotAvatar(pub?.bot_avatar_url ?? null);
+        setBotUsername(pub?.bot_username ?? null);
         setItems(recs.items ?? []);
         setFriends(fr.items ?? []);
         setRefreshTick((t) => t + 1);
@@ -178,8 +182,17 @@ export function BoobubbleAssistantWidget() {
         {/* Header */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="ai-orb-breathe relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-400 via-fuchsia-400 to-purple-500 shadow-lg shadow-fuchsia-500/30">
-              <Wand2 className="h-4.5 w-4.5 text-white" />
+            <div className="ai-orb-breathe relative grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-violet-400 via-fuchsia-400 to-purple-500 shadow-lg shadow-fuchsia-500/30">
+              {botAvatar ? (
+                <img
+                  src={botAvatar}
+                  alt={botUsername ? `@${botUsername}` : "Boobubble assistant"}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <Wand2 className="h-4.5 w-4.5 text-white" />
+              )}
               <span
                 className={`absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full ring-2 ring-slate-950 ${
                   inView && tabVisible
@@ -191,7 +204,9 @@ export function BoobubbleAssistantWidget() {
               />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold tracking-tight text-white">AI Picks For You</h3>
+              <h3 className="text-sm font-extrabold tracking-tight text-white">
+                {botUsername ? `${botUsername}'s Picks` : "AI Picks For You"}
+              </h3>
               <p className="text-[10px] font-medium uppercase tracking-wider text-violet-300/80">
                 {inView && tabVisible ? (refreshing ? "Refreshing…" : "Live · auto-refresh") : "Paused"}
               </p>
