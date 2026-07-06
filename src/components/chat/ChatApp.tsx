@@ -242,6 +242,7 @@ export function ChatApp() {
           activeTheme={chatTheme}
           onThemeChange={refreshChatTheme}
         />
+        <CommunityHub open={hubOpen} onOpenChange={setHubOpen} isMobile={isMobile} />
       </div>
 
       {toast && (
