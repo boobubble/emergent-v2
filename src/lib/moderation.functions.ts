@@ -327,6 +327,130 @@ export const listUrlRules = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+// ---------- Safety Moderation ----------
+export const listSafetyEvents = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      status: z.enum(["pending", "approved", "kept_blocked", "false_positive", "escalated", "all"]).default("pending"),
+      severity: z.number().int().min(1).max(3).optional(),
+      limit: z.number().min(1).max(200).default(100),
+    }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    await assertMod(context.userId);
+    const admin = await getSupabaseAdmin();
+    let q = admin.from("safety_events").select("*").order("created_at", { ascending: false }).limit(data.limit);
+    if (data.status !== "all") q = q.eq("status", data.status);
+    if (data.severity) q = q.eq("severity", data.severity);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const getSafetyOverview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertMod(context.userId);
+    const admin = await getSupabaseAdmin();
+    const [pending, sev3_24h, blocked_24h] = await Promise.all([
+      admin.from("safety_events").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      admin.from("safety_events").select("id", { count: "exact", head: true })
+        .eq("severity", 3).gte("created_at", new Date(Date.now() - 24 * 3600 * 1000).toISOString()),
+      admin.from("safety_events").select("id", { count: "exact", head: true })
+        .neq("action", "logged").gte("created_at", new Date(Date.now() - 24 * 3600 * 1000).toISOString()),
+    ]);
+    return {
+      pending: pending.count ?? 0,
+      imminent24h: sev3_24h.count ?? 0,
+      blocked24h: blocked_24h.count ?? 0,
+    };
+  });
+
+export const resolveSafetyEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      id: z.string().uuid(),
+      status: z.enum(["approved", "kept_blocked", "false_positive", "escalated"]),
+      note: z.string().max(1000).optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertMod(context.userId);
+    const admin = await getSupabaseAdmin();
+    const { error } = await admin
+      .from("safety_events")
+      .update({
+        status: data.status,
+        reviewer_id: context.userId,
+        reviewer_note: data.note ?? null,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAction(context.userId, "resolve_report", { target_id: data.id, payload: { safety: true, status: data.status } });
+    return { ok: true };
+  });
+
+export const listSafetyKeywords = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertMod(context.userId);
+    const admin = await getSupabaseAdmin();
+    const { data, error } = await admin.from("safety_keywords").select("*").order("severity", { ascending: false }).order("category");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const addSafetyKeyword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      pattern: z.string().min(2).max(200),
+      match_mode: z.enum(["word", "substring", "regex"]).default("substring"),
+      category: z.enum(["violent_crime","terrorism","illegal_coordination","threats","dangerous_instructions","self_harm"]),
+      severity: z.number().int().min(1).max(3),
+      notes: z.string().max(300).optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const admin = await getSupabaseAdmin();
+    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", context.userId);
+    const list = (roles ?? []).map((r) => r.role as string);
+    if (!list.includes("super_admin") && !list.includes("admin")) throw new Error("Admins only");
+    const { error } = await admin.from("safety_keywords").insert({ ...data, created_by: context.userId });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const toggleSafetyKeyword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid(), active: z.boolean() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const admin = await getSupabaseAdmin();
+    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", context.userId);
+    const list = (roles ?? []).map((r) => r.role as string);
+    if (!list.includes("super_admin") && !list.includes("admin")) throw new Error("Admins only");
+    const { error } = await admin.from("safety_keywords").update({ active: data.active }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const removeSafetyKeyword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const admin = await getSupabaseAdmin();
+    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", context.userId);
+    const list = (roles ?? []).map((r) => r.role as string);
+    if (!list.includes("super_admin") && !list.includes("admin")) throw new Error("Admins only");
+    const { error } = await admin.from("safety_keywords").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
 export const addUrlRule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
