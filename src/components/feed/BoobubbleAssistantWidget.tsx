@@ -13,6 +13,8 @@ import {
   Newspaper,
   Vote,
   VenetianMask,
+  Trophy,
+  Clock,
 } from "lucide-react";
 import {
   getAssistantFeedRecommendations,
@@ -26,6 +28,16 @@ import {
   type AssistantRecommendation,
   type FriendSuggestion,
 } from "@/lib/boobubble.functions";
+import { listCompetitions } from "@/lib/competitions.functions";
+
+type LiveComp = {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  banner_url?: string | null;
+  end_at?: string | null;
+};
 import { useAuth } from "@/lib/auth-store";
 
 const DISMISS_KEY = "boobubble:feed-rec:dismissed-at";
