@@ -116,20 +116,30 @@ export function BoobubbleAssistantWidget() {
   const load = useCallback(() => {
     if (!user?.id || user.isGuest || dismissed) { setLoading(false); return; }
     let alive = true;
-    Promise.all([fetchPublic({}), fetchRecs({}), fetchFriends({})])
-      .then(([pub, recs, fr]) => {
+    Promise.all([
+      fetchPublic({}),
+      fetchRecs({}),
+      fetchFriends({}),
+      fetchComps({}).catch(() => []),
+    ])
+      .then(([pub, recs, fr, comps]) => {
         if (!alive) return;
         setEnabled(Boolean(pub?.enabled && pub?.feed_recs_enabled));
         setBotAvatar(pub?.bot_avatar_url ?? null);
         setBotUsername(pub?.bot_username ?? null);
         setItems(recs.items ?? []);
         setFriends(fr.items ?? []);
+        const now = Date.now();
+        const live = (Array.isArray(comps) ? comps : [])
+          .filter((c: LiveComp) => c.status === "live" && (!c.end_at || new Date(c.end_at).getTime() > now))
+          .slice(0, 3);
+        setLiveComps(live as LiveComp[]);
         setRefreshTick((t) => t + 1);
       })
-      .catch(() => { if (alive) { setItems([]); setFriends([]); } })
+      .catch(() => { if (alive) { setItems([]); setFriends([]); setLiveComps([]); } })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [user?.id, user?.isGuest, dismissed, fetchPublic, fetchRecs, fetchFriends]);
+  }, [user?.id, user?.isGuest, dismissed, fetchPublic, fetchRecs, fetchFriends, fetchComps]);
 
   useEffect(() => { load(); }, [load]);
 
