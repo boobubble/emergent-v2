@@ -31,6 +31,35 @@ export function ChatApp() {
   const [lbOpen, setLbOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
   const [toast, setToast] = useState<EngageToast | null>(null);
+  const [hubOpen, setHubOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 768px)").matches : false,
+  );
+  const [feedbotChip, setFeedbotChip] = useState<{ title: string; body: string } | null>(null);
+  const hubBadge = useHubBadge(hubOpen);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 768px)");
+    const onChange = () => setIsMobile(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  // FeedBot smart welcome — once per browser session.
+  useEffect(() => {
+    try {
+      if (window.sessionStorage.getItem("palrgo:hub:welcomed") === "1") return;
+      window.sessionStorage.setItem("palrgo:hub:welcomed", "1");
+    } catch { /* ignore */ }
+    const t = window.setTimeout(() => {
+      setFeedbotChip({
+        title: "👋 Welcome back",
+        body: "You have missions, rewards & live events waiting.",
+      });
+    }, 1500);
+    return () => window.clearTimeout(t);
+  }, []);
   // Persist the user's sidebar open/closed choice across route switches and
   // browser resizes. Only fall back to auto-collapse on phones when the user
   // has never expressed a preference.
