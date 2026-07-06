@@ -175,7 +175,7 @@ export function ChatApp() {
             </button>
           )}
 
-          <ChatHeader />
+          <ChatHeader onOpenHub={() => setHubOpen(true)} hubOpen={hubOpen} />
           <div className="relative flex min-h-0 flex-1 flex-col">
             <MessageList channelId={state.activeChannel} />
             <PresenceFeed channelId={state.activeChannel} />
