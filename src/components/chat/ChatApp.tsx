@@ -46,19 +46,81 @@ export function ChatApp() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  // FeedBot smart welcome — once per browser session.
+  // FeedBot smart welcome + non-spammy topic reminders.
+  // Rules:
+  //  - One welcome chip per browser session (never repeats).
+  //  - Follow-up topic reminders only after a long quiet interval,
+  //    only when no chip is currently visible, one topic per session,
+  //    and throttled globally across the app (localStorage cooldown).
   useEffect(() => {
-    try {
-      if (window.sessionStorage.getItem("palrgo:hub:welcomed") === "1") return;
-      window.sessionStorage.setItem("palrgo:hub:welcomed", "1");
-    } catch { /* ignore */ }
-    const t = window.setTimeout(() => {
-      setFeedbotChip({
-        title: "👋 Welcome back",
-        body: "You have missions, rewards & live events waiting.",
-      });
-    }, 1500);
-    return () => window.clearTimeout(t);
+    const SESSION_WELCOMED = "palrgo:hub:welcomed";
+    const SESSION_TOPICS_SHOWN = "palrgo:hub:topicsShown";
+    const LAST_REMINDER_AT = "palrgo:hub:lastReminderAt";
+    const REMINDER_COOLDOWN_MS = 15 * 60 * 1000; // 15 min between any reminders
+    const FIRST_TOPIC_DELAY_MS = 6 * 60 * 1000;  // wait 6 min after welcome
+
+    const TOPICS: Record<string, { title: string; body: string }> = {
+      missions:     { title: "🎯 New missions",   body: "Fresh missions are ready to claim." },
+      challenges:   { title: "⚔️ Daily challenge", body: "A new challenge just went live." },
+      rewards:      { title: "🎁 Rewards waiting", body: "Unclaimed coins & XP in your Hub." },
+      competitions: { title: "🏆 Live competition", body: "A competition is running right now." },
+      radio:        { title: "📻 Radio is on air",  body: "Tune in to what's playing now." },
+      trending:     { title: "🔥 Trending on feed", body: "See what the community is loving." },
+    };
+
+    const readShown = (): string[] => {
+      try { return JSON.parse(window.sessionStorage.getItem(SESSION_TOPICS_SHOWN) || "[]"); }
+      catch { return []; }
+    };
+    const markShown = (key: string) => {
+      try {
+        const s = readShown();
+        if (!s.includes(key)) s.push(key);
+        window.sessionStorage.setItem(SESSION_TOPICS_SHOWN, JSON.stringify(s));
+        window.localStorage.setItem(LAST_REMINDER_AT, String(Date.now()));
+      } catch { /* ignore */ }
+    };
+    const canShowNow = () => {
+      try {
+        const last = Number(window.localStorage.getItem(LAST_REMINDER_AT) || 0);
+        return Date.now() - last >= REMINDER_COOLDOWN_MS;
+      } catch { return true; }
+    };
+
+    const timers: number[] = [];
+    let welcomed = false;
+    try { welcomed = window.sessionStorage.getItem(SESSION_WELCOMED) === "1"; } catch { /* ignore */ }
+
+    if (!welcomed) {
+      try { window.sessionStorage.setItem(SESSION_WELCOMED, "1"); } catch { /* ignore */ }
+      timers.push(window.setTimeout(() => {
+        setFeedbotChip({
+          title: "👋 Welcome back",
+          body: "You have missions, rewards & live events waiting.",
+        });
+        try { window.localStorage.setItem(LAST_REMINDER_AT, String(Date.now())); } catch { /* ignore */ }
+      }, 1500));
+    }
+
+    const scheduleNextTopic = (delay: number) => {
+      timers.push(window.setTimeout(() => {
+        setFeedbotChip((current) => {
+          if (current) { scheduleNextTopic(REMINDER_COOLDOWN_MS); return current; }
+          if (!canShowNow()) { scheduleNextTopic(REMINDER_COOLDOWN_MS); return current; }
+          const shown = readShown();
+          const remaining = Object.keys(TOPICS).filter((k) => !shown.includes(k));
+          if (remaining.length === 0) return current;
+          const pick = remaining[Math.floor(Math.random() * remaining.length)];
+          markShown(pick);
+          scheduleNextTopic(REMINDER_COOLDOWN_MS);
+          return TOPICS[pick];
+        });
+      }, delay));
+    };
+
+    scheduleNextTopic(FIRST_TOPIC_DELAY_MS);
+
+    return () => { timers.forEach((t) => window.clearTimeout(t)); };
   }, []);
   // Persist the user's sidebar open/closed choice across route switches and
   // browser resizes. Only fall back to auto-collapse on phones when the user
