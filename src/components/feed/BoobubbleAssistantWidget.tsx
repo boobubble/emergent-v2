@@ -13,6 +13,8 @@ import {
   Newspaper,
   Vote,
   VenetianMask,
+  Trophy,
+  Clock,
 } from "lucide-react";
 import {
   getAssistantFeedRecommendations,
@@ -26,6 +28,16 @@ import {
   type AssistantRecommendation,
   type FriendSuggestion,
 } from "@/lib/boobubble.functions";
+import { listCompetitions } from "@/lib/competitions.functions";
+
+type LiveComp = {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  banner_url?: string | null;
+  end_at?: string | null;
+};
 import { useAuth } from "@/lib/auth-store";
 
 const DISMISS_KEY = "boobubble:feed-rec:dismissed-at";
@@ -70,6 +82,7 @@ export function BoobubbleAssistantWidget() {
   const triggerSecurity = useServerFn(triggerSecurityDigestIfNeeded);
   const fetchFriends = useServerFn(getFriendSuggestions);
   const fetchPublic = useServerFn(getBoobubblePublic);
+  const fetchComps = useServerFn(listCompetitions);
 
   const [items, setItems] = useState<AssistantRecommendation[]>([]);
   const [friends, setFriends] = useState<FriendSuggestion[]>([]);
@@ -80,6 +93,7 @@ export function BoobubbleAssistantWidget() {
   const [refreshTick, setRefreshTick] = useState(0);
   const [botAvatar, setBotAvatar] = useState<string | null>(null);
   const [botUsername, setBotUsername] = useState<string | null>(null);
+  const [liveComps, setLiveComps] = useState<LiveComp[]>([]);
 
   // Fire all idempotent triggers on first authenticated mount
   useEffect(() => {
@@ -102,20 +116,30 @@ export function BoobubbleAssistantWidget() {
   const load = useCallback(() => {
     if (!user?.id || user.isGuest || dismissed) { setLoading(false); return; }
     let alive = true;
-    Promise.all([fetchPublic({}), fetchRecs({}), fetchFriends({})])
-      .then(([pub, recs, fr]) => {
+    Promise.all([
+      fetchPublic({}),
+      fetchRecs({}),
+      fetchFriends({}),
+      fetchComps({}).catch(() => []),
+    ])
+      .then(([pub, recs, fr, comps]) => {
         if (!alive) return;
         setEnabled(Boolean(pub?.enabled && pub?.feed_recs_enabled));
         setBotAvatar(pub?.bot_avatar_url ?? null);
         setBotUsername(pub?.bot_username ?? null);
         setItems(recs.items ?? []);
         setFriends(fr.items ?? []);
+        const now = Date.now();
+        const live = (Array.isArray(comps) ? comps : [])
+          .filter((c: LiveComp) => c.status === "live" && (!c.end_at || new Date(c.end_at).getTime() > now))
+          .slice(0, 3);
+        setLiveComps(live as LiveComp[]);
         setRefreshTick((t) => t + 1);
       })
-      .catch(() => { if (alive) { setItems([]); setFriends([]); } })
+      .catch(() => { if (alive) { setItems([]); setFriends([]); setLiveComps([]); } })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [user?.id, user?.isGuest, dismissed, fetchPublic, fetchRecs, fetchFriends]);
+  }, [user?.id, user?.isGuest, dismissed, fetchPublic, fetchRecs, fetchFriends, fetchComps]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -164,8 +188,8 @@ export function BoobubbleAssistantWidget() {
 
 
   if (!user?.id || user.isGuest || dismissed || !enabled) return null;
-  if (loading && items.length === 0 && friends.length === 0) return null;
-  if (items.length === 0 && friends.length === 0) return null;
+  if (loading && items.length === 0 && friends.length === 0 && liveComps.length === 0) return null;
+  if (items.length === 0 && friends.length === 0 && liveComps.length === 0) return null;
 
   const dismiss = () => {
     try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch { /* ignore */ }
@@ -239,6 +263,48 @@ export function BoobubbleAssistantWidget() {
         <p className="mb-3 text-[11px] text-white/50">
           Real picks from the community — refreshed for you.
         </p>
+
+        {/* Live competitions */}
+        {liveComps.length > 0 && (
+          <div className="mb-3 space-y-2">
+            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-white/60">
+              <Trophy className="h-3 w-3 text-amber-400" /> Running competitions
+              <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-300 ring-1 ring-rose-500/30">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> Live
+              </span>
+            </p>
+            {liveComps.map((c) => (
+              <Link
+                key={c.id}
+                to="/competitions/$id"
+                params={{ id: c.id }}
+                className="group flex items-center gap-3 overflow-hidden rounded-2xl border border-amber-500/15 bg-gradient-to-r from-amber-500/10 via-rose-500/5 to-transparent p-2.5 transition hover:-translate-y-0.5 hover:border-amber-400/30 hover:shadow-lg hover:shadow-amber-500/10"
+              >
+                {c.banner_url ? (
+                  <img
+                    src={c.banner_url}
+                    alt=""
+                    loading="lazy"
+                    className="h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-amber-400/20"
+                  />
+                ) : (
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-amber-500/30 to-rose-500/20 ring-1 ring-amber-400/30">
+                    <Trophy className="h-5 w-5 text-amber-300" />
+                  </div>
+                )}
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="truncate text-[12px] font-semibold text-white/90 group-hover:text-white transition">
+                    {c.name}
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-200/70">
+                    <Clock className="h-2.5 w-2.5" /> <TimeLeft endAt={c.end_at ?? null} />
+                  </span>
+                </div>
+                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-white/20 opacity-0 transition group-hover:translate-x-0.5 group-hover:text-white/60 group-hover:opacity-100" />
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* Recommendation cards */}
         {items.length > 0 && (
@@ -371,4 +437,21 @@ function RecCard({ item, index }: { item: AssistantRecommendation; index: number
       <ArrowRight className="h-3.5 w-3.5 shrink-0 text-white/20 opacity-0 transition group-hover:translate-x-0.5 group-hover:text-white/60 group-hover:opacity-100" />
     </Link>
   );
+}
+
+function TimeLeft({ endAt }: { endAt: string | null }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  if (!endAt) return <>Ongoing</>;
+  const ms = new Date(endAt).getTime() - now;
+  if (ms <= 0) return <>Ending soon</>;
+  const mins = Math.floor(ms / 60_000);
+  const hrs = Math.floor(mins / 60);
+  const days = Math.floor(hrs / 24);
+  if (days >= 1) return <>{days}d {hrs % 24}h left</>;
+  if (hrs >= 1) return <>{hrs}h {mins % 60}m left</>;
+  return <>{Math.max(1, mins)}m left</>;
 }
