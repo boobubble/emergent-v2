@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Settings, Palette, LayoutGrid, Puzzle, Shield,
+  LayoutDashboard, Settings, Palette, LayoutGrid, Puzzle, Shield, ShieldAlert,
   Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3, Bot, Users2,
   FileText, MessageSquare, Newspaper, Zap, Flag,
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
