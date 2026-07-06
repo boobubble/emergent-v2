@@ -2518,6 +2518,99 @@ export type Database = {
         }
         Relationships: []
       }
+      safety_events: {
+        Row: {
+          action: string
+          category: string
+          channel_id: string | null
+          created_at: string
+          id: string
+          matched_pattern: string | null
+          message_id: string | null
+          message_text: string
+          reviewed_at: string | null
+          reviewer_id: string | null
+          reviewer_note: string | null
+          severity: number
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          category: string
+          channel_id?: string | null
+          created_at?: string
+          id?: string
+          matched_pattern?: string | null
+          message_id?: string | null
+          message_text: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_note?: string | null
+          severity: number
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          category?: string
+          channel_id?: string | null
+          created_at?: string
+          id?: string
+          matched_pattern?: string | null
+          message_id?: string | null
+          message_text?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_note?: string | null
+          severity?: number
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      safety_keywords: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          match_mode: string
+          notes: string | null
+          pattern: string
+          severity: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match_mode?: string
+          notes?: string | null
+          pattern: string
+          severity: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match_mode?: string
+          notes?: string | null
+          pattern?: string
+          severity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       seo_settings: {
         Row: {
           description: string | null
