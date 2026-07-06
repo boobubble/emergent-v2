@@ -188,8 +188,8 @@ export function BoobubbleAssistantWidget() {
 
 
   if (!user?.id || user.isGuest || dismissed || !enabled) return null;
-  if (loading && items.length === 0 && friends.length === 0) return null;
-  if (items.length === 0 && friends.length === 0) return null;
+  if (loading && items.length === 0 && friends.length === 0 && liveComps.length === 0) return null;
+  if (items.length === 0 && friends.length === 0 && liveComps.length === 0) return null;
 
   const dismiss = () => {
     try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch { /* ignore */ }
