@@ -1,20 +1,18 @@
-import { MessageCircle, X, Bot, BotOff, Search, Users, Palette, Minus, Star } from "lucide-react";
+import { MessageCircle, X, Bot, BotOff, Search, Users, Palette, Minus } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
 import { LoyaltyChip } from "./LoyaltyChip";
 import { BrandMark } from "@/components/BrandMark";
-import { useHubBadge } from "./CommunityHub";
 
 interface ChatHeaderProps {
   onOpenHub?: () => void;
   hubOpen?: boolean;
 }
 
-export function ChatHeader({ onOpenHub, hubOpen = false }: ChatHeaderProps = {}) {
+export function ChatHeader(_props: ChatHeaderProps = {}) {
   const { state, isDM, dmUser, channelLabel, closeDM, setActive } = useChat();
   const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
-  const hubBadge = useHubBadge(hubOpen);
   const id = state.activeChannel;
 
   if (isDM(id)) {
