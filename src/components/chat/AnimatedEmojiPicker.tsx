@@ -1,22 +1,65 @@
 // Skype-style animated emoticon picker.
-// Uses Google's Noto Animated Emoji GIFs (public CDN) as sticker-style GIFs.
-// Animated sticker packs must be purchased from the Shop — only owned packs appear here.
+// - Shop sticker packs the user owns (Noto Animated Emoji GIFs).
+// - Admin-uploaded custom stickers/emojis (from public.custom_stickers), available to everyone.
 import { useEffect, useState } from "react";
-import { ShoppingBag, Lock } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { SHOP_BY_ID, SHOP_BY_CATEGORY, stickerGifUrl, type StickerDef, type ShopItem } from "@/lib/shop-catalog";
 
-export type Sticker = StickerDef;
+export type Sticker = StickerDef & { url?: string };
 
 export function gifUrlForSticker(cp: string) {
   return stickerGifUrl(cp);
+}
+
+/** Resolve a Sticker to its final image URL (custom uploads use `url`; shop uses `cp`). */
+export function stickerUrl(s: Sticker) {
+  return s.url ?? stickerGifUrl(s.cp);
+}
+
+type Pack = {
+  id: string;
+  name: string;
+  stickers: Sticker[];
+  isCustom?: boolean;
+};
+
+function useCustomPacks() {
+  const [packs, setPacks] = useState<Pack[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("custom_stickers")
+        .select("id, name, pack, kind, url, sort_order")
+        .eq("is_active", true)
+        .order("pack", { ascending: true })
+        .order("sort_order", { ascending: true });
+      if (cancelled) return;
+      const byPack = new Map<string, Sticker[]>();
+      for (const r of (data ?? []) as any[]) {
+        const key = `${r.kind === "emoji" ? "Emojis" : "Stickers"} · ${r.pack || "Custom"}`;
+        const list = byPack.get(key) ?? [];
+        list.push({ cp: r.id, name: r.name, label: r.name, url: r.url });
+        byPack.set(key, list);
+      }
+      const out: Pack[] = [];
+      for (const [name, stickers] of byPack) {
+        out.push({ id: `custom:${name}`, name, stickers, isCustom: true });
+      }
+      setPacks(out);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return packs;
 }
 
 export function AnimatedEmojiPicker({ onPick, onOpenShop }: { onPick: (s: Sticker) => void; onOpenShop?: () => void }) {
   const { user } = useAuth();
   const [ownedPacks, setOwnedPacks] = useState<ShopItem[] | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const customPacks = useCustomPacks();
 
   useEffect(() => {
     let cancelled = false;
@@ -32,53 +75,69 @@ export function AnimatedEmojiPicker({ onPick, onOpenShop }: { onPick: (s: Sticke
         .map(r => SHOP_BY_ID[r.item_id])
         .filter((it): it is ShopItem => !!it && !!it.stickers?.length);
       setOwnedPacks(items);
-      setActiveId(prev => prev ?? items[0]?.id ?? null);
     })();
     return () => { cancelled = true; };
   }, [user?.id]);
 
   const totalForSale = SHOP_BY_CATEGORY.emoji_pack.length;
 
-  if (ownedPacks === null) {
+  const allPacks: Pack[] = [
+    ...(customPacks ?? []),
+    ...((ownedPacks ?? []).map(p => ({ id: p.id, name: p.name.replace(/ Pack$/, ""), stickers: (p.stickers ?? []) as Sticker[] }))),
+  ];
+
+  // set default active pack once packs load
+  useEffect(() => {
+    if (activeId) return;
+    if (allPacks.length > 0) setActiveId(allPacks[0].id);
+  }, [allPacks.length, activeId]);
+
+  if (customPacks === null || ownedPacks === null) {
     return (
-      <div className="w-[300px] rounded-xl border border-border bg-card p-4 text-center text-xs text-muted-foreground shadow-lg">
-        Loading sticker packs…
+      <div className="w-[320px] rounded-xl border border-border bg-card p-4 text-center text-xs text-muted-foreground shadow-lg">
+        Loading stickers…
       </div>
     );
   }
 
-  if (ownedPacks.length === 0) {
+  if (allPacks.length === 0) {
     return (
-      <div className="w-[300px] rounded-xl border border-border bg-card p-4 shadow-lg">
+      <div className="w-[320px] rounded-xl border border-border bg-card p-4 shadow-lg">
         <div className="flex flex-col items-center gap-2 py-3 text-center">
-          <Lock className="h-6 w-6 text-muted-foreground" />
           <div className="text-sm font-semibold">No animated stickers yet</div>
           <div className="text-[11px] text-muted-foreground">
-            Buy sticker packs from the Shop to send animated stickers in chat.
+            Buy sticker packs from the Shop, or ask an admin to upload custom ones.
           </div>
-          <button
-            onClick={onOpenShop}
-            className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground hover:bg-primary/90"
-          >
-            <ShoppingBag className="h-3.5 w-3.5" /> Open Shop ({totalForSale} packs)
-          </button>
+          {onOpenShop && (
+            <button
+              onClick={onOpenShop}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground hover:bg-primary/90"
+            >
+              <ShoppingBag className="h-3.5 w-3.5" /> Open Shop ({totalForSale} packs)
+            </button>
+          )}
         </div>
       </div>
     );
   }
 
-  const active = ownedPacks.find(p => p.id === activeId) ?? ownedPacks[0];
+  const active = allPacks.find(p => p.id === activeId) ?? allPacks[0];
+  const isEmojiPack = active.isCustom && /^Emojis/.test(active.name);
+  const cellSize = isEmojiPack ? "h-10 w-10" : "h-16 w-16";
+  const imgSize = isEmojiPack ? "h-9 w-9" : "h-14 w-14";
+  const cols = isEmojiPack ? "grid-cols-6" : "grid-cols-4";
+
   return (
-    <div className="w-[300px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+    <div className="w-[320px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
       <div className="flex items-center gap-1 border-b border-border px-2 py-1 overflow-x-auto">
-        {ownedPacks.map(p => (
+        {allPacks.map(p => (
           <button
             key={p.id}
             onClick={() => setActiveId(p.id)}
             title={p.name}
             className={`shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${active.id === p.id ? "bg-primary/20 text-primary" : "text-muted-foreground hover:bg-white/5"}`}
           >
-            {p.name.replace(/ Pack$/, "")}
+            {p.name}
           </button>
         ))}
         {onOpenShop && (
@@ -91,27 +150,27 @@ export function AnimatedEmojiPicker({ onPick, onOpenShop }: { onPick: (s: Sticke
           </button>
         )}
       </div>
-      <div className="max-h-[200px] overflow-y-auto p-1.5">
-        <div className="grid grid-cols-6 gap-1">
+      <div className="max-h-[240px] overflow-y-auto p-2">
+        <div className={`grid ${cols} gap-1.5`}>
           {(active.stickers ?? []).map(s => (
             <button
               key={s.name + s.cp}
               onClick={() => onPick(s)}
               title={s.label}
-              className="grid h-10 w-10 place-items-center rounded-lg transition-transform hover:scale-110 hover:bg-white/5 active:scale-95"
+              className={`grid ${cellSize} place-items-center rounded-lg transition-transform hover:scale-110 hover:bg-white/5 active:scale-95`}
             >
               <img
-                src={gifUrlForSticker(s.cp)}
+                src={stickerUrl(s)}
                 alt={s.label}
                 loading="lazy"
-                className="h-9 w-9 object-contain"
+                className={`${imgSize} object-contain`}
               />
             </button>
           ))}
         </div>
       </div>
       <div className="border-t border-border px-2 py-1 text-center text-[9px] uppercase tracking-wider text-muted-foreground">
-        Tap to send animated sticker
+        Tap to send
       </div>
     </div>
   );

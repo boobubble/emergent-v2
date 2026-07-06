@@ -7,7 +7,7 @@ import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
-import { AnimatedEmojiPicker, gifUrlForSticker } from "./AnimatedEmojiPicker";
+import { AnimatedEmojiPicker, stickerUrl } from "./AnimatedEmojiPicker";
 import { GiphyPicker } from "./GiphyPicker";
 import { YoutubePicker } from "./YoutubePicker";
 import { useAppSettings } from "@/lib/app-settings";
@@ -345,7 +345,7 @@ export function MessageInput() {
                   name: `${s.name}.gif`,
                   mime: "image/gif",
                   size: 0,
-                  dataUrl: gifUrlForSticker(s.cp),
+                  dataUrl: stickerUrl(s),
                 },
                 replyToId: replyingTo?.id,
               });

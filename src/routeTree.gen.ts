@@ -56,6 +56,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminUpcomingRouteImport } from './routes/admin.upcoming'
 import { Route as AdminSystemRouteImport } from './routes/admin.system'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
+import { Route as AdminStickersRouteImport } from './routes/admin.stickers'
 import { Route as AdminStaffPermissionsRouteImport } from './routes/admin.staff-permissions'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
 import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
@@ -358,6 +359,11 @@ const AdminSystemRoute = AdminSystemRouteImport.update({
 const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
   id: '/subscriptions',
   path: '/subscriptions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStickersRoute = AdminStickersRouteImport.update({
+  id: '/stickers',
+  path: '/stickers',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminStaffPermissionsRoute = AdminStaffPermissionsRouteImport.update({
@@ -788,6 +794,7 @@ export interface FileRoutesByFullPath {
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
+  '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
@@ -902,6 +909,7 @@ export interface FileRoutesByTo {
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
+  '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
@@ -1019,6 +1027,7 @@ export interface FileRoutesById {
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
+  '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
@@ -1137,6 +1146,7 @@ export interface FileRouteTypes {
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
+    | '/admin/stickers'
     | '/admin/subscriptions'
     | '/admin/system'
     | '/admin/upcoming'
@@ -1251,6 +1261,7 @@ export interface FileRouteTypes {
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
+    | '/admin/stickers'
     | '/admin/subscriptions'
     | '/admin/system'
     | '/admin/upcoming'
@@ -1367,6 +1378,7 @@ export interface FileRouteTypes {
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
+    | '/admin/stickers'
     | '/admin/subscriptions'
     | '/admin/system'
     | '/admin/upcoming'
@@ -1766,6 +1778,13 @@ declare module '@tanstack/react-router' {
       path: '/subscriptions'
       fullPath: '/admin/subscriptions'
       preLoaderRoute: typeof AdminSubscriptionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/stickers': {
+      id: '/admin/stickers'
+      path: '/stickers'
+      fullPath: '/admin/stickers'
+      preLoaderRoute: typeof AdminStickersRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/staff-permissions': {
@@ -2312,6 +2331,7 @@ interface AdminRouteChildren {
   AdminSocialFeedRoute: typeof AdminSocialFeedRoute
   AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
   AdminStaffPermissionsRoute: typeof AdminStaffPermissionsRoute
+  AdminStickersRoute: typeof AdminStickersRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminSystemRoute: typeof AdminSystemRoute
   AdminUpcomingRoute: typeof AdminUpcomingRouteWithChildren
@@ -2380,6 +2400,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSocialFeedRoute: AdminSocialFeedRoute,
   AdminSocialLayoutRoute: AdminSocialLayoutRoute,
   AdminStaffPermissionsRoute: AdminStaffPermissionsRoute,
+  AdminStickersRoute: AdminStickersRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminSystemRoute: AdminSystemRoute,
   AdminUpcomingRoute: AdminUpcomingRouteWithChildren,
@@ -2481,13 +2502,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
