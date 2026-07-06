@@ -1,13 +1,20 @@
-import { MessageCircle, X, Bot, BotOff, Search, Users, Palette, Minus } from "lucide-react";
+import { MessageCircle, X, Bot, BotOff, Search, Users, Palette, Minus, Star } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
 import { LoyaltyChip } from "./LoyaltyChip";
 import { BrandMark } from "@/components/BrandMark";
+import { useHubBadge } from "./CommunityHub";
 
-export function ChatHeader() {
+interface ChatHeaderProps {
+  onOpenHub?: () => void;
+  hubOpen?: boolean;
+}
+
+export function ChatHeader({ onOpenHub, hubOpen = false }: ChatHeaderProps = {}) {
   const { state, isDM, dmUser, channelLabel, closeDM, setActive } = useChat();
   const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
+  const hubBadge = useHubBadge(hubOpen);
   const id = state.activeChannel;
 
   if (isDM(id)) {
@@ -106,6 +113,19 @@ export function ChatHeader() {
           onClick={() => window.dispatchEvent(new Event("palrgo:open-chat-theme-store"))}
         >
           <Palette className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onOpenHub?.()}
+          className="hub-trigger hidden md:inline-flex"
+          title="Community Hub"
+          aria-label="Open Community Hub"
+        >
+          <Star className="h-3.5 w-3.5 fill-current" />
+          <span>Hub</span>
+          {hubBadge > 0 && (
+            <span className="hub-trigger-badge hub-badge-pulse">{hubBadge > 9 ? "9+" : hubBadge}</span>
+          )}
         </button>
         <button
           type="button"
