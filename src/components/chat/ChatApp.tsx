@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate } from "@tanstack/react-router";
-import { Flame, Award, PanelLeftOpen } from "lucide-react";
+import { Flame, Award, PanelLeftOpen, Star, X } from "lucide-react";
+import { CommunityHub, useHubBadge } from "@/components/chat/CommunityHub";
 import { ChatThemeStore } from "@/components/chat/ChatThemeStore";
 import { useActiveChatTheme } from "@/lib/chat-themes";
 import { useOptionalChat } from "@/lib/chat-store";
