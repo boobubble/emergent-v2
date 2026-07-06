@@ -181,7 +181,51 @@ export function ChatApp() {
             <PresenceFeed channelId={state.activeChannel} />
           </div>
           <PollDiscoveryWidget />
+
+          {/* FeedBot smart reminder chip (dismissible, one-per-session) */}
+          {feedbotChip && (
+            <div className="pointer-events-auto mx-auto mb-2 flex w-[92%] max-w-md items-start gap-2 rounded-2xl border border-primary/25 bg-gradient-to-r from-primary/15 via-accent/10 to-transparent p-2.5 shadow-lg backdrop-blur-md md:mb-0">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground">
+                <Star className="h-4 w-4 fill-current" />
+              </div>
+              <div className="min-w-0 flex-1 leading-tight">
+                <div className="truncate text-[11px] font-bold text-foreground">{feedbotChip.title}</div>
+                <div className="truncate text-[11px] text-muted-foreground">{feedbotChip.body}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setHubOpen(true); setFeedbotChip(null); }}
+                className="shrink-0 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground shadow"
+              >
+                Open Hub
+              </button>
+              <button
+                type="button"
+                onClick={() => setFeedbotChip(null)}
+                aria-label="Dismiss"
+                className="shrink-0 rounded-full p-1 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
           <MessageInput />
+
+          {/* Mobile sticky floating Hub button — above message input */}
+          <button
+            type="button"
+            onClick={() => setHubOpen(true)}
+            aria-label="Open Community Hub"
+            className="hub-trigger fixed bottom-24 right-4 z-30 !px-4 !py-3 md:hidden"
+          >
+            <Star className="h-4 w-4 fill-current" />
+            <span>Hub</span>
+            {hubBadge > 0 && (
+              <span className="hub-trigger-badge hub-badge-pulse">{hubBadge > 9 ? "9+" : hubBadge}</span>
+            )}
+          </button>
+
           <DjFooter />
         </main>
         {!isDM(state.activeChannel) && <MembersPanel roomId={state.activeChannel} />}
