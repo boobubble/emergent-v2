@@ -46,6 +46,13 @@ export function ChatApp() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  // Listen for open-hub events dispatched from MembersPanel / anywhere.
+  useEffect(() => {
+    const open = () => setHubOpen(true);
+    window.addEventListener("palrgo:open-hub", open);
+    return () => window.removeEventListener("palrgo:open-hub", open);
+  }, []);
+
   // FeedBot smart welcome + non-spammy topic reminders.
   // Rules:
   //  - One welcome chip per browser session (never repeats).

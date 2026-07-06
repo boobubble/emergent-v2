@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, UserCheck, VolumeX, Search, Bot, Settings2, Check, Sparkles } from "lucide-react";
+import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, UserCheck, VolumeX, Search, Bot, Settings2, Check, Sparkles, Star } from "lucide-react";
+import { useHubBadge } from "./CommunityHub";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
@@ -208,9 +209,26 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
 
 
+  const hubBadge = useHubBadge(false);
+
   const body = (
     <>
       <div className="flex items-center justify-end gap-0 px-3 pt-2 pr-12 lg:pr-3">
+
+        <button
+          type="button"
+          title="Community Hub"
+          aria-label="Open Community Hub"
+          onClick={() => window.dispatchEvent(new Event("palrgo:open-hub"))}
+          className="relative grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+        >
+          <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+          {hubBadge > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+              {hubBadge > 9 ? "9+" : hubBadge}
+            </span>
+          )}
+        </button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
