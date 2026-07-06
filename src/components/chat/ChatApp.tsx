@@ -281,20 +281,6 @@ export function ChatApp() {
 
           <MessageInput />
 
-          {/* Mobile sticky floating Hub button — above message input */}
-          <button
-            type="button"
-            onClick={() => setHubOpen(true)}
-            aria-label="Open Community Hub"
-            className="hub-trigger fixed bottom-16 right-4 z-30 !px-3 !py-2 md:hidden"
-          >
-            <Star className="h-4 w-4 fill-current" />
-            <span>Hub</span>
-            {hubBadge > 0 && (
-              <span className="hub-trigger-badge hub-badge-pulse">{hubBadge > 9 ? "9+" : hubBadge}</span>
-            )}
-          </button>
-
           <DjFooter />
         </main>
         {!isDM(state.activeChannel) && <MembersPanel roomId={state.activeChannel} />}
