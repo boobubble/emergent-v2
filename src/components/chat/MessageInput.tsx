@@ -283,7 +283,7 @@ export function MessageInput() {
   const muteLabel = muteSecsLeft >= 60 ? `${Math.ceil(muteSecsLeft / 60)}m` : `${muteSecsLeft}s`;
 
   return (
-    <div className="px-3 pb-1 pt-1 sm:px-6 sm:pb-1">
+    <div className="px-3 pb-0 pt-1 sm:px-6 sm:pb-0">
       {replyingTo && (
         <div className="mb-2 flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
           <Reply className="h-3.5 w-3.5 shrink-0 text-primary" />
