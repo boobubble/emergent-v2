@@ -38,7 +38,6 @@ const SEV_LABEL: Record<number, { label: string; color: string }> = {
 };
 
 function SafetyPage() {
-  const router = useRouter();
   const listFn = useServerFn(listSafetyEvents);
   const overviewFn = useServerFn(getSafetyOverview);
   const resolveFn = useServerFn(resolveSafetyEvent);
