@@ -104,15 +104,28 @@ export function CommunityHub({ open, onOpenChange, isMobile }: Props) {
         <div className="pointer-events-none absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-accent/20 blur-3xl" />
 
         <SheetHeader className="sticky top-0 z-10 border-b border-white/10 bg-background/70 px-5 py-4 backdrop-blur-xl">
-          <SheetTitle className="flex items-center gap-2 text-left">
-            <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-            <span className="bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
-              Community Hub
-            </span>
-          </SheetTitle>
-          <p className="text-left text-xs text-muted-foreground">
-            One place for missions, rewards, competitions and more.
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <SheetTitle className="flex items-center gap-2 text-left">
+                <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                <span className="bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
+                  Community Hub
+                </span>
+              </SheetTitle>
+              <p className="text-left text-xs text-muted-foreground">
+                One place for missions, rewards, competitions and more.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              aria-label="Close Community Hub"
+              title="Close"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </SheetHeader>
 
         <div className="relative space-y-3 p-4 pb-8">
