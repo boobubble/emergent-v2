@@ -116,6 +116,19 @@ export function ChatHeader({ onOpenHub, hubOpen = false }: ChatHeaderProps = {})
         </button>
         <button
           type="button"
+          onClick={() => onOpenHub?.()}
+          className="hub-trigger hidden md:inline-flex"
+          title="Community Hub"
+          aria-label="Open Community Hub"
+        >
+          <Star className="h-3.5 w-3.5 fill-current" />
+          <span>Hub</span>
+          {hubBadge > 0 && (
+            <span className="hub-trigger-badge hub-badge-pulse">{hubBadge > 9 ? "9+" : hubBadge}</span>
+          )}
+        </button>
+        <button
+          type="button"
           className="chat-icon-btn"
           title="Search messages"
           aria-label="Search messages"
