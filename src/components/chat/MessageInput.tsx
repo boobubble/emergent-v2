@@ -345,7 +345,7 @@ export function MessageInput() {
                   name: `${s.name}.gif`,
                   mime: "image/gif",
                   size: 0,
-                  dataUrl: gifUrlForSticker(s.cp),
+                  dataUrl: stickerUrl(s),
                 },
                 replyToId: replyingTo?.id,
               });
