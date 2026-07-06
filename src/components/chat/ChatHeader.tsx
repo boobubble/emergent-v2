@@ -11,9 +11,10 @@ interface ChatHeaderProps {
   hubOpen?: boolean;
 }
 
-export function ChatHeader() {
+export function ChatHeader({ onOpenHub, hubOpen = false }: ChatHeaderProps = {}) {
   const { state, isDM, dmUser, channelLabel, closeDM, setActive } = useChat();
   const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
+  const hubBadge = useHubBadge(hubOpen);
   const id = state.activeChannel;
 
   if (isDM(id)) {
