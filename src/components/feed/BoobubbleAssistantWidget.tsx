@@ -438,3 +438,20 @@ function RecCard({ item, index }: { item: AssistantRecommendation; index: number
     </Link>
   );
 }
+
+function TimeLeft({ endAt }: { endAt: string | null }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  if (!endAt) return <>Ongoing</>;
+  const ms = new Date(endAt).getTime() - now;
+  if (ms <= 0) return <>Ending soon</>;
+  const mins = Math.floor(ms / 60_000);
+  const hrs = Math.floor(mins / 60);
+  const days = Math.floor(hrs / 24);
+  if (days >= 1) return <>{days}d {hrs % 24}h left</>;
+  if (hrs >= 1) return <>{hrs}h {mins % 60}m left</>;
+  return <>{Math.max(1, mins)}m left</>;
+}
