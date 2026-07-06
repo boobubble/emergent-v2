@@ -7,7 +7,7 @@ import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
-import { AnimatedEmojiPicker, gifUrlForSticker } from "./AnimatedEmojiPicker";
+import { AnimatedEmojiPicker, stickerUrl } from "./AnimatedEmojiPicker";
 import { GiphyPicker } from "./GiphyPicker";
 import { YoutubePicker } from "./YoutubePicker";
 import { useAppSettings } from "@/lib/app-settings";
