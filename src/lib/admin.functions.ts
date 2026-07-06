@@ -53,7 +53,7 @@ const SENSITIVE_SETTING_KEYS = new Set<string>([
   "bots", "automation", "fake_activity", "moderation", "security",
   "word_filters", "ai_chatbots", "admin_modules", "staff_permissions",
   "admin_roles", "filters", "boobubble_openai_key", "boobubble_gemini_key",
-  "ai_chat",
+  "ai_chat", "feedbot_hook_secret",
 ]);
 
 // -------- Settings (public read; sensitive keys stripped) --------
