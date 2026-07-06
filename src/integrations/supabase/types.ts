@@ -3688,6 +3688,10 @@ export type Database = {
         Args: { _password: string; _room: string }
         Returns: boolean
       }
+      verify_trio_room_password: {
+        Args: { _password: string; _room: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "moderator" | "user" | "dj" | "rj"
