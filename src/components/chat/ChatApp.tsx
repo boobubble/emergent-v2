@@ -286,7 +286,7 @@ export function ChatApp() {
             type="button"
             onClick={() => setHubOpen(true)}
             aria-label="Open Community Hub"
-            className="hub-trigger fixed bottom-24 right-4 z-30 !px-4 !py-3 md:hidden"
+            className="hub-trigger fixed bottom-16 right-4 z-30 !px-3 !py-2 md:hidden"
           >
             <Star className="h-4 w-4 fill-current" />
             <span>Hub</span>
