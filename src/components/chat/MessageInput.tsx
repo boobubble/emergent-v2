@@ -283,7 +283,7 @@ export function MessageInput() {
   const muteLabel = muteSecsLeft >= 60 ? `${Math.ceil(muteSecsLeft / 60)}m` : `${muteSecsLeft}s`;
 
   return (
-    <div className="px-3 pb-0 pt-1 sm:px-6 sm:pb-0">
+    <div className="px-3 py-0 sm:px-6">
       {replyingTo && (
         <div className="mb-2 flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
           <Reply className="h-3.5 w-3.5 shrink-0 text-primary" />
@@ -421,7 +421,7 @@ export function MessageInput() {
           <span className="flex-1">You're muted in the lobby ({muteLabel} left). You can still DM friends from your friends list.</span>
         </div>
       ) : (
-      <div className="chat-composer-glow group relative flex items-end gap-1 rounded-3xl border border-border bg-card/60 py-2 pl-4 pr-2 shadow-sm backdrop-blur-md transition-all">
+      <div className="chat-composer-glow group relative flex items-end gap-1 rounded-3xl border border-border bg-card/60 pt-2 pb-0 pl-4 pr-2 shadow-sm backdrop-blur-md transition-all">
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
         <button onClick={() => fileRef.current?.click()} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Attach file">
           <Paperclip className="h-5 w-5" />
