@@ -264,6 +264,48 @@ export function BoobubbleAssistantWidget() {
           Real picks from the community — refreshed for you.
         </p>
 
+        {/* Live competitions */}
+        {liveComps.length > 0 && (
+          <div className="mb-3 space-y-2">
+            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-white/60">
+              <Trophy className="h-3 w-3 text-amber-400" /> Running competitions
+              <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-300 ring-1 ring-rose-500/30">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> Live
+              </span>
+            </p>
+            {liveComps.map((c) => (
+              <Link
+                key={c.id}
+                to="/competitions/$id"
+                params={{ id: c.id }}
+                className="group flex items-center gap-3 overflow-hidden rounded-2xl border border-amber-500/15 bg-gradient-to-r from-amber-500/10 via-rose-500/5 to-transparent p-2.5 transition hover:-translate-y-0.5 hover:border-amber-400/30 hover:shadow-lg hover:shadow-amber-500/10"
+              >
+                {c.banner_url ? (
+                  <img
+                    src={c.banner_url}
+                    alt=""
+                    loading="lazy"
+                    className="h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-amber-400/20"
+                  />
+                ) : (
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-amber-500/30 to-rose-500/20 ring-1 ring-amber-400/30">
+                    <Trophy className="h-5 w-5 text-amber-300" />
+                  </div>
+                )}
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="truncate text-[12px] font-semibold text-white/90 group-hover:text-white transition">
+                    {c.name}
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-200/70">
+                    <Clock className="h-2.5 w-2.5" /> <TimeLeft endAt={c.end_at ?? null} />
+                  </span>
+                </div>
+                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-white/20 opacity-0 transition group-hover:translate-x-0.5 group-hover:text-white/60 group-hover:opacity-100" />
+              </Link>
+            ))}
+          </div>
+        )}
+
         {/* Recommendation cards */}
         {items.length > 0 && (
           <div className="space-y-2">
