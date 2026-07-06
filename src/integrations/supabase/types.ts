@@ -907,6 +907,60 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_stickers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          height: number | null
+          id: string
+          is_active: boolean
+          kind: string
+          mime: string | null
+          name: string
+          pack: string
+          size_bytes: number | null
+          sort_order: number
+          storage_path: string | null
+          updated_at: string
+          url: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          height?: number | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          mime?: string | null
+          name: string
+          pack?: string
+          size_bytes?: number | null
+          sort_order?: number
+          storage_path?: string | null
+          updated_at?: string
+          url: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          height?: number | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          mime?: string | null
+          name?: string
+          pack?: string
+          size_bytes?: number | null
+          sort_order?: number
+          storage_path?: string | null
+          updated_at?: string
+          url?: string
+          width?: number | null
+        }
+        Relationships: []
+      }
       daily_missions: {
         Row: {
           claimed: string[]
