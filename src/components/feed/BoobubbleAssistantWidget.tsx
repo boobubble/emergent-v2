@@ -82,6 +82,7 @@ export function BoobubbleAssistantWidget() {
   const triggerSecurity = useServerFn(triggerSecurityDigestIfNeeded);
   const fetchFriends = useServerFn(getFriendSuggestions);
   const fetchPublic = useServerFn(getBoobubblePublic);
+  const fetchComps = useServerFn(listCompetitions);
 
   const [items, setItems] = useState<AssistantRecommendation[]>([]);
   const [friends, setFriends] = useState<FriendSuggestion[]>([]);
