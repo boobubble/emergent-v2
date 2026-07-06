@@ -93,6 +93,7 @@ export function BoobubbleAssistantWidget() {
   const [refreshTick, setRefreshTick] = useState(0);
   const [botAvatar, setBotAvatar] = useState<string | null>(null);
   const [botUsername, setBotUsername] = useState<string | null>(null);
+  const [liveComps, setLiveComps] = useState<LiveComp[]>([]);
 
   // Fire all idempotent triggers on first authenticated mount
   useEffect(() => {
