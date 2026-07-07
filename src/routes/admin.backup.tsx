@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   Database, Image as ImageIcon, Package, Upload, Download, Loader2,
-  ShieldAlert, CheckCircle2,
+  ShieldAlert, CheckCircle2, Zap, FileJson, ExternalLink, BookOpen,
 } from "lucide-react";
+
 import {
   backupDatabase,
   backupMediaManifest,
