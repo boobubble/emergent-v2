@@ -989,28 +989,6 @@ function InstallerPage() {
                     <p className="text-sm text-muted-foreground">Clicking Finish locks the installer and shows your dashboard.</p>
                   </div>
                   <StageTimeline stages={stages} />
-                </div>
-              )
-            )}
-            {current.id === "finish" && !postStats && (
-              <>
-                <div className="rounded-lg border bg-muted/40 p-3 text-left text-xs space-y-1">
-                  <div><span className="text-muted-foreground">Mode:</span> {mode === "cloud" ? "Lovable Cloud" : "Self-Hosted"}</div>
-                  <div><span className="text-muted-foreground">License:</span> {licenseType === "envato" ? "Envato" : "Offline"}</div>
-                  <div><span className="text-muted-foreground">Admin:</span> {adminUser || "—"}</div>
-                  <div><span className="text-muted-foreground">Site:</span> {siteName}</div>
-                </div>
-              </>
-            )}
-
-                <div className="space-y-4 text-center">
-                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10">
-                    <PartyPopper className="h-8 w-8 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">Ready to install</h3>
-                    <p className="text-sm text-muted-foreground">Clicking Finish locks the installer and shows your dashboard.</p>
-                  </div>
                   <div className="rounded-lg border bg-muted/40 p-3 text-left text-xs space-y-1">
                     <div><span className="text-muted-foreground">Mode:</span> {mode === "cloud" ? "Lovable Cloud" : "Self-Hosted"}</div>
                     <div><span className="text-muted-foreground">License:</span> {licenseType === "envato" ? "Envato" : "Offline"}</div>
@@ -1023,6 +1001,7 @@ function InstallerPage() {
                 </div>
               )
             )}
+
 
             {/* Back button (not on welcome or finish) */}
             {step > 0 && current.id !== "finish" && (
