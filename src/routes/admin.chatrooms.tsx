@@ -75,7 +75,7 @@ function ChannelsManager() {
               onKeyDown={(e) => { if (e.key === "Enter") addChannel(); }}
             />
           </div>
-          <Button onClick={addChannel} disabled={!name.trim() || saving || savingList} className="gap-1.5">
+          <Button onClick={addChannel} disabled={!name.trim() || saving} className="gap-1.5">
             <Plus className="h-4 w-4" /> Add
           </Button>
         </div>
