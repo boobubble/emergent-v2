@@ -389,7 +389,7 @@ function CheckStep({
 
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-2">
-        <Button onClick={runAll} disabled={busy} className="flex-1">
+        <Button onClick={() => runAll({ force: true })} disabled={busy} className="flex-1">
           {busy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />Running checks…</>
             : <><PlayCircle className="mr-2 h-4 w-4" aria-hidden />Run Deployment Check</>}
         </Button>
