@@ -1,5 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from "react";
-import type { User, Message, Room, GameState, Attachment } from "./chat-types";
+import type { User, Message, Room, GameState, Attachment, RoomGameConfig } from "./chat-types";
+
+export interface AdminChannelInput {
+  id: string;
+  name: string;
+  topic?: string;
+  kind?: "chat" | "game";
+  game?: RoomGameConfig;
+}
 import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
