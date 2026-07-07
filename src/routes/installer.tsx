@@ -305,6 +305,8 @@ function InstallerPage() {
     }
   }
 
+  const provisionBuckets = useServerFn(ensureRequiredBuckets);
+
   async function finish() {
     setBusy(true);
     pushLog("info", "finish", "Finalizing installation…");
@@ -315,6 +317,16 @@ function InstallerPage() {
         await supabase.from("app_settings").upsert({ key: "general", value: { site_name: siteName } }, { onConflict: "key" });
         pushLog("ok", "finish", `Site name saved: ${siteName}`);
       } catch (e: any) { pushLog("warn", "finish", `Site name save: ${e?.message ?? "skipped"}`); }
+      // Auto-provision every storage bucket the app writes to. Storage
+      // policies are shipped in migrations; bucket rows cannot be created
+      // via SQL, so this closes the last manual step.
+      try {
+        const { results } = await provisionBuckets({});
+        for (const r of results) {
+          if (r.ok) pushLog("ok", "finish", `bucket ${r.name}: ${r.created ? "created" : "ok"}`);
+          else      pushLog("warn", "finish", `bucket ${r.name}: ${r.error ?? "failed"}`);
+        }
+      } catch (e: any) { pushLog("warn", "finish", `bucket provisioning: ${e?.message ?? "skipped"}`); }
       // Load post-install dashboard stats
       try {
         const { data } = await supabase.rpc("installer_get_extras");
