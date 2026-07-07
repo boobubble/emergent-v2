@@ -275,52 +275,64 @@ export function ChatApp() {
           )}
 
           <ChatHeader onOpenHub={() => setHubOpen(true)} hubOpen={hubOpen} />
-          <div className="relative flex min-h-0 flex-1 flex-col">
-            {activeIsDM && (
-              <DMChatBackground
-                wallpaper={dmTheme.wallpaper}
-                opacity={dmTheme.opacity}
-                blur={dmTheme.blur}
-                brightness={dmTheme.brightness}
-                overlay={dmTheme.overlay}
-                paused={!chatVisible}
-              />
-            )}
-            <MessageList channelId={state.activeChannel} />
-            <PresenceFeed channelId={state.activeChannel} />
-          </div>
+          {(() => {
+            const activeRoom = !activeIsDM ? state.rooms[state.activeChannel] : null;
+            const isGameRoom = activeRoom?.kind === "game";
+            if (isGameRoom && activeRoom) {
+              return <GameRoomCanvas room={activeRoom} />;
+            }
+            return (
+              <>
+                <div className="relative flex min-h-0 flex-1 flex-col">
+                  {activeIsDM && (
+                    <DMChatBackground
+                      wallpaper={dmTheme.wallpaper}
+                      opacity={dmTheme.opacity}
+                      blur={dmTheme.blur}
+                      brightness={dmTheme.brightness}
+                      overlay={dmTheme.overlay}
+                      paused={!chatVisible}
+                    />
+                  )}
+                  <MessageList channelId={state.activeChannel} />
+                  <PresenceFeed channelId={state.activeChannel} />
+                </div>
 
-          <PollDiscoveryWidget />
+                <PollDiscoveryWidget />
 
-          {/* FeedBot smart reminder chip (dismissible, one-per-session) */}
-          {feedbotChip && (
-            <div className="pointer-events-auto mx-auto mb-2 flex w-[92%] max-w-md items-start gap-2 rounded-2xl border border-primary/25 bg-gradient-to-r from-primary/15 via-accent/10 to-transparent p-2.5 shadow-lg backdrop-blur-md md:mb-0">
-              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground">
-                <Star className="h-4 w-4 fill-current" />
-              </div>
-              <div className="min-w-0 flex-1 leading-tight">
-                <div className="truncate text-[11px] font-bold text-foreground">{feedbotChip.title}</div>
-                <div className="truncate text-[11px] text-muted-foreground">{feedbotChip.body}</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => { setHubOpen(true); setFeedbotChip(null); }}
-                className="shrink-0 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground shadow"
-              >
-                Open Hub
-              </button>
-              <button
-                type="button"
-                onClick={() => setFeedbotChip(null)}
-                aria-label="Dismiss"
-                className="shrink-0 rounded-full p-1 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          )}
+                {/* FeedBot smart reminder chip (dismissible, one-per-session) */}
+                {feedbotChip && (
+                  <div className="pointer-events-auto mx-auto mb-2 flex w-[92%] max-w-md items-start gap-2 rounded-2xl border border-primary/25 bg-gradient-to-r from-primary/15 via-accent/10 to-transparent p-2.5 shadow-lg backdrop-blur-md md:mb-0">
+                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground">
+                      <Star className="h-4 w-4 fill-current" />
+                    </div>
+                    <div className="min-w-0 flex-1 leading-tight">
+                      <div className="truncate text-[11px] font-bold text-foreground">{feedbotChip.title}</div>
+                      <div className="truncate text-[11px] text-muted-foreground">{feedbotChip.body}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setHubOpen(true); setFeedbotChip(null); }}
+                      className="shrink-0 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground shadow"
+                    >
+                      Open Hub
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFeedbotChip(null)}
+                      aria-label="Dismiss"
+                      className="shrink-0 rounded-full p-1 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
 
-          <MessageInput />
+                <MessageInput />
+              </>
+            );
+          })()}
+
 
           <DjFooter />
         </main>
