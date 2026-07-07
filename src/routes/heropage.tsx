@@ -476,9 +476,12 @@ function HeroHomepage() {
   if (user) return <Navigate to="/" replace />;
 
 
+  // Note: a bg-color fallback is required because Chromium fails to paint an
+  // arbitrary radial-gradient across very tall elements (page height > ~8192px),
+  // leaving the lower portion transparent and exposing the white <body>.
   const bg = dark
-    ? "bg-[radial-gradient(ellipse_at_top,_#1e1b4b_0%,_#0b0b1a_45%,_#000_100%)] text-white"
-    : "bg-[radial-gradient(ellipse_at_top,_#dbeafe_0%,_#f5f3ff_45%,_#fff_100%)] text-slate-900";
+    ? "bg-black bg-[radial-gradient(ellipse_at_top,_#1e1b4b_0%,_#0b0b1a_45%,_#000_100%)] text-white"
+    : "bg-white bg-[radial-gradient(ellipse_at_top,_#dbeafe_0%,_#f5f3ff_45%,_#fff_100%)] text-slate-900";
 
   const statCards = [
     { emoji: "👥", label: "Members", value: stats.members || 25000 },
