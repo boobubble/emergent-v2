@@ -197,6 +197,52 @@ function UpdatesPage() {
     a.click(); URL.revokeObjectURL(url);
   }
 
+  function onDownloadPreview(fmt: "json" | "txt") {
+    if (!preview || !targetPkg) return;
+    const stamp = new Date().toISOString().slice(0, 10);
+    const base = `update-preview-v${targetPkg.version}-${stamp}`;
+    if (fmt === "json") {
+      const blob = new Blob([JSON.stringify({ preview, validation, checklist }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = `${base}.json`; a.click();
+      URL.revokeObjectURL(a.href);
+      return;
+    }
+    const lines: string[] = [];
+    lines.push(`Update Preview Report — v${targetPkg.version} (build ${targetPkg.build_number})`);
+    lines.push(`Generated: ${preview.generated_at}`);
+    lines.push(`Current: v${preview.current_version ?? "?"}  →  Target: v${preview.package.version}`);
+    lines.push(`Channel: ${preview.package.channel}   Release date: ${preview.package.release_date ?? "—"}`);
+    lines.push(`Risk: ${preview.risk.level.toUpperCase()} (score ${preview.risk.score})`);
+    lines.push("");
+    lines.push("Compatibility");
+    for (const c of preview.compatibility.checks) lines.push(`  [${c.ok ? "✔" : "✘"}] ${c.name} — ${c.detail ?? ""}`);
+    lines.push("");
+    lines.push(`Migrations: ${preview.migrations.pending} pending / ${preview.migrations.applied} applied / ${preview.migrations.total} total`);
+    lines.push(`SQL summary: +${preview.sql.tables_added.length} tables, ~${preview.sql.tables_modified.length} altered, +${preview.sql.columns_added} cols, -${preview.sql.columns_removed} cols, +${preview.sql.indexes_added} idx, +${preview.sql.functions_added} fn, +${preview.sql.triggers_added} trg, +${preview.sql.policies_added} pol`);
+    if (preview.sql.destructive.length) {
+      lines.push("DESTRUCTIVE:");
+      for (const d of preview.sql.destructive) lines.push(`  - ${d.op} in ${d.migration_id}`);
+    }
+    lines.push("");
+    lines.push("Impact Analysis");
+    for (const [k, v] of Object.entries(preview.impacts)) lines.push(`  ${k}: ${v}`);
+    lines.push("");
+    lines.push(`Estimated: total ${Math.round(preview.estimates_ms.total / 1000)}s, migrations ${Math.round(preview.estimates_ms.migration / 1000)}s, verify ${Math.round(preview.estimates_ms.verify / 1000)}s`);
+    if (preview.warnings.length) {
+      lines.push(""); lines.push("Warnings");
+      for (const w of preview.warnings) lines.push(`  ! ${w}`);
+    }
+    lines.push(""); lines.push("Validation");
+    for (const r of (validation?.results ?? [])) lines.push(`  [${r.ok ? "✔" : "✘"}] ${r.name} — ${r.detail ?? ""}`);
+    lines.push(""); lines.push("Checklist");
+    for (const c of checklist) lines.push(`  [${c.ok ? "✔" : " "}] ${c.label}`);
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = `${base}.txt`; a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
   const elapsed = startedAt ? now - startedAt : 0;
 
   return (
