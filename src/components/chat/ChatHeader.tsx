@@ -85,11 +85,13 @@ export function ChatHeader(_props: ChatHeaderProps = {}) {
             <span className="truncate font-bold text-foreground">{channelLabel(id)}</span>
             <LoyaltyChip channelId={id} />
           </div>
-          <div className="flex items-center gap-1.5 truncate text-[11px] text-muted-foreground">
-            <span className="chat-online-dot shrink-0" aria-hidden />
-            <span className="font-semibold text-foreground/80">{room.members.length}</span>
-            <span>online</span>
-            {room.topic && <span className="truncate">· {room.topic}</span>}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <span className="chat-online-dot shrink-0" aria-hidden />
+              <span className="font-semibold text-foreground/80">{room.members.length}</span>
+              <span>online</span>
+            </span>
+            <HeaderBotEvents />
           </div>
         </div>
       </div>
