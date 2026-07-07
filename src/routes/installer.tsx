@@ -15,7 +15,9 @@ import {
 import { useServerFn } from "@tanstack/react-start";
 import { ensureRequiredBuckets } from "@/lib/backup.functions";
 import { getBootstrapStatus, runSchemaBootstrap, type BootstrapStatus, type BootstrapResult } from "@/lib/installer-bootstrap.functions";
+import { getEnvValidation, testDatabaseConnection, type EnvValidation, type DbConnectionResult } from "@/lib/installer-diagnostics.functions";
 import { toast } from "sonner";
+import { APP_VERSION } from "@/lib/app-version";
 
 export const Route = createFileRoute("/installer")({ component: InstallerPage });
 
