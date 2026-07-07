@@ -138,6 +138,8 @@ export const getBootstrapStatus = createServerFn({ method: "GET" }).handler(asyn
 // ── Run bootstrap (idempotent, resumable) ────────────────────────────────
 
 export const runSchemaBootstrap = createServerFn({ method: "POST" }).handler(async (): Promise<BootstrapResult> => {
+  const { assertInstallerAllowed } = await import("./installer-guard.server");
+  await assertInstallerAllowed();
   const started = Date.now();
   const log: BootstrapLogEntry[] = [];
   const applied: string[] = [];
