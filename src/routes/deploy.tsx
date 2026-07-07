@@ -56,7 +56,7 @@ function DeployWizard() {
     }
   }
 
-  const canProceed = result?.allGreen === true;
+  const canProceed = result?.criticalPassed === true;
   const hasFailures = result?.checks.some((c) => c.state === "fail") ?? false;
 
   return (
