@@ -12,6 +12,18 @@ export function useBotEventsNotifier() {
   useEffect(() => {
     if (!chat) return;
     const seen = new Set<string>();
+    const NOTICE_KEY = "palrgo:bot-events:notified";
+    const readNoticed = (): Record<string, boolean> => {
+      try { return JSON.parse(localStorage.getItem(NOTICE_KEY) || "{}"); } catch { return {}; }
+    };
+    const markNoticed = (key: string) => {
+      try {
+        const m = readNoticed(); m[key] = true;
+        const keys = Object.keys(m);
+        if (keys.length > 200) for (const k of keys.slice(0, keys.length - 200)) delete m[k];
+        localStorage.setItem(NOTICE_KEY, JSON.stringify(m));
+      } catch { /* ignore */ }
+    };
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{
         kind: BotEventKind; live: boolean; cycleId: string;
