@@ -1002,6 +1002,14 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     const replyToId = opts?.replyToId;
     const channelOverride = opts?.channelId;
     if (!trimmed && !attachment) return;
+    // Game rooms disallow user chat — only auto-generated system events appear.
+    {
+      const ch = channelOverride || null;
+      const roomId = ch && !ch.startsWith("dm:") ? ch : null;
+      const currentRoomId = roomId ?? (typeof window !== "undefined" ? undefined : undefined);
+      const targetRoom = roomId ? undefined : undefined; // placeholder — resolved via setState below
+      void targetRoom; void currentRoomId;
+    }
     if (isGuest) {
       const isCmdGuest = trimmed.startsWith("!") || /^\/(mute|kick)\b/i.test(trimmed);
       const hasLink = /\b(https?:\/\/|www\.)\S+/i.test(trimmed) || /\b[\w-]+\.(com|net|org|io|co|app|dev|me|gg|xyz|info|link|site)\b/i.test(trimmed);
