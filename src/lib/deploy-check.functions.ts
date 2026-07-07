@@ -138,7 +138,7 @@ function serverEnv() {
 
 // ---------- Runtime + env ----------
 export const checkRuntime = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("runtime", async () => {
     const started = Date.now();
     const items: CheckItem[] = [];
     const runtime =
@@ -153,7 +153,7 @@ export const checkRuntime = createServerFn({ method: "GET" }).handler(
       message: `Running on ${runtime}`,
     });
     return { category: "runtime", items, durationMs: Date.now() - started };
-  },
+  }),
 );
 
 export const checkEnv = createServerFn({ method: "GET" }).handler(
