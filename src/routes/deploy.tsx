@@ -484,7 +484,7 @@ function CheckStep({
                   )}
                 </div>
                 <Button
-                  size="sm" variant="ghost" onClick={() => runOne(c.key)}
+                  size="sm" variant="ghost" onClick={() => runOne(c.key, { force: true })}
                   disabled={running}
                   aria-label={`Retry ${c.label} checks`}
                 >
