@@ -93,6 +93,8 @@ function checksum(s: string): string {
 // ── Status ───────────────────────────────────────────────────────────────
 
 export const getBootstrapStatus = createServerFn({ method: "GET" }).handler(async (): Promise<BootstrapStatus> => {
+  const { assertInstallerAllowed } = await import("./installer-guard.server");
+  await assertInstallerAllowed();
   const dbUrlPresent = !!process.env.SUPABASE_DB_URL;
   const serviceRolePresent = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
   const totalBundled = BUNDLED_MIGRATION_COUNT;
