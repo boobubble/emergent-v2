@@ -1566,11 +1566,47 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     });
   }, []);
 
+  const syncAdminChannels = useCallback((channels: { id: string; name: string; topic?: string }[]) => {
+    setState(s => {
+      const rooms = { ...s.rooms };
+      let roomOrder = [...s.roomOrder];
+      const validIds = new Set(channels.map(c => c.id));
+      // Add or update admin-managed rooms
+      for (const c of channels) {
+        const existing = rooms[c.id];
+        if (existing) {
+          rooms[c.id] = { ...existing, name: c.name, topic: c.topic || existing.topic };
+        } else {
+          rooms[c.id] = {
+            id: c.id,
+            name: c.name,
+            topic: c.topic || "",
+            members: ["me", ...SEED_BOTS.map(b => b.id)],
+            roles: { me: "member", "bot-gamebot": "owner" },
+            isPublic: true,
+          };
+          if (!roomOrder.includes(c.id)) roomOrder.push(c.id);
+        }
+      }
+      // Remove previously admin-managed rooms (adm-* prefix) not in list
+      const messages = { ...s.messages };
+      for (const id of Object.keys(rooms)) {
+        if (id.startsWith("adm-") && !validIds.has(id)) {
+          delete rooms[id];
+          delete messages[id];
+          roomOrder = roomOrder.filter(x => x !== id);
+        }
+      }
+      const activeChannel = rooms[s.activeChannel] ? s.activeChannel : (roomOrder[0] || "lobby");
+      return { ...s, rooms, messages, roomOrder, activeChannel };
+    });
+  }, []);
+
 
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
     adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
-    pushSystem, wipeChannel, deleteRoom,
+    pushSystem, wipeChannel, deleteRoom, syncAdminChannels,
 
     isFriend: (id) => (state.me.friends ?? []).includes(id),
     isBlocked: (id) => (state.me.blocked ?? []).includes(id),
