@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Circle, AlertCircle, Loader2, Rocket, Cloud, Server, Shield, KeyRound, Database, UserPlus, Palette, PartyPopper, Terminal, Copy, Trash2, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { CheckCircle2, Circle, AlertCircle, Loader2, Rocket, Cloud, Server, Shield, KeyRound, Database, UserPlus, Palette, PartyPopper, Terminal, Copy, Trash2, ChevronDown, ChevronUp, Download, HardDrive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   detectInstallMode, fetchInstallStatus, isValidEnvatoCode, isValidOfflineKey,
@@ -14,6 +14,7 @@ import {
 } from "@/lib/installer";
 import { useServerFn } from "@tanstack/react-start";
 import { ensureRequiredBuckets } from "@/lib/backup.functions";
+import { getBootstrapStatus, runSchemaBootstrap, type BootstrapStatus, type BootstrapResult } from "@/lib/installer-bootstrap.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/installer")({ component: InstallerPage });
@@ -22,6 +23,7 @@ const STEPS = [
   { id: "welcome",   label: "Welcome",       icon: Rocket },
   { id: "license",   label: "License",       icon: KeyRound },
   { id: "reqs",      label: "Requirements",  icon: Shield },
+  { id: "schema",    label: "Schema",        icon: HardDrive },
   { id: "db",        label: "Database",      icon: Database },
   { id: "admin",     label: "Admin Account", icon: UserPlus },
   { id: "branding",  label: "Site Branding", icon: Palette },
@@ -62,6 +64,11 @@ function InstallerPage() {
   const [smtpTestEmail, setSmtpTestEmail] = useState("");
   const [smtpTesting, setSmtpTesting] = useState(false);
   const [postStats, setPostStats] = useState<{ users: number; buckets: number; cron: number } | null>(null);
+  const [schemaStatus, setSchemaStatus] = useState<BootstrapStatus | null>(null);
+  const [schemaResult, setSchemaResult] = useState<BootstrapResult | null>(null);
+  const [schemaRunning, setSchemaRunning] = useState(false);
+  const fetchSchemaStatus = useServerFn(getBootstrapStatus);
+  const runSchemaBootstrapFn = useServerFn(runSchemaBootstrap);
 
   type LogLevel = "info" | "ok" | "warn" | "error";
   type LogEntry = { ts: string; level: LogLevel; step: string; msg: string };
@@ -96,11 +103,45 @@ function InstallerPage() {
   }
   if (alreadyInstalled) return <Navigate to="/" replace />;
 
-  // Skip DB step entirely in cloud mode
+  // Skip legacy DB step in cloud mode (schema step handles bootstrap for self-hosted).
   const visibleSteps = STEPS.filter((s) => !(s.id === "db" && mode === "cloud"));
   const current = visibleSteps[step];
 
   const go = (delta: number) => setStep((s) => Math.max(0, Math.min(visibleSteps.length - 1, s + delta)));
+
+  async function loadSchemaStatus() {
+    try {
+      const s = await fetchSchemaStatus({});
+      setSchemaStatus(s);
+      pushLog(s.ready ? "ok" : "info", "schema", s.message);
+    } catch (e: any) {
+      pushLog("error", "schema", e?.message ?? "Failed to read schema status");
+    }
+  }
+
+  async function runBootstrap() {
+    setSchemaRunning(true);
+    pushLog("info", "schema", "Starting schema bootstrap…");
+    try {
+      const result = await runSchemaBootstrapFn({});
+      setSchemaResult(result);
+      for (const entry of result.log) pushLog(entry.level, "schema", `${entry.name}: ${entry.msg}${entry.ms ? ` (${entry.ms}ms)` : ""}`);
+      if (result.ok) {
+        pushLog("ok", "schema", `Applied ${result.applied.length}, skipped ${result.skipped.length}, in ${(result.totalMs / 1000).toFixed(1)}s`);
+        toast.success("Schema bootstrap complete");
+        await loadSchemaStatus();
+      } else {
+        const err = result.failed?.error ?? "Bootstrap failed";
+        pushLog("error", "schema", err);
+        toast.error(err);
+      }
+    } catch (e: any) {
+      pushLog("error", "schema", e?.message ?? "Bootstrap failed");
+      toast.error(e?.message ?? "Bootstrap failed");
+    } finally {
+      setSchemaRunning(false);
+    }
+  }
 
   async function verifyLicense() {
     pushLog("info", "license", `Verifying ${licenseType} key…`);
@@ -513,6 +554,109 @@ function InstallerPage() {
               </div>
             )}
 
+            {current.id === "schema" && (
+              <div className="space-y-3">
+                <div className="rounded-lg border bg-muted/40 p-3 text-sm">
+                  <div className="mb-1 flex items-center gap-2 font-medium">
+                    <HardDrive className="h-4 w-4" /> Automatic Schema Bootstrap
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Applies all bundled migrations directly to your Supabase Postgres
+                    — tables, indexes, RLS policies, triggers, functions, and seed data.
+                    Safe to re-run: only pending migrations are applied. Requires{" "}
+                    <code className="rounded bg-background px-1">SUPABASE_DB_URL</code>{" "}
+                    in your environment (Project Settings → Database → Connection string → URI).
+                  </p>
+                </div>
+
+                {!schemaStatus && (
+                  <Button onClick={loadSchemaStatus} variant="outline" className="w-full">
+                    Check Database Status
+                  </Button>
+                )}
+
+                {schemaStatus && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="rounded-lg border bg-muted/40 p-2">
+                        <div className="text-2xl font-bold">{schemaStatus.totalBundled}</div>
+                        <div className="text-[10px] uppercase text-muted-foreground">Bundled</div>
+                      </div>
+                      <div className="rounded-lg border bg-emerald-500/10 p-2">
+                        <div className="text-2xl font-bold text-emerald-500">{schemaStatus.applied}</div>
+                        <div className="text-[10px] uppercase text-muted-foreground">Applied</div>
+                      </div>
+                      <div className="rounded-lg border bg-amber-500/10 p-2">
+                        <div className="text-2xl font-bold text-amber-500">{schemaStatus.pending}</div>
+                        <div className="text-[10px] uppercase text-muted-foreground">Pending</div>
+                      </div>
+                    </div>
+
+                    <div className={`rounded-lg border p-3 text-xs ${schemaStatus.ready ? "border-emerald-500/30 bg-emerald-500/10" : schemaStatus.dbUrlPresent ? "border-amber-500/30 bg-amber-500/10" : "border-red-500/30 bg-red-500/10"}`}>
+                      <div className="flex items-start gap-2">
+                        {schemaStatus.ready
+                          ? <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                          : <AlertCircle className="mt-0.5 h-3.5 w-3.5 text-amber-500 shrink-0" />}
+                        <div>
+                          <div className="font-medium">{schemaStatus.message}</div>
+                          {schemaStatus.lastApplied && (
+                            <div className="mt-1 text-muted-foreground font-mono text-[10px]">Last: {schemaStatus.lastApplied}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {schemaResult?.verified && (
+                      <div className="rounded-lg border bg-background p-3">
+                        <div className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Verification</div>
+                        <div className="grid gap-1 text-xs">
+                          {schemaResult.verified.checks.map((c) => (
+                            <div key={c.label} className="flex items-center gap-2">
+                              {c.ok
+                                ? <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                : <AlertCircle className="h-3 w-3 text-red-500" />}
+                              <span className="flex-1">{c.label}</span>
+                              <span className="text-muted-foreground">{c.detail}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Button
+                        onClick={runBootstrap}
+                        disabled={schemaRunning || !schemaStatus.dbUrlPresent}
+                        className="flex-1"
+                      >
+                        {schemaRunning
+                          ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Applying {schemaStatus.pending} migrations…</>
+                          : schemaStatus.ready
+                            ? "Re-verify Schema"
+                            : schemaStatus.applied > 0
+                              ? `Resume Bootstrap (${schemaStatus.pending} left)`
+                              : `Run Bootstrap (${schemaStatus.totalBundled} migrations)`}
+                      </Button>
+                      <Button onClick={loadSchemaStatus} variant="outline" disabled={schemaRunning}>
+                        Refresh
+                      </Button>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => go(1)}
+                        disabled={!schemaStatus.ready}
+                        variant={schemaStatus.ready ? "default" : "outline"}
+                        className="flex-1"
+                      >
+                        {schemaStatus.ready ? "Continue" : "Complete schema to continue"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {current.id === "db" && (
               <div className="space-y-3">
                 <div>
@@ -751,6 +895,7 @@ function stepDescription(id: string, mode: InstallMode): string {
     case "welcome":  return "Let's get your BooBubble site running.";
     case "license":  return "Verify your purchase to activate the app.";
     case "reqs":     return "Checking that your environment is ready.";
+    case "schema":   return "Automatically create tables, indexes, RLS, functions, triggers, and seed data.";
     case "db":       return "Connect to your self-hosted Supabase project.";
     case "admin":    return "Create the first super admin account.";
     case "branding": return "Pick a site name. More options inside admin.";
