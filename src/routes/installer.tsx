@@ -685,6 +685,72 @@ function InstallerPage() {
 
             {current.id === "schema" && (
               <div className="space-y-3">
+                {/* Environment variables validation */}
+                <div className="rounded-lg border bg-muted/40 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Environment Variables</div>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs"
+                      onClick={async () => { try { setEnvCheck(await fetchEnvValidation({})); } catch (e: any) { toast.error(e?.message ?? "Failed"); } }}>
+                      {envCheck ? "Re-check" : "Check Environment"}
+                    </Button>
+                  </div>
+                  {envCheck ? (
+                    <div className="grid gap-1 text-xs">
+                      {envCheck.vars.map((v) => (
+                        <div key={v.name} className="flex items-center gap-2">
+                          {v.present
+                            ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                            : <AlertCircle className={`h-3.5 w-3.5 shrink-0 ${v.required ? "text-red-500" : "text-amber-500"}`} />}
+                          <span className="font-mono">{v.name}</span>
+                          {!v.required && <span className="text-[10px] text-muted-foreground">(optional)</span>}
+                          <span className="ml-auto text-[10px] text-muted-foreground">{v.present ? "set" : v.hint}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Verify all required environment variables are configured before running the schema bootstrap.</p>
+                  )}
+                </div>
+
+                {/* Database connection test */}
+                <div className="rounded-lg border bg-muted/40 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Database Connection</div>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" disabled={dbTesting}
+                      onClick={async () => {
+                        setDbTesting(true);
+                        pushLog("info", "db-test", "Testing database connection…");
+                        try {
+                          const r = await runDbTest({});
+                          setDbTest(r);
+                          if (r.ok) { pushLog("ok", "db-test", `Connected (${r.latencyMs}ms) — ${r.serverVersion ?? "Postgres"}`); toast.success("Database connected"); }
+                          else { pushLog("error", "db-test", r.friendlyError ?? "Failed"); toast.error(r.friendlyError ?? "Connection failed"); }
+                        } catch (e: any) {
+                          pushLog("error", "db-test", e?.message ?? "Failed");
+                          toast.error(e?.message ?? "Connection failed");
+                        } finally { setDbTesting(false); }
+                      }}>
+                      {dbTesting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Test Database Connection"}
+                    </Button>
+                  </div>
+                  {dbTest ? (
+                    <div className={`text-xs ${dbTest.ok ? "text-emerald-600" : "text-red-600"}`}>
+                      {dbTest.ok ? (
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4" /> Connected — {dbTest.serverVersion} • {dbTest.latencyMs}ms • SSL
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span>{dbTest.friendlyError}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Verifies SUPABASE_DB_URL, credentials and SSL before applying migrations.</p>
+                  )}
+                </div>
+
                 <div className="rounded-lg border bg-muted/40 p-3 text-sm">
                   <div className="mb-1 flex items-center gap-2 font-medium">
                     <HardDrive className="h-4 w-4" /> Automatic Schema Bootstrap
@@ -697,6 +763,7 @@ function InstallerPage() {
                     in your environment (Project Settings → Database → Connection string → URI).
                   </p>
                 </div>
+
 
                 {!schemaStatus && (
                   <Button onClick={loadSchemaStatus} variant="outline" className="w-full">
