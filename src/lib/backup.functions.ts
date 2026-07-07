@@ -208,3 +208,42 @@ export const uploadMediaFile = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, size: bytes.byteLength };
   });
+
+// --- Install-time bucket provisioning ---
+// Called by the installer on a fresh Supabase project to guarantee every
+// bucket the app writes to exists. Storage POLICIES are already shipped in
+// migrations; the bucket rows themselves cannot be created via SQL, so we
+// create them here through the admin storage API. Idempotent.
+const REQUIRED_BUCKETS: { name: string; public: boolean }[] = [
+  { name: "avatars",      public: true  },
+  { name: "feed-media",   public: true  },
+  { name: "brand-assets", public: false },
+  { name: "stickers",     public: true  },
+];
+
+export const ensureRequiredBuckets = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const results: { name: string; created: boolean; ok: boolean; error?: string }[] = [];
+    for (const b of REQUIRED_BUCKETS) {
+      try {
+        const existing = await supabaseAdmin.storage.getBucket(b.name);
+        if (existing.data) {
+          if (existing.data.public !== b.public) {
+            await supabaseAdmin.storage.updateBucket(b.name, { public: b.public });
+          }
+          results.push({ name: b.name, created: false, ok: true });
+          continue;
+        }
+        const { error } = await supabaseAdmin.storage.createBucket(b.name, { public: b.public });
+        if (error) throw new Error(error.message);
+        results.push({ name: b.name, created: true, ok: true });
+      } catch (e: any) {
+        results.push({ name: b.name, created: false, ok: false, error: e?.message ?? "failed" });
+      }
+    }
+    return { results };
+  });
+
