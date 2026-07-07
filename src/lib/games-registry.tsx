@@ -1,5 +1,5 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from "react";
-import { Puzzle, type LucideIcon } from "lucide-react";
+import { Puzzle, Route as RouteIcon, type LucideIcon } from "lucide-react";
 import type { Room, RoomGameConfig } from "@/lib/chat-types";
 
 export interface GameRuntimeProps {
@@ -29,6 +29,13 @@ export const GAMES: Record<string, GameDef> = {
     icon: Puzzle,
     Component: lazy(() => import("@/components/games/rooms/ArrowPuzzleGame")),
   },
+  "arrow-flow": {
+    key: "arrow-flow",
+    label: "Arrow Flow",
+    description: "Rotate path pieces so the flow connects source to sink.",
+    icon: RouteIcon,
+    Component: lazy(() => import("@/components/games/rooms/ArrowFlowGame")),
+  },
 };
 
 export function getGame(key: string | undefined): GameDef | null {
@@ -39,3 +46,4 @@ export function getGame(key: string | undefined): GameDef | null {
 export function listGames(): GameDef[] {
   return Object.values(GAMES);
 }
+

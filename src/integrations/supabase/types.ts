@@ -257,6 +257,157 @@ export type Database = {
         }
         Relationships: []
       }
+      arrowflow_daily: {
+        Row: {
+          bonus_coins: number
+          bonus_xp: number
+          challenge_date: string
+          created_at: string
+          id: string
+          level_id: string
+        }
+        Insert: {
+          bonus_coins?: number
+          bonus_xp?: number
+          challenge_date: string
+          created_at?: string
+          id?: string
+          level_id: string
+        }
+        Update: {
+          bonus_coins?: number
+          bonus_xp?: number
+          challenge_date?: string
+          created_at?: string
+          id?: string
+          level_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arrowflow_daily_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "arrowflow_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arrowflow_levels: {
+        Row: {
+          coin_reward: number
+          created_at: string
+          created_by: string | null
+          difficulty: string
+          grid_size: number
+          id: string
+          is_enabled: boolean
+          is_featured: boolean
+          layout: Json
+          level_number: number
+          par_moves: number
+          par_time_ms: number
+          solution: Json
+          updated_at: string
+          version: number
+          xp_reward: number
+        }
+        Insert: {
+          coin_reward?: number
+          created_at?: string
+          created_by?: string | null
+          difficulty: string
+          grid_size: number
+          id?: string
+          is_enabled?: boolean
+          is_featured?: boolean
+          layout: Json
+          level_number: number
+          par_moves?: number
+          par_time_ms?: number
+          solution: Json
+          updated_at?: string
+          version?: number
+          xp_reward?: number
+        }
+        Update: {
+          coin_reward?: number
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string
+          grid_size?: number
+          id?: string
+          is_enabled?: boolean
+          is_featured?: boolean
+          layout?: Json
+          level_number?: number
+          par_moves?: number
+          par_time_ms?: number
+          solution?: Json
+          updated_at?: string
+          version?: number
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      arrowflow_scores: {
+        Row: {
+          client_signature: string | null
+          created_at: string
+          hints_used: number
+          id: string
+          level_id: string
+          mode: string
+          move_log: Json | null
+          moves: number
+          perfect: boolean
+          room_id: string | null
+          score: number
+          stars: number
+          time_ms: number
+          user_id: string
+        }
+        Insert: {
+          client_signature?: string | null
+          created_at?: string
+          hints_used?: number
+          id?: string
+          level_id: string
+          mode?: string
+          move_log?: Json | null
+          moves: number
+          perfect?: boolean
+          room_id?: string | null
+          score: number
+          stars?: number
+          time_ms: number
+          user_id: string
+        }
+        Update: {
+          client_signature?: string | null
+          created_at?: string
+          hints_used?: number
+          id?: string
+          level_id?: string
+          mode?: string
+          move_log?: Json | null
+          moves?: number
+          perfect?: boolean
+          room_id?: string | null
+          score?: number
+          stars?: number
+          time_ms?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arrowflow_scores_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "arrowflow_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assistant_user_prefs: {
         Row: {
           created_at: string
