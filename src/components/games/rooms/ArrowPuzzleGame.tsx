@@ -139,7 +139,7 @@ export default function ArrowPuzzleGame({ room, config }: GameRuntimeProps) {
     for (let i = 0; i < tiles.length; i++) {
       const trial = [...tiles];
       for (const n of neighbors(i, size)) trial[n] = ((trial[n] + 1) % 4) as Dir;
-      const s = trial.reduce((acc, d) => acc + (d === 0 ? 0 : 1), 0);
+      const s = trial.reduce<number>((acc, d) => acc + (d === 0 ? 0 : 1), 0);
       if (s < bestScore) { bestScore = s; bestIdx = i; }
     }
     setHint(bestIdx);
