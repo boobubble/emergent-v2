@@ -1175,26 +1175,33 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
         return { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], sysMsg] } };
       }
       if (isCmd) {
-        // Per-command cooldown for !fish, !dig, !wine — 1 use per minute per user
+        // Global scheduled event gate for !fish, !dig, !wine.
+        // Replaces the old per-user cooldown with a community event window.
         const cdMatch = trimmed.match(/^!(fish|dig|wine)\b/i);
         if (cdMatch) {
-          const cmdName = cdMatch[1].toLowerCase();
-          const cdKey = `${cmdName}`;
-          const lastUsed = cmdCooldownRef.current[cdKey] || 0;
-          const elapsed = now - lastUsed;
-          const COOLDOWN_MS = 60_000;
-          if (elapsed < COOLDOWN_MS) {
-            const remainSec = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
-            const botId = cmdName === "fish" ? "bot-fish" : cmdName === "dig" ? "bot-dig" : "bot-wine";
-            const sysMsg: Message = {
-              id: uid(), channelId, authorId: botId, ts: now + 200,
-              text: `⏳ Slow down! You can use **!${cmdName}** again in **${remainSec}s**. (1 use per minute)`,
-              kind: "system",
-            };
-            return { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], sysMsg] } };
+          const cmdName = cdMatch[1].toLowerCase() as BotEventKind;
+          const cfg = getBotEventsConfig()[cmdName];
+          const evt = computeEventState(cmdName, cfg, now);
+          const meta = BOT_EVENT_META[cmdName];
+          const userKey = next.me.name;
+          const mkSys = (text: string): Message => ({
+            id: uid(), channelId, authorId: meta.botId, ts: now + 200, text, kind: "system",
+          });
+          if (!cfg.enabled) {
+            return { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], mkSys(`⛔ ${meta.label} is currently disabled by the admin.`)] } };
           }
-          cmdCooldownRef.current[cdKey] = now;
+          if (!evt.live) {
+            const mins = Math.max(1, Math.ceil(evt.msUntilOpen / 60_000));
+            return { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], mkSys(`⏳ ${meta.emoji} ${meta.label} isn't open right now. Next round in **${mins}m**.`)] } };
+          }
+          const used = getAttempts(userKey, evt.cycleId);
+          const cap = Math.max(1, cfg.max_attempts);
+          if (used >= cap) {
+            return { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], mkSys(`✋ You've already joined this ${meta.label}. Please wait for the next round.`)] } };
+          }
+          recordAttempt(userKey, evt.cycleId);
         }
+
         const result = runCommand(cmdInput, { state: next, channelId, actor: next.me.name });
         const sysMsgs: Message[] = result.replies.map((r: { text: string; from?: string }, idx: number) => {
           const id = remote ? newUuid() : uid();
