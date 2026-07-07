@@ -117,7 +117,7 @@ function AdminWalletPage() {
 
   return (
     <div className="mx-auto max-w-6xl p-4 md:p-8 space-y-6">
-      <AdminPageHeader title="Wallet & Coins Store" description="Manage packages, providers, orders, daily rewards, feature flags and user wallets." icon={<Coins className="h-6 w-6" />} />
+      <AdminPageHeader title="Wallet & Coins Store" description="Manage packages, providers, orders, daily rewards, feature flags and user wallets." />
 
       <Tabs defaultValue="packages">
         <TabsList className="flex flex-wrap">
