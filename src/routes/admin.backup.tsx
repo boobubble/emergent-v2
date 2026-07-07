@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   Database, Image as ImageIcon, Package, Upload, Download, Loader2,
-  ShieldAlert, CheckCircle2,
+  ShieldAlert, CheckCircle2, Zap, FileJson, ExternalLink, BookOpen,
 } from "lucide-react";
+
 import {
   backupDatabase,
   backupMediaManifest,
@@ -64,7 +65,20 @@ async function runPool<T, R>(
   return results;
 }
 
+function QuickBackupChecklist({ items }: { items: string[] }) {
+  return (
+    <ul className="grid gap-1.5 text-xs text-muted-foreground sm:grid-cols-2">
+      {items.map((it) => (
+        <li key={it} className="flex items-center gap-1.5">
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> {it}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function BackupPage() {
+
   const [busy, setBusy] = useState<Job>(null);
   const [progress, setProgress] = useState<{ label: string; done: number; total: number } | null>(null);
   const [lastFile, setLastFile] = useState<string | null>(null);
@@ -76,6 +90,22 @@ function BackupPage() {
   const runDownload = useServerFn(downloadMediaFile);
   const runEnsureBucket = useServerFn(ensureStorageBucket);
   const runUpload = useServerFn(uploadMediaFile);
+  const [quickBusy, setQuickBusy] = useState(false);
+
+  async function onQuickJson() {
+    setQuickBusy(true);
+    try {
+      const snap = await runDb({});
+      const blob = new Blob([JSON.stringify(snap, null, 2)], { type: "application/json" });
+      download(blob, `quick-backup_${todayStamp()}.json`);
+      toast.success("JSON backup downloaded");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Quick backup failed");
+    } finally {
+      setQuickBusy(false);
+    }
+  }
+
 
   async function buildFullZip(
     parts: { name: string; content: string }[],
@@ -259,6 +289,61 @@ function BackupPage() {
   return (
     <div className="space-y-4">
       <AdminPageHeader title="System Backup" description="Snapshot the database and media into a portable ZIP, or restore an archive on any Supabase project. Super admin only." />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="border-emerald-500/30 bg-emerald-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-emerald-500" /> Quick Backup
+              <span className="ml-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-600">Recommended</span>
+            </CardTitle>
+            <CardDescription>One-click JSON export of your core application data. Fast, portable, and safe to run any time.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <QuickBackupChecklist
+              items={["App Data", "Settings", "Competitions", "Feed", "Profiles", "Themes & Roles"]}
+            />
+            <Button onClick={onQuickJson} disabled={quickBusy || !!busy} className="w-full sm:w-auto">
+              {quickBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileJson className="mr-2 h-4 w-4" />}
+              Download JSON Backup
+            </Button>
+            <p className="text-[11px] text-muted-foreground">
+              Saves as <span className="font-mono">quick-backup_{todayStamp()}.json</span>. Row limits per table apply — use Full Backup below for media and larger tables.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Database className="h-4 w-4" /> Full Database Backup</CardTitle>
+            <CardDescription>Recommended before major upgrades — includes schema, functions, triggers, RLS policies and every row.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <QuickBackupChecklist
+              items={["Schema", "Tables", "Functions", "Triggers", "RLS Policies", "Everything"]}
+            />
+            <Button
+              asChild
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
+              <a
+                href="https://supabase.com/docs/guides/platform/backups"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <BookOpen className="mr-2 h-4 w-4" />
+                Open Supabase Export Guide
+                <ExternalLink className="ml-2 h-3.5 w-3.5 opacity-60" />
+              </a>
+            </Button>
+            <p className="text-[11px] text-muted-foreground">
+              Full Postgres dumps run outside the app — the guide walks through Point-in-Time Recovery and downloadable database backups from your hosting provider.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
 
       <Card>
         <CardHeader>
