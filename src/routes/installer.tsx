@@ -637,6 +637,8 @@ function InstallerPage() {
 
             {current.id === "reqs" && (
               <div className="space-y-3">
+                <SystemCompatibilityPanel compat={compat} busy={compatBusy} onRun={loadCompat} />
+
                 <div className="space-y-2 text-sm">
                   <RequirementItem ok label="Browser supports modern JavaScript" />
                   <RequirementItem ok label="HTTPS / secure context" />
