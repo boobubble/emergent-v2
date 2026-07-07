@@ -15,6 +15,14 @@ import digbotImg from "@/assets/bots/digbot.png";
 import fishbotImg from "@/assets/bots/fishbot.png";
 import wineImg from "@/assets/bots/wine.png";
 import spambotImg from "@/assets/bots/spambot.png";
+import {
+  BOT_EVENT_META,
+  computeEventState,
+  getAttempts,
+  getBotEventsConfig,
+  recordAttempt,
+  type BotEventKind,
+} from "./bot-events";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUuid(s: string) { return UUID_RE.test(s); }
