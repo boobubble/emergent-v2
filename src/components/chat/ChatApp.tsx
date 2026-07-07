@@ -13,6 +13,7 @@ import { MessageInput } from "@/components/chat/MessageInput";
 import { DMChatBackground } from "@/components/chat/DMChatBackground";
 import { useDmTheme } from "@/lib/use-dm-theme";
 import { supabase } from "@/integrations/supabase/client";
+import { useAppSettings } from "@/lib/app-settings";
 
 
 import { useBotEventsNotifier } from "@/lib/use-bot-events-notifier";
