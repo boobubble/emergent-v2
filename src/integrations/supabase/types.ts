@@ -3835,7 +3835,6 @@ export type Database = {
         }
       }
       delete_user_cascade: { Args: { _user: string }; Returns: undefined }
-      exec_sql: { Args: { sql: string }; Returns: undefined }
       feedbot_dispatch_run: { Args: never; Returns: undefined }
       feedbot_enqueue: {
         Args: {
@@ -3852,7 +3851,6 @@ export type Database = {
       feedbot_summary_run: { Args: never; Returns: undefined }
       get_active_chat_theme: { Args: { _user: string }; Returns: string }
       get_active_feed_theme: { Args: { _user: string }; Returns: string }
-      get_chatroom_password: { Args: { _room: string }; Returns: string }
       get_install_status: { Args: never; Returns: Json }
       get_my_phone: {
         Args: never
@@ -3875,7 +3873,6 @@ export type Database = {
         }[]
       }
       get_system_version: { Args: never; Returns: Json }
-      get_trio_room_password: { Args: { _room: string }; Returns: string }
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
       has_role: {
         Args: {
