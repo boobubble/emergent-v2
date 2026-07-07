@@ -895,6 +895,7 @@ function stepDescription(id: string, mode: InstallMode): string {
     case "welcome":  return "Let's get your BooBubble site running.";
     case "license":  return "Verify your purchase to activate the app.";
     case "reqs":     return "Checking that your environment is ready.";
+    case "schema":   return "Automatically create tables, indexes, RLS, functions, triggers, and seed data.";
     case "db":       return "Connect to your self-hosted Supabase project.";
     case "admin":    return "Create the first super admin account.";
     case "branding": return "Pick a site name. More options inside admin.";
