@@ -1073,6 +1073,77 @@ function InstallerPage() {
   );
 }
 
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="flex items-center gap-1.5 text-muted-foreground">
+        <CheckCircle2 className="h-3 w-3 text-emerald-500" />{label}
+      </span>
+      <span className="font-medium">{value}</span>
+    </div>
+  );
+}
+
+function StageTimeline({ stages }: {
+  stages: Record<"env"|"db"|"schema"|"storage"|"admin"|"verify"|"finalize", { state: "idle"|"running"|"ok"|"fail"; ms?: number; msg?: string }>
+}) {
+  const items: Array<[keyof typeof stages, string]> = [
+    ["env", "Preparing Environment"],
+    ["db", "Connecting Database"],
+    ["schema", "Applying Schema"],
+    ["storage", "Creating Storage"],
+    ["admin", "Creating Admin"],
+    ["verify", "Verifying Installation"],
+    ["finalize", "Finalizing"],
+  ];
+  return (
+    <div className="rounded-lg border bg-muted/30 p-3">
+      <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Installation Progress</div>
+      <ol className="space-y-1.5 text-xs">
+        {items.map(([key, label]) => {
+          const s = stages[key];
+          const icon =
+            s.state === "ok" ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> :
+            s.state === "fail" ? <AlertCircle className="h-3.5 w-3.5 text-red-500" /> :
+            s.state === "running" ? <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /> :
+            <Circle className="h-3.5 w-3.5 text-muted-foreground" />;
+          return (
+            <li key={key} className="flex items-center gap-2">
+              {icon}
+              <span className={s.state === "idle" ? "text-muted-foreground" : ""}>{label}</span>
+              {s.ms != null && <span className="ml-auto text-[10px] text-muted-foreground">{s.ms}ms</span>}
+              {s.msg && <span className="text-[10px] text-muted-foreground">{s.msg}</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+function InstallerLockedScreen({ onLogin, onAdmin }: { onLogin: () => void; onAdmin: () => void }) {
+  return (
+    <div className="grid min-h-screen place-items-center bg-gradient-to-br from-background via-muted/30 to-background px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500/15 mb-2">
+            <Shield className="h-7 w-7 text-emerald-500" />
+          </div>
+          <CardTitle>Installation already completed</CardTitle>
+          <CardDescription>
+            The installer is locked. To re-run it, unlock the installer from Admin → System.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Button className="w-full" onClick={onLogin}>Go to Login</Button>
+          <Button className="w-full" variant="outline" onClick={onAdmin}>Go to Admin</Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+
 function RequirementItem({ ok, label, pending }: { ok: boolean; label: string; pending?: boolean }) {
   return (
     <div className="flex items-center gap-2">
