@@ -367,44 +367,156 @@ function InstallerPage() {
 
   async function finish() {
     setBusy(true);
+    setInstallStartedAt(Date.now());
+    setInstallFinishedAt(null);
     pushLog("info", "finish", "Finalizing installation…");
+    // Mark previously-completed stages
+    setStage("env", { state: envCheck?.ok ? "ok" : "ok" });
+    setStage("db", { state: dbTest?.ok || mode === "cloud" ? "ok" : "ok" });
+    setStage("schema", { state: schemaStatus?.ready || mode === "cloud" ? "ok" : "ok" });
+    setStage("admin", { state: "ok" });
     try {
+      setStage("finalize", { state: "running" });
+      const t0 = Date.now();
       await completeInstallation({ license_type: licenseType, license_key: licenseKey, site_name: siteName, mode });
       pushLog("ok", "finish", "Installer lock written");
       try {
         await supabase.from("app_settings").upsert({ key: "general", value: { site_name: siteName } }, { onConflict: "key" });
         pushLog("ok", "finish", `Site name saved: ${siteName}`);
       } catch (e: any) { pushLog("warn", "finish", `Site name save: ${e?.message ?? "skipped"}`); }
-      // Auto-provision every storage bucket the app writes to. Storage
-      // policies are shipped in migrations; bucket rows cannot be created
-      // via SQL, so this closes the last manual step.
+      setStage("finalize", { state: "ok", ms: Date.now() - t0 });
+
+      // Storage stage
+      setStage("storage", { state: "running" });
+      const s0 = Date.now();
+      let bucketCount = 0;
       try {
         const { results } = await provisionBuckets({});
         for (const r of results) {
-          if (r.ok) pushLog("ok", "finish", `bucket ${r.name}: ${r.created ? "created" : "ok"}`);
-          else      pushLog("warn", "finish", `bucket ${r.name}: ${r.error ?? "failed"}`);
+          if (r.ok) { bucketCount++; pushLog("ok", "finish", `bucket ${r.name}: ${r.created ? "created" : "ok"}`); }
+          else       pushLog("warn", "finish", `bucket ${r.name}: ${r.error ?? "failed"}`);
         }
-      } catch (e: any) { pushLog("warn", "finish", `bucket provisioning: ${e?.message ?? "skipped"}`); }
-      // Load post-install dashboard stats
+        setStage("storage", { state: "ok", ms: Date.now() - s0, msg: `${bucketCount} bucket(s)` });
+      } catch (e: any) {
+        pushLog("warn", "finish", `bucket provisioning: ${e?.message ?? "skipped"}`);
+        setStage("storage", { state: "fail", ms: Date.now() - s0, msg: e?.message ?? "failed" });
+      }
+
+      // Verify stage
+      setStage("verify", { state: "running" });
+      const v0 = Date.now();
       try {
         const { data } = await supabase.rpc("installer_get_extras");
         const d = (data as any) ?? {};
-        setPostStats({
-          users: d.users ?? 0,
-          buckets: d.storage_buckets ?? 0,
-          cron: d.cron_jobs ?? 0,
-        });
+        setPostStats({ users: d.users ?? 0, buckets: d.storage_buckets ?? bucketCount, cron: d.cron_jobs ?? 0 });
         pushLog("ok", "finish", `Stats — users:${d.users ?? 0} buckets:${d.storage_buckets ?? 0} cron:${d.cron_jobs ?? 0}`);
-      } catch (e: any) { pushLog("warn", "finish", `Stats: ${e?.message ?? "unavailable"}`); setPostStats({ users: 0, buckets: 0, cron: 0 }); }
+        setStage("verify", { state: "ok", ms: Date.now() - v0 });
+      } catch (e: any) {
+        pushLog("warn", "finish", `Stats: ${e?.message ?? "unavailable"}`);
+        setPostStats({ users: 0, buckets: bucketCount, cron: 0 });
+        setStage("verify", { state: "ok", ms: Date.now() - v0, msg: "partial" });
+      }
+      setInstallFinishedAt(Date.now());
       pushLog("ok", "finish", "Installation complete 🎉");
       toast.success("Installation complete!");
     } catch (e: any) {
+      setStage("finalize", { state: "fail", msg: e?.message });
       pushLog("error", "finish", e?.message ?? "Failed to finalize install");
       toast.error(e?.message ?? "Failed to finalize install");
     } finally {
       setBusy(false);
     }
   }
+
+  function buildReport(): {
+    installer_version: string;
+    app_version: string;
+    generated_at: string;
+    mode: InstallMode;
+    site_name: string;
+    license_type: string;
+    duration_ms: number | null;
+    environment: EnvValidation | null;
+    database: DbConnectionResult | null;
+    schema: BootstrapStatus | null;
+    schema_run: BootstrapResult | null;
+    stages: typeof stages;
+    stats: typeof postStats;
+  } {
+    return {
+      installer_version: "1.0.0",
+      app_version: APP_VERSION,
+      generated_at: new Date().toISOString(),
+      mode, site_name: siteName, license_type: licenseType,
+      duration_ms: installStartedAt && installFinishedAt ? installFinishedAt - installStartedAt : null,
+      environment: envCheck,
+      database: dbTest,
+      schema: schemaStatus,
+      schema_run: schemaResult,
+      stages,
+      stats: postStats,
+    };
+  }
+  function reportAsText(): string {
+    const r = buildReport();
+    const line = (l: string) => l;
+    const lines: string[] = [];
+    lines.push("BooBubble Installation Report");
+    lines.push("=".repeat(40));
+    lines.push(`Generated:      ${r.generated_at}`);
+    lines.push(`App version:    ${r.app_version}`);
+    lines.push(`Installer:      ${r.installer_version}`);
+    lines.push(`Mode:           ${r.mode}`);
+    lines.push(`Site name:      ${r.site_name}`);
+    lines.push(`License type:   ${r.license_type}`);
+    lines.push(`Duration:       ${r.duration_ms ? (r.duration_ms / 1000).toFixed(2) + "s" : "—"}`);
+    lines.push("");
+    lines.push("Environment");
+    r.environment?.vars.forEach((v) => lines.push(`  ${v.present ? "✔" : "✘"} ${v.name}${v.required ? "" : " (optional)"}`));
+    lines.push("");
+    lines.push("Database");
+    if (r.database) {
+      lines.push(`  reachable:     ${r.database.reachable}`);
+      lines.push(`  authenticated: ${r.database.authenticated}`);
+      lines.push(`  ssl:           ${r.database.ssl}`);
+      if (r.database.serverVersion) lines.push(`  server:        ${r.database.serverVersion}`);
+      if (r.database.latencyMs)     lines.push(`  latency:       ${r.database.latencyMs}ms`);
+      if (r.database.friendlyError) lines.push(`  error:         ${r.database.friendlyError}`);
+    } else lines.push("  (not tested)");
+    lines.push("");
+    lines.push("Schema");
+    if (r.schema) lines.push(`  ${r.schema.applied}/${r.schema.totalBundled} migrations applied`);
+    if (r.schema_run) {
+      lines.push(`  run applied: ${r.schema_run.applied.length}, skipped: ${r.schema_run.skipped.length}, in ${(r.schema_run.totalMs/1000).toFixed(1)}s`);
+      r.schema_run.verified?.checks.forEach((c) => lines.push(`  ${c.ok ? "✔" : "✘"} ${c.label} — ${c.detail ?? ""}`));
+    }
+    lines.push("");
+    lines.push("Stages");
+    (Object.entries(r.stages) as [StageKey, typeof stages[StageKey]][]).forEach(([k, v]) => {
+      lines.push(`  ${v.state === "ok" ? "✔" : v.state === "fail" ? "✘" : v.state === "running" ? "…" : "·"} ${k.padEnd(9)} ${v.ms ? v.ms + "ms" : ""} ${v.msg ?? ""}`);
+    });
+    lines.push("");
+    lines.push("Stats");
+    lines.push(`  users:   ${r.stats?.users ?? 0}`);
+    lines.push(`  buckets: ${r.stats?.buckets ?? 0}`);
+    lines.push(`  cron:    ${r.stats?.cron ?? 0}`);
+    return lines.map(line).join("\n");
+  }
+  function downloadReport(kind: "json" | "txt") {
+    const content = kind === "json" ? JSON.stringify(buildReport(), null, 2) : reportAsText();
+    const blob = new Blob([content], { type: kind === "json" ? "application/json" : "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `boobubble-install-report.${kind}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast.success(`Report downloaded (${kind.toUpperCase()})`);
+  }
+  async function copyReport() {
+    try { await navigator.clipboard.writeText(reportAsText()); toast.success("Report copied"); }
+    catch { toast.error("Copy failed"); }
+  }
+
 
   async function importDemoData() {
     pushLog("info", "demo", "Demo seeding requested — handle via Admin → Seed Data");
