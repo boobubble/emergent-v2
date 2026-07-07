@@ -792,7 +792,9 @@ function HeroHomepage() {
   };
 
   return (
-    <div data-hero-theme={dark ? "dark" : "light"} className={`min-h-screen ${bg} relative overflow-x-clip`}>
+    <div data-hero-theme={dark ? "dark" : "light"} className={`min-h-screen relative overflow-x-clip ${dark ? "text-white" : "text-slate-900"}`}>
+      {/* Fixed background layer — avoids Chromium paint gaps on very tall gradient elements */}
+      <div aria-hidden className={`fixed inset-0 -z-10 ${bg}`} />
       {/* Animations + scroll behavior */}
       <style>{`
         html { scroll-behavior: smooth; }
@@ -800,6 +802,7 @@ function HeroHomepage() {
         @keyframes hero-msg-in { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes hero-bar { from { transform: scaleY(0.4) } to { transform: scaleY(1) } }
       `}</style>
+
 
       {/* Decorative gradient orbs */}
       <div className="pointer-events-none absolute -top-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-fuchsia-500/20 blur-3xl" />
