@@ -39,6 +39,7 @@ export function ChatApp() {
   );
   const [feedbotChip, setFeedbotChip] = useState<{ title: string; body: string } | null>(null);
   const hubBadge = useHubBadge(hubOpen);
+  useBotEventsNotifier();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
