@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReelsRouteImport } from './routes/reels'
@@ -133,6 +134,11 @@ import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrustRoute = TrustRouteImport.update({
@@ -765,6 +771,7 @@ export interface FileRoutesByFullPath {
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/trust': typeof TrustRoute
+  '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
@@ -885,6 +892,7 @@ export interface FileRoutesByTo {
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/trust': typeof TrustRoute
+  '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
@@ -1008,6 +1016,7 @@ export interface FileRoutesById {
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/trust': typeof TrustRoute
+  '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
@@ -1132,6 +1141,7 @@ export interface FileRouteTypes {
     | '/reels'
     | '/reset-password'
     | '/trust'
+    | '/wallet'
     | '/welcome'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
@@ -1252,6 +1262,7 @@ export interface FileRouteTypes {
     | '/reels'
     | '/reset-password'
     | '/trust'
+    | '/wallet'
     | '/welcome'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
@@ -1374,6 +1385,7 @@ export interface FileRouteTypes {
     | '/reels'
     | '/reset-password'
     | '/trust'
+    | '/wallet'
     | '/welcome'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
@@ -1497,6 +1509,7 @@ export interface RootRouteChildren {
   ReelsRoute: typeof ReelsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TrustRoute: typeof TrustRoute
+  WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
@@ -1517,6 +1530,13 @@ declare module '@tanstack/react-router' {
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trust': {
@@ -2592,6 +2612,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReelsRoute: ReelsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TrustRoute: TrustRoute,
+  WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
