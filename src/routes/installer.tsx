@@ -103,11 +103,45 @@ function InstallerPage() {
   }
   if (alreadyInstalled) return <Navigate to="/" replace />;
 
-  // Skip DB step entirely in cloud mode
+  // Skip legacy DB step in cloud mode (schema step handles bootstrap for self-hosted).
   const visibleSteps = STEPS.filter((s) => !(s.id === "db" && mode === "cloud"));
   const current = visibleSteps[step];
 
   const go = (delta: number) => setStep((s) => Math.max(0, Math.min(visibleSteps.length - 1, s + delta)));
+
+  async function loadSchemaStatus() {
+    try {
+      const s = await fetchSchemaStatus({});
+      setSchemaStatus(s);
+      pushLog(s.ready ? "ok" : "info", "schema", s.message);
+    } catch (e: any) {
+      pushLog("error", "schema", e?.message ?? "Failed to read schema status");
+    }
+  }
+
+  async function runBootstrap() {
+    setSchemaRunning(true);
+    pushLog("info", "schema", "Starting schema bootstrap…");
+    try {
+      const result = await runSchemaBootstrapFn({});
+      setSchemaResult(result);
+      for (const entry of result.log) pushLog(entry.level, "schema", `${entry.name}: ${entry.msg}${entry.ms ? ` (${entry.ms}ms)` : ""}`);
+      if (result.ok) {
+        pushLog("ok", "schema", `Applied ${result.applied.length}, skipped ${result.skipped.length}, in ${(result.totalMs / 1000).toFixed(1)}s`);
+        toast.success("Schema bootstrap complete");
+        await loadSchemaStatus();
+      } else {
+        const err = result.failed?.error ?? "Bootstrap failed";
+        pushLog("error", "schema", err);
+        toast.error(err);
+      }
+    } catch (e: any) {
+      pushLog("error", "schema", e?.message ?? "Bootstrap failed");
+      toast.error(e?.message ?? "Bootstrap failed");
+    } finally {
+      setSchemaRunning(false);
+    }
+  }
 
   async function verifyLicense() {
     pushLog("info", "license", `Verifying ${licenseType} key…`);
