@@ -3815,6 +3815,168 @@ export type Database = {
           },
         ]
       }
+      wallet_bonus_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          enabled: boolean
+          ends_at: string | null
+          feature: string | null
+          id: string
+          name: string
+          price_multiplier: number
+          reward_multiplier: number
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean
+          ends_at?: string | null
+          feature?: string | null
+          id?: string
+          name: string
+          price_multiplier?: number
+          reward_multiplier?: number
+          starts_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean
+          ends_at?: string | null
+          feature?: string | null
+          id?: string
+          name?: string
+          price_multiplier?: number
+          reward_multiplier?: number
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      wallet_rules: {
+        Row: {
+          coin_cost: number
+          coin_reward: number
+          cooldown_seconds: number | null
+          created_at: string
+          daily_limit: number | null
+          enabled: boolean
+          feature: string
+          id: string
+          label: string
+          max_per_conversation: number | null
+          max_per_day: number | null
+          max_per_event: number | null
+          metadata: Json
+          min_account_age_days: number | null
+          min_reputation: number | null
+          min_xp_level: number | null
+          monthly_limit: number | null
+          premium_only: boolean
+          refund_window_seconds: number | null
+          required_badge: string | null
+          required_plan_slug: string | null
+          updated_at: string
+          vip_only: boolean
+          weekly_limit: number | null
+        }
+        Insert: {
+          coin_cost?: number
+          coin_reward?: number
+          cooldown_seconds?: number | null
+          created_at?: string
+          daily_limit?: number | null
+          enabled?: boolean
+          feature: string
+          id?: string
+          label: string
+          max_per_conversation?: number | null
+          max_per_day?: number | null
+          max_per_event?: number | null
+          metadata?: Json
+          min_account_age_days?: number | null
+          min_reputation?: number | null
+          min_xp_level?: number | null
+          monthly_limit?: number | null
+          premium_only?: boolean
+          refund_window_seconds?: number | null
+          required_badge?: string | null
+          required_plan_slug?: string | null
+          updated_at?: string
+          vip_only?: boolean
+          weekly_limit?: number | null
+        }
+        Update: {
+          coin_cost?: number
+          coin_reward?: number
+          cooldown_seconds?: number | null
+          created_at?: string
+          daily_limit?: number | null
+          enabled?: boolean
+          feature?: string
+          id?: string
+          label?: string
+          max_per_conversation?: number | null
+          max_per_day?: number | null
+          max_per_event?: number | null
+          metadata?: Json
+          min_account_age_days?: number | null
+          min_reputation?: number | null
+          min_xp_level?: number | null
+          monthly_limit?: number | null
+          premium_only?: boolean
+          refund_window_seconds?: number | null
+          required_badge?: string | null
+          required_plan_slug?: string | null
+          updated_at?: string
+          vip_only?: boolean
+          weekly_limit?: number | null
+        }
+        Relationships: []
+      }
+      wallet_suspicious_events: {
+        Row: {
+          category: string
+          created_at: string
+          detail: Json
+          id: string
+          reviewed: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
+          severity: number
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: number
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       webhook_deliveries: {
         Row: {
           created_at: string
@@ -4568,6 +4730,44 @@ export type Database = {
         Args: { _password: string; _room: string }
         Returns: boolean
       }
+      wallet_analytics_feature_stats: {
+        Args: never
+        Returns: {
+          avg_cost: number
+          coin_cost: number
+          enabled: boolean
+          feature: string
+          label: string
+          last_used: string
+          total_revenue: number
+          total_tx: number
+          unique_users: number
+        }[]
+      }
+      wallet_analytics_leaderboards: {
+        Args: { _limit?: number }
+        Returns: Json
+      }
+      wallet_analytics_summary: { Args: never; Returns: Json }
+      wallet_analytics_timeseries: {
+        Args: { _days?: number }
+        Returns: {
+          day: string
+          earned: number
+          purchased: number
+          refunded: number
+          spent: number
+        }[]
+      }
+      wallet_analytics_top_kinds: {
+        Args: { _direction?: string; _limit?: number }
+        Returns: {
+          kind: string
+          total: number
+          tx_count: number
+          unique_users: number
+        }[]
+      }
       wallet_apply: {
         Args: {
           _amount: number
@@ -4602,6 +4802,32 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      wallet_effective_price: {
+        Args: { _base_cost?: number; _feature: string }
+        Returns: number
+      }
+      wallet_effective_reward: {
+        Args: { _base_reward?: number; _feature: string }
+        Returns: number
+      }
+      wallet_log_suspicious: {
+        Args: {
+          _category: string
+          _detail: Json
+          _severity: number
+          _user: string
+        }
+        Returns: string
+      }
+      wallet_validate: {
+        Args: {
+          _amount?: number
+          _direction?: string
+          _feature: string
+          _user: string
+        }
+        Returns: Json
       }
     }
     Enums: {
