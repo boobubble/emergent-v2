@@ -124,9 +124,13 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
                     onClick={() => setActive(id)}
                     className="flex min-w-0 flex-1 items-center gap-2.5 truncate bg-transparent p-0 text-left"
                   >
-                    <span className={cn("text-base leading-none", active ? "text-primary" : "opacity-50")}>
-                      #
-                    </span>
+                    {r.kind === "game" ? (
+                      <Gamepad2 className={cn("h-3.5 w-3.5 shrink-0", active ? "text-primary" : "text-primary/70")} />
+                    ) : (
+                      <span className={cn("text-base leading-none", active ? "text-primary" : "opacity-50")}>
+                        #
+                      </span>
+                    )}
                     <span className="truncate">{r.name}</span>
                   </button>
                   <span className="flex items-center gap-1 text-[10px]">
