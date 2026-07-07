@@ -554,6 +554,109 @@ function InstallerPage() {
               </div>
             )}
 
+            {current.id === "schema" && (
+              <div className="space-y-3">
+                <div className="rounded-lg border bg-muted/40 p-3 text-sm">
+                  <div className="mb-1 flex items-center gap-2 font-medium">
+                    <HardDrive className="h-4 w-4" /> Automatic Schema Bootstrap
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Applies all bundled migrations directly to your Supabase Postgres
+                    — tables, indexes, RLS policies, triggers, functions, and seed data.
+                    Safe to re-run: only pending migrations are applied. Requires{" "}
+                    <code className="rounded bg-background px-1">SUPABASE_DB_URL</code>{" "}
+                    in your environment (Project Settings → Database → Connection string → URI).
+                  </p>
+                </div>
+
+                {!schemaStatus && (
+                  <Button onClick={loadSchemaStatus} variant="outline" className="w-full">
+                    Check Database Status
+                  </Button>
+                )}
+
+                {schemaStatus && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="rounded-lg border bg-muted/40 p-2">
+                        <div className="text-2xl font-bold">{schemaStatus.totalBundled}</div>
+                        <div className="text-[10px] uppercase text-muted-foreground">Bundled</div>
+                      </div>
+                      <div className="rounded-lg border bg-emerald-500/10 p-2">
+                        <div className="text-2xl font-bold text-emerald-500">{schemaStatus.applied}</div>
+                        <div className="text-[10px] uppercase text-muted-foreground">Applied</div>
+                      </div>
+                      <div className="rounded-lg border bg-amber-500/10 p-2">
+                        <div className="text-2xl font-bold text-amber-500">{schemaStatus.pending}</div>
+                        <div className="text-[10px] uppercase text-muted-foreground">Pending</div>
+                      </div>
+                    </div>
+
+                    <div className={`rounded-lg border p-3 text-xs ${schemaStatus.ready ? "border-emerald-500/30 bg-emerald-500/10" : schemaStatus.dbUrlPresent ? "border-amber-500/30 bg-amber-500/10" : "border-red-500/30 bg-red-500/10"}`}>
+                      <div className="flex items-start gap-2">
+                        {schemaStatus.ready
+                          ? <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                          : <AlertCircle className="mt-0.5 h-3.5 w-3.5 text-amber-500 shrink-0" />}
+                        <div>
+                          <div className="font-medium">{schemaStatus.message}</div>
+                          {schemaStatus.lastApplied && (
+                            <div className="mt-1 text-muted-foreground font-mono text-[10px]">Last: {schemaStatus.lastApplied}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {schemaResult?.verified && (
+                      <div className="rounded-lg border bg-background p-3">
+                        <div className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Verification</div>
+                        <div className="grid gap-1 text-xs">
+                          {schemaResult.verified.checks.map((c) => (
+                            <div key={c.label} className="flex items-center gap-2">
+                              {c.ok
+                                ? <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                : <AlertCircle className="h-3 w-3 text-red-500" />}
+                              <span className="flex-1">{c.label}</span>
+                              <span className="text-muted-foreground">{c.detail}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Button
+                        onClick={runBootstrap}
+                        disabled={schemaRunning || !schemaStatus.dbUrlPresent}
+                        className="flex-1"
+                      >
+                        {schemaRunning
+                          ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Applying {schemaStatus.pending} migrations…</>
+                          : schemaStatus.ready
+                            ? "Re-verify Schema"
+                            : schemaStatus.applied > 0
+                              ? `Resume Bootstrap (${schemaStatus.pending} left)`
+                              : `Run Bootstrap (${schemaStatus.totalBundled} migrations)`}
+                      </Button>
+                      <Button onClick={loadSchemaStatus} variant="outline" disabled={schemaRunning}>
+                        Refresh
+                      </Button>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => go(1)}
+                        disabled={!schemaStatus.ready}
+                        variant={schemaStatus.ready ? "default" : "outline"}
+                        className="flex-1"
+                      >
+                        {schemaStatus.ready ? "Continue" : "Complete schema to continue"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {current.id === "db" && (
               <div className="space-y-3">
                 <div>
