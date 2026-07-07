@@ -23,6 +23,7 @@ const STEPS = [
   { id: "welcome",   label: "Welcome",       icon: Rocket },
   { id: "license",   label: "License",       icon: KeyRound },
   { id: "reqs",      label: "Requirements",  icon: Shield },
+  { id: "schema",    label: "Schema",        icon: HardDrive },
   { id: "db",        label: "Database",      icon: Database },
   { id: "admin",     label: "Admin Account", icon: UserPlus },
   { id: "branding",  label: "Site Branding", icon: Palette },
