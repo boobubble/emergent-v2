@@ -11,10 +11,13 @@ import { getMyGamification } from "@/lib/gamification-engine.functions";
  */
 export function GamificationSummary() {
   const fn = useServerFn(getMyGamification);
-  const { data } = useQuery({ queryKey: ["my-gamification"], queryFn: () => fn({}) });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = useQuery<any>({ queryKey: ["my-gamification"], queryFn: () => fn({}) });
   if (!data) return null;
-  const openQuests = data.quests.filter((q) => !q.progress?.completed_at).length;
-  const doneMilestones = data.milestones.filter((m) => m.progress?.completed_at).length;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const openQuests = data.quests.filter((q: any) => !q.progress?.completed_at).length;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const doneMilestones = data.milestones.filter((m: any) => m.progress?.completed_at).length;
   return (
     <section className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
       <div className="mb-3 flex items-center justify-between">
