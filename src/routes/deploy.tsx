@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 import {
   checkRuntime, checkEnv, checkDatabase, checkAuth, checkStorage,
-  checkRealtime, checkAi, checkEmail, getDeploymentInfo,
+  checkRealtime, checkAi, checkEmail, getDeploymentInfo, clearDeployCheckCache,
   type CategoryResult, type CheckCategory, type CheckItem, type CheckState,
   type DeploymentInfo,
 } from "@/lib/deploy-check.functions";
@@ -96,10 +96,14 @@ function DeployWizard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const infoFn = useServerFn(getDeploymentInfo);
+  const clearCacheFn = useServerFn(clearDeployCheckCache);
 
-  async function runOne(cat: CheckCategory) {
+  async function runOne(cat: CheckCategory, opts: { force?: boolean } = {}) {
     setRunningCats((s) => new Set(s).add(cat));
     try {
+      if (opts.force) {
+        await clearCacheFn({ data: { category: cat } }).catch(() => {});
+      }
       const r = await runners[cat]();
       setResults((prev) => ({ ...prev, [cat]: r }));
     } catch (e: any) {
@@ -120,10 +124,11 @@ function DeployWizard() {
     }
   }
 
-  async function runAll() {
+  async function runAll(opts: { force?: boolean } = {}) {
     setBusy(true);
     setResults({});
     try {
+      if (opts.force) await clearCacheFn({ data: {} }).catch(() => {});
       await Promise.all([
         ...CATEGORIES.map((c) => runOne(c.key)),
         infoFn().then(setInfo).catch(() => {}),
@@ -333,9 +338,9 @@ function CheckStep({
   criticalPassed, failedCritical, info, copyReport, exportReport, summaryRef, hasRun,
 }: {
   busy: boolean;
-  runAll: () => void;
+  runAll: (opts?: { force?: boolean }) => void;
   results: Partial<Record<CheckCategory, CategoryResult>>;
-  runOne: (c: CheckCategory) => void;
+  runOne: (c: CheckCategory, opts?: { force?: boolean }) => void;
   runningCats: Set<CheckCategory>;
   progressPct: number;
   healthScore: number;
@@ -384,7 +389,7 @@ function CheckStep({
 
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-2">
-        <Button onClick={runAll} disabled={busy} className="flex-1">
+        <Button onClick={() => runAll({ force: true })} disabled={busy} className="flex-1">
           {busy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />Running checks…</>
             : <><PlayCircle className="mr-2 h-4 w-4" aria-hidden />Run Deployment Check</>}
         </Button>
@@ -479,7 +484,7 @@ function CheckStep({
                   )}
                 </div>
                 <Button
-                  size="sm" variant="ghost" onClick={() => runOne(c.key)}
+                  size="sm" variant="ghost" onClick={() => runOne(c.key, { force: true })}
                   disabled={running}
                   aria-label={`Retry ${c.label} checks`}
                 >

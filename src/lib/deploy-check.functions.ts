@@ -42,6 +42,56 @@ export type DeploymentInfo = {
 const DEFAULT_TIMEOUT = 6000;
 const STORAGE_TIMEOUT = 12000;
 
+// ---------- In-memory TTL cache ----------
+// Server functions run on stateless workers, but within a warm instance this
+// prevents repeated retries (and parallel tab loads) from hammering Supabase
+// and storage APIs. Each category has its own TTL tuned to its cost.
+type CacheEntry = { at: number; value: CategoryResult };
+const _cache = new Map<CheckCategory, CacheEntry>();
+const _inflight = new Map<CheckCategory, Promise<CategoryResult>>();
+const CACHE_TTL: Record<CheckCategory, number> = {
+  runtime: 300_000,   // 5 min — static
+  env: 300_000,       // 5 min — static per deploy
+  database: 60_000,   // 1 min
+  storage: 45_000,    // 45s — heaviest (upload/download)
+  auth: 60_000,
+  realtime: 300_000,
+  ai: 120_000,
+  email: 120_000,
+  backup: 60_000,
+};
+
+async function cached(
+  category: CheckCategory,
+  compute: () => Promise<CategoryResult>,
+): Promise<CategoryResult> {
+  const hit = _cache.get(category);
+  if (hit && Date.now() - hit.at < CACHE_TTL[category]) {
+    return { ...hit.value, durationMs: 0 };
+  }
+  const pending = _inflight.get(category);
+  if (pending) return pending;
+  const p = (async () => {
+    try {
+      const value = await compute();
+      _cache.set(category, { at: Date.now(), value });
+      return value;
+    } finally {
+      _inflight.delete(category);
+    }
+  })();
+  _inflight.set(category, p);
+  return p;
+}
+
+export const clearDeployCheckCache = createServerFn({ method: "POST" })
+  .inputValidator((d: { category?: CheckCategory } | undefined) => d ?? {})
+  .handler(async ({ data }) => {
+    if (data.category) _cache.delete(data.category);
+    else _cache.clear();
+    return { ok: true };
+  });
+
 const REQUIRED_BUCKETS = ["avatars", "feed-media", "brand-assets", "stickers"];
 const REQUIRED_TABLES = [
   "profiles", "user_roles", "app_settings", "chatrooms", "messages",
@@ -88,7 +138,7 @@ function serverEnv() {
 
 // ---------- Runtime + env ----------
 export const checkRuntime = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("runtime", async () => {
     const started = Date.now();
     const items: CheckItem[] = [];
     const runtime =
@@ -103,11 +153,11 @@ export const checkRuntime = createServerFn({ method: "GET" }).handler(
       message: `Running on ${runtime}`,
     });
     return { category: "runtime", items, durationMs: Date.now() - started };
-  },
+  }),
 );
 
 export const checkEnv = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("env", async () => {
     const started = Date.now();
     const required = ["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "SUPABASE_SERVICE_ROLE_KEY"];
     const missing = required.filter((k) => !process.env[k]);
@@ -125,12 +175,12 @@ export const checkEnv = createServerFn({ method: "GET" }).handler(
           : "Add the missing keys to your hosting environment and redeploy.",
       }],
     };
-  },
+  }),
 );
 
 // ---------- Database ----------
 export const checkDatabase = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("database", async () => {
     const started = Date.now();
     const items: CheckItem[] = [];
     const { url, pub, svc } = serverEnv();
@@ -250,12 +300,12 @@ export const checkDatabase = createServerFn({ method: "GET" }).handler(
     }
 
     return { category: "database", items, durationMs: Date.now() - started };
-  },
+  }),
 );
 
 // ---------- Auth ----------
 export const checkAuth = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("auth", async () => {
     const started = Date.now();
     const { url, pub } = serverEnv();
     if (!url || !pub) {
@@ -292,12 +342,12 @@ export const checkAuth = createServerFn({ method: "GET" }).handler(
         }],
       };
     }
-  },
+  }),
 );
 
 // ---------- Storage ----------
 export const checkStorage = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("storage", async () => {
     const started = Date.now();
     const items: CheckItem[] = [];
     const { url, svc } = serverEnv();
@@ -361,12 +411,12 @@ export const checkStorage = createServerFn({ method: "GET" }).handler(
       });
     }
     return { category: "storage", items, durationMs: Date.now() - started };
-  },
+  }),
 );
 
 // ---------- Realtime (server-side capability) ----------
 export const checkRealtime = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("realtime", async () => {
     const started = Date.now();
     const { url } = serverEnv();
     return {
@@ -379,12 +429,12 @@ export const checkRealtime = createServerFn({ method: "GET" }).handler(
         fix: url ? undefined : "Set SUPABASE_URL to enable realtime.",
       }],
     };
-  },
+  }),
 );
 
 // ---------- AI ----------
 export const checkAi = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("ai", async () => {
     const started = Date.now();
     const { ai } = serverEnv();
     if (!ai) {
@@ -422,12 +472,12 @@ export const checkAi = createServerFn({ method: "GET" }).handler(
         }],
       };
     }
-  },
+  }),
 );
 
 // ---------- Email ----------
 export const checkEmail = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("email", async () => {
     const started = Date.now();
     const { url, svc } = serverEnv();
     if (!url || !svc) {
@@ -465,7 +515,7 @@ export const checkEmail = createServerFn({ method: "GET" }).handler(
         }],
       };
     }
-  },
+  }),
 );
 
 // ---------- Deployment info ----------
