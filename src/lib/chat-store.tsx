@@ -387,7 +387,7 @@ interface Ctx {
   pushSystem: (channelId: string, text: string) => void;
   wipeChannel: (channelId: string) => void;
   deleteRoom: (roomId: string) => void;
-  syncAdminChannels: (channels: { id: string; name: string; topic?: string }[]) => void;
+  syncAdminChannels: (channels: AdminChannelInput[]) => void;
 
 }
 
