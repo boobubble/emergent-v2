@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 import {
   checkRuntime, checkEnv, checkDatabase, checkAuth, checkStorage,
-  checkRealtime, checkAi, checkEmail, getDeploymentInfo,
+  checkRealtime, checkAi, checkEmail, getDeploymentInfo, clearDeployCheckCache,
   type CategoryResult, type CheckCategory, type CheckItem, type CheckState,
   type DeploymentInfo,
 } from "@/lib/deploy-check.functions";
