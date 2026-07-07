@@ -53,6 +53,18 @@ export interface Message {
   replyToId?: string;         // threading: id of message being replied to
 }
 
+export interface RoomGameConfig {
+  type: string;                 // registry key (e.g. "arrow-puzzle")
+  difficulty?: "easy" | "normal" | "hard";
+  dailyChallenge?: boolean;
+  tournament?: boolean;
+  spectators?: boolean;
+  entryFeeCoins?: number;
+  coinReward?: number;
+  xpReward?: number;
+  featured?: boolean;
+}
+
 export interface Room {
   id: string;
   name: string;
@@ -60,6 +72,8 @@ export interface Room {
   members: string[];
   roles: Record<string, Role>;
   isPublic: boolean;
+  kind?: "chat" | "game";
+  game?: RoomGameConfig;
 }
 
 export interface GameState {

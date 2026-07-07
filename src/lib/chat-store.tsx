@@ -1,5 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from "react";
-import type { User, Message, Room, GameState, Attachment } from "./chat-types";
+import type { User, Message, Room, GameState, Attachment, RoomGameConfig } from "./chat-types";
+
+export interface AdminChannelInput {
+  id: string;
+  name: string;
+  topic?: string;
+  kind?: "chat" | "game";
+  game?: RoomGameConfig;
+}
 import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
@@ -387,7 +395,7 @@ interface Ctx {
   pushSystem: (channelId: string, text: string) => void;
   wipeChannel: (channelId: string) => void;
   deleteRoom: (roomId: string) => void;
-  syncAdminChannels: (channels: { id: string; name: string; topic?: string }[]) => void;
+  syncAdminChannels: (channels: AdminChannelInput[]) => void;
 
 }
 
@@ -1002,6 +1010,14 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     const replyToId = opts?.replyToId;
     const channelOverride = opts?.channelId;
     if (!trimmed && !attachment) return;
+    // Game rooms disallow user chat — only auto-generated system events appear.
+    {
+      const ch = channelOverride || stateRef.current.activeChannel;
+      if (ch && !ch.startsWith("dm:") && stateRef.current.rooms[ch]?.kind === "game") {
+        setReplyingTo(null);
+        return;
+      }
+    }
     if (isGuest) {
       const isCmdGuest = trimmed.startsWith("!") || /^\/(mute|kick)\b/i.test(trimmed);
       const hasLink = /\b(https?:\/\/|www\.)\S+/i.test(trimmed) || /\b[\w-]+\.(com|net|org|io|co|app|dev|me|gg|xyz|info|link|site)\b/i.test(trimmed);
@@ -1567,16 +1583,23 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     });
   }, []);
 
-  const syncAdminChannels = useCallback((channels: { id: string; name: string; topic?: string }[]) => {
+  const syncAdminChannels = useCallback((channels: AdminChannelInput[]) => {
     setState(s => {
       const rooms = { ...s.rooms };
       let roomOrder = [...s.roomOrder];
       const validIds = new Set(channels.map(c => c.id));
       // Add or update admin-managed rooms
       for (const c of channels) {
+        const kind = c.kind ?? "chat";
         const existing = rooms[c.id];
         if (existing) {
-          rooms[c.id] = { ...existing, name: c.name, topic: c.topic || existing.topic };
+          rooms[c.id] = {
+            ...existing,
+            name: c.name,
+            topic: c.topic || existing.topic,
+            kind,
+            game: kind === "game" ? c.game : undefined,
+          };
         } else {
           rooms[c.id] = {
             id: c.id,
@@ -1585,6 +1608,8 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
             members: ["me", ...SEED_BOTS.map(b => b.id)],
             roles: { me: "member", "bot-gamebot": "owner" },
             isPublic: true,
+            kind,
+            game: kind === "game" ? c.game : undefined,
           };
           if (!roomOrder.includes(c.id)) roomOrder.push(c.id);
         }
