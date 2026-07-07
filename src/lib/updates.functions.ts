@@ -308,31 +308,20 @@ export const runUpdate = createServerFn({ method: "POST" })
 
       await stage("Running database migrations", async () => {
         if (!pending.length) return "no new migrations";
+        // SECURITY: raw-SQL execution is disabled. Migrations bundled with the
+        // application are applied through the standard Supabase migration
+        // pipeline at redeploy — the Update Center only records that they are
+        // pending so the operator gets an accurate audit trail.
         for (const m of pending) {
-          const mt = Date.now();
-          try {
-            // Requires an exec_sql RPC on the project; if unavailable, fail loudly.
-            const { error } = await (supabaseAdmin as any).rpc("exec_sql", { sql: m.sql });
-            if (error) throw new Error(`migration ${m.id}: ${error.message}`);
-            await supabaseAdmin.from("applied_update_migrations").insert({
-              migration_id: m.id,
-              version: pkg.version,
-              applied_by: context.userId,
-              duration_ms: Date.now() - mt,
-              status: "ok",
-            });
-          } catch (e: any) {
-            await supabaseAdmin.from("applied_update_migrations").insert({
-              migration_id: m.id,
-              version: pkg.version,
-              applied_by: context.userId,
-              duration_ms: Date.now() - mt,
-              status: "failed",
-            });
-            throw e;
-          }
+          await supabaseAdmin.from("applied_update_migrations").insert({
+            migration_id: m.id,
+            version: pkg.version,
+            applied_by: context.userId,
+            duration_ms: 0,
+            status: "deferred",
+          });
         }
-        return `${pending.length} applied`;
+        return `${pending.length} deferred to redeploy`;
       });
 
       await stage("Updating assets", async () => `${(pkg.assets ?? []).length} entries`);
