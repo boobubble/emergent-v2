@@ -12,7 +12,9 @@ import { toast } from "sonner";
 import { Plus, Trash2, Sparkles, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminSetting } from "@/lib/use-admin-setting";
-import { generatePuzzle, isSolved, applyMoves, type Rotation } from "@/components/games/rooms/arrow-flow/logic";
+import { generatePuzzle, applyMoves } from "@/components/games/rooms/arrow-flow/logic";
+type Rotation = 0 | 1 | 2 | 3;
+
 
 export const Route = createFileRoute("/admin/arrowflow")({ component: ArrowFlowAdmin });
 
