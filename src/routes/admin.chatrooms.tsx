@@ -22,22 +22,19 @@ function slugify(name: string) {
 }
 
 function ChannelsManager() {
-  const { values, patch, save, saving } = useAdminSetting<Cfg>("chat_channels_cfg", DEFAULTS);
-  // We persist under `chat_channels` (array) too so ChatApp can consume it directly.
-  const { patch: patchList, save: saveList, saving: savingList } = useAdminSetting<{ list: AdminChannel[] }>(
+  const { values, patch, save, saving } = useAdminSetting<{ list: AdminChannel[] }>(
     "chat_channels",
     { list: [] },
   );
   const [name, setName] = useState("");
   const [topic, setTopic] = useState("");
 
-  const channels = values.channels ?? [];
+  const channels = values.list ?? [];
 
   async function persist(next: AdminChannel[]) {
-    patch({ channels: next });
-    patchList({ list: next });
-    // Save both keys; ChatApp reads raw.chat_channels which the settings ctx normalizes.
-    await Promise.all([save(), saveList()]);
+    patch({ list: next });
+    // Defer save to next tick so state update lands first.
+    setTimeout(() => save(), 0);
   }
 
   function addChannel() {
