@@ -515,7 +515,7 @@ export const checkEmail = createServerFn({ method: "GET" }).handler(
         }],
       };
     }
-  },
+  }),
 );
 
 // ---------- Deployment info ----------
