@@ -3835,6 +3835,7 @@ export type Database = {
         }
       }
       delete_user_cascade: { Args: { _user: string }; Returns: undefined }
+      exec_sql: { Args: { sql: string }; Returns: undefined }
       feedbot_dispatch_run: { Args: never; Returns: undefined }
       feedbot_enqueue: {
         Args: {
