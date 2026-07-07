@@ -251,6 +251,8 @@ async function verifyInternal(sql: Awaited<ReturnType<typeof openClient>>): Prom
 }
 
 export const verifyInstallation = createServerFn({ method: "GET" }).handler(async (): Promise<VerifyResult> => {
+  const { assertInstallerAllowed } = await import("./installer-guard.server");
+  await assertInstallerAllowed();
   const sql = await openClient();
   try { return await verifyInternal(sql); }
   finally { await sql.end({ timeout: 5 }); }
@@ -261,6 +263,9 @@ export const verifyInstallation = createServerFn({ method: "GET" }).handler(asyn
 export const resetBootstrapTracker = createServerFn({ method: "POST" })
   .inputValidator((d: { confirm: string }) => d)
   .handler(async ({ data }) => {
+    const { assertInstallerAllowed, assertDestructiveInstallerAllowed } = await import("./installer-guard.server");
+    await assertInstallerAllowed();
+    assertDestructiveInstallerAllowed();
     if (data.confirm !== "I UNDERSTAND") {
       throw new Error("Refusing to reset without explicit confirmation.");
     }
