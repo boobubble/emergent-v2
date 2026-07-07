@@ -342,7 +342,7 @@ export const checkAuth = createServerFn({ method: "GET" }).handler(
         }],
       };
     }
-  },
+  }),
 );
 
 // ---------- Storage ----------
