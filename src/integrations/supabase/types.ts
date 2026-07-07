@@ -116,6 +116,147 @@ export type Database = {
         }
         Relationships: []
       }
+      app_update_history: {
+        Row: {
+          backup_created: boolean
+          backup_id: string | null
+          build_number: number | null
+          completed_at: string | null
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          from_version: string | null
+          id: string
+          installed_by: string | null
+          report: Json
+          rollback_available: boolean
+          started_at: string
+          status: string
+          to_version: string
+        }
+        Insert: {
+          backup_created?: boolean
+          backup_id?: string | null
+          build_number?: number | null
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          from_version?: string | null
+          id?: string
+          installed_by?: string | null
+          report?: Json
+          rollback_available?: boolean
+          started_at?: string
+          status?: string
+          to_version: string
+        }
+        Update: {
+          backup_created?: boolean
+          backup_id?: string | null
+          build_number?: number | null
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          from_version?: string | null
+          id?: string
+          installed_by?: string | null
+          report?: Json
+          rollback_available?: boolean
+          started_at?: string
+          status?: string
+          to_version?: string
+        }
+        Relationships: []
+      }
+      app_updates: {
+        Row: {
+          build_number: number
+          channel: string
+          created_at: string
+          id: string
+          is_current: boolean
+          manifest: Json
+          migrations: Json
+          min_from_version: string | null
+          package_sha256: string | null
+          package_size: number | null
+          release_date: string
+          release_notes: Json
+          updated_at: string
+          uploaded_by: string | null
+          version: string
+        }
+        Insert: {
+          build_number?: number
+          channel?: string
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          manifest?: Json
+          migrations?: Json
+          min_from_version?: string | null
+          package_sha256?: string | null
+          package_size?: number | null
+          release_date?: string
+          release_notes?: Json
+          updated_at?: string
+          uploaded_by?: string | null
+          version: string
+        }
+        Update: {
+          build_number?: number
+          channel?: string
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          manifest?: Json
+          migrations?: Json
+          min_from_version?: string | null
+          package_sha256?: string | null
+          package_size?: number | null
+          release_date?: string
+          release_notes?: Json
+          updated_at?: string
+          uploaded_by?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
+      applied_update_migrations: {
+        Row: {
+          applied_at: string
+          applied_by: string | null
+          checksum: string | null
+          duration_ms: number | null
+          id: string
+          migration_id: string
+          status: string
+          version: string
+        }
+        Insert: {
+          applied_at?: string
+          applied_by?: string | null
+          checksum?: string | null
+          duration_ms?: number | null
+          id?: string
+          migration_id: string
+          status?: string
+          version: string
+        }
+        Update: {
+          applied_at?: string
+          applied_by?: string | null
+          checksum?: string | null
+          duration_ms?: number | null
+          id?: string
+          migration_id?: string
+          status?: string
+          version?: string
+        }
+        Relationships: []
+      }
       assistant_user_prefs: {
         Row: {
           created_at: string
@@ -3732,6 +3873,7 @@ export type Database = {
           viewer_id: string
         }[]
       }
+      get_system_version: { Args: never; Returns: Json }
       get_trio_room_password: { Args: { _room: string }; Returns: string }
       has_friendship: { Args: { _a: string; _b: string }; Returns: boolean }
       has_role: {
