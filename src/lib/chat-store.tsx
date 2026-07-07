@@ -1665,7 +1665,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     })(),
     staffKick,
     staffLocalMute,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, wipeChannel, deleteRoom]);
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, wipeChannel, deleteRoom, syncAdminChannels]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
