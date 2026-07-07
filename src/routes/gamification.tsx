@@ -80,7 +80,7 @@ function Page() {
             <Sparkles className="h-6 w-6 text-primary" />
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {data.tiers.map((t) => {
+            {data.tiers.map((t: any) => {
               const reached = (data.seasonProgress?.tier ?? 0) >= t.tier;
               const claimed = (data.seasonProgress?.claimed_tiers ?? []).includes(t.tier);
               return (
@@ -101,26 +101,26 @@ function Page() {
 
       {dailies.length > 0 && (
         <section><h2 className="mb-3 flex items-center gap-2 text-sm font-bold"><Target className="h-4 w-4" /> Daily Quests</h2>
-          <div className="grid gap-3 sm:grid-cols-2">{dailies.map((q) => <Card key={q.id} row={q} icon={<Target className="h-5 w-5" />} />)}</div>
+          <div className="grid gap-3 sm:grid-cols-2">{dailies.map((q: any) => <Card key={q.id} row={q} icon={<Target className="h-5 w-5" />} />)}</div>
         </section>
       )}
       {weeklies.length > 0 && (
         <section><h2 className="mb-3 flex items-center gap-2 text-sm font-bold"><Target className="h-4 w-4" /> Weekly Quests</h2>
-          <div className="grid gap-3 sm:grid-cols-2">{weeklies.map((q) => <Card key={q.id} row={q} icon={<Target className="h-5 w-5" />} />)}</div>
+          <div className="grid gap-3 sm:grid-cols-2">{weeklies.map((q: any) => <Card key={q.id} row={q} icon={<Target className="h-5 w-5" />} />)}</div>
         </section>
       )}
       {monthlies.length > 0 && (
         <section><h2 className="mb-3 flex items-center gap-2 text-sm font-bold"><Target className="h-4 w-4" /> Monthly Missions</h2>
-          <div className="grid gap-3 sm:grid-cols-2">{monthlies.map((q) => <Card key={q.id} row={q} icon={<Target className="h-5 w-5" />} />)}</div>
+          <div className="grid gap-3 sm:grid-cols-2">{monthlies.map((q: any) => <Card key={q.id} row={q} icon={<Target className="h-5 w-5" />} />)}</div>
         </section>
       )}
 
       <section><h2 className="mb-3 flex items-center gap-2 text-sm font-bold"><Trophy className="h-4 w-4" /> Achievements</h2>
-        <div className="grid gap-3 sm:grid-cols-2">{data.achievements.map((a) => <Card key={a.id} row={a} icon={<Trophy className="h-5 w-5" />} />)}</div>
+        <div className="grid gap-3 sm:grid-cols-2">{data.achievements.map((a: any) => <Card key={a.id} row={a} icon={<Trophy className="h-5 w-5" />} />)}</div>
       </section>
 
       <section><h2 className="mb-3 text-sm font-bold">Lifetime Milestones</h2>
-        <div className="grid gap-3 sm:grid-cols-2">{data.milestones.map((m) => <Card key={m.id} row={m} icon={<Sparkles className="h-5 w-5" />} />)}</div>
+        <div className="grid gap-3 sm:grid-cols-2">{data.milestones.map((m: any) => <Card key={m.id} row={m} icon={<Sparkles className="h-5 w-5" />} />)}</div>
       </section>
     </div>
   );
