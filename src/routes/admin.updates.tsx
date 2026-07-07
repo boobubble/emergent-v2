@@ -11,11 +11,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Package, RefreshCw, Upload, Play, RotateCcw, CheckCircle2, XCircle,
   Loader2, Clock, ShieldAlert, FileJson, History, Sparkles, AlertTriangle,
-  Download, Trash2, ChevronRight,
+  Download, Trash2, ChevronRight, Eye, GitCompare, Gauge, Skull,
 } from "lucide-react";
 import {
   getSystemVersion, listUpdates, uploadUpdatePackage, deleteUpdatePackage,
   preUpdateChecks, runUpdate, rollbackUpdate, listUpdateHistory,
+  validatePackage, previewUpdate,
 } from "@/lib/updates.functions";
 
 export const Route = createFileRoute("/admin/updates")({ component: UpdatesPage });
