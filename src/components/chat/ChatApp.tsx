@@ -10,6 +10,7 @@ import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
+import { GameRoomCanvas } from "@/components/chat/GameRoomCanvas";
 import { DMChatBackground } from "@/components/chat/DMChatBackground";
 import { useDmTheme } from "@/lib/use-dm-theme";
 import { supabase } from "@/integrations/supabase/client";
