@@ -64,6 +64,11 @@ function InstallerPage() {
   const [smtpTestEmail, setSmtpTestEmail] = useState("");
   const [smtpTesting, setSmtpTesting] = useState(false);
   const [postStats, setPostStats] = useState<{ users: number; buckets: number; cron: number } | null>(null);
+  const [schemaStatus, setSchemaStatus] = useState<BootstrapStatus | null>(null);
+  const [schemaResult, setSchemaResult] = useState<BootstrapResult | null>(null);
+  const [schemaRunning, setSchemaRunning] = useState(false);
+  const fetchSchemaStatus = useServerFn(getBootstrapStatus);
+  const runSchemaBootstrapFn = useServerFn(runSchemaBootstrap);
 
   type LogLevel = "info" | "ok" | "warn" | "error";
   type LogEntry = { ts: string; level: LogLevel; step: string; msg: string };
