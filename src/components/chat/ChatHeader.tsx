@@ -4,6 +4,7 @@ import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
 import { LoyaltyChip } from "./LoyaltyChip";
 import { BrandMark } from "@/components/BrandMark";
+import { HeaderBotEvents } from "./HeaderBotEvents";
 
 interface ChatHeaderProps {
   onOpenHub?: () => void;
