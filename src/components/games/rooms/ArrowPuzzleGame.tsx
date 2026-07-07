@@ -25,7 +25,7 @@ function neighbors(idx: number, size: number): number[] {
 }
 
 function scramble(size: number, moves: number): Dir[] {
-  const arr: Dir[] = new Array(size * size).fill(0);
+  const arr: Dir[] = Array.from({ length: size * size }, () => 0 as Dir);
   for (let i = 0; i < moves; i++) {
     const idx = Math.floor(Math.random() * arr.length);
     for (const n of neighbors(idx, size)) {
