@@ -1,4 +1,4 @@
-import { MessageCircle, X, Bot, BotOff, Search, Users, Palette, Minus } from "lucide-react";
+import { MessageCircle, X, Bot, BotOff, Users, Palette, Minus } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
@@ -76,9 +76,6 @@ export function ChatHeader(_props: ChatHeaderProps = {}) {
           roomId={id}
           alt="Room logo"
           className="h-9 w-9 shrink-0 rounded-xl object-contain ring-1 ring-border"
-          fallback={
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 font-bold text-primary ring-1 ring-primary/20">#</div>
-          }
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -113,15 +110,6 @@ export function ChatHeader(_props: ChatHeaderProps = {}) {
           onClick={() => window.dispatchEvent(new Event("palrgo:open-chat-theme-store"))}
         >
           <Palette className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          className="chat-icon-btn"
-          title="Search messages"
-          aria-label="Search messages"
-          onClick={() => window.dispatchEvent(new Event("palrgo:search-open"))}
-        >
-          <Search className="h-4 w-4" />
         </button>
         <button
           type="button"
