@@ -477,7 +477,7 @@ export const checkAi = createServerFn({ method: "GET" }).handler(
 
 // ---------- Email ----------
 export const checkEmail = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("email", async () => {
     const started = Date.now();
     const { url, svc } = serverEnv();
     if (!url || !svc) {
