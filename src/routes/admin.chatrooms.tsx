@@ -13,8 +13,6 @@ import { useAdminSetting } from "@/lib/use-admin-setting";
 export const Route = createFileRoute("/admin/chatrooms")({ component: ChatroomsHub });
 
 interface AdminChannel { id: string; name: string; topic?: string }
-interface Cfg { channels: AdminChannel[] }
-const DEFAULTS: Cfg = { channels: [] };
 
 function slugify(name: string) {
   const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24) || "channel";
