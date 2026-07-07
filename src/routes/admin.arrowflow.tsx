@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Sparkles, Route as RouteIcon, Star } from "lucide-react";
+import { Plus, Trash2, Sparkles, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminSetting } from "@/lib/use-admin-setting";
 import { generatePuzzle, isSolved, applyMoves, type Rotation } from "@/components/games/rooms/arrow-flow/logic";
