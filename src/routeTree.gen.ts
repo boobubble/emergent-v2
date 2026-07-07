@@ -106,6 +106,7 @@ import { Route as AdminChatThemesRouteImport } from './routes/admin.chat-themes'
 import { Route as AdminCallsRouteImport } from './routes/admin.calls'
 import { Route as AdminCacheRouteImport } from './routes/admin.cache'
 import { Route as AdminBotsRouteImport } from './routes/admin.bots'
+import { Route as AdminBotEventsRouteImport } from './routes/admin.bot-events'
 import { Route as AdminBoobubbleRouteImport } from './routes/admin.boobubble'
 import { Route as AdminBackupRouteImport } from './routes/admin.backup'
 import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
@@ -615,6 +616,11 @@ const AdminBotsRoute = AdminBotsRouteImport.update({
   path: '/bots',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBotEventsRoute = AdminBotEventsRouteImport.update({
+  id: '/bot-events',
+  path: '/bot-events',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBoobubbleRoute = AdminBoobubbleRouteImport.update({
   id: '/boobubble',
   path: '/boobubble',
@@ -767,6 +773,7 @@ export interface FileRoutesByFullPath {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
+  '/admin/bot-events': typeof AdminBotEventsRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
   '/admin/calls': typeof AdminCallsRoute
@@ -885,6 +892,7 @@ export interface FileRoutesByTo {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
+  '/admin/bot-events': typeof AdminBotEventsRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
   '/admin/calls': typeof AdminCallsRoute
@@ -1006,6 +1014,7 @@ export interface FileRoutesById {
   '/admin/automation': typeof AdminAutomationRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
+  '/admin/bot-events': typeof AdminBotEventsRoute
   '/admin/bots': typeof AdminBotsRoute
   '/admin/cache': typeof AdminCacheRoute
   '/admin/calls': typeof AdminCallsRoute
@@ -1128,6 +1137,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/backup'
     | '/admin/boobubble'
+    | '/admin/bot-events'
     | '/admin/bots'
     | '/admin/cache'
     | '/admin/calls'
@@ -1246,6 +1256,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/backup'
     | '/admin/boobubble'
+    | '/admin/bot-events'
     | '/admin/bots'
     | '/admin/cache'
     | '/admin/calls'
@@ -1366,6 +1377,7 @@ export interface FileRouteTypes {
     | '/admin/automation'
     | '/admin/backup'
     | '/admin/boobubble'
+    | '/admin/bot-events'
     | '/admin/bots'
     | '/admin/cache'
     | '/admin/calls'
@@ -2167,6 +2179,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBotsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/bot-events': {
+      id: '/admin/bot-events'
+      path: '/bot-events'
+      fullPath: '/admin/bot-events'
+      preLoaderRoute: typeof AdminBotEventsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/boobubble': {
       id: '/admin/boobubble'
       path: '/boobubble'
@@ -2343,6 +2362,7 @@ interface AdminRouteChildren {
   AdminAutomationRoute: typeof AdminAutomationRoute
   AdminBackupRoute: typeof AdminBackupRoute
   AdminBoobubbleRoute: typeof AdminBoobubbleRoute
+  AdminBotEventsRoute: typeof AdminBotEventsRoute
   AdminBotsRoute: typeof AdminBotsRoute
   AdminCacheRoute: typeof AdminCacheRoute
   AdminCallsRoute: typeof AdminCallsRoute
@@ -2414,6 +2434,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAutomationRoute: AdminAutomationRoute,
   AdminBackupRoute: AdminBackupRoute,
   AdminBoobubbleRoute: AdminBoobubbleRoute,
+  AdminBotEventsRoute: AdminBotEventsRoute,
   AdminBotsRoute: AdminBotsRoute,
   AdminCacheRoute: AdminCacheRoute,
   AdminCallsRoute: AdminCallsRoute,
