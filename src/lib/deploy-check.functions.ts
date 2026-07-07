@@ -305,7 +305,7 @@ export const checkDatabase = createServerFn({ method: "GET" }).handler(
 
 // ---------- Auth ----------
 export const checkAuth = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("auth", async () => {
     const started = Date.now();
     const { url, pub } = serverEnv();
     if (!url || !pub) {
