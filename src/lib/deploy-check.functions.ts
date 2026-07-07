@@ -300,7 +300,7 @@ export const checkDatabase = createServerFn({ method: "GET" }).handler(
     }
 
     return { category: "database", items, durationMs: Date.now() - started };
-  },
+  }),
 );
 
 // ---------- Auth ----------
