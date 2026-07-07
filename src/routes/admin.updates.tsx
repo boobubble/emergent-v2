@@ -82,6 +82,12 @@ function UpdatesPage() {
     try {
       const text = await f.text();
       const json = JSON.parse(text);
+      const v = await _validate({ data: { pkg: json } });
+      if (!v.valid) {
+        setValidation(v);
+        toast.error("Package failed validation — see report below");
+        return;
+      }
       const res = await _upload({ data: json });
       toast.success(res.replaced ? "Package replaced" : "Package uploaded");
       await refresh();
@@ -93,6 +99,30 @@ function UpdatesPage() {
     }
   }
 
+  // Auto-preview + validate when a package is selected
+  useEffect(() => {
+    if (!targetPkg) { setPreview(null); setValidation(null); return; }
+    (async () => {
+      try {
+        const [prv, val] = await Promise.all([
+          _preview({ data: { version: targetPkg.version } }),
+          _validate({ data: { pkg: {
+            version: targetPkg.version,
+            build_number: targetPkg.build_number,
+            release_date: targetPkg.release_date,
+            channel: targetPkg.channel,
+            min_from_version: targetPkg.min_from_version ?? undefined,
+            release_notes: targetPkg.release_notes ?? {},
+            migrations: targetPkg.migrations ?? [],
+            manifest: targetPkg.manifest ?? {},
+            package_sha256: targetPkg.package_sha256 ?? undefined,
+          } } }),
+        ]);
+        setPreview(prv); setValidation(val); setAckDestructive(false);
+      } catch (e: any) { toast.error(e.message); }
+    })();
+  }, [targetPkg?.id]);
+
   async function onCheck() {
     if (!targetPkg) return;
     setBusy("check");
@@ -103,9 +133,24 @@ function UpdatesPage() {
     finally { setBusy(null); }
   }
 
+  const checklist = useMemo(() => {
+    const hasDestructive = (preview?.sql?.destructive?.length ?? 0) > 0;
+    return [
+      { key: "validated", label: "Package validated", ok: !!validation?.valid },
+      { key: "compat", label: "Compatibility passed", ok: !!preview?.compatibility?.passed },
+      { key: "checks", label: "Pre-update checks passed", ok: !!checks?.ready },
+      { key: "db", label: "Database connected", ok: checks?.checks?.find((c: any) => c.name === "Database connection")?.ok ?? false },
+      { key: "storage", label: "Storage healthy", ok: checks?.checks?.find((c: any) => c.name === "Storage service")?.ok ?? false },
+      { key: "env", label: "Environment valid", ok: checks?.checks?.find((c: any) => c.name === "Environment variables")?.ok ?? false },
+      { key: "destructive", label: hasDestructive ? "Destructive operations acknowledged" : "No destructive operations", ok: hasDestructive ? ackDestructive : true },
+    ];
+  }, [validation, preview, checks, ackDestructive]);
+
+  const allChecklistOk = checklist.every((c) => c.ok);
+
   async function onRun() {
     if (!targetPkg) return;
-    if (!checks?.ready) { toast.error("Run pre-update checks first"); return; }
+    if (!allChecklistOk) { toast.error("Complete the pre-update checklist first"); return; }
     if (!confirm(`Update to v${targetPkg.version}? A backup will be created first.`)) return;
 
     setRunning(true); setStartedAt(Date.now());
@@ -128,6 +173,7 @@ function UpdatesPage() {
     } catch (e: any) { toast.error(e.message); }
     finally { setRunning(false); }
   }
+
 
   async function onDelete(id: string) {
     if (!confirm("Delete this update package?")) return;
