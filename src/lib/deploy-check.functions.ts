@@ -434,7 +434,7 @@ export const checkRealtime = createServerFn({ method: "GET" }).handler(
 
 // ---------- AI ----------
 export const checkAi = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("ai", async () => {
     const started = Date.now();
     const { ai } = serverEnv();
     if (!ai) {
