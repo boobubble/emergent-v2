@@ -139,12 +139,13 @@ export function CommunityEventsTicker() {
             </span>
           ) : null}
           <span className="text-[12px] leading-none shrink-0">{current.emoji}</span>
-          <span className="truncate">
+          <span className="min-w-0 flex-1 truncate text-left">
             <span className={current.live ? "font-semibold" : ""}>{current.label}</span>
             {current.suffix && (
               <span className="ml-1 tabular-nums text-emerald-200/90">· {current.suffix}</span>
             )}
           </span>
+
         </button>
       </div>
     </div>
