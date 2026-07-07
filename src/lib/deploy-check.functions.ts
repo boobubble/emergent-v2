@@ -416,7 +416,7 @@ export const checkStorage = createServerFn({ method: "GET" }).handler(
 
 // ---------- Realtime (server-side capability) ----------
 export const checkRealtime = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("realtime", async () => {
     const started = Date.now();
     const { url } = serverEnv();
     return {
