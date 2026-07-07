@@ -1286,3 +1286,19 @@
   0%,100% { transform: scale(1); box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.5); }
   50%     { transform: scale(1.08); box-shadow: 0 0 0 6px hsl(var(--destructive) / 0); }
 }
+
+/* Community events ticker — GPU-accelerated marquee */
+.community-ticker-track {
+  animation: community-ticker-scroll 45s linear infinite;
+}
+.community-ticker:active .community-ticker-track { animation-play-state: paused; }
+@keyframes community-ticker-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+@media (max-width: 640px) {
+  .community-ticker-track { animation-duration: 60s; gap: 0.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .community-ticker-track { animation: none; }
+}
