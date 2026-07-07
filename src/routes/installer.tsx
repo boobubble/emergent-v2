@@ -88,6 +88,22 @@ function InstallerPage() {
   const runSchemaBootstrapFn = useServerFn(runSchemaBootstrap);
   const fetchEnvValidation = useServerFn(getEnvValidation);
   const runDbTest = useServerFn(testDatabaseConnection);
+  const runCompat = useServerFn(getSystemCompatibility);
+  const [compat, setCompat] = useState<SystemCompatibility | null>(null);
+  const [compatBusy, setCompatBusy] = useState(false);
+  async function loadCompat() {
+    setCompatBusy(true);
+    try {
+      const r = await runCompat({});
+      setCompat(r);
+      pushLog(r.ok ? "ok" : "warn", "compat", `Compatibility check: ${r.checks.filter(c => c.state === "ok").length}/${r.checks.length} OK`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Compatibility check failed");
+    } finally {
+      setCompatBusy(false);
+    }
+  }
+
 
   type LogLevel = "info" | "ok" | "warn" | "error";
   type LogEntry = { ts: string; level: LogLevel; step: string; msg: string };
