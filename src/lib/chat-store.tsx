@@ -1583,16 +1583,23 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     });
   }, []);
 
-  const syncAdminChannels = useCallback((channels: { id: string; name: string; topic?: string }[]) => {
+  const syncAdminChannels = useCallback((channels: AdminChannelInput[]) => {
     setState(s => {
       const rooms = { ...s.rooms };
       let roomOrder = [...s.roomOrder];
       const validIds = new Set(channels.map(c => c.id));
       // Add or update admin-managed rooms
       for (const c of channels) {
+        const kind = c.kind ?? "chat";
         const existing = rooms[c.id];
         if (existing) {
-          rooms[c.id] = { ...existing, name: c.name, topic: c.topic || existing.topic };
+          rooms[c.id] = {
+            ...existing,
+            name: c.name,
+            topic: c.topic || existing.topic,
+            kind,
+            game: kind === "game" ? c.game : undefined,
+          };
         } else {
           rooms[c.id] = {
             id: c.id,
@@ -1601,6 +1608,8 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
             members: ["me", ...SEED_BOTS.map(b => b.id)],
             roles: { me: "member", "bot-gamebot": "owner" },
             isPublic: true,
+            kind,
+            game: kind === "game" ? c.game : undefined,
           };
           if (!roomOrder.includes(c.id)) roomOrder.push(c.id);
         }
