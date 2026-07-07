@@ -11,11 +11,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Package, RefreshCw, Upload, Play, RotateCcw, CheckCircle2, XCircle,
   Loader2, Clock, ShieldAlert, FileJson, History, Sparkles, AlertTriangle,
-  Download, Trash2, ChevronRight,
+  Download, Trash2, ChevronRight, Eye, GitCompare, Gauge, Skull,
 } from "lucide-react";
 import {
   getSystemVersion, listUpdates, uploadUpdatePackage, deleteUpdatePackage,
   preUpdateChecks, runUpdate, rollbackUpdate, listUpdateHistory,
+  validatePackage, previewUpdate,
 } from "@/lib/updates.functions";
 
 export const Route = createFileRoute("/admin/updates")({ component: UpdatesPage });
@@ -41,17 +42,22 @@ function UpdatesPage() {
   const _run = useServerFn(runUpdate);
   const _rollback = useServerFn(rollbackUpdate);
   const _history = useServerFn(listUpdateHistory);
+  const _validate = useServerFn(validatePackage);
+  const _preview = useServerFn(previewUpdate);
 
   const [sys, setSys] = useState<Sys | null>(null);
   const [pkgs, setPkgs] = useState<Pkg[]>([]);
   const [history, setHistory] = useState<Hist[]>([]);
   const [selected, setSelected] = useState<Pkg | null>(null);
   const [checks, setChecks] = useState<any>(null);
+  const [validation, setValidation] = useState<any>(null);
+  const [preview, setPreview] = useState<any>(null);
   const [progress, setProgress] = useState<{ stage: string; ok: boolean | null; ms?: number; detail?: string }[]>([]);
   const [running, setRunning] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
   const [busy, setBusy] = useState<string | null>(null);
+  const [ackDestructive, setAckDestructive] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const refresh = async () => {
@@ -67,6 +73,7 @@ function UpdatesPage() {
     return () => clearInterval(t);
   }, [running]);
 
+
   const targetPkg = useMemo(() => selected ?? pkgs[0] ?? null, [selected, pkgs]);
   const isUpdateAvailable = sys?.update_available;
 
@@ -75,6 +82,12 @@ function UpdatesPage() {
     try {
       const text = await f.text();
       const json = JSON.parse(text);
+      const v = await _validate({ data: { pkg: json } });
+      if (!v.valid) {
+        setValidation(v);
+        toast.error("Package failed validation — see report below");
+        return;
+      }
       const res = await _upload({ data: json });
       toast.success(res.replaced ? "Package replaced" : "Package uploaded");
       await refresh();
@@ -86,6 +99,30 @@ function UpdatesPage() {
     }
   }
 
+  // Auto-preview + validate when a package is selected
+  useEffect(() => {
+    if (!targetPkg) { setPreview(null); setValidation(null); return; }
+    (async () => {
+      try {
+        const [prv, val] = await Promise.all([
+          _preview({ data: { version: targetPkg.version } }),
+          _validate({ data: { pkg: {
+            version: targetPkg.version,
+            build_number: targetPkg.build_number,
+            release_date: targetPkg.release_date,
+            channel: targetPkg.channel,
+            min_from_version: targetPkg.min_from_version ?? undefined,
+            release_notes: targetPkg.release_notes ?? {},
+            migrations: targetPkg.migrations ?? [],
+            manifest: targetPkg.manifest ?? {},
+            package_sha256: targetPkg.package_sha256 ?? undefined,
+          } } }),
+        ]);
+        setPreview(prv); setValidation(val); setAckDestructive(false);
+      } catch (e: any) { toast.error(e.message); }
+    })();
+  }, [targetPkg?.id]);
+
   async function onCheck() {
     if (!targetPkg) return;
     setBusy("check");
@@ -96,9 +133,24 @@ function UpdatesPage() {
     finally { setBusy(null); }
   }
 
+  const checklist = useMemo(() => {
+    const hasDestructive = (preview?.sql?.destructive?.length ?? 0) > 0;
+    return [
+      { key: "validated", label: "Package validated", ok: !!validation?.valid },
+      { key: "compat", label: "Compatibility passed", ok: !!preview?.compatibility?.passed },
+      { key: "checks", label: "Pre-update checks passed", ok: !!checks?.ready },
+      { key: "db", label: "Database connected", ok: checks?.checks?.find((c: any) => c.name === "Database connection")?.ok ?? false },
+      { key: "storage", label: "Storage healthy", ok: checks?.checks?.find((c: any) => c.name === "Storage service")?.ok ?? false },
+      { key: "env", label: "Environment valid", ok: checks?.checks?.find((c: any) => c.name === "Environment variables")?.ok ?? false },
+      { key: "destructive", label: hasDestructive ? "Destructive operations acknowledged" : "No destructive operations", ok: hasDestructive ? ackDestructive : true },
+    ];
+  }, [validation, preview, checks, ackDestructive]);
+
+  const allChecklistOk = checklist.every((c) => c.ok);
+
   async function onRun() {
     if (!targetPkg) return;
-    if (!checks?.ready) { toast.error("Run pre-update checks first"); return; }
+    if (!allChecklistOk) { toast.error("Complete the pre-update checklist first"); return; }
     if (!confirm(`Update to v${targetPkg.version}? A backup will be created first.`)) return;
 
     setRunning(true); setStartedAt(Date.now());
@@ -122,6 +174,7 @@ function UpdatesPage() {
     finally { setRunning(false); }
   }
 
+
   async function onDelete(id: string) {
     if (!confirm("Delete this update package?")) return;
     await _delete({ data: { id } }); await refresh();
@@ -142,6 +195,52 @@ function UpdatesPage() {
     const a = document.createElement("a");
     a.href = url; a.download = `update-report-${h.to_version}-${h.id.slice(0, 8)}.json`;
     a.click(); URL.revokeObjectURL(url);
+  }
+
+  function onDownloadPreview(fmt: "json" | "txt") {
+    if (!preview || !targetPkg) return;
+    const stamp = new Date().toISOString().slice(0, 10);
+    const base = `update-preview-v${targetPkg.version}-${stamp}`;
+    if (fmt === "json") {
+      const blob = new Blob([JSON.stringify({ preview, validation, checklist }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = `${base}.json`; a.click();
+      URL.revokeObjectURL(a.href);
+      return;
+    }
+    const lines: string[] = [];
+    lines.push(`Update Preview Report — v${targetPkg.version} (build ${targetPkg.build_number})`);
+    lines.push(`Generated: ${preview.generated_at}`);
+    lines.push(`Current: v${preview.current_version ?? "?"}  →  Target: v${preview.package.version}`);
+    lines.push(`Channel: ${preview.package.channel}   Release date: ${preview.package.release_date ?? "—"}`);
+    lines.push(`Risk: ${preview.risk.level.toUpperCase()} (score ${preview.risk.score})`);
+    lines.push("");
+    lines.push("Compatibility");
+    for (const c of preview.compatibility.checks) lines.push(`  [${c.ok ? "✔" : "✘"}] ${c.name} — ${c.detail ?? ""}`);
+    lines.push("");
+    lines.push(`Migrations: ${preview.migrations.pending} pending / ${preview.migrations.applied} applied / ${preview.migrations.total} total`);
+    lines.push(`SQL summary: +${preview.sql.tables_added.length} tables, ~${preview.sql.tables_modified.length} altered, +${preview.sql.columns_added} cols, -${preview.sql.columns_removed} cols, +${preview.sql.indexes_added} idx, +${preview.sql.functions_added} fn, +${preview.sql.triggers_added} trg, +${preview.sql.policies_added} pol`);
+    if (preview.sql.destructive.length) {
+      lines.push("DESTRUCTIVE:");
+      for (const d of preview.sql.destructive) lines.push(`  - ${d.op} in ${d.migration_id}`);
+    }
+    lines.push("");
+    lines.push("Impact Analysis");
+    for (const [k, v] of Object.entries(preview.impacts)) lines.push(`  ${k}: ${v}`);
+    lines.push("");
+    lines.push(`Estimated: total ${Math.round(preview.estimates_ms.total / 1000)}s, migrations ${Math.round(preview.estimates_ms.migration / 1000)}s, verify ${Math.round(preview.estimates_ms.verify / 1000)}s`);
+    if (preview.warnings.length) {
+      lines.push(""); lines.push("Warnings");
+      for (const w of preview.warnings) lines.push(`  ! ${w}`);
+    }
+    lines.push(""); lines.push("Validation");
+    for (const r of (validation?.results ?? [])) lines.push(`  [${r.ok ? "✔" : "✘"}] ${r.name} — ${r.detail ?? ""}`);
+    lines.push(""); lines.push("Checklist");
+    for (const c of checklist) lines.push(`  [${c.ok ? "✔" : " "}] ${c.label}`);
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = `${base}.txt`; a.click();
+    URL.revokeObjectURL(a.href);
   }
 
   const elapsed = startedAt ? now - startedAt : 0;
@@ -261,6 +360,9 @@ function UpdatesPage() {
 
             <Separator />
 
+            {/* Advanced preview */}
+            <UpdatePreviewPanel preview={preview} validation={validation} targetPkg={targetPkg} />
+
             <div className="grid gap-3 md:grid-cols-2">
               <div className="rounded-lg border p-3 text-xs space-y-1">
                 <div className="font-medium text-sm mb-1">Required Migrations</div>
@@ -281,7 +383,7 @@ function UpdatesPage() {
                 <div className="font-medium text-sm mb-1">Compatibility</div>
                 <div>Min. required version: <code>v{targetPkg.min_from_version ?? "any"}</code></div>
                 <div>Channel: {targetPkg.channel}</div>
-                <div>Est. update time: ~{Math.max(1, (targetPkg.migrations?.length ?? 0) + 1)} min</div>
+                <div>Est. update time: {preview?.estimates_ms ? fmtDuration(preview.estimates_ms.total) : `~${Math.max(1, (targetPkg.migrations?.length ?? 0) + 1)} min`}</div>
               </div>
             </div>
 
@@ -345,10 +447,38 @@ function UpdatesPage() {
               </div>
             )}
 
-            <div className="flex items-center gap-2">
-              <Button onClick={onRun} disabled={running || !checks?.ready}>
+            {/* Pre-update checklist */}
+            <div className="rounded-lg border p-3 space-y-2">
+              <div className="font-medium text-sm flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Pre-Update Checklist</div>
+              <div className="grid gap-1.5 md:grid-cols-2">
+                {checklist.map((c) => (
+                  <div key={c.key} className="flex items-center gap-2 text-xs">
+                    {c.ok ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                    <span className={c.ok ? "" : "text-muted-foreground"}>{c.label}</span>
+                  </div>
+                ))}
+              </div>
+              {(preview?.sql?.destructive?.length ?? 0) > 0 && (
+                <label className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs cursor-pointer">
+                  <input type="checkbox" className="mt-0.5" checked={ackDestructive} onChange={(e) => setAckDestructive(e.target.checked)} />
+                  <span>
+                    I understand this package contains {preview.sql.destructive.length} destructive operation(s)
+                    ({preview.sql.destructive.map((d: any) => d.op).join(", ")}) and I want to proceed.
+                  </span>
+                </label>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button onClick={onRun} disabled={running || !allChecklistOk}>
                 {running ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Play className="mr-2 h-3.5 w-3.5" />}
                 Run Update
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => onDownloadPreview("json")} disabled={!preview}>
+                <Download className="mr-2 h-3.5 w-3.5" /> Report (JSON)
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => onDownloadPreview("txt")} disabled={!preview}>
+                <Download className="mr-2 h-3.5 w-3.5" /> Report (TXT)
               </Button>
               <span className="text-xs text-muted-foreground">
                 A backup snapshot is created automatically. No user data is deleted.
@@ -440,6 +570,159 @@ function ReleaseNotes({ notes }: { notes: any }) {
           </ul>
         </div>
       ))}
+    </div>
+  );
+}
+
+function RiskBadge({ level, score }: { level: string; score: number }) {
+  const map: Record<string, string> = {
+    low: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+    medium: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+    high: "bg-destructive/15 text-destructive border-destructive/30",
+  };
+  const emoji = level === "high" ? "🔴" : level === "medium" ? "🟡" : "🟢";
+  return <Badge variant="outline" className={`text-xs ${map[level] ?? ""}`}>{emoji} {level.toUpperCase()} · {score}</Badge>;
+}
+
+function ImpactBadge({ status }: { status: "safe" | "attention" | "manual" }) {
+  const s = status === "safe"
+    ? { l: "✔ Safe", c: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" }
+    : status === "attention"
+    ? { l: "⚠ Attention", c: "bg-amber-500/15 text-amber-600 border-amber-500/30" }
+    : { l: "❌ Manual", c: "bg-destructive/15 text-destructive border-destructive/30" };
+  return <Badge variant="outline" className={`text-xs ${s.c}`}>{s.l}</Badge>;
+}
+
+function UpdatePreviewPanel({ preview, validation, targetPkg }: { preview: any; validation: any; targetPkg: any }) {
+  if (!preview) {
+    return (
+      <div className="rounded-lg border p-3 text-sm text-muted-foreground flex items-center gap-2">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating update preview…
+      </div>
+    );
+  }
+  const sql = preview.sql;
+  const est = preview.estimates_ms;
+  const notes = preview.release_notes ?? {};
+  return (
+    <div className="space-y-3">
+      {/* Header row: version + risk + compat */}
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="rounded-lg border p-3 text-xs space-y-1">
+          <div className="font-medium text-sm flex items-center gap-2"><Eye className="h-4 w-4" /> Update Summary</div>
+          <div>Version: v{preview.current_version ?? "?"} → <b>v{preview.package.version}</b></div>
+          <div>Build: {preview.package.build_number}</div>
+          <div>Released: {preview.package.release_date ? new Date(preview.package.release_date).toLocaleDateString() : "—"}</div>
+          <div>Estimated: {fmtDuration(est.total)} (migrations {fmtDuration(est.migration)}, verify {fmtDuration(est.verify)})</div>
+        </div>
+        <div className="rounded-lg border p-3 text-xs space-y-1">
+          <div className="font-medium text-sm flex items-center gap-2"><ShieldAlert className="h-4 w-4" /> Compatibility</div>
+          {preview.compatibility.checks.map((c: any, i: number) => (
+            <div key={i} className="flex items-center gap-2">
+              {c.ok ? <CheckCircle2 className="h-3 w-3 text-emerald-500" /> : <XCircle className="h-3 w-3 text-destructive" />}
+              <span>{c.name}</span>
+              <span className="text-muted-foreground ml-auto">{c.detail ?? ""}</span>
+            </div>
+          ))}
+          <div className="pt-1">
+            {preview.compatibility.passed
+              ? <Badge className="text-xs">✔ Compatible</Badge>
+              : <Badge variant="outline" className="text-xs bg-destructive/15 text-destructive border-destructive/30">❌ Incompatible</Badge>}
+          </div>
+        </div>
+        <div className="rounded-lg border p-3 text-xs space-y-1">
+          <div className="font-medium text-sm flex items-center gap-2"><Gauge className="h-4 w-4" /> Risk</div>
+          <div><RiskBadge level={preview.risk.level} score={preview.risk.score} /></div>
+          <div className="text-muted-foreground">
+            {preview.migrations.pending} pending migration(s) · {(notes.breaking?.length ?? 0)} breaking · {sql.destructive.length} destructive op(s)
+          </div>
+          {sql.destructive.length > 0 && (
+            <div className="text-destructive flex items-center gap-1 pt-1">
+              <Skull className="h-3 w-3" /> {sql.destructive.map((d: any) => d.op).join(", ")}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Change comparison */}
+      <div className="rounded-lg border p-3 space-y-2">
+        <div className="font-medium text-sm flex items-center gap-2"><GitCompare className="h-4 w-4" /> Database Preview</div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+          <Stat label="Tables Added" v={sql.tables_added.length} />
+          <Stat label="Tables Modified" v={sql.tables_modified.length} />
+          <Stat label="Columns +" v={sql.columns_added} />
+          <Stat label="Columns ~" v={sql.columns_modified} />
+          <Stat label="Columns −" v={sql.columns_removed} tone={sql.columns_removed > 0 ? "danger" : undefined} />
+          <Stat label="Indexes Added" v={sql.indexes_added} />
+          <Stat label="Views Added" v={sql.views_added} />
+          <Stat label="Functions Added" v={sql.functions_added} />
+          <Stat label="Triggers Added" v={sql.triggers_added} />
+          <Stat label="Policies Added" v={sql.policies_added} />
+        </div>
+        {(sql.tables_added.length > 0 || sql.tables_modified.length > 0) && (
+          <div className="grid gap-2 md:grid-cols-2 text-xs pt-1">
+            {sql.tables_added.length > 0 && (
+              <div><span className="text-muted-foreground">Added tables:</span> {sql.tables_added.map((t: string) => <code key={t} className="mx-0.5">{t}</code>)}</div>
+            )}
+            {sql.tables_modified.length > 0 && (
+              <div><span className="text-muted-foreground">Modified tables:</span> {sql.tables_modified.map((t: string) => <code key={t} className="mx-0.5">{t}</code>)}</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Impact */}
+      <div className="rounded-lg border p-3 space-y-2">
+        <div className="font-medium text-sm">Impact Analysis</div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-1.5 text-xs">
+          {Object.entries(preview.impacts).map(([k, v]) => (
+            <div key={k} className="flex items-center justify-between rounded border px-2 py-1">
+              <span className="capitalize">{k}</span>
+              <ImpactBadge status={v as any} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Validation results */}
+      {validation && (
+        <div className="rounded-lg border p-3 space-y-1">
+          <div className="font-medium text-sm flex items-center gap-2">
+            <FileJson className="h-4 w-4" /> Package Validation
+            {validation.valid
+              ? <Badge className="ml-1 text-xs">✔ Valid</Badge>
+              : <Badge variant="outline" className="ml-1 text-xs bg-destructive/15 text-destructive border-destructive/30">❌ Invalid</Badge>}
+          </div>
+          {validation.results.map((r: any, i: number) => (
+            <div key={i} className="flex items-center gap-2 text-xs">
+              {r.ok ? <CheckCircle2 className="h-3 w-3 text-emerald-500" /> : <XCircle className="h-3 w-3 text-destructive" />}
+              <span>{r.name}</span>
+              <span className="text-muted-foreground ml-auto">{r.detail ?? ""}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Warnings */}
+      {preview.warnings.length > 0 && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 space-y-1">
+          <div className="font-medium text-sm flex items-center gap-2 text-amber-700 dark:text-amber-400">
+            <AlertTriangle className="h-4 w-4" /> Smart Warnings
+          </div>
+          <ul className="text-xs list-disc list-inside space-y-0.5">
+            {preview.warnings.map((w: string, i: number) => <li key={i}>{w}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, v, tone }: { label: string; v: number; tone?: "danger" }) {
+  return (
+    <div className={`rounded border px-2 py-1.5 ${tone === "danger" && v > 0 ? "border-destructive/40 bg-destructive/5" : ""}`}>
+      <div className={`text-lg font-semibold ${tone === "danger" && v > 0 ? "text-destructive" : ""}`}>{v}</div>
+      <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</div>
     </div>
   );
 }

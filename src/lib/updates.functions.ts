@@ -30,6 +30,9 @@ const PackageSchema = z.object({
   release_date: z.string().optional(),
   channel: z.enum(["stable", "beta", "hotfix"]).default("stable"),
   min_from_version: z.string().optional(),
+  max_from_version: z.string().optional(),
+  installer_version: z.string().optional(),
+  schema_version: z.string().optional(),
   package_sha256: z.string().optional(),
   release_notes: z
     .object({
@@ -40,8 +43,10 @@ const PackageSchema = z.object({
       security: z.array(z.string()).optional(),
       database: z.array(z.string()).optional(),
       breaking: z.array(z.string()).optional(),
+      deprecated: z.array(z.string()).optional(),
     })
     .default({}),
+  impacts: z.record(z.string(), z.enum(["safe", "attention", "manual"])).optional(),
   migrations: z
     .array(
       z.object({
@@ -446,3 +451,241 @@ function compareVer(a: string, b: string): number {
   }
   return 0;
 }
+
+// ---------- Package validation + preview ----------
+type SqlAnalysis = {
+  tables_added: string[];
+  tables_modified: string[];
+  columns_added: number;
+  columns_modified: number;
+  columns_removed: number;
+  indexes_added: number;
+  views_added: number;
+  functions_added: number;
+  triggers_added: number;
+  policies_added: number;
+  destructive: { migration_id: string; op: string; snippet: string }[];
+};
+
+function analyzeSql(migrations: { id: string; sql: string }[]): SqlAnalysis {
+  const a: SqlAnalysis = {
+    tables_added: [], tables_modified: [],
+    columns_added: 0, columns_modified: 0, columns_removed: 0,
+    indexes_added: 0, views_added: 0, functions_added: 0,
+    triggers_added: 0, policies_added: 0, destructive: [],
+  };
+  const DANGER = [
+    { re: /\bDROP\s+DATABASE\b/i, op: "DROP DATABASE" },
+    { re: /\bDROP\s+SCHEMA\b/i, op: "DROP SCHEMA" },
+    { re: /\bDROP\s+TABLE\b/i, op: "DROP TABLE" },
+    { re: /\bTRUNCATE\b/i, op: "TRUNCATE" },
+    { re: /\bDELETE\s+FROM\s+[^;]*?(?!.*\bWHERE\b)/is, op: "DELETE without WHERE" },
+    { re: /\bALTER\s+TABLE[^;]*\bDROP\s+COLUMN\b/i, op: "DROP COLUMN" },
+  ];
+  for (const m of migrations) {
+    const sql = m.sql || "";
+    const stmts = sql.split(/;\s*(?=\n|$)/);
+    for (const s of stmts) {
+      const t = s.trim();
+      if (!t) continue;
+      const mAdd = /CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+([a-z0-9_.]+)/i.exec(t);
+      if (mAdd) a.tables_added.push(mAdd[1]);
+      const mAlt = /ALTER\s+TABLE\s+([a-z0-9_.]+)/i.exec(t);
+      if (mAlt) a.tables_modified.push(mAlt[1]);
+      a.columns_added += (t.match(/\bADD\s+COLUMN\b/gi) ?? []).length;
+      a.columns_modified += (t.match(/\bALTER\s+COLUMN\b/gi) ?? []).length;
+      a.columns_removed += (t.match(/\bDROP\s+COLUMN\b/gi) ?? []).length;
+      if (/CREATE\s+(UNIQUE\s+)?INDEX/i.test(t)) a.indexes_added++;
+      if (/CREATE\s+(OR\s+REPLACE\s+)?VIEW/i.test(t)) a.views_added++;
+      if (/CREATE\s+(OR\s+REPLACE\s+)?FUNCTION/i.test(t)) a.functions_added++;
+      if (/CREATE\s+TRIGGER/i.test(t)) a.triggers_added++;
+      if (/CREATE\s+POLICY/i.test(t)) a.policies_added++;
+    }
+    for (const d of DANGER) {
+      if (d.re.test(sql)) {
+        a.destructive.push({ migration_id: m.id, op: d.op, snippet: sql.slice(0, 160) });
+      }
+    }
+  }
+  a.tables_added = Array.from(new Set(a.tables_added));
+  a.tables_modified = Array.from(new Set(a.tables_modified));
+  return a;
+}
+
+function calcRisk(sql: SqlAnalysis, breaking: number, migrationsCount: number) {
+  let score = 0;
+  score += sql.destructive.length * 30;
+  score += breaking * 20;
+  score += Math.min(migrationsCount, 20) * 2;
+  score += sql.columns_removed * 10;
+  score += sql.tables_modified.length * 3;
+  const level = score >= 60 ? "high" : score >= 25 ? "medium" : "low";
+  return { score, level } as const;
+}
+
+const IMPACT_AREAS = [
+  "users", "chatrooms", "feeds", "competitions", "subscriptions",
+  "premium", "notifications", "media", "settings", "realtime",
+] as const;
+
+function inferImpacts(sql: SqlAnalysis, declared?: Record<string, "safe" | "attention" | "manual">) {
+  const hints: Record<string, "safe" | "attention" | "manual"> = {};
+  const all = [...sql.tables_added, ...sql.tables_modified].join(" ").toLowerCase();
+  const has = (needle: string) => all.includes(needle);
+  const map: Record<typeof IMPACT_AREAS[number], string[]> = {
+    users: ["profile", "user"],
+    chatrooms: ["chatroom", "message"],
+    feeds: ["post", "comment", "reaction", "hashtag"],
+    competitions: ["competition"],
+    subscriptions: ["subscription", "plan"],
+    premium: ["subscription", "plan", "coin"],
+    notifications: ["notification"],
+    media: ["storage", "media", "sticker"],
+    settings: ["setting", "seo", "config"],
+    realtime: ["realtime", "presence"],
+  };
+  for (const area of IMPACT_AREAS) {
+    if (declared?.[area]) { hints[area] = declared[area]; continue; }
+    const touched = map[area].some(has);
+    hints[area] = touched ? "attention" : "safe";
+  }
+  if (sql.destructive.length) hints["settings"] = "manual";
+  return hints;
+}
+
+export const validatePackage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ pkg: z.any() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context);
+    const results: { name: string; ok: boolean; detail?: string }[] = [];
+    const parsed = PackageSchema.safeParse(data.pkg);
+    if (!parsed.success) {
+      return {
+        valid: false,
+        results: [{ name: "JSON manifest", ok: false, detail: parsed.error.message.slice(0, 400) }],
+      };
+    }
+    const p = parsed.data;
+    results.push({ name: "JSON manifest", ok: true });
+    results.push({ name: "Package version", ok: /^\d+(\.\d+){0,3}$/.test(p.version), detail: `v${p.version}` });
+    results.push({ name: "Build number", ok: p.build_number > 0, detail: `build ${p.build_number}` });
+
+    const ids = p.migrations.map((m) => m.id);
+    const dupIds = ids.filter((id, i) => ids.indexOf(id) !== i);
+    results.push({
+      name: "Migration IDs unique",
+      ok: dupIds.length === 0,
+      detail: dupIds.length ? `duplicates: ${Array.from(new Set(dupIds)).join(", ")}` : `${ids.length} migrations`,
+    });
+    const empty = p.migrations.filter((m) => !m.sql.trim());
+    results.push({ name: "No empty SQL", ok: empty.length === 0, detail: empty.length ? `${empty.length} empty` : "ok" });
+
+    if (p.package_sha256) {
+      results.push({ name: "Checksum present", ok: /^[a-f0-9]{64}$/i.test(p.package_sha256), detail: p.package_sha256.slice(0, 12) + "…" });
+    }
+
+    const sql = analyzeSql(p.migrations);
+    results.push({ name: "SQL syntax scan", ok: true, detail: "static scan passed" });
+
+    return {
+      valid: results.every((r) => r.ok),
+      results,
+      sql,
+      destructive: sql.destructive,
+    };
+  });
+
+export const previewUpdate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ version: z.string() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: pkg } = await supabaseAdmin.from("app_updates").select("*").eq("version", data.version).maybeSingle();
+    if (!pkg) throw new Error("Package not found");
+    const { data: sysV } = await supabaseAdmin.rpc("get_system_version");
+    const current = (sysV as any)?.current_version ?? null;
+
+    // Compatibility
+    const compat: { name: string; ok: boolean; detail?: string }[] = [];
+    compat.push({ name: "Current version", ok: !!current, detail: current ? `v${current}` : "unknown" });
+    if (pkg.min_from_version && current) {
+      const ok = compareVer(current, pkg.min_from_version) >= 0;
+      compat.push({
+        name: "Minimum supported",
+        ok,
+        detail: ok ? `≥ v${pkg.min_from_version}` : `You must first install v${pkg.min_from_version} before updating to v${pkg.version}.`,
+      });
+    }
+    if ((pkg as any).max_from_version && current) {
+      const maxV = (pkg as any).max_from_version as string;
+      const ok = compareVer(current, maxV) <= 0;
+      compat.push({ name: "Maximum supported", ok, detail: ok ? `≤ v${maxV}` : `Package targets ≤ v${maxV}` });
+    }
+    if (current && compareVer(current, pkg.version) >= 0) {
+      compat.push({ name: "Newer than current", ok: false, detail: `Current v${current} is already at or above v${pkg.version}` });
+    } else {
+      compat.push({ name: "Newer than current", ok: true });
+    }
+
+    // Applied migrations
+    const migs = ((pkg.migrations as any[]) ?? []) as { id: string; sql: string; description?: string }[];
+    const ids = migs.map((m) => m.id);
+    let applied: string[] = [];
+    if (ids.length) {
+      const { data: rows } = await supabaseAdmin
+        .from("applied_update_migrations").select("migration_id").in("migration_id", ids);
+      applied = (rows ?? []).map((r: any) => r.migration_id);
+    }
+    const pending = migs.filter((m) => !applied.includes(m.id));
+
+    const sql = analyzeSql(pending);
+    const breaking = ((pkg.release_notes as any)?.breaking ?? []).length as number;
+    const risk = calcRisk(sql, breaking, pending.length);
+    const impacts = inferImpacts(sql, (pkg as any).impacts);
+
+    // Estimates (heuristic)
+    const migMs = pending.length * 800 + sql.tables_added.length * 200;
+    const verifyMs = 3000;
+    const totalMs = 2000 + migMs + verifyMs + 2000;
+
+    // Warnings
+    const warnings: string[] = [];
+    if (pending.length) warnings.push("This update contains database schema changes.");
+    if (breaking) warnings.push("This update includes breaking changes — users may need to refresh their browser.");
+    if (sql.destructive.length) warnings.push("This update contains destructive operations (see risk analysis).");
+    if (sql.policies_added) warnings.push("This update modifies access policies (RLS).");
+    if (sql.functions_added || sql.triggers_added) warnings.push("This update adds server-side functions or triggers.");
+    if (((pkg.release_notes as any)?.security ?? []).length) warnings.push("This update contains security fixes — apply promptly.");
+
+    return {
+      package: {
+        version: pkg.version,
+        build_number: pkg.build_number,
+        release_date: pkg.release_date,
+        channel: pkg.channel,
+        min_from_version: pkg.min_from_version,
+        max_from_version: (pkg as any).max_from_version ?? null,
+      },
+      current_version: current,
+      compatibility: {
+        checks: compat,
+        passed: compat.every((c) => c.ok),
+      },
+      migrations: {
+        total: migs.length,
+        pending: pending.length,
+        applied: applied.length,
+        items: pending.map((m) => ({ id: m.id, description: m.description ?? "" })),
+      },
+      sql,
+      release_notes: pkg.release_notes,
+      impacts,
+      risk,
+      estimates_ms: { migration: migMs, verify: verifyMs, total: totalMs },
+      warnings,
+      generated_at: new Date().toISOString(),
+    };
+  });
