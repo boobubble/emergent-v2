@@ -386,6 +386,7 @@ interface Ctx {
   staffLocalMute: (targetId: string, channelId: string, minutes: number, targetName: string) => void;
   pushSystem: (channelId: string, text: string) => void;
   wipeChannel: (channelId: string) => void;
+  deleteRoom: (roomId: string) => void;
 
 }
 
@@ -1554,11 +1555,22 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     setState(s => ({ ...s, messages: { ...s.messages, [channelId]: [] } }));
   }, []);
 
+  const deleteRoom = useCallback((roomId: string) => {
+    setState(s => {
+      if (!s.rooms[roomId]) return s;
+      const { [roomId]: _removed, ...rooms } = s.rooms;
+      const { [roomId]: _msgs, ...messages } = s.messages;
+      const roomOrder = s.roomOrder.filter(id => id !== roomId);
+      const activeChannel = s.activeChannel === roomId ? (roomOrder[0] || "lobby") : s.activeChannel;
+      return { ...s, rooms, messages, roomOrder, activeChannel };
+    });
+  }, []);
+
 
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
     adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
-    pushSystem, wipeChannel,
+    pushSystem, wipeChannel, deleteRoom,
 
     isFriend: (id) => (state.me.friends ?? []).includes(id),
     isBlocked: (id) => (state.me.blocked ?? []).includes(id),
@@ -1616,7 +1628,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     })(),
     staffKick,
     staffLocalMute,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, wipeChannel]);
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, wipeChannel, deleteRoom]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;

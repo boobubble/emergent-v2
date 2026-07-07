@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap } from "lucide-react";
+import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2 } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
+import { useMyRoles } from "@/lib/use-my-role";
 import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -18,8 +19,9 @@ interface Props {
 }
 
 export function Sidebar({ onOpenProfile, onCollapse }: Props) {
-  const { state, setActive, createRoom, reset } = useChat();
+  const { state, setActive, createRoom, deleteRoom, reset } = useChat();
   const { logout, user } = useAuth();
+  const { isAdmin } = useMyRoles();
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newTopic, setNewTopic] = useState("");
@@ -111,31 +113,50 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
               const r = state.rooms[id];
               const active = state.activeChannel === id;
               return (
-                <button
+                <div
                   key={id}
-                  onClick={() => setActive(id)}
                   className={cn(
-                    "premium-nav-item",
+                    "premium-nav-item group/room",
                     active && "premium-nav-item-active",
                   )}
                 >
-                  <span className="flex items-center gap-2.5 truncate">
+                  <button
+                    onClick={() => setActive(id)}
+                    className="flex min-w-0 flex-1 items-center gap-2.5 truncate bg-transparent p-0 text-left"
+                  >
                     <span className={cn("text-base leading-none", active ? "text-primary" : "opacity-50")}>
                       #
                     </span>
                     <span className="truncate">{r.name}</span>
-                  </span>
-                  <span className="flex items-center gap-1.5 text-[10px]">
+                  </button>
+                  <span className="flex items-center gap-1 text-[10px]">
                     <span className="chat-online-dot" aria-hidden style={{ width: "0.4rem", height: "0.4rem" }} />
                     <span className="font-semibold opacity-80">{r.members.length}</span>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Delete channel "${r.name}"? This removes it for you and cannot be undone.`)) {
+                            deleteRoom(id);
+                          }
+                        }}
+                        aria-label={`Delete ${r.name}`}
+                        title="Delete channel (admin)"
+                        className="ml-1 grid h-5 w-5 place-items-center rounded-full text-muted-foreground opacity-0 transition hover:bg-destructive/15 hover:text-destructive group-hover/room:opacity-100"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
                   </span>
-                </button>
+                </div>
               );
             })}
           </div>
         </div>
 
       </nav>
+
 
 
       <div className="border-t border-border p-2">
