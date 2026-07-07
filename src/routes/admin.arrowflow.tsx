@@ -84,7 +84,8 @@ function ArrowFlowAdmin() {
     try {
       const size = DEFAULT_GRID[newDiff];
       const { layout, solution } = generatePuzzle(size, newDiff);
-      void solution;
+
+
 
       const parMoves = layout.pieces.reduce((n, p) => n + (p.shape !== "none" && !p.locked ? 1 : 0), 0);
       const parTime = { easy: 30_000, normal: 60_000, hard: 90_000, expert: 150_000, master: 240_000 }[newDiff];
