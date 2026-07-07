@@ -429,7 +429,7 @@ export const checkRealtime = createServerFn({ method: "GET" }).handler(
         fix: url ? undefined : "Set SUPABASE_URL to enable realtime.",
       }],
     };
-  },
+  }),
 );
 
 // ---------- AI ----------
