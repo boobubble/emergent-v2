@@ -118,7 +118,7 @@ function InstallerPage() {
   if (loading) {
     return <div className="grid min-h-screen place-items-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   }
-  if (alreadyInstalled) return <Navigate to="/" replace />;
+  if (alreadyInstalled) return <InstallerLockedScreen onLogin={() => navigate({ to: "/login" as any })} onAdmin={() => navigate({ to: "/admin" as any })} />;
 
   // Skip legacy DB step in cloud mode (schema step handles bootstrap for self-hosted).
   const visibleSteps = STEPS.filter((s) => !(s.id === "db" && mode === "cloud"));
