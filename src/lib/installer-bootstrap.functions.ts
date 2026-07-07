@@ -154,7 +154,7 @@ export const runSchemaBootstrap = createServerFn({ method: "POST" }).handler(asy
     await sql.unsafe(TRACK_TABLE_SQL);
 
     const rows = await sql`SELECT name FROM public._installer_migrations`;
-    const done = new Set(rows.map((r: { name: string }) => r.name));
+    const done = new Set(rows.map((r) => (r as { name: string }).name));
 
     for (const m of BUNDLED_MIGRATIONS) {
       if (done.has(m.name)) {
