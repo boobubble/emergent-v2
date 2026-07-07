@@ -401,10 +401,38 @@ function UpdatesPage() {
               </div>
             )}
 
-            <div className="flex items-center gap-2">
-              <Button onClick={onRun} disabled={running || !checks?.ready}>
+            {/* Pre-update checklist */}
+            <div className="rounded-lg border p-3 space-y-2">
+              <div className="font-medium text-sm flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Pre-Update Checklist</div>
+              <div className="grid gap-1.5 md:grid-cols-2">
+                {checklist.map((c) => (
+                  <div key={c.key} className="flex items-center gap-2 text-xs">
+                    {c.ok ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                    <span className={c.ok ? "" : "text-muted-foreground"}>{c.label}</span>
+                  </div>
+                ))}
+              </div>
+              {(preview?.sql?.destructive?.length ?? 0) > 0 && (
+                <label className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs cursor-pointer">
+                  <input type="checkbox" className="mt-0.5" checked={ackDestructive} onChange={(e) => setAckDestructive(e.target.checked)} />
+                  <span>
+                    I understand this package contains {preview.sql.destructive.length} destructive operation(s)
+                    ({preview.sql.destructive.map((d: any) => d.op).join(", ")}) and I want to proceed.
+                  </span>
+                </label>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button onClick={onRun} disabled={running || !allChecklistOk}>
                 {running ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Play className="mr-2 h-3.5 w-3.5" />}
                 Run Update
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => onDownloadPreview("json")} disabled={!preview}>
+                <Download className="mr-2 h-3.5 w-3.5" /> Report (JSON)
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => onDownloadPreview("txt")} disabled={!preview}>
+                <Download className="mr-2 h-3.5 w-3.5" /> Report (TXT)
               </Button>
               <span className="text-xs text-muted-foreground">
                 A backup snapshot is created automatically. No user data is deleted.
