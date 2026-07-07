@@ -130,10 +130,10 @@ function ArrowFlowAdmin() {
   return (
     <div className="mx-auto max-w-5xl space-y-5 p-4">
       <AdminPageHeader
-        icon={<RouteIcon className="h-5 w-5" />}
         title="Arrow Flow"
-        subtitle="Manage levels, rewards, hints and daily challenges for the Arrow Flow game."
+        description="Manage levels, rewards, hints and daily challenges for the Arrow Flow game."
       />
+
 
       <Card>
         <CardContent className="space-y-4 p-4">
