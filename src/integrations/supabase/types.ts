@@ -467,36 +467,182 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_feature_flags: {
+        Row: {
+          enabled: boolean
+          feature: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          feature: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          feature?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      coin_packages: {
+        Row: {
+          badge: string | null
+          bonus_coins: number
+          coins: number
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean
+          name: string
+          price_inr: number | null
+          price_usd_cents: number | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          badge?: string | null
+          bonus_coins?: number
+          coins: number
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          price_inr?: number | null
+          price_usd_cents?: number | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          badge?: string | null
+          bonus_coins?: number
+          coins?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_inr?: number | null
+          price_usd_cents?: number | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      coin_payment_orders: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          bonus_coins: number
+          coins: number
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json
+          package_id: string | null
+          provider: string
+          provider_order_id: string | null
+          provider_payment_id: string | null
+          receipt_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount: number
+          bonus_coins?: number
+          coins: number
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json
+          package_id?: string | null
+          provider: string
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          receipt_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          bonus_coins?: number
+          coins?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json
+          package_id?: string | null
+          provider?: string
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          receipt_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coin_payment_orders_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "coin_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coin_transactions: {
         Row: {
           amount: number
           created_at: string
+          direction: string | null
           id: string
           kind: string
+          metadata: Json
+          provider: string
           reason: string
           ref_id: string | null
           ref_type: string | null
+          reference_id: string | null
+          status: string
           user_id: string
+          wallet_kind: string | null
         }
         Insert: {
           amount: number
           created_at?: string
+          direction?: string | null
           id?: string
           kind: string
+          metadata?: Json
+          provider?: string
           reason: string
           ref_id?: string | null
           ref_type?: string | null
+          reference_id?: string | null
+          status?: string
           user_id: string
+          wallet_kind?: string | null
         }
         Update: {
           amount?: number
           created_at?: string
+          direction?: string | null
           id?: string
           kind?: string
+          metadata?: Json
+          provider?: string
           reason?: string
           ref_id?: string | null
           ref_type?: string | null
+          reference_id?: string | null
+          status?: string
           user_id?: string
+          wallet_kind?: string | null
         }
         Relationships: []
       }
@@ -1126,6 +1272,24 @@ export type Database = {
           progress?: Json
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      daily_reward_config: {
+        Row: {
+          coins: number
+          day_number: number
+          updated_at: string
+        }
+        Insert: {
+          coins: number
+          day_number: number
+          updated_at?: string
+        }
+        Update: {
+          coins?: number
+          day_number?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2154,6 +2318,27 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_providers: {
+        Row: {
+          config: Json
+          enabled: boolean
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          enabled?: boolean
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          enabled?: boolean
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       post_boosts: {
         Row: {
           booster_id: string
@@ -2317,6 +2502,10 @@ export type Database = {
           birthday: string | null
           city: string | null
           coins: number
+          coins_bonus_total: number
+          coins_lifetime_earned: number
+          coins_lifetime_spent: number
+          coins_purchased_total: number
           country_code: string | null
           cover_url: string | null
           created_at: string
@@ -2347,6 +2536,7 @@ export type Database = {
           streak: number
           updated_at: string
           username: string
+          wallet_frozen: boolean
           xp: number
         }
         Insert: {
@@ -2359,6 +2549,10 @@ export type Database = {
           birthday?: string | null
           city?: string | null
           coins?: number
+          coins_bonus_total?: number
+          coins_lifetime_earned?: number
+          coins_lifetime_spent?: number
+          coins_purchased_total?: number
           country_code?: string | null
           cover_url?: string | null
           created_at?: string
@@ -2389,6 +2583,7 @@ export type Database = {
           streak?: number
           updated_at?: string
           username: string
+          wallet_frozen?: boolean
           xp?: number
         }
         Update: {
@@ -2401,6 +2596,10 @@ export type Database = {
           birthday?: string | null
           city?: string | null
           coins?: number
+          coins_bonus_total?: number
+          coins_lifetime_earned?: number
+          coins_lifetime_spent?: number
+          coins_purchased_total?: number
           country_code?: string | null
           cover_url?: string | null
           created_at?: string
@@ -2431,6 +2630,7 @@ export type Database = {
           streak?: number
           updated_at?: string
           username?: string
+          wallet_frozen?: boolean
           xp?: number
         }
         Relationships: []
@@ -2974,6 +3174,32 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_coin_grants: {
+        Row: {
+          monthly_coins: number
+          plan_id: string
+          updated_at: string
+        }
+        Insert: {
+          monthly_coins?: number
+          plan_id: string
+          updated_at?: string
+        }
+        Update: {
+          monthly_coins?: number
+          plan_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_coin_grants_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: true
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_payments: {
         Row: {
           admin_note: string | null
@@ -3306,6 +3532,33 @@ export type Database = {
             referencedColumns: ["theme_key"]
           },
         ]
+      }
+      user_daily_claims: {
+        Row: {
+          claim_date: string
+          coins: number
+          created_at: string
+          id: string
+          streak: number
+          user_id: string
+        }
+        Insert: {
+          claim_date?: string
+          coins: number
+          created_at?: string
+          id?: string
+          streak?: number
+          user_id: string
+        }
+        Update: {
+          claim_date?: string
+          coins?: number
+          created_at?: string
+          id?: string
+          streak?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       user_devices: {
         Row: {
@@ -3979,6 +4232,63 @@ export type Database = {
       }
       activate_chat_theme: { Args: { _theme_key: string }; Returns: string }
       activate_feed_theme: { Args: { _theme_key: string }; Returns: string }
+      admin_adjust_coins: {
+        Args: {
+          _amount: number
+          _direction: string
+          _reason?: string
+          _user: string
+        }
+        Returns: {
+          amount: number
+          created_at: string
+          direction: string | null
+          id: string
+          kind: string
+          metadata: Json
+          provider: string
+          reason: string
+          ref_id: string | null
+          ref_type: string | null
+          reference_id: string | null
+          status: string
+          user_id: string
+          wallet_kind: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "coin_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_approve_coin_order: {
+        Args: { _order_id: string; _payment_ref?: string }
+        Returns: {
+          admin_note: string | null
+          amount: number
+          bonus_coins: number
+          coins: number
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json
+          package_id: string | null
+          provider: string
+          provider_order_id: string | null
+          provider_payment_id: string | null
+          receipt_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "coin_payment_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_grant_chat_theme: {
         Args: { _days?: number; _theme_key: string; _user: string }
         Returns: {
@@ -4015,9 +4325,40 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_reject_coin_order: {
+        Args: { _note?: string; _order_id: string }
+        Returns: {
+          admin_note: string | null
+          amount: number
+          bonus_coins: number
+          coins: number
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json
+          package_id: string | null
+          provider: string
+          provider_order_id: string | null
+          provider_payment_id: string | null
+          receipt_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "coin_payment_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_revoke_chat_theme: {
         Args: { _theme_key: string; _user: string }
         Returns: undefined
+      }
+      admin_set_wallet_frozen: {
+        Args: { _frozen: boolean; _user: string }
+        Returns: boolean
       }
       bootstrap_first_admin: { Args: never; Returns: undefined }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
@@ -4025,8 +4366,36 @@ export type Database = {
         Args: { _competition: string; _participant: string }
         Returns: undefined
       }
+      claim_daily_reward: { Args: never; Returns: Json }
       close_inactive_trio_rooms: { Args: never; Returns: undefined }
       complete_installation: { Args: { _payload: Json }; Returns: Json }
+      create_coin_order: {
+        Args: { _package_id: string; _provider: string }
+        Returns: {
+          admin_note: string | null
+          amount: number
+          bonus_coins: number
+          coins: number
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json
+          package_id: string | null
+          provider: string
+          provider_order_id: string | null
+          provider_payment_id: string | null
+          receipt_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "coin_payment_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_trio_room: {
         Args: { _hidden?: boolean; _name: string; _password?: string }
         Returns: {
@@ -4198,6 +4567,41 @@ export type Database = {
       verify_trio_room_password: {
         Args: { _password: string; _room: string }
         Returns: boolean
+      }
+      wallet_apply: {
+        Args: {
+          _amount: number
+          _bonus_portion?: number
+          _direction: string
+          _kind: string
+          _metadata?: Json
+          _provider?: string
+          _reference?: string
+          _status?: string
+          _user: string
+        }
+        Returns: {
+          amount: number
+          created_at: string
+          direction: string | null
+          id: string
+          kind: string
+          metadata: Json
+          provider: string
+          reason: string
+          ref_id: string | null
+          ref_type: string | null
+          reference_id: string | null
+          status: string
+          user_id: string
+          wallet_kind: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "coin_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {

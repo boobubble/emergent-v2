@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReelsRouteImport } from './routes/reels'
@@ -52,6 +53,7 @@ import { Route as BroadcasterQueueRouteImport } from './routes/broadcaster.queue
 import { Route as BroadcasterMicRouteImport } from './routes/broadcaster.mic'
 import { Route as BroadcasterAnnouncementsRouteImport } from './routes/broadcaster.announcements'
 import { Route as BroadcasterAnalyticsRouteImport } from './routes/broadcaster.analytics'
+import { Route as AdminWalletRouteImport } from './routes/admin.wallet'
 import { Route as AdminVoiceNotesRouteImport } from './routes/admin.voice-notes'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminUpdatesRouteImport } from './routes/admin.updates'
@@ -133,6 +135,11 @@ import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrustRoute = TrustRouteImport.update({
@@ -345,6 +352,11 @@ const BroadcasterAnalyticsRoute = BroadcasterAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
   getParentRoute: () => BroadcasterRoute,
+} as any)
+const AdminWalletRoute = AdminWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminVoiceNotesRoute = AdminVoiceNotesRouteImport.update({
   id: '/voice-notes',
@@ -765,6 +777,7 @@ export interface FileRoutesByFullPath {
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/trust': typeof TrustRoute
+  '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
@@ -835,6 +848,7 @@ export interface FileRoutesByFullPath {
   '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voice-notes': typeof AdminVoiceNotesRoute
+  '/admin/wallet': typeof AdminWalletRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -885,6 +899,7 @@ export interface FileRoutesByTo {
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/trust': typeof TrustRoute
+  '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
@@ -955,6 +970,7 @@ export interface FileRoutesByTo {
   '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voice-notes': typeof AdminVoiceNotesRoute
+  '/admin/wallet': typeof AdminWalletRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -1008,6 +1024,7 @@ export interface FileRoutesById {
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/trust': typeof TrustRoute
+  '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
@@ -1078,6 +1095,7 @@ export interface FileRoutesById {
   '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voice-notes': typeof AdminVoiceNotesRoute
+  '/admin/wallet': typeof AdminWalletRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -1132,6 +1150,7 @@ export interface FileRouteTypes {
     | '/reels'
     | '/reset-password'
     | '/trust'
+    | '/wallet'
     | '/welcome'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
@@ -1202,6 +1221,7 @@ export interface FileRouteTypes {
     | '/admin/updates'
     | '/admin/users'
     | '/admin/voice-notes'
+    | '/admin/wallet'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -1252,6 +1272,7 @@ export interface FileRouteTypes {
     | '/reels'
     | '/reset-password'
     | '/trust'
+    | '/wallet'
     | '/welcome'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
@@ -1322,6 +1343,7 @@ export interface FileRouteTypes {
     | '/admin/updates'
     | '/admin/users'
     | '/admin/voice-notes'
+    | '/admin/wallet'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -1374,6 +1396,7 @@ export interface FileRouteTypes {
     | '/reels'
     | '/reset-password'
     | '/trust'
+    | '/wallet'
     | '/welcome'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
@@ -1444,6 +1467,7 @@ export interface FileRouteTypes {
     | '/admin/updates'
     | '/admin/users'
     | '/admin/voice-notes'
+    | '/admin/wallet'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -1497,6 +1521,7 @@ export interface RootRouteChildren {
   ReelsRoute: typeof ReelsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TrustRoute: typeof TrustRoute
+  WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
@@ -1517,6 +1542,13 @@ declare module '@tanstack/react-router' {
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trust': {
@@ -1812,6 +1844,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/broadcaster/analytics'
       preLoaderRoute: typeof BroadcasterAnalyticsRouteImport
       parentRoute: typeof BroadcasterRoute
+    }
+    '/admin/wallet': {
+      id: '/admin/wallet'
+      path: '/wallet'
+      fullPath: '/admin/wallet'
+      preLoaderRoute: typeof AdminWalletRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/voice-notes': {
       id: '/admin/voice-notes'
@@ -2437,6 +2476,7 @@ interface AdminRouteChildren {
   AdminUpdatesRoute: typeof AdminUpdatesRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVoiceNotesRoute: typeof AdminVoiceNotesRoute
+  AdminWalletRoute: typeof AdminWalletRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -2510,6 +2550,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminUpdatesRoute: AdminUpdatesRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminVoiceNotesRoute: AdminVoiceNotesRoute,
+  AdminWalletRoute: AdminWalletRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -2592,6 +2633,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReelsRoute: ReelsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TrustRoute: TrustRoute,
+  WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
