@@ -48,12 +48,15 @@ export function ChatApp() {
   useBotEventsNotifier();
 
   const { raw } = useAppSettings();
+  const chatRef = useRef(chat);
+  chatRef.current = chat;
   useEffect(() => {
-    if (!chat) return;
+    const c = chatRef.current;
+    if (!c) return;
     const cfg = raw.chat_channels as { list?: { id: string; name: string; topic?: string }[] } | undefined;
     const list = Array.isArray(cfg?.list) ? cfg!.list : [];
-    chat.syncAdminChannels(list);
-  }, [raw.chat_channels, chat]);
+    c.syncAdminChannels(list);
+  }, [raw.chat_channels]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
