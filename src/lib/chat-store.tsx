@@ -1004,11 +1004,11 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     if (!trimmed && !attachment) return;
     // Game rooms disallow user chat — only auto-generated system events appear.
     {
-      const ch = channelOverride || null;
-      const roomId = ch && !ch.startsWith("dm:") ? ch : null;
-      const currentRoomId = roomId ?? (typeof window !== "undefined" ? undefined : undefined);
-      const targetRoom = roomId ? undefined : undefined; // placeholder — resolved via setState below
-      void targetRoom; void currentRoomId;
+      const ch = channelOverride || stateRef.current.activeChannel;
+      if (ch && !ch.startsWith("dm:") && stateRef.current.rooms[ch]?.kind === "game") {
+        setReplyingTo(null);
+        return;
+      }
     }
     if (isGuest) {
       const isCmdGuest = trimmed.startsWith("!") || /^\/(mute|kick)\b/i.test(trimmed);
