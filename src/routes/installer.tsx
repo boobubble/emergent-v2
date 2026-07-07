@@ -12,6 +12,8 @@ import {
   detectInstallMode, fetchInstallStatus, isValidEnvatoCode, isValidOfflineKey,
   completeInstallation, bootstrapFirstAdmin, type InstallMode,
 } from "@/lib/installer";
+import { useServerFn } from "@tanstack/react-start";
+import { ensureRequiredBuckets } from "@/lib/backup.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/installer")({ component: InstallerPage });
