@@ -157,7 +157,7 @@ export const checkRuntime = createServerFn({ method: "GET" }).handler(
 );
 
 export const checkEnv = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("env", async () => {
     const started = Date.now();
     const required = ["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "SUPABASE_SERVICE_ROLE_KEY"];
     const missing = required.filter((k) => !process.env[k]);
@@ -175,7 +175,7 @@ export const checkEnv = createServerFn({ method: "GET" }).handler(
           : "Add the missing keys to your hosting environment and redeploy.",
       }],
     };
-  },
+  }),
 );
 
 // ---------- Database ----------
