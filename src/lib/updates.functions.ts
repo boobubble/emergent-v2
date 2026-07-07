@@ -307,7 +307,7 @@ export const runUpdate = createServerFn({ method: "POST" })
           const mt = Date.now();
           try {
             // Requires an exec_sql RPC on the project; if unavailable, fail loudly.
-            const { error } = await supabaseAdmin.rpc("exec_sql", { sql: m.sql });
+            const { error } = await (supabaseAdmin as any).rpc("exec_sql", { sql: m.sql });
             if (error) throw new Error(`migration ${m.id}: ${error.message}`);
             await supabaseAdmin.from("applied_update_migrations").insert({
               migration_id: m.id,
