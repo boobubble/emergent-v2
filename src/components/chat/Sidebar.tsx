@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap } from "lucide-react";
+import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2 } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
+import { useMyRoles } from "@/lib/use-my-role";
 import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -18,8 +19,9 @@ interface Props {
 }
 
 export function Sidebar({ onOpenProfile, onCollapse }: Props) {
-  const { state, setActive, createRoom, reset } = useChat();
+  const { state, setActive, createRoom, deleteRoom, reset } = useChat();
   const { logout, user } = useAuth();
+  const { isAdmin } = useMyRoles();
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newTopic, setNewTopic] = useState("");
