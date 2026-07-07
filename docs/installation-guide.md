@@ -26,20 +26,15 @@ bun install        # or: npm install
 ## 3. Connect your backend
 
 1. Create a Supabase project at https://supabase.com.
-2. Copy `.env.example` to `.env` and fill in:
-   ```env
-   VITE_SUPABASE_URL=https://<project-ref>.supabase.co
-   VITE_SUPABASE_PUBLISHABLE_KEY=<publishable-anon-key>
-   VITE_SUPABASE_PROJECT_ID=<project-ref>
-   SUPABASE_URL=https://<project-ref>.supabase.co
-   SUPABASE_PUBLISHABLE_KEY=<publishable-anon-key>
-   SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
-   ```
+2. Copy `.env.example` to `.env` and fill in the six `SUPABASE_*` /
+   `VITE_SUPABASE_*` values (see `.env.example` — every variable is
+   documented inline).
 3. Apply migrations:
    ```bash
    bunx supabase db push
    ```
-   This creates every table, RLS policy, function, and trigger the app uses.
+   This creates every table, index, RLS policy, function, trigger and seed
+   row the app uses.
 
 ## 4. Start the dev server
 
@@ -47,28 +42,30 @@ bun install        # or: npm install
 bun dev
 ```
 
-Open http://localhost:5173. You should see the welcome / landing page.
+Open http://localhost:5173.
 
-## 5. Create your first admin
+## 5. Run the installer (`/installer`)
 
-1. Sign up through the normal `/login` page with your real email.
-2. In Supabase **SQL Editor**, run:
-   ```sql
-   insert into public.user_roles (user_id, role)
-   select id, 'super_admin' from auth.users where email = 'you@example.com';
-   ```
-3. Reload the app — the **Admin** entry appears in your menu.
+Visit `/installer` and follow the 7-step wizard:
 
-## 6. Run the Setup Wizard
+1. **Welcome** → **License** → **Requirements** — health check for DB,
+   storage, realtime, SMTP, env vars.
+2. **Admin Account** — creates the first user AND automatically promotes
+   them to `super_admin` (no manual SQL required).
+3. **Site Branding** — site name, logo.
+4. **Finish** — writes the install lock, provisions the four required
+   storage buckets (`avatars`, `feed-media`, `brand-assets`, `stickers`)
+   automatically, and reports post-install stats.
 
-Visit `/admin/setup-wizard` and walk through:
+That's it — the app is ready to use. `/admin` is now reachable.
 
-- Site name, tagline, logo, favicon (Settings → General, Themes).
-- Pick a layout preset (Settings → Layout).
-- Enable / disable modules (Manage Features → Modules).
-- (Optional) Import demo content from **Tools → Demo Data**.
+> Alternative path: after step 5 (Admin Account), skip the wizard and go
+> straight to `/admin/backup` → **Restore Backup** to restore a portable
+> ZIP from another install. Buckets and media files are recreated on the
+> new project automatically.
 
-## 7. Configure the essentials
+## 6. Configure the essentials
+
 
 | Area | Where | Notes |
 |------|-------|-------|
