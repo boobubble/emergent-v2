@@ -46,6 +46,13 @@ export function ChatApp() {
   const hubBadge = useHubBadge(hubOpen);
   useBotEventsNotifier();
 
+  const { raw } = useAppSettings();
+  useEffect(() => {
+    if (!chat) return;
+    const list = (raw.chat_channels as { id: string; name: string; topic?: string }[] | undefined) ?? [];
+    if (Array.isArray(list)) chat.syncAdminChannels(list);
+  }, [raw.chat_channels, chat]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(max-width: 768px)");
