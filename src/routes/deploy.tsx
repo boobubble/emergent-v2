@@ -338,9 +338,9 @@ function CheckStep({
   criticalPassed, failedCritical, info, copyReport, exportReport, summaryRef, hasRun,
 }: {
   busy: boolean;
-  runAll: () => void;
+  runAll: (opts?: { force?: boolean }) => void;
   results: Partial<Record<CheckCategory, CategoryResult>>;
-  runOne: (c: CheckCategory) => void;
+  runOne: (c: CheckCategory, opts?: { force?: boolean }) => void;
   runningCats: Set<CheckCategory>;
   progressPct: number;
   healthScore: number;
