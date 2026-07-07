@@ -90,6 +90,22 @@ function BackupPage() {
   const runDownload = useServerFn(downloadMediaFile);
   const runEnsureBucket = useServerFn(ensureStorageBucket);
   const runUpload = useServerFn(uploadMediaFile);
+  const [quickBusy, setQuickBusy] = useState(false);
+
+  async function onQuickJson() {
+    setQuickBusy(true);
+    try {
+      const snap = await runDb({});
+      const blob = new Blob([JSON.stringify(snap, null, 2)], { type: "application/json" });
+      download(blob, `quick-backup_${todayStamp()}.json`);
+      toast.success("JSON backup downloaded");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Quick backup failed");
+    } finally {
+      setQuickBusy(false);
+    }
+  }
+
 
   async function buildFullZip(
     parts: { name: string; content: string }[],
