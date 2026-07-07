@@ -53,6 +53,8 @@ import { Route as BroadcasterQueueRouteImport } from './routes/broadcaster.queue
 import { Route as BroadcasterMicRouteImport } from './routes/broadcaster.mic'
 import { Route as BroadcasterAnnouncementsRouteImport } from './routes/broadcaster.announcements'
 import { Route as BroadcasterAnalyticsRouteImport } from './routes/broadcaster.analytics'
+import { Route as AdminWalletRulesRouteImport } from './routes/admin.wallet-rules'
+import { Route as AdminWalletAnalyticsRouteImport } from './routes/admin.wallet-analytics'
 import { Route as AdminWalletRouteImport } from './routes/admin.wallet'
 import { Route as AdminVoiceNotesRouteImport } from './routes/admin.voice-notes'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -352,6 +354,16 @@ const BroadcasterAnalyticsRoute = BroadcasterAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
   getParentRoute: () => BroadcasterRoute,
+} as any)
+const AdminWalletRulesRoute = AdminWalletRulesRouteImport.update({
+  id: '/wallet-rules',
+  path: '/wallet-rules',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWalletAnalyticsRoute = AdminWalletAnalyticsRouteImport.update({
+  id: '/wallet-analytics',
+  path: '/wallet-analytics',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminWalletRoute = AdminWalletRouteImport.update({
   id: '/wallet',
@@ -849,6 +861,8 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/voice-notes': typeof AdminVoiceNotesRoute
   '/admin/wallet': typeof AdminWalletRoute
+  '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
+  '/admin/wallet-rules': typeof AdminWalletRulesRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -971,6 +985,8 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin/voice-notes': typeof AdminVoiceNotesRoute
   '/admin/wallet': typeof AdminWalletRoute
+  '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
+  '/admin/wallet-rules': typeof AdminWalletRulesRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -1096,6 +1112,8 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/voice-notes': typeof AdminVoiceNotesRoute
   '/admin/wallet': typeof AdminWalletRoute
+  '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
+  '/admin/wallet-rules': typeof AdminWalletRulesRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -1222,6 +1240,8 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/voice-notes'
     | '/admin/wallet'
+    | '/admin/wallet-analytics'
+    | '/admin/wallet-rules'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -1344,6 +1364,8 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/voice-notes'
     | '/admin/wallet'
+    | '/admin/wallet-analytics'
+    | '/admin/wallet-rules'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -1468,6 +1490,8 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/voice-notes'
     | '/admin/wallet'
+    | '/admin/wallet-analytics'
+    | '/admin/wallet-rules'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -1844,6 +1868,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/broadcaster/analytics'
       preLoaderRoute: typeof BroadcasterAnalyticsRouteImport
       parentRoute: typeof BroadcasterRoute
+    }
+    '/admin/wallet-rules': {
+      id: '/admin/wallet-rules'
+      path: '/wallet-rules'
+      fullPath: '/admin/wallet-rules'
+      preLoaderRoute: typeof AdminWalletRulesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/wallet-analytics': {
+      id: '/admin/wallet-analytics'
+      path: '/wallet-analytics'
+      fullPath: '/admin/wallet-analytics'
+      preLoaderRoute: typeof AdminWalletAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/wallet': {
       id: '/admin/wallet'
@@ -2477,6 +2515,8 @@ interface AdminRouteChildren {
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVoiceNotesRoute: typeof AdminVoiceNotesRoute
   AdminWalletRoute: typeof AdminWalletRoute
+  AdminWalletAnalyticsRoute: typeof AdminWalletAnalyticsRoute
+  AdminWalletRulesRoute: typeof AdminWalletRulesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -2551,6 +2591,8 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminUsersRoute: AdminUsersRoute,
   AdminVoiceNotesRoute: AdminVoiceNotesRoute,
   AdminWalletRoute: AdminWalletRoute,
+  AdminWalletAnalyticsRoute: AdminWalletAnalyticsRoute,
+  AdminWalletRulesRoute: AdminWalletRulesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
