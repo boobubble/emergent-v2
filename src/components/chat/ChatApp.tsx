@@ -10,7 +10,7 @@ import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
-import { BotEventsPanel } from "@/components/chat/BotEventsPanel";
+
 import { useBotEventsNotifier } from "@/lib/use-bot-events-notifier";
 import { MembersPanel } from "@/components/chat/MembersPanel";
 import { FloatingDMDock } from "@/components/chat/FloatingDMDock";
