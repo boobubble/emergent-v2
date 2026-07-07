@@ -17,7 +17,7 @@ export type CheckItem = {
   message: string;
   fix?: string;
   critical: boolean;
-  details?: Record<string, unknown>;
+  details?: { found?: number; total?: number; missing?: string[] };
 };
 
 export type DeploymentCheckResult = {
