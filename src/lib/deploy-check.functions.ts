@@ -347,7 +347,7 @@ export const checkAuth = createServerFn({ method: "GET" }).handler(
 
 // ---------- Storage ----------
 export const checkStorage = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("storage", async () => {
     const started = Date.now();
     const items: CheckItem[] = [];
     const { url, svc } = serverEnv();
