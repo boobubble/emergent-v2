@@ -249,6 +249,7 @@ export function ChatApp() {
 
           <ChatHeader onOpenHub={() => setHubOpen(true)} hubOpen={hubOpen} />
           <div className="relative flex min-h-0 flex-1 flex-col">
+            {!isDM(state.activeChannel) && <BotEventsPanel />}
             <MessageList channelId={state.activeChannel} />
             <PresenceFeed channelId={state.activeChannel} />
           </div>
