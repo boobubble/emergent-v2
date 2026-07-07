@@ -4,7 +4,7 @@ import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
 import { LoyaltyChip } from "./LoyaltyChip";
 import { BrandMark } from "@/components/BrandMark";
-import { HeaderBotEvents } from "./HeaderBotEvents";
+import { CommunityEventsTicker } from "./CommunityEventsTicker";
 
 interface ChatHeaderProps {
   onOpenHub?: () => void;
@@ -85,13 +85,12 @@ export function ChatHeader(_props: ChatHeaderProps = {}) {
             <span className="truncate font-bold text-foreground">{channelLabel(id)}</span>
             <LoyaltyChip channelId={id} />
           </div>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <span className="chat-online-dot shrink-0" aria-hidden />
-              <span className="font-semibold text-foreground/80">{room.members.length}</span>
-              <span>online</span>
-            </span>
-            <HeaderBotEvents />
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <span className="chat-online-dot shrink-0" aria-hidden />
+            <span className="font-semibold text-foreground/80">{room.members.length}</span>
+            <span>online</span>
+            <span className="mx-1 text-muted-foreground/40">·</span>
+            <CommunityEventsTicker />
           </div>
         </div>
       </div>
