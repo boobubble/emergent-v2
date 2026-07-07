@@ -1,73 +1,96 @@
-# Premium Private Chat Personalization
+# Wallet & Coins Store
 
-Scope is DM-only (`channel_id` starting with `dm:`). Lobbies, trio rooms, and community chats stay untouched. Reuses the existing Coins economy — no new currency.
+Builds on the existing `coin_transactions` + profile coin balance. No second currency. Everything routes through one atomic RPC so future features (wallpapers, gifts, games, competitions) just call it.
 
-## What ships
+## 1. Database
 
-### 1. Wallpaper library (admin-managed catalog)
-- New table `dm_wallpapers` with: `key`, `name`, `category`, `kind` (`solid|gradient|image|animated`), `preview_url`, `asset_url`, `price_coins`, `is_premium`, `is_featured`, `is_limited`, `enabled`, `sort_order`, timestamps.
-- Categories: Romantic, Space, Nature, Gaming, Neon, Cute, Dark, Seasonal, Trending, Premium Exclusive.
-- Public `TO anon/authenticated` SELECT on enabled rows; admin writes only.
-- Admin CRUD screen at `/admin/wallpapers` (list, upload asset, set price, toggle featured/limited, delete).
-- Assets stored in a new public `dm-wallpapers` storage bucket.
+### Extend `profiles`
+- `coins_balance` (already exists) — kept as the source of truth.
+- `coins_lifetime_earned`, `coins_lifetime_spent`, `coins_purchased_total`, `coins_bonus_total` (int, default 0).
+- `wallet_frozen` (bool, default false).
 
-### 2. Ownership + purchases (Coins-integrated)
-- `user_dm_wallpapers (user_id, wallpaper_key, acquired_at)` — permanent unlock; one row per user per wallpaper.
-- `dm_wallpaper_purchases (id, user_id, wallpaper_key, coins_spent, purchase_type, dm_channel_id, created_at)` — history log.
-- DB function `purchase_dm_wallpaper(_key, _type, _channel)`:
-  - Validates DM channel + membership.
-  - If already owned and `_type='self'`: no-op, returns owned=true.
-  - Deducts coins from purchaser only (via `profiles.coins` + `coin_transactions`).
-  - Inserts ownership row (if new) and history row.
-  - For `_type='shared'`: writes the applied theme to the shared DM state (see #3) and inserts a system message announcing the change.
-- Insufficient coins raises a clear error surfaced to the client.
+### Extend `coin_transactions`
+Add columns (backfill-safe):
+- `kind` enum: `purchase | reward | competition | gift_in | gift_out | wallpaper | premium_theme | game_reward | admin_bonus | refund | transfer_in | transfer_out | daily_login | streak_bonus | subscription_grant | spend_other`
+- `direction` (`credit` | `debit`)
+- `status` (`pending | completed | failed | refunded`)
+- `reference_id` text (unique, nullable) — dedupes payment callbacks
+- `provider` (`manual | razorpay | stripe | system`)
+- `metadata` jsonb
 
-### 3. Applied themes per conversation
-- `dm_chat_themes (channel_id, user_id, wallpaper_key, opacity, blur, brightness, overlay, bubble_accent, updated_at)` — one row per (channel, user) for "My View Only".
-- `dm_shared_themes (channel_id, wallpaper_key, applied_by, opacity, blur, brightness, overlay, bubble_accent, updated_at)` — one row per channel for "Shared".
-- Resolution order in the client: shared theme (if set) → user's personal theme → default.
-- RLS: users can read/write their own personal row; shared row is readable by both DM participants, writable only via the purchase function.
-- Realtime enabled on `dm_shared_themes` so the other participant sees the change instantly.
+### New tables (all with GRANTs + RLS)
+- `coin_packages` — id, name, coins, bonus_coins, price_inr, price_usd_cents, sort_order, is_active, badge (e.g. "Best value"). Admin CRUD; anon SELECT active.
+- `coin_payment_orders` — id, user_id, package_id, provider, provider_order_id, provider_payment_id, amount, currency, coins, bonus_coins, status (`created|awaiting_review|paid|failed|refunded`), receipt_url, admin_note, created_at. RLS: user reads own; admin all.
+- `payment_providers` — key (`manual|razorpay|stripe`), enabled bool, config jsonb. Admin only.
+- `daily_reward_config` — day_number (1..30+), coins. Admin editable.
+- `user_daily_claims` — user_id, claim_date (unique per user/date), streak, coins.
+- `coin_feature_flags` — feature key (`wallpaper|gift|game|competition|username_fx|profile_frame|bubble|emoji|room_decor` …), enabled.
+- `subscription_coin_grants` — plan_id, monthly_coins. On renewal, credit.
 
-### 4. Premium gating
-- Reads `my_active_plan()` — buying/applying paid or animated wallpapers requires an active paid plan. Free solid/gradient wallpapers stay available to all.
+### Atomic RPC
+`public.wallet_apply(_user uuid, _amount int, _direction text, _kind text, _status text, _provider text, _reference text, _metadata jsonb) returns coin_transactions`
+- SECURITY DEFINER, single transaction
+- Rejects if `wallet_frozen`
+- Rejects if debit would push balance negative
+- Unique on `reference_id` per provider → dedupe fake/duplicate callbacks
+- Updates lifetime + purchased/bonus counters based on `kind`
 
-### 5. Chat UI
-- New "Wallpaper" button in DM header (only visible when `channel_id` starts with `dm:`).
-- Sheet with:
-  - Category tabs + grid of wallpapers (thumbnail, name, price, Owned/Premium badges).
-  - Live preview overlay on the actual chat.
-  - Opacity / blur / brightness / dark-overlay sliders.
-  - Bottom bar: **Apply** (self), **Apply for both** (shared, shows coin cost + balance + balance-after), **Cancel**, **Reset to default**.
-  - "Insufficient coins" state with Earn Coins CTA.
-  - Custom upload tile (Premium) → uploads to `dm-wallpapers/custom/<user>/…`, validates size/dims/mime, registers as a personal wallpaper.
-- Background layer rendered behind the message list only; bubbles keep existing readability tokens; overlay/blur applied via CSS variables per DM.
-- Animated wallpapers (GIF/WebP) pause via `IntersectionObserver` + `document.visibilitychange`.
+All spends across the app must call `wallet_apply` — no direct balance updates.
 
-### 6. System message on shared apply
-- On `_type='shared'`, insert a system message into the DM channel: `🎨 {applier} applied the "{name}" conversation theme.` Uses existing message pipeline; no schema changes.
+## 2. Server functions (`src/lib/wallet.functions.ts`)
+- `getWallet` — balance + lifetime + last N transactions
+- `listPackages` (public)
+- `createOrder({ packageId, provider })` — creates `coin_payment_orders`, returns provider payload (Razorpay order / Stripe checkout URL / manual instructions)
+- `submitManualPayment({ orderId, receiptUrl, note })` → `awaiting_review`
+- `claimDaily` — computes streak, calls `wallet_apply`
+- `listTransactions({ range, kind })`
+- Admin: `adminAdjustCoins`, `adminFreeze`, `adminRefund`, `adminGift`, `adminApproveManualOrder`, `adminUpsertPackage`, `adminSetProvider`, `adminSetFeatureFlag`, `adminSetDailyConfig`, `adminReport`
 
-## Explicit non-goals (to keep scope tight this pass)
-- Lottie playback — deferred; ship image + GIF/WebP only.
-- "Buy Coins" storefront — button links to existing coins earn page; no new payment flow.
-- Per-message emoji reaction recolor — bubble/accent color changes only; reaction colors stay default.
+Razorpay/Stripe webhook routes under `src/routes/api/public/webhooks/{razorpay,stripe}.tsx` — verify signature, load order by `provider_order_id`, call `wallet_apply` with `reference_id = provider_payment_id`.
 
-## Technical notes
-- All Supabase writes for purchases go through the `SECURITY DEFINER` function so RLS stays strict and coin deductions are atomic.
-- GRANT statements included in the same migration as every new table (per `public-schema-grants` rule).
-- Two migrations: (a) tables + RLS + grants + function, (b) `ALTER PUBLICATION supabase_realtime ADD TABLE dm_shared_themes;`.
-- Storage bucket created via `supabase--storage_create_bucket` tool.
-- Seed 12–15 starter wallpapers (solids, gradients, a few licensed-free images) in the same migration so the library isn't empty at launch.
+## 3. Client
 
-## Files touched (approximate)
-- `supabase/migrations/*_dm_wallpapers.sql` (new)
-- `src/lib/dm-wallpapers.ts` — types + fetch/purchase helpers
-- `src/lib/use-dm-theme.ts` — resolves active theme per channel, subscribes to shared changes
-- `src/components/chat/DMWallpaperSheet.tsx` — picker + preview + purchase flow
-- `src/components/chat/DMChatBackground.tsx` — background layer
-- `src/components/chat/ChatHeader.tsx` — add Wallpaper button (DM-only)
-- `src/components/chat/ChatApp.tsx` — mount background layer inside DM channels only
-- `src/routes/admin/wallpapers.tsx` — admin catalog CRUD
-- `src/styles.css` — CSS vars for wallpaper overlay/blur/brightness/accent
+### `/wallet` (authenticated)
+- Balance card, lifetime earned/spent, purchased vs bonus split
+- Daily claim button + streak visual
+- Tabs: Store · Transactions · Daily
+- Transactions filterable (Today/Week/Month/All, by kind)
 
-Approve and I'll build it end-to-end, or tell me which parts to trim/expand (e.g. skip admin UI, skip custom upload, ship free-only first).
+### `/wallet/store`
+- Package grid, provider chooser (only enabled providers), manual flow uploads receipt via existing storage
+- Razorpay: load checkout.js, use returned order
+- Stripe: redirect to Checkout session URL
+
+### `/admin/wallet`
+- Packages CRUD
+- Providers enable/disable + keys form (secrets stored via `add_secret`)
+- Manual orders queue (approve/reject)
+- User lookup: adjust / freeze / refund / gift
+- Daily reward config
+- Feature flags
+- Reports (CSV)
+
+### Subscription hook
+On subscription renewal (existing subscription logic), call `wallet_apply` with `kind='subscription_grant'` for the plan's monthly coins.
+
+### Cosmetic integration
+Refactor existing DM wallpaper purchase to call `wallet_apply` (kind `wallpaper`) instead of touching balance directly, so it flows through the wallet. Same pattern reserved for gifts/games/etc via feature flags.
+
+## 4. Security
+- Webhooks verify HMAC (Razorpay `x-razorpay-signature`, Stripe signing secret) before RPC
+- `reference_id` UNIQUE prevents replay
+- `wallet_apply` is the only path that mutates balance; direct table UPDATE denied by RLS (no update policy for `authenticated`)
+- Admin ops gated by `has_role(auth.uid(),'admin')`
+
+## 5. Out of scope this pass
+- Actual Razorpay/Stripe key entry (added when user provides them; scaffolding + webhook routes ready)
+- CSV export UI polish beyond a basic download
+- Peer-to-peer coin transfers (schema supports it via `transfer_in/out`, UI later)
+
+## Files
+- migration: `supabase/migrations/*_wallet_store.sql`
+- `src/lib/wallet.functions.ts`, `src/lib/wallet.ts` (types + client helpers)
+- `src/routes/wallet.tsx`, `src/routes/wallet.store.tsx`
+- `src/routes/admin.wallet.tsx`
+- `src/routes/api/public/webhooks/razorpay.tsx`, `.../stripe.tsx`
+- Refactor: `src/lib/dm-wallpapers.ts` `purchase_dm_wallpaper` → delegate to `wallet_apply`
