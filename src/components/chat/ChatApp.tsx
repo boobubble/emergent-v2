@@ -275,7 +275,6 @@ export function ChatApp() {
             </button>
           )}
 
-          <ChatHeader onOpenHub={() => setHubOpen(true)} hubOpen={hubOpen} />
           {(() => {
             const activeRoom = !activeIsDM ? state.rooms[state.activeChannel] : null;
             const isGameRoom = activeRoom?.kind === "game";
@@ -284,6 +283,7 @@ export function ChatApp() {
             }
             return (
               <>
+                <ChatHeader onOpenHub={() => setHubOpen(true)} hubOpen={hubOpen} />
                 <div className="relative flex min-h-0 flex-1 flex-col">
                   {activeIsDM && (
                     <DMChatBackground
