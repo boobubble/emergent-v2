@@ -10,6 +10,8 @@ import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
+import { BotEventsPanel } from "@/components/chat/BotEventsPanel";
+import { useBotEventsNotifier } from "@/lib/use-bot-events-notifier";
 import { MembersPanel } from "@/components/chat/MembersPanel";
 import { FloatingDMDock } from "@/components/chat/FloatingDMDock";
 import { MobileDMMinimizedDock } from "@/components/chat/MobileDMMinimizedDock";
@@ -37,6 +39,7 @@ export function ChatApp() {
   );
   const [feedbotChip, setFeedbotChip] = useState<{ title: string; body: string } | null>(null);
   const hubBadge = useHubBadge(hubOpen);
+  useBotEventsNotifier();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -246,6 +249,7 @@ export function ChatApp() {
 
           <ChatHeader onOpenHub={() => setHubOpen(true)} hubOpen={hubOpen} />
           <div className="relative flex min-h-0 flex-1 flex-col">
+            {!isDM(state.activeChannel) && <BotEventsPanel />}
             <MessageList channelId={state.activeChannel} />
             <PresenceFeed channelId={state.activeChannel} />
           </div>
