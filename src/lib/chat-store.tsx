@@ -1555,11 +1555,22 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     setState(s => ({ ...s, messages: { ...s.messages, [channelId]: [] } }));
   }, []);
 
+  const deleteRoom = useCallback((roomId: string) => {
+    setState(s => {
+      if (!s.rooms[roomId]) return s;
+      const { [roomId]: _removed, ...rooms } = s.rooms;
+      const { [roomId]: _msgs, ...messages } = s.messages;
+      const roomOrder = s.roomOrder.filter(id => id !== roomId);
+      const activeChannel = s.activeChannel === roomId ? (roomOrder[0] || "lobby") : s.activeChannel;
+      return { ...s, rooms, messages, roomOrder, activeChannel };
+    });
+  }, []);
+
 
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
     adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
-    pushSystem, wipeChannel,
+    pushSystem, wipeChannel, deleteRoom,
 
     isFriend: (id) => (state.me.friends ?? []).includes(id),
     isBlocked: (id) => (state.me.blocked ?? []).includes(id),
