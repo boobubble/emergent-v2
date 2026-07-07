@@ -29,9 +29,12 @@ export function useBotEventsNotifier() {
         kind: BotEventKind; live: boolean; cycleId: string;
         duration_min: number; interval_min: number; golden: boolean;
       }>).detail;
-      const key = `${detail.cycleId}:${detail.live}`;
+      const key = `${detail.cycleId}:${detail.live ? "open" : "closed"}`;
       if (seen.has(key)) return;
       seen.add(key);
+      const noticed = readNoticed();
+      if (noticed[key]) return;
+      markNoticed(key);
       const meta = BOT_EVENT_META[detail.kind];
       const channelId = chat.state.activeChannel;
       if (channelId.startsWith("dm:")) return;
