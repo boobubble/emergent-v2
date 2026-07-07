@@ -180,7 +180,7 @@ export const checkEnv = createServerFn({ method: "GET" }).handler(
 
 // ---------- Database ----------
 export const checkDatabase = createServerFn({ method: "GET" }).handler(
-  async (): Promise<CategoryResult> => {
+  async (): Promise<CategoryResult> => cached("database", async () => {
     const started = Date.now();
     const items: CheckItem[] = [];
     const { url, pub, svc } = serverEnv();
