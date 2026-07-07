@@ -476,9 +476,12 @@ function HeroHomepage() {
   if (user) return <Navigate to="/" replace />;
 
 
+  // Note: a bg-color fallback is required because Chromium fails to paint an
+  // arbitrary radial-gradient across very tall elements (page height > ~8192px),
+  // leaving the lower portion transparent and exposing the white <body>.
   const bg = dark
-    ? "bg-[radial-gradient(ellipse_at_top,_#1e1b4b_0%,_#0b0b1a_45%,_#000_100%)] text-white"
-    : "bg-[radial-gradient(ellipse_at_top,_#dbeafe_0%,_#f5f3ff_45%,_#fff_100%)] text-slate-900";
+    ? "bg-black bg-[radial-gradient(ellipse_at_top,_#1e1b4b_0%,_#0b0b1a_45%,_#000_100%)] text-white"
+    : "bg-white bg-[radial-gradient(ellipse_at_top,_#dbeafe_0%,_#f5f3ff_45%,_#fff_100%)] text-slate-900";
 
   const statCards = [
     { emoji: "👥", label: "Members", value: stats.members || 25000 },
@@ -789,7 +792,9 @@ function HeroHomepage() {
   };
 
   return (
-    <div data-hero-theme={dark ? "dark" : "light"} className={`min-h-screen ${bg} relative overflow-x-hidden`}>
+    <div data-hero-theme={dark ? "dark" : "light"} className={`min-h-screen relative overflow-x-clip ${dark ? "text-white" : "text-slate-900"}`}>
+      {/* Fixed background layer — avoids Chromium paint gaps on very tall gradient elements */}
+      <div aria-hidden className={`fixed inset-0 -z-10 ${bg}`} />
       {/* Animations + scroll behavior */}
       <style>{`
         html { scroll-behavior: smooth; }
@@ -798,10 +803,11 @@ function HeroHomepage() {
         @keyframes hero-bar { from { transform: scaleY(0.4) } to { transform: scaleY(1) } }
       `}</style>
 
+
       {/* Decorative gradient orbs */}
       <div className="pointer-events-none absolute -top-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-fuchsia-500/20 blur-3xl" />
       <div className="pointer-events-none absolute top-40 -right-32 h-[28rem] w-[28rem] rounded-full bg-indigo-500/20 blur-3xl" />
-      <div className="pointer-events-none absolute top-[120%] left-1/3 h-[28rem] w-[28rem] rounded-full bg-cyan-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-40 left-1/3 h-[28rem] w-[28rem] rounded-full bg-cyan-400/10 blur-3xl" />
 
       {/* Sticky nav */}
       <header className={`sticky top-0 z-30 transition-all ${scrolled ? "border-b border-white/10 bg-black/40 backdrop-blur-xl" : "bg-transparent"}`}>
