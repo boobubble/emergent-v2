@@ -30,6 +30,9 @@ const PackageSchema = z.object({
   release_date: z.string().optional(),
   channel: z.enum(["stable", "beta", "hotfix"]).default("stable"),
   min_from_version: z.string().optional(),
+  max_from_version: z.string().optional(),
+  installer_version: z.string().optional(),
+  schema_version: z.string().optional(),
   package_sha256: z.string().optional(),
   release_notes: z
     .object({
@@ -40,8 +43,10 @@ const PackageSchema = z.object({
       security: z.array(z.string()).optional(),
       database: z.array(z.string()).optional(),
       breaking: z.array(z.string()).optional(),
+      deprecated: z.array(z.string()).optional(),
     })
     .default({}),
+  impacts: z.record(z.string(), z.enum(["safe", "attention", "manual"])).optional(),
   migrations: z
     .array(
       z.object({
