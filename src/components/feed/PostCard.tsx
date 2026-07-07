@@ -114,7 +114,7 @@ export const PostCard = memo(function PostCard({
       .select().single();
     if (data) {
       setReactions((p) => [...p, data as FeedReaction]);
-      earnReaction({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
+      earnReaction({ data: { postId: post.id } }).catch(() => {});
     }
   }
 
@@ -123,7 +123,7 @@ export const PostCard = memo(function PostCard({
     setSending(true);
     const { error } = await supabase.from("comments").insert({ post_id: post.id, author_id: meId, text: commentText.trim() });
     if (!error) {
-      earnComment({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
+      earnComment({ data: { postId: post.id } }).catch(() => {});
     }
     setCommentText("");
     setSending(false);
@@ -290,7 +290,7 @@ export const PostCard = memo(function PostCard({
               : `${authorName} on Palrgo`;
             const shareText = post.text ? post.text : `Check out this post by ${authorName}`;
             const payload: SharePayload = { title, text: shareText, url };
-            earnShare({ data: { postId: post.id, ownerId: post.owner_id || undefined } }).catch(() => {});
+            earnShare({ data: { postId: post.id } }).catch(() => {});
             claimShare({ data: { postId: post.id, target: "native" } })
               .then((r) => { if (r?.ok && r.awarded > 0) toast.success(`+${r.awarded} 🪙 for sharing!`); })
               .catch(() => {});
