@@ -69,8 +69,23 @@ function InstallerPage() {
   const [schemaStatus, setSchemaStatus] = useState<BootstrapStatus | null>(null);
   const [schemaResult, setSchemaResult] = useState<BootstrapResult | null>(null);
   const [schemaRunning, setSchemaRunning] = useState(false);
+  const [envCheck, setEnvCheck] = useState<EnvValidation | null>(null);
+  const [dbTest, setDbTest] = useState<DbConnectionResult | null>(null);
+  const [dbTesting, setDbTesting] = useState(false);
+  type StageKey = "env" | "db" | "schema" | "storage" | "admin" | "verify" | "finalize";
+  type StageState = "idle" | "running" | "ok" | "fail";
+  const [stages, setStages] = useState<Record<StageKey, { state: StageState; ms?: number; msg?: string }>>({
+    env: { state: "idle" }, db: { state: "idle" }, schema: { state: "idle" },
+    storage: { state: "idle" }, admin: { state: "idle" }, verify: { state: "idle" }, finalize: { state: "idle" },
+  });
+  const setStage = (k: StageKey, patch: { state: StageState; ms?: number; msg?: string }) =>
+    setStages((prev) => ({ ...prev, [k]: { ...prev[k], ...patch } }));
+  const [installStartedAt, setInstallStartedAt] = useState<number | null>(null);
+  const [installFinishedAt, setInstallFinishedAt] = useState<number | null>(null);
   const fetchSchemaStatus = useServerFn(getBootstrapStatus);
   const runSchemaBootstrapFn = useServerFn(runSchemaBootstrap);
+  const fetchEnvValidation = useServerFn(getEnvValidation);
+  const runDbTest = useServerFn(testDatabaseConnection);
 
   type LogLevel = "info" | "ok" | "warn" | "error";
   type LogEntry = { ts: string; level: LogLevel; step: string; msg: string };
