@@ -42,17 +42,22 @@ function UpdatesPage() {
   const _run = useServerFn(runUpdate);
   const _rollback = useServerFn(rollbackUpdate);
   const _history = useServerFn(listUpdateHistory);
+  const _validate = useServerFn(validatePackage);
+  const _preview = useServerFn(previewUpdate);
 
   const [sys, setSys] = useState<Sys | null>(null);
   const [pkgs, setPkgs] = useState<Pkg[]>([]);
   const [history, setHistory] = useState<Hist[]>([]);
   const [selected, setSelected] = useState<Pkg | null>(null);
   const [checks, setChecks] = useState<any>(null);
+  const [validation, setValidation] = useState<any>(null);
+  const [preview, setPreview] = useState<any>(null);
   const [progress, setProgress] = useState<{ stage: string; ok: boolean | null; ms?: number; detail?: string }[]>([]);
   const [running, setRunning] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
   const [busy, setBusy] = useState<string | null>(null);
+  const [ackDestructive, setAckDestructive] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const refresh = async () => {
@@ -67,6 +72,7 @@ function UpdatesPage() {
     const t = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(t);
   }, [running]);
+
 
   const targetPkg = useMemo(() => selected ?? pkgs[0] ?? null, [selected, pkgs]);
   const isUpdateAvailable = sys?.update_available;
