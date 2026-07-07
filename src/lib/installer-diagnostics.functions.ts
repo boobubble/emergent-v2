@@ -36,6 +36,8 @@ function friendly(err: unknown): string {
 }
 
 export const getEnvValidation = createServerFn({ method: "GET" }).handler(async (): Promise<EnvValidation> => {
+  const { assertInstallerAllowed } = await import("./installer-guard.server");
+  await assertInstallerAllowed();
   const defs: Array<{ name: string; required: boolean; hint: string }> = [
     { name: "SUPABASE_URL",              required: true,  hint: "Your Supabase project URL" },
     { name: "SUPABASE_PUBLISHABLE_KEY",  required: true,  hint: "Anon / publishable key" },
