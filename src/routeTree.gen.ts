@@ -54,6 +54,7 @@ import { Route as BroadcasterAnnouncementsRouteImport } from './routes/broadcast
 import { Route as BroadcasterAnalyticsRouteImport } from './routes/broadcaster.analytics'
 import { Route as AdminVoiceNotesRouteImport } from './routes/admin.voice-notes'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminUpdatesRouteImport } from './routes/admin.updates'
 import { Route as AdminUpcomingRouteImport } from './routes/admin.upcoming'
 import { Route as AdminSystemRouteImport } from './routes/admin.system'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
@@ -351,6 +352,11 @@ const AdminVoiceNotesRoute = AdminVoiceNotesRouteImport.update({
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUpdatesRoute = AdminUpdatesRouteImport.update({
+  id: '/updates',
+  path: '/updates',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminUpcomingRoute = AdminUpcomingRouteImport.update({
@@ -812,6 +818,7 @@ export interface FileRoutesByFullPath {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
+  '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voice-notes': typeof AdminVoiceNotesRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
@@ -929,6 +936,7 @@ export interface FileRoutesByTo {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
+  '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voice-notes': typeof AdminVoiceNotesRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
@@ -1049,6 +1057,7 @@ export interface FileRoutesById {
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
+  '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voice-notes': typeof AdminVoiceNotesRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
@@ -1170,6 +1179,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/system'
     | '/admin/upcoming'
+    | '/admin/updates'
     | '/admin/users'
     | '/admin/voice-notes'
     | '/broadcaster/analytics'
@@ -1287,6 +1297,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/system'
     | '/admin/upcoming'
+    | '/admin/updates'
     | '/admin/users'
     | '/admin/voice-notes'
     | '/broadcaster/analytics'
@@ -1406,6 +1417,7 @@ export interface FileRouteTypes {
     | '/admin/subscriptions'
     | '/admin/system'
     | '/admin/upcoming'
+    | '/admin/updates'
     | '/admin/users'
     | '/admin/voice-notes'
     | '/broadcaster/analytics'
@@ -1789,6 +1801,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/updates': {
+      id: '/admin/updates'
+      path: '/updates'
+      fullPath: '/admin/updates'
+      preLoaderRoute: typeof AdminUpdatesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/upcoming': {
@@ -2375,6 +2394,7 @@ interface AdminRouteChildren {
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminSystemRoute: typeof AdminSystemRoute
   AdminUpcomingRoute: typeof AdminUpcomingRouteWithChildren
+  AdminUpdatesRoute: typeof AdminUpdatesRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVoiceNotesRoute: typeof AdminVoiceNotesRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -2445,6 +2465,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminSystemRoute: AdminSystemRoute,
   AdminUpcomingRoute: AdminUpcomingRouteWithChildren,
+  AdminUpdatesRoute: AdminUpdatesRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminVoiceNotesRoute: AdminVoiceNotesRoute,
   AdminIndexRoute: AdminIndexRoute,
