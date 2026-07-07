@@ -141,6 +141,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/performance",   label: "Performance",   icon: Activity, advanced: true,                               keywords: ["cache", "cdn"] },
       { to: "/admin/realtime",      label: "Realtime",      icon: Radio,    advanced: true,                               keywords: ["websocket", "presence", "live"] },
       { to: "/admin/system",        label: "System",        icon: Server,   advanced: true, superOnly: true,              keywords: ["database", "jobs"] },
+      { to: "/admin/updates",       label: "Updates",       icon: Sparkles, superOnly: true,                              keywords: ["update", "upgrade", "version", "release", "changelog", "migration"] },
       { to: "/admin/backup",        label: "Backup",        icon: Download, superOnly: true,                              keywords: ["backup", "restore", "database", "media", "zip"] },
       { to: "/admin/api",           label: "API & Webhooks", icon: KeyRound, advanced: true, superOnly: true,             keywords: ["api", "keys", "webhooks"] },
     ],
