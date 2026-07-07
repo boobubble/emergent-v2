@@ -126,3 +126,85 @@ export const restoreBackupDryRun = createServerFn({ method: "POST" })
       note: "Restore is recorded for audit only. For a true rollback, request a point-in-time restore.",
     };
   });
+
+// --- Media file download / upload (portable backup & restore) ---
+
+const bucketPathSchema = z.object({
+  bucket: z.string().min(1).max(63),
+  path: z.string().min(1).max(1024),
+});
+
+function toBase64(bytes: Uint8Array): string {
+  let bin = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  // btoa is available in Workers/Node18+
+  return btoa(bin);
+}
+
+function fromBase64(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+export const downloadMediaFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => bucketPathSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: blob, error } = await supabaseAdmin.storage.from(data.bucket).download(data.path);
+    if (error || !blob) throw new Error(error?.message ?? "Download failed");
+    const buf = new Uint8Array(await blob.arrayBuffer());
+    return {
+      bucket: data.bucket,
+      path: data.path,
+      mime: blob.type || "application/octet-stream",
+      size: buf.byteLength,
+      contentBase64: toBase64(buf),
+    };
+  });
+
+export const ensureStorageBucket = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ name: z.string().min(1).max(63), public: z.boolean().default(false) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const existing = await supabaseAdmin.storage.getBucket(data.name);
+    if (existing.data) {
+      if (existing.data.public !== data.public) {
+        await supabaseAdmin.storage.updateBucket(data.name, { public: data.public });
+      }
+      return { ok: true, created: false };
+    }
+    const { error } = await supabaseAdmin.storage.createBucket(data.name, { public: data.public });
+    if (error) throw new Error(error.message);
+    return { ok: true, created: true };
+  });
+
+export const uploadMediaFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    bucketPathSchema.extend({
+      contentBase64: z.string(),
+      mime: z.string().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const bytes = fromBase64(data.contentBase64);
+    const { error } = await supabaseAdmin.storage.from(data.bucket).upload(data.path, bytes, {
+      contentType: data.mime || "application/octet-stream",
+      upsert: true,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true, size: bytes.byteLength };
+  });
