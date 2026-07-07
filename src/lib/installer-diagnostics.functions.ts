@@ -55,6 +55,8 @@ export const getEnvValidation = createServerFn({ method: "GET" }).handler(async 
 });
 
 export const testDatabaseConnection = createServerFn({ method: "POST" }).handler(async (): Promise<DbConnectionResult> => {
+  const { assertInstallerAllowed } = await import("./installer-guard.server");
+  await assertInstallerAllowed();
   if (!process.env.SUPABASE_DB_URL) {
     return {
       ok: false, reachable: false, authenticated: false, ssl: false,
