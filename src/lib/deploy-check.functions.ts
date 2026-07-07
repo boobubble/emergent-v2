@@ -472,7 +472,7 @@ export const checkAi = createServerFn({ method: "GET" }).handler(
         }],
       };
     }
-  },
+  }),
 );
 
 // ---------- Email ----------
