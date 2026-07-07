@@ -573,3 +573,156 @@ function ReleaseNotes({ notes }: { notes: any }) {
     </div>
   );
 }
+
+function RiskBadge({ level, score }: { level: string; score: number }) {
+  const map: Record<string, string> = {
+    low: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+    medium: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+    high: "bg-destructive/15 text-destructive border-destructive/30",
+  };
+  const emoji = level === "high" ? "🔴" : level === "medium" ? "🟡" : "🟢";
+  return <Badge variant="outline" className={`text-xs ${map[level] ?? ""}`}>{emoji} {level.toUpperCase()} · {score}</Badge>;
+}
+
+function ImpactBadge({ status }: { status: "safe" | "attention" | "manual" }) {
+  const s = status === "safe"
+    ? { l: "✔ Safe", c: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" }
+    : status === "attention"
+    ? { l: "⚠ Attention", c: "bg-amber-500/15 text-amber-600 border-amber-500/30" }
+    : { l: "❌ Manual", c: "bg-destructive/15 text-destructive border-destructive/30" };
+  return <Badge variant="outline" className={`text-xs ${s.c}`}>{s.l}</Badge>;
+}
+
+function UpdatePreviewPanel({ preview, validation, targetPkg }: { preview: any; validation: any; targetPkg: any }) {
+  if (!preview) {
+    return (
+      <div className="rounded-lg border p-3 text-sm text-muted-foreground flex items-center gap-2">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating update preview…
+      </div>
+    );
+  }
+  const sql = preview.sql;
+  const est = preview.estimates_ms;
+  const notes = preview.release_notes ?? {};
+  return (
+    <div className="space-y-3">
+      {/* Header row: version + risk + compat */}
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="rounded-lg border p-3 text-xs space-y-1">
+          <div className="font-medium text-sm flex items-center gap-2"><Eye className="h-4 w-4" /> Update Summary</div>
+          <div>Version: v{preview.current_version ?? "?"} → <b>v{preview.package.version}</b></div>
+          <div>Build: {preview.package.build_number}</div>
+          <div>Released: {preview.package.release_date ? new Date(preview.package.release_date).toLocaleDateString() : "—"}</div>
+          <div>Estimated: {fmtDuration(est.total)} (migrations {fmtDuration(est.migration)}, verify {fmtDuration(est.verify)})</div>
+        </div>
+        <div className="rounded-lg border p-3 text-xs space-y-1">
+          <div className="font-medium text-sm flex items-center gap-2"><ShieldAlert className="h-4 w-4" /> Compatibility</div>
+          {preview.compatibility.checks.map((c: any, i: number) => (
+            <div key={i} className="flex items-center gap-2">
+              {c.ok ? <CheckCircle2 className="h-3 w-3 text-emerald-500" /> : <XCircle className="h-3 w-3 text-destructive" />}
+              <span>{c.name}</span>
+              <span className="text-muted-foreground ml-auto">{c.detail ?? ""}</span>
+            </div>
+          ))}
+          <div className="pt-1">
+            {preview.compatibility.passed
+              ? <Badge className="text-xs">✔ Compatible</Badge>
+              : <Badge variant="outline" className="text-xs bg-destructive/15 text-destructive border-destructive/30">❌ Incompatible</Badge>}
+          </div>
+        </div>
+        <div className="rounded-lg border p-3 text-xs space-y-1">
+          <div className="font-medium text-sm flex items-center gap-2"><Gauge className="h-4 w-4" /> Risk</div>
+          <div><RiskBadge level={preview.risk.level} score={preview.risk.score} /></div>
+          <div className="text-muted-foreground">
+            {preview.migrations.pending} pending migration(s) · {(notes.breaking?.length ?? 0)} breaking · {sql.destructive.length} destructive op(s)
+          </div>
+          {sql.destructive.length > 0 && (
+            <div className="text-destructive flex items-center gap-1 pt-1">
+              <Skull className="h-3 w-3" /> {sql.destructive.map((d: any) => d.op).join(", ")}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Change comparison */}
+      <div className="rounded-lg border p-3 space-y-2">
+        <div className="font-medium text-sm flex items-center gap-2"><GitCompare className="h-4 w-4" /> Database Preview</div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+          <Stat label="Tables Added" v={sql.tables_added.length} />
+          <Stat label="Tables Modified" v={sql.tables_modified.length} />
+          <Stat label="Columns +" v={sql.columns_added} />
+          <Stat label="Columns ~" v={sql.columns_modified} />
+          <Stat label="Columns −" v={sql.columns_removed} tone={sql.columns_removed > 0 ? "danger" : undefined} />
+          <Stat label="Indexes Added" v={sql.indexes_added} />
+          <Stat label="Views Added" v={sql.views_added} />
+          <Stat label="Functions Added" v={sql.functions_added} />
+          <Stat label="Triggers Added" v={sql.triggers_added} />
+          <Stat label="Policies Added" v={sql.policies_added} />
+        </div>
+        {(sql.tables_added.length > 0 || sql.tables_modified.length > 0) && (
+          <div className="grid gap-2 md:grid-cols-2 text-xs pt-1">
+            {sql.tables_added.length > 0 && (
+              <div><span className="text-muted-foreground">Added tables:</span> {sql.tables_added.map((t: string) => <code key={t} className="mx-0.5">{t}</code>)}</div>
+            )}
+            {sql.tables_modified.length > 0 && (
+              <div><span className="text-muted-foreground">Modified tables:</span> {sql.tables_modified.map((t: string) => <code key={t} className="mx-0.5">{t}</code>)}</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Impact */}
+      <div className="rounded-lg border p-3 space-y-2">
+        <div className="font-medium text-sm">Impact Analysis</div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-1.5 text-xs">
+          {Object.entries(preview.impacts).map(([k, v]) => (
+            <div key={k} className="flex items-center justify-between rounded border px-2 py-1">
+              <span className="capitalize">{k}</span>
+              <ImpactBadge status={v as any} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Validation results */}
+      {validation && (
+        <div className="rounded-lg border p-3 space-y-1">
+          <div className="font-medium text-sm flex items-center gap-2">
+            <FileJson className="h-4 w-4" /> Package Validation
+            {validation.valid
+              ? <Badge className="ml-1 text-xs">✔ Valid</Badge>
+              : <Badge variant="outline" className="ml-1 text-xs bg-destructive/15 text-destructive border-destructive/30">❌ Invalid</Badge>}
+          </div>
+          {validation.results.map((r: any, i: number) => (
+            <div key={i} className="flex items-center gap-2 text-xs">
+              {r.ok ? <CheckCircle2 className="h-3 w-3 text-emerald-500" /> : <XCircle className="h-3 w-3 text-destructive" />}
+              <span>{r.name}</span>
+              <span className="text-muted-foreground ml-auto">{r.detail ?? ""}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Warnings */}
+      {preview.warnings.length > 0 && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 space-y-1">
+          <div className="font-medium text-sm flex items-center gap-2 text-amber-700 dark:text-amber-400">
+            <AlertTriangle className="h-4 w-4" /> Smart Warnings
+          </div>
+          <ul className="text-xs list-disc list-inside space-y-0.5">
+            {preview.warnings.map((w: string, i: number) => <li key={i}>{w}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, v, tone }: { label: string; v: number; tone?: "danger" }) {
+  return (
+    <div className={`rounded border px-2 py-1.5 ${tone === "danger" && v > 0 ? "border-destructive/40 bg-destructive/5" : ""}`}>
+      <div className={`text-lg font-semibold ${tone === "danger" && v > 0 ? "text-destructive" : ""}`}>{v}</div>
+      <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</div>
+    </div>
+  );
+}
