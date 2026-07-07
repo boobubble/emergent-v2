@@ -25,6 +25,7 @@ import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FeedRouteImport } from './routes/feed'
+import { Route as DeployRouteImport } from './routes/deploy'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as CompetitionsRouteImport } from './routes/competitions'
 import { Route as ChatroomsRouteImport } from './routes/chatrooms'
@@ -204,6 +205,11 @@ const FeedbackRoute = FeedbackRouteImport.update({
 const FeedRoute = FeedRouteImport.update({
   id: '/feed',
   path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeployRoute = DeployRouteImport.update({
+  id: '/deploy',
+  path: '/deploy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfessionsRoute = ConfessionsRouteImport.update({
@@ -725,6 +731,7 @@ export interface FileRoutesByFullPath {
   '/chatrooms': typeof ChatroomsRoute
   '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
+  '/deploy': typeof DeployRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
@@ -841,6 +848,7 @@ export interface FileRoutesByTo {
   '/chatrooms': typeof ChatroomsRoute
   '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
+  '/deploy': typeof DeployRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
@@ -960,6 +968,7 @@ export interface FileRoutesById {
   '/chatrooms': typeof ChatroomsRoute
   '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
+  '/deploy': typeof DeployRoute
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
@@ -1080,6 +1089,7 @@ export interface FileRouteTypes {
     | '/chatrooms'
     | '/competitions'
     | '/confessions'
+    | '/deploy'
     | '/feed'
     | '/feedback'
     | '/find-friends'
@@ -1196,6 +1206,7 @@ export interface FileRouteTypes {
     | '/chatrooms'
     | '/competitions'
     | '/confessions'
+    | '/deploy'
     | '/feed'
     | '/feedback'
     | '/find-friends'
@@ -1314,6 +1325,7 @@ export interface FileRouteTypes {
     | '/chatrooms'
     | '/competitions'
     | '/confessions'
+    | '/deploy'
     | '/feed'
     | '/feedback'
     | '/find-friends'
@@ -1433,6 +1445,7 @@ export interface RootRouteChildren {
   ChatroomsRoute: typeof ChatroomsRoute
   CompetitionsRoute: typeof CompetitionsRouteWithChildren
   ConfessionsRoute: typeof ConfessionsRoute
+  DeployRoute: typeof DeployRoute
   FeedRoute: typeof FeedRouteWithChildren
   FeedbackRoute: typeof FeedbackRoute
   FindFriendsRoute: typeof FindFriendsRoute
@@ -1573,6 +1586,13 @@ declare module '@tanstack/react-router' {
       path: '/feed'
       fullPath: '/feed'
       preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deploy': {
+      id: '/deploy'
+      path: '/deploy'
+      fullPath: '/deploy'
+      preLoaderRoute: typeof DeployRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/confessions': {
@@ -2493,6 +2513,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatroomsRoute: ChatroomsRoute,
   CompetitionsRoute: CompetitionsRouteWithChildren,
   ConfessionsRoute: ConfessionsRoute,
+  DeployRoute: DeployRoute,
   FeedRoute: FeedRouteWithChildren,
   FeedbackRoute: FeedbackRoute,
   FindFriendsRoute: FindFriendsRoute,
@@ -2523,13 +2544,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
