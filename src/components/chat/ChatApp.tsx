@@ -13,6 +13,7 @@ import { MessageInput } from "@/components/chat/MessageInput";
 import { DMChatBackground } from "@/components/chat/DMChatBackground";
 import { useDmTheme } from "@/lib/use-dm-theme";
 import { supabase } from "@/integrations/supabase/client";
+import { useAppSettings } from "@/lib/app-settings";
 
 
 import { useBotEventsNotifier } from "@/lib/use-bot-events-notifier";
@@ -44,6 +45,14 @@ export function ChatApp() {
   const [feedbotChip, setFeedbotChip] = useState<{ title: string; body: string } | null>(null);
   const hubBadge = useHubBadge(hubOpen);
   useBotEventsNotifier();
+
+  const { raw } = useAppSettings();
+  useEffect(() => {
+    if (!chat) return;
+    const cfg = raw.chat_channels as { list?: { id: string; name: string; topic?: string }[] } | undefined;
+    const list = Array.isArray(cfg?.list) ? cfg!.list : [];
+    chat.syncAdminChannels(list);
+  }, [raw.chat_channels, chat]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
