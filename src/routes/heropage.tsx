@@ -807,7 +807,7 @@ function HeroHomepage() {
       {/* Decorative gradient orbs */}
       <div className="pointer-events-none absolute -top-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-fuchsia-500/20 blur-3xl" />
       <div className="pointer-events-none absolute top-40 -right-32 h-[28rem] w-[28rem] rounded-full bg-indigo-500/20 blur-3xl" />
-      <div className="pointer-events-none absolute top-[120%] left-1/3 h-[28rem] w-[28rem] rounded-full bg-cyan-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-40 left-1/3 h-[28rem] w-[28rem] rounded-full bg-cyan-400/10 blur-3xl" />
 
       {/* Sticky nav */}
       <header className={`sticky top-0 z-30 transition-all ${scrolled ? "border-b border-white/10 bg-black/40 backdrop-blur-xl" : "bg-transparent"}`}>
