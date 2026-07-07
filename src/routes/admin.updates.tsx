@@ -314,6 +314,9 @@ function UpdatesPage() {
 
             <Separator />
 
+            {/* Advanced preview */}
+            <UpdatePreviewPanel preview={preview} validation={validation} targetPkg={targetPkg} />
+
             <div className="grid gap-3 md:grid-cols-2">
               <div className="rounded-lg border p-3 text-xs space-y-1">
                 <div className="font-medium text-sm mb-1">Required Migrations</div>
@@ -334,7 +337,7 @@ function UpdatesPage() {
                 <div className="font-medium text-sm mb-1">Compatibility</div>
                 <div>Min. required version: <code>v{targetPkg.min_from_version ?? "any"}</code></div>
                 <div>Channel: {targetPkg.channel}</div>
-                <div>Est. update time: ~{Math.max(1, (targetPkg.migrations?.length ?? 0) + 1)} min</div>
+                <div>Est. update time: {preview?.estimates_ms ? fmtDuration(preview.estimates_ms.total) : `~${Math.max(1, (targetPkg.migrations?.length ?? 0) + 1)} min`}</div>
               </div>
             </div>
 
