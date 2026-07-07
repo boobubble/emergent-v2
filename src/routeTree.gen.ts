@@ -119,6 +119,7 @@ import { Route as AdminBackupRouteImport } from './routes/admin.backup'
 import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
 import { Route as AdminAuthBackgroundRouteImport } from './routes/admin.auth-background'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
+import { Route as AdminArrowflowRouteImport } from './routes/admin.arrowflow'
 import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
 import { Route as AdminApiRouteImport } from './routes/admin.api'
 import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
@@ -688,6 +689,11 @@ const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
   path: '/audit-logs',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminArrowflowRoute = AdminArrowflowRouteImport.update({
+  id: '/arrowflow',
+  path: '/arrowflow',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAppearanceRoute = AdminAppearanceRouteImport.update({
   id: '/appearance',
   path: '/appearance',
@@ -812,6 +818,7 @@ export interface FileRoutesByFullPath {
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/arrowflow': typeof AdminArrowflowRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
@@ -938,6 +945,7 @@ export interface FileRoutesByTo {
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/arrowflow': typeof AdminArrowflowRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
@@ -1067,6 +1075,7 @@ export interface FileRoutesById {
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/admin/api': typeof AdminApiRoute
   '/admin/appearance': typeof AdminAppearanceRoute
+  '/admin/arrowflow': typeof AdminArrowflowRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
@@ -1197,6 +1206,7 @@ export interface FileRouteTypes {
     | '/admin/announcements'
     | '/admin/api'
     | '/admin/appearance'
+    | '/admin/arrowflow'
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
@@ -1323,6 +1333,7 @@ export interface FileRouteTypes {
     | '/admin/announcements'
     | '/admin/api'
     | '/admin/appearance'
+    | '/admin/arrowflow'
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
@@ -1451,6 +1462,7 @@ export interface FileRouteTypes {
     | '/admin/announcements'
     | '/admin/api'
     | '/admin/appearance'
+    | '/admin/arrowflow'
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
@@ -2356,6 +2368,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuditLogsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/arrowflow': {
+      id: '/admin/arrowflow'
+      path: '/arrowflow'
+      fullPath: '/admin/arrowflow'
+      preLoaderRoute: typeof AdminArrowflowRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/appearance': {
       id: '/admin/appearance'
       path: '/appearance'
@@ -2492,6 +2511,7 @@ interface AdminRouteChildren {
   AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
   AdminApiRoute: typeof AdminApiRoute
   AdminAppearanceRoute: typeof AdminAppearanceRoute
+  AdminArrowflowRoute: typeof AdminArrowflowRoute
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminAuthBackgroundRoute: typeof AdminAuthBackgroundRoute
   AdminAutomationRoute: typeof AdminAutomationRoute
@@ -2569,6 +2589,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnnouncementsRoute: AdminAnnouncementsRoute,
   AdminApiRoute: AdminApiRoute,
   AdminAppearanceRoute: AdminAppearanceRoute,
+  AdminArrowflowRoute: AdminArrowflowRoute,
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminAuthBackgroundRoute: AdminAuthBackgroundRoute,
   AdminAutomationRoute: AdminAutomationRoute,
@@ -2733,13 +2754,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
