@@ -22,6 +22,7 @@ import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as InstallerRouteImport } from './routes/installer'
 import { Route as HeropageRouteImport } from './routes/heropage'
 import { Route as GroupsRouteImport } from './routes/groups'
+import { Route as GamificationRouteImport } from './routes/gamification'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedbackRouteImport } from './routes/feedback'
@@ -92,6 +93,7 @@ import { Route as AdminHomepageRouteImport } from './routes/admin.homepage'
 import { Route as AdminHeroPageRouteImport } from './routes/admin.hero-page'
 import { Route as AdminGuestAccessRouteImport } from './routes/admin.guest-access'
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
+import { Route as AdminGamificationRouteImport } from './routes/admin.gamification'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
 import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
 import { Route as AdminFeedbotRouteImport } from './routes/admin.feedbot'
@@ -197,6 +199,11 @@ const HeropageRoute = HeropageRouteImport.update({
 const GroupsRoute = GroupsRouteImport.update({
   id: '/groups',
   path: '/groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamificationRoute = GamificationRouteImport.update({
+  id: '/gamification',
+  path: '/gamification',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GamesRoute = GamesRouteImport.update({
@@ -550,6 +557,11 @@ const AdminGeneralRoute = AdminGeneralRouteImport.update({
   path: '/general',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminGamificationRoute = AdminGamificationRouteImport.update({
+  id: '/gamification',
+  path: '/gamification',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminGamesRoute = AdminGamesRouteImport.update({
   id: '/games',
   path: '/games',
@@ -778,6 +790,7 @@ export interface FileRoutesByFullPath {
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
+  '/gamification': typeof GamificationRoute
   '/groups': typeof GroupsRoute
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
@@ -824,6 +837,7 @@ export interface FileRoutesByFullPath {
   '/admin/feedbot': typeof AdminFeedbotRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
+  '/admin/gamification': typeof AdminGamificationRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/hero-page': typeof AdminHeroPageRoute
@@ -902,6 +916,7 @@ export interface FileRoutesByTo {
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
+  '/gamification': typeof GamificationRoute
   '/groups': typeof GroupsRoute
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
@@ -948,6 +963,7 @@ export interface FileRoutesByTo {
   '/admin/feedbot': typeof AdminFeedbotRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
+  '/admin/gamification': typeof AdminGamificationRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/hero-page': typeof AdminHeroPageRoute
@@ -1029,6 +1045,7 @@ export interface FileRoutesById {
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRoute
+  '/gamification': typeof GamificationRoute
   '/groups': typeof GroupsRoute
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
@@ -1075,6 +1092,7 @@ export interface FileRoutesById {
   '/admin/feedbot': typeof AdminFeedbotRoute
   '/admin/filters': typeof AdminFiltersRoute
   '/admin/games': typeof AdminGamesRoute
+  '/admin/gamification': typeof AdminGamificationRoute
   '/admin/general': typeof AdminGeneralRoute
   '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/hero-page': typeof AdminHeroPageRoute
@@ -1157,6 +1175,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/find-friends'
     | '/games'
+    | '/gamification'
     | '/groups'
     | '/heropage'
     | '/installer'
@@ -1203,6 +1222,7 @@ export interface FileRouteTypes {
     | '/admin/feedbot'
     | '/admin/filters'
     | '/admin/games'
+    | '/admin/gamification'
     | '/admin/general'
     | '/admin/guest-access'
     | '/admin/hero-page'
@@ -1281,6 +1301,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/find-friends'
     | '/games'
+    | '/gamification'
     | '/groups'
     | '/heropage'
     | '/installer'
@@ -1327,6 +1348,7 @@ export interface FileRouteTypes {
     | '/admin/feedbot'
     | '/admin/filters'
     | '/admin/games'
+    | '/admin/gamification'
     | '/admin/general'
     | '/admin/guest-access'
     | '/admin/hero-page'
@@ -1407,6 +1429,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/find-friends'
     | '/games'
+    | '/gamification'
     | '/groups'
     | '/heropage'
     | '/installer'
@@ -1453,6 +1476,7 @@ export interface FileRouteTypes {
     | '/admin/feedbot'
     | '/admin/filters'
     | '/admin/games'
+    | '/admin/gamification'
     | '/admin/general'
     | '/admin/guest-access'
     | '/admin/hero-page'
@@ -1534,6 +1558,7 @@ export interface RootRouteChildren {
   FeedbackRoute: typeof FeedbackRoute
   FindFriendsRoute: typeof FindFriendsRoute
   GamesRoute: typeof GamesRoute
+  GamificationRoute: typeof GamificationRoute
   GroupsRoute: typeof GroupsRoute
   HeropageRoute: typeof HeropageRoute
   InstallerRoute: typeof InstallerRoute
@@ -1650,6 +1675,13 @@ declare module '@tanstack/react-router' {
       path: '/groups'
       fullPath: '/groups'
       preLoaderRoute: typeof GroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gamification': {
+      id: '/gamification'
+      path: '/gamification'
+      fullPath: '/gamification'
+      preLoaderRoute: typeof GamificationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/games': {
@@ -2142,6 +2174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGeneralRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/gamification': {
+      id: '/admin/gamification'
+      path: '/gamification'
+      fullPath: '/admin/gamification'
+      preLoaderRoute: typeof AdminGamificationRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/games': {
       id: '/admin/games'
       path: '/games'
@@ -2478,6 +2517,7 @@ interface AdminRouteChildren {
   AdminFeedbotRoute: typeof AdminFeedbotRoute
   AdminFiltersRoute: typeof AdminFiltersRoute
   AdminGamesRoute: typeof AdminGamesRoute
+  AdminGamificationRoute: typeof AdminGamificationRoute
   AdminGeneralRoute: typeof AdminGeneralRoute
   AdminGuestAccessRoute: typeof AdminGuestAccessRoute
   AdminHeroPageRoute: typeof AdminHeroPageRoute
@@ -2554,6 +2594,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFeedbotRoute: AdminFeedbotRoute,
   AdminFiltersRoute: AdminFiltersRoute,
   AdminGamesRoute: AdminGamesRoute,
+  AdminGamificationRoute: AdminGamificationRoute,
   AdminGeneralRoute: AdminGeneralRoute,
   AdminGuestAccessRoute: AdminGuestAccessRoute,
   AdminHeroPageRoute: AdminHeroPageRoute,
@@ -2664,6 +2705,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedbackRoute: FeedbackRoute,
   FindFriendsRoute: FindFriendsRoute,
   GamesRoute: GamesRoute,
+  GamificationRoute: GamificationRoute,
   GroupsRoute: GroupsRoute,
   HeropageRoute: HeropageRoute,
   InstallerRoute: InstallerRoute,

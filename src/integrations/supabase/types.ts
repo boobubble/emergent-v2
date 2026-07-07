@@ -1863,6 +1863,427 @@ export type Database = {
         }
         Relationships: []
       }
+      gam_achievements: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          description: string | null
+          event_type: string
+          icon: string | null
+          id: string
+          key: string
+          metadata: Json
+          name: string
+          reward_badge: string | null
+          reward_coins: number
+          reward_frame_id: string | null
+          reward_wallpaper_id: string | null
+          reward_xp: number
+          sort_order: number
+          target: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          description?: string | null
+          event_type: string
+          icon?: string | null
+          id?: string
+          key: string
+          metadata?: Json
+          name: string
+          reward_badge?: string | null
+          reward_coins?: number
+          reward_frame_id?: string | null
+          reward_wallpaper_id?: string | null
+          reward_xp?: number
+          sort_order?: number
+          target?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          icon?: string | null
+          id?: string
+          key?: string
+          metadata?: Json
+          name?: string
+          reward_badge?: string | null
+          reward_coins?: number
+          reward_frame_id?: string | null
+          reward_wallpaper_id?: string | null
+          reward_xp?: number
+          sort_order?: number
+          target?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gam_event_log: {
+        Row: {
+          amount: number
+          created_at: string
+          event_type: string
+          id: number
+          metadata: Json
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          event_type: string
+          id?: number
+          metadata?: Json
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          event_type?: string
+          id?: number
+          metadata?: Json
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      gam_milestones: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          event_type: string
+          id: string
+          key: string
+          name: string
+          reward_badge: string | null
+          reward_coins: number
+          reward_frame_id: string | null
+          reward_wallpaper_id: string | null
+          reward_xp: number
+          sort_order: number
+          target: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          event_type: string
+          id?: string
+          key: string
+          name: string
+          reward_badge?: string | null
+          reward_coins?: number
+          reward_frame_id?: string | null
+          reward_wallpaper_id?: string | null
+          reward_xp?: number
+          sort_order?: number
+          target: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          key?: string
+          name?: string
+          reward_badge?: string | null
+          reward_coins?: number
+          reward_frame_id?: string | null
+          reward_wallpaper_id?: string | null
+          reward_xp?: number
+          sort_order?: number
+          target?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gam_quests: {
+        Row: {
+          active: boolean
+          cadence: string
+          created_at: string
+          description: string | null
+          event_type: string
+          id: string
+          key: string
+          metadata: Json
+          name: string
+          reward_coins: number
+          reward_xp: number
+          sort_order: number
+          target: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cadence: string
+          created_at?: string
+          description?: string | null
+          event_type: string
+          id?: string
+          key: string
+          metadata?: Json
+          name: string
+          reward_coins?: number
+          reward_xp?: number
+          sort_order?: number
+          target?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cadence?: string
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          key?: string
+          metadata?: Json
+          name?: string
+          reward_coins?: number
+          reward_xp?: number
+          sort_order?: number
+          target?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gam_season_tiers: {
+        Row: {
+          id: string
+          premium_only: boolean
+          reward_badge: string | null
+          reward_coins: number
+          reward_frame_id: string | null
+          reward_wallpaper_id: string | null
+          reward_xp: number
+          season_id: string
+          tier: number
+          xp_required: number
+        }
+        Insert: {
+          id?: string
+          premium_only?: boolean
+          reward_badge?: string | null
+          reward_coins?: number
+          reward_frame_id?: string | null
+          reward_wallpaper_id?: string | null
+          reward_xp?: number
+          season_id: string
+          tier: number
+          xp_required: number
+        }
+        Update: {
+          id?: string
+          premium_only?: boolean
+          reward_badge?: string | null
+          reward_coins?: number
+          reward_frame_id?: string | null
+          reward_wallpaper_id?: string | null
+          reward_xp?: number
+          season_id?: string
+          tier?: number
+          xp_required?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gam_season_tiers_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "gam_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gam_seasons: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          ends_at: string
+          id: string
+          key: string
+          name: string
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          ends_at: string
+          id?: string
+          key: string
+          name: string
+          starts_at: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          ends_at?: string
+          id?: string
+          key?: string
+          name?: string
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gam_user_achievements: {
+        Row: {
+          achievement_id: string
+          claimed_at: string | null
+          completed_at: string | null
+          progress: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          claimed_at?: string | null
+          completed_at?: string | null
+          progress?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          claimed_at?: string | null
+          completed_at?: string | null
+          progress?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gam_user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "gam_achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gam_user_milestones: {
+        Row: {
+          completed_at: string | null
+          milestone_id: string
+          progress: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          milestone_id: string
+          progress?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          milestone_id?: string
+          progress?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gam_user_milestones_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "gam_milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gam_user_quests: {
+        Row: {
+          claimed_at: string | null
+          completed_at: string | null
+          period_key: string
+          progress: number
+          quest_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          completed_at?: string | null
+          period_key: string
+          progress?: number
+          quest_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          completed_at?: string | null
+          period_key?: string
+          progress?: number
+          quest_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gam_user_quests_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "gam_quests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gam_user_season: {
+        Row: {
+          claimed_tiers: number[]
+          premium: boolean
+          season_id: string
+          tier: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          claimed_tiers?: number[]
+          premium?: boolean
+          season_id: string
+          tier?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          claimed_tiers?: number[]
+          premium?: boolean
+          season_id?: string
+          tier?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gam_user_season_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "gam_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_invites: {
         Row: {
           created_at: string
@@ -4592,6 +5013,34 @@ export type Database = {
         Returns: undefined
       }
       feedbot_summary_run: { Args: never; Returns: undefined }
+      gam_award: {
+        Args: {
+          _badge: string
+          _coins: number
+          _reason: string
+          _reference: string
+          _user_id: string
+          _xp: number
+        }
+        Returns: undefined
+      }
+      gam_claim_season_tier: {
+        Args: { _season_id: string; _tier: number }
+        Returns: undefined
+      }
+      gam_emit: {
+        Args: {
+          _amount?: number
+          _event_type: string
+          _metadata?: Json
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      gam_period_key: {
+        Args: { _cadence: string; _now?: string }
+        Returns: string
+      }
       get_active_chat_theme: { Args: { _user: string }; Returns: string }
       get_active_feed_theme: { Args: { _user: string }; Returns: string }
       get_install_status: { Args: never; Returns: Json }
