@@ -211,11 +211,25 @@ export const earnChatMessage = createServerFn({ method: "POST" })
     return { rewarded: true, coins: cfg.coins, xp: cfg.xp };
   });
 
+/**
+ * Fetch a post's canonical owner_id from the DB. Never trust a client-supplied
+ * ownerId — otherwise anyone can arbitrarily credit XP/coins to any user by
+ * calling earn* with a fabricated (postId, ownerId) pair.
+ */
+async function fetchPostOwner(postId: string): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("posts")
+    .select("owner_id")
+    .eq("id", postId)
+    .maybeSingle();
+  return (data?.owner_id as string | null | undefined) ?? null;
+}
+
 /** Called when a user reacts to a post. Rewards both actor and post owner. */
 export const earnFeedReaction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) =>
-    z.object({ postId: z.string().uuid(), ownerId: z.string().uuid().optional() }).parse(i),
+    z.object({ postId: z.string().uuid() }).parse(i),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -228,13 +242,14 @@ export const earnFeedReaction = createServerFn({ method: "POST" })
     }
     await bumpMissionProgress(userId, "react_5");
 
-    // Owner reward (skip self-reactions and anon posts)
-    if (data.ownerId && data.ownerId !== userId) {
-      const ownerCount = await countToday(data.ownerId, "feed_reaction_owner", data.postId);
+    // Owner reward — resolve owner server-side; skip self-reactions and anon posts
+    const ownerId = await fetchPostOwner(data.postId);
+    if (ownerId && ownerId !== userId) {
+      const ownerCount = await countToday(ownerId, "feed_reaction_owner", data.postId);
       if (ownerCount < EARN.feed_reaction_owner.dailyCapPerPost) {
-        await bumpProfile(data.ownerId, EARN.feed_reaction_owner.xp, EARN.feed_reaction_owner.coins);
-        await logTx(data.ownerId, "coins", EARN.feed_reaction_owner.coins, "feed_reaction_owner", "post", data.postId);
-        await bumpMissionProgress(data.ownerId, "engage_15");
+        await bumpProfile(ownerId, EARN.feed_reaction_owner.xp, EARN.feed_reaction_owner.coins);
+        await logTx(ownerId, "coins", EARN.feed_reaction_owner.coins, "feed_reaction_owner", "post", data.postId);
+        await bumpMissionProgress(ownerId, "engage_15");
       }
     }
     return { ok: true };
@@ -244,7 +259,7 @@ export const earnFeedReaction = createServerFn({ method: "POST" })
 export const earnFeedComment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) =>
-    z.object({ postId: z.string().uuid(), ownerId: z.string().uuid().optional() }).parse(i),
+    z.object({ postId: z.string().uuid() }).parse(i),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -256,12 +271,13 @@ export const earnFeedComment = createServerFn({ method: "POST" })
     }
     await bumpMissionProgress(userId, "comment_3");
 
-    if (data.ownerId && data.ownerId !== userId) {
-      const ownerCount = await countToday(data.ownerId, "feed_comment_owner", data.postId);
+    const ownerId = await fetchPostOwner(data.postId);
+    if (ownerId && ownerId !== userId) {
+      const ownerCount = await countToday(ownerId, "feed_comment_owner", data.postId);
       if (ownerCount < EARN.feed_comment_owner.dailyCapPerPost) {
-        await bumpProfile(data.ownerId, EARN.feed_comment_owner.xp, EARN.feed_comment_owner.coins);
-        await logTx(data.ownerId, "coins", EARN.feed_comment_owner.coins, "feed_comment_owner", "post", data.postId);
-        await bumpMissionProgress(data.ownerId, "engage_15");
+        await bumpProfile(ownerId, EARN.feed_comment_owner.xp, EARN.feed_comment_owner.coins);
+        await logTx(ownerId, "coins", EARN.feed_comment_owner.coins, "feed_comment_owner", "post", data.postId);
+        await bumpMissionProgress(ownerId, "engage_15");
       }
     }
     return { ok: true };
@@ -271,15 +287,16 @@ export const earnFeedComment = createServerFn({ method: "POST" })
 export const earnFeedShare = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) =>
-    z.object({ postId: z.string().uuid(), ownerId: z.string().uuid().optional() }).parse(i),
+    z.object({ postId: z.string().uuid() }).parse(i),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    if (data.ownerId && data.ownerId !== userId) {
-      const ownerCount = await countToday(data.ownerId, "feed_share_owner", data.postId);
+    const ownerId = await fetchPostOwner(data.postId);
+    if (ownerId && ownerId !== userId) {
+      const ownerCount = await countToday(ownerId, "feed_share_owner", data.postId);
       if (ownerCount < EARN.feed_share_owner.dailyCapPerPost) {
-        await bumpProfile(data.ownerId, EARN.feed_share_owner.xp, EARN.feed_share_owner.coins);
-        await logTx(data.ownerId, "coins", EARN.feed_share_owner.coins, "feed_share_owner", "post", data.postId);
+        await bumpProfile(ownerId, EARN.feed_share_owner.xp, EARN.feed_share_owner.coins);
+        await logTx(ownerId, "coins", EARN.feed_share_owner.coins, "feed_share_owner", "post", data.postId);
       }
     }
     return { ok: true };

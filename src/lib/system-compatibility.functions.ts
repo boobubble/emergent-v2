@@ -28,6 +28,8 @@ const MIN_PG_MAJOR = 14;
 
 export const getSystemCompatibility = createServerFn({ method: "POST" }).handler(
   async (): Promise<SystemCompatibility> => {
+    const { assertInstallerAllowed } = await import("./installer-guard.server");
+    await assertInstallerAllowed();
     const checks: CompatCheck[] = [];
     let postgresVersion: string | undefined;
     let postgresMajor: number | undefined;
