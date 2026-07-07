@@ -101,11 +101,24 @@ function Reveal({ children, className = "", delay = 0 }: { children: React.React
   const [shown, setShown] = useState(false);
   useEffect(() => {
     const el = ref.current; if (!el) return;
+    // Fallback 1: if element is already within viewport at mount, reveal immediately.
+    const r = el.getBoundingClientRect();
+    if (r.top < window.innerHeight && r.bottom > 0) {
+      setShown(true);
+      return;
+    }
+    // Fallback 2: if IntersectionObserver is unavailable, reveal immediately.
+    if (typeof IntersectionObserver === "undefined") {
+      setShown(true);
+      return;
+    }
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => { if (e.isIntersecting) { setShown(true); io.disconnect(); } });
     }, { threshold: 0.12, rootMargin: "0px 0px -60px 0px" });
     io.observe(el);
-    return () => io.disconnect();
+    // Fallback 3: guarantee reveal after 1.2s in case the observer never fires.
+    const timeout = window.setTimeout(() => setShown(true), 1200);
+    return () => { io.disconnect(); window.clearTimeout(timeout); };
   }, []);
   return (
     <div
