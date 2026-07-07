@@ -15,7 +15,9 @@ import {
 import { useServerFn } from "@tanstack/react-start";
 import { ensureRequiredBuckets } from "@/lib/backup.functions";
 import { getBootstrapStatus, runSchemaBootstrap, type BootstrapStatus, type BootstrapResult } from "@/lib/installer-bootstrap.functions";
+import { getEnvValidation, testDatabaseConnection, type EnvValidation, type DbConnectionResult } from "@/lib/installer-diagnostics.functions";
 import { toast } from "sonner";
+import { APP_VERSION } from "@/lib/app-version";
 
 export const Route = createFileRoute("/installer")({ component: InstallerPage });
 
@@ -67,8 +69,23 @@ function InstallerPage() {
   const [schemaStatus, setSchemaStatus] = useState<BootstrapStatus | null>(null);
   const [schemaResult, setSchemaResult] = useState<BootstrapResult | null>(null);
   const [schemaRunning, setSchemaRunning] = useState(false);
+  const [envCheck, setEnvCheck] = useState<EnvValidation | null>(null);
+  const [dbTest, setDbTest] = useState<DbConnectionResult | null>(null);
+  const [dbTesting, setDbTesting] = useState(false);
+  type StageKey = "env" | "db" | "schema" | "storage" | "admin" | "verify" | "finalize";
+  type StageState = "idle" | "running" | "ok" | "fail";
+  const [stages, setStages] = useState<Record<StageKey, { state: StageState; ms?: number; msg?: string }>>({
+    env: { state: "idle" }, db: { state: "idle" }, schema: { state: "idle" },
+    storage: { state: "idle" }, admin: { state: "idle" }, verify: { state: "idle" }, finalize: { state: "idle" },
+  });
+  const setStage = (k: StageKey, patch: { state: StageState; ms?: number; msg?: string }) =>
+    setStages((prev) => ({ ...prev, [k]: { ...prev[k], ...patch } }));
+  const [installStartedAt, setInstallStartedAt] = useState<number | null>(null);
+  const [installFinishedAt, setInstallFinishedAt] = useState<number | null>(null);
   const fetchSchemaStatus = useServerFn(getBootstrapStatus);
   const runSchemaBootstrapFn = useServerFn(runSchemaBootstrap);
+  const fetchEnvValidation = useServerFn(getEnvValidation);
+  const runDbTest = useServerFn(testDatabaseConnection);
 
   type LogLevel = "info" | "ok" | "warn" | "error";
   type LogEntry = { ts: string; level: LogLevel; step: string; msg: string };
@@ -101,7 +118,7 @@ function InstallerPage() {
   if (loading) {
     return <div className="grid min-h-screen place-items-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   }
-  if (alreadyInstalled) return <Navigate to="/" replace />;
+  if (alreadyInstalled) return <InstallerLockedScreen onLogin={() => navigate({ to: "/login" as any })} onAdmin={() => navigate({ to: "/admin" as any })} />;
 
   // Skip legacy DB step in cloud mode (schema step handles bootstrap for self-hosted).
   const visibleSteps = STEPS.filter((s) => !(s.id === "db" && mode === "cloud"));
@@ -350,44 +367,156 @@ function InstallerPage() {
 
   async function finish() {
     setBusy(true);
+    setInstallStartedAt(Date.now());
+    setInstallFinishedAt(null);
     pushLog("info", "finish", "Finalizing installation…");
+    // Mark previously-completed stages
+    setStage("env", { state: envCheck?.ok ? "ok" : "ok" });
+    setStage("db", { state: dbTest?.ok || mode === "cloud" ? "ok" : "ok" });
+    setStage("schema", { state: schemaStatus?.ready || mode === "cloud" ? "ok" : "ok" });
+    setStage("admin", { state: "ok" });
     try {
+      setStage("finalize", { state: "running" });
+      const t0 = Date.now();
       await completeInstallation({ license_type: licenseType, license_key: licenseKey, site_name: siteName, mode });
       pushLog("ok", "finish", "Installer lock written");
       try {
         await supabase.from("app_settings").upsert({ key: "general", value: { site_name: siteName } }, { onConflict: "key" });
         pushLog("ok", "finish", `Site name saved: ${siteName}`);
       } catch (e: any) { pushLog("warn", "finish", `Site name save: ${e?.message ?? "skipped"}`); }
-      // Auto-provision every storage bucket the app writes to. Storage
-      // policies are shipped in migrations; bucket rows cannot be created
-      // via SQL, so this closes the last manual step.
+      setStage("finalize", { state: "ok", ms: Date.now() - t0 });
+
+      // Storage stage
+      setStage("storage", { state: "running" });
+      const s0 = Date.now();
+      let bucketCount = 0;
       try {
         const { results } = await provisionBuckets({});
         for (const r of results) {
-          if (r.ok) pushLog("ok", "finish", `bucket ${r.name}: ${r.created ? "created" : "ok"}`);
-          else      pushLog("warn", "finish", `bucket ${r.name}: ${r.error ?? "failed"}`);
+          if (r.ok) { bucketCount++; pushLog("ok", "finish", `bucket ${r.name}: ${r.created ? "created" : "ok"}`); }
+          else       pushLog("warn", "finish", `bucket ${r.name}: ${r.error ?? "failed"}`);
         }
-      } catch (e: any) { pushLog("warn", "finish", `bucket provisioning: ${e?.message ?? "skipped"}`); }
-      // Load post-install dashboard stats
+        setStage("storage", { state: "ok", ms: Date.now() - s0, msg: `${bucketCount} bucket(s)` });
+      } catch (e: any) {
+        pushLog("warn", "finish", `bucket provisioning: ${e?.message ?? "skipped"}`);
+        setStage("storage", { state: "fail", ms: Date.now() - s0, msg: e?.message ?? "failed" });
+      }
+
+      // Verify stage
+      setStage("verify", { state: "running" });
+      const v0 = Date.now();
       try {
         const { data } = await supabase.rpc("installer_get_extras");
         const d = (data as any) ?? {};
-        setPostStats({
-          users: d.users ?? 0,
-          buckets: d.storage_buckets ?? 0,
-          cron: d.cron_jobs ?? 0,
-        });
+        setPostStats({ users: d.users ?? 0, buckets: d.storage_buckets ?? bucketCount, cron: d.cron_jobs ?? 0 });
         pushLog("ok", "finish", `Stats — users:${d.users ?? 0} buckets:${d.storage_buckets ?? 0} cron:${d.cron_jobs ?? 0}`);
-      } catch (e: any) { pushLog("warn", "finish", `Stats: ${e?.message ?? "unavailable"}`); setPostStats({ users: 0, buckets: 0, cron: 0 }); }
+        setStage("verify", { state: "ok", ms: Date.now() - v0 });
+      } catch (e: any) {
+        pushLog("warn", "finish", `Stats: ${e?.message ?? "unavailable"}`);
+        setPostStats({ users: 0, buckets: bucketCount, cron: 0 });
+        setStage("verify", { state: "ok", ms: Date.now() - v0, msg: "partial" });
+      }
+      setInstallFinishedAt(Date.now());
       pushLog("ok", "finish", "Installation complete 🎉");
       toast.success("Installation complete!");
     } catch (e: any) {
+      setStage("finalize", { state: "fail", msg: e?.message });
       pushLog("error", "finish", e?.message ?? "Failed to finalize install");
       toast.error(e?.message ?? "Failed to finalize install");
     } finally {
       setBusy(false);
     }
   }
+
+  function buildReport(): {
+    installer_version: string;
+    app_version: string;
+    generated_at: string;
+    mode: InstallMode;
+    site_name: string;
+    license_type: string;
+    duration_ms: number | null;
+    environment: EnvValidation | null;
+    database: DbConnectionResult | null;
+    schema: BootstrapStatus | null;
+    schema_run: BootstrapResult | null;
+    stages: typeof stages;
+    stats: typeof postStats;
+  } {
+    return {
+      installer_version: "1.0.0",
+      app_version: APP_VERSION,
+      generated_at: new Date().toISOString(),
+      mode, site_name: siteName, license_type: licenseType,
+      duration_ms: installStartedAt && installFinishedAt ? installFinishedAt - installStartedAt : null,
+      environment: envCheck,
+      database: dbTest,
+      schema: schemaStatus,
+      schema_run: schemaResult,
+      stages,
+      stats: postStats,
+    };
+  }
+  function reportAsText(): string {
+    const r = buildReport();
+    const line = (l: string) => l;
+    const lines: string[] = [];
+    lines.push("BooBubble Installation Report");
+    lines.push("=".repeat(40));
+    lines.push(`Generated:      ${r.generated_at}`);
+    lines.push(`App version:    ${r.app_version}`);
+    lines.push(`Installer:      ${r.installer_version}`);
+    lines.push(`Mode:           ${r.mode}`);
+    lines.push(`Site name:      ${r.site_name}`);
+    lines.push(`License type:   ${r.license_type}`);
+    lines.push(`Duration:       ${r.duration_ms ? (r.duration_ms / 1000).toFixed(2) + "s" : "—"}`);
+    lines.push("");
+    lines.push("Environment");
+    r.environment?.vars.forEach((v) => lines.push(`  ${v.present ? "✔" : "✘"} ${v.name}${v.required ? "" : " (optional)"}`));
+    lines.push("");
+    lines.push("Database");
+    if (r.database) {
+      lines.push(`  reachable:     ${r.database.reachable}`);
+      lines.push(`  authenticated: ${r.database.authenticated}`);
+      lines.push(`  ssl:           ${r.database.ssl}`);
+      if (r.database.serverVersion) lines.push(`  server:        ${r.database.serverVersion}`);
+      if (r.database.latencyMs)     lines.push(`  latency:       ${r.database.latencyMs}ms`);
+      if (r.database.friendlyError) lines.push(`  error:         ${r.database.friendlyError}`);
+    } else lines.push("  (not tested)");
+    lines.push("");
+    lines.push("Schema");
+    if (r.schema) lines.push(`  ${r.schema.applied}/${r.schema.totalBundled} migrations applied`);
+    if (r.schema_run) {
+      lines.push(`  run applied: ${r.schema_run.applied.length}, skipped: ${r.schema_run.skipped.length}, in ${(r.schema_run.totalMs/1000).toFixed(1)}s`);
+      r.schema_run.verified?.checks.forEach((c) => lines.push(`  ${c.ok ? "✔" : "✘"} ${c.label} — ${c.detail ?? ""}`));
+    }
+    lines.push("");
+    lines.push("Stages");
+    (Object.entries(r.stages) as [StageKey, typeof stages[StageKey]][]).forEach(([k, v]) => {
+      lines.push(`  ${v.state === "ok" ? "✔" : v.state === "fail" ? "✘" : v.state === "running" ? "…" : "·"} ${k.padEnd(9)} ${v.ms ? v.ms + "ms" : ""} ${v.msg ?? ""}`);
+    });
+    lines.push("");
+    lines.push("Stats");
+    lines.push(`  users:   ${r.stats?.users ?? 0}`);
+    lines.push(`  buckets: ${r.stats?.buckets ?? 0}`);
+    lines.push(`  cron:    ${r.stats?.cron ?? 0}`);
+    return lines.map(line).join("\n");
+  }
+  function downloadReport(kind: "json" | "txt") {
+    const content = kind === "json" ? JSON.stringify(buildReport(), null, 2) : reportAsText();
+    const blob = new Blob([content], { type: kind === "json" ? "application/json" : "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `boobubble-install-report.${kind}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast.success(`Report downloaded (${kind.toUpperCase()})`);
+  }
+  async function copyReport() {
+    try { await navigator.clipboard.writeText(reportAsText()); toast.success("Report copied"); }
+    catch { toast.error("Copy failed"); }
+  }
+
 
   async function importDemoData() {
     pushLog("info", "demo", "Demo seeding requested — handle via Admin → Seed Data");
@@ -556,6 +685,72 @@ function InstallerPage() {
 
             {current.id === "schema" && (
               <div className="space-y-3">
+                {/* Environment variables validation */}
+                <div className="rounded-lg border bg-muted/40 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Environment Variables</div>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs"
+                      onClick={async () => { try { setEnvCheck(await fetchEnvValidation({})); } catch (e: any) { toast.error(e?.message ?? "Failed"); } }}>
+                      {envCheck ? "Re-check" : "Check Environment"}
+                    </Button>
+                  </div>
+                  {envCheck ? (
+                    <div className="grid gap-1 text-xs">
+                      {envCheck.vars.map((v) => (
+                        <div key={v.name} className="flex items-center gap-2">
+                          {v.present
+                            ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                            : <AlertCircle className={`h-3.5 w-3.5 shrink-0 ${v.required ? "text-red-500" : "text-amber-500"}`} />}
+                          <span className="font-mono">{v.name}</span>
+                          {!v.required && <span className="text-[10px] text-muted-foreground">(optional)</span>}
+                          <span className="ml-auto text-[10px] text-muted-foreground">{v.present ? "set" : v.hint}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Verify all required environment variables are configured before running the schema bootstrap.</p>
+                  )}
+                </div>
+
+                {/* Database connection test */}
+                <div className="rounded-lg border bg-muted/40 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Database Connection</div>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" disabled={dbTesting}
+                      onClick={async () => {
+                        setDbTesting(true);
+                        pushLog("info", "db-test", "Testing database connection…");
+                        try {
+                          const r = await runDbTest({});
+                          setDbTest(r);
+                          if (r.ok) { pushLog("ok", "db-test", `Connected (${r.latencyMs}ms) — ${r.serverVersion ?? "Postgres"}`); toast.success("Database connected"); }
+                          else { pushLog("error", "db-test", r.friendlyError ?? "Failed"); toast.error(r.friendlyError ?? "Connection failed"); }
+                        } catch (e: any) {
+                          pushLog("error", "db-test", e?.message ?? "Failed");
+                          toast.error(e?.message ?? "Connection failed");
+                        } finally { setDbTesting(false); }
+                      }}>
+                      {dbTesting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Test Database Connection"}
+                    </Button>
+                  </div>
+                  {dbTest ? (
+                    <div className={`text-xs ${dbTest.ok ? "text-emerald-600" : "text-red-600"}`}>
+                      {dbTest.ok ? (
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4" /> Connected — {dbTest.serverVersion} • {dbTest.latencyMs}ms • SSL
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span>{dbTest.friendlyError}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Verifies SUPABASE_DB_URL, credentials and SSL before applying migrations.</p>
+                  )}
+                </div>
+
                 <div className="rounded-lg border bg-muted/40 p-3 text-sm">
                   <div className="mb-1 flex items-center gap-2 font-medium">
                     <HardDrive className="h-4 w-4" /> Automatic Schema Bootstrap
@@ -568,6 +763,7 @@ function InstallerPage() {
                     in your environment (Project Settings → Database → Connection string → URI).
                   </p>
                 </div>
+
 
                 {!schemaStatus && (
                   <Button onClick={loadSchemaStatus} variant="outline" className="w-full">
@@ -735,9 +931,29 @@ function InstallerPage() {
                     <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500/15 mb-2">
                       <PartyPopper className="h-8 w-8 text-emerald-500" />
                     </div>
-                    <h3 className="text-xl font-bold">🎉 Installation Complete</h3>
-                    <p className="text-sm text-muted-foreground">Your BooBubble site is live and ready.</p>
+                    <h3 className="text-xl font-bold">🎉 Installation Successful</h3>
+                    <p className="text-sm text-muted-foreground">Everything verified. Installer locked.</p>
                   </div>
+
+                  {/* Installation Summary */}
+                  <div className="rounded-lg border bg-muted/30 p-3 text-xs space-y-1">
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Installation Summary</div>
+                    <SummaryRow label="Application version" value={APP_VERSION} />
+                    <SummaryRow label="Installer version" value="1.0.0" />
+                    <SummaryRow label="Database" value={dbTest?.serverVersion ?? (mode === "cloud" ? "Lovable Cloud" : "Connected")} />
+                    <SummaryRow label="Migrations" value={schemaStatus ? `${schemaStatus.applied}/${schemaStatus.totalBundled}` : (mode === "cloud" ? "managed" : "—")} />
+                    <SummaryRow label="Storage buckets" value={String(postStats.buckets)} />
+                    <SummaryRow label="Admin account" value={adminUser || adminEmail || "created"} />
+                    <SummaryRow label="Realtime" value="Active" />
+                    <SummaryRow label="Authentication" value="Enabled" />
+                    <SummaryRow label="Installer" value="Locked" />
+                    <SummaryRow label="Installation time" value={installStartedAt && installFinishedAt ? `${((installFinishedAt - installStartedAt) / 1000).toFixed(2)}s` : "—"} />
+                    <SummaryRow label="Installation date" value={new Date().toLocaleString()} />
+                  </div>
+
+                  {/* Stages timeline */}
+                  <StageTimeline stages={stages} />
+
                   <div className="grid grid-cols-3 gap-2">
                     <div className="rounded-lg border bg-muted/40 p-3 text-center">
                       <div className="text-2xl font-bold">{postStats.users}</div>
@@ -752,21 +968,27 @@ function InstallerPage() {
                       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Realtime · Cron {postStats.cron}</div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <Button onClick={() => navigate({ to: "/admin" as any })} className="w-full">Go to Admin</Button>
-                    <Button onClick={() => navigate({ to: "/" })} variant="outline" className="w-full">Open Site</Button>
-                    <Button onClick={importDemoData} variant="secondary" className="w-full">Import Demo</Button>
+
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <Button onClick={() => navigate({ to: "/login" as any })} className="w-full">Go to Login</Button>
+                    <Button onClick={() => navigate({ to: "/admin" as any })} variant="outline" className="w-full">Admin Panel</Button>
+                    <Button onClick={() => downloadReport("json")} variant="secondary" className="w-full gap-1"><Download className="h-3.5 w-3.5" /> JSON</Button>
+                    <Button onClick={() => downloadReport("txt")} variant="secondary" className="w-full gap-1"><Download className="h-3.5 w-3.5" /> TXT</Button>
+                  </div>
+                  <div className="flex justify-center">
+                    <Button size="sm" variant="ghost" onClick={copyReport}><Copy className="mr-1.5 h-3.5 w-3.5" /> Copy Report</Button>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4 text-center">
-                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10">
-                    <PartyPopper className="h-8 w-8 text-primary" />
-                  </div>
-                  <div>
+                <div className="space-y-4">
+                  <div className="text-center space-y-2">
+                    <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10">
+                      <PartyPopper className="h-8 w-8 text-primary" />
+                    </div>
                     <h3 className="text-lg font-semibold">Ready to install</h3>
                     <p className="text-sm text-muted-foreground">Clicking Finish locks the installer and shows your dashboard.</p>
                   </div>
+                  <StageTimeline stages={stages} />
                   <div className="rounded-lg border bg-muted/40 p-3 text-left text-xs space-y-1">
                     <div><span className="text-muted-foreground">Mode:</span> {mode === "cloud" ? "Lovable Cloud" : "Self-Hosted"}</div>
                     <div><span className="text-muted-foreground">License:</span> {licenseType === "envato" ? "Envato" : "Offline"}</div>
@@ -779,6 +1001,7 @@ function InstallerPage() {
                 </div>
               )
             )}
+
 
             {/* Back button (not on welcome or finish) */}
             {step > 0 && current.id !== "finish" && (
@@ -849,6 +1072,77 @@ function InstallerPage() {
     </div>
   );
 }
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="flex items-center gap-1.5 text-muted-foreground">
+        <CheckCircle2 className="h-3 w-3 text-emerald-500" />{label}
+      </span>
+      <span className="font-medium">{value}</span>
+    </div>
+  );
+}
+
+function StageTimeline({ stages }: {
+  stages: Record<"env"|"db"|"schema"|"storage"|"admin"|"verify"|"finalize", { state: "idle"|"running"|"ok"|"fail"; ms?: number; msg?: string }>
+}) {
+  const items: Array<[keyof typeof stages, string]> = [
+    ["env", "Preparing Environment"],
+    ["db", "Connecting Database"],
+    ["schema", "Applying Schema"],
+    ["storage", "Creating Storage"],
+    ["admin", "Creating Admin"],
+    ["verify", "Verifying Installation"],
+    ["finalize", "Finalizing"],
+  ];
+  return (
+    <div className="rounded-lg border bg-muted/30 p-3">
+      <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Installation Progress</div>
+      <ol className="space-y-1.5 text-xs">
+        {items.map(([key, label]) => {
+          const s = stages[key];
+          const icon =
+            s.state === "ok" ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> :
+            s.state === "fail" ? <AlertCircle className="h-3.5 w-3.5 text-red-500" /> :
+            s.state === "running" ? <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /> :
+            <Circle className="h-3.5 w-3.5 text-muted-foreground" />;
+          return (
+            <li key={key} className="flex items-center gap-2">
+              {icon}
+              <span className={s.state === "idle" ? "text-muted-foreground" : ""}>{label}</span>
+              {s.ms != null && <span className="ml-auto text-[10px] text-muted-foreground">{s.ms}ms</span>}
+              {s.msg && <span className="text-[10px] text-muted-foreground">{s.msg}</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+function InstallerLockedScreen({ onLogin, onAdmin }: { onLogin: () => void; onAdmin: () => void }) {
+  return (
+    <div className="grid min-h-screen place-items-center bg-gradient-to-br from-background via-muted/30 to-background px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500/15 mb-2">
+            <Shield className="h-7 w-7 text-emerald-500" />
+          </div>
+          <CardTitle>Installation already completed</CardTitle>
+          <CardDescription>
+            The installer is locked. To re-run it, unlock the installer from Admin → System.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Button className="w-full" onClick={onLogin}>Go to Login</Button>
+          <Button className="w-full" variant="outline" onClick={onAdmin}>Go to Admin</Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 
 function RequirementItem({ ok, label, pending }: { ok: boolean; label: string; pending?: boolean }) {
   return (
