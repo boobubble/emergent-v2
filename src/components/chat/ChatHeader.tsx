@@ -88,16 +88,16 @@ export function ChatHeader(_props: ChatHeaderProps = {}) {
   if (!room) return null;
 
   return (
-    <header className="chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-2 px-3 pl-14 sm:px-6">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+    <header className="chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-1.5 px-2 pl-12 sm:gap-2 sm:px-6 sm:pl-14">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         <BrandMark
           slot="chat"
           roomId={id}
           alt="Room logo"
-          className="h-9 w-9 shrink-0 rounded-xl object-contain ring-1 ring-border"
+          className="hidden h-9 w-9 shrink-0 rounded-xl object-contain ring-1 ring-border sm:block"
         />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <span className="truncate font-bold text-foreground">{channelLabel(id)}</span>
             <LoyaltyChip channelId={id} />
           </div>
