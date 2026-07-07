@@ -411,7 +411,7 @@ export const checkStorage = createServerFn({ method: "GET" }).handler(
       });
     }
     return { category: "storage", items, durationMs: Date.now() - started };
-  },
+  }),
 );
 
 // ---------- Realtime (server-side capability) ----------
