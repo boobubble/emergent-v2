@@ -398,6 +398,35 @@ export type Database = {
         }
         Relationships: []
       }
+      chatroom_password_secrets: {
+        Row: {
+          created_at: string
+          password_hash: string
+          room_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          password_hash: string
+          room_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          password_hash?: string
+          room_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatroom_password_secrets_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "chatrooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chatrooms: {
         Row: {
           age_restricted: boolean
@@ -413,7 +442,6 @@ export type Database = {
           member_count: number
           name: string
           owner_id: string
-          password: string | null
           rules: string | null
           slug: string
           theme_color: string | null
@@ -435,7 +463,6 @@ export type Database = {
           member_count?: number
           name: string
           owner_id: string
-          password?: string | null
           rules?: string | null
           slug: string
           theme_color?: string | null
@@ -457,7 +484,6 @@ export type Database = {
           member_count?: number
           name?: string
           owner_id?: string
-          password?: string | null
           rules?: string | null
           slug?: string
           theme_color?: string | null
@@ -3817,6 +3843,35 @@ export type Database = {
           },
         ]
       }
+      trio_room_password_secrets: {
+        Row: {
+          created_at: string
+          password_hash: string
+          room_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          password_hash: string
+          room_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          password_hash?: string
+          room_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trio_room_password_secrets_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "trio_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trio_rooms: {
         Row: {
           closed_at: string | null
@@ -3826,7 +3881,6 @@ export type Database = {
           id: string
           name: string
           owner_id: string
-          password: string | null
         }
         Insert: {
           closed_at?: string | null
@@ -3836,7 +3890,6 @@ export type Database = {
           id?: string
           name: string
           owner_id: string
-          password?: string | null
         }
         Update: {
           closed_at?: string | null
@@ -3846,7 +3899,6 @@ export type Database = {
           id?: string
           name?: string
           owner_id?: string
-          password?: string | null
         }
         Relationships: []
       }
@@ -4811,7 +4863,7 @@ export type Database = {
     Functions: {
       accept_trio_invite: {
         Args: { _password?: string; _room: string }
-        Returns: undefined
+        Returns: string
       }
       activate_chat_theme: { Args: { _theme_key: string }; Returns: string }
       activate_feed_theme: { Args: { _theme_key: string }; Returns: string }
@@ -4989,7 +5041,6 @@ export type Database = {
           id: string
           name: string
           owner_id: string
-          password: string | null
         }
         SetofOptions: {
           from: "*"
@@ -5172,12 +5223,12 @@ export type Database = {
         }[]
       }
       verify_chatroom_password: {
-        Args: { _password: string; _room: string }
-        Returns: boolean
+        Args: { _password?: string; _room: string }
+        Returns: string
       }
       verify_trio_room_password: {
-        Args: { _password: string; _room: string }
-        Returns: boolean
+        Args: { _password?: string; _room: string }
+        Returns: string
       }
       wallet_analytics_feature_stats: {
         Args: never
