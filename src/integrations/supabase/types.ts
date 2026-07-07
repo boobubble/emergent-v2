@@ -1177,6 +1177,50 @@ export type Database = {
         }
         Relationships: []
       }
+      dm_chat_themes: {
+        Row: {
+          blur: number
+          brightness: number
+          bubble_accent: string | null
+          channel_id: string
+          opacity: number
+          overlay: number
+          updated_at: string
+          user_id: string
+          wallpaper_key: string | null
+        }
+        Insert: {
+          blur?: number
+          brightness?: number
+          bubble_accent?: string | null
+          channel_id: string
+          opacity?: number
+          overlay?: number
+          updated_at?: string
+          user_id: string
+          wallpaper_key?: string | null
+        }
+        Update: {
+          blur?: number
+          brightness?: number
+          bubble_accent?: string | null
+          channel_id?: string
+          opacity?: number
+          overlay?: number
+          updated_at?: string
+          user_id?: string
+          wallpaper_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_chat_themes_wallpaper_key_fkey"
+            columns: ["wallpaper_key"]
+            isOneToOne: false
+            referencedRelation: "dm_wallpapers"
+            referencedColumns: ["wallpaper_key"]
+          },
+        ]
+      }
       dm_reads: {
         Row: {
           channel_id: string
@@ -1192,6 +1236,145 @@ export type Database = {
           channel_id?: string
           last_read_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      dm_shared_themes: {
+        Row: {
+          applied_by: string | null
+          blur: number
+          brightness: number
+          bubble_accent: string | null
+          channel_id: string
+          opacity: number
+          overlay: number
+          updated_at: string
+          wallpaper_key: string | null
+        }
+        Insert: {
+          applied_by?: string | null
+          blur?: number
+          brightness?: number
+          bubble_accent?: string | null
+          channel_id: string
+          opacity?: number
+          overlay?: number
+          updated_at?: string
+          wallpaper_key?: string | null
+        }
+        Update: {
+          applied_by?: string | null
+          blur?: number
+          brightness?: number
+          bubble_accent?: string | null
+          channel_id?: string
+          opacity?: number
+          overlay?: number
+          updated_at?: string
+          wallpaper_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_shared_themes_wallpaper_key_fkey"
+            columns: ["wallpaper_key"]
+            isOneToOne: false
+            referencedRelation: "dm_wallpapers"
+            referencedColumns: ["wallpaper_key"]
+          },
+        ]
+      }
+      dm_wallpaper_purchases: {
+        Row: {
+          coins_spent: number
+          created_at: string
+          dm_channel_id: string | null
+          id: string
+          purchase_type: string
+          user_id: string
+          wallpaper_key: string
+        }
+        Insert: {
+          coins_spent?: number
+          created_at?: string
+          dm_channel_id?: string | null
+          id?: string
+          purchase_type: string
+          user_id: string
+          wallpaper_key: string
+        }
+        Update: {
+          coins_spent?: number
+          created_at?: string
+          dm_channel_id?: string | null
+          id?: string
+          purchase_type?: string
+          user_id?: string
+          wallpaper_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_wallpaper_purchases_wallpaper_key_fkey"
+            columns: ["wallpaper_key"]
+            isOneToOne: false
+            referencedRelation: "dm_wallpapers"
+            referencedColumns: ["wallpaper_key"]
+          },
+        ]
+      }
+      dm_wallpapers: {
+        Row: {
+          asset_url: string | null
+          category: string
+          created_at: string
+          css_value: string | null
+          enabled: boolean
+          id: string
+          is_featured: boolean
+          is_limited: boolean
+          is_premium: boolean
+          kind: string
+          name: string
+          preview_url: string | null
+          price_coins: number
+          sort_order: number
+          updated_at: string
+          wallpaper_key: string
+        }
+        Insert: {
+          asset_url?: string | null
+          category: string
+          created_at?: string
+          css_value?: string | null
+          enabled?: boolean
+          id?: string
+          is_featured?: boolean
+          is_limited?: boolean
+          is_premium?: boolean
+          kind: string
+          name: string
+          preview_url?: string | null
+          price_coins?: number
+          sort_order?: number
+          updated_at?: string
+          wallpaper_key: string
+        }
+        Update: {
+          asset_url?: string | null
+          category?: string
+          created_at?: string
+          css_value?: string | null
+          enabled?: boolean
+          id?: string
+          is_featured?: boolean
+          is_limited?: boolean
+          is_premium?: boolean
+          kind?: string
+          name?: string
+          preview_url?: string | null
+          price_coins?: number
+          sort_order?: number
+          updated_at?: string
+          wallpaper_key?: string
         }
         Relationships: []
       }
@@ -3151,6 +3334,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_dm_wallpapers: {
+        Row: {
+          acquired_at: string
+          source: string
+          user_id: string
+          wallpaper_key: string
+        }
+        Insert: {
+          acquired_at?: string
+          source?: string
+          user_id: string
+          wallpaper_key: string
+        }
+        Update: {
+          acquired_at?: string
+          source?: string
+          user_id?: string
+          wallpaper_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_dm_wallpapers_wallpaper_key_fkey"
+            columns: ["wallpaper_key"]
+            isOneToOne: false
+            referencedRelation: "dm_wallpapers"
+            referencedColumns: ["wallpaper_key"]
+          },
+        ]
+      }
       user_feed_themes: {
         Row: {
           created_at: string
@@ -3922,6 +4134,14 @@ export type Database = {
       }
       my_coin_balance: { Args: never; Returns: number }
       my_competition_vote: { Args: { _competition: string }; Returns: string }
+      purchase_dm_wallpaper: {
+        Args: {
+          _channel_id?: string
+          _purchase_type: string
+          _wallpaper_key: string
+        }
+        Returns: Json
+      }
       record_profile_view: { Args: { _owner_id: string }; Returns: undefined }
       reset_installation: { Args: never; Returns: undefined }
       slugify: { Args: { input: string }; Returns: string }

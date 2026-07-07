@@ -96,6 +96,7 @@ import { Route as AdminFeedThemesRouteImport } from './routes/admin.feed-themes'
 import { Route as AdminExportRouteImport } from './routes/admin.export'
 import { Route as AdminEmailRouteImport } from './routes/admin.email'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
+import { Route as AdminDmWallpapersRouteImport } from './routes/admin.dm-wallpapers'
 import { Route as AdminDjRouteImport } from './routes/admin.dj'
 import { Route as AdminDemoRouteImport } from './routes/admin.demo'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
@@ -565,6 +566,11 @@ const AdminEconomyRoute = AdminEconomyRouteImport.update({
   path: '/economy',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDmWallpapersRoute = AdminDmWallpapersRouteImport.update({
+  id: '/dm-wallpapers',
+  path: '/dm-wallpapers',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDjRoute = AdminDjRouteImport.update({
   id: '/dj',
   path: '/dj',
@@ -784,6 +790,7 @@ export interface FileRoutesByFullPath {
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
+  '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
   '/admin/export': typeof AdminExportRoute
@@ -903,6 +910,7 @@ export interface FileRoutesByTo {
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
+  '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
   '/admin/export': typeof AdminExportRoute
@@ -1025,6 +1033,7 @@ export interface FileRoutesById {
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
+  '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
   '/admin/export': typeof AdminExportRoute
@@ -1148,6 +1157,7 @@ export interface FileRouteTypes {
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
+    | '/admin/dm-wallpapers'
     | '/admin/economy'
     | '/admin/email'
     | '/admin/export'
@@ -1267,6 +1277,7 @@ export interface FileRouteTypes {
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
+    | '/admin/dm-wallpapers'
     | '/admin/economy'
     | '/admin/email'
     | '/admin/export'
@@ -1388,6 +1399,7 @@ export interface FileRouteTypes {
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
+    | '/admin/dm-wallpapers'
     | '/admin/economy'
     | '/admin/email'
     | '/admin/export'
@@ -2109,6 +2121,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEconomyRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/dm-wallpapers': {
+      id: '/admin/dm-wallpapers'
+      path: '/dm-wallpapers'
+      fullPath: '/admin/dm-wallpapers'
+      preLoaderRoute: typeof AdminDmWallpapersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/dj': {
       id: '/admin/dj'
       path: '/dj'
@@ -2373,6 +2392,7 @@ interface AdminRouteChildren {
   AdminConfessionsRoute: typeof AdminConfessionsRoute
   AdminDemoRoute: typeof AdminDemoRoute
   AdminDjRoute: typeof AdminDjRoute
+  AdminDmWallpapersRoute: typeof AdminDmWallpapersRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
   AdminEmailRoute: typeof AdminEmailRoute
   AdminExportRoute: typeof AdminExportRoute
@@ -2445,6 +2465,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminConfessionsRoute: AdminConfessionsRoute,
   AdminDemoRoute: AdminDemoRoute,
   AdminDjRoute: AdminDjRoute,
+  AdminDmWallpapersRoute: AdminDmWallpapersRoute,
   AdminEconomyRoute: AdminEconomyRoute,
   AdminEmailRoute: AdminEmailRoute,
   AdminExportRoute: AdminExportRoute,

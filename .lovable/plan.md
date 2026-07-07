@@ -1,123 +1,73 @@
-# FeedBot — Community Announcement Bot
+# Premium Private Chat Personalization
 
-Add a single official system bot ("FeedBot") that automatically posts community activity updates into selected chatrooms, with admin controls, spam protection, and a nightly AI summary.
+Scope is DM-only (`channel_id` starting with `dm:`). Lobbies, trio rooms, and community chats stay untouched. Reuses the existing Coins economy — no new currency.
 
-Nothing existing changes behaviorally. Feed, Radio, XP, Streak, Competitions, Auth stay untouched — FeedBot only *reads* their events and *writes* messages.
+## What ships
 
----
+### 1. Wallpaper library (admin-managed catalog)
+- New table `dm_wallpapers` with: `key`, `name`, `category`, `kind` (`solid|gradient|image|animated`), `preview_url`, `asset_url`, `price_coins`, `is_premium`, `is_featured`, `is_limited`, `enabled`, `sort_order`, timestamps.
+- Categories: Romantic, Space, Nature, Gaming, Neon, Cute, Dark, Seasonal, Trending, Premium Exclusive.
+- Public `TO anon/authenticated` SELECT on enabled rows; admin writes only.
+- Admin CRUD screen at `/admin/wallpapers` (list, upload asset, set price, toggle featured/limited, delete).
+- Assets stored in a new public `dm-wallpapers` storage bucket.
 
-## What the user gets
+### 2. Ownership + purchases (Coins-integrated)
+- `user_dm_wallpapers (user_id, wallpaper_key, acquired_at)` — permanent unlock; one row per user per wallpaper.
+- `dm_wallpaper_purchases (id, user_id, wallpaper_key, coins_spent, purchase_type, dm_channel_id, created_at)` — history log.
+- DB function `purchase_dm_wallpaper(_key, _type, _channel)`:
+  - Validates DM channel + membership.
+  - If already owned and `_type='self'`: no-op, returns owned=true.
+  - Deducts coins from purchaser only (via `profiles.coins` + `coin_transactions`).
+  - Inserts ownership row (if new) and history row.
+  - For `_type='shared'`: writes the applied theme to the shared DM state (see #3) and inserts a system message announcing the change.
+- Insufficient coins raises a clear error surfaced to the client.
 
-1. A verified bot profile ("FeedBot") visible in Chatrooms with an official avatar, bot badge, and bio.
-2. Automatic announcements in admin-selected chatrooms when these events happen:
-   - Feed: new post, image post, poll, trending post, shared post
-   - Profile: avatar / cover / bio / username updated
-   - Competitions: started, new vote, leader changed, milestone, ending soon, winners
-   - Community: new member, level up, XP milestone, streak milestone, achievement, badge
-   - Radio: live started, RJ changed, live show, special event
-   - Chatrooms: new premium room created, room featured, event started
-3. Rich messages with avatar, preview text, image thumbnail, and clickable action buttons (View Feed, View Profile, Vote Now, Join Radio, Open Competition).
-4. Admin panel at `/admin/feedbot` to enable/disable, pick event categories, pick target chatrooms, set cooldown, and toggle "combine into digest".
-5. Spam protection: per-category cooldown + optional bundling into a single "Community Update" post.
-6. Daily AI summary post at 21:00 IST with top highlights.
+### 3. Applied themes per conversation
+- `dm_chat_themes (channel_id, user_id, wallpaper_key, opacity, blur, brightness, overlay, bubble_accent, updated_at)` — one row per (channel, user) for "My View Only".
+- `dm_shared_themes (channel_id, wallpaper_key, applied_by, opacity, blur, brightness, overlay, bubble_accent, updated_at)` — one row per channel for "Shared".
+- Resolution order in the client: shared theme (if set) → user's personal theme → default.
+- RLS: users can read/write their own personal row; shared row is readable by both DM participants, writable only via the purchase function.
+- Realtime enabled on `dm_shared_themes` so the other participant sees the change instantly.
 
----
+### 4. Premium gating
+- Reads `my_active_plan()` — buying/applying paid or animated wallpapers requires an active paid plan. Free solid/gradient wallpapers stay available to all.
 
-## Data model (single new bot, single settings row)
+### 5. Chat UI
+- New "Wallpaper" button in DM header (only visible when `channel_id` starts with `dm:`).
+- Sheet with:
+  - Category tabs + grid of wallpapers (thumbnail, name, price, Owned/Premium badges).
+  - Live preview overlay on the actual chat.
+  - Opacity / blur / brightness / dark-overlay sliders.
+  - Bottom bar: **Apply** (self), **Apply for both** (shared, shows coin cost + balance + balance-after), **Cancel**, **Reset to default**.
+  - "Insufficient coins" state with Earn Coins CTA.
+  - Custom upload tile (Premium) → uploads to `dm-wallpapers/custom/<user>/…`, validates size/dims/mime, registers as a personal wallpaper.
+- Background layer rendered behind the message list only; bubbles keep existing readability tokens; overlay/blur applied via CSS variables per DM.
+- Animated wallpapers (GIF/WebP) pause via `IntersectionObserver` + `document.visibilitychange`.
 
-New tables:
-- `feedbot_settings` (single row): `enabled`, `event_flags jsonb`, `target_chatrooms uuid[]`, `min_interval_seconds`, `digest_mode`, `daily_summary_enabled`, `daily_summary_time`.
-- `feedbot_events`: durable queue of pending announcements — `id, kind, payload jsonb, actor_id, target_url, image_url, created_at, dispatched_at, dedupe_key`.
-- `feedbot_dispatch_log`: last-post-per-(chatroom, category) timestamp for cooldown checks.
+### 6. System message on shared apply
+- On `_type='shared'`, insert a system message into the DM channel: `🎨 {applier} applied the "{name}" conversation theme.` Uses existing message pipeline; no schema changes.
 
-The FeedBot user itself is one seeded row in `profiles` with `is_bot=true`, `is_verified=true`, fixed `id` (constant UUID). Existing `messages` table already supports `sender_id` + jsonb metadata — reused as-is.
+## Explicit non-goals (to keep scope tight this pass)
+- Lottie playback — deferred; ship image + GIF/WebP only.
+- "Buy Coins" storefront — button links to existing coins earn page; no new payment flow.
+- Per-message emoji reaction recolor — bubble/accent color changes only; reaction colors stay default.
 
-Add columns to `profiles` if missing: `is_bot boolean default false`, `is_verified boolean default false`.
+## Technical notes
+- All Supabase writes for purchases go through the `SECURITY DEFINER` function so RLS stays strict and coin deductions are atomic.
+- GRANT statements included in the same migration as every new table (per `public-schema-grants` rule).
+- Two migrations: (a) tables + RLS + grants + function, (b) `ALTER PUBLICATION supabase_realtime ADD TABLE dm_shared_themes;`.
+- Storage bucket created via `supabase--storage_create_bucket` tool.
+- Seed 12–15 starter wallpapers (solids, gradients, a few licensed-free images) in the same migration so the library isn't empty at launch.
 
-Add column to `messages`: `bot_payload jsonb` (buttons, preview card). Rendered by a new `<BotMessageCard>` chat bubble.
+## Files touched (approximate)
+- `supabase/migrations/*_dm_wallpapers.sql` (new)
+- `src/lib/dm-wallpapers.ts` — types + fetch/purchase helpers
+- `src/lib/use-dm-theme.ts` — resolves active theme per channel, subscribes to shared changes
+- `src/components/chat/DMWallpaperSheet.tsx` — picker + preview + purchase flow
+- `src/components/chat/DMChatBackground.tsx` — background layer
+- `src/components/chat/ChatHeader.tsx` — add Wallpaper button (DM-only)
+- `src/components/chat/ChatApp.tsx` — mount background layer inside DM channels only
+- `src/routes/admin/wallpapers.tsx` — admin catalog CRUD
+- `src/styles.css` — CSS vars for wallpaper overlay/blur/brightness/accent
 
----
-
-## Event sources → queue
-
-Each event type is captured via a Postgres trigger that inserts into `feedbot_events` with a `dedupe_key`:
-
-| Event | Source table | Trigger |
-|---|---|---|
-| new_post, image_post, poll | `posts` | AFTER INSERT |
-| trending_post | scheduled scan | cron |
-| profile_avatar / cover / bio | `profiles` | AFTER UPDATE (column-diff) |
-| competition_started / ended / winner | `competitions` | AFTER UPDATE of status |
-| new_vote / leader_changed | `competition_votes` | AFTER INSERT (compute rank delta) |
-| level_up / xp_milestone / streak / achievement | existing XP/streak functions | append INSERT into queue |
-| radio_live | `radio_widget_state` | AFTER UPDATE of is_live |
-| new_member | `profiles` | AFTER INSERT |
-| chatroom_created (premium) / featured | `chatrooms` | AFTER INSERT/UPDATE |
-
-Triggers only enqueue — they never post directly, so failures never block user actions.
-
----
-
-## Dispatcher
-
-A pg_cron job every minute calls a public server route `/api/public/hooks/feedbot-dispatch` that:
-1. Loads `feedbot_settings`; exits if disabled.
-2. Pulls undispatched `feedbot_events`.
-3. For each event: check category flag, check per-(chatroom, category) cooldown, either post immediately or accumulate into a digest bucket.
-4. Insert one row into `messages` per target chatroom with `sender_id = feedbot`, `bot_payload = { kind, preview, image_url, buttons: [...] }`.
-5. Mark events dispatched.
-
-A second daily job at 21:00 IST calls `/api/public/hooks/feedbot-summary` which uses Lovable AI (`google/gemini-3-flash-preview`) to produce the highlight text from the last 24h of activity counts, then posts one digest message.
-
-Both routes verify a shared secret header.
-
----
-
-## UI changes
-
-- **Chatroom message renderer**: new `BotMessageCard` component. When `sender.is_bot && message.bot_payload`, render preview card + action buttons instead of plain text. Falls back to plain text otherwise. Existing message flow untouched for regular users.
-- **Profile page**: show verified bot badge next to FeedBot's name; hide send-DM and add-friend buttons for bot accounts.
-- **New admin page** `/admin/feedbot`:
-  - Master enable toggle
-  - Grid of event category toggles
-  - Multi-select for target chatrooms
-  - Cooldown slider (30s – 1h)
-  - Digest mode toggle
-  - Daily AI summary toggle + time picker
-  - "Send test announcement" button
-- Add link in `AdminNav.ts` under Community.
-
----
-
-## Files to create
-
-- `supabase/migrations/<ts>_feedbot.sql` — profile flags, tables, triggers, RLS, GRANTs, seed FeedBot profile, seed settings row, enable pg_cron jobs.
-- `src/routes/api/public/hooks/feedbot-dispatch.ts` — queue drainer.
-- `src/routes/api/public/hooks/feedbot-summary.ts` — nightly AI summary.
-- `src/lib/feedbot.functions.ts` — admin CRUD, test-post, fetch settings.
-- `src/lib/feedbot-format.ts` — payload builders per event kind.
-- `src/routes/admin.feedbot.tsx` — admin panel.
-- `src/components/chat/BotMessageCard.tsx` — rich bot bubble with buttons.
-
-## Files to edit
-
-- Chatroom message list component — branch on `sender.is_bot` to render `BotMessageCard`.
-- `src/components/admin/AdminNav.ts` — add FeedBot link.
-- `AGENT`/profile card components — show verified bot badge when `profile.is_bot`.
-
-## Out of scope
-
-- No changes to Auth, Feed logic, Competitions logic, XP/Streak, Radio, Notifications.
-- No new payment surface.
-- Bot cannot receive DMs or friend requests (blocked at UI + RLS).
-
----
-
-## Technical details
-
-- Bot user id is a fixed UUID stored as a constant `FEEDBOT_ID` in `src/lib/feedbot-format.ts` and inserted via migration.
-- All triggers use `SECURITY DEFINER` and only INSERT into `feedbot_events` — no cross-table reads that could break RLS.
-- Dispatcher runs as `service_role` inside the server route (verified secret), so it can post into any chatroom.
-- Cooldown key = `(chatroom_id, category)`; digest mode groups events per chatroom into a single "📢 Community Update" message when >1 event fires inside the cooldown window.
-- AI summary uses Lovable AI Gateway; no user secret required.
-- All new tables get RLS + GRANTs following project rules; `feedbot_events` and `feedbot_dispatch_log` are service_role-only, `feedbot_settings` is admin read/write via `has_role('admin')`.
+Approve and I'll build it end-to-end, or tell me which parts to trim/expand (e.g. skip admin UI, skip custom upload, ship free-only first).

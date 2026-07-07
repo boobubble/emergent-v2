@@ -10,6 +10,10 @@ import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
+import { DMChatBackground } from "@/components/chat/DMChatBackground";
+import { useDmTheme } from "@/lib/use-dm-theme";
+import { supabase } from "@/integrations/supabase/client";
+
 
 import { useBotEventsNotifier } from "@/lib/use-bot-events-notifier";
 import { MembersPanel } from "@/components/chat/MembersPanel";
@@ -206,12 +210,26 @@ export function ChatApp() {
   const { state, isDM } = chat;
   const { theme: chatTheme, refresh: refreshChatTheme } = useActiveChatTheme();
   const [themeStoreOpen, setThemeStoreOpen] = useState(false);
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).auth.getUser().then((r: { data: { user: { id: string } | null } }) => setAuthUserId(r?.data?.user?.id ?? null));
+  }, []);
+  const activeIsDM = isDM(state.activeChannel);
+  const dmTheme = useDmTheme(activeIsDM ? state.activeChannel : null, authUserId);
+  const [chatVisible, setChatVisible] = useState(true);
+  useEffect(() => {
+    const onVis = () => setChatVisible(document.visibilityState === "visible");
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
 
   useEffect(() => {
     const open = () => setThemeStoreOpen(true);
     window.addEventListener("palrgo:open-chat-theme-store", open);
     return () => window.removeEventListener("palrgo:open-chat-theme-store", open);
   }, []);
+
 
   return (
     <>
@@ -249,10 +267,20 @@ export function ChatApp() {
 
           <ChatHeader onOpenHub={() => setHubOpen(true)} hubOpen={hubOpen} />
           <div className="relative flex min-h-0 flex-1 flex-col">
-            
+            {activeIsDM && (
+              <DMChatBackground
+                wallpaper={dmTheme.wallpaper}
+                opacity={dmTheme.opacity}
+                blur={dmTheme.blur}
+                brightness={dmTheme.brightness}
+                overlay={dmTheme.overlay}
+                paused={!chatVisible}
+              />
+            )}
             <MessageList channelId={state.activeChannel} />
             <PresenceFeed channelId={state.activeChannel} />
           </div>
+
           <PollDiscoveryWidget />
 
           {/* FeedBot smart reminder chip (dismissible, one-per-session) */}

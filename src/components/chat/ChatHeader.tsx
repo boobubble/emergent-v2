@@ -1,10 +1,13 @@
-import { MessageCircle, X, Bot, BotOff, Users, Palette, Minus } from "lucide-react";
+import { useState } from "react";
+import { MessageCircle, X, Bot, BotOff, Users, Palette, Minus, Sparkles } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
 import { LoyaltyChip } from "./LoyaltyChip";
 import { BrandMark } from "@/components/BrandMark";
 import { CommunityEventsTicker } from "./CommunityEventsTicker";
+import { DMWallpaperSheet } from "./DMWallpaperSheet";
+
 
 interface ChatHeaderProps {
   onOpenHub?: () => void;
@@ -14,18 +17,22 @@ interface ChatHeaderProps {
 export function ChatHeader(_props: ChatHeaderProps = {}) {
   const { state, isDM, dmUser, channelLabel, closeDM, setActive } = useChat();
   const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
+  const [wallpaperOpen, setWallpaperOpen] = useState(false);
   const id = state.activeChannel;
 
   if (isDM(id)) {
     const u = dmUser(id);
     if (!u) return null;
+
     const ONLINE_WINDOW_MS = 5 * 60 * 1000;
     const isOnline = u.isBot
       ? u.status !== "offline"
       : u.status === "online" && (!u.lastSeen || Date.now() - u.lastSeen <= ONLINE_WINDOW_MS);
     const statusLabel = isOnline ? "online" : "offline";
     return (
+      <>
       <header className="chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-3 px-6 pl-14">
+
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar user={u} size={36} />
           <div className="min-w-0 leading-tight">
@@ -41,6 +48,15 @@ export function ChatHeader(_props: ChatHeaderProps = {}) {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setWallpaperOpen(true)}
+            aria-label="Personalize this chat"
+            title="Personalize this chat"
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+          >
+            <Sparkles className="h-4 w-4" />
+          </button>
           <button
             onClick={() => {
               window.dispatchEvent(new CustomEvent("palrgo:minimizeMobileDM", { detail: { peerId: u.id } }));
@@ -62,7 +78,10 @@ export function ChatHeader(_props: ChatHeaderProps = {}) {
           </button>
         </div>
       </header>
+      <DMWallpaperSheet open={wallpaperOpen} onOpenChange={setWallpaperOpen} channelId={id} />
+      </>
     );
+
   }
 
   const room = state.rooms[id];
