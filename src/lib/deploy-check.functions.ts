@@ -42,6 +42,56 @@ export type DeploymentInfo = {
 const DEFAULT_TIMEOUT = 6000;
 const STORAGE_TIMEOUT = 12000;
 
+// ---------- In-memory TTL cache ----------
+// Server functions run on stateless workers, but within a warm instance this
+// prevents repeated retries (and parallel tab loads) from hammering Supabase
+// and storage APIs. Each category has its own TTL tuned to its cost.
+type CacheEntry = { at: number; value: CategoryResult };
+const _cache = new Map<CheckCategory, CacheEntry>();
+const _inflight = new Map<CheckCategory, Promise<CategoryResult>>();
+const CACHE_TTL: Record<CheckCategory, number> = {
+  runtime: 300_000,   // 5 min — static
+  env: 300_000,       // 5 min — static per deploy
+  database: 60_000,   // 1 min
+  storage: 45_000,    // 45s — heaviest (upload/download)
+  auth: 60_000,
+  realtime: 300_000,
+  ai: 120_000,
+  email: 120_000,
+  backup: 60_000,
+};
+
+async function cached(
+  category: CheckCategory,
+  compute: () => Promise<CategoryResult>,
+): Promise<CategoryResult> {
+  const hit = _cache.get(category);
+  if (hit && Date.now() - hit.at < CACHE_TTL[category]) {
+    return { ...hit.value, durationMs: 0 };
+  }
+  const pending = _inflight.get(category);
+  if (pending) return pending;
+  const p = (async () => {
+    try {
+      const value = await compute();
+      _cache.set(category, { at: Date.now(), value });
+      return value;
+    } finally {
+      _inflight.delete(category);
+    }
+  })();
+  _inflight.set(category, p);
+  return p;
+}
+
+export const clearDeployCheckCache = createServerFn({ method: "POST" })
+  .inputValidator((d: { category?: CheckCategory } | undefined) => d ?? {})
+  .handler(async ({ data }) => {
+    if (data.category) _cache.delete(data.category);
+    else _cache.clear();
+    return { ok: true };
+  });
+
 const REQUIRED_BUCKETS = ["avatars", "feed-media", "brand-assets", "stickers"];
 const REQUIRED_TABLES = [
   "profiles", "user_roles", "app_settings", "chatrooms", "messages",
