@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2 } from "lucide-react";
+import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2, Gamepad2 } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useMyRoles } from "@/lib/use-my-role";
