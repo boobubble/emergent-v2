@@ -49,8 +49,9 @@ export function ChatApp() {
   const { raw } = useAppSettings();
   useEffect(() => {
     if (!chat) return;
-    const list = (raw.chat_channels as { id: string; name: string; topic?: string }[] | undefined) ?? [];
-    if (Array.isArray(list)) chat.syncAdminChannels(list);
+    const cfg = raw.chat_channels as { list?: { id: string; name: string; topic?: string }[] } | undefined;
+    const list = Array.isArray(cfg?.list) ? cfg!.list : [];
+    chat.syncAdminChannels(list);
   }, [raw.chat_channels, chat]);
 
   useEffect(() => {
