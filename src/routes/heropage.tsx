@@ -792,7 +792,7 @@ function HeroHomepage() {
   };
 
   return (
-    <div data-hero-theme={dark ? "dark" : "light"} className={`min-h-screen ${bg} relative overflow-x-hidden`}>
+    <div data-hero-theme={dark ? "dark" : "light"} className={`min-h-screen ${bg} relative overflow-x-clip`}>
       {/* Animations + scroll behavior */}
       <style>{`
         html { scroll-behavior: smooth; }
