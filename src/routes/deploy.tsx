@@ -96,10 +96,14 @@ function DeployWizard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const infoFn = useServerFn(getDeploymentInfo);
+  const clearCacheFn = useServerFn(clearDeployCheckCache);
 
-  async function runOne(cat: CheckCategory) {
+  async function runOne(cat: CheckCategory, opts: { force?: boolean } = {}) {
     setRunningCats((s) => new Set(s).add(cat));
     try {
+      if (opts.force) {
+        await clearCacheFn({ data: { category: cat } }).catch(() => {});
+      }
       const r = await runners[cat]();
       setResults((prev) => ({ ...prev, [cat]: r }));
     } catch (e: any) {
@@ -120,10 +124,11 @@ function DeployWizard() {
     }
   }
 
-  async function runAll() {
+  async function runAll(opts: { force?: boolean } = {}) {
     setBusy(true);
     setResults({});
     try {
+      if (opts.force) await clearCacheFn({ data: {} }).catch(() => {});
       await Promise.all([
         ...CATEGORIES.map((c) => runOne(c.key)),
         infoFn().then(setInfo).catch(() => {}),
