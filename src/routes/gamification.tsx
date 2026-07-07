@@ -47,16 +47,20 @@ function Page() {
   const fn = useServerFn(getMyGamification);
   const claim = useServerFn(claimSeasonTier);
   const qc = useQueryClient();
-  const { data } = useQuery({ queryKey: ["my-gamification"], queryFn: () => fn({}) });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = useQuery<any>({ queryKey: ["my-gamification"], queryFn: () => fn({}) });
   const claimMut = useMutation({
     mutationFn: (v: { seasonId: string; tier: number }) => claim({ data: v }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-gamification"] }),
   });
   if (!data) return <div className="p-8 text-sm text-muted-foreground">Loading…</div>;
 
-  const dailies = data.quests.filter((q) => q.cadence === "daily");
-  const weeklies = data.quests.filter((q) => q.cadence === "weekly");
-  const monthlies = data.quests.filter((q) => q.cadence === "monthly");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dailies = data.quests.filter((q: any) => q.cadence === "daily");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const weeklies = data.quests.filter((q: any) => q.cadence === "weekly");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const monthlies = data.quests.filter((q: any) => q.cadence === "monthly");
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 p-6">
