@@ -65,7 +65,20 @@ async function runPool<T, R>(
   return results;
 }
 
+function QuickBackupChecklist({ items }: { items: string[] }) {
+  return (
+    <ul className="grid gap-1.5 text-xs text-muted-foreground sm:grid-cols-2">
+      {items.map((it) => (
+        <li key={it} className="flex items-center gap-1.5">
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> {it}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function BackupPage() {
+
   const [busy, setBusy] = useState<Job>(null);
   const [progress, setProgress] = useState<{ label: string; done: number; total: number } | null>(null);
   const [lastFile, setLastFile] = useState<string | null>(null);
