@@ -84,9 +84,8 @@ function ArrowFlowAdmin() {
     try {
       const size = DEFAULT_GRID[newDiff];
       const { layout, solution } = generatePuzzle(size, newDiff);
-      // Sanity — the un-scrambled layout should be solved once we reset to solution.
-      const check = applyMoves(layout, []); // just to ensure typecheck path
-      void check;
+      void solution;
+
       const parMoves = layout.pieces.reduce((n, p) => n + (p.shape !== "none" && !p.locked ? 1 : 0), 0);
       const parTime = { easy: 30_000, normal: 60_000, hard: 90_000, expert: 150_000, master: 240_000 }[newDiff];
       const coinReward = { easy: 10, normal: 20, hard: 40, expert: 80, master: 160 }[newDiff];
