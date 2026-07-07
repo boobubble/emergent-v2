@@ -931,9 +931,29 @@ function InstallerPage() {
                     <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500/15 mb-2">
                       <PartyPopper className="h-8 w-8 text-emerald-500" />
                     </div>
-                    <h3 className="text-xl font-bold">🎉 Installation Complete</h3>
-                    <p className="text-sm text-muted-foreground">Your BooBubble site is live and ready.</p>
+                    <h3 className="text-xl font-bold">🎉 Installation Successful</h3>
+                    <p className="text-sm text-muted-foreground">Everything verified. Installer locked.</p>
                   </div>
+
+                  {/* Installation Summary */}
+                  <div className="rounded-lg border bg-muted/30 p-3 text-xs space-y-1">
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Installation Summary</div>
+                    <SummaryRow label="Application version" value={APP_VERSION} />
+                    <SummaryRow label="Installer version" value="1.0.0" />
+                    <SummaryRow label="Database" value={dbTest?.serverVersion ?? (mode === "cloud" ? "Lovable Cloud" : "Connected")} />
+                    <SummaryRow label="Migrations" value={schemaStatus ? `${schemaStatus.applied}/${schemaStatus.totalBundled}` : (mode === "cloud" ? "managed" : "—")} />
+                    <SummaryRow label="Storage buckets" value={String(postStats.buckets)} />
+                    <SummaryRow label="Admin account" value={adminUser || adminEmail || "created"} />
+                    <SummaryRow label="Realtime" value="Active" />
+                    <SummaryRow label="Authentication" value="Enabled" />
+                    <SummaryRow label="Installer" value="Locked" />
+                    <SummaryRow label="Installation time" value={installStartedAt && installFinishedAt ? `${((installFinishedAt - installStartedAt) / 1000).toFixed(2)}s` : "—"} />
+                    <SummaryRow label="Installation date" value={new Date().toLocaleString()} />
+                  </div>
+
+                  {/* Stages timeline */}
+                  <StageTimeline stages={stages} />
+
                   <div className="grid grid-cols-3 gap-2">
                     <div className="rounded-lg border bg-muted/40 p-3 text-center">
                       <div className="text-2xl font-bold">{postStats.users}</div>
@@ -948,13 +968,41 @@ function InstallerPage() {
                       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Realtime · Cron {postStats.cron}</div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <Button onClick={() => navigate({ to: "/admin" as any })} className="w-full">Go to Admin</Button>
-                    <Button onClick={() => navigate({ to: "/" })} variant="outline" className="w-full">Open Site</Button>
-                    <Button onClick={importDemoData} variant="secondary" className="w-full">Import Demo</Button>
+
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <Button onClick={() => navigate({ to: "/login" as any })} className="w-full">Go to Login</Button>
+                    <Button onClick={() => navigate({ to: "/admin" as any })} variant="outline" className="w-full">Admin Panel</Button>
+                    <Button onClick={() => downloadReport("json")} variant="secondary" className="w-full gap-1"><Download className="h-3.5 w-3.5" /> JSON</Button>
+                    <Button onClick={() => downloadReport("txt")} variant="secondary" className="w-full gap-1"><Download className="h-3.5 w-3.5" /> TXT</Button>
+                  </div>
+                  <div className="flex justify-center">
+                    <Button size="sm" variant="ghost" onClick={copyReport}><Copy className="mr-1.5 h-3.5 w-3.5" /> Copy Report</Button>
                   </div>
                 </div>
               ) : (
+                <div className="space-y-4">
+                  <div className="text-center space-y-2">
+                    <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10">
+                      <PartyPopper className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold">Ready to install</h3>
+                    <p className="text-sm text-muted-foreground">Clicking Finish locks the installer and shows your dashboard.</p>
+                  </div>
+                  <StageTimeline stages={stages} />
+                </div>
+              )
+            )}
+            {current.id === "finish" && !postStats && (
+              <>
+                <div className="rounded-lg border bg-muted/40 p-3 text-left text-xs space-y-1">
+                  <div><span className="text-muted-foreground">Mode:</span> {mode === "cloud" ? "Lovable Cloud" : "Self-Hosted"}</div>
+                  <div><span className="text-muted-foreground">License:</span> {licenseType === "envato" ? "Envato" : "Offline"}</div>
+                  <div><span className="text-muted-foreground">Admin:</span> {adminUser || "—"}</div>
+                  <div><span className="text-muted-foreground">Site:</span> {siteName}</div>
+                </div>
+              </>
+            )}
+
                 <div className="space-y-4 text-center">
                   <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10">
                     <PartyPopper className="h-8 w-8 text-primary" />
