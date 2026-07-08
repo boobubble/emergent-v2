@@ -76,11 +76,11 @@ export function Board({ level, positions, disabled, onMove, hintSolution }: Prop
     <div ref={wrapRef} className="absolute inset-0 h-full w-full overflow-hidden">
       <div className="absolute" style={{ left: offX, top: offY, width: boardW, height: boardH }}>
           {/* grid + solution ghosts */}
-          <svg width={boardW} height={boardH} className="absolute inset-0 pointer-events-none">
+            <svg width={boardW} height={boardH} className="absolute inset-0 pointer-events-none">
             <defs>
               <linearGradient id="pe-bg" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--primary) / 0.06)" />
-                <stop offset="100%" stopColor="hsl(var(--primary) / 0.02)" />
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.08} />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.025} />
               </linearGradient>
             </defs>
             <rect x={0} y={0} width={boardW} height={boardH} rx={cam.cell * 0.15} fill="url(#pe-bg)" />
@@ -90,8 +90,9 @@ export function Board({ level, positions, disabled, onMove, hintSolution }: Prop
                   x={c * cam.cell + 4} y={r * cam.cell + 4}
                   width={cam.cell - 8} height={cam.cell - 8}
                   rx={cam.cell * 0.12}
-                  fill="hsl(var(--muted) / 0.4)"
-                  stroke="hsl(var(--border))"
+                  fill="var(--muted)"
+                  fillOpacity={0.4}
+                  stroke="var(--border)"
                   strokeWidth={1}
                 />
               ))
@@ -104,8 +105,10 @@ export function Board({ level, positions, disabled, onMove, hintSolution }: Prop
                   y={(s.r - cam.originR) * cam.cell + 4}
                   width={cam.cell - 8} height={cam.cell - 8}
                   rx={cam.cell * 0.12}
-                  fill={highlighted ? "hsl(var(--primary) / 0.15)" : "none"}
-                  stroke={highlighted ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.35)"}
+                  fill={highlighted ? "var(--primary)" : "none"}
+                  fillOpacity={highlighted ? 0.15 : undefined}
+                  stroke="var(--primary)"
+                  strokeOpacity={highlighted ? 1 : 0.35}
                   strokeDasharray={highlighted ? undefined : "4 4"}
                   strokeWidth={highlighted ? 2 : 1.5}
                 />
@@ -168,14 +171,14 @@ function DraggablePiece({
         className="flex h-full w-full items-center justify-center rounded-[14%] shadow-lg transition-colors"
         style={{
           background: solved
-            ? "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.75) 100%)"
-            : "linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%)",
-          border: `1.5px solid hsl(var(--${solved ? "primary" : "border"}))`,
-          boxShadow: dragging ? "0 12px 32px -8px hsl(var(--primary) / 0.4)" : undefined,
+            ? "linear-gradient(135deg, var(--primary) 0%, color-mix(in oklab, var(--primary) 76%, var(--background)) 100%)"
+            : "linear-gradient(135deg, var(--card) 0%, var(--muted) 100%)",
+          border: `1.5px solid var(--${solved ? "primary" : "border"})`,
+          boxShadow: dragging ? "0 12px 32px -8px color-mix(in oklab, var(--primary) 40%, transparent)" : undefined,
         }}
       >
         <svg viewBox="0 0 26 26" width={size * 0.55} height={size * 0.55}>
-          <path d={arrowPath[dir]} fill={solved ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))"} />
+          <path d={arrowPath[dir]} fill={solved ? "var(--primary-foreground)" : "var(--foreground)"} />
         </svg>
       </div>
     </motion.div>
