@@ -207,7 +207,7 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
           <Board
             level={level}
             positions={ghost && ghostPlaying ? ghost.positions : state.positions}
-            disabled={state.status !== "playing" || ghostPlaying}
+            disabled={state.status === "won" || ghostPlaying}
             onMove={tryPlace}
             hintSolution={hintSolution ?? undefined}
           />
