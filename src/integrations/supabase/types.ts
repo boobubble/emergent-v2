@@ -5523,6 +5523,7 @@ export type Database = {
           created_at: string
           moves: number
           rank: number
+          score_id: string
           stars: number
           time_ms: number
           user_id: string
