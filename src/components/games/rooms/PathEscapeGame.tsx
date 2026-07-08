@@ -141,12 +141,23 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
     if (!level) return;
     // Find any piece whose path is currently clear — that's the next legal move.
     const next = level.layout.pieces.find(p => !state.removed.has(p.id) && canExit(level, p.id, state.removed));
-    if (!next) { toast.info("No move currently available"); return; }
+    if (!next) {
+      toast.info("No moves left — restarting the puzzle");
+      restart();
+      return;
+    }
     setHintPieceId(next.id);
     setHintsUsed(n => n + 1);
     toast.success("Hint — highlighted piece can exit now");
     window.setTimeout(() => setHintPieceId(prev => prev === next.id ? null : prev), 2500);
-  }, [level, state.removed]);
+  }, [level, state.removed, restart]);
+
+  // Auto-recover from deadlocks: if the player paints themselves into a corner, offer a restart.
+  useEffect(() => {
+    if (state.status !== "stuck") return;
+    toast.info("Stuck! No arrow can exit — puzzle restarted.");
+    restart();
+  }, [state.status, restart]);
 
   const goNext = useCallback(async () => {
     if (!mode) return;
