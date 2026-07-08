@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Settings, Palette, LayoutGrid, Puzzle, Shield, ShieldAlert,
   Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3, Bot, Users2,
-  FileText, MessageSquare, Newspaper, Zap, Flag,
+  FileText, MessageSquare, Newspaper, Zap, Flag, Compass,
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
   Rocket, Flame, Radio, Trophy, Youtube, Disc3, UserCircle2, MessageSquareHeart, Vote,
   Bug, Home, Wand2, Database, ScrollText, History, Bell, MousePointerClick, Mail,
