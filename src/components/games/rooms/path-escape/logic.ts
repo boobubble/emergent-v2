@@ -1,8 +1,9 @@
-// Path Escape — pure grid/arrow math. No React, no DOM.
+// Arrow Escape — tap an arrow, it flies off the board in the direction of its
+// tip when the whole path is clear. Blocked by walls, other arrows, and the
+// board edges (which the arrow only crosses to exit).
 export type Dir = "U" | "D" | "L" | "R";
-export interface Cell { r: number; c: number; dir: Dir }
-export interface PieceDef { id: string; cells: Cell[]; startR: number; startC: number }
-export interface SolutionPiece { id: string; r: number; c: number }
+export interface Cell { r: number; c: number }
+export interface PieceDef { id: string; r: number; c: number; dir: Dir }
 export interface Level {
   id: string;
   number: number;
@@ -10,46 +11,50 @@ export interface Level {
   difficulty: "easy" | "normal" | "hard" | "expert" | "master" | "nightmare";
   grid_w: number;
   grid_h: number;
-  layout: { pieces: PieceDef[] };
-  solution: { pieces: SolutionPiece[] };
+  layout: { pieces: PieceDef[]; walls?: Cell[] };
+  // Kept for schema compat with old rows; unused by new mechanic.
+  solution?: { pieces: Array<{ id: string; r: number; c: number }> };
   par_moves: number;
   par_time: number;
   coin_reward: number;
   xp_reward: number;
 }
-export interface PiecePos { r: number; c: number }
 
-export const absoluteCells = (p: PieceDef, pos: PiecePos): Cell[] =>
-  p.cells.map(c => ({ r: pos.r + c.r, c: pos.c + c.c, dir: c.dir }));
+export const DELTA: Record<Dir, { dr: number; dc: number }> = {
+  U: { dr: -1, dc: 0 },
+  D: { dr: 1, dc: 0 },
+  L: { dr: 0, dc: -1 },
+  R: { dr: 0, dc: 1 },
+};
 
-export const inBounds = (p: PieceDef, pos: PiecePos, gw: number, gh: number) =>
-  absoluteCells(p, pos).every(c => c.r >= 0 && c.c >= 0 && c.r < gh && c.c < gw);
+const keyOf = (r: number, c: number) => `${r},${c}`;
 
-export function collides(p: PieceDef, pos: PiecePos, occ: Set<string>): boolean {
-  return absoluteCells(p, pos).some(c => occ.has(`${c.r},${c.c}`));
+export function isValidLevel(level: Level | null | undefined): level is Level {
+  const pieces = level?.layout?.pieces ?? [];
+  if (!pieces.length) return false;
+  return pieces.every(p => typeof p.r === "number" && typeof p.c === "number" && !!p.dir);
 }
-export const keyOf = (r: number, c: number) => `${r},${c}`;
 
-export function occupancy(pieces: PieceDef[], positions: Record<string, PiecePos>, except?: string): Set<string> {
-  const s = new Set<string>();
-  for (const p of pieces) {
-    if (p.id === except) continue;
-    const pos = positions[p.id]; if (!pos) continue;
-    for (const c of absoluteCells(p, pos)) s.add(keyOf(c.r, c.c));
+/** true when tapping `pieceId` would clear a path to the edge (removing it). */
+export function canExit(level: Level, pieceId: string, removed: Set<string>): boolean {
+  const piece = level.layout.pieces.find(p => p.id === pieceId);
+  if (!piece || removed.has(pieceId)) return false;
+  const walls = new Set((level.layout.walls ?? []).map(w => keyOf(w.r, w.c)));
+  const blockers = new Set(
+    level.layout.pieces
+      .filter(p => p.id !== pieceId && !removed.has(p.id))
+      .map(p => keyOf(p.r, p.c)),
+  );
+  const { dr, dc } = DELTA[piece.dir];
+  let r = piece.r + dr, c = piece.c + dc;
+  while (r >= 0 && c >= 0 && r < level.grid_h && c < level.grid_w) {
+    const k = keyOf(r, c);
+    if (walls.has(k) || blockers.has(k)) return false;
+    r += dr; c += dc;
   }
-  return s;
+  return true;
 }
 
-export function isSolved(level: Level, positions: Record<string, PiecePos>): boolean {
-  return level.solution.pieces.every(s => {
-    const p = positions[s.id];
-    return p && p.r === s.r && p.c === s.c;
-  });
-}
-
-export function correctCount(level: Level, positions: Record<string, PiecePos>): number {
-  return level.solution.pieces.reduce((n, s) => {
-    const p = positions[s.id];
-    return p && p.r === s.r && p.c === s.c ? n + 1 : n;
-  }, 0);
+export function isCleared(level: Level, removed: Set<string>): boolean {
+  return level.layout.pieces.every(p => removed.has(p.id));
 }
