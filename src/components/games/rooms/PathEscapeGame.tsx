@@ -245,22 +245,6 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
           </div>
         </div>
       )}
-        <div className="w-16" />
-      </div>
-
-      {/* Floating controls */}
-      {level && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-3 pb-3">
-          <div className="pointer-events-auto flex gap-2 rounded-full border border-border/50 bg-background/70 px-2 py-1.5 shadow-lg backdrop-blur-md">
-            <Button size="sm" variant="ghost" className="rounded-full" onClick={restart}>
-              <RotateCcw className="mr-1 h-3.5 w-3.5" /> Restart
-            </Button>
-            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => setShowLB(true)}>
-              <Award className="mr-1 h-3.5 w-3.5" /> Leaderboard
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Result */}
       <Dialog open={!!result} onOpenChange={o => !o && setResult(null)}>
