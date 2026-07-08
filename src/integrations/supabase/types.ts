@@ -2800,6 +2800,41 @@ export type Database = {
           },
         ]
       }
+      pathescape_hint_log: {
+        Row: {
+          coins_spent: number
+          created_at: string
+          hint_type: string
+          id: string
+          level_id: string
+          user_id: string
+        }
+        Insert: {
+          coins_spent?: number
+          created_at?: string
+          hint_type: string
+          id?: string
+          level_id: string
+          user_id: string
+        }
+        Update: {
+          coins_spent?: number
+          created_at?: string
+          hint_type?: string
+          id?: string
+          level_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathescape_hint_log_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "pathescape_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pathescape_levels: {
         Row: {
           admin_notes: string | null
@@ -2866,6 +2901,30 @@ export type Database = {
           updated_at?: string
           version?: number
           xp_reward?: number
+        }
+        Relationships: []
+      }
+      pathescape_lives: {
+        Row: {
+          lives: number
+          max_lives: number
+          next_regen_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          lives?: number
+          max_lives?: number
+          next_regen_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          lives?: number
+          max_lives?: number
+          next_regen_at?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -5399,6 +5458,18 @@ export type Database = {
       }
       my_coin_balance: { Args: never; Returns: number }
       my_competition_vote: { Args: { _competition: string }; Returns: string }
+      pathescape_buy_hint: {
+        Args: { _cost?: number; _hint_type?: string; _level_id: string }
+        Returns: Json
+      }
+      pathescape_consume_life: {
+        Args: never
+        Returns: {
+          lives: number
+          max_lives: number
+          next_regen_at: string
+        }[]
+      }
       pathescape_current_daily: {
         Args: never
         Returns: {
@@ -5436,6 +5507,15 @@ export type Database = {
           xp_reward: number
         }[]
       }
+      pathescape_get_lives: {
+        Args: never
+        Returns: {
+          lives: number
+          max_lives: number
+          next_regen_at: string
+        }[]
+      }
+      pathescape_get_replay: { Args: { _score_id: string }; Returns: Json }
       pathescape_leaderboard: {
         Args: { _level_id: string; _limit?: number }
         Returns: {
@@ -5449,6 +5529,15 @@ export type Database = {
           username: string
         }[]
       }
+      pathescape_refill_lives: {
+        Args: { _cost?: number }
+        Returns: {
+          lives: number
+          max_lives: number
+          next_regen_at: string
+        }[]
+      }
+      pathescape_regen_minutes: { Args: never; Returns: number }
       pathescape_submit_score: {
         Args: {
           _hints_used?: number
