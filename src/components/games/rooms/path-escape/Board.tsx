@@ -90,18 +90,21 @@ export function Board({ level, positions, disabled, onMove, hintSolution }: Prop
                 />
               ))
             )}
-            {level.solution.pieces.map(s => (
-              <rect key={`s-${s.id}`}
-                x={(s.c - cam.originC) * cam.cell + 4}
-                y={(s.r - cam.originR) * cam.cell + 4}
-                width={cam.cell - 8} height={cam.cell - 8}
-                rx={cam.cell * 0.12}
-                fill="none"
-                stroke="hsl(var(--primary) / 0.35)"
-                strokeDasharray="4 4"
-                strokeWidth={1.5}
-              />
-            ))}
+            {level.solution.pieces.map(s => {
+              const highlighted = !!hintSolution?.pieces.some(h => h.id === s.id);
+              return (
+                <rect key={`s-${s.id}`}
+                  x={(s.c - cam.originC) * cam.cell + 4}
+                  y={(s.r - cam.originR) * cam.cell + 4}
+                  width={cam.cell - 8} height={cam.cell - 8}
+                  rx={cam.cell * 0.12}
+                  fill={highlighted ? "hsl(var(--primary) / 0.15)" : "none"}
+                  stroke={highlighted ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.35)"}
+                  strokeDasharray={highlighted ? undefined : "4 4"}
+                  strokeWidth={highlighted ? 2 : 1.5}
+                />
+              );
+            })}
           </svg>
 
           {level.layout.pieces.map(p => {
