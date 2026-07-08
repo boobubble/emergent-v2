@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Settings, Palette, LayoutGrid, Puzzle, Shield, ShieldAlert,
   Lock, Search, Coins, Gavel, Gamepad2, Sparkles, BarChart3, Bot, Users2,
-  FileText, MessageSquare, Newspaper, Zap, Flag,
+  FileText, MessageSquare, Newspaper, Zap, Flag, Compass,
   Filter, Server, KeyRound, Activity, SlidersHorizontal, Wrench, Megaphone,
   Rocket, Flame, Radio, Trophy, Youtube, Disc3, UserCircle2, MessageSquareHeart, Vote,
   Bug, Home, Wand2, Database, ScrollText, History, Bell, MousePointerClick, Mail,
@@ -82,6 +82,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/poll-widget", label: "Poll Widget",   icon: Vote,          keywords: ["poll", "polls", "vote", "voting", "chatroom widget", "discovery", "trending poll", "poll of the day"] },
 
       { to: "/admin/games",       label: "Games",        icon: Gamepad2,      keywords: ["mini-games"] },
+      { to: "/admin/pathescape",  label: "Path Escape",  icon: Compass,       keywords: ["path escape", "puzzle", "levels", "arrows", "grid", "game"] },
 
 
 
