@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { canExit, isCleared, type Level } from "./logic";
+import { canExit, hasAnyMove, isCleared, type Level } from "./logic";
 
 export type Status = "playing" | "won";
 export interface MoveLog { pieceId: string; t: number }
