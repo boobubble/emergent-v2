@@ -81,7 +81,6 @@ import { Route as AdminProgressionRouteImport } from './routes/admin.progression
 import { Route as AdminPopupsRouteImport } from './routes/admin.popups'
 import { Route as AdminPollWidgetRouteImport } from './routes/admin.poll-widget'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
-import { Route as AdminPathescapeRouteImport } from './routes/admin.pathescape'
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminModulesRouteImport } from './routes/admin.modules'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
@@ -498,11 +497,6 @@ const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
   path: '/performance',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminPathescapeRoute = AdminPathescapeRouteImport.update({
-  id: '/pathescape',
-  path: '/pathescape',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminPagesRoute = AdminPagesRouteImport.update({
   id: '/pages',
   path: '/pages',
@@ -856,7 +850,6 @@ export interface FileRoutesByFullPath {
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
-  '/admin/pathescape': typeof AdminPathescapeRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -983,7 +976,6 @@ export interface FileRoutesByTo {
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
-  '/admin/pathescape': typeof AdminPathescapeRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -1113,7 +1105,6 @@ export interface FileRoutesById {
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
-  '/admin/pathescape': typeof AdminPathescapeRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -1244,7 +1235,6 @@ export interface FileRouteTypes {
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
-    | '/admin/pathescape'
     | '/admin/performance'
     | '/admin/poll-widget'
     | '/admin/popups'
@@ -1371,7 +1361,6 @@ export interface FileRouteTypes {
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
-    | '/admin/pathescape'
     | '/admin/performance'
     | '/admin/poll-widget'
     | '/admin/popups'
@@ -1500,7 +1489,6 @@ export interface FileRouteTypes {
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
-    | '/admin/pathescape'
     | '/admin/performance'
     | '/admin/poll-widget'
     | '/admin/popups'
@@ -2102,13 +2090,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPerformanceRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/pathescape': {
-      id: '/admin/pathescape'
-      path: '/pathescape'
-      fullPath: '/admin/pathescape'
-      preLoaderRoute: typeof AdminPathescapeRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/pages': {
       id: '/admin/pages'
       path: '/pages'
@@ -2549,7 +2530,6 @@ interface AdminRouteChildren {
   AdminModerationRoute: typeof AdminModerationRoute
   AdminModulesRoute: typeof AdminModulesRoute
   AdminPagesRoute: typeof AdminPagesRoute
-  AdminPathescapeRoute: typeof AdminPathescapeRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPollWidgetRoute: typeof AdminPollWidgetRoute
   AdminPopupsRoute: typeof AdminPopupsRoute
@@ -2627,7 +2607,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminModerationRoute: AdminModerationRoute,
   AdminModulesRoute: AdminModulesRoute,
   AdminPagesRoute: AdminPagesRoute,
-  AdminPathescapeRoute: AdminPathescapeRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPollWidgetRoute: AdminPollWidgetRoute,
   AdminPopupsRoute: AdminPopupsRoute,
@@ -2754,13 +2733,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

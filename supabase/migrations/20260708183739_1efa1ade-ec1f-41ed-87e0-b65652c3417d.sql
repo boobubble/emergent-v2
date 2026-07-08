@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.pathescape_removal_report() CASCADE;
