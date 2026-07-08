@@ -111,10 +111,15 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
   }, [level?.id]);
 
   useEffect(() => {
-    if (state.status !== "won" || !level || !authUserId || !mode) return;
-    if (mode === "practice") {
-      setResult({ stars: 3, perfect: state.moves <= level.par_moves, coins: 0, xp: 0, record: false, timeMs: state.timeMs, moves: state.moves });
-      pushSystem(room.id, `🧪 Practice: cleared Level ${level.number} in ${state.moves} taps`);
+    if (state.status !== "won" || !level || !mode) return;
+    const perfect = state.moves <= level.par_moves;
+    const localResult = { stars: perfect ? 3 : 2, perfect, coins: 0, xp: 0, record: false, timeMs: state.timeMs, moves: state.moves };
+    // Demo/fallback levels use non-UUID ids — never hit the RPC.
+    const isDemoLevel = typeof level.id === "string" && level.id.startsWith("demo-");
+    if (mode === "practice" || isDemoLevel || !authUserId) {
+      setResult(localResult);
+      const tag = mode === "practice" ? "🧪 Practice" : "✅ Demo";
+      pushSystem(room.id, `${tag}: cleared Level ${level.number} in ${state.moves} taps`);
       return;
     }
     let cancelled = false;
@@ -124,7 +129,11 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
         _hints_used: hintsUsed, _mode: mode, _room_id: room.id, _replay_log: state.log,
       });
       if (cancelled) return;
-      if (error) { toast.error(error.message || "Score rejected"); return; }
+      if (error) {
+        toast.error(error.message || "Score not recorded");
+        setResult(localResult); // still let the player advance
+        return;
+      }
       const r = data as { stars: number; perfect: boolean; coins: number; xp: number; record_broken: boolean };
       setResult({ ...r, record: r.record_broken, timeMs: state.timeMs, moves: state.moves });
       gamify(`pathescape.${mode}.completed`, 1, { level: level.number, stars: r.stars });
