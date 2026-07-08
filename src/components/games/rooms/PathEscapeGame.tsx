@@ -187,7 +187,13 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
             No level available for this mode yet.
           </div>
         ) : (
-          <Board level={level} positions={state.positions} disabled={state.status !== "playing"} onMove={tryPlace} />
+          <Board
+            level={level}
+            positions={ghost && ghostPlaying ? ghost.positions : state.positions}
+            disabled={state.status !== "playing" || ghostPlaying}
+            onMove={tryPlace}
+            hintSolution={hintSolution ?? undefined}
+          />
         )}
       </div>
 
@@ -205,8 +211,40 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
             <Pill icon={<Clock className="h-3 w-3" />} label={fmtTime(state.timeMs)} />
             <Pill icon={<Move className="h-3 w-3" />} label={`${state.moves}/${level.par_moves}`} />
             <Pill icon={<Star className="h-3 w-3" />} label={`${state.correct}/${state.total}`} />
+            {authUserId && mode !== "practice" && (
+              <Pill icon={<Heart className="h-3 w-3 fill-red-500 text-red-500" />} label={`${lives.lives}/${lives.max}`} />
+            )}
           </div>
         )}
+        <div className="w-16" />
+      </div>
+
+      {/* Floating controls */}
+      {level && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-3 pb-3">
+          <div className="pointer-events-auto flex gap-2 rounded-full border border-border/50 bg-background/70 px-2 py-1.5 shadow-lg backdrop-blur-md">
+            <Button size="sm" variant="ghost" className="rounded-full" onClick={restart} disabled={ghostPlaying}>
+              <RotateCcw className="mr-1 h-3.5 w-3.5" /> Restart
+            </Button>
+            <Button size="sm" variant="ghost" className="rounded-full" onClick={buyHint} disabled={ghostPlaying || state.status !== "playing"}>
+              <Lightbulb className="mr-1 h-3.5 w-3.5" /> Hint · 10💎
+            </Button>
+            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => setShowLB(true)}>
+              <Award className="mr-1 h-3.5 w-3.5" /> Board
+            </Button>
+            {authUserId && mode !== "practice" && lives.lives === 0 && (
+              <Button size="sm" variant="default" className="rounded-full" onClick={lives.refill}>
+                Refill · 50💎
+              </Button>
+            )}
+            {ghostPlaying && (
+              <Button size="sm" variant="secondary" className="rounded-full" onClick={() => { setGhost(null); setGhostPlaying(false); restart(); }}>
+                Stop Ghost
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
         <div className="w-16" />
       </div>
 
