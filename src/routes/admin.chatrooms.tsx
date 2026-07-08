@@ -31,7 +31,7 @@ function slugify(name: string) {
 
 const GAME_OPTIONS = listGames();
 const DEFAULT_GAME_CFG: RoomGameConfig = {
-  type: GAME_OPTIONS[0]?.key ?? "arrow-puzzle",
+  type: GAME_OPTIONS[0]?.key ?? "",
   difficulty: "normal",
   spectators: true,
   coinReward: 10,
