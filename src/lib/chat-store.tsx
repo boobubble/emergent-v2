@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from "react";
 import type { User, Message, Room, GameState, Attachment, RoomGameConfig } from "./chat-types";
+import { canonicalGameType } from "./games-registry";
 
 export interface AdminChannelInput {
   id: string;
@@ -7,6 +8,12 @@ export interface AdminChannelInput {
   topic?: string;
   kind?: "chat" | "game";
   game?: RoomGameConfig;
+}
+
+function normalizeRoomGameConfig(game?: RoomGameConfig): RoomGameConfig | undefined {
+  if (!game) return undefined;
+  const type = canonicalGameType(game.type);
+  return type ? { ...game, type } : game;
 }
 import { runCommand } from "./commands";
 import { evaluateBadges, todayKey, daysBetween } from "./achievements";
@@ -1608,7 +1615,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
             name: c.name,
             topic: c.topic || existing.topic,
             kind,
-            game: kind === "game" ? c.game : undefined,
+            game: kind === "game" ? normalizeRoomGameConfig(c.game) : undefined,
           };
         } else {
           rooms[c.id] = {
@@ -1619,7 +1626,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
             roles: { me: "member", "bot-gamebot": "owner" },
             isPublic: true,
             kind,
-            game: kind === "game" ? c.game : undefined,
+            game: kind === "game" ? normalizeRoomGameConfig(c.game) : undefined,
           };
           if (!roomOrder.includes(c.id)) roomOrder.push(c.id);
         }
