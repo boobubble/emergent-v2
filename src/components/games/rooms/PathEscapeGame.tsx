@@ -81,8 +81,8 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
         const { data } = await sb.from("pathescape_levels")
           .select("id, number, name, difficulty, grid_w, grid_h, layout, solution, par_moves, par_time, coin_reward, xp_reward")
           .eq("enabled", true).limit(50);
-        const arr = (data as Level[]) ?? [];
-        setLevel(arr.length ? (arr[Math.floor(Math.random() * arr.length)] as unknown as Level) : null);
+        const arr = ((data as unknown) as Level[]) ?? [];
+        setLevel(arr.length ? arr[Math.floor(Math.random() * arr.length)] : null);
       }
     } finally { setLoading(false); }
   }, [authUserId, daily, weekly, endlessFn]);
