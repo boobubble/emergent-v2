@@ -35,6 +35,11 @@ async function fetchProgress(userId: string | null): Promise<number> {
   const { data } = await sb.from("pathescape_progress").select("highest_level").eq("user_id", userId).maybeSingle();
   return (data?.highest_level as number) ?? 0;
 }
+function playableLevel(level: Level | null | undefined, fallback: Level): Level {
+  const pieces = level?.layout?.pieces ?? [];
+  const targets = level?.solution?.pieces ?? [];
+  return pieces.length > 0 && targets.length >= pieces.length ? level as Level : fallback;
+}
 const fmtTime = (ms: number) => {
   const s = Math.floor(ms / 1000);
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
@@ -50,7 +55,7 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
   const endlessFn = useServerFn(getEndlessLevel);
   const lbFn = useServerFn(getLeaderboard);
 
-  const [mode, setMode] = useState<Mode | null>(null);
+  const [mode, setMode] = useState<Mode | null>("practice");
   const [level, setLevel] = useState<Level | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<null | { stars: number; perfect: boolean; coins: number; xp: number; record: boolean; timeMs: number; moves: number }>(null);
@@ -76,21 +81,22 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
     try {
       if (m === "story") {
         const highest = await fetchProgress(authUserId);
-        setLevel((await fetchStoryLevel(highest + 1)) ?? fallbackLevel(highest + 1));
+        const fallback = fallbackLevel(highest + 1);
+        setLevel(playableLevel(await fetchStoryLevel(highest + 1), fallback));
       } else if (m === "daily") {
-        setLevel((daily as any)?.level ?? fallbackLevel(1));
+        setLevel(playableLevel((daily as any)?.level, fallbackLevel(1)));
       } else if (m === "weekly") {
-        setLevel((weekly as any)?.level ?? fallbackLevel(2));
+        setLevel(playableLevel((weekly as any)?.level, fallbackLevel(2)));
       } else if (m === "endless") {
         if (!authUserId) { toast.error("Sign in to play Endless"); setMode(null); return; }
         const lvl = await endlessFn({});
-        setLevel((lvl as unknown as Level | null) ?? null);
+        setLevel(playableLevel(lvl as unknown as Level | null, randomFallbackLevel()));
       } else if (m === "practice") {
         // random enabled level, no rewards
         const { data } = await sb.from("pathescape_levels")
           .select("id, number, name, difficulty, grid_w, grid_h, layout, solution, par_moves, par_time, coin_reward, xp_reward")
           .eq("enabled", true).limit(50);
-        const arr = ((data as unknown) as Level[]) ?? [];
+        const arr = (((data as unknown) as Level[]) ?? []).filter(l => playableLevel(l, DEMO_SENTINEL) === l);
         setLevel(arr.length ? arr[Math.floor(Math.random() * arr.length)] : randomFallbackLevel());
       }
     } finally { setLoading(false); }
