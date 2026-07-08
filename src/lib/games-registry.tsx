@@ -1,5 +1,8 @@
-import { lazy, type ComponentType, type LazyExoticComponent } from "react";
-import { Compass, type LucideIcon } from "lucide-react";
+// Path Flow (Path Escape) was fully removed. No games are currently registered.
+// This shim keeps the public API stable for any remaining callers.
+
+import type { ComponentType, LazyExoticComponent } from "react";
+import type { LucideIcon } from "lucide-react";
 import type { Room, RoomGameConfig } from "@/lib/chat-types";
 
 export interface GameRuntimeProps {
@@ -15,31 +18,16 @@ export interface GameDef {
   Component: LazyExoticComponent<ComponentType<GameRuntimeProps>>;
 }
 
-const pathEscape: GameDef = {
-  key: "path-escape",
-  label: "Path Escape",
-  description: "Drag arrow pieces onto the marked cells to build the escape route.",
-  icon: Compass,
-  Component: lazy(() => import("@/components/games/rooms/PathEscapeGame")),
-};
-
-export const GAMES: Record<string, GameDef> = {
-  "path-escape": pathEscape,
-  pathescape: pathEscape,
-};
+export const GAMES: Record<string, GameDef> = {};
 
 export function canonicalGameType(key: string | undefined): string | undefined {
-  if (!key) return undefined;
-  if (key === "pathescape") return "path-escape";
-  return key;
+  return key ?? undefined;
 }
 
-export function getGame(key: string | undefined): GameDef | null {
-  const canonical = canonicalGameType(key);
-  if (!canonical) return null;
-  return GAMES[canonical] ?? null;
+export function getGame(_key: string | undefined): GameDef | null {
+  return null;
 }
 
 export function listGames(): GameDef[] {
-  return [pathEscape];
+  return [];
 }
