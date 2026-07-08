@@ -2765,6 +2765,170 @@ export type Database = {
         }
         Relationships: []
       }
+      pathescape_levels: {
+        Row: {
+          admin_notes: string | null
+          coin_reward: number
+          created_at: string
+          difficulty: Database["public"]["Enums"]["pathescape_difficulty"]
+          enabled: boolean
+          featured: boolean
+          grid_h: number
+          grid_w: number
+          id: string
+          layout: Json
+          lives: number
+          name: string
+          number: number
+          par_moves: number
+          par_time: number
+          season: string | null
+          solution: Json
+          updated_at: string
+          version: number
+          xp_reward: number
+        }
+        Insert: {
+          admin_notes?: string | null
+          coin_reward?: number
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["pathescape_difficulty"]
+          enabled?: boolean
+          featured?: boolean
+          grid_h: number
+          grid_w: number
+          id?: string
+          layout: Json
+          lives?: number
+          name?: string
+          number: number
+          par_moves?: number
+          par_time?: number
+          season?: string | null
+          solution: Json
+          updated_at?: string
+          version?: number
+          xp_reward?: number
+        }
+        Update: {
+          admin_notes?: string | null
+          coin_reward?: number
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["pathescape_difficulty"]
+          enabled?: boolean
+          featured?: boolean
+          grid_h?: number
+          grid_w?: number
+          id?: string
+          layout?: Json
+          lives?: number
+          name?: string
+          number?: number
+          par_moves?: number
+          par_time?: number
+          season?: string | null
+          solution?: Json
+          updated_at?: string
+          version?: number
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      pathescape_progress: {
+        Row: {
+          current_level: number
+          highest_level: number
+          lifetime_coins: number
+          lifetime_xp: number
+          perfect_solves: number
+          saved_state: Json | null
+          stars: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_level?: number
+          highest_level?: number
+          lifetime_coins?: number
+          lifetime_xp?: number
+          perfect_solves?: number
+          saved_state?: Json | null
+          stars?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_level?: number
+          highest_level?: number
+          lifetime_coins?: number
+          lifetime_xp?: number
+          perfect_solves?: number
+          saved_state?: Json | null
+          stars?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pathescape_scores: {
+        Row: {
+          coins_awarded: number
+          created_at: string
+          hints_used: number
+          id: string
+          level_id: string
+          mode: string
+          moves: number
+          perfect: boolean
+          replay_log: Json | null
+          room_id: string | null
+          stars: number
+          time_ms: number
+          user_id: string
+          xp_awarded: number
+        }
+        Insert: {
+          coins_awarded?: number
+          created_at?: string
+          hints_used?: number
+          id?: string
+          level_id: string
+          mode?: string
+          moves: number
+          perfect?: boolean
+          replay_log?: Json | null
+          room_id?: string | null
+          stars?: number
+          time_ms: number
+          user_id: string
+          xp_awarded?: number
+        }
+        Update: {
+          coins_awarded?: number
+          created_at?: string
+          hints_used?: number
+          id?: string
+          level_id?: string
+          mode?: string
+          moves?: number
+          perfect?: boolean
+          replay_log?: Json | null
+          room_id?: string | null
+          stars?: number
+          time_ms?: number
+          user_id?: string
+          xp_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathescape_scores_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "pathescape_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_providers: {
         Row: {
           config: Json
@@ -5165,6 +5329,18 @@ export type Database = {
       }
       my_coin_balance: { Args: never; Returns: number }
       my_competition_vote: { Args: { _competition: string }; Returns: string }
+      pathescape_submit_score: {
+        Args: {
+          _hints_used?: number
+          _level_id: string
+          _mode?: string
+          _moves: number
+          _replay_log?: Json
+          _room_id?: string
+          _time_ms: number
+        }
+        Returns: Json
+      }
       purchase_dm_wallpaper: {
         Args: {
           _channel_id?: string
@@ -5398,6 +5574,13 @@ export type Database = {
         | "remove_url_rule"
         | "clear_channel"
       mute_scope: "global" | "room"
+      pathescape_difficulty:
+        | "easy"
+        | "normal"
+        | "hard"
+        | "expert"
+        | "master"
+        | "nightmare"
       post_kind: "text" | "image" | "gif" | "poll"
       post_privacy: "public" | "friends" | "private"
       radio_schedule_status: "scheduled" | "live" | "completed" | "cancelled"
@@ -5606,6 +5789,14 @@ export const Constants = {
         "clear_channel",
       ],
       mute_scope: ["global", "room"],
+      pathescape_difficulty: [
+        "easy",
+        "normal",
+        "hard",
+        "expert",
+        "master",
+        "nightmare",
+      ],
       post_kind: ["text", "image", "gif", "poll"],
       post_privacy: ["public", "friends", "private"],
       radio_schedule_status: ["scheduled", "live", "completed", "cancelled"],
