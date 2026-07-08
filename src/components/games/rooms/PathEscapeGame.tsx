@@ -11,7 +11,7 @@ import { gamify } from "@/lib/gamification-emit";
 import type { GameRuntimeProps } from "@/lib/games-registry";
 import { Board } from "./path-escape/Board";
 import { useEngine } from "./path-escape/useEngine";
-import type { Level, PiecePos } from "./path-escape/logic";
+import { canExit, isValidLevel, type Level } from "./path-escape/logic";
 import { useLives } from "./path-escape/useLives";
 import { fallbackLevel, randomFallbackLevel } from "./path-escape/demoLevels";
 import { getCurrentDaily, getCurrentWeekly, getEndlessLevel, getLeaderboard } from "@/lib/pathescape-modes.functions";
@@ -19,7 +19,7 @@ import { getCurrentDaily, getCurrentWeekly, getEndlessLevel, getLeaderboard } fr
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
 
-interface MoveLog { pieceId: string; from: PiecePos; to: PiecePos; t: number }
+interface MoveLog { pieceId: string; t: number }
 
 export type Mode = "story" | "daily" | "weekly" | "endless" | "practice";
 
