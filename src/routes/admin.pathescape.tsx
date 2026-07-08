@@ -319,6 +319,12 @@ function AdminPathEscape() {
           </div>
         </TabsContent>
 
+        <TabsContent value="schedule" className="space-y-4">
+          <ScheduleTab levels={levels as any[]} />
+        </TabsContent>
+
+
+
         <TabsContent value="analytics" className="space-y-2">
           {(levels as any[]).map((l: any) => {
             const st = (stats as any)[l.id];
