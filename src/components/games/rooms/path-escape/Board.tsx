@@ -1,44 +1,17 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import type { Dir, Level, PieceDef, PiecePos } from "./logic";
-import { absoluteCells } from "./logic";
+import { motion, AnimatePresence } from "framer-motion";
+import { DELTA, canExit, type Dir, type Level, type PieceDef } from "./logic";
 
 interface Props {
   level: Level;
-  positions: Record<string, PiecePos>;
+  removed: Set<string>;
   disabled?: boolean;
-  onMove(pieceId: string, next: PiecePos): boolean;
-  hintSolution?: Level["solution"];
+  onTap(pieceId: string): boolean;
+  hintPieceId?: string | null;
 }
-
-interface Camera { cell: number; cols: number; rows: number; originR: number; originC: number }
 
 const MIN_CELL = 40;
-const MAX_CELL = 140;
-
-function computeCamera(level: Level, positions: Record<string, PiecePos>, vw: number, vh: number): Camera {
-  let minR = 0, minC = 0, maxR = level.grid_h - 1, maxC = level.grid_w - 1;
-  // consider start + current + solution to keep piece drag area comfortable
-  const consider = (r: number, c: number) => {
-    if (r < minR) minR = r; if (c < minC) minC = c;
-    if (r > maxR) maxR = r; if (c > maxC) maxC = c;
-  };
-  for (const p of level.layout.pieces) {
-    const pos = positions[p.id] ?? { r: p.startR, c: p.startC };
-    for (const cell of absoluteCells(p, pos)) consider(cell.r, cell.c);
-    for (const cell of absoluteCells(p, { r: p.startR, c: p.startC })) consider(cell.r, cell.c);
-  }
-  for (const s of level.solution.pieces) consider(s.r, s.c);
-  const r0 = Math.max(0, minR), c0 = Math.max(0, minC);
-  const r1 = Math.min(level.grid_h - 1, maxR), c1 = Math.min(level.grid_w - 1, maxC);
-  const cols = c1 - c0 + 1, rows = r1 - r0 + 1;
-  const pad = 24;
-  const availW = Math.max(0, vw - pad * 2);
-  const availH = Math.max(0, vh - pad * 2);
-  const raw = Math.floor(Math.min(availW / cols, availH / rows));
-  const cell = Math.max(MIN_CELL, Math.min(MAX_CELL, raw || MIN_CELL));
-  return { cell, cols, rows, originR: r0, originC: c0 };
-}
+const MAX_CELL = 120;
 
 const arrowPath: Record<Dir, string> = {
   U: "M12 4 L20 14 L14 14 L14 22 L10 22 L10 14 L4 14 Z",
@@ -47,7 +20,7 @@ const arrowPath: Record<Dir, string> = {
   R: "M22 13 L12 5 L12 11 L4 11 L4 15 L12 15 L12 21 Z",
 };
 
-export function Board({ level, positions, disabled, onMove, hintSolution }: Props) {
+export function Board({ level, removed, disabled, onTap, hintPieceId }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [vp, setVp] = useState({ w: 0, h: 0 });
 
@@ -58,129 +31,127 @@ export function Board({ level, positions, disabled, onMove, hintSolution }: Prop
       setVp({ w: Math.max(0, Math.floor(r.width)), h: Math.max(0, Math.floor(r.height)) });
     };
     measure();
-    // Retry next frame in case parent flex layout not settled yet.
     const raf = requestAnimationFrame(measure);
     const ro = new ResizeObserver(measure); ro.observe(el);
     if (el.parentElement) ro.observe(el.parentElement);
     return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, []);
 
-  const ready = vp.w > 40 && vp.h > 40;
-  const cam = useMemo(() => computeCamera(level, positions, ready ? vp.w : 320, ready ? vp.h : 320), [level, positions, vp.w, vp.h, ready]);
-  const boardW = cam.cell * cam.cols;
-  const boardH = cam.cell * cam.rows;
+  const cell = useMemo(() => {
+    const pad = 24;
+    const w = Math.max(0, vp.w - pad * 2);
+    const h = Math.max(0, vp.h - pad * 2);
+    const raw = Math.floor(Math.min(w / level.grid_w, h / level.grid_h));
+    return Math.max(MIN_CELL, Math.min(MAX_CELL, raw || MIN_CELL));
+  }, [vp.w, vp.h, level.grid_w, level.grid_h]);
+
+  const boardW = cell * level.grid_w;
+  const boardH = cell * level.grid_h;
   const offX = Math.max(0, (Math.max(vp.w, boardW) - boardW) / 2);
   const offY = Math.max(0, (Math.max(vp.h, boardH) - boardH) / 2);
+
+  const walls = level.layout.walls ?? [];
 
   return (
     <div ref={wrapRef} className="absolute inset-0 h-full w-full overflow-hidden">
       <div className="absolute" style={{ left: offX, top: offY, width: boardW, height: boardH }}>
-          {/* grid + solution ghosts */}
-            <svg width={boardW} height={boardH} className="absolute inset-0 pointer-events-none">
-            <defs>
-              <linearGradient id="pe-bg" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.08} />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.025} />
-              </linearGradient>
-            </defs>
-            <rect x={0} y={0} width={boardW} height={boardH} rx={cam.cell * 0.15} fill="url(#pe-bg)" />
-            {Array.from({ length: cam.rows }).map((_, r) =>
-              Array.from({ length: cam.cols }).map((_, c) => (
-                <rect key={`g-${r}-${c}`}
-                  x={c * cam.cell + 4} y={r * cam.cell + 4}
-                  width={cam.cell - 8} height={cam.cell - 8}
-                  rx={cam.cell * 0.12}
-                  fill="var(--muted)"
-                  fillOpacity={0.4}
-                  stroke="var(--border)"
-                  strokeWidth={1}
-                />
-              ))
-            )}
-            {level.solution.pieces.map(s => {
-              const highlighted = !!hintSolution?.pieces.some(h => h.id === s.id);
-              return (
-                <rect key={`s-${s.id}`}
-                  x={(s.c - cam.originC) * cam.cell + 4}
-                  y={(s.r - cam.originR) * cam.cell + 4}
-                  width={cam.cell - 8} height={cam.cell - 8}
-                  rx={cam.cell * 0.12}
-                  fill={highlighted ? "var(--primary)" : "none"}
-                  fillOpacity={highlighted ? 0.15 : undefined}
-                  stroke="var(--primary)"
-                  strokeOpacity={highlighted ? 1 : 0.35}
-                  strokeDasharray={highlighted ? undefined : "4 4"}
-                  strokeWidth={highlighted ? 2 : 1.5}
-                />
-              );
-            })}
-          </svg>
+        <svg width={boardW} height={boardH} className="absolute inset-0 pointer-events-none">
+          <defs>
+            <linearGradient id="pe-bg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.10} />
+              <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.03} />
+            </linearGradient>
+          </defs>
+          <rect x={0} y={0} width={boardW} height={boardH} rx={cell * 0.15} fill="url(#pe-bg)" />
+          {Array.from({ length: level.grid_h }).map((_, r) =>
+            Array.from({ length: level.grid_w }).map((_, c) => (
+              <rect key={`g-${r}-${c}`}
+                x={c * cell + 4} y={r * cell + 4}
+                width={cell - 8} height={cell - 8}
+                rx={cell * 0.12}
+                fill="var(--muted)"
+                fillOpacity={0.4}
+                stroke="var(--border)"
+                strokeWidth={1}
+              />
+            ))
+          )}
+          {walls.map((w, i) => (
+            <rect key={`w-${i}`}
+              x={w.c * cell + 4} y={w.r * cell + 4}
+              width={cell - 8} height={cell - 8}
+              rx={cell * 0.12}
+              fill="var(--foreground)"
+              fillOpacity={0.85}
+            />
+          ))}
+        </svg>
 
+        <AnimatePresence>
           {level.layout.pieces.map(p => {
-            const pos = positions[p.id] ?? { r: p.startR, c: p.startC };
-            const solved = level.solution.pieces.some(s => s.id === p.id && s.r === pos.r && s.c === pos.c);
+            if (removed.has(p.id)) return null;
             return (
-              <DraggablePiece
-                key={p.id} piece={p} pos={pos} cam={cam}
-                boardW={boardW} boardH={boardH}
-                disabled={disabled} solved={solved}
-                onMove={onMove}
+              <Piece
+                key={p.id}
+                piece={p}
+                cell={cell}
+                boardW={boardW}
+                boardH={boardH}
+                disabled={disabled || !canExit(level, p.id, removed)}
+                hinted={hintPieceId === p.id}
+                onTap={() => onTap(p.id)}
               />
             );
           })}
+        </AnimatePresence>
       </div>
-
     </div>
   );
 }
 
-function DraggablePiece({
-  piece, pos, cam, boardW, boardH, disabled, solved, onMove,
+function Piece({
+  piece, cell, boardW, boardH, disabled, hinted, onTap,
 }: {
-  piece: PieceDef; pos: PiecePos; cam: Camera;
-  boardW: number; boardH: number; disabled?: boolean; solved?: boolean;
-  onMove(id: string, next: PiecePos): boolean;
+  piece: PieceDef; cell: number;
+  boardW: number; boardH: number;
+  disabled?: boolean; hinted?: boolean;
+  onTap(): void;
 }) {
-  const [dragging, setDragging] = useState(false);
-  const x = (pos.c - cam.originC) * cam.cell;
-  const y = (pos.r - cam.originR) * cam.cell;
-  const dir = piece.cells[0].dir;
-  const size = cam.cell - 8;
+  const size = cell - 8;
+  const x = piece.c * cell + 4;
+  const y = piece.r * cell + 4;
+  const d = DELTA[piece.dir];
+  // Exit off-board (past the edge).
+  const exitX = d.dc === 0 ? x : d.dc > 0 ? boardW + cell : -cell;
+  const exitY = d.dr === 0 ? y : d.dr > 0 ? boardH + cell : -cell;
 
   return (
-    <motion.div
-      drag={!disabled}
-      dragMomentum={false}
-      dragElastic={0}
-      dragConstraints={{ left: -x, top: -y, right: boardW - x - cam.cell, bottom: boardH - y - cam.cell }}
-      onDragStart={() => setDragging(true)}
-      onDragEnd={(_, info) => {
-        setDragging(false);
-        const dc = Math.round(info.offset.x / cam.cell);
-        const dr = Math.round(info.offset.y / cam.cell);
-        if (dc === 0 && dr === 0) return;
-        onMove(piece.id, { r: pos.r + dr, c: pos.c + dc });
+    <motion.button
+      type="button"
+      onClick={() => { if (!disabled) onTap(); }}
+      initial={{ x, y, opacity: 1, scale: 1 }}
+      animate={{ x, y, opacity: 1, scale: 1 }}
+      exit={{ x: exitX, y: exitY, opacity: 0, scale: 0.6 }}
+      transition={{ type: "spring", stiffness: 420, damping: 30, mass: 0.5 }}
+      whileTap={disabled ? undefined : { scale: 0.94 }}
+      whileHover={disabled ? undefined : { scale: 1.04 }}
+      aria-label={`Arrow ${piece.dir}`}
+      className={
+        "absolute left-0 top-0 flex items-center justify-center rounded-[14%] shadow-lg " +
+        (disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer")
+      }
+      style={{
+        width: size, height: size,
+        background: disabled
+          ? "linear-gradient(135deg, var(--muted) 0%, var(--card) 100%)"
+          : "linear-gradient(135deg, var(--card) 0%, color-mix(in oklab, var(--primary) 20%, var(--muted)) 100%)",
+        border: `1.5px solid var(--${hinted ? "primary" : "border"})`,
+        boxShadow: hinted ? "0 0 0 3px color-mix(in oklab, var(--primary) 45%, transparent)" : undefined,
       }}
-      animate={{ x, y }}
-      transition={{ type: "spring", stiffness: 560, damping: 32, mass: 0.5 }}
-      whileTap={{ scale: 1.06 }}
-      className={"absolute left-1 top-1 touch-none " + (disabled ? "cursor-default" : "cursor-grab active:cursor-grabbing")}
-      style={{ zIndex: dragging ? 30 : solved ? 10 : 20, width: size, height: size }}
     >
-      <div
-        className="flex h-full w-full items-center justify-center rounded-[14%] shadow-lg transition-colors"
-        style={{
-          background: solved
-            ? "linear-gradient(135deg, var(--primary) 0%, color-mix(in oklab, var(--primary) 76%, var(--background)) 100%)"
-            : "linear-gradient(135deg, var(--card) 0%, var(--muted) 100%)",
-          border: `1.5px solid var(--${solved ? "primary" : "border"})`,
-          boxShadow: dragging ? "0 12px 32px -8px color-mix(in oklab, var(--primary) 40%, transparent)" : undefined,
-        }}
-      >
-        <svg viewBox="0 0 26 26" width={size * 0.55} height={size * 0.55}>
-          <path d={arrowPath[dir]} fill={solved ? "var(--primary-foreground)" : "var(--foreground)"} />
-        </svg>
-      </div>
-    </motion.div>
+      <svg viewBox="0 0 26 26" width={size * 0.6} height={size * 0.6}>
+        <path d={arrowPath[piece.dir]} fill="var(--foreground)" />
+      </svg>
+    </motion.button>
   );
 }
