@@ -58,3 +58,29 @@ export function canExit(level: Level, pieceId: string, removed: Set<string>): bo
 export function isCleared(level: Level, removed: Set<string>): boolean {
   return level.layout.pieces.every(p => removed.has(p.id));
 }
+
+/** true if at least one un-removed piece can currently exit. */
+export function hasAnyMove(level: Level, removed: Set<string>): boolean {
+  return level.layout.pieces.some(p => !removed.has(p.id) && canExit(level, p.id, removed));
+}
+
+/** true if the level is solvable from the given state via some tap order. */
+export function isSolvable(level: Level, removed: Set<string> = new Set()): boolean {
+  if (isCleared(level, removed)) return true;
+  const seen = new Set<string>();
+  const dfs = (rem: Set<string>): boolean => {
+    if (isCleared(level, rem)) return true;
+    const key = [...rem].sort().join("|");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    for (const p of level.layout.pieces) {
+      if (rem.has(p.id)) continue;
+      if (!canExit(level, p.id, rem)) continue;
+      const next = new Set(rem); next.add(p.id);
+      if (dfs(next)) return true;
+    }
+    return false;
+  };
+  return dfs(new Set(removed));
+}
+
