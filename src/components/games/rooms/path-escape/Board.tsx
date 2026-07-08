@@ -53,22 +53,28 @@ export function Board({ level, positions, disabled, onMove, hintSolution }: Prop
 
   useLayoutEffect(() => {
     const el = wrapRef.current; if (!el) return;
-    const measure = () => setVp({ w: el.clientWidth, h: el.clientHeight });
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      setVp({ w: Math.max(0, Math.floor(r.width)), h: Math.max(0, Math.floor(r.height)) });
+    };
     measure();
+    // Retry next frame in case parent flex layout not settled yet.
+    const raf = requestAnimationFrame(measure);
     const ro = new ResizeObserver(measure); ro.observe(el);
-    return () => ro.disconnect();
+    if (el.parentElement) ro.observe(el.parentElement);
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, []);
 
-  const cam = useMemo(() => computeCamera(level, positions, vp.w, vp.h), [level, positions, vp.w, vp.h]);
+  const ready = vp.w > 40 && vp.h > 40;
+  const cam = useMemo(() => computeCamera(level, positions, ready ? vp.w : 320, ready ? vp.h : 320), [level, positions, vp.w, vp.h, ready]);
   const boardW = cam.cell * cam.cols;
   const boardH = cam.cell * cam.rows;
-  const offX = Math.max(0, (vp.w - boardW) / 2);
-  const offY = Math.max(0, (vp.h - boardH) / 2);
+  const offX = Math.max(0, (Math.max(vp.w, boardW) - boardW) / 2);
+  const offY = Math.max(0, (Math.max(vp.h, boardH) - boardH) / 2);
 
   return (
-    <div ref={wrapRef} className="absolute inset-0 overflow-hidden">
-      {vp.w > 0 && (
-        <div className="absolute" style={{ left: offX, top: offY, width: boardW, height: boardH }}>
+    <div ref={wrapRef} className="absolute inset-0 h-full w-full overflow-hidden">
+      <div className="absolute" style={{ left: offX, top: offY, width: boardW, height: boardH }}>
           {/* grid + solution ghosts */}
           <svg width={boardW} height={boardH} className="absolute inset-0 pointer-events-none">
             <defs>
