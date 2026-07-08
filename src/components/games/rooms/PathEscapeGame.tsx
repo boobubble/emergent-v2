@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, Move, RotateCcw, Star, Trophy, Calendar, Flame, Infinity as InfIcon, Award, ChevronLeft } from "lucide-react";
+import { Clock, Move, RotateCcw, Star, Trophy, Calendar, Flame, Infinity as InfIcon, Award, ChevronLeft, Heart, Lightbulb, Ghost } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,14 @@ import { gamify } from "@/lib/gamification-emit";
 import type { GameRuntimeProps } from "@/lib/games-registry";
 import { Board } from "./path-escape/Board";
 import { useEngine } from "./path-escape/useEngine";
-import type { Level } from "./path-escape/logic";
+import type { Level, PiecePos } from "./path-escape/logic";
+import { useLives } from "./path-escape/useLives";
 import { getCurrentDaily, getCurrentWeekly, getEndlessLevel, getLeaderboard } from "@/lib/pathescape-modes.functions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
+
+interface MoveLog { pieceId: string; from: PiecePos; to: PiecePos; t: number }
 
 export type Mode = "story" | "daily" | "weekly" | "endless" | "practice";
 
@@ -51,7 +54,12 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<null | { stars: number; perfect: boolean; coins: number; xp: number; record: boolean; timeMs: number; moves: number }>(null);
   const [showLB, setShowLB] = useState(false);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [hintSolution, setHintSolution] = useState<Level["solution"] | null>(null);
+  const [ghost, setGhost] = useState<null | { positions: Record<string, PiecePos> }>(null);
+  const [ghostPlaying, setGhostPlaying] = useState(false);
 
+  const lives = useLives(authUserId);
   const { state, tryPlace, restart } = useEngine(level);
 
   const { data: daily } = useQuery({ queryKey: ["pe-daily"], queryFn: () => dailyFn({}), staleTime: 60_000 });
@@ -87,12 +95,23 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
     } finally { setLoading(false); }
   }, [authUserId, daily, weekly, endlessFn]);
 
-  useEffect(() => { if (mode) { loadForMode(mode); gamify(`pathescape.${mode}.started`, 1); } }, [mode, loadForMode]);
+  useEffect(() => {
+    if (!mode) return;
+    setHintsUsed(0); setHintSolution(null);
+    loadForMode(mode);
+    gamify(`pathescape.${mode}.started`, 1);
+  }, [mode, loadForMode]);
+
+  // Consume a life on new level (scored modes only)
+  useEffect(() => {
+    if (!level || !mode || mode === "practice" || !authUserId) return;
+    lives.consume().then(ok => { if (!ok) { setMode(null); setLevel(null); } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level?.id]);
 
   useEffect(() => {
     if (state.status !== "won" || !level || !authUserId || !mode) return;
     if (mode === "practice") {
-      // No score submit for practice.
       setResult({ stars: 3, perfect: state.moves <= level.par_moves, coins: 0, xp: 0, record: false, timeMs: state.timeMs, moves: state.moves });
       pushSystem(room.id, `🧪 Practice: solved Level ${level.number} in ${state.moves} moves`);
       return;
@@ -101,7 +120,7 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
     (async () => {
       const { data, error } = await sb.rpc("pathescape_submit_score", {
         _level_id: level.id, _time_ms: state.timeMs, _moves: state.moves,
-        _hints_used: 0, _mode: mode, _room_id: room.id, _replay_log: state.log,
+        _hints_used: hintsUsed, _mode: mode, _room_id: room.id, _replay_log: state.log,
       });
       if (cancelled) return;
       if (error) { toast.error(error.message || "Score rejected"); return; }
@@ -115,7 +134,49 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
       if (r.record_broken) pushSystem(room.id, `🔥 New personal record!`);
     })();
     return () => { cancelled = true; };
-  }, [state.status, state.timeMs, state.moves, state.log, level, authUserId, mode, pushSystem, room.id]);
+  }, [state.status, state.timeMs, state.moves, state.log, level, authUserId, mode, pushSystem, room.id, hintsUsed]);
+
+  const buyHint = useCallback(async () => {
+    if (!level || !authUserId) { toast.error("Sign in to use hints"); return; }
+    const { data, error } = await sb.rpc("pathescape_buy_hint", { _level_id: level.id, _hint_type: "reveal_piece", _cost: 10 });
+    if (error) { toast.error(error.message || "Not enough coins"); return; }
+    const sol = (data?.solution ?? level.solution) as Level["solution"];
+    // Snap one un-solved piece into place
+    const target = sol.pieces.find(sp => {
+      const p = state.positions[sp.id];
+      return !p || p.r !== sp.r || p.c !== sp.c;
+    });
+    if (target) {
+      const ok = tryPlace(target.id, { r: target.r, c: target.c });
+      if (!ok) { setHintSolution(sol); toast.info("Hint revealed — path is blocked, clear it first"); return; }
+    }
+    setHintsUsed(n => n + 1);
+    setHintSolution(sol);
+    toast.success("Hint used (−10💎)");
+  }, [level, authUserId, state.positions, tryPlace]);
+
+  // Ghost replay playback
+  useEffect(() => {
+    if (!ghost || !level) { setGhostPlaying(false); return; }
+    setGhostPlaying(true);
+    const log = (ghost as unknown as { log: MoveLog[] }).log ?? [];
+    // Reset to starts
+    const init: Record<string, PiecePos> = {};
+    for (const p of level.layout.pieces) init[p.id] = { r: p.startR, c: p.startC };
+    setGhost({ positions: init, log } as unknown as { positions: Record<string, PiecePos> });
+    let cancelled = false;
+    let i = 0;
+    const step = () => {
+      if (cancelled || i >= log.length) { return; }
+      const mv = log[i++];
+      setGhost(g => g ? ({ ...g, positions: { ...g.positions, [mv.pieceId]: mv.to } }) : g);
+      const nextDelay = i < log.length ? Math.max(120, Math.min(1200, log[i].t - mv.t)) : 0;
+      window.setTimeout(step, nextDelay);
+    };
+    window.setTimeout(step, 400);
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level?.id, (ghost as unknown as { log?: MoveLog[] })?.log]);
 
   const goNext = useCallback(async () => {
     if (!mode) return;
@@ -143,7 +204,13 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
             No level available for this mode yet.
           </div>
         ) : (
-          <Board level={level} positions={state.positions} disabled={state.status !== "playing"} onMove={tryPlace} />
+          <Board
+            level={level}
+            positions={ghost && ghostPlaying ? ghost.positions : state.positions}
+            disabled={state.status !== "playing" || ghostPlaying}
+            onMove={tryPlace}
+            hintSolution={hintSolution ?? undefined}
+          />
         )}
       </div>
 
@@ -161,6 +228,9 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
             <Pill icon={<Clock className="h-3 w-3" />} label={fmtTime(state.timeMs)} />
             <Pill icon={<Move className="h-3 w-3" />} label={`${state.moves}/${level.par_moves}`} />
             <Pill icon={<Star className="h-3 w-3" />} label={`${state.correct}/${state.total}`} />
+            {authUserId && mode !== "practice" && (
+              <Pill icon={<Heart className="h-3 w-3 fill-red-500 text-red-500" />} label={`${lives.lives}/${lives.max}`} />
+            )}
           </div>
         )}
         <div className="w-16" />
@@ -170,12 +240,25 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
       {level && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-3 pb-3">
           <div className="pointer-events-auto flex gap-2 rounded-full border border-border/50 bg-background/70 px-2 py-1.5 shadow-lg backdrop-blur-md">
-            <Button size="sm" variant="ghost" className="rounded-full" onClick={restart}>
+            <Button size="sm" variant="ghost" className="rounded-full" onClick={restart} disabled={ghostPlaying}>
               <RotateCcw className="mr-1 h-3.5 w-3.5" /> Restart
             </Button>
-            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => setShowLB(true)}>
-              <Award className="mr-1 h-3.5 w-3.5" /> Leaderboard
+            <Button size="sm" variant="ghost" className="rounded-full" onClick={buyHint} disabled={ghostPlaying || state.status !== "playing"}>
+              <Lightbulb className="mr-1 h-3.5 w-3.5" /> Hint · 10💎
             </Button>
+            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => setShowLB(true)}>
+              <Award className="mr-1 h-3.5 w-3.5" /> Board
+            </Button>
+            {authUserId && mode !== "practice" && lives.lives === 0 && (
+              <Button size="sm" variant="default" className="rounded-full" onClick={lives.refill}>
+                Refill · 50💎
+              </Button>
+            )}
+            {ghostPlaying && (
+              <Button size="sm" variant="secondary" className="rounded-full" onClick={() => { setGhost(null); setGhostPlaying(false); restart(); }}>
+                Stop Ghost
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -215,10 +298,21 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
               <div className="py-6 text-center text-sm text-muted-foreground">No scores yet — be the first!</div>
             )}
             {(leaderboard as any[]).map(r => (
-              <div key={r.user_id} className="flex items-center gap-3 rounded-lg bg-muted/30 p-2 text-sm">
+              <div key={r.score_id ?? r.user_id} className="flex items-center gap-3 rounded-lg bg-muted/30 p-2 text-sm">
                 <span className="w-6 text-center font-bold text-muted-foreground">#{r.rank}</span>
                 <span className="flex-1 truncate">{r.username ?? "player"}</span>
                 <span className="text-xs text-muted-foreground">{r.stars}★ · {r.moves}m · {fmtTime(r.time_ms)}</span>
+                {r.score_id && (
+                  <Button size="sm" variant="ghost" className="h-7 rounded-full px-2" onClick={async () => {
+                    const { data } = await sb.rpc("pathescape_get_replay", { _score_id: r.score_id });
+                    const log = ((data as any)?.log ?? []) as MoveLog[];
+                    if (!log.length) { toast.info("No replay available"); return; }
+                    setShowLB(false);
+                    setGhost({ positions: {}, log } as unknown as { positions: Record<string, PiecePos> });
+                  }}>
+                    <Ghost className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </div>
             ))}
           </div>

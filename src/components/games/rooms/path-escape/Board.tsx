@@ -8,6 +8,7 @@ interface Props {
   positions: Record<string, PiecePos>;
   disabled?: boolean;
   onMove(pieceId: string, next: PiecePos): boolean;
+  hintSolution?: Level["solution"];
 }
 
 interface Camera { cell: number; cols: number; rows: number; originR: number; originC: number }
@@ -46,7 +47,7 @@ const arrowPath: Record<Dir, string> = {
   R: "M22 13 L12 5 L12 11 L4 11 L4 15 L12 15 L12 21 Z",
 };
 
-export function Board({ level, positions, disabled, onMove }: Props) {
+export function Board({ level, positions, disabled, onMove, hintSolution }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [vp, setVp] = useState({ w: 0, h: 0 });
 
@@ -89,18 +90,21 @@ export function Board({ level, positions, disabled, onMove }: Props) {
                 />
               ))
             )}
-            {level.solution.pieces.map(s => (
-              <rect key={`s-${s.id}`}
-                x={(s.c - cam.originC) * cam.cell + 4}
-                y={(s.r - cam.originR) * cam.cell + 4}
-                width={cam.cell - 8} height={cam.cell - 8}
-                rx={cam.cell * 0.12}
-                fill="none"
-                stroke="hsl(var(--primary) / 0.35)"
-                strokeDasharray="4 4"
-                strokeWidth={1.5}
-              />
-            ))}
+            {level.solution.pieces.map(s => {
+              const highlighted = !!hintSolution?.pieces.some(h => h.id === s.id);
+              return (
+                <rect key={`s-${s.id}`}
+                  x={(s.c - cam.originC) * cam.cell + 4}
+                  y={(s.r - cam.originR) * cam.cell + 4}
+                  width={cam.cell - 8} height={cam.cell - 8}
+                  rx={cam.cell * 0.12}
+                  fill={highlighted ? "hsl(var(--primary) / 0.15)" : "none"}
+                  stroke={highlighted ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.35)"}
+                  strokeDasharray={highlighted ? undefined : "4 4"}
+                  strokeWidth={highlighted ? 2 : 1.5}
+                />
+              );
+            })}
           </svg>
 
           {level.layout.pieces.map(p => {
