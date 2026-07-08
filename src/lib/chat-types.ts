@@ -54,7 +54,7 @@ export interface Message {
 }
 
 export interface RoomGameConfig {
-  type: string;                 // registry key (e.g. "arrow-puzzle")
+  type: string;                 // registry key from games-registry
   difficulty?: "easy" | "normal" | "hard";
   dailyChallenge?: boolean;
   tournament?: boolean;

@@ -186,16 +186,6 @@ const SEED_ROOMS: Room[] = [
     roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod" },
     isPublic: true,
   },
-  {
-    id: "arrow-flow",
-    name: "Arrow Flow",
-    topic: "🧩 Rotate path pieces to connect source to sink. Fewer moves = higher score.",
-    members: ["me", ...SEED_BOTS.map(b => b.id)],
-    roles: { me: "member", "bot-gamebot": "owner" },
-    isPublic: true,
-    kind: "game",
-    game: { type: "arrow-flow", difficulty: "easy", spectators: true, coinReward: 10, xpReward: 20, featured: true },
-  },
 ];
 
 interface ModEntry {
