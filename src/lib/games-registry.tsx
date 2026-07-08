@@ -20,21 +20,33 @@ export interface GameDef {
  * normal chatrooms never pull in game code. Adding a new game is one entry
  * here + one file under src/components/games/rooms/.
  */
-export const GAMES: Record<string, GameDef> = {
-  "path-flow": {
-    key: "path-flow",
-    label: "Path Flow",
-    description: "Drag path pieces onto the grid to build one continuous arrow route.",
-    icon: Waypoints,
-    Component: lazy(() => import("@/components/games/rooms/PathFlowGame")),
-  },
+const pathFlowGame: GameDef = {
+  key: "path-flow",
+  label: "Path Flow",
+  description: "Drag path pieces onto the grid to build one continuous arrow route.",
+  icon: Waypoints,
+  Component: lazy(() => import("@/components/games/rooms/PathFlowGame")),
 };
 
+export const GAMES: Record<string, GameDef> = {
+  "path-flow": pathFlowGame,
+  pathflow: pathFlowGame,
+  "arrow-puzzle": pathFlowGame,
+  arrowflow: pathFlowGame,
+};
+
+export function canonicalGameType(key: string | undefined): string | undefined {
+  if (!key) return undefined;
+  if (key === "pathflow" || key === "arrow-puzzle" || key === "arrowflow") return "path-flow";
+  return key;
+}
+
 export function getGame(key: string | undefined): GameDef | null {
-  if (!key) return null;
-  return GAMES[key] ?? null;
+  const canonical = canonicalGameType(key);
+  if (!canonical) return null;
+  return GAMES[canonical] ?? null;
 }
 
 export function listGames(): GameDef[] {
-  return Object.values(GAMES);
+  return [pathFlowGame];
 }
