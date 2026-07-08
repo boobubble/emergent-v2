@@ -1,7 +1,8 @@
 import type { Level } from "./logic";
 
-// Arrow Escape demos — single-cell arrows that fly off the board when tapped.
-// Levels are hand-crafted so blockers force a solve order.
+// Arrow Escape demos — every level is hand-verified solvable (see isSolvable()).
+// A tapped arrow flies off the board in its pointing direction when its path
+// is clear of walls and other arrows.
 
 export const DEMO_PATH_ESCAPE_LEVELS: Level[] = [
   {
@@ -13,10 +14,10 @@ export const DEMO_PATH_ESCAPE_LEVELS: Level[] = [
     grid_h: 5,
     layout: {
       pieces: [
-        // C must go right first (clear), then B up, then A left.
-        { id: "A", r: 2, c: 4, dir: "L" },
-        { id: "B", r: 4, c: 2, dir: "U" },
-        { id: "C", r: 2, c: 2, dir: "R" },
+        // A → R is blocked by B. Tap B (down, clear) first, then A, then C.
+        { id: "A", r: 0, c: 0, dir: "R" },
+        { id: "B", r: 0, c: 3, dir: "D" },
+        { id: "C", r: 3, c: 0, dir: "R" },
       ],
     },
     par_moves: 3,
@@ -32,12 +33,13 @@ export const DEMO_PATH_ESCAPE_LEVELS: Level[] = [
     grid_w: 6,
     grid_h: 6,
     layout: {
-      walls: [{ r: 2, c: 2 }, { r: 3, c: 3 }],
+      walls: [{ r: 2, c: 2 }],
       pieces: [
-        { id: "A", r: 0, c: 1, dir: "D" }, // blocked by C until C leaves right
-        { id: "B", r: 5, c: 4, dir: "U" }, // blocked by D until D leaves left
-        { id: "C", r: 1, c: 0, dir: "R" },
-        { id: "D", r: 4, c: 5, dir: "L" },
+        // A → R blocked by B. B → D clear. C → U blocked by A until A leaves.
+        { id: "A", r: 1, c: 1, dir: "R" },
+        { id: "B", r: 1, c: 4, dir: "D" },
+        { id: "C", r: 4, c: 1, dir: "U" },
+        { id: "D", r: 4, c: 4, dir: "R" }, // independent
       ],
     },
     par_moves: 4,
@@ -48,17 +50,18 @@ export const DEMO_PATH_ESCAPE_LEVELS: Level[] = [
   {
     id: "demo-pathescape-3",
     number: 3,
-    name: "Gridlock",
+    name: "Chain Reaction",
     difficulty: "hard",
     grid_w: 6,
     grid_h: 6,
     layout: {
-      walls: [{ r: 0, c: 3 }, { r: 5, c: 2 }],
+      walls: [{ r: 2, c: 0 }, { r: 5, c: 5 }],
       pieces: [
-        { id: "A", r: 2, c: 1, dir: "R" },
-        { id: "B", r: 2, c: 4, dir: "D" },
-        { id: "C", r: 4, c: 4, dir: "L" },
-        { id: "D", r: 4, c: 1, dir: "U" },
+        // D → D is clear (goes down and off). Then B → D, then A → R, then C → R.
+        { id: "A", r: 0, c: 0, dir: "R" },
+        { id: "B", r: 0, c: 3, dir: "D" },
+        { id: "C", r: 3, c: 0, dir: "R" },
+        { id: "D", r: 3, c: 3, dir: "D" },
       ],
     },
     par_moves: 4,
