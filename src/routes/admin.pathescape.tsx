@@ -55,7 +55,6 @@ function PathEscapeRollbackReport() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        icon={Compass}
         title="Path Flow — Rollback Verification"
         description="Path Flow (Path Escape) has been removed. This page verifies that no code, imports, or backend objects remain."
       />
