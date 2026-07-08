@@ -114,7 +114,7 @@ export function Board({ level, positions, disabled, onMove, hintSolution }: Prop
           </svg>
 
           {level.layout.pieces.map(p => {
-            const pos = positions[p.id]; if (!pos) return null;
+            const pos = positions[p.id] ?? { r: p.startR, c: p.startC };
             const solved = level.solution.pieces.some(s => s.id === p.id && s.r === pos.r && s.c === pos.c);
             return (
               <DraggablePiece
