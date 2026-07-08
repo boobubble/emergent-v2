@@ -6,8 +6,8 @@ import { gamify } from "@/lib/gamification-emit";
 import type { GameRuntimeProps } from "@/lib/games-registry";
 import { Board } from "./path-flow/Board";
 import { HUD } from "./path-flow/HUD";
+import { FloatingControls } from "./path-flow/FloatingControls";
 import { ResultDialog } from "./path-flow/ResultDialog";
-import { LeaderboardPanel } from "./path-flow/LeaderboardPanel";
 import { useEngine } from "./path-flow/useEngine";
 import { nextHintPiece, type Level } from "./path-flow/logic";
 
@@ -128,9 +128,9 @@ export default function PathFlowGame({ room }: GameRuntimeProps) {
   const canHint = state.status === "playing";
 
   const boardArea = useMemo(() => {
-    if (loading) return <div className="grid flex-1 place-items-center text-sm text-muted-foreground">Loading level…</div>;
+    if (loading) return <div className="grid h-full place-items-center text-sm text-muted-foreground">Loading level…</div>;
     if (!level) return (
-      <div className="grid flex-1 place-items-center px-6 text-center text-sm text-muted-foreground">
+      <div className="grid h-full place-items-center px-6 text-center text-sm text-muted-foreground">
         No enabled Path Flow levels yet. Ask an admin to publish some from <span className="mx-1 rounded bg-muted px-1 py-0.5 font-mono text-[11px]">/admin/pathflow</span>.
       </div>
     );
@@ -146,7 +146,7 @@ export default function PathFlowGame({ room }: GameRuntimeProps) {
   }, [loading, level, state.positions, state.status, hintHighlight, tryPlace]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       {level && (
         <HUD
           levelNumber={level.number}
@@ -156,19 +156,22 @@ export default function PathFlowGame({ room }: GameRuntimeProps) {
           parMoves={level.par_moves}
           parTime={level.par_time}
           hintsUsed={state.hintsUsed}
-          hintCost={HINT_COST_DEFAULT}
+        />
+      )}
+
+      <div className="relative min-h-0 flex-1 px-2 pb-16">{boardArea}</div>
+
+      {level && (
+        <FloatingControls
           canHint={canHint}
           paused={state.status === "paused"}
+          hintCost={HINT_COST_DEFAULT}
           onHint={handleHint}
           onPause={pause}
           onResume={resume}
           onRestart={restart}
         />
       )}
-
-      <div className="flex-1 py-4">{boardArea}</div>
-
-      {level && <LeaderboardPanel levelId={level.id} />}
 
       <ResultDialog
         open={!!result}

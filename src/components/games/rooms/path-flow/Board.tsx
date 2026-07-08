@@ -12,9 +12,9 @@ interface BoardProps {
 }
 
 /**
- * Renders the dotted grid + all pieces. Pieces are absolutely positioned in
- * grid coordinates and dragged with pointer events. On drop we ask the
- * engine to accept; if rejected the piece snaps back to its previous cell.
+ * Auto-fitting dotted-grid board. Fills the available width AND height of its
+ * parent and centers itself. Pieces are absolutely positioned in grid
+ * coordinates and dragged with pointer events.
  */
 export function Board({ level, positions, disabled, hintPieceId, onMove }: BoardProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -23,23 +23,31 @@ export function Board({ level, positions, disabled, hintPieceId, onMove }: Board
   useLayoutEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(entries => {
-      const w = entries[0].contentRect.width;
-      const size = Math.floor(Math.min(w / level.grid_w, 72));
-      setCell(Math.max(28, size));
-    });
+    const compute = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      if (!w || !h) return;
+      // reserve a bit of breathing room for the floating controls bar
+      const pad = 12;
+      const size = Math.floor(
+        Math.min((w - pad * 2) / level.grid_w, (h - pad * 2) / level.grid_h),
+      );
+      setCell(Math.max(24, Math.min(size, 96)));
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [level.grid_w]);
+  }, [level.grid_w, level.grid_h]);
 
   const boardW = cell * level.grid_w;
   const boardH = cell * level.grid_h;
 
   return (
-    <div ref={wrapRef} className="mx-auto w-full max-w-[680px] px-2">
+    <div ref={wrapRef} className="relative flex h-full w-full items-center justify-center">
       <div
-        className="relative mx-auto rounded-3xl border border-border/60 bg-gradient-to-br from-background/70 to-background/40 p-3 backdrop-blur-xl shadow-[0_20px_60px_-30px_hsl(var(--primary)/0.35)]"
-        style={{ width: boardW + 24, height: boardH + 24 }}
+        className="relative rounded-[28px] bg-gradient-to-br from-background/60 to-background/20 p-2 ring-1 ring-border/40 shadow-[0_30px_80px_-40px_hsl(var(--primary)/0.35)]"
+        style={{ width: boardW + 16, height: boardH + 16 }}
       >
         <div className="relative" style={{ width: boardW, height: boardH }}>
           {/* dotted grid */}
@@ -50,8 +58,8 @@ export function Board({ level, positions, disabled, hintPieceId, onMove }: Board
                   key={`${r}-${c}`}
                   cx={c * cell}
                   cy={r * cell}
-                  r={1.4}
-                  fill="hsl(var(--muted-foreground) / 0.35)"
+                  r={1.3}
+                  fill="hsl(var(--muted-foreground) / 0.32)"
                 />
               )),
             )}
@@ -113,9 +121,9 @@ function DraggablePiece({
         if (dc === 0 && dr === 0) return;
         onMove(piece.id, { r: pos.r + dr, c: pos.c + dc });
       }}
-      animate={{ x, y }}
-      transition={{ type: "spring", stiffness: 520, damping: 34 }}
-      whileTap={{ scale: 1.03 }}
+      animate={{ x, y, scale: 1 }}
+      transition={{ type: "spring", stiffness: 560, damping: 32, mass: 0.6 }}
+      whileTap={{ scale: 1.04 }}
       className={
         "absolute left-0 top-0 touch-none " +
         (disabled ? "cursor-default" : "cursor-grab active:cursor-grabbing")
