@@ -51,7 +51,7 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
   const endlessFn = useServerFn(getEndlessLevel);
   const lbFn = useServerFn(getLeaderboard);
 
-  const [mode, setMode] = useState<Mode | null>("practice");
+  const [mode, setMode] = useState<Mode | null>(null);
   const [level, setLevel] = useState<Level | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<null | { stars: number; perfect: boolean; coins: number; xp: number; record: boolean; timeMs: number; moves: number }>(null);
