@@ -54,7 +54,12 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<null | { stars: number; perfect: boolean; coins: number; xp: number; record: boolean; timeMs: number; moves: number }>(null);
   const [showLB, setShowLB] = useState(false);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [hintSolution, setHintSolution] = useState<Level["solution"] | null>(null);
+  const [ghost, setGhost] = useState<null | { positions: Record<string, PiecePos> }>(null);
+  const [ghostPlaying, setGhostPlaying] = useState(false);
 
+  const lives = useLives(authUserId);
   const { state, tryPlace, restart } = useEngine(level);
 
   const { data: daily } = useQuery({ queryKey: ["pe-daily"], queryFn: () => dailyFn({}), staleTime: 60_000 });
