@@ -95,12 +95,23 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
     } finally { setLoading(false); }
   }, [authUserId, daily, weekly, endlessFn]);
 
-  useEffect(() => { if (mode) { loadForMode(mode); gamify(`pathescape.${mode}.started`, 1); } }, [mode, loadForMode]);
+  useEffect(() => {
+    if (!mode) return;
+    setHintsUsed(0); setHintSolution(null);
+    loadForMode(mode);
+    gamify(`pathescape.${mode}.started`, 1);
+  }, [mode, loadForMode]);
+
+  // Consume a life on new level (scored modes only)
+  useEffect(() => {
+    if (!level || !mode || mode === "practice" || !authUserId) return;
+    lives.consume().then(ok => { if (!ok) { setMode(null); setLevel(null); } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level?.id]);
 
   useEffect(() => {
     if (state.status !== "won" || !level || !authUserId || !mode) return;
     if (mode === "practice") {
-      // No score submit for practice.
       setResult({ stars: 3, perfect: state.moves <= level.par_moves, coins: 0, xp: 0, record: false, timeMs: state.timeMs, moves: state.moves });
       pushSystem(room.id, `🧪 Practice: solved Level ${level.number} in ${state.moves} moves`);
       return;
@@ -109,7 +120,7 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
     (async () => {
       const { data, error } = await sb.rpc("pathescape_submit_score", {
         _level_id: level.id, _time_ms: state.timeMs, _moves: state.moves,
-        _hints_used: 0, _mode: mode, _room_id: room.id, _replay_log: state.log,
+        _hints_used: hintsUsed, _mode: mode, _room_id: room.id, _replay_log: state.log,
       });
       if (cancelled) return;
       if (error) { toast.error(error.message || "Score rejected"); return; }
@@ -123,7 +134,32 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
       if (r.record_broken) pushSystem(room.id, `🔥 New personal record!`);
     })();
     return () => { cancelled = true; };
-  }, [state.status, state.timeMs, state.moves, state.log, level, authUserId, mode, pushSystem, room.id]);
+  }, [state.status, state.timeMs, state.moves, state.log, level, authUserId, mode, pushSystem, room.id, hintsUsed]);
+
+  const buyHint = useCallback(async () => {
+    if (!level || !authUserId) { toast.error("Sign in to use hints"); return; }
+    const { data, error } = await sb.rpc("pathescape_buy_hint", { _level_id: level.id, _hint_type: "reveal_piece", _cost: 10 });
+    if (error) { toast.error(error.message || "Not enough coins"); return; }
+    const sol = (data?.solution ?? level.solution) as Level["solution"];
+    // Snap one un-solved piece into place
+    const target = sol.pieces.find(sp => {
+      const p = state.positions[sp.id];
+      return !p || p.r !== sp.r || p.c !== sp.c;
+    });
+    if (target) {
+      const ok = tryPlace(target.id, { r: target.r, c: target.c });
+      if (!ok) { setHintSolution(sol); toast.info("Hint revealed — path is blocked, clear it first"); return; }
+    }
+    setHintsUsed(n => n + 1);
+    setHintSolution(sol);
+    toast.success("Hint used (−10💎)");
+  }, [level, authUserId, state.positions, tryPlace]);
+
+  // Ghost replay playback
+  useEffect(() => {
+    if (!ghost || !level) return;
+    setGhostPlaying(true);
+  }, [ghost, level]);
 
   const goNext = useCallback(async () => {
     if (!mode) return;
