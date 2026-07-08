@@ -147,19 +147,25 @@ export default function PathFlowGame({ room }: GameRuntimeProps) {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-      {level && (
-        <HUD
-          levelNumber={level.number}
-          difficulty={level.difficulty}
-          timeMs={state.timeMs}
-          moves={state.moves}
-          parMoves={level.par_moves}
-          parTime={level.par_time}
-          hintsUsed={state.hintsUsed}
-        />
-      )}
+      {/* board fills the entire viewport */}
+      <div className="relative min-h-0 flex-1">{boardArea}</div>
 
-      <div className="relative min-h-0 flex-1 px-2 pb-16">{boardArea}</div>
+      {/* HUD floats over the top, does not consume layout height */}
+      {level && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
+          <div className="pointer-events-auto">
+            <HUD
+              levelNumber={level.number}
+              difficulty={level.difficulty}
+              timeMs={state.timeMs}
+              moves={state.moves}
+              parMoves={level.par_moves}
+              parTime={level.par_time}
+              hintsUsed={state.hintsUsed}
+            />
+          </div>
+        </div>
+      )}
 
       {level && (
         <FloatingControls
