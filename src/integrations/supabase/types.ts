@@ -2974,10 +2974,13 @@ export type Database = {
           profile_views_enabled: boolean
           profile_views_friends_only: boolean
           profile_views_unlocked_full: boolean
+          show_about_me: boolean
           show_birthday: boolean
+          show_city: boolean
           show_country_flag: boolean
           show_gender: boolean
           show_guest_badge: boolean
+          show_interests: boolean
           sound_prefs: Json
           status: string
           streak: number
@@ -3021,10 +3024,13 @@ export type Database = {
           profile_views_enabled?: boolean
           profile_views_friends_only?: boolean
           profile_views_unlocked_full?: boolean
+          show_about_me?: boolean
           show_birthday?: boolean
+          show_city?: boolean
           show_country_flag?: boolean
           show_gender?: boolean
           show_guest_badge?: boolean
+          show_interests?: boolean
           sound_prefs?: Json
           status?: string
           streak?: number
@@ -3068,10 +3074,13 @@ export type Database = {
           profile_views_enabled?: boolean
           profile_views_friends_only?: boolean
           profile_views_unlocked_full?: boolean
+          show_about_me?: boolean
           show_birthday?: boolean
+          show_city?: boolean
           show_country_flag?: boolean
           show_gender?: boolean
           show_guest_badge?: boolean
+          show_interests?: boolean
           sound_prefs?: Json
           status?: string
           streak?: number
@@ -4767,61 +4776,76 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           birthday: string | null
+          city: string | null
           country_code: string | null
           gender: string | null
           hide_birth_year: boolean | null
           id: string | null
+          interests: string[] | null
           is_bot: boolean | null
           is_official: boolean | null
           last_seen: string | null
           level: number | null
           longest_streak: number | null
+          show_about_me: boolean | null
+          show_city: boolean | null
           show_country_flag: boolean | null
           show_guest_badge: boolean | null
+          show_interests: boolean | null
           status: string | null
           streak: number | null
           username: string | null
           xp: number | null
         }
         Insert: {
-          about_me?: string | null
+          about_me?: never
           avatar_color?: string | null
           avatar_url?: string | null
-          bio?: string | null
+          bio?: never
           birthday?: never
+          city?: never
           country_code?: never
           gender?: never
           hide_birth_year?: boolean | null
           id?: string | null
+          interests?: never
           is_bot?: boolean | null
           is_official?: boolean | null
           last_seen?: string | null
           level?: number | null
           longest_streak?: number | null
+          show_about_me?: boolean | null
+          show_city?: boolean | null
           show_country_flag?: boolean | null
           show_guest_badge?: boolean | null
+          show_interests?: boolean | null
           status?: string | null
           streak?: number | null
           username?: string | null
           xp?: number | null
         }
         Update: {
-          about_me?: string | null
+          about_me?: never
           avatar_color?: string | null
           avatar_url?: string | null
-          bio?: string | null
+          bio?: never
           birthday?: never
+          city?: never
           country_code?: never
           gender?: never
           hide_birth_year?: boolean | null
           id?: string | null
+          interests?: never
           is_bot?: boolean | null
           is_official?: boolean | null
           last_seen?: string | null
           level?: number | null
           longest_streak?: number | null
+          show_about_me?: boolean | null
+          show_city?: boolean | null
           show_country_flag?: boolean | null
           show_guest_badge?: boolean | null
+          show_interests?: boolean | null
           status?: string | null
           streak?: number | null
           username?: string | null
