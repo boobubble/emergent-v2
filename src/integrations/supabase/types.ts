@@ -2765,6 +2765,41 @@ export type Database = {
         }
         Relationships: []
       }
+      pathescape_daily: {
+        Row: {
+          coin_reward: number
+          created_at: string
+          day: string
+          level_id: string
+          seed: number
+          xp_reward: number
+        }
+        Insert: {
+          coin_reward?: number
+          created_at?: string
+          day: string
+          level_id: string
+          seed?: number
+          xp_reward?: number
+        }
+        Update: {
+          coin_reward?: number
+          created_at?: string
+          day?: string
+          level_id?: string
+          seed?: number
+          xp_reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathescape_daily_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "pathescape_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pathescape_levels: {
         Row: {
           admin_notes: string | null
@@ -2922,6 +2957,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "pathescape_scores_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "pathescape_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathescape_weekly: {
+        Row: {
+          coin_reward: number
+          created_at: string
+          level_id: string
+          top_prize_coins: number
+          week_start: string
+          xp_reward: number
+        }
+        Insert: {
+          coin_reward?: number
+          created_at?: string
+          level_id: string
+          top_prize_coins?: number
+          week_start: string
+          xp_reward?: number
+        }
+        Update: {
+          coin_reward?: number
+          created_at?: string
+          level_id?: string
+          top_prize_coins?: number
+          week_start?: string
+          xp_reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathescape_weekly_level_id_fkey"
             columns: ["level_id"]
             isOneToOne: false
             referencedRelation: "pathescape_levels"
@@ -5329,6 +5399,56 @@ export type Database = {
       }
       my_coin_balance: { Args: never; Returns: number }
       my_competition_vote: { Args: { _competition: string }; Returns: string }
+      pathescape_current_daily: {
+        Args: never
+        Returns: {
+          coin_reward: number
+          day: string
+          level_id: string
+          seed: number
+          xp_reward: number
+        }[]
+      }
+      pathescape_current_weekly: {
+        Args: never
+        Returns: {
+          coin_reward: number
+          level_id: string
+          top_prize_coins: number
+          week_start: string
+          xp_reward: number
+        }[]
+      }
+      pathescape_endless_level: {
+        Args: { _exclude_solved_by?: string }
+        Returns: {
+          coin_reward: number
+          difficulty: Database["public"]["Enums"]["pathescape_difficulty"]
+          grid_h: number
+          grid_w: number
+          id: string
+          layout: Json
+          name: string
+          number: number
+          par_moves: number
+          par_time: number
+          solution: Json
+          xp_reward: number
+        }[]
+      }
+      pathescape_leaderboard: {
+        Args: { _level_id: string; _limit?: number }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          moves: number
+          rank: number
+          stars: number
+          time_ms: number
+          user_id: string
+          username: string
+        }[]
+      }
       pathescape_submit_score: {
         Args: {
           _hints_used?: number

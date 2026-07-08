@@ -19,6 +19,7 @@ import {
   adminListLevels, adminSaveLevel, adminDeleteLevel, adminBulkSetEnabled,
   adminValidateLevel, adminLevelStats,
 } from "@/lib/pathescape.functions";
+import { adminListSchedule, adminPinDaily, adminPinWeekly } from "@/lib/pathescape-modes.functions";
 import type { Dir } from "@/lib/pathescape-solver";
 
 export const Route = createFileRoute("/admin/pathescape")({
@@ -248,6 +249,7 @@ function AdminPathEscape() {
       <Tabs defaultValue="levels">
         <TabsList>
           <TabsTrigger value="levels">Levels</TabsTrigger>
+          <TabsTrigger value="schedule">Daily / Weekly</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
@@ -318,6 +320,12 @@ function AdminPathEscape() {
           </div>
         </TabsContent>
 
+        <TabsContent value="schedule" className="space-y-4">
+          <ScheduleTab levels={levels as any[]} />
+        </TabsContent>
+
+
+
         <TabsContent value="analytics" className="space-y-2">
           {(levels as any[]).map((l: any) => {
             const st = (stats as any)[l.id];
@@ -344,6 +352,95 @@ function AdminPathEscape() {
     </div>
   );
 }
+
+// ---------- Schedule Tab (Daily / Weekly) ----------
+function ScheduleTab({ levels }: { levels: any[] }) {
+  const listFn = useServerFn(adminListSchedule);
+  const pinDailyFn = useServerFn(adminPinDaily);
+  const pinWeeklyFn = useServerFn(adminPinWeekly);
+  const qc = useQueryClient();
+  const { data } = useQuery({ queryKey: ["pe-schedule"], queryFn: () => listFn({}) });
+
+  const today = new Date().toISOString().slice(0, 10);
+  const monday = (() => {
+    const d = new Date();
+    const day = (d.getUTCDay() + 6) % 7;
+    d.setUTCDate(d.getUTCDate() - day);
+    return d.toISOString().slice(0, 10);
+  })();
+
+  const [dailyDay, setDailyDay] = useState(today);
+  const [dailyLevel, setDailyLevel] = useState<string>("");
+  const [weeklyStart, setWeeklyStart] = useState(monday);
+  const [weeklyLevel, setWeeklyLevel] = useState<string>("");
+
+  const dailyM = useMutation({
+    mutationFn: () => pinDailyFn({ data: { day: dailyDay, levelId: dailyLevel } }),
+    onSuccess: () => { toast.success("Daily pinned"); qc.invalidateQueries({ queryKey: ["pe-schedule"] }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+  const weeklyM = useMutation({
+    mutationFn: () => pinWeeklyFn({ data: { weekStart: weeklyStart, levelId: weeklyLevel } }),
+    onSuccess: () => { toast.success("Weekly pinned"); qc.invalidateQueries({ queryKey: ["pe-schedule"] }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+
+  const enabledLevels = levels.filter(l => l.enabled);
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <Card><CardContent className="space-y-3 p-4">
+        <div className="flex items-center gap-2 font-semibold"><Compass className="h-4 w-4" /> Daily Challenge</div>
+        <div className="grid grid-cols-2 gap-2">
+          <div><Label>Day (UTC)</Label><Input type="date" value={dailyDay} onChange={e => setDailyDay(e.target.value)} /></div>
+          <div>
+            <Label>Level</Label>
+            <Select value={dailyLevel} onValueChange={setDailyLevel}>
+              <SelectTrigger><SelectValue placeholder="Pick a level" /></SelectTrigger>
+              <SelectContent>{enabledLevels.map(l => <SelectItem key={l.id} value={l.id}>#{l.number} · {l.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        </div>
+        <Button size="sm" disabled={!dailyLevel} onClick={() => dailyM.mutate()}>Pin daily</Button>
+        <div className="space-y-1 pt-2">
+          <div className="text-xs font-semibold text-muted-foreground">Upcoming & recent</div>
+          {((data as any)?.daily ?? []).map((d: any) => (
+            <div key={d.day} className="flex items-center justify-between rounded bg-muted/40 px-2 py-1 text-xs">
+              <span>{d.day}</span>
+              <span className="text-muted-foreground">#{d.level?.number} · {d.level?.name}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent></Card>
+
+      <Card><CardContent className="space-y-3 p-4">
+        <div className="flex items-center gap-2 font-semibold"><Star className="h-4 w-4" /> Weekly Tournament</div>
+        <div className="grid grid-cols-2 gap-2">
+          <div><Label>Week start (Mon UTC)</Label><Input type="date" value={weeklyStart} onChange={e => setWeeklyStart(e.target.value)} /></div>
+          <div>
+            <Label>Level</Label>
+            <Select value={weeklyLevel} onValueChange={setWeeklyLevel}>
+              <SelectTrigger><SelectValue placeholder="Pick a level" /></SelectTrigger>
+              <SelectContent>{enabledLevels.map(l => <SelectItem key={l.id} value={l.id}>#{l.number} · {l.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        </div>
+        <Button size="sm" disabled={!weeklyLevel} onClick={() => weeklyM.mutate()}>Pin weekly</Button>
+        <div className="space-y-1 pt-2">
+          <div className="text-xs font-semibold text-muted-foreground">Upcoming & recent</div>
+          {((data as any)?.weekly ?? []).map((w: any) => (
+            <div key={w.week_start} className="flex items-center justify-between rounded bg-muted/40 px-2 py-1 text-xs">
+              <span>{w.week_start}</span>
+              <span className="text-muted-foreground">#{w.level?.number} · {w.level?.name}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent></Card>
+    </div>
+  );
+}
+
+
 
 // ---------- Visual Level Editor ----------
 type Tool = { kind: "piece"; dir: Dir } | { kind: "target" } | { kind: "erase" };
