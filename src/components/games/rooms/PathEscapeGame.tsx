@@ -82,7 +82,7 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
           .select("id, number, name, difficulty, grid_w, grid_h, layout, solution, par_moves, par_time, coin_reward, xp_reward")
           .eq("enabled", true).limit(50);
         const arr = (data as Level[]) ?? [];
-        setLevel(arr.length ? arr[Math.floor(Math.random() * arr.length)] : null);
+        setLevel(arr.length ? (arr[Math.floor(Math.random() * arr.length)] as unknown as Level) : null);
       }
     } finally { setLoading(false); }
   }, [authUserId, daily, weekly, endlessFn]);
