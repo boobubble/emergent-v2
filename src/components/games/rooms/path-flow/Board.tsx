@@ -57,19 +57,23 @@ export function Board({ level, positions, disabled, hintPieceId, onMove }: Board
             )}
           </svg>
 
-          {level.layout.pieces.map(p => (
-            <DraggablePiece
-              key={p.id}
-              piece={p}
-              pos={positions[p.id]}
-              cell={cell}
-              boardW={boardW}
-              boardH={boardH}
-              disabled={disabled}
-              highlight={hintPieceId === p.id ? "hint" : null}
-              onMove={onMove}
-            />
-          ))}
+          {level.layout.pieces.map(p => {
+            const pos = positions[p.id];
+            if (!pos) return null;
+            return (
+              <DraggablePiece
+                key={p.id}
+                piece={p}
+                pos={pos}
+                cell={cell}
+                boardW={boardW}
+                boardH={boardH}
+                disabled={disabled}
+                highlight={hintPieceId === p.id ? "hint" : null}
+                onMove={onMove}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
