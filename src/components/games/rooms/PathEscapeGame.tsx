@@ -298,10 +298,21 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
               <div className="py-6 text-center text-sm text-muted-foreground">No scores yet — be the first!</div>
             )}
             {(leaderboard as any[]).map(r => (
-              <div key={r.user_id} className="flex items-center gap-3 rounded-lg bg-muted/30 p-2 text-sm">
+              <div key={r.score_id ?? r.user_id} className="flex items-center gap-3 rounded-lg bg-muted/30 p-2 text-sm">
                 <span className="w-6 text-center font-bold text-muted-foreground">#{r.rank}</span>
                 <span className="flex-1 truncate">{r.username ?? "player"}</span>
                 <span className="text-xs text-muted-foreground">{r.stars}★ · {r.moves}m · {fmtTime(r.time_ms)}</span>
+                {r.score_id && (
+                  <Button size="sm" variant="ghost" className="h-7 rounded-full px-2" onClick={async () => {
+                    const { data } = await sb.rpc("pathescape_get_replay", { _score_id: r.score_id });
+                    const log = ((data as any)?.log ?? []) as MoveLog[];
+                    if (!log.length) { toast.info("No replay available"); return; }
+                    setShowLB(false);
+                    setGhost({ positions: {}, log } as unknown as { positions: Record<string, PiecePos> });
+                  }}>
+                    <Ghost className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </div>
             ))}
           </div>
