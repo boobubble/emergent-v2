@@ -157,9 +157,26 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
 
   // Ghost replay playback
   useEffect(() => {
-    if (!ghost || !level) return;
+    if (!ghost || !level) { setGhostPlaying(false); return; }
     setGhostPlaying(true);
-  }, [ghost, level]);
+    const log = (ghost as unknown as { log: MoveLog[] }).log ?? [];
+    // Reset to starts
+    const init: Record<string, PiecePos> = {};
+    for (const p of level.layout.pieces) init[p.id] = { r: p.startR, c: p.startC };
+    setGhost({ positions: init, log } as unknown as { positions: Record<string, PiecePos> });
+    let cancelled = false;
+    let i = 0;
+    const step = () => {
+      if (cancelled || i >= log.length) { return; }
+      const mv = log[i++];
+      setGhost(g => g ? ({ ...g, positions: { ...g.positions, [mv.pieceId]: mv.to } }) : g);
+      const nextDelay = i < log.length ? Math.max(120, Math.min(1200, log[i].t - mv.t)) : 0;
+      window.setTimeout(step, nextDelay);
+    };
+    window.setTimeout(step, 400);
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level?.id, (ghost as unknown as { log?: MoveLog[] })?.log]);
 
   const goNext = useCallback(async () => {
     if (!mode) return;
