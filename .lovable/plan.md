@@ -1,83 +1,108 @@
-# Path Flow — Build Plan
+# Path Escape — Phased Build Plan
 
-Original path-connection puzzle (inspired by the reference video, no copied assets), plugged into the existing Game Room system. **All existing infra reused**: Game Rooms, Wallet, XP, Gamification, Leaderboards, Notifications, Spectator, Admin Panel.
+Original puzzle game (arrow-path connection genre) plugged into existing BooBubble systems. No existing feature (Wallet, XP, Gamification, Achievements, Notifications, Leaderboards, Game Rooms, Admin, Tournaments) is rebuilt — Path Escape only registers with them.
 
-## Scope for this build (MVP that feels complete)
+Because the previous Path Flow attempt was rolled back after being built end-to-end, this build is split into shippable phases. Each phase is independently testable and leaves the app in a working state. We stop after each phase for your OK.
 
-**In**
-- Gameplay: grid board, draggable path-piece groups, snap-to-grid, no-overlap, one-solution validation, smooth motion (Framer Motion).
-- HUD: level #, difficulty, timer, moves, 3-star rating, hint, restart, pause, leave.
-- Level system: fully data-driven table `pathflow_levels` (no hardcoded levels). Admin CRUD + JSON import/export + preview.
-- Star + progression: per-user `pathflow_progress` (highest level, stars, best time, best moves, perfect solves) + `pathflow_scores` for leaderboards.
-- Hint system: consumes coins via existing `wallet_apply` RPC; hint cost + free daily hints stored in `app_settings`.
-- Daily Challenge: one deterministic level per day (chosen server-side from featured pool), shared across all users, own leaderboard.
-- Leaderboards: global / daily / room (fastest time, least moves) via existing leaderboard patterns.
-- System event feed: post `system` messages ("Rahul completed Level 12", "⭐ Perfect Solve", "🔥 New room record").
-- Gamification events: `pathflow.started/completed/perfect/record.broken/daily.completed`.
-- Registry entry + lazy-loaded module (only loads inside Game Rooms).
-- Admin page: `/admin/pathflow` — levels CRUD, difficulty, rewards, hint economy, daily-challenge picker, enable/disable, JSON I/O.
-- Original BooBubble UI: glassmorphism cards, dark/light, mobile-first, 60fps drag.
-- Server-side anti-cheat: min-time floor, min-moves floor, dedupe per (user, level, day), reject impossible submits.
+---
 
-**Deferred (called out, not built now)** — noted in `.lovable/plan.md`:
-- Replay recording, Ghost Mode races, Weekly Tournaments, Friend leaderboards tab, Rotate-enabled levels, Haptics, Badges/Frames unlocks. All can plug into the same tables later.
+## Design principles (apply to every phase)
 
-## Data model (new tables, all with GRANTs + RLS)
+- Original code, art, sounds, level data. No copied assets or names.
+- SVG-only board rendering, mobile-first, board fills viewport (fix from Path Flow).
+- All Coins/XP go through `wallet_apply()` and the existing gamification engine — no reward code inside the game.
+- Server-authoritative scoring. Client never grants rewards.
+- Emits only the `pathescape.*` event keys — engine handles achievements/quests/missions.
+- Deterministic level format + solver-based validation → guarantees single-solution.
+- Lazy-loaded from the game registry; nothing loads outside a Game Room hosting it.
 
-```text
-pathflow_levels           admin-writable, public-readable when enabled=true
-  number, difficulty, grid_w, grid_h, layout(jsonb), solution(jsonb),
-  par_moves, par_time, coin_reward, xp_reward, enabled, version, featured
+---
 
-pathflow_progress         one row per user
-  user_id PK, highest_level, stars_total, perfect_solves,
-  best_times(jsonb), best_moves(jsonb), completion_pct
+## Phase 1 — Foundation (DB + engine + minimal playable)
 
-pathflow_scores           one row per (user, level, kind='level'|'daily')
-  user_id, level_id, kind, day_key, time_ms, moves, hints_used,
-  stars, perfect, created_at
+- Migration: `pathescape_levels`, `pathescape_progress`, `pathescape_scores` (with GRANTs + RLS).
+- Level format: JSON (`grid_w`, `grid_h`, `pieces[{id,cells[{r,c,dir}],startR,startC}]`, `solution[]`, `par_moves`, `par_time`).
+- Pure engine module (`logic.ts`, `useEngine.ts`) — reused later by validator, solver, replay.
+- Auto-fitting SVG board (camera math, no CSS scale) — the correct version of the Path Flow board.
+- Register `path-escape` in `games-registry`, add "Path Escape" seed game room.
+- RPC `pathescape_submit_score` calls `wallet_apply()` + emits `pathescape.*` events.
+- Playable Story mode with 3 hand-authored seed levels for smoke testing.
 
-pathflow_daily            one row per day
-  day_key PK, level_id, participants, fastest_time_ms, least_moves
-```
+Deliverable: a working game inside a Game Room, coins/XP credited via wallet, no admin UI yet.
 
-Plus RPCs: `pathflow_submit_score(...)` (validates + writes score + progress + emits gamification), `pathflow_buy_hint(...)` (calls `wallet_apply`), `pathflow_daily_current()`.
+---
 
-## Files
+## Phase 2 — Admin Level Builder
 
-```text
-src/components/games/rooms/PathFlowGame.tsx         entry, lazy-loaded
-src/components/games/rooms/path-flow/
-  Board.tsx           grid + pieces + drag
-  Piece.tsx           SVG arrow-piece renderer
-  HUD.tsx             timer/moves/stars/hint/restart
-  ResultDialog.tsx    win screen with stars + rewards
-  LeaderboardPanel.tsx
-  useEngine.ts        game state machine
-  logic.ts            pure grid math + solution validation + star calc
-src/lib/pathflow.functions.ts   server fns (list levels, submit, buy hint, daily)
-src/routes/admin.pathflow.tsx   admin CRUD page
-supabase migration              tables + RLS + GRANTs + RPCs
-```
+- Route `/admin/pathescape` with tabs: **Levels**, **Settings**, **Analytics** (empty tab), **Daily/Weekly** (empty tab).
+- Visual grid editor (place pieces, set arrows, mark solution).
+- Actions: Create, Duplicate, Preview, Test Play, Import/Export JSON, Bulk enable/disable/delete, Draft/Publish, Schedule release, Version history (row per save).
+- **Solver-based validation** on save: rejects unsolvable, multi-solution, or disconnected levels. This is what guarantees "only one correct answer".
+- Difficulty enum + filter/search.
 
-Registry: add one entry in `src/lib/games-registry.tsx`. Chat-store: seed one "Path Flow" game room. AdminNav: add `/admin/pathflow` under Community → Games.
+Deliverable: unlimited admin-authored levels, no code deploys.
 
-## Technical notes
+---
 
-- Levels stored as `layout: { pieces: [{id, cells:[{r,c,dir}]}] }` and `solution: { pieces: [{id, r, c}] }` — piece = connected group of directional cells; solution stores each piece's top-left offset in the final grid.
-- Solved-check: place all pieces at their current positions → the union of arrows must exactly equal the solution's arrow map, no overlaps, no cell left uncovered by an arrow of the target path.
-- Drag uses pointer events + Framer Motion `useMotionValue`, snap on release.
-- Hints reveal one correct piece placement (animates it home); each hint costs coins via `wallet_apply` (`_kind: 'pathflow_hint'`, `_direction: 'debit'`).
-- Anti-cheat in `pathflow_submit_score`: reject `time_ms < par_time * 0.25`, `moves < solution_pieces`, and dedupe same (user, level, day).
-- Star formula: 3 = perfect (0 hints, ≤ par_moves, ≤ par_time); 2 = ≤ par_time OR ≤ par_moves; 1 = completed.
+## Phase 3 — Modes: Daily Challenge + Weekly Tournament
 
-## Delivery order
+- `pathescape_daily` table + `pathescape_current_daily()` RPC (seeded from published level pool by date).
+- Weekly tournament: reuse existing tournament engine — Path Escape only registers an event source and submits scores. No new tournament engine.
+- Countdown, per-mode leaderboards (Daily, Weekly, All-time) via existing leaderboard reads scoped by `mode`.
+- Practice + Endless flags on the mode selector (Endless behind a feature flag, no gameplay yet).
 
-1. Migration (tables + RLS + GRANTs + RPCs) → wait for approval.
-2. Registry + chat-store seed + AdminNav entry.
-3. Engine + Board + HUD + ResultDialog + logic.
-4. Server fns + hint flow + score submit + daily fetch.
-5. Admin CRUD page with JSON import/export + preview.
-6. Update `.lovable/plan.md` with what's shipped + what's deferred.
+Deliverable: three live modes, all wired to existing leaderboard/tournament infra.
 
-Reply **approve** to proceed, or tell me what to add/cut.
+---
+
+## Phase 4 — Lives, Hints, Ghosts, Replay
+
+- Lives system (Admin: Unlimited / 3 / 5 / Energy regen / Coin refill). Regen job via existing scheduler.
+- Hint flow calls existing `wallet_apply()` with configurable cost, cooldown, free-daily.
+- Replay: store move log (`[{pieceId, from, to, t}]`) on score submission; deterministic playback from log + level id (no video).
+- Ghost mode: overlay best replay (Personal / Friend / Room / World) — reuses same replay format.
+
+Deliverable: full single-player loop feature-complete.
+
+---
+
+## Phase 5 — Room + Spectator + System Events
+
+- Path Escape rooms: hide chat composer, center = game, bottom = system-event feed (already-existing `pushSystem`).
+- Spectator view: read-only board + live moves/timer/progress via existing realtime channel used by other games.
+- System event templates for start / complete / perfect / record / coins earned.
+
+Deliverable: full multiplayer-shell parity with other Game Room games.
+
+---
+
+## Phase 6 — Anti-cheat + Analytics + Polish
+
+- Server validators: min-time-per-move floor, replay ↔ final-state check, per-user submit rate limit, idempotency key on submit, HMAC on move log.
+- Admin Analytics tab: Players Online, Started/Finished, Avg Time/Moves, Completion %, Hint Usage, Most Failed/Played/Abandoned Level, Retention hooks (feeds existing analytics tables).
+- Sound + music + haptics toggles (assets: original short SFX only; no music track by default — user can upload one).
+- Achievements: seed the listed set as rows in the existing achievements table (no new engine).
+- Save/Resume: `pathescape_progress` persists in-flight state; auto-resume on reopen.
+
+Deliverable: production-ready game.
+
+---
+
+## Technical notes (for the technical reader)
+
+- **Import protection**: server logic in `*.functions.ts` under `src/lib/`; admin/service-role reads inside handler bodies via `await import('@/integrations/supabase/client.server')`.
+- **Solver**: DFS with pruning over piece placements; used both for admin validation and daily-level generation from a template pool.
+- **RLS**: `pathescape_levels` — public SELECT on `enabled=true` only; admin write via `has_role('admin')`. `pathescape_scores`/`pathescape_progress` scoped to `auth.uid()`.
+- **Board rendering**: bounding-box camera → cell size = `min(availW/cols, availH/rows)`; SVG viewport; no CSS scale.
+- **Event keys reserved**: `pathescape.started|completed|failed|perfect|record|daily|weekly|tournament`.
+- **No new schemas** in `auth`, `storage`, `realtime`, `supabase_functions`, `vault`.
+
+---
+
+## What I need from you before I start Phase 1
+
+1. Confirm the working name **Path Escape** and the URL slug **`/admin/pathescape`** (both admin-renameable later).
+2. Confirm phased delivery — I will stop after each phase for your review, not build all six in one go.
+3. Confirm you're OK with the DB migration in Phase 1 creating three new tables + one RPC (all Path-Escape-prefixed, no touches to shared tables).
+
+Reply "go phase 1" and I'll start.
