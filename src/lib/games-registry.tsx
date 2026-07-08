@@ -1,5 +1,5 @@
-import { lazy, type ComponentType, type LazyExoticComponent } from "react";
-import { Waypoints, type LucideIcon } from "lucide-react";
+import { type ComponentType, type LazyExoticComponent } from "react";
+import { type LucideIcon } from "lucide-react";
 import type { Room, RoomGameConfig } from "@/lib/chat-types";
 
 export interface GameRuntimeProps {
@@ -16,28 +16,12 @@ export interface GameDef {
 }
 
 /**
- * Registry of pluggable Game Room games. Each Component is React.lazy so
- * normal chatrooms never pull in game code. Adding a new game is one entry
- * here + one file under src/components/games/rooms/.
+ * Registry of pluggable Game Room games. Currently empty — add entries here
+ * plus a matching file under src/components/games/rooms/ to plug in new games.
  */
-const pathFlowGame: GameDef = {
-  key: "path-flow",
-  label: "Path Flow",
-  description: "Drag path pieces onto the grid to build one continuous arrow route.",
-  icon: Waypoints,
-  Component: lazy(() => import("@/components/games/rooms/PathFlowGame")),
-};
-
-export const GAMES: Record<string, GameDef> = {
-  "path-flow": pathFlowGame,
-  pathflow: pathFlowGame,
-  "arrow-puzzle": pathFlowGame,
-  arrowflow: pathFlowGame,
-};
+export const GAMES: Record<string, GameDef> = {};
 
 export function canonicalGameType(key: string | undefined): string | undefined {
-  if (!key) return undefined;
-  if (key === "pathflow" || key === "arrow-puzzle" || key === "arrowflow") return "path-flow";
   return key;
 }
 
@@ -48,5 +32,5 @@ export function getGame(key: string | undefined): GameDef | null {
 }
 
 export function listGames(): GameDef[] {
-  return [pathFlowGame];
+  return [];
 }
