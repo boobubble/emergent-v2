@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, Move, RotateCcw, Star, Trophy, Calendar, Flame, Infinity as InfIcon, Award, ChevronLeft, Heart, Lightbulb, Ghost, Play } from "lucide-react";
+import { Clock, Move, RotateCcw, Star, Trophy, Calendar, Flame, Infinity as InfIcon, Award, ChevronLeft, Heart, Lightbulb, Ghost } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
