@@ -46,12 +46,14 @@ export function useEngine(level: Level | null) {
   }, [level]);
 
   useEffect(() => {
-    if (!level) return;
-    if (status === "playing" && isCleared(level, removed)) {
+    if (!level || status !== "playing") return;
+    if (isCleared(level, removed)) {
       if (startRef.current != null) accumRef.current += Date.now() - startRef.current;
       startRef.current = null;
       setTimeMs(accumRef.current);
       setStatus("won");
+    } else if (!hasAnyMove(level, removed)) {
+      setStatus("stuck");
     }
   }, [removed, status, level]);
 
