@@ -248,6 +248,7 @@ function AdminPathEscape() {
       <Tabs defaultValue="levels">
         <TabsList>
           <TabsTrigger value="levels">Levels</TabsTrigger>
+          <TabsTrigger value="schedule">Daily / Weekly</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
