@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, Move, RotateCcw, Star, Trophy, Calendar, Flame, Infinity as InfIcon, Award, ChevronLeft } from "lucide-react";
+import { Clock, Move, RotateCcw, Star, Trophy, Calendar, Flame, Infinity as InfIcon, Award, ChevronLeft, Heart, Lightbulb, Ghost, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,14 @@ import { gamify } from "@/lib/gamification-emit";
 import type { GameRuntimeProps } from "@/lib/games-registry";
 import { Board } from "./path-escape/Board";
 import { useEngine } from "./path-escape/useEngine";
-import type { Level } from "./path-escape/logic";
+import type { Level, PiecePos } from "./path-escape/logic";
+import { useLives } from "./path-escape/useLives";
 import { getCurrentDaily, getCurrentWeekly, getEndlessLevel, getLeaderboard } from "@/lib/pathescape-modes.functions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
+
+interface MoveLog { pieceId: string; from: PiecePos; to: PiecePos; t: number }
 
 export type Mode = "story" | "daily" | "weekly" | "endless" | "practice";
 
