@@ -19,6 +19,7 @@ import {
   adminListLevels, adminSaveLevel, adminDeleteLevel, adminBulkSetEnabled,
   adminValidateLevel, adminLevelStats,
 } from "@/lib/pathescape.functions";
+import { adminListSchedule, adminPinDaily, adminPinWeekly } from "@/lib/pathescape-modes.functions";
 import type { Dir } from "@/lib/pathescape-solver";
 
 export const Route = createFileRoute("/admin/pathescape")({
