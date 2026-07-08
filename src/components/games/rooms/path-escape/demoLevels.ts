@@ -55,7 +55,7 @@ export const DEMO_PATH_ESCAPE_LEVELS: Level[] = [
     grid_w: 6,
     grid_h: 6,
     layout: {
-      walls: [{ r: 0, c: 5 }, { r: 5, c: 0 }],
+      walls: [{ r: 2, c: 0 }, { r: 5, c: 5 }],
       pieces: [
         // D → D is clear (goes down and off). Then B → D, then A → R, then C → R.
         { id: "A", r: 0, c: 0, dir: "R" },
