@@ -186,6 +186,16 @@ const SEED_ROOMS: Room[] = [
     roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod" },
     isPublic: true,
   },
+  {
+    id: "path-flow",
+    name: "Path Flow",
+    topic: "🧩 Drag path pieces to build one continuous route. Compete for the fastest time.",
+    members: ["me", ...SEED_BOTS.map(b => b.id)],
+    roles: { me: "member", "bot-gamebot": "owner" },
+    isPublic: true,
+    kind: "game",
+    game: { type: "path-flow", difficulty: "normal", spectators: true, coinReward: 5, xpReward: 10 },
+  },
 ];
 
 interface ModEntry {
