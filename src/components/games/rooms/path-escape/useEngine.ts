@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { canExit, hasAnyMove, isCleared, type Level } from "./logic";
 
-export type Status = "playing" | "won";
+export type Status = "playing" | "won" | "stuck";
 export interface MoveLog { pieceId: string; t: number }
 
 export function useEngine(level: Level | null) {
