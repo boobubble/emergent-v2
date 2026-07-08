@@ -82,6 +82,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/poll-widget", label: "Poll Widget",   icon: Vote,          keywords: ["poll", "polls", "vote", "voting", "chatroom widget", "discovery", "trending poll", "poll of the day"] },
 
       { to: "/admin/games",       label: "Games",        icon: Gamepad2,      keywords: ["mini-games"] },
+      { to: "/admin/pathescape",  label: "Path Escape",  icon: Compass,       keywords: ["path escape", "puzzle", "levels", "arrows", "grid", "game"] },
 
 
 
