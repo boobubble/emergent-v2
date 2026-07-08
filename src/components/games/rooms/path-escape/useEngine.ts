@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { collides, correctCount, inBounds, isSolved, occupancy, type Level, type PiecePos } from "./logic";
+import { canExit, isCleared, type Level } from "./logic";
 
-export type Status = "idle" | "playing" | "paused" | "won";
-export interface MoveLog { pieceId: string; from: PiecePos; to: PiecePos; t: number }
+export type Status = "playing" | "won";
+export interface MoveLog { pieceId: string; t: number }
 
 export function useEngine(level: Level | null) {
-  const [positions, setPositions] = useState<Record<string, PiecePos>>({});
+  const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [moves, setMoves] = useState(0);
   const [status, setStatus] = useState<Status>("playing");
   const [timeMs, setTimeMs] = useState(0);
@@ -15,9 +15,7 @@ export function useEngine(level: Level | null) {
 
   useEffect(() => {
     if (!level) return;
-    const init: Record<string, PiecePos> = {};
-    for (const p of level.layout.pieces) init[p.id] = { r: p.startR, c: p.startC };
-    setPositions(init);
+    setRemoved(new Set());
     setMoves(0); setTimeMs(0); setLog([]);
     accumRef.current = 0; startRef.current = Date.now();
     setStatus("playing");
@@ -31,43 +29,37 @@ export function useEngine(level: Level | null) {
     return () => window.clearInterval(id);
   }, [status]);
 
-  const tryPlace = useCallback((pieceId: string, target: PiecePos): boolean => {
+  const tapPiece = useCallback((pieceId: string): boolean => {
     if (!level || status !== "playing") return false;
-    const piece = level.layout.pieces.find(p => p.id === pieceId);
-    if (!piece) return false;
-    if (!inBounds(piece, target, level.grid_w, level.grid_h)) return false;
-    if (collides(piece, target, occupancy(level.layout.pieces, positions, pieceId))) return false;
-    const cur = positions[pieceId];
-    if (cur && cur.r === target.r && cur.c === target.c) return true;
-    setPositions(p => ({ ...p, [pieceId]: target }));
+    if (!canExit(level, pieceId, removed)) return false;
+    const next = new Set(removed); next.add(pieceId);
+    setRemoved(next);
     setMoves(m => m + 1);
-    setLog(l => [...l, { pieceId, from: cur, to: target, t: Date.now() - (startRef.current ?? Date.now()) + accumRef.current }]);
+    setLog(l => [...l, { pieceId, t: Date.now() - (startRef.current ?? Date.now()) + accumRef.current }]);
     return true;
-  }, [level, positions, status]);
+  }, [level, removed, status]);
 
   const restart = useCallback(() => {
     if (!level) return;
-    const init: Record<string, PiecePos> = {};
-    for (const p of level.layout.pieces) init[p.id] = { r: p.startR, c: p.startC };
-    setPositions(init); setMoves(0); setTimeMs(0); setLog([]);
+    setRemoved(new Set()); setMoves(0); setTimeMs(0); setLog([]);
     accumRef.current = 0; startRef.current = Date.now(); setStatus("playing");
   }, [level]);
 
   useEffect(() => {
     if (!level) return;
-    if (status === "playing" && isSolved(level, positions)) {
+    if (status === "playing" && isCleared(level, removed)) {
       if (startRef.current != null) accumRef.current += Date.now() - startRef.current;
       startRef.current = null;
       setTimeMs(accumRef.current);
       setStatus("won");
     }
-  }, [positions, status, level]);
+  }, [removed, status, level]);
 
   const state = useMemo(() => ({
-    positions, moves, timeMs, status, log,
-    correct: level ? correctCount(level, positions) : 0,
-    total: level?.solution.pieces.length ?? 0,
-  }), [positions, moves, timeMs, status, log, level]);
+    removed, moves, timeMs, status, log,
+    correct: removed.size,
+    total: level?.layout.pieces.length ?? 0,
+  }), [removed, moves, timeMs, status, log, level]);
 
-  return { state, tryPlace, restart };
+  return { state, tapPiece, restart };
 }
