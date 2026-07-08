@@ -16,7 +16,7 @@ export const Route = createFileRoute("/admin/pathescape")({
 // Client-side scan for lingering source references. Vite's import.meta.glob
 // runs at build time, so this reflects the shipped bundle.
 const ALL_SOURCE = import.meta.glob(
-  "/src/**/*.{ts,tsx,js,jsx,sql}",
+  ["/src/**/*.{ts,tsx,js,jsx,sql}", "!/src/routeTree.gen.ts", "!/src/integrations/supabase/**"],
   { query: "?raw", import: "default", eager: true },
 ) as Record<string, string>;
 
