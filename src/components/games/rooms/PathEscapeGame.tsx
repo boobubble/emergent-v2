@@ -35,10 +35,13 @@ async function fetchProgress(userId: string | null): Promise<number> {
   const { data } = await sb.from("pathescape_progress").select("highest_level").eq("user_id", userId).maybeSingle();
   return (data?.highest_level as number) ?? 0;
 }
-function playableLevel(level: Level | null | undefined, fallback: Level): Level {
+function isPlayableLevel(level: Level | null | undefined): level is Level {
   const pieces = level?.layout?.pieces ?? [];
   const targets = level?.solution?.pieces ?? [];
-  return pieces.length > 0 && targets.length >= pieces.length ? level as Level : fallback;
+  return pieces.length > 0 && targets.length >= pieces.length;
+}
+function playableLevel(level: Level | null | undefined, fallback: Level): Level {
+  return isPlayableLevel(level) ? level : fallback;
 }
 const fmtTime = (ms: number) => {
   const s = Math.floor(ms / 1000);
@@ -96,7 +99,7 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
         const { data } = await sb.from("pathescape_levels")
           .select("id, number, name, difficulty, grid_w, grid_h, layout, solution, par_moves, par_time, coin_reward, xp_reward")
           .eq("enabled", true).limit(50);
-        const arr = (((data as unknown) as Level[]) ?? []).filter(l => playableLevel(l, DEMO_SENTINEL) === l);
+        const arr = (((data as unknown) as Level[]) ?? []).filter(isPlayableLevel);
         setLevel(arr.length ? arr[Math.floor(Math.random() * arr.length)] : randomFallbackLevel());
       }
     } finally { setLoading(false); }
