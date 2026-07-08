@@ -5189,7 +5189,6 @@ export type Database = {
       }
       my_coin_balance: { Args: never; Returns: number }
       my_competition_vote: { Args: { _competition: string }; Returns: string }
-      pathescape_removal_report: { Args: never; Returns: Json }
       purchase_dm_wallpaper: {
         Args: {
           _channel_id?: string
