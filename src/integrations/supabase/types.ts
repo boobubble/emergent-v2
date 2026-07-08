@@ -2765,6 +2765,190 @@ export type Database = {
         }
         Relationships: []
       }
+      pathflow_daily: {
+        Row: {
+          created_at: string
+          day_key: string
+          fastest_time_ms: number | null
+          least_moves: number | null
+          level_id: string
+          participants: number
+        }
+        Insert: {
+          created_at?: string
+          day_key: string
+          fastest_time_ms?: number | null
+          least_moves?: number | null
+          level_id: string
+          participants?: number
+        }
+        Update: {
+          created_at?: string
+          day_key?: string
+          fastest_time_ms?: number | null
+          least_moves?: number | null
+          level_id?: string
+          participants?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathflow_daily_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "pathflow_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathflow_levels: {
+        Row: {
+          coin_reward: number
+          created_at: string
+          difficulty: string
+          enabled: boolean
+          featured: boolean
+          grid_h: number
+          grid_w: number
+          id: string
+          layout: Json
+          number: number
+          par_moves: number
+          par_time: number
+          solution: Json
+          updated_at: string
+          version: number
+          xp_reward: number
+        }
+        Insert: {
+          coin_reward?: number
+          created_at?: string
+          difficulty?: string
+          enabled?: boolean
+          featured?: boolean
+          grid_h: number
+          grid_w: number
+          id?: string
+          layout: Json
+          number: number
+          par_moves?: number
+          par_time?: number
+          solution: Json
+          updated_at?: string
+          version?: number
+          xp_reward?: number
+        }
+        Update: {
+          coin_reward?: number
+          created_at?: string
+          difficulty?: string
+          enabled?: boolean
+          featured?: boolean
+          grid_h?: number
+          grid_w?: number
+          id?: string
+          layout?: Json
+          number?: number
+          par_moves?: number
+          par_time?: number
+          solution?: Json
+          updated_at?: string
+          version?: number
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      pathflow_progress: {
+        Row: {
+          best_moves: Json
+          best_times: Json
+          completions: number
+          highest_level: number
+          perfect_solves: number
+          stars_by_level: Json
+          stars_total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          best_moves?: Json
+          best_times?: Json
+          completions?: number
+          highest_level?: number
+          perfect_solves?: number
+          stars_by_level?: Json
+          stars_total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          best_moves?: Json
+          best_times?: Json
+          completions?: number
+          highest_level?: number
+          perfect_solves?: number
+          stars_by_level?: Json
+          stars_total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pathflow_scores: {
+        Row: {
+          created_at: string
+          day_key: string
+          hints_used: number
+          id: string
+          kind: string
+          level_id: string
+          level_number: number
+          moves: number
+          perfect: boolean
+          room_id: string | null
+          stars: number
+          time_ms: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_key?: string
+          hints_used?: number
+          id?: string
+          kind?: string
+          level_id: string
+          level_number: number
+          moves: number
+          perfect?: boolean
+          room_id?: string | null
+          stars?: number
+          time_ms: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_key?: string
+          hints_used?: number
+          id?: string
+          kind?: string
+          level_id?: string
+          level_number?: number
+          moves?: number
+          perfect?: boolean
+          room_id?: string | null
+          stars?: number
+          time_ms?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathflow_scores_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "pathflow_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_providers: {
         Row: {
           config: Json
@@ -5165,6 +5349,38 @@ export type Database = {
       }
       my_coin_balance: { Args: never; Returns: number }
       my_competition_vote: { Args: { _competition: string }; Returns: string }
+      pathflow_buy_hint: { Args: { _cost: number }; Returns: Json }
+      pathflow_current_daily: {
+        Args: never
+        Returns: {
+          coin_reward: number
+          day_key: string
+          difficulty: string
+          fastest_time_ms: number
+          grid_h: number
+          grid_w: number
+          layout: Json
+          least_moves: number
+          level_id: string
+          level_number: number
+          par_moves: number
+          par_time: number
+          participants: number
+          solution: Json
+          xp_reward: number
+        }[]
+      }
+      pathflow_submit_score: {
+        Args: {
+          _hints_used: number
+          _kind?: string
+          _level_id: string
+          _moves: number
+          _room_id?: string
+          _time_ms: number
+        }
+        Returns: Json
+      }
       purchase_dm_wallpaper: {
         Args: {
           _channel_id?: string
