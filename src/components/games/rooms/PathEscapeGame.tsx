@@ -247,9 +247,11 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
             <div className="rounded-lg bg-muted/50 p-2"><div className="text-muted-foreground">Coins</div><div className="font-semibold">+{result?.coins ?? 0}</div></div>
             <div className="rounded-lg bg-muted/50 p-2"><div className="text-muted-foreground">XP</div><div className="font-semibold">+{result?.xp ?? 0}</div></div>
           </div>
-          <div className="mt-3 flex gap-2">
+          <p className="mt-4 text-center text-sm font-medium">Ready for the next level?</p>
+          <div className="mt-2 flex gap-2">
             <Button variant="outline" className="flex-1" onClick={() => { setResult(null); restart(); }}>Replay</Button>
-            <Button className="flex-1" onClick={goNext}>Next</Button>
+            <Button variant="ghost" className="flex-1" onClick={() => { setResult(null); setMode(null); setLevel(null); }}>Exit</Button>
+            <Button className="flex-1" onClick={goNext}>Start Next</Button>
           </div>
         </DialogContent>
       </Dialog>
