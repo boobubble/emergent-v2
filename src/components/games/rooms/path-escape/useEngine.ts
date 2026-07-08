@@ -7,7 +7,7 @@ export interface MoveLog { pieceId: string; from: PiecePos; to: PiecePos; t: num
 export function useEngine(level: Level | null) {
   const [positions, setPositions] = useState<Record<string, PiecePos>>({});
   const [moves, setMoves] = useState(0);
-  const [status, setStatus] = useState<Status>("idle");
+  const [status, setStatus] = useState<Status>("playing");
   const [timeMs, setTimeMs] = useState(0);
   const [log, setLog] = useState<MoveLog[]>([]);
   const startRef = useRef<number | null>(null);
