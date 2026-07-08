@@ -193,6 +193,16 @@ const SEED_ROOMS: Room[] = [
     roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod" },
     isPublic: true,
   },
+  {
+    id: "path-escape",
+    name: "Path Escape",
+    topic: "🧭 Drag arrow pieces to build the escape route. Fastest solve wins.",
+    members: ["me", ...SEED_BOTS.map(b => b.id)],
+    roles: { me: "member", "bot-gamebot": "owner" },
+    isPublic: true,
+    kind: "game",
+    game: { type: "path-escape", difficulty: "normal", spectators: true, coinReward: 10, xpReward: 10 },
+  },
 ];
 
 interface ModEntry {

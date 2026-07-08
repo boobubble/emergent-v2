@@ -1,5 +1,5 @@
-import { type ComponentType, type LazyExoticComponent } from "react";
-import { type LucideIcon } from "lucide-react";
+import { lazy, type ComponentType, type LazyExoticComponent } from "react";
+import { Compass, type LucideIcon } from "lucide-react";
 import type { Room, RoomGameConfig } from "@/lib/chat-types";
 
 export interface GameRuntimeProps {
@@ -15,13 +15,22 @@ export interface GameDef {
   Component: LazyExoticComponent<ComponentType<GameRuntimeProps>>;
 }
 
-/**
- * Registry of pluggable Game Room games. Currently empty — add entries here
- * plus a matching file under src/components/games/rooms/ to plug in new games.
- */
-export const GAMES: Record<string, GameDef> = {};
+const pathEscape: GameDef = {
+  key: "path-escape",
+  label: "Path Escape",
+  description: "Drag arrow pieces onto the marked cells to build the escape route.",
+  icon: Compass,
+  Component: lazy(() => import("@/components/games/rooms/PathEscapeGame")),
+};
+
+export const GAMES: Record<string, GameDef> = {
+  "path-escape": pathEscape,
+  pathescape: pathEscape,
+};
 
 export function canonicalGameType(key: string | undefined): string | undefined {
+  if (!key) return undefined;
+  if (key === "pathescape") return "path-escape";
   return key;
 }
 
@@ -32,5 +41,5 @@ export function getGame(key: string | undefined): GameDef | null {
 }
 
 export function listGames(): GameDef[] {
-  return [];
+  return [pathEscape];
 }
