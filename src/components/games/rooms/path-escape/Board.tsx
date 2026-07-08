@@ -125,8 +125,8 @@ export function Board({ level, positions, disabled, onMove, hintSolution }: Prop
               />
             );
           })}
-        </div>
-      )}
+      </div>
+
     </div>
   );
 }
