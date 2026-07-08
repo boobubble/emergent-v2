@@ -75,7 +75,7 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
       } else if (m === "endless") {
         if (!authUserId) { toast.error("Sign in to play Endless"); setMode(null); return; }
         const lvl = await endlessFn({});
-        setLevel(lvl as Level | null);
+        setLevel((lvl as unknown as Level | null) ?? null);
       } else if (m === "practice") {
         // random enabled level, no rewards
         const { data } = await sb.from("pathescape_levels")
