@@ -13,6 +13,7 @@ import { Board } from "./path-escape/Board";
 import { useEngine } from "./path-escape/useEngine";
 import type { Level, PiecePos } from "./path-escape/logic";
 import { useLives } from "./path-escape/useLives";
+import { fallbackLevel, randomFallbackLevel } from "./path-escape/demoLevels";
 import { getCurrentDaily, getCurrentWeekly, getEndlessLevel, getLeaderboard } from "@/lib/pathescape-modes.functions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,11 +76,11 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
     try {
       if (m === "story") {
         const highest = await fetchProgress(authUserId);
-        setLevel(await fetchStoryLevel(highest + 1));
+        setLevel((await fetchStoryLevel(highest + 1)) ?? fallbackLevel(highest + 1));
       } else if (m === "daily") {
-        setLevel((daily as any)?.level ?? null);
+        setLevel((daily as any)?.level ?? fallbackLevel(1));
       } else if (m === "weekly") {
-        setLevel((weekly as any)?.level ?? null);
+        setLevel((weekly as any)?.level ?? fallbackLevel(2));
       } else if (m === "endless") {
         if (!authUserId) { toast.error("Sign in to play Endless"); setMode(null); return; }
         const lvl = await endlessFn({});
@@ -90,7 +91,7 @@ export default function PathEscapeGame({ room }: GameRuntimeProps) {
           .select("id, number, name, difficulty, grid_w, grid_h, layout, solution, par_moves, par_time, coin_reward, xp_reward")
           .eq("enabled", true).limit(50);
         const arr = ((data as unknown) as Level[]) ?? [];
-        setLevel(arr.length ? arr[Math.floor(Math.random() * arr.length)] : null);
+        setLevel(arr.length ? arr[Math.floor(Math.random() * arr.length)] : randomFallbackLevel());
       }
     } finally { setLoading(false); }
   }, [authUserId, daily, weekly, endlessFn]);
