@@ -58,7 +58,11 @@ export async function decryptBackup(bytes: Uint8Array, password: string): Promis
   const cipher = bytes.slice(MAGIC.length + 16 + 12);
   const key = await deriveKey(password, salt);
   try {
-    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, cipher);
+    const plain = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: iv as unknown as BufferSource },
+      key,
+      cipher as unknown as BufferSource,
+    );
     return new Uint8Array(plain);
   } catch {
     throw new Error("Incorrect password or corrupted backup");
