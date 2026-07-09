@@ -357,3 +357,127 @@ export const dumpDatabaseSql = createServerFn({ method: "POST" })
     };
   });
 
+
+// --- Extras: storage config, RLS policies, extensions, realtime, cron, meta ---
+// Reads live catalogs via a single admin RPC so future tables/buckets/jobs
+// are included automatically. All output is formatted into files the ZIP
+// builder drops into database/*.
+function ident(s: string): string {
+  return `"${String(s).replace(/"/g, '""')}"`;
+}
+function lit(v: any): string {
+  return sqlLiteral(v);
+}
+
+export const exportBackupExtras = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { data, error } = await (context.supabase as any).rpc("admin_export_extras");
+    if (error) throw new Error(`extras export failed: ${error.message}`);
+    const x = (data ?? {}) as any;
+    const now = new Date().toISOString();
+
+    // storage.sql — bucket definitions (idempotent upserts)
+    let storageSql = `-- BooBubble Storage Dump\n-- Generated: ${now}\n\n`;
+    for (const b of x.storage_buckets ?? []) {
+      storageSql +=
+        `INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types, avif_autodetection, owner)\n` +
+        `VALUES (${lit(b.id)}, ${lit(b.name)}, ${lit(!!b.public)}, ${lit(b.file_size_limit ?? null)}, ` +
+        `${lit(b.allowed_mime_types ?? null)}, ${lit(b.avif_autodetection ?? false)}, ${lit(b.owner ?? null)})\n` +
+        `ON CONFLICT (id) DO UPDATE SET\n` +
+        `  public = EXCLUDED.public,\n` +
+        `  file_size_limit = EXCLUDED.file_size_limit,\n` +
+        `  allowed_mime_types = EXCLUDED.allowed_mime_types,\n` +
+        `  avif_autodetection = EXCLUDED.avif_autodetection;\n\n`;
+    }
+
+    // policies.sql — every RLS policy across public + storage
+    let policiesSql = `-- BooBubble RLS Policies\n-- Generated: ${now}\n\n`;
+    const tablesSeen = new Set<string>();
+    for (const p of x.policies ?? []) {
+      const qual = p.qualified_table ?? `${p.schemaname}.${p.tablename}`;
+      const tkey = `${p.schemaname}.${p.tablename}`;
+      if (!tablesSeen.has(tkey)) {
+        policiesSql += `ALTER TABLE ${ident(p.schemaname)}.${ident(p.tablename)} ENABLE ROW LEVEL SECURITY;\n`;
+        tablesSeen.add(tkey);
+      }
+      const roles = Array.isArray(p.roles) ? p.roles.join(", ") : (p.roles ?? "public");
+      policiesSql += `DROP POLICY IF EXISTS ${ident(p.policyname)} ON ${ident(p.schemaname)}.${ident(p.tablename)};\n`;
+      policiesSql += `CREATE POLICY ${ident(p.policyname)} ON ${ident(p.schemaname)}.${ident(p.tablename)}\n`;
+      policiesSql += `  AS ${p.permissive ?? "PERMISSIVE"} FOR ${p.cmd ?? "ALL"} TO ${roles}`;
+      if (p.qual) policiesSql += `\n  USING (${p.qual})`;
+      if (p.with_check) policiesSql += `\n  WITH CHECK (${p.with_check})`;
+      policiesSql += `;\n\n`;
+      void qual;
+    }
+
+    // extensions.sql
+    let extensionsSql = `-- BooBubble Extensions\n-- Generated: ${now}\n\n`;
+    for (const e of x.extensions ?? []) {
+      extensionsSql += `CREATE EXTENSION IF NOT EXISTS ${ident(e.name)} WITH SCHEMA ${ident(e.schema)};\n`;
+    }
+
+    // cron.sql — safe re-schedule via cron.schedule
+    let cronSql = `-- BooBubble Scheduled Jobs (pg_cron)\n-- Generated: ${now}\n\n`;
+    if ((x.cron_jobs ?? []).length === 0) {
+      cronSql += `-- No cron jobs found (pg_cron may be disabled or empty).\n`;
+    } else {
+      for (const j of x.cron_jobs ?? []) {
+        const jobname = j.jobname ?? `job_${j.jobid}`;
+        cronSql += `-- ${jobname} (active=${j.active})\n`;
+        cronSql += `SELECT cron.schedule(${lit(jobname)}, ${lit(j.schedule)}, $CRON$${j.command}$CRON$);\n\n`;
+      }
+    }
+
+    // realtime.json
+    const realtimeJson = {
+      generated_at: now,
+      publications: x.publications ?? [],
+      tables: x.realtime_tables ?? [],
+    };
+
+    // auth.json — metadata only, never secrets
+    const authJson = {
+      generated_at: now,
+      note: "Provider secrets and SMTP credentials are managed outside the database and are never exported. Reconfigure them on the destination project.",
+      providers_in_use: x.auth_providers ?? [],
+    };
+
+    // project-info.json
+    const projectInfo = {
+      generated_at: now,
+      backup_version: 2,
+      pg_version: x.pg_version ?? null,
+      total_tables: x.total_tables ?? null,
+      total_buckets: x.total_buckets ?? null,
+      total_users: x.total_users ?? null,
+      total_files: x.total_files ?? null,
+      migration_count: (x.migrations ?? []).length,
+      migrations: x.migrations ?? [],
+    };
+
+    return {
+      version: 2,
+      generated_at: now,
+      files: {
+        "storage.sql": storageSql,
+        "policies.sql": policiesSql,
+        "extensions.sql": extensionsSql,
+        "cron.sql": cronSql,
+        "realtime.json": JSON.stringify(realtimeJson, null, 2),
+        "auth.json": JSON.stringify(authJson, null, 2),
+      },
+      project_info: projectInfo,
+      counts: {
+        storage_buckets: (x.storage_buckets ?? []).length,
+        policies: (x.policies ?? []).length,
+        extensions: (x.extensions ?? []).length,
+        cron_jobs: (x.cron_jobs ?? []).length,
+        publications: (x.publications ?? []).length,
+        realtime_tables: (x.realtime_tables ?? []).length,
+      },
+    };
+  });
+
+

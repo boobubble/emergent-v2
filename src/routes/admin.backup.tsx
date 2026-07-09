@@ -25,6 +25,7 @@ import {
   ensureStorageBucket,
   uploadMediaFile,
   dumpDatabaseSql,
+  exportBackupExtras,
 } from "@/lib/backup.functions";
 import {
   recordBackupHistory, listBackupHistory, deleteBackupHistory,
@@ -114,6 +115,7 @@ function BackupPage() {
   const runEnsureBucket = useServerFn(ensureStorageBucket);
   const runUpload = useServerFn(uploadMediaFile);
   const runDumpSql = useServerFn(dumpDatabaseSql);
+  const runExtras = useServerFn(exportBackupExtras);
   const runRecord = useServerFn(recordBackupHistory);
   const runList = useServerFn(listBackupHistory);
   const runDelete = useServerFn(deleteBackupHistory);
@@ -175,7 +177,11 @@ function BackupPage() {
     mediaFiles?: { bucket: string; path: string; bytes: Uint8Array }[],
     databaseFiles?: { name: string; content: string }[],
     extraInfo?: Record<string, unknown>,
-    opts?: { skipDownload?: boolean },
+    opts?: {
+      skipDownload?: boolean;
+      restoreFiles?: { name: string; content: string }[];
+      includeChecksums?: boolean;
+    },
   ): Promise<{ blob: Blob; filename: string; meta: Record<string, unknown> }> {
     const zip = new JSZip();
     const stamp = todayStamp();
@@ -187,6 +193,7 @@ function BackupPage() {
       parts: parts.map((p) => p.name),
       media_files: mediaFiles?.length ?? 0,
       database_files: databaseFiles?.map((f) => f.name) ?? [],
+      restore_scripts: opts?.restoreFiles?.map((f) => f.name) ?? [],
       ...extraInfo,
     };
     zip.file("manifest.json", JSON.stringify(meta, null, 2));
@@ -196,12 +203,33 @@ function BackupPage() {
       const db = zip.folder("database")!;
       for (const f of databaseFiles) db.file(f.name, f.content);
     }
+    if (opts?.restoreFiles?.length) {
+      const r = zip.folder("restore")!;
+      for (const f of opts.restoreFiles) r.file(f.name, f.content);
+    }
     if (mediaFiles?.length) {
       const media = zip.folder("media")!;
       for (const f of mediaFiles) {
         media.file(`${f.bucket}/${f.path}`, f.bytes);
       }
     }
+
+    // Per-file SHA-256 index (checksums.sha256) — computed BEFORE finalize
+    if (opts?.includeChecksums) {
+      const lines: string[] = [];
+      const entries: { path: string; obj: JSZip.JSZipObject }[] = [];
+      zip.forEach((relPath, obj) => {
+        if (!obj.dir) entries.push({ path: relPath, obj });
+      });
+      entries.sort((a, b) => a.path.localeCompare(b.path));
+      for (const e of entries) {
+        const bytes = await e.obj.async("uint8array");
+        const hex = await sha256Hex(bytes);
+        lines.push(`${hex}  ${e.path}`);
+      }
+      zip.file("checksums.sha256", lines.join("\n") + "\n");
+    }
+
     const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
     const fname = `backup_${stamp}_${label}.zip`;
     if (!opts?.skipDownload) {
@@ -210,6 +238,49 @@ function BackupPage() {
     }
     return { blob, filename: fname, meta };
   }
+
+  // Restore scripts (templates — user customizes DB URL / project ref).
+  function restoreScripts(): { name: string; content: string }[] {
+    const sh = `#!/usr/bin/env bash
+# BooBubble backup restore (Linux/macOS)
+# Usage: DATABASE_URL=postgres://... ./restore.sh
+set -euo pipefail
+: "\${DATABASE_URL:?Set DATABASE_URL to the target Postgres connection string}"
+HERE="$(cd "$(dirname "$0")/.." && pwd)"
+echo "==> Extensions";  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$HERE/database/extensions.sql" || true
+echo "==> Schema";      psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$HERE/database/schema.sql"
+echo "==> Data";        psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$HERE/database/data.sql"
+echo "==> Policies";    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$HERE/database/policies.sql" || true
+echo "==> Storage cfg"; psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$HERE/database/storage.sql" || true
+echo "==> Cron jobs";   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$HERE/database/cron.sql" || true
+echo "Done. Media files under $HERE/media/ must be re-uploaded via the Backup Center Restore button or the Supabase Storage API."
+`;
+    const ps1 = `# BooBubble backup restore (Windows PowerShell)
+# Usage: $env:DATABASE_URL="postgres://..."; .\\restore.ps1
+$ErrorActionPreference = "Stop"
+if (-not $env:DATABASE_URL) { throw "Set DATABASE_URL to the target Postgres connection string" }
+$Here = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+foreach ($f in @("extensions.sql","schema.sql","data.sql","policies.sql","storage.sql","cron.sql")) {
+  $p = Join-Path $Here "database\\$f"
+  if (Test-Path $p) { Write-Host "==> $f"; psql $env:DATABASE_URL -v ON_ERROR_STOP=1 -f $p }
+}
+Write-Host "Done. Re-upload media/ via the Backup Center Restore button."
+`;
+    const verify = `#!/usr/bin/env bash
+# Verify every file in the backup matches checksums.sha256
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$HERE"
+if [ ! -f checksums.sha256 ]; then echo "checksums.sha256 missing"; exit 1; fi
+sha256sum -c checksums.sha256
+`;
+    return [
+      { name: "restore.sh",  content: sh },
+      { name: "restore.ps1", content: ps1 },
+      { name: "verify.sh",   content: verify },
+    ];
+  }
+
 
 
   async function fetchMediaFiles(manifest: any) {
@@ -275,32 +346,63 @@ function BackupPage() {
       });
       setProgress({ label: "Downloading media", done: 2, total: 5 });
       const files = await fetchMediaFiles(manifest);
-      const databaseFiles = sqlDump
-        ? [
-            { name: "database.sql", content: sqlDump.full_sql },
-            { name: "schema.sql", content: sqlDump.schema_sql },
-            { name: "data.sql", content: sqlDump.data_sql },
-            { name: "stats.json", content: JSON.stringify(sqlDump.stats, null, 2) },
-          ]
-        : undefined;
+
+      // Extras: storage config, RLS policies, extensions, realtime, cron, meta.
+      // Best-effort — never blocks the backup if the RPC is unavailable.
+      const extras = await runExtras({}).catch((e) => {
+        console.warn("Extras export failed:", e?.message);
+        toast.warning("Extras skipped: " + (e?.message ?? "error"));
+        return null;
+      });
+
+      const databaseFiles: { name: string; content: string }[] = [];
+      if (sqlDump) {
+        databaseFiles.push(
+          { name: "database.sql", content: sqlDump.full_sql },
+          { name: "schema.sql",   content: sqlDump.schema_sql },
+          { name: "data.sql",     content: sqlDump.data_sql },
+          { name: "stats.json",   content: JSON.stringify(sqlDump.stats, null, 2) },
+        );
+      }
+      if (extras) {
+        for (const [name, content] of Object.entries(extras.files)) {
+          databaseFiles.push({ name, content: content as string });
+        }
+      }
 
       setProgress({ label: "Building ZIP", done: 3, total: 5 });
+      const parts: { name: string; content: string }[] = [
+        { name: "database.json", content: JSON.stringify(db, null, 2) },
+        { name: "media-manifest.json", content: JSON.stringify(manifest, null, 2) },
+      ];
+      if (extras) {
+        parts.push({ name: "project-info.json", content: JSON.stringify(extras.project_info, null, 2) });
+      }
+      const startedAt = Date.now();
       const built = await buildFullZip(
-        [
-          { name: "database.json", content: JSON.stringify(db, null, 2) },
-          { name: "media-manifest.json", content: JSON.stringify(manifest, null, 2) },
-        ],
+        parts,
         "full",
         files,
-        databaseFiles,
+        databaseFiles.length ? databaseFiles : undefined,
         {
           database_sql_included: !!sqlDump,
-          total_tables: sqlDump?.stats.tables ?? null,
+          extras_included: !!extras,
+          total_tables: sqlDump?.stats.tables ?? extras?.project_info.total_tables ?? null,
           total_rows_exported: sqlDump?.stats.rows ?? null,
+          total_buckets: extras?.project_info.total_buckets ?? null,
+          total_users: extras?.project_info.total_users ?? null,
+          total_files: extras?.project_info.total_files ?? null,
+          extras_counts: extras?.counts ?? null,
+          export_duration_ms: Date.now() - startedAt,
           encrypted: encryptEnabled,
         },
-        { skipDownload: true },
+        {
+          skipDownload: true,
+          restoreFiles: restoreScripts(),
+          includeChecksums: true,
+        },
       );
+
 
       // Verify the ZIP before we announce success.
       setProgress({ label: "Verifying backup", done: 4, total: 5 });
