@@ -440,9 +440,36 @@ function BackupPage() {
   async function onRestoreFile(file: File) {
     setBusy("restore");
     try {
-      const zip = await JSZip.loadAsync(file);
+      // Decrypt on the fly if the file is encrypted.
+      let workingFile = file;
+      const rawBytes = new Uint8Array(await file.arrayBuffer());
+      if (isEncryptedBackup(rawBytes)) {
+        const pw = window.prompt("Backup is encrypted. Enter password to restore:");
+        if (!pw) { setBusy(null); return; }
+        const plain = await decryptBackup(rawBytes, pw);
+        workingFile = new File([plain as unknown as BlobPart], file.name.replace(/\.enc$/i, ""));
+      }
+      const zip = await JSZip.loadAsync(workingFile);
 
-      // 1) Database dry-run verify (if present)
+      // 1) Apply SQL schema then data if present (one-click restore).
+      const schemaEntry = zip.file("database/schema.sql");
+      const dataEntry = zip.file("database/data.sql");
+      let schemaResult: any = null;
+      let dataResult: any = null;
+      if (schemaEntry) {
+        setProgress({ label: "Restoring schema", done: 0, total: 1 });
+        const sql = await schemaEntry.async("text");
+        schemaResult = await runRestoreSql({ data: { sql, phase: "schema" } });
+        setProgress({ label: "Restoring schema", done: 1, total: 1 });
+      }
+      if (dataEntry) {
+        setProgress({ label: "Restoring data", done: 0, total: 1 });
+        const sql = await dataEntry.async("text");
+        dataResult = await runRestoreSql({ data: { sql, phase: "data" } });
+        setProgress({ label: "Restoring data", done: 1, total: 1 });
+      }
+
+      // 2) Database dry-run verify (legacy JSON summary, if present)
       let dbSummary = { tables: 0, rows: 0 };
       const dbEntry = zip.file("database.json");
       if (dbEntry) {
