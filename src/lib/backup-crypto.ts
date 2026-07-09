@@ -18,7 +18,7 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
     ["deriveKey"],
   );
   return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt, iterations: PBKDF_ITERS, hash: "SHA-256" },
+    { name: "PBKDF2", salt: salt as unknown as BufferSource, iterations: PBKDF_ITERS, hash: "SHA-256" },
     material,
     { name: "AES-GCM", length: 256 },
     false,
@@ -32,9 +32,9 @@ export async function encryptBlobAes256(input: Blob, password: string): Promise<
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(password, salt);
   const cipherBuf = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
+    { name: "AES-GCM", iv: iv as unknown as BufferSource },
     key,
-    bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    bytes as unknown as BufferSource,
   );
   const cipher = new Uint8Array(cipherBuf);
   const out = new Uint8Array(MAGIC.length + salt.length + iv.length + cipher.length);
@@ -42,7 +42,7 @@ export async function encryptBlobAes256(input: Blob, password: string): Promise<
   out.set(salt, MAGIC.length);
   out.set(iv, MAGIC.length + salt.length);
   out.set(cipher, MAGIC.length + salt.length + iv.length);
-  return new Blob([out], { type: "application/octet-stream" });
+  return new Blob([out as unknown as BlobPart], { type: "application/octet-stream" });
 }
 
 export function isEncryptedBackup(bytes: Uint8Array): boolean {
