@@ -247,3 +247,109 @@ export const ensureRequiredBuckets = createServerFn({ method: "POST" })
     return { results };
   });
 
+
+// --- Full PostgreSQL dump (schema + data) for the public schema ---
+
+function sqlLiteral(v: any): string {
+  if (v === null || v === undefined) return "NULL";
+  if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
+  if (typeof v === "number") return Number.isFinite(v) ? String(v) : "NULL";
+  if (typeof v === "bigint") return v.toString();
+  if (v instanceof Date) return `'${v.toISOString()}'::timestamptz`;
+  if (Array.isArray(v) || typeof v === "object") {
+    const j = JSON.stringify(v).replace(/'/g, "''");
+    return `'${j}'::jsonb`;
+  }
+  const s = String(v).replace(/'/g, "''");
+  return `'${s}'`;
+}
+
+export const dumpDatabaseSql = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // 1) Schema (extensions, tables, constraints, indexes, views, functions,
+    //    triggers, RLS, policies, grants)
+    const { data: schemaSql, error: schemaErr } = await (supabaseAdmin as any)
+      .rpc("admin_export_schema_sql");
+    if (schemaErr) throw new Error(`schema export failed: ${schemaErr.message}`);
+
+    // 2) Enumerate every public table (future-proof — no hardcoded list)
+    const { data: tableRows, error: tblErr } = await (supabaseAdmin as any)
+      .rpc("admin_list_public_tables");
+    if (tblErr) throw new Error(`table list failed: ${tblErr.message}`);
+    const tables: string[] = (tableRows ?? []).map((r: any) => r.table_name);
+
+    // 3) Emit INSERT statements per table, wrapped so triggers/RLS don't fire.
+    const PAGE = 1000;
+    let dataSql = "-- ============================================\n";
+    dataSql += "-- BooBubble Data Dump\n";
+    dataSql += `-- Generated: ${new Date().toISOString()}\n`;
+    dataSql += "-- ============================================\n\n";
+    dataSql += "SET session_replication_role = replica;\n\n";
+
+    let totalRows = 0;
+    const tableStats: { table: string; rows: number }[] = [];
+
+    for (const table of tables) {
+      let offset = 0;
+      let tableCount = 0;
+      let firstPage = true;
+      let colNames: string[] = [];
+
+      while (true) {
+        const { data, error } = await supabaseAdmin
+          .from(table as any)
+          .select("*")
+          .range(offset, offset + PAGE - 1);
+        if (error) {
+          dataSql += `-- ! Skipped ${table}: ${error.message}\n\n`;
+          break;
+        }
+        const rows = data ?? [];
+        if (rows.length === 0) break;
+        if (firstPage) {
+          colNames = Object.keys(rows[0] as unknown as Record<string, unknown>);
+          dataSql += `-- ${table}\n`;
+          firstPage = false;
+        }
+        const colList = colNames.map((c) => `"${c}"`).join(", ");
+        for (const row of rows) {
+          const vals = colNames.map((c) => sqlLiteral((row as any)[c])).join(", ");
+          dataSql += `INSERT INTO public."${table}" (${colList}) VALUES (${vals}) ON CONFLICT DO NOTHING;\n`;
+        }
+        tableCount += rows.length;
+        if (rows.length < PAGE) break;
+        offset += PAGE;
+      }
+      if (tableCount > 0) dataSql += `\n`;
+      tableStats.push({ table, rows: tableCount });
+      totalRows += tableCount;
+    }
+
+    dataSql += "\nSET session_replication_role = DEFAULT;\n";
+
+    const fullSql =
+      (schemaSql as string) +
+      "\n\n-- ============================================\n" +
+      "-- DATA\n" +
+      "-- ============================================\n\n" +
+      dataSql;
+
+    return {
+      version: 1,
+      kind: "database-sql",
+      generated_at: new Date().toISOString(),
+      schema_sql: schemaSql as string,
+      data_sql: dataSql,
+      full_sql: fullSql,
+      stats: {
+        tables: tables.length,
+        rows: totalRows,
+        per_table: tableStats,
+      },
+    };
+  });
+

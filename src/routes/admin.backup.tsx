@@ -19,7 +19,9 @@ import {
   downloadMediaFile,
   ensureStorageBucket,
   uploadMediaFile,
+  dumpDatabaseSql,
 } from "@/lib/backup.functions";
+import { APP_VERSION } from "@/lib/app-version";
 
 export const Route = createFileRoute("/admin/backup")({ component: BackupPage });
 
@@ -90,6 +92,7 @@ function BackupPage() {
   const runDownload = useServerFn(downloadMediaFile);
   const runEnsureBucket = useServerFn(ensureStorageBucket);
   const runUpload = useServerFn(uploadMediaFile);
+  const runDumpSql = useServerFn(dumpDatabaseSql);
   const [quickBusy, setQuickBusy] = useState(false);
 
   async function onQuickJson() {
@@ -111,6 +114,8 @@ function BackupPage() {
     parts: { name: string; content: string }[],
     label: string,
     mediaFiles?: { bucket: string; path: string; bytes: Uint8Array }[],
+    databaseFiles?: { name: string; content: string }[],
+    extraInfo?: Record<string, unknown>,
   ) {
     const zip = new JSZip();
     const stamp = todayStamp();
@@ -118,11 +123,19 @@ function BackupPage() {
       kind: label,
       generated_at: new Date().toISOString(),
       app: "BooBubble",
+      app_version: APP_VERSION,
       parts: parts.map((p) => p.name),
       media_files: mediaFiles?.length ?? 0,
+      database_files: databaseFiles?.map((f) => f.name) ?? [],
+      ...extraInfo,
     };
     zip.file("manifest.json", JSON.stringify(meta, null, 2));
+    zip.file("backup-info.json", JSON.stringify(meta, null, 2));
     parts.forEach((p) => zip.file(p.name, p.content));
+    if (databaseFiles?.length) {
+      const db = zip.folder("database")!;
+      for (const f of databaseFiles) db.file(f.name, f.content);
+    }
     if (mediaFiles?.length) {
       const media = zip.folder("media")!;
       for (const f of mediaFiles) {
@@ -182,13 +195,41 @@ function BackupPage() {
   async function onFull() {
     setBusy("full");
     try {
+      setProgress({ label: "Preparing backup (JSON + media manifest)", done: 0, total: 3 });
       const [db, manifest] = await Promise.all([runDb({}), runMedia({})]);
+      setProgress({ label: "Exporting PostgreSQL database", done: 1, total: 3 });
+      const sqlDump = await runDumpSql({}).catch((e) => {
+        console.warn("SQL dump failed:", e?.message);
+        toast.warning("Database SQL dump skipped: " + (e?.message ?? "error"));
+        return null;
+      });
+      setProgress({ label: "Downloading media", done: 2, total: 3 });
       const files = await fetchMediaFiles(manifest);
-      await buildFullZip([
-        { name: "database.json", content: JSON.stringify(db, null, 2) },
-        { name: "media-manifest.json", content: JSON.stringify(manifest, null, 2) },
-      ], "full", files);
-      toast.success(`Full backup downloaded (${files.length} media files)`);
+      const databaseFiles = sqlDump
+        ? [
+            { name: "database.sql", content: sqlDump.full_sql },
+            { name: "schema.sql", content: sqlDump.schema_sql },
+            { name: "data.sql", content: sqlDump.data_sql },
+            { name: "stats.json", content: JSON.stringify(sqlDump.stats, null, 2) },
+          ]
+        : undefined;
+      await buildFullZip(
+        [
+          { name: "database.json", content: JSON.stringify(db, null, 2) },
+          { name: "media-manifest.json", content: JSON.stringify(manifest, null, 2) },
+        ],
+        "full",
+        files,
+        databaseFiles,
+        {
+          database_sql_included: !!sqlDump,
+          total_tables: sqlDump?.stats.tables ?? null,
+          total_rows_exported: sqlDump?.stats.rows ?? null,
+        },
+      );
+      toast.success(
+        `Full backup downloaded (${files.length} media files${sqlDump ? `, ${sqlDump.stats.rows} rows in ${sqlDump.stats.tables} tables` : ""})`,
+      );
     } catch (e: any) {
       toast.error(e?.message ?? "Full backup failed");
     } finally { setBusy(null); setProgress(null); }
