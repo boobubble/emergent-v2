@@ -115,6 +115,7 @@ function BackupPage() {
   const runEnsureBucket = useServerFn(ensureStorageBucket);
   const runUpload = useServerFn(uploadMediaFile);
   const runDumpSql = useServerFn(dumpDatabaseSql);
+  const runExtras = useServerFn(exportBackupExtras);
   const runRecord = useServerFn(recordBackupHistory);
   const runList = useServerFn(listBackupHistory);
   const runDelete = useServerFn(deleteBackupHistory);
