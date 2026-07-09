@@ -25,6 +25,7 @@ import {
   ensureStorageBucket,
   uploadMediaFile,
   dumpDatabaseSql,
+  exportBackupExtras,
 } from "@/lib/backup.functions";
 import {
   recordBackupHistory, listBackupHistory, deleteBackupHistory,
