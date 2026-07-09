@@ -271,13 +271,17 @@ export const dumpDatabaseSql = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // 1) Schema (extensions, tables, constraints, indexes, views, functions,
-    //    triggers, RLS, policies, grants)
-    const { data: schemaSql, error: schemaErr } = await (supabaseAdmin as any)
+    //    triggers, RLS, policies, grants).
+    // NOTE: call these RPCs via the user's authenticated client so that
+    // auth.uid() resolves inside the SECURITY DEFINER function's is_admin
+    // check. Under supabaseAdmin (service role) auth.uid() is NULL and the
+    // guard rejects with 'forbidden'.
+    const { data: schemaSql, error: schemaErr } = await (context.supabase as any)
       .rpc("admin_export_schema_sql");
     if (schemaErr) throw new Error(`schema export failed: ${schemaErr.message}`);
 
     // 2) Enumerate every public table (future-proof — no hardcoded list)
-    const { data: tableRows, error: tblErr } = await (supabaseAdmin as any)
+    const { data: tableRows, error: tblErr } = await (context.supabase as any)
       .rpc("admin_list_public_tables");
     if (tblErr) throw new Error(`table list failed: ${tblErr.message}`);
     const tables: string[] = (tableRows ?? []).map((r: any) => r.table_name);
