@@ -131,7 +131,6 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   }
 
   const room = state.rooms[roomId];
-  if (!room) return null;
 
   // Merge bots/me from local seed with remote profiles (skip our own remote profile — "me" represents us).
   const usersById: Record<string, User> = { ...state.users };
@@ -140,7 +139,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     usersById[id] = u;
   });
 
-  const localIds = room.members;
+  const localIds = room?.members ?? [];
   const remoteIds = Object.keys(profiles).filter(id => !authUser || id !== authUser.id);
   const allIds = Array.from(new Set([...localIds, ...remoteIds]));
 
@@ -167,8 +166,8 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const online = allIds
     .filter(id => isOnline(id) && !usersById[id]?.isGuest && matchesQuery(id))
     .sort((a, b) => {
-      const ra = roleOrder[room.roles[a] || "member"];
-      const rb = roleOrder[room.roles[b] || "member"];
+      const ra = roleOrder[(room?.roles[a]) || "member"];
+      const rb = roleOrder[(room?.roles[b]) || "member"];
       if (ra !== rb) return ra - rb;
       return (usersById[a]?.name || "").localeCompare(usersById[b]?.name || "");
     });
@@ -197,7 +196,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const effectiveMode: "split" | "merged" =
     botMode === "auto" ? (onlineUsers.length >= 8 ? "split" : "merged") : botMode;
 
-  const meRole = (meId && room.roles[meId]) || "member";
+  const meRole = (meId && room?.roles[meId]) || "member";
   const isStaff = meRole === "owner" || meRole === "admin";
 
   useEffect(() => {
@@ -209,7 +208,11 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
 
 
+
   const hubBadge = useHubBadge(false);
+
+  if (!room) return null;
+
 
   const body = (
     <>
