@@ -346,32 +346,63 @@ sha256sum -c checksums.sha256
       });
       setProgress({ label: "Downloading media", done: 2, total: 5 });
       const files = await fetchMediaFiles(manifest);
-      const databaseFiles = sqlDump
-        ? [
-            { name: "database.sql", content: sqlDump.full_sql },
-            { name: "schema.sql", content: sqlDump.schema_sql },
-            { name: "data.sql", content: sqlDump.data_sql },
-            { name: "stats.json", content: JSON.stringify(sqlDump.stats, null, 2) },
-          ]
-        : undefined;
+
+      // Extras: storage config, RLS policies, extensions, realtime, cron, meta.
+      // Best-effort — never blocks the backup if the RPC is unavailable.
+      const extras = await runExtras({}).catch((e) => {
+        console.warn("Extras export failed:", e?.message);
+        toast.warning("Extras skipped: " + (e?.message ?? "error"));
+        return null;
+      });
+
+      const databaseFiles: { name: string; content: string }[] = [];
+      if (sqlDump) {
+        databaseFiles.push(
+          { name: "database.sql", content: sqlDump.full_sql },
+          { name: "schema.sql",   content: sqlDump.schema_sql },
+          { name: "data.sql",     content: sqlDump.data_sql },
+          { name: "stats.json",   content: JSON.stringify(sqlDump.stats, null, 2) },
+        );
+      }
+      if (extras) {
+        for (const [name, content] of Object.entries(extras.files)) {
+          databaseFiles.push({ name, content: content as string });
+        }
+      }
 
       setProgress({ label: "Building ZIP", done: 3, total: 5 });
+      const parts: { name: string; content: string }[] = [
+        { name: "database.json", content: JSON.stringify(db, null, 2) },
+        { name: "media-manifest.json", content: JSON.stringify(manifest, null, 2) },
+      ];
+      if (extras) {
+        parts.push({ name: "project-info.json", content: JSON.stringify(extras.project_info, null, 2) });
+      }
+      const startedAt = Date.now();
       const built = await buildFullZip(
-        [
-          { name: "database.json", content: JSON.stringify(db, null, 2) },
-          { name: "media-manifest.json", content: JSON.stringify(manifest, null, 2) },
-        ],
+        parts,
         "full",
         files,
-        databaseFiles,
+        databaseFiles.length ? databaseFiles : undefined,
         {
           database_sql_included: !!sqlDump,
-          total_tables: sqlDump?.stats.tables ?? null,
+          extras_included: !!extras,
+          total_tables: sqlDump?.stats.tables ?? extras?.project_info.total_tables ?? null,
           total_rows_exported: sqlDump?.stats.rows ?? null,
+          total_buckets: extras?.project_info.total_buckets ?? null,
+          total_users: extras?.project_info.total_users ?? null,
+          total_files: extras?.project_info.total_files ?? null,
+          extras_counts: extras?.counts ?? null,
+          export_duration_ms: Date.now() - startedAt,
           encrypted: encryptEnabled,
         },
-        { skipDownload: true },
+        {
+          skipDownload: true,
+          restoreFiles: restoreScripts(),
+          includeChecksums: true,
+        },
       );
+
 
       // Verify the ZIP before we announce success.
       setProgress({ label: "Verifying backup", done: 4, total: 5 });
