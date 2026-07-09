@@ -114,7 +114,45 @@ function BackupPage() {
   const runEnsureBucket = useServerFn(ensureStorageBucket);
   const runUpload = useServerFn(uploadMediaFile);
   const runDumpSql = useServerFn(dumpDatabaseSql);
+  const runRecord = useServerFn(recordBackupHistory);
+  const runList = useServerFn(listBackupHistory);
+  const runDelete = useServerFn(deleteBackupHistory);
+  const runMarkVerified = useServerFn(markBackupVerified);
+  const runMarkRestored = useServerFn(markRestoreTested);
+  const runGetRetention = useServerFn(getBackupRetention);
+  const runSetRetention = useServerFn(setBackupRetention);
+  const runGetHealth = useServerFn(getBackupHealth);
+  const runRestoreSql = useServerFn(restoreDatabaseSql);
+  const runGetBuckets = useServerFn(getStorageBucketNames);
   const [quickBusy, setQuickBusy] = useState(false);
+
+  // Enterprise state
+  const [encryptEnabled, setEncryptEnabled] = useState(false);
+  const [encryptPassword, setEncryptPassword] = useState("");
+  const [verifyReport, setVerifyReport] = useState<VerifyReport | null>(null);
+  const [lastChecksum, setLastChecksum] = useState<{ sha256: string; md5: string; filename: string } | null>(null);
+  const [validateReport, setValidateReport] = useState<VerifyReport | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [health, setHealth] = useState<any | null>(null);
+  const [retention, setRetention] = useState<string>("30d");
+  const [preRestore, setPreRestore] = useState<PreRestoreInfo | null>(null);
+  const [pendingRestoreFile, setPendingRestoreFile] = useState<File | null>(null);
+
+  const refreshHistoryAndHealth = useCallback(async () => {
+    try {
+      const [h, hl, r] = await Promise.all([
+        runList({}), runGetHealth({}), runGetRetention({}),
+      ]);
+      setHistory(h as any[]);
+      setHealth(hl);
+      setRetention(r as string);
+    } catch (e) {
+      console.warn("refresh backup meta failed:", e);
+    }
+  }, [runList, runGetHealth, runGetRetention]);
+
+  useEffect(() => { refreshHistoryAndHealth(); }, [refreshHistoryAndHealth]);
+
 
   async function onQuickJson() {
     setQuickBusy(true);
