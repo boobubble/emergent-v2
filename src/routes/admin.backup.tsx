@@ -560,9 +560,13 @@ function BackupPage() {
     } finally { setBusy(null); setProgress(null); }
   }
 
+  const validateInput = useRef<HTMLInputElement>(null);
+
   return (
     <div className="space-y-4">
       <AdminPageHeader title="System Backup" description="Snapshot the database and media into a portable ZIP, or restore an archive on any Supabase project. Super admin only." />
+
+      <BackupHealthCard health={health} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="border-emerald-500/30 bg-emerald-500/5">
@@ -626,45 +630,43 @@ function BackupPage() {
             Downloads as <span className="font-mono">backup_{todayStamp()}_*.zip</span> — includes raw media file bytes under <span className="font-mono">/media/&lt;bucket&gt;/&lt;path&gt;</span>.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-3">
-          <Button onClick={onDatabase} disabled={!!busy} className="justify-start">
-            {busy === "db" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
-            Backup Database
-          </Button>
-          <Button onClick={onMedia} disabled={!!busy} variant="outline" className="justify-start">
-            {busy === "media" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ImageIcon className="mr-2 h-4 w-4" />}
-            Backup Media (files)
-          </Button>
-          <Button onClick={onFull} disabled={!!busy} variant="secondary" className="justify-start">
-            {busy === "full" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-            Full Backup
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Upload className="h-4 w-4" /> Restore backup</CardTitle>
-          <CardDescription>Upload a backup ZIP — buckets are recreated and media files are uploaded to this project's storage. Works across projects, localhost, and new domains.</CardDescription>
-        </CardHeader>
         <CardContent className="space-y-3">
-          <input
-            ref={fileInput}
-            type="file"
-            accept=".zip,application/zip"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onRestoreFile(f);
-              e.target.value = "";
-            }}
-          />
-          <Button onClick={() => fileInput.current?.click()} disabled={!!busy} variant="outline">
-            {busy === "restore" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            Restore Backup
-          </Button>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Button onClick={onDatabase} disabled={!!busy} className="justify-start">
+              {busy === "db" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+              Backup Database
+            </Button>
+            <Button onClick={onMedia} disabled={!!busy} variant="outline" className="justify-start">
+              {busy === "media" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ImageIcon className="mr-2 h-4 w-4" />}
+              Backup Media (files)
+            </Button>
+            <Button onClick={onFull} disabled={!!busy} variant="secondary" className="justify-start">
+              {busy === "full" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+              Full Backup
+            </Button>
+          </div>
 
-          {progress && (
+          <div className="flex flex-col gap-2 rounded-md border bg-muted/30 p-3 text-xs sm:flex-row sm:items-center">
+            <label className="flex items-center gap-2">
+              <Checkbox checked={encryptEnabled} onCheckedChange={(v) => setEncryptEnabled(!!v)} />
+              <span className="inline-flex items-center gap-1"><Lock className="h-3 w-3" /> Encrypt backup (AES-256)</span>
+            </label>
+            {encryptEnabled && (
+              <Input
+                type="password"
+                placeholder="Password (min 8 chars)"
+                value={encryptPassword}
+                onChange={(e) => setEncryptPassword(e.target.value)}
+                className="max-w-xs"
+                autoComplete="new-password"
+              />
+            )}
+            <span className="text-muted-foreground sm:ml-auto">
+              Applies only to Full Backup. Password is never stored.
+            </span>
+          </div>
+
+          {progress && busy === "full" && (
             <div className="rounded-lg border bg-muted/40 p-3 text-xs space-y-2">
               <div className="flex justify-between">
                 <span>{progress.label}</span>
@@ -674,9 +676,71 @@ function BackupPage() {
             </div>
           )}
 
+          <BackupVerificationPanel
+            report={verifyReport}
+            sha256={lastChecksum?.sha256}
+            md5={lastChecksum?.md5}
+            filename={lastChecksum?.filename ?? lastFile}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Upload className="h-4 w-4" /> Restore backup</CardTitle>
+          <CardDescription>Upload a backup ZIP — schema, data, buckets, and media are restored to this project. Works across projects, localhost, and new domains.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".zip,application/zip,.enc"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) stageRestore(f);
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={validateInput}
+            type="file"
+            accept=".zip,application/zip,.enc"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onValidate(f);
+              e.target.value = "";
+            }}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => fileInput.current?.click()} disabled={!!busy}>
+              {busy === "restore" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              Restore Backup
+            </Button>
+            <Button onClick={() => validateInput.current?.click()} disabled={!!busy} variant="outline">
+              {busy === "validate" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+              Validate Backup (dry run)
+            </Button>
+          </div>
+
+          {progress && busy !== "full" && (
+            <div className="rounded-lg border bg-muted/40 p-3 text-xs space-y-2">
+              <div className="flex justify-between">
+                <span>{progress.label}</span>
+                <span className="font-mono">{progress.done} / {progress.total}</span>
+              </div>
+              <Progress value={progress.total ? (progress.done / progress.total) * 100 : 0} />
+            </div>
+          )}
+
+          {validateReport && (
+            <BackupVerificationPanel report={validateReport} />
+          )}
+
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-200">
             <ShieldAlert className="mr-1 inline h-3.5 w-3.5" />
-            Media files upload with <span className="font-mono">upsert=true</span>. Database rows are verified only — full row restore requires a point-in-time snapshot from the database provider.
+            Restore applies schema and data through the admin restore endpoint. Existing rows with matching primary keys are kept (INSERT ... ON CONFLICT DO NOTHING).
           </div>
           {lastFile && (
             <div className="flex items-center gap-2 text-xs text-emerald-600">
@@ -685,6 +749,65 @@ function BackupPage() {
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="flex items-center gap-2"><HistoryIcon className="h-4 w-4" /> Backup History</CardTitle>
+            <CardDescription>Recent backups with checksums and verification status. Expired rows are pruned automatically.</CardDescription>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <Label className="text-muted-foreground">Retention:</Label>
+            <Select
+              value={retention}
+              onValueChange={async (v) => {
+                setRetention(v);
+                try {
+                  await runSetRetention({ data: { value: v as any } });
+                  toast.success(`Retention set to ${v}`);
+                } catch (e: any) {
+                  toast.error(e?.message ?? "Failed to update retention");
+                }
+              }}
+            >
+              <SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">7 days</SelectItem>
+                <SelectItem value="30d">30 days</SelectItem>
+                <SelectItem value="90d">90 days</SelectItem>
+                <SelectItem value="forever">Forever</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <BackupHistoryTable
+            rows={history}
+            onDelete={async (id) => {
+              try {
+                await runDelete({ data: { id } });
+                toast.success("Backup entry deleted");
+                await refreshHistoryAndHealth();
+              } catch (e: any) {
+                toast.error(e?.message ?? "Delete failed");
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      <PreRestoreDialog
+        open={!!preRestore}
+        info={preRestore}
+        onCancel={() => { setPreRestore(null); setPendingRestoreFile(null); }}
+        onConfirm={async () => {
+          const f = pendingRestoreFile;
+          setPreRestore(null);
+          setPendingRestoreFile(null);
+          if (f) await onRestoreFile(f);
+        }}
+      />
     </div>
   );
 }
+
