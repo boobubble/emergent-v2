@@ -132,6 +132,7 @@ import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/g
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
+import { Route as ApiPublicBackupRetentionRouteImport } from './routes/api/public/backup-retention'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 import { Route as ApiPublicHooksFeedbotSummaryRouteImport } from './routes/api/public/hooks/feedbot-summary'
 import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/public/hooks/feedbot-dispatch'
@@ -754,6 +755,12 @@ const ApiPublicCommunityBgRoute = ApiPublicCommunityBgRouteImport.update({
   path: '/api/public/community-bg',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBackupRetentionRoute =
+  ApiPublicBackupRetentionRouteImport.update({
+    id: '/api/public/backup-retention',
+    path: '/api/public/backup-retention',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   id: '/$key',
   path: '/$key',
@@ -892,6 +899,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
@@ -1018,6 +1026,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/broadcaster': typeof BroadcasterIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
@@ -1147,6 +1156,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
@@ -1277,6 +1287,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/broadcaster/'
     | '/admin/upcoming/$key'
+    | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
@@ -1403,6 +1414,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/broadcaster'
     | '/admin/upcoming/$key'
+    | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
@@ -1531,6 +1543,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/broadcaster/'
     | '/admin/upcoming/$key'
+    | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
@@ -1575,6 +1588,7 @@ export interface RootRouteChildren {
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiPublicBackupRetentionRoute: typeof ApiPublicBackupRetentionRoute
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
@@ -2447,6 +2461,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCommunityBgRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/backup-retention': {
+      id: '/api/public/backup-retention'
+      path: '/api/public/backup-retention'
+      fullPath: '/api/public/backup-retention'
+      preLoaderRoute: typeof ApiPublicBackupRetentionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/upcoming/$key': {
       id: '/admin/upcoming/$key'
       path: '/$key'
@@ -2722,6 +2743,7 @@ const rootRouteChildren: RootRouteChildren = {
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiPublicBackupRetentionRoute: ApiPublicBackupRetentionRoute,
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
