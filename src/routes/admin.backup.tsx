@@ -19,7 +19,9 @@ import {
   downloadMediaFile,
   ensureStorageBucket,
   uploadMediaFile,
+  dumpDatabaseSql,
 } from "@/lib/backup.functions";
+import { APP_VERSION } from "@/lib/app-version";
 
 export const Route = createFileRoute("/admin/backup")({ component: BackupPage });
 
