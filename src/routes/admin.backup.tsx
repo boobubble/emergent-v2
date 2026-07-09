@@ -175,7 +175,8 @@ function BackupPage() {
     mediaFiles?: { bucket: string; path: string; bytes: Uint8Array }[],
     databaseFiles?: { name: string; content: string }[],
     extraInfo?: Record<string, unknown>,
-  ) {
+    opts?: { skipDownload?: boolean },
+  ): Promise<{ blob: Blob; filename: string; meta: Record<string, unknown> }> {
     const zip = new JSZip();
     const stamp = todayStamp();
     const meta = {
@@ -203,9 +204,13 @@ function BackupPage() {
     }
     const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
     const fname = `backup_${stamp}_${label}.zip`;
-    download(blob, fname);
-    setLastFile(fname);
+    if (!opts?.skipDownload) {
+      download(blob, fname);
+      setLastFile(fname);
+    }
+    return { blob, filename: fname, meta };
   }
+
 
   async function fetchMediaFiles(manifest: any) {
     const flat: { bucket: string; path: string }[] = [];
