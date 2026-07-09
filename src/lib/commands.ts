@@ -61,6 +61,14 @@ function roll(spec: string): string {
 }
 
 
+const GAMES_ONLY_CMDS = new Set([
+  "roll", "flip", "slots",
+  "trivia", "a",
+  "hangman", "g",
+  "ludo", "join", "lr", "stopludo", "endludo",
+]);
+const GAMES_CHANNEL_ID = "games";
+
 export function runCommand(input: string, ctx: CmdCtx): CmdResult {
   const [rawCmd, ...rest] = input.slice(1).split(/\s+/);
   const cmd = rawCmd.toLowerCase();
@@ -68,6 +76,11 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
   const game: GameState | undefined = ctx.state.games[ctx.channelId];
 
   const who = ctx.actor ? `@${ctx.actor}` : "You";
+
+  if (GAMES_ONLY_CMDS.has(cmd) && ctx.channelId !== GAMES_CHANNEL_ID) {
+    return { replies: [{ text: `🎮 **!${cmd}** can only be played in the **#games** channel. Head over there to play!` }] };
+  }
+
 
   switch (cmd) {
     case "help":
