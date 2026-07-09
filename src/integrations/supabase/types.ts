@@ -4948,6 +4948,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_export_schema_sql: { Args: never; Returns: string }
       admin_grant_chat_theme: {
         Args: { _days?: number; _theme_key: string; _user: string }
         Returns: {
@@ -4983,6 +4984,13 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_list_public_tables: {
+        Args: never
+        Returns: {
+          estimated_rows: number
+          table_name: string
+        }[]
       }
       admin_reject_coin_order: {
         Args: { _note?: string; _order_id: string }
