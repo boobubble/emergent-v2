@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import JSZip from "jszip";
 import { toast } from "sonner";
@@ -7,9 +7,14 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Database, Image as ImageIcon, Package, Upload, Download, Loader2,
   ShieldAlert, CheckCircle2, Zap, FileJson, ExternalLink, BookOpen,
+  Lock, ShieldCheck, History as HistoryIcon,
 } from "lucide-react";
 
 import {
@@ -21,11 +26,27 @@ import {
   uploadMediaFile,
   dumpDatabaseSql,
 } from "@/lib/backup.functions";
+import {
+  recordBackupHistory, listBackupHistory, deleteBackupHistory,
+  markBackupVerified, markRestoreTested,
+  getBackupRetention, setBackupRetention, getBackupHealth,
+} from "@/lib/backup-history.functions";
+import {
+  restoreDatabaseSql, getStorageBucketNames,
+} from "@/lib/backup-restore.functions";
 import { APP_VERSION } from "@/lib/app-version";
+import { sha256Hex, md5Hex } from "@/lib/hash";
+import { encryptBlobAes256, isEncryptedBackup, decryptBackup } from "@/lib/backup-crypto";
+import { verifyFullBackupZip, dryRunValidateZip, type VerifyReport } from "@/lib/backup-verify";
+import { BackupHealthCard } from "@/components/admin/BackupHealthCard";
+import { BackupHistoryTable } from "@/components/admin/BackupHistoryTable";
+import { BackupVerificationPanel } from "@/components/admin/BackupVerificationPanel";
+import { PreRestoreDialog, type PreRestoreInfo } from "@/components/admin/PreRestoreDialog";
 
 export const Route = createFileRoute("/admin/backup")({ component: BackupPage });
 
-type Job = "db" | "media" | "full" | "restore" | null;
+type Job = "db" | "media" | "full" | "restore" | "validate" | null;
+
 
 function todayStamp() {
   const d = new Date();
@@ -93,7 +114,45 @@ function BackupPage() {
   const runEnsureBucket = useServerFn(ensureStorageBucket);
   const runUpload = useServerFn(uploadMediaFile);
   const runDumpSql = useServerFn(dumpDatabaseSql);
+  const runRecord = useServerFn(recordBackupHistory);
+  const runList = useServerFn(listBackupHistory);
+  const runDelete = useServerFn(deleteBackupHistory);
+  const runMarkVerified = useServerFn(markBackupVerified);
+  const runMarkRestored = useServerFn(markRestoreTested);
+  const runGetRetention = useServerFn(getBackupRetention);
+  const runSetRetention = useServerFn(setBackupRetention);
+  const runGetHealth = useServerFn(getBackupHealth);
+  const runRestoreSql = useServerFn(restoreDatabaseSql);
+  const runGetBuckets = useServerFn(getStorageBucketNames);
   const [quickBusy, setQuickBusy] = useState(false);
+
+  // Enterprise state
+  const [encryptEnabled, setEncryptEnabled] = useState(false);
+  const [encryptPassword, setEncryptPassword] = useState("");
+  const [verifyReport, setVerifyReport] = useState<VerifyReport | null>(null);
+  const [lastChecksum, setLastChecksum] = useState<{ sha256: string; md5: string; filename: string } | null>(null);
+  const [validateReport, setValidateReport] = useState<VerifyReport | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [health, setHealth] = useState<any | null>(null);
+  const [retention, setRetention] = useState<string>("30d");
+  const [preRestore, setPreRestore] = useState<PreRestoreInfo | null>(null);
+  const [pendingRestoreFile, setPendingRestoreFile] = useState<File | null>(null);
+
+  const refreshHistoryAndHealth = useCallback(async () => {
+    try {
+      const [h, hl, r] = await Promise.all([
+        runList({}), runGetHealth({}), runGetRetention({}),
+      ]);
+      setHistory(h as any[]);
+      setHealth(hl);
+      setRetention(r as string);
+    } catch (e) {
+      console.warn("refresh backup meta failed:", e);
+    }
+  }, [runList, runGetHealth, runGetRetention]);
+
+  useEffect(() => { refreshHistoryAndHealth(); }, [refreshHistoryAndHealth]);
+
 
   async function onQuickJson() {
     setQuickBusy(true);
@@ -116,7 +175,8 @@ function BackupPage() {
     mediaFiles?: { bucket: string; path: string; bytes: Uint8Array }[],
     databaseFiles?: { name: string; content: string }[],
     extraInfo?: Record<string, unknown>,
-  ) {
+    opts?: { skipDownload?: boolean },
+  ): Promise<{ blob: Blob; filename: string; meta: Record<string, unknown> }> {
     const zip = new JSZip();
     const stamp = todayStamp();
     const meta = {
@@ -144,9 +204,13 @@ function BackupPage() {
     }
     const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
     const fname = `backup_${stamp}_${label}.zip`;
-    download(blob, fname);
-    setLastFile(fname);
+    if (!opts?.skipDownload) {
+      download(blob, fname);
+      setLastFile(fname);
+    }
+    return { blob, filename: fname, meta };
   }
+
 
   async function fetchMediaFiles(manifest: any) {
     const flat: { bucket: string; path: string }[] = [];
@@ -193,17 +257,23 @@ function BackupPage() {
   }
 
   async function onFull() {
+    if (encryptEnabled && encryptPassword.length < 8) {
+      toast.error("Encryption password must be at least 8 characters");
+      return;
+    }
     setBusy("full");
+    setVerifyReport(null);
+    setLastChecksum(null);
     try {
-      setProgress({ label: "Preparing backup (JSON + media manifest)", done: 0, total: 3 });
+      setProgress({ label: "Preparing backup (JSON + media manifest)", done: 0, total: 5 });
       const [db, manifest] = await Promise.all([runDb({}), runMedia({})]);
-      setProgress({ label: "Exporting PostgreSQL database", done: 1, total: 3 });
+      setProgress({ label: "Exporting PostgreSQL database", done: 1, total: 5 });
       const sqlDump = await runDumpSql({}).catch((e) => {
         console.warn("SQL dump failed:", e?.message);
         toast.warning("Database SQL dump skipped: " + (e?.message ?? "error"));
         return null;
       });
-      setProgress({ label: "Downloading media", done: 2, total: 3 });
+      setProgress({ label: "Downloading media", done: 2, total: 5 });
       const files = await fetchMediaFiles(manifest);
       const databaseFiles = sqlDump
         ? [
@@ -213,7 +283,9 @@ function BackupPage() {
             { name: "stats.json", content: JSON.stringify(sqlDump.stats, null, 2) },
           ]
         : undefined;
-      await buildFullZip(
+
+      setProgress({ label: "Building ZIP", done: 3, total: 5 });
+      const built = await buildFullZip(
         [
           { name: "database.json", content: JSON.stringify(db, null, 2) },
           { name: "media-manifest.json", content: JSON.stringify(manifest, null, 2) },
@@ -225,22 +297,179 @@ function BackupPage() {
           database_sql_included: !!sqlDump,
           total_tables: sqlDump?.stats.tables ?? null,
           total_rows_exported: sqlDump?.stats.rows ?? null,
+          encrypted: encryptEnabled,
         },
+        { skipDownload: true },
       );
+
+      // Verify the ZIP before we announce success.
+      setProgress({ label: "Verifying backup", done: 4, total: 5 });
+      const report = await verifyFullBackupZip(built.blob);
+      setVerifyReport(report);
+      if (!report.ok) {
+        toast.error("Verification failed — see report below");
+        return;
+      }
+
+      // Checksums (of the plain ZIP; encrypted output also gets its own below).
+      const zipBytes = new Uint8Array(await built.blob.arrayBuffer());
+      const sha = await sha256Hex(zipBytes);
+      const md = md5Hex(zipBytes);
+      setLastChecksum({ sha256: sha, md5: md, filename: built.filename });
+
+      // Companion checksums.json
+      const checksumsBlob = new Blob(
+        [JSON.stringify({ filename: built.filename, size: built.blob.size, sha256: sha, md5: md }, null, 2)],
+        { type: "application/json" },
+      );
+
+      // Optional encryption
+      let finalBlob: Blob = built.blob;
+      let finalName = built.filename;
+      let finalSha = sha;
+      let finalMd = md;
+      if (encryptEnabled) {
+        finalBlob = await encryptBlobAes256(built.blob, encryptPassword);
+        finalName = `${built.filename}.enc`;
+        const encBytes = new Uint8Array(await finalBlob.arrayBuffer());
+        finalSha = await sha256Hex(encBytes);
+        finalMd = md5Hex(encBytes);
+        setLastChecksum({ sha256: finalSha, md5: finalMd, filename: finalName });
+      }
+
+      download(finalBlob, finalName);
+      download(checksumsBlob, `${finalName}.checksums.json`);
+      setLastFile(finalName);
+      setEncryptPassword("");
+
+      // Persist history entry.
+      try {
+        await runRecord({
+          data: {
+            filename: finalName,
+            backup_type: "full",
+            size_bytes: finalBlob.size,
+            sha256: finalSha,
+            md5: finalMd,
+            verified: true,
+            encrypted: encryptEnabled,
+            app_version: APP_VERSION,
+            total_tables: sqlDump?.stats.tables ?? null,
+            total_rows: sqlDump?.stats.rows ?? null,
+            media_files: files.length,
+          },
+        });
+        await refreshHistoryAndHealth();
+      } catch (e: any) {
+        console.warn("history record failed:", e?.message);
+      }
+
+      setProgress({ label: "Done", done: 5, total: 5 });
       toast.success(
-        `Full backup downloaded (${files.length} media files${sqlDump ? `, ${sqlDump.stats.rows} rows in ${sqlDump.stats.tables} tables` : ""})`,
+        `Full backup verified & downloaded (${files.length} media files${sqlDump ? `, ${sqlDump.stats.rows} rows in ${sqlDump.stats.tables} tables` : ""})`,
       );
     } catch (e: any) {
       toast.error(e?.message ?? "Full backup failed");
     } finally { setBusy(null); setProgress(null); }
   }
 
+  // Dry-run validation of an uploaded ZIP without touching DB or storage.
+  async function onValidate(file: File) {
+    setBusy("validate");
+    setValidateReport(null);
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let blob: Blob = file;
+      if (isEncryptedBackup(bytes)) {
+        const pw = window.prompt("Backup is encrypted. Enter password:");
+        if (!pw) { setBusy(null); return; }
+        const plain = await decryptBackup(bytes, pw);
+        blob = new Blob([plain as unknown as BlobPart]);
+      }
+      let currentBuckets: string[] | undefined;
+      try { currentBuckets = await runGetBuckets({}); } catch { /* ignore */ }
+      const report = await dryRunValidateZip(blob, currentBuckets);
+      setValidateReport(report);
+      if (report.ok) toast.success("Backup validated — no issues found");
+      else toast.error("Validation failed — see report");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Validation failed");
+    } finally { setBusy(null); }
+  }
+
+  // Ask the admin to confirm before running a real restore.
+  async function stageRestore(file: File) {
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let workingFile = file;
+      if (isEncryptedBackup(bytes)) {
+        const pw = window.prompt("Backup is encrypted. Enter password to restore:");
+        if (!pw) return;
+        const plain = await decryptBackup(bytes, pw);
+        workingFile = new File([plain as unknown as BlobPart], file.name.replace(/\.enc$/i, ""));
+      }
+      const zip = await JSZip.loadAsync(workingFile);
+      let info: any = {};
+      const infoEntry = zip.file("backup-info.json");
+      if (infoEntry) info = JSON.parse(await infoEntry.async("text"));
+      let stats: any = {};
+      const statsEntry = zip.file("database/stats.json");
+      if (statsEntry) stats = JSON.parse(await statsEntry.async("text"));
+      const mm = zip.file("media-manifest.json");
+      let mediaFiles = 0;
+      if (mm) {
+        const parsed = JSON.parse(await mm.async("text"));
+        for (const b of parsed.buckets ?? []) mediaFiles += (b.files ?? []).length;
+      }
+      setPendingRestoreFile(workingFile);
+      setPreRestore({
+        filename: file.name,
+        size: file.size,
+        backupAppVersion: info.app_version,
+        backupGeneratedAt: info.generated_at,
+        tables: stats.tables ?? info.total_tables,
+        rows: stats.rows ?? info.total_rows_exported,
+        mediaFiles,
+      });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not read backup");
+    }
+  }
+
+
   async function onRestoreFile(file: File) {
     setBusy("restore");
     try {
-      const zip = await JSZip.loadAsync(file);
+      // Decrypt on the fly if the file is encrypted.
+      let workingFile = file;
+      const rawBytes = new Uint8Array(await file.arrayBuffer());
+      if (isEncryptedBackup(rawBytes)) {
+        const pw = window.prompt("Backup is encrypted. Enter password to restore:");
+        if (!pw) { setBusy(null); return; }
+        const plain = await decryptBackup(rawBytes, pw);
+        workingFile = new File([plain as unknown as BlobPart], file.name.replace(/\.enc$/i, ""));
+      }
+      const zip = await JSZip.loadAsync(workingFile);
 
-      // 1) Database dry-run verify (if present)
+      // 1) Apply SQL schema then data if present (one-click restore).
+      const schemaEntry = zip.file("database/schema.sql");
+      const dataEntry = zip.file("database/data.sql");
+      let schemaResult: any = null;
+      let dataResult: any = null;
+      if (schemaEntry) {
+        setProgress({ label: "Restoring schema", done: 0, total: 1 });
+        const sql = await schemaEntry.async("text");
+        schemaResult = await runRestoreSql({ data: { sql, phase: "schema" } });
+        setProgress({ label: "Restoring schema", done: 1, total: 1 });
+      }
+      if (dataEntry) {
+        setProgress({ label: "Restoring data", done: 0, total: 1 });
+        const sql = await dataEntry.async("text");
+        dataResult = await runRestoreSql({ data: { sql, phase: "data" } });
+        setProgress({ label: "Restoring data", done: 1, total: 1 });
+      }
+
+      // 2) Database dry-run verify (legacy JSON summary, if present)
       let dbSummary = { tables: 0, rows: 0 };
       const dbEntry = zip.file("database.json");
       if (dbEntry) {
@@ -319,17 +548,25 @@ function BackupPage() {
         }, (done, total) => setProgress({ label: "Uploading media", done, total }));
       }
 
+      const sqlBits: string[] = [];
+      if (schemaResult) sqlBits.push(`schema ${schemaResult.ok}/${schemaResult.total}`);
+      if (dataResult) sqlBits.push(`data ${dataResult.ok}/${dataResult.total}`);
       toast.success(
-        `Restore complete — ${dbSummary.rows} rows in ${dbSummary.tables} tables verified, ${mediaRestored} media files uploaded`,
+        `Restore complete — ${sqlBits.join(", ")}${sqlBits.length ? " · " : ""}${dbSummary.rows} rows in ${dbSummary.tables} tables verified, ${mediaRestored} media files uploaded`,
       );
+      await refreshHistoryAndHealth();
     } catch (e: any) {
       toast.error(e?.message ?? "Restore failed");
     } finally { setBusy(null); setProgress(null); }
   }
 
+  const validateInput = useRef<HTMLInputElement>(null);
+
   return (
     <div className="space-y-4">
       <AdminPageHeader title="System Backup" description="Snapshot the database and media into a portable ZIP, or restore an archive on any Supabase project. Super admin only." />
+
+      <BackupHealthCard health={health} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="border-emerald-500/30 bg-emerald-500/5">
@@ -393,45 +630,43 @@ function BackupPage() {
             Downloads as <span className="font-mono">backup_{todayStamp()}_*.zip</span> — includes raw media file bytes under <span className="font-mono">/media/&lt;bucket&gt;/&lt;path&gt;</span>.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-3">
-          <Button onClick={onDatabase} disabled={!!busy} className="justify-start">
-            {busy === "db" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
-            Backup Database
-          </Button>
-          <Button onClick={onMedia} disabled={!!busy} variant="outline" className="justify-start">
-            {busy === "media" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ImageIcon className="mr-2 h-4 w-4" />}
-            Backup Media (files)
-          </Button>
-          <Button onClick={onFull} disabled={!!busy} variant="secondary" className="justify-start">
-            {busy === "full" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-            Full Backup
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Upload className="h-4 w-4" /> Restore backup</CardTitle>
-          <CardDescription>Upload a backup ZIP — buckets are recreated and media files are uploaded to this project's storage. Works across projects, localhost, and new domains.</CardDescription>
-        </CardHeader>
         <CardContent className="space-y-3">
-          <input
-            ref={fileInput}
-            type="file"
-            accept=".zip,application/zip"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onRestoreFile(f);
-              e.target.value = "";
-            }}
-          />
-          <Button onClick={() => fileInput.current?.click()} disabled={!!busy} variant="outline">
-            {busy === "restore" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            Restore Backup
-          </Button>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Button onClick={onDatabase} disabled={!!busy} className="justify-start">
+              {busy === "db" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+              Backup Database
+            </Button>
+            <Button onClick={onMedia} disabled={!!busy} variant="outline" className="justify-start">
+              {busy === "media" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ImageIcon className="mr-2 h-4 w-4" />}
+              Backup Media (files)
+            </Button>
+            <Button onClick={onFull} disabled={!!busy} variant="secondary" className="justify-start">
+              {busy === "full" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+              Full Backup
+            </Button>
+          </div>
 
-          {progress && (
+          <div className="flex flex-col gap-2 rounded-md border bg-muted/30 p-3 text-xs sm:flex-row sm:items-center">
+            <label className="flex items-center gap-2">
+              <Checkbox checked={encryptEnabled} onCheckedChange={(v) => setEncryptEnabled(!!v)} />
+              <span className="inline-flex items-center gap-1"><Lock className="h-3 w-3" /> Encrypt backup (AES-256)</span>
+            </label>
+            {encryptEnabled && (
+              <Input
+                type="password"
+                placeholder="Password (min 8 chars)"
+                value={encryptPassword}
+                onChange={(e) => setEncryptPassword(e.target.value)}
+                className="max-w-xs"
+                autoComplete="new-password"
+              />
+            )}
+            <span className="text-muted-foreground sm:ml-auto">
+              Applies only to Full Backup. Password is never stored.
+            </span>
+          </div>
+
+          {progress && busy === "full" && (
             <div className="rounded-lg border bg-muted/40 p-3 text-xs space-y-2">
               <div className="flex justify-between">
                 <span>{progress.label}</span>
@@ -441,9 +676,71 @@ function BackupPage() {
             </div>
           )}
 
+          <BackupVerificationPanel
+            report={verifyReport}
+            sha256={lastChecksum?.sha256}
+            md5={lastChecksum?.md5}
+            filename={lastChecksum?.filename ?? lastFile}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Upload className="h-4 w-4" /> Restore backup</CardTitle>
+          <CardDescription>Upload a backup ZIP — schema, data, buckets, and media are restored to this project. Works across projects, localhost, and new domains.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".zip,application/zip,.enc"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) stageRestore(f);
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={validateInput}
+            type="file"
+            accept=".zip,application/zip,.enc"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onValidate(f);
+              e.target.value = "";
+            }}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => fileInput.current?.click()} disabled={!!busy}>
+              {busy === "restore" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              Restore Backup
+            </Button>
+            <Button onClick={() => validateInput.current?.click()} disabled={!!busy} variant="outline">
+              {busy === "validate" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+              Validate Backup (dry run)
+            </Button>
+          </div>
+
+          {progress && busy !== "full" && (
+            <div className="rounded-lg border bg-muted/40 p-3 text-xs space-y-2">
+              <div className="flex justify-between">
+                <span>{progress.label}</span>
+                <span className="font-mono">{progress.done} / {progress.total}</span>
+              </div>
+              <Progress value={progress.total ? (progress.done / progress.total) * 100 : 0} />
+            </div>
+          )}
+
+          {validateReport && (
+            <BackupVerificationPanel report={validateReport} />
+          )}
+
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-200">
             <ShieldAlert className="mr-1 inline h-3.5 w-3.5" />
-            Media files upload with <span className="font-mono">upsert=true</span>. Database rows are verified only — full row restore requires a point-in-time snapshot from the database provider.
+            Restore applies schema and data through the admin restore endpoint. Existing rows with matching primary keys are kept (INSERT ... ON CONFLICT DO NOTHING).
           </div>
           {lastFile && (
             <div className="flex items-center gap-2 text-xs text-emerald-600">
@@ -452,6 +749,65 @@ function BackupPage() {
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="flex items-center gap-2"><HistoryIcon className="h-4 w-4" /> Backup History</CardTitle>
+            <CardDescription>Recent backups with checksums and verification status. Expired rows are pruned automatically.</CardDescription>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <Label className="text-muted-foreground">Retention:</Label>
+            <Select
+              value={retention}
+              onValueChange={async (v) => {
+                setRetention(v);
+                try {
+                  await runSetRetention({ data: { value: v as any } });
+                  toast.success(`Retention set to ${v}`);
+                } catch (e: any) {
+                  toast.error(e?.message ?? "Failed to update retention");
+                }
+              }}
+            >
+              <SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">7 days</SelectItem>
+                <SelectItem value="30d">30 days</SelectItem>
+                <SelectItem value="90d">90 days</SelectItem>
+                <SelectItem value="forever">Forever</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <BackupHistoryTable
+            rows={history}
+            onDelete={async (id) => {
+              try {
+                await runDelete({ data: { id } });
+                toast.success("Backup entry deleted");
+                await refreshHistoryAndHealth();
+              } catch (e: any) {
+                toast.error(e?.message ?? "Delete failed");
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      <PreRestoreDialog
+        open={!!preRestore}
+        info={preRestore}
+        onCancel={() => { setPreRestore(null); setPendingRestoreFile(null); }}
+        onConfirm={async () => {
+          const f = pendingRestoreFile;
+          setPreRestore(null);
+          setPendingRestoreFile(null);
+          if (f) await onRestoreFile(f);
+        }}
+      />
     </div>
   );
 }
+
