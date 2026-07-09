@@ -281,8 +281,17 @@ function ensureWelcome(state: State, name: string): State {
 function ensureBots(state: State): State {
   const users = { ...state.users };
   SEED_BOTS.forEach(b => { if (!users[b.id]) users[b.id] = b; });
-  const rooms = { ...state.rooms };
-  const roomOrder = [...(state.roomOrder || [])];
+  const rooms: Record<string, Room> = { ...state.rooms };
+  let roomOrder = [...(state.roomOrder || [])];
+  // Prune any legacy Path Escape / Path Flow rooms from cached state.
+  const isRemovedGameRoom = (id: string) => {
+    const r = rooms[id];
+    const gameType = (r?.game?.type || "").toLowerCase();
+    const key = `${id} ${r?.name ?? ""} ${gameType}`.toLowerCase();
+    return /path[\s-]?escape|path[\s-]?flow|pathescape/.test(key);
+  };
+  roomOrder = roomOrder.filter(id => !isRemovedGameRoom(id));
+  Object.keys(rooms).forEach(id => { if (isRemovedGameRoom(id)) delete rooms[id]; });
   // Make sure every seeded room exists (handles older cached state without "games")
   SEED_ROOMS.forEach(seedRoom => {
     if (!rooms[seedRoom.id]) {
