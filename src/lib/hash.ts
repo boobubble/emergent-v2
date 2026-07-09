@@ -2,8 +2,10 @@
 // SHA-256 via SubtleCrypto (browser + Worker), MD5 via a tiny JS impl.
 
 export async function sha256Hex(bytes: Uint8Array | ArrayBuffer): Promise<string> {
-  const buf = bytes instanceof Uint8Array ? bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) : bytes;
-  const digest = await crypto.subtle.digest("SHA-256", buf);
+  const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const copy = new Uint8Array(u8.byteLength);
+  copy.set(u8);
+  const digest = await crypto.subtle.digest("SHA-256", copy.buffer);
   return bufToHex(new Uint8Array(digest));
 }
 
