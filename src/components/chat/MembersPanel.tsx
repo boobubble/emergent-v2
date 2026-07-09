@@ -211,6 +211,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   const hubBadge = useHubBadge(false);
 
+  if (!room) return null;
+
+
   const body = (
     <>
       <div className="flex items-center justify-end gap-0 px-3 pt-2 pr-12 lg:pr-3">
