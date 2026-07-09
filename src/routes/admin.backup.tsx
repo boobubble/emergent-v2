@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import JSZip from "jszip";
 import { toast } from "sonner";
@@ -7,9 +7,14 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Database, Image as ImageIcon, Package, Upload, Download, Loader2,
   ShieldAlert, CheckCircle2, Zap, FileJson, ExternalLink, BookOpen,
+  Lock, ShieldCheck, History as HistoryIcon,
 } from "lucide-react";
 
 import {
@@ -21,11 +26,27 @@ import {
   uploadMediaFile,
   dumpDatabaseSql,
 } from "@/lib/backup.functions";
+import {
+  recordBackupHistory, listBackupHistory, deleteBackupHistory,
+  markBackupVerified, markRestoreTested,
+  getBackupRetention, setBackupRetention, getBackupHealth,
+} from "@/lib/backup-history.functions";
+import {
+  restoreDatabaseSql, getStorageBucketNames,
+} from "@/lib/backup-restore.functions";
 import { APP_VERSION } from "@/lib/app-version";
+import { sha256Hex, md5Hex } from "@/lib/hash";
+import { encryptBlobAes256, isEncryptedBackup, decryptBackup } from "@/lib/backup-crypto";
+import { verifyFullBackupZip, dryRunValidateZip, type VerifyReport } from "@/lib/backup-verify";
+import { BackupHealthCard } from "@/components/admin/BackupHealthCard";
+import { BackupHistoryTable } from "@/components/admin/BackupHistoryTable";
+import { BackupVerificationPanel } from "@/components/admin/BackupVerificationPanel";
+import { PreRestoreDialog, type PreRestoreInfo } from "@/components/admin/PreRestoreDialog";
 
 export const Route = createFileRoute("/admin/backup")({ component: BackupPage });
 
-type Job = "db" | "media" | "full" | "restore" | null;
+type Job = "db" | "media" | "full" | "restore" | "validate" | null;
+
 
 function todayStamp() {
   const d = new Date();
