@@ -257,17 +257,23 @@ function BackupPage() {
   }
 
   async function onFull() {
+    if (encryptEnabled && encryptPassword.length < 8) {
+      toast.error("Encryption password must be at least 8 characters");
+      return;
+    }
     setBusy("full");
+    setVerifyReport(null);
+    setLastChecksum(null);
     try {
-      setProgress({ label: "Preparing backup (JSON + media manifest)", done: 0, total: 3 });
+      setProgress({ label: "Preparing backup (JSON + media manifest)", done: 0, total: 5 });
       const [db, manifest] = await Promise.all([runDb({}), runMedia({})]);
-      setProgress({ label: "Exporting PostgreSQL database", done: 1, total: 3 });
+      setProgress({ label: "Exporting PostgreSQL database", done: 1, total: 5 });
       const sqlDump = await runDumpSql({}).catch((e) => {
         console.warn("SQL dump failed:", e?.message);
         toast.warning("Database SQL dump skipped: " + (e?.message ?? "error"));
         return null;
       });
-      setProgress({ label: "Downloading media", done: 2, total: 3 });
+      setProgress({ label: "Downloading media", done: 2, total: 5 });
       const files = await fetchMediaFiles(manifest);
       const databaseFiles = sqlDump
         ? [
@@ -277,7 +283,9 @@ function BackupPage() {
             { name: "stats.json", content: JSON.stringify(sqlDump.stats, null, 2) },
           ]
         : undefined;
-      await buildFullZip(
+
+      setProgress({ label: "Building ZIP", done: 3, total: 5 });
+      const built = await buildFullZip(
         [
           { name: "database.json", content: JSON.stringify(db, null, 2) },
           { name: "media-manifest.json", content: JSON.stringify(manifest, null, 2) },
@@ -289,15 +297,145 @@ function BackupPage() {
           database_sql_included: !!sqlDump,
           total_tables: sqlDump?.stats.tables ?? null,
           total_rows_exported: sqlDump?.stats.rows ?? null,
+          encrypted: encryptEnabled,
         },
+        { skipDownload: true },
       );
+
+      // Verify the ZIP before we announce success.
+      setProgress({ label: "Verifying backup", done: 4, total: 5 });
+      const report = await verifyFullBackupZip(built.blob);
+      setVerifyReport(report);
+      if (!report.ok) {
+        toast.error("Verification failed — see report below");
+        return;
+      }
+
+      // Checksums (of the plain ZIP; encrypted output also gets its own below).
+      const zipBytes = new Uint8Array(await built.blob.arrayBuffer());
+      const sha = await sha256Hex(zipBytes);
+      const md = md5Hex(zipBytes);
+      setLastChecksum({ sha256: sha, md5: md, filename: built.filename });
+
+      // Companion checksums.json
+      const checksumsBlob = new Blob(
+        [JSON.stringify({ filename: built.filename, size: built.blob.size, sha256: sha, md5: md }, null, 2)],
+        { type: "application/json" },
+      );
+
+      // Optional encryption
+      let finalBlob: Blob = built.blob;
+      let finalName = built.filename;
+      let finalSha = sha;
+      let finalMd = md;
+      if (encryptEnabled) {
+        finalBlob = await encryptBlobAes256(built.blob, encryptPassword);
+        finalName = `${built.filename}.enc`;
+        const encBytes = new Uint8Array(await finalBlob.arrayBuffer());
+        finalSha = await sha256Hex(encBytes);
+        finalMd = md5Hex(encBytes);
+        setLastChecksum({ sha256: finalSha, md5: finalMd, filename: finalName });
+      }
+
+      download(finalBlob, finalName);
+      download(checksumsBlob, `${finalName}.checksums.json`);
+      setLastFile(finalName);
+      setEncryptPassword("");
+
+      // Persist history entry.
+      try {
+        await runRecord({
+          data: {
+            filename: finalName,
+            backup_type: "full",
+            size_bytes: finalBlob.size,
+            sha256: finalSha,
+            md5: finalMd,
+            verified: true,
+            encrypted: encryptEnabled,
+            app_version: APP_VERSION,
+            total_tables: sqlDump?.stats.tables ?? null,
+            total_rows: sqlDump?.stats.rows ?? null,
+            media_files: files.length,
+          },
+        });
+        await refreshHistoryAndHealth();
+      } catch (e: any) {
+        console.warn("history record failed:", e?.message);
+      }
+
+      setProgress({ label: "Done", done: 5, total: 5 });
       toast.success(
-        `Full backup downloaded (${files.length} media files${sqlDump ? `, ${sqlDump.stats.rows} rows in ${sqlDump.stats.tables} tables` : ""})`,
+        `Full backup verified & downloaded (${files.length} media files${sqlDump ? `, ${sqlDump.stats.rows} rows in ${sqlDump.stats.tables} tables` : ""})`,
       );
     } catch (e: any) {
       toast.error(e?.message ?? "Full backup failed");
     } finally { setBusy(null); setProgress(null); }
   }
+
+  // Dry-run validation of an uploaded ZIP without touching DB or storage.
+  async function onValidate(file: File) {
+    setBusy("validate");
+    setValidateReport(null);
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let blob: Blob = file;
+      if (isEncryptedBackup(bytes)) {
+        const pw = window.prompt("Backup is encrypted. Enter password:");
+        if (!pw) { setBusy(null); return; }
+        const plain = await decryptBackup(bytes, pw);
+        blob = new Blob([plain as unknown as BlobPart]);
+      }
+      let currentBuckets: string[] | undefined;
+      try { currentBuckets = await runGetBuckets({}); } catch { /* ignore */ }
+      const report = await dryRunValidateZip(blob, currentBuckets);
+      setValidateReport(report);
+      if (report.ok) toast.success("Backup validated — no issues found");
+      else toast.error("Validation failed — see report");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Validation failed");
+    } finally { setBusy(null); }
+  }
+
+  // Ask the admin to confirm before running a real restore.
+  async function stageRestore(file: File) {
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let workingFile = file;
+      if (isEncryptedBackup(bytes)) {
+        const pw = window.prompt("Backup is encrypted. Enter password to restore:");
+        if (!pw) return;
+        const plain = await decryptBackup(bytes, pw);
+        workingFile = new File([plain as unknown as BlobPart], file.name.replace(/\.enc$/i, ""));
+      }
+      const zip = await JSZip.loadAsync(workingFile);
+      let info: any = {};
+      const infoEntry = zip.file("backup-info.json");
+      if (infoEntry) info = JSON.parse(await infoEntry.async("text"));
+      let stats: any = {};
+      const statsEntry = zip.file("database/stats.json");
+      if (statsEntry) stats = JSON.parse(await statsEntry.async("text"));
+      const mm = zip.file("media-manifest.json");
+      let mediaFiles = 0;
+      if (mm) {
+        const parsed = JSON.parse(await mm.async("text"));
+        for (const b of parsed.buckets ?? []) mediaFiles += (b.files ?? []).length;
+      }
+      setPendingRestoreFile(workingFile);
+      setPreRestore({
+        filename: file.name,
+        size: file.size,
+        backupAppVersion: info.app_version,
+        backupGeneratedAt: info.generated_at,
+        tables: stats.tables ?? info.total_tables,
+        rows: stats.rows ?? info.total_rows_exported,
+        mediaFiles,
+      });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not read backup");
+    }
+  }
+
 
   async function onRestoreFile(file: File) {
     setBusy("restore");
