@@ -311,7 +311,7 @@ export const dumpDatabaseSql = createServerFn({ method: "POST" })
         const rows = data ?? [];
         if (rows.length === 0) break;
         if (firstPage) {
-          colNames = Object.keys(rows[0] as Record<string, unknown>);
+          colNames = Object.keys(rows[0] as unknown as Record<string, unknown>);
           dataSql += `-- ${table}\n`;
           firstPage = false;
         }
