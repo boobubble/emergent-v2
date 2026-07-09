@@ -299,6 +299,69 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_history: {
+        Row: {
+          app_version: string | null
+          backup_type: string
+          created_at: string
+          encrypted: boolean
+          expires_at: string | null
+          filename: string
+          generated_at: string
+          generated_by: string | null
+          id: string
+          last_restore_test_at: string | null
+          md5: string | null
+          media_files: number | null
+          notes: string | null
+          sha256: string | null
+          size_bytes: number
+          total_rows: number | null
+          total_tables: number | null
+          verified: boolean
+        }
+        Insert: {
+          app_version?: string | null
+          backup_type?: string
+          created_at?: string
+          encrypted?: boolean
+          expires_at?: string | null
+          filename: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          last_restore_test_at?: string | null
+          md5?: string | null
+          media_files?: number | null
+          notes?: string | null
+          sha256?: string | null
+          size_bytes?: number
+          total_rows?: number | null
+          total_tables?: number | null
+          verified?: boolean
+        }
+        Update: {
+          app_version?: string | null
+          backup_type?: string
+          created_at?: string
+          encrypted?: boolean
+          expires_at?: string | null
+          filename?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          last_restore_test_at?: string | null
+          md5?: string | null
+          media_files?: number | null
+          notes?: string | null
+          sha256?: string | null
+          size_bytes?: number
+          total_rows?: number | null
+          total_tables?: number | null
+          verified?: boolean
+        }
+        Relationships: []
+      }
       banned_devices: {
         Row: {
           created_at: string
@@ -4948,6 +5011,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_db_size: { Args: never; Returns: number }
+      admin_exec_sql: { Args: { _sql: string }; Returns: undefined }
       admin_export_schema_sql: { Args: never; Returns: string }
       admin_grant_chat_theme: {
         Args: { _days?: number; _theme_key: string; _user: string }
@@ -5027,6 +5092,7 @@ export type Database = {
         Args: { _frozen: boolean; _user: string }
         Returns: boolean
       }
+      backup_history_purge_expired: { Args: never; Returns: number }
       bootstrap_first_admin: { Args: never; Returns: undefined }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
       cast_competition_vote: {
