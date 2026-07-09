@@ -114,6 +114,8 @@ function BackupPage() {
     parts: { name: string; content: string }[],
     label: string,
     mediaFiles?: { bucket: string; path: string; bytes: Uint8Array }[],
+    databaseFiles?: { name: string; content: string }[],
+    extraInfo?: Record<string, unknown>,
   ) {
     const zip = new JSZip();
     const stamp = todayStamp();
@@ -121,11 +123,19 @@ function BackupPage() {
       kind: label,
       generated_at: new Date().toISOString(),
       app: "BooBubble",
+      app_version: APP_VERSION,
       parts: parts.map((p) => p.name),
       media_files: mediaFiles?.length ?? 0,
+      database_files: databaseFiles?.map((f) => f.name) ?? [],
+      ...extraInfo,
     };
     zip.file("manifest.json", JSON.stringify(meta, null, 2));
+    zip.file("backup-info.json", JSON.stringify(meta, null, 2));
     parts.forEach((p) => zip.file(p.name, p.content));
+    if (databaseFiles?.length) {
+      const db = zip.folder("database")!;
+      for (const f of databaseFiles) db.file(f.name, f.content);
+    }
     if (mediaFiles?.length) {
       const media = zip.folder("media")!;
       for (const f of mediaFiles) {
