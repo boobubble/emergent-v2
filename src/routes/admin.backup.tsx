@@ -195,13 +195,41 @@ function BackupPage() {
   async function onFull() {
     setBusy("full");
     try {
+      setProgress({ label: "Preparing backup (JSON + media manifest)", done: 0, total: 3 });
       const [db, manifest] = await Promise.all([runDb({}), runMedia({})]);
+      setProgress({ label: "Exporting PostgreSQL database", done: 1, total: 3 });
+      const sqlDump = await runDumpSql({}).catch((e) => {
+        console.warn("SQL dump failed:", e?.message);
+        toast.warning("Database SQL dump skipped: " + (e?.message ?? "error"));
+        return null;
+      });
+      setProgress({ label: "Downloading media", done: 2, total: 3 });
       const files = await fetchMediaFiles(manifest);
-      await buildFullZip([
-        { name: "database.json", content: JSON.stringify(db, null, 2) },
-        { name: "media-manifest.json", content: JSON.stringify(manifest, null, 2) },
-      ], "full", files);
-      toast.success(`Full backup downloaded (${files.length} media files)`);
+      const databaseFiles = sqlDump
+        ? [
+            { name: "database.sql", content: sqlDump.full_sql },
+            { name: "schema.sql", content: sqlDump.schema_sql },
+            { name: "data.sql", content: sqlDump.data_sql },
+            { name: "stats.json", content: JSON.stringify(sqlDump.stats, null, 2) },
+          ]
+        : undefined;
+      await buildFullZip(
+        [
+          { name: "database.json", content: JSON.stringify(db, null, 2) },
+          { name: "media-manifest.json", content: JSON.stringify(manifest, null, 2) },
+        ],
+        "full",
+        files,
+        databaseFiles,
+        {
+          database_sql_included: !!sqlDump,
+          total_tables: sqlDump?.stats.tables ?? null,
+          total_rows_exported: sqlDump?.stats.rows ?? null,
+        },
+      );
+      toast.success(
+        `Full backup downloaded (${files.length} media files${sqlDump ? `, ${sqlDump.stats.rows} rows in ${sqlDump.stats.tables} tables` : ""})`,
+      );
     } catch (e: any) {
       toast.error(e?.message ?? "Full backup failed");
     } finally { setBusy(null); setProgress(null); }
