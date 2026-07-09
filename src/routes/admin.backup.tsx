@@ -548,9 +548,13 @@ function BackupPage() {
         }, (done, total) => setProgress({ label: "Uploading media", done, total }));
       }
 
+      const sqlBits: string[] = [];
+      if (schemaResult) sqlBits.push(`schema ${schemaResult.ok}/${schemaResult.total}`);
+      if (dataResult) sqlBits.push(`data ${dataResult.ok}/${dataResult.total}`);
       toast.success(
-        `Restore complete — ${dbSummary.rows} rows in ${dbSummary.tables} tables verified, ${mediaRestored} media files uploaded`,
+        `Restore complete — ${sqlBits.join(", ")}${sqlBits.length ? " · " : ""}${dbSummary.rows} rows in ${dbSummary.tables} tables verified, ${mediaRestored} media files uploaded`,
       );
+      await refreshHistoryAndHealth();
     } catch (e: any) {
       toast.error(e?.message ?? "Restore failed");
     } finally { setBusy(null); setProgress(null); }
