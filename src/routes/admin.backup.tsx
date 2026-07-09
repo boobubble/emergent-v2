@@ -92,6 +92,7 @@ function BackupPage() {
   const runDownload = useServerFn(downloadMediaFile);
   const runEnsureBucket = useServerFn(ensureStorageBucket);
   const runUpload = useServerFn(uploadMediaFile);
+  const runDumpSql = useServerFn(dumpDatabaseSql);
   const [quickBusy, setQuickBusy] = useState(false);
 
   async function onQuickJson() {
