@@ -101,11 +101,7 @@ export function ChatHeader(_props: ChatHeaderProps = {}) {
             <span className="truncate font-bold text-foreground">{channelLabel(id)}</span>
             <LoyaltyChip channelId={id} />
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <span className="chat-online-dot shrink-0" aria-hidden />
-            <span className="font-semibold text-foreground/80">{room.members.length}</span>
-            <span>online</span>
-            <span className="mx-1 text-muted-foreground/40">·</span>
+          <div className="w-full">
             <CommunityEventsTicker />
           </div>
         </div>
