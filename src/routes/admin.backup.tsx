@@ -117,6 +117,7 @@ function BackupPage() {
   const runUpload = useServerFn(uploadMediaFile);
   const runDumpSql = useServerFn(dumpDatabaseSql);
   const runExtras = useServerFn(exportBackupExtras);
+  const runMetaV2 = useServerFn(exportBackupMetadataV2);
   const runRecord = useServerFn(recordBackupHistory);
   const runList = useServerFn(listBackupHistory);
   const runDelete = useServerFn(deleteBackupHistory);
