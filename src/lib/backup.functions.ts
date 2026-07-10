@@ -335,6 +335,16 @@ export const dumpDatabaseSql = createServerFn({ method: "POST" })
 
     dataSql += "\nSET session_replication_role = DEFAULT;\n";
 
+    const { data: validation, error: validationErr } = await (context.supabase as any)
+      .rpc("admin_validate_export_sql", { _schema_sql: schemaSql as string, _data_sql: dataSql });
+    if (validationErr) throw new Error(`SQL restore validation failed: ${validationErr.message}`);
+    if (!validation?.ok) {
+      const missing = validation?.missing_or_invalid_object ?? "unknown dependency error";
+      const referencedBy = validation?.referenced_by ? ` Referenced by: ${validation.referenced_by}` : "";
+      const detail = validation?.detail ? ` Detail: ${validation.detail}` : "";
+      throw new Error(`SQL restore validation failed: ${missing}.${referencedBy}${detail}`);
+    }
+
     const fullSql =
       (schemaSql as string) +
       "\n\n-- ============================================\n" +
