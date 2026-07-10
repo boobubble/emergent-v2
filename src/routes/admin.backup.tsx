@@ -475,6 +475,7 @@ sha256sum -c checksums.sha256
           "restore/restore.sh":      check(true),
           "restore/restore.ps1":     check(true),
           "restore/verify.sh":       check(true),
+          "restore/restore.json":    check(true),
         } as Record<string, { ok: boolean; reason?: string }>,
       };
       const failedComponents = Object.entries(validation.components).filter(([, v]) => !v.ok);
@@ -656,44 +657,15 @@ This package is self-describing and requires no manual editing.
         }
       }
 
-      // Health checks — derived from actual ZIP contents (future-proof)
+      // Common helpers used by both restore manifest + health checks.
       const has = (p: string) => !!outerZip.file(p);
       const mediaFolder = outerZip.folder("media");
       const hasMedia = !!(mediaFolder && Object.keys((mediaFolder as any).files ?? {}).length > 0)
         || files.length > 0;
-      const checks: Record<string, boolean> = {
-        Database:        has("database/database.sql"),
-        Schema:          has("database/schema.sql"),
-        Data:            has("database/data.sql"),
-        Storage:         has("database/storage.sql"),
-        Policies:        has("database/policies.sql"),
-        Extensions:      has("database/extensions.sql"),
-        Realtime:        has("database/realtime.json"),
-        Auth:            has("database/auth.json"),
-        Media:           hasMedia,
-        Checksums:       has("checksums.sha256"),
-        "Restore Scripts": has("restore/restore.sh") && has("restore/restore.ps1"),
-        Validation:      has("validation.json"),
-      };
-      const passed = Object.values(checks).filter(Boolean).length;
-      const total = Object.values(checks).length;
-      const healthScore = Math.round((passed / total) * 100);
-      const overallStatus =
-        healthScore === 100 ? "Production Ready" :
-        healthScore >= 80  ? "Degraded" : "Failed";
-      const health = {
-        generated_at: new Date().toISOString(),
-        health_score: healthScore,
-        checks_passed: passed,
-        checks_total: total,
-        checks,
-        overall_status: overallStatus,
-      };
-      outerZip.file("health.json", JSON.stringify(health, null, 2));
 
       // ---- restore/restore.json — master restore manifest (auto-discovered)
-      // Ordered restore sequence. Files not present in the ZIP are skipped
-      // at restore time by the runner; they still appear here as optional.
+      // Written FIRST so downstream health/validation/manifest patches can
+      // record its presence.
       const ORDERED_RESTORE_STEPS: { file: string; required: boolean; depends_on: string[]; validation: boolean; type: string }[] = [
         { file: "database/extensions.sql", required: true,  depends_on: [],                            validation: true,  type: "sql" },
         { file: "database/storage.sql",    required: true,  depends_on: ["database/extensions.sql"],   validation: true,  type: "sql" },
@@ -707,15 +679,11 @@ This package is self-describing and requires no manual editing.
         { file: "verify",                  required: true,  depends_on: [],                            validation: true,  type: "post-check" },
       ];
 
-      // Auto-discover: every file present in ZIP that isn't already covered
-      // by the ordered steps gets registered as an optional post-step so
-      // future backup components restore automatically.
       const knownFiles = new Set(ORDERED_RESTORE_STEPS.map((s) => s.file));
       const discovered: { file: string; required: boolean; depends_on: string[]; validation: boolean; type: string }[] = [];
       outerZip.forEach((relPath, obj) => {
         if (obj.dir) return;
         if (knownFiles.has(relPath)) return;
-        // Media files are represented by the "media/" folder step.
         if (relPath.startsWith("media/")) return;
         const type = relPath.endsWith(".sql") ? "sql"
                    : relPath.endsWith(".json") ? "json-meta"
@@ -740,7 +708,6 @@ This package is self-describing and requires no manual editing.
                : has(s.file),
       }));
 
-      // Validate: every ordered required step must reference a present file.
       const restoreMissing = restoreComponents
         .filter((c) => c.required && !c.present && c.file !== "verify" && c.file !== "media/")
         .map((c) => c.file);
@@ -752,7 +719,6 @@ This package is self-describing and requires no manual editing.
         app_version: APP_VERSION,
         generated_at: new Date().toISOString(),
         backup_uuid: backupUuid,
-
         compatibility: {
           min_backup_version: "1.0",
           max_backup_version: "2.x",
@@ -760,7 +726,6 @@ This package is self-describing and requires no manual editing.
           supabase_version: "cloud",
           application_version: APP_VERSION,
         },
-
         restore_modes: {
           full:          ORDERED_RESTORE_STEPS.map((s) => s.file),
           database_only: ["database/extensions.sql","database/schema.sql","database/data.sql","verify"],
@@ -770,9 +735,7 @@ This package is self-describing and requires no manual editing.
           security_only: ["database/policies.sql","verify"],
           configuration_only: ["database/realtime.json","database/auth.json","database/cron.sql","verify"],
         },
-
         restore_order: ORDERED_RESTORE_STEPS.map((s) => s.file),
-
         dependencies: {
           "schema.sql":   ["extensions.sql"],
           "policies.sql": ["schema.sql"],
@@ -781,9 +744,7 @@ This package is self-describing and requires no manual editing.
           "cron.sql":     ["schema.sql"],
           "realtime.json":["schema.sql"],
         },
-
         components: restoreComponents,
-
         post_restore_tasks: [
           { id: "refresh_schema_cache", description: "Refresh PostgREST schema cache",       sql: "NOTIFY pgrst, 'reload schema';" },
           { id: "reload_postgrest",     description: "Reload PostgREST configuration",       sql: "NOTIFY pgrst, 'reload config';" },
@@ -793,13 +754,73 @@ This package is self-describing and requires no manual editing.
           { id: "verify_realtime",      description: "Verify publications/tables in realtime.json" },
           { id: "verify_auth",          description: "Verify auth providers listed in auth.json are configured" },
         ],
-
         validation: {
           missing_required_files: restoreMissing,
           ok: restoreMissing.length === 0,
         },
       };
       outerZip.file("restore/restore.json", JSON.stringify(restoreManifest, null, 2));
+
+      // Patch manifest.json + backup-info.json to record the restore manifest.
+      for (const infoName of ["manifest.json", "backup-info.json"]) {
+        const e = outerZip.file(infoName);
+        if (!e) continue;
+        const existing = JSON.parse(await e.async("string"));
+        const scripts: string[] = Array.isArray(existing.restore_scripts) ? [...existing.restore_scripts] : [];
+        if (!scripts.includes("restore.json")) scripts.push("restore.json");
+        outerZip.file(infoName, JSON.stringify({
+          ...existing,
+          restore_scripts: scripts,
+          restore_manifest: "restore/restore.json",
+          restore_manifest_ok: restoreMissing.length === 0,
+        }, null, 2));
+      }
+
+      // Patch validation.json to reflect restore.json presence.
+      const vEntry = outerZip.file("validation.json");
+      if (vEntry) {
+        const v = JSON.parse(await vEntry.async("string"));
+        v.components = v.components ?? {};
+        v.components["restore/restore.json"] = { ok: true };
+        const failed = Object.entries(v.components).filter(([, c]: any) => !c.ok);
+        v.ok = failed.length === 0 && restoreMissing.length === 0;
+        v.failed_count = failed.length;
+        v.restore_missing_required = restoreMissing;
+        outerZip.file("validation.json", JSON.stringify(v, null, 2));
+      }
+
+      // Health checks — derived from actual ZIP contents (future-proof)
+      const checks: Record<string, boolean> = {
+        Database:        has("database/database.sql"),
+        Schema:          has("database/schema.sql"),
+        Data:            has("database/data.sql"),
+        Storage:         has("database/storage.sql"),
+        Policies:        has("database/policies.sql"),
+        Extensions:      has("database/extensions.sql"),
+        Realtime:        has("database/realtime.json"),
+        Auth:            has("database/auth.json"),
+        Media:           hasMedia,
+        Checksums:       has("checksums.sha256"),
+        "Restore Scripts": has("restore/restore.sh") && has("restore/restore.ps1") && has("restore/verify.sh"),
+        "Restore Manifest": has("restore/restore.json"),
+        Validation:      has("validation.json"),
+      };
+      const passed = Object.values(checks).filter(Boolean).length;
+      const total = Object.values(checks).length;
+      const healthScore = Math.round((passed / total) * 100);
+      const overallStatus =
+        healthScore === 100 ? "Production Ready" :
+        healthScore >= 80  ? "Degraded" : "Failed";
+      const health = {
+        generated_at: new Date().toISOString(),
+        health_score: healthScore,
+        checks_passed: passed,
+        checks_total: total,
+        checks,
+        overall_status: overallStatus,
+      };
+      outerZip.file("health.json", JSON.stringify(health, null, 2));
+
 
       // FAIL the backup if any expected file is missing / empty.
       const emptyExports: string[] = [];
