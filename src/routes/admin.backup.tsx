@@ -343,11 +343,24 @@ sha256sum -c checksums.sha256
       setProgress({ label: "Preparing backup (JSON + media manifest)", done: 0, total: 6 });
       const [db, manifest] = await Promise.all([runDb({}), runMedia({})]);
       setProgress({ label: "Exporting PostgreSQL database", done: 1, total: 6 });
-      const sqlDump = await runDumpSql({}).catch((e) => {
-        console.warn("SQL dump failed:", e?.message);
-        toast.warning("Database SQL dump skipped: " + (e?.message ?? "error"));
-        return null;
-      });
+      let sqlDump: Awaited<ReturnType<typeof runDumpSql>>;
+      try {
+        sqlDump = await runDumpSql({});
+      } catch (e: any) {
+        // Root-cause SQL export failure. Do NOT continue to validation or
+        // report downstream "missing file" errors — surface the original
+        // SQL error (object, type, file:line, dependency chain) verbatim.
+        const raw = String(e?.message ?? e ?? "unknown SQL export error");
+        console.error("SQL export failed — backup aborted.\nRoot cause:\n" + raw);
+        toast.error(
+          "SQL export failed — backup aborted.\nRoot cause: " + raw,
+          { duration: 20000 },
+        );
+        setBusy(null);
+        setProgress(null);
+        return;
+      }
+
       setProgress({ label: "Downloading media", done: 2, total: 6 });
       const files = await fetchMediaFiles(manifest);
 
