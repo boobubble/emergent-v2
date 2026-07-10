@@ -673,7 +673,8 @@ This package is self-describing and requires no manual editing.
         Auth:            has("database/auth.json"),
         Media:           hasMedia,
         Checksums:       has("checksums.sha256"),
-        "Restore Scripts": has("restore/restore.sh") && has("restore/restore.ps1"),
+        "Restore Scripts": has("restore/restore.sh") && has("restore/restore.ps1") && has("restore/verify.sh"),
+        "Restore Manifest": has("restore/restore.json"),
         Validation:      has("validation.json"),
       };
       const passed = Object.values(checks).filter(Boolean).length;
