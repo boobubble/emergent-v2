@@ -5014,6 +5014,7 @@ export type Database = {
       admin_db_size: { Args: never; Returns: number }
       admin_exec_sql: { Args: { _sql: string }; Returns: undefined }
       admin_export_extras: { Args: never; Returns: Json }
+      admin_export_metadata_v2: { Args: never; Returns: Json }
       admin_export_schema_sql: { Args: never; Returns: string }
       admin_grant_chat_theme: {
         Args: { _days?: number; _theme_key: string; _user: string }
