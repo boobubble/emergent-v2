@@ -364,28 +364,83 @@ sha256sum -c checksums.sha256
       });
 
       const databaseFiles: { name: string; content: string }[] = [];
-      // SQL sanity: literal `\n);` or `\n;` outside of quoted strings means the
-      // exporter emitted a non-E-prefixed \n. Refuse to package such SQL.
-      const sqlLooksBroken = (sql: string): string | null => {
+      // SQL sanity: a literal two-char `\n` (0x5C 0x6E) *outside* any string
+      // literal is invalid SQL. Real newlines are fine, and `\n` inside
+      // single-quoted strings or dollar-quoted blocks is a valid escape
+      // (jsonb values commonly contain them). The old regex-only check
+      // false-positived on those, so strip string literals first, then look
+      // for `\n` in the remaining "code" region and report file+line+context.
+      const stripSqlStrings = (sql: string): string => {
+        let out = "";
+        let i = 0;
+        const n = sql.length;
+        while (i < n) {
+          const c = sql[i];
+          // single-quoted string, incl. '' escape
+          if (c === "'") {
+            out += " ";
+            i++;
+            while (i < n) {
+              if (sql[i] === "'" && sql[i + 1] === "'") { i += 2; continue; }
+              if (sql[i] === "'") { i++; break; }
+              // preserve real newlines so line numbers stay aligned
+              out += sql[i] === "\n" ? "\n" : " ";
+              i++;
+            }
+            continue;
+          }
+          // dollar-quoted string: $tag$ ... $tag$
+          if (c === "$") {
+            const m = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(i));
+            if (m) {
+              const tag = m[0];
+              out += " ".repeat(tag.length);
+              i += tag.length;
+              const end = sql.indexOf(tag, i);
+              if (end === -1) { out += sql.slice(i).replace(/[^\n]/g, " "); i = n; break; }
+              for (let k = i; k < end; k++) out += sql[k] === "\n" ? "\n" : " ";
+              out += " ".repeat(tag.length);
+              i = end + tag.length;
+              continue;
+            }
+          }
+          // line comment
+          if (c === "-" && sql[i + 1] === "-") {
+            while (i < n && sql[i] !== "\n") { out += " "; i++; }
+            continue;
+          }
+          out += c;
+          i++;
+        }
+        return out;
+      };
+      const sqlLooksBroken = (filename: string, sql: string): string | null => {
         if (!sql) return null;
-        // The characteristic bug pattern: two-char sequence "\n" (0x5C 0x6E)
-        // sitting right before ")" / ";" — Postgres will syntax-error on it.
-        if (/\\n\s*\)\s*;/.test(sql)) return "literal \\n before closing ')' — invalid SQL";
-        if (/[A-Za-z0-9_"'\)]\\n[A-Za-z_]/.test(sql)) return "literal \\n between tokens — invalid SQL";
-        // Sanity: a real dump has many newlines. A totally single-line dump
-        // with lots of `\n` sequences is almost certainly broken.
-        const literalCount = (sql.match(/\\n/g) ?? []).length;
-        const realNewlines = (sql.match(/\n/g) ?? []).length;
-        if (literalCount > 20 && realNewlines < literalCount / 4) return "SQL contains literal \\n sequences instead of real newlines";
-        return null;
+        const stripped = stripSqlStrings(sql);
+        const idx = stripped.indexOf("\\n");
+        if (idx === -1) return null;
+        // Compute line number + surrounding context from the ORIGINAL file
+        // (stripped preserves newlines so offsets align).
+        const before = sql.slice(0, idx);
+        const line = before.split("\n").length;
+        const lineStart = before.lastIndexOf("\n") + 1;
+        const lineEnd = sql.indexOf("\n", idx);
+        const snippet = sql.slice(lineStart, lineEnd === -1 ? sql.length : lineEnd);
+        const col = idx - lineStart + 1;
+        const caret = " ".repeat(Math.max(0, col - 1)) + "^^";
+        // Log full detail to console — toast has a length limit.
+        console.error(
+          `SQL export invalid\n${filename}\nLine ${line}, column ${col}\n${snippet}\n${caret}`,
+        );
+        return `${filename}:${line}:${col} — literal \\n outside string literal\n> ${snippet.trim().slice(0, 160)}`;
       };
       if (sqlDump) {
         const bad =
-          sqlLooksBroken(sqlDump.schema_sql) ||
-          sqlLooksBroken(sqlDump.data_sql) ||
-          sqlLooksBroken(sqlDump.full_sql);
+          sqlLooksBroken("schema.sql", sqlDump.schema_sql) ||
+          sqlLooksBroken("data.sql", sqlDump.data_sql) ||
+          sqlLooksBroken("database.sql", sqlDump.full_sql);
         if (bad) {
-          toast.error(`SQL export invalid — backup aborted: ${bad}`);
+          toast.error(`SQL export invalid — backup aborted:\n${bad}`, { duration: 15000 });
           setBusy(null);
           setProgress(null);
           return;
@@ -397,6 +452,7 @@ sha256sum -c checksums.sha256
           { name: "stats.json",   content: JSON.stringify(sqlDump.stats, null, 2) },
         );
       }
+
 
       if (extras) {
         for (const [name, content] of Object.entries(extras.files)) {
