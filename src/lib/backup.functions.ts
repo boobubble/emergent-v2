@@ -335,14 +335,32 @@ export const dumpDatabaseSql = createServerFn({ method: "POST" })
 
     dataSql += "\nSET session_replication_role = DEFAULT;\n";
 
+    // Statement-level restore validation on a throwaway schema. Split each
+    // file into statements (dollar-quote aware), remember 1-based line origin,
+    // and hand the array to the RPC. On failure we know exactly which file
+    // and which line the failing statement started at.
+    const { splitSqlStatementsWithLines } = await import("@/lib/backup-restore.functions");
+    const schemaStmts = splitSqlStatementsWithLines(schemaSql as string);
+    const dataStmts = splitSqlStatementsWithLines(dataSql);
+    const combined = [
+      ...schemaStmts.map((s) => ({ ...s, file: "schema.sql" as const })),
+      ...dataStmts.map((s) => ({ ...s, file: "database.sql" as const })),
+    ];
     const { data: validation, error: validationErr } = await (context.supabase as any)
-      .rpc("admin_validate_export_sql", { _schema_sql: schemaSql as string, _data_sql: dataSql });
+      .rpc("admin_validate_export_sql_stmts", { _stmts: combined.map((c) => c.text) });
     if (validationErr) throw new Error(`SQL restore validation failed: ${validationErr.message}`);
     if (!validation?.ok) {
-      const missing = validation?.missing_or_invalid_object ?? "unknown dependency error";
-      const referencedBy = validation?.referenced_by ? ` Referenced by: ${validation.referenced_by}` : "";
-      const detail = validation?.detail ? ` Detail: ${validation.detail}` : "";
-      throw new Error(`SQL restore validation failed: ${missing}.${referencedBy}${detail}`);
+      const idx = ((validation?.failed_index as number) ?? 1) - 1;
+      const hit = combined[idx];
+      const where = hit ? `${hit.file}:${hit.startLine}` : "unknown location";
+      const stmt = validation?.failed_statement ?? hit?.text?.slice(0, 400) ?? "";
+      const msg = validation?.message ?? "unknown error";
+      const sqlstate = validation?.sqlstate ? ` [${validation.sqlstate}]` : "";
+      const detail = validation?.detail ? `\n  detail: ${validation.detail}` : "";
+      const hint = validation?.hint ? `\n  hint: ${validation.hint}` : "";
+      throw new Error(
+        `SQL restore validation failed at ${where}${sqlstate}: ${msg}${detail}${hint}\n  statement: ${stmt}`,
+      );
     }
 
     const fullSql =
