@@ -817,7 +817,7 @@ This package is self-describing and requires no manual editing.
         if (!e) continue;
         try { JSON.parse(await e.async("string")); } catch { badJson.push(jf); }
       }
-      const productionReady = overallStatus === "Production Ready" && emptyExports.length === 0 && badJson.length === 0;
+      const productionReady = overallStatus === "Production Ready" && emptyExports.length === 0 && badJson.length === 0 && restoreMissing.length === 0;
 
       // Recompute checksums.sha256 over final content set (excluding itself + signature which we hash last).
       outerZip.remove("checksums.sha256");
