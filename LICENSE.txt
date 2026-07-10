@@ -1,0 +1,8 @@
+BooBubble — Community Platform
+Copyright (c) 2026 The BooBubble authors.
+
+Licensed under the CodeCanyon Regular / Extended License purchased with this
+item. See https://codecanyon.net/licenses/standard for the full terms.
+
+Third-party open-source dependencies retain their original licenses; see the
+LICENSE files inside each package under node_modules/ after `npm install`.
