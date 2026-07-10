@@ -475,6 +475,7 @@ sha256sum -c checksums.sha256
           "restore/restore.sh":      check(true),
           "restore/restore.ps1":     check(true),
           "restore/verify.sh":       check(true),
+          "restore/restore.json":    check(true),
         } as Record<string, { ok: boolean; reason?: string }>,
       };
       const failedComponents = Object.entries(validation.components).filter(([, v]) => !v.ok);
