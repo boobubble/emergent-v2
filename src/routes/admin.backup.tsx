@@ -378,6 +378,42 @@ sha256sum -c checksums.sha256
       if (extras) {
         parts.push({ name: "project-info.json", content: JSON.stringify(extras.project_info, null, 2) });
       }
+
+      // validation.json — component-by-component export report
+      const dbNames = new Set(databaseFiles.map((f) => f.name));
+      const check = (present: boolean, reason?: string) => ({
+        ok: present,
+        ...(present ? {} : { reason: reason ?? "missing" }),
+      });
+      const validation = {
+        generated_at: new Date().toISOString(),
+        backup_version: 2,
+        components: {
+          "database/database.sql":   check(dbNames.has("database.sql"),   sqlDump ? undefined : "sql dump failed"),
+          "database/schema.sql":     check(dbNames.has("schema.sql"),     sqlDump ? undefined : "sql dump failed"),
+          "database/data.sql":       check(dbNames.has("data.sql"),       sqlDump ? undefined : "sql dump failed"),
+          "database/stats.json":     check(dbNames.has("stats.json"),     sqlDump ? undefined : "sql dump failed"),
+          "database/storage.sql":    check(dbNames.has("storage.sql"),    extras ? undefined : "extras export failed"),
+          "database/policies.sql":   check(dbNames.has("policies.sql"),   extras ? undefined : "extras export failed"),
+          "database/extensions.sql": check(dbNames.has("extensions.sql"), extras ? undefined : "extras export failed"),
+          "database/cron.sql":       check(dbNames.has("cron.sql"),       extras ? undefined : "extras export failed"),
+          "database/auth.json":      check(dbNames.has("auth.json"),      extras ? undefined : "extras export failed"),
+          "database/realtime.json":  check(dbNames.has("realtime.json"),  extras ? undefined : "extras export failed"),
+          "database.json":           check(true),
+          "media-manifest.json":     check(true),
+          "media":                   check(files.length > 0, files.length === 0 ? "no media files" : undefined),
+          "project-info.json":       check(!!extras, extras ? undefined : "extras export failed"),
+          "backup-info.json":        check(true),
+          "checksums.sha256":        check(true),
+          "restore/restore.sh":      check(true),
+          "restore/restore.ps1":     check(true),
+          "restore/verify.sh":       check(true),
+        } as Record<string, { ok: boolean; reason?: string }>,
+      };
+      const failed = Object.entries(validation.components).filter(([, v]) => !v.ok);
+      (validation as any).ok = failed.length === 0;
+      (validation as any).failed_count = failed.length;
+      parts.push({ name: "validation.json", content: JSON.stringify(validation, null, 2) });
       const startedAt = Date.now();
       const built = await buildFullZip(
         parts,
