@@ -5098,6 +5098,10 @@ export type Database = {
         Args: { _data_sql?: string; _schema_sql: string }
         Returns: Json
       }
+      admin_validate_export_sql_stmts: {
+        Args: { _stmts: string[] }
+        Returns: Json
+      }
       backup_history_purge_expired: { Args: never; Returns: number }
       bootstrap_first_admin: { Args: never; Returns: undefined }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
