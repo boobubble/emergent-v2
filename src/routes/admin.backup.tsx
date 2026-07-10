@@ -691,6 +691,116 @@ This package is self-describing and requires no manual editing.
       };
       outerZip.file("health.json", JSON.stringify(health, null, 2));
 
+      // ---- restore/restore.json — master restore manifest (auto-discovered)
+      // Ordered restore sequence. Files not present in the ZIP are skipped
+      // at restore time by the runner; they still appear here as optional.
+      const ORDERED_RESTORE_STEPS: { file: string; required: boolean; depends_on: string[]; validation: boolean; type: string }[] = [
+        { file: "database/extensions.sql", required: true,  depends_on: [],                            validation: true,  type: "sql" },
+        { file: "database/storage.sql",    required: true,  depends_on: ["database/extensions.sql"],   validation: true,  type: "sql" },
+        { file: "database/schema.sql",     required: true,  depends_on: ["database/extensions.sql"],   validation: true,  type: "sql" },
+        { file: "database/policies.sql",   required: true,  depends_on: ["database/schema.sql"],       validation: true,  type: "sql" },
+        { file: "database/realtime.json",  required: false, depends_on: ["database/schema.sql"],       validation: true,  type: "json-config" },
+        { file: "database/auth.json",      required: false, depends_on: [],                            validation: true,  type: "json-config" },
+        { file: "database/cron.sql",       required: false, depends_on: ["database/schema.sql"],       validation: true,  type: "sql" },
+        { file: "database/data.sql",       required: true,  depends_on: ["database/schema.sql"],       validation: true,  type: "sql" },
+        { file: "media/",                  required: false, depends_on: ["database/storage.sql"],      validation: true,  type: "media-folder" },
+        { file: "verify",                  required: true,  depends_on: [],                            validation: true,  type: "post-check" },
+      ];
+
+      // Auto-discover: every file present in ZIP that isn't already covered
+      // by the ordered steps gets registered as an optional post-step so
+      // future backup components restore automatically.
+      const knownFiles = new Set(ORDERED_RESTORE_STEPS.map((s) => s.file));
+      const discovered: { file: string; required: boolean; depends_on: string[]; validation: boolean; type: string }[] = [];
+      outerZip.forEach((relPath, obj) => {
+        if (obj.dir) return;
+        if (knownFiles.has(relPath)) return;
+        // Media files are represented by the "media/" folder step.
+        if (relPath.startsWith("media/")) return;
+        const type = relPath.endsWith(".sql") ? "sql"
+                   : relPath.endsWith(".json") ? "json-meta"
+                   : relPath.endsWith(".sha256") ? "checksum"
+                   : relPath.startsWith("restore/") ? "restore-script"
+                   : "misc";
+        discovered.push({ file: relPath, required: false, depends_on: [], validation: type === "json-meta", type });
+      });
+      discovered.sort((a, b) => a.file.localeCompare(b.file));
+
+      const allSteps = [...ORDERED_RESTORE_STEPS, ...discovered];
+      const restoreComponents = allSteps.map((s, i) => ({
+        file: s.file,
+        type: s.type,
+        order: i + 1,
+        required: s.required,
+        depends_on: s.depends_on,
+        validation: s.validation,
+        checksum_available: s.file === "verify" || s.file === "media/" ? false : has("checksums.sha256"),
+        present: s.file === "verify" ? true
+               : s.file === "media/" ? hasMedia
+               : has(s.file),
+      }));
+
+      // Validate: every ordered required step must reference a present file.
+      const restoreMissing = restoreComponents
+        .filter((c) => c.required && !c.present && c.file !== "verify" && c.file !== "media/")
+        .map((c) => c.file);
+
+      const restoreManifest = {
+        backup_version: "2.0",
+        manifest_version: 1,
+        app: "BooBubble",
+        app_version: APP_VERSION,
+        generated_at: new Date().toISOString(),
+        backup_uuid: backupUuid,
+
+        compatibility: {
+          min_backup_version: "1.0",
+          max_backup_version: "2.x",
+          postgres_version: (extras?.project_info as any)?.pg_version ?? null,
+          supabase_version: "cloud",
+          application_version: APP_VERSION,
+        },
+
+        restore_modes: {
+          full:          ORDERED_RESTORE_STEPS.map((s) => s.file),
+          database_only: ["database/extensions.sql","database/schema.sql","database/data.sql","verify"],
+          media_only:    ["database/storage.sql","media/","verify"],
+          schema_only:   ["database/extensions.sql","database/schema.sql","verify"],
+          data_only:     ["database/data.sql","verify"],
+          security_only: ["database/policies.sql","verify"],
+          configuration_only: ["database/realtime.json","database/auth.json","database/cron.sql","verify"],
+        },
+
+        restore_order: ORDERED_RESTORE_STEPS.map((s) => s.file),
+
+        dependencies: {
+          "schema.sql":   ["extensions.sql"],
+          "policies.sql": ["schema.sql"],
+          "data.sql":     ["schema.sql"],
+          "media":        ["storage.sql"],
+          "cron.sql":     ["schema.sql"],
+          "realtime.json":["schema.sql"],
+        },
+
+        components: restoreComponents,
+
+        post_restore_tasks: [
+          { id: "refresh_schema_cache", description: "Refresh PostgREST schema cache",       sql: "NOTIFY pgrst, 'reload schema';" },
+          { id: "reload_postgrest",     description: "Reload PostgREST configuration",       sql: "NOTIFY pgrst, 'reload config';" },
+          { id: "verify_buckets",       description: "Verify all storage buckets exist and match storage.sql" },
+          { id: "verify_policies",      description: "Verify RLS policies match policies.sql" },
+          { id: "verify_extensions",    description: "Verify extensions from extensions.sql are installed" },
+          { id: "verify_realtime",      description: "Verify publications/tables in realtime.json" },
+          { id: "verify_auth",          description: "Verify auth providers listed in auth.json are configured" },
+        ],
+
+        validation: {
+          missing_required_files: restoreMissing,
+          ok: restoreMissing.length === 0,
+        },
+      };
+      outerZip.file("restore/restore.json", JSON.stringify(restoreManifest, null, 2));
+
       // FAIL the backup if any expected file is missing / empty.
       const emptyExports: string[] = [];
       for (const dbFileName of ["database.sql", "schema.sql", "data.sql"]) {
@@ -702,12 +812,12 @@ This package is self-describing and requires no manual editing.
       }
       // JSON files must parse
       const badJson: string[] = [];
-      for (const jf of ["manifest.json","backup-info.json","project-info.json","validation.json","health.json","signature.json","media-manifest.json","database.json","database/stats.json","database/realtime.json","database/auth.json"]) {
+      for (const jf of ["manifest.json","backup-info.json","project-info.json","validation.json","health.json","signature.json","media-manifest.json","database.json","database/stats.json","database/realtime.json","database/auth.json","restore/restore.json"]) {
         const e = outerZip.file(jf);
         if (!e) continue;
         try { JSON.parse(await e.async("string")); } catch { badJson.push(jf); }
       }
-      const productionReady = overallStatus === "Production Ready" && emptyExports.length === 0 && badJson.length === 0;
+      const productionReady = overallStatus === "Production Ready" && emptyExports.length === 0 && badJson.length === 0 && restoreMissing.length === 0;
 
       // Recompute checksums.sha256 over final content set (excluding itself + signature which we hash last).
       outerZip.remove("checksums.sha256");
