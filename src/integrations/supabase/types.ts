@@ -5094,6 +5094,10 @@ export type Database = {
         Args: { _frozen: boolean; _user: string }
         Returns: boolean
       }
+      admin_validate_export_sql: {
+        Args: { _data_sql?: string; _schema_sql: string }
+        Returns: Json
+      }
       backup_history_purge_expired: { Args: never; Returns: number }
       bootstrap_first_admin: { Args: never; Returns: undefined }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
