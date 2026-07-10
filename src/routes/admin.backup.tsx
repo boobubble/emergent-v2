@@ -812,7 +812,7 @@ This package is self-describing and requires no manual editing.
       }
       // JSON files must parse
       const badJson: string[] = [];
-      for (const jf of ["manifest.json","backup-info.json","project-info.json","validation.json","health.json","signature.json","media-manifest.json","database.json","database/stats.json","database/realtime.json","database/auth.json"]) {
+      for (const jf of ["manifest.json","backup-info.json","project-info.json","validation.json","health.json","signature.json","media-manifest.json","database.json","database/stats.json","database/realtime.json","database/auth.json","restore/restore.json"]) {
         const e = outerZip.file(jf);
         if (!e) continue;
         try { JSON.parse(await e.async("string")); } catch { badJson.push(jf); }
