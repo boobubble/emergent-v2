@@ -60,6 +60,69 @@ export function splitSqlStatements(sql: string): string[] {
   return out;
 }
 
+// Same splitter as splitSqlStatements, but also returns the 1-based line
+// number where each statement started in the original source. Used by the
+// backup validator so it can report file + line on restore failures.
+export function splitSqlStatementsWithLines(sql: string): { text: string; startLine: number }[] {
+  const out: { text: string; startLine: number }[] = [];
+  let buf = "";
+  let bufStartLine = 1;
+  let line = 1;
+  let bufHasContent = false;
+  let i = 0;
+  let inSingle = false;
+  let dollarTag: string | null = null;
+  const pushChar = (ch: string) => {
+    if (!bufHasContent && ch.trim() !== "") {
+      bufStartLine = line;
+      bufHasContent = true;
+    }
+    buf += ch;
+    if (ch === "\n") line++;
+  };
+  while (i < sql.length) {
+    const ch = sql[i];
+    const next2 = sql.substr(i, 2);
+    if (!inSingle && !dollarTag && next2 === "--") {
+      const eol = sql.indexOf("\n", i);
+      const stop = eol === -1 ? sql.length : eol;
+      for (let k = i; k < stop; k++) pushChar(sql[k]);
+      i = stop;
+      continue;
+    }
+    if (!inSingle) {
+      const m = sql.slice(i).match(/^\$([A-Za-z0-9_]*)\$/);
+      if (m) {
+        const tag = m[0];
+        if (dollarTag === null) dollarTag = tag;
+        else if (dollarTag === tag) dollarTag = null;
+        for (let k = 0; k < tag.length; k++) pushChar(tag[k]);
+        i += tag.length;
+        continue;
+      }
+    }
+    if (!dollarTag && ch === "'") {
+      inSingle = !inSingle;
+      pushChar(ch);
+      i++;
+      continue;
+    }
+    if (!inSingle && !dollarTag && ch === ";") {
+      const stmt = buf.trim();
+      if (stmt) out.push({ text: stmt, startLine: bufStartLine });
+      buf = "";
+      bufHasContent = false;
+      i++;
+      continue;
+    }
+    pushChar(ch);
+    i++;
+  }
+  const tail = buf.trim();
+  if (tail) out.push({ text: tail, startLine: bufStartLine });
+  return out;
+}
+
 export const restoreDatabaseSql = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
