@@ -26,6 +26,7 @@ import {
   uploadMediaFile,
   dumpDatabaseSql,
   exportBackupExtras,
+  exportBackupMetadataV2,
 } from "@/lib/backup.functions";
 import {
   recordBackupHistory, listBackupHistory, deleteBackupHistory,
