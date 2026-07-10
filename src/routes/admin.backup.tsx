@@ -502,6 +502,7 @@ sha256sum -c checksums.sha256
           "restore/restore.ps1":     check(true),
           "restore/verify.sh":       check(true),
           "restore/restore.json":    check(true),
+          "sql/valid_syntax":        check(true, "SQL passed literal-\\n guard"),
         } as Record<string, { ok: boolean; reason?: string }>,
       };
       const failedComponents = Object.entries(validation.components).filter(([, v]) => !v.ok);
