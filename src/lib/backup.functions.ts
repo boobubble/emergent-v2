@@ -483,3 +483,14 @@ export const exportBackupExtras = createServerFn({ method: "POST" })
   });
 
 
+
+// Extended metadata (v2): richer counts + sizes. Additive; does not affect
+// the original exportBackupExtras output.
+export const exportBackupMetadataV2 = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { data, error } = await (context.supabase as any).rpc("admin_export_metadata_v2");
+    if (error) throw new Error(`metadata v2 failed: ${error.message}`);
+    return data ?? {};
+  });
