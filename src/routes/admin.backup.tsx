@@ -337,16 +337,18 @@ sha256sum -c checksums.sha256
     setBusy("full");
     setVerifyReport(null);
     setLastChecksum(null);
+    const startedAtDate = new Date();
+    const startedAt = startedAtDate.getTime();
     try {
-      setProgress({ label: "Preparing backup (JSON + media manifest)", done: 0, total: 5 });
+      setProgress({ label: "Preparing backup (JSON + media manifest)", done: 0, total: 6 });
       const [db, manifest] = await Promise.all([runDb({}), runMedia({})]);
-      setProgress({ label: "Exporting PostgreSQL database", done: 1, total: 5 });
+      setProgress({ label: "Exporting PostgreSQL database", done: 1, total: 6 });
       const sqlDump = await runDumpSql({}).catch((e) => {
         console.warn("SQL dump failed:", e?.message);
         toast.warning("Database SQL dump skipped: " + (e?.message ?? "error"));
         return null;
       });
-      setProgress({ label: "Downloading media", done: 2, total: 5 });
+      setProgress({ label: "Downloading media", done: 2, total: 6 });
       const files = await fetchMediaFiles(manifest);
 
       // Extras: storage config, RLS policies, extensions, realtime, cron, meta.
@@ -355,6 +357,10 @@ sha256sum -c checksums.sha256
         console.warn("Extras export failed:", e?.message);
         toast.warning("Extras skipped: " + (e?.message ?? "error"));
         return null;
+      });
+      const metaV2 = await runMetaV2({}).catch((e) => {
+        console.warn("Metadata v2 failed:", e?.message);
+        return null as any;
       });
 
       const databaseFiles: { name: string; content: string }[] = [];
@@ -372,14 +378,70 @@ sha256sum -c checksums.sha256
         }
       }
 
-      setProgress({ label: "Building ZIP", done: 3, total: 5 });
+      setProgress({ label: "Building ZIP", done: 3, total: 6 });
       const parts: { name: string; content: string }[] = [
         { name: "database.json", content: JSON.stringify(db, null, 2) },
         { name: "media-manifest.json", content: JSON.stringify(manifest, null, 2) },
       ];
-      if (extras) {
-        parts.push({ name: "project-info.json", content: JSON.stringify(extras.project_info, null, 2) });
-      }
+
+      // Aggregate media bytes for size math + restore estimation
+      const mediaBytesTotal = files.reduce((s, f) => s + f.bytes.byteLength, 0);
+      const dbSizeBytes = metaV2?.database_size_bytes ?? null;
+      const storageSizeBytes = metaV2?.storage_total_size_bytes ?? mediaBytesTotal;
+
+      // Restore time estimation (rough, based on throughput heuristics)
+      const rowsForEstimate = sqlDump?.stats.rows ?? metaV2?.total_rows_estimate ?? 0;
+      const dbRestoreSec   = Math.max(2, Math.ceil(rowsForEstimate / 2000));
+      const mediaRestoreSec = Math.max(1, Math.ceil(mediaBytesTotal / (2 * 1024 * 1024))); // ~2 MB/s upload
+      const storageRestoreSec = Math.max(1, Math.ceil(files.length / 20));
+      const totalRestoreSec = dbRestoreSec + mediaRestoreSec + storageRestoreSec;
+      const fmtDur = (s: number) => s < 60 ? `${s} sec` : `${Math.floor(s/60)}m ${s%60}s`;
+      const restoreEstimation = {
+        database:  { seconds: dbRestoreSec,      pretty: fmtDur(dbRestoreSec) },
+        media:     { seconds: mediaRestoreSec,   pretty: fmtDur(mediaRestoreSec) },
+        storage:   { seconds: storageRestoreSec, pretty: fmtDur(storageRestoreSec) },
+        total:     { seconds: totalRestoreSec,   pretty: fmtDur(totalRestoreSec) },
+      };
+
+      // Rich project-info.json — initial (sizes/timing patched later)
+      const projectInfo = {
+        generated_at: new Date().toISOString(),
+        backup_version: 3,
+        app: {
+          name: "BooBubble",
+          version: APP_VERSION,
+          environment: (import.meta as any).env?.MODE ?? "production",
+          migration_count: (extras?.project_info?.migration_count ?? 0),
+        },
+        database: {
+          pg_version: extras?.project_info?.pg_version ?? null,
+          total_tables:       extras?.project_info?.total_tables ?? null,
+          total_rows:         sqlDump?.stats.rows ?? metaV2?.total_rows_estimate ?? null,
+          total_functions:    metaV2?.total_functions ?? null,
+          total_rpcs:         metaV2?.total_functions ?? null,
+          total_views:        metaV2?.total_views ?? null,
+          total_materialized_views: metaV2?.total_materialized_views ?? null,
+          total_triggers:     metaV2?.total_triggers ?? null,
+          total_indexes:      metaV2?.total_indexes ?? null,
+          total_foreign_keys: metaV2?.total_foreign_keys ?? null,
+          total_sequences:    metaV2?.total_sequences ?? null,
+          total_policies:     metaV2?.total_policies ?? (extras?.counts?.policies ?? null),
+          database_size_bytes: dbSizeBytes,
+        },
+        storage: {
+          total_buckets: extras?.project_info?.total_buckets ?? null,
+          total_files:   extras?.project_info?.total_files   ?? files.length,
+          total_size_bytes: storageSizeBytes,
+          largest_bucket: metaV2?.largest_bucket ?? null,
+        },
+        extras_counts: extras?.counts ?? null,
+        migrations: extras?.project_info?.migrations ?? [],
+        restore_estimation: restoreEstimation,
+        // Filled in second pass:
+        sizes: null as null | Record<string, unknown>,
+        timing: null as null | Record<string, unknown>,
+      };
+      parts.push({ name: "project-info.json", content: JSON.stringify(projectInfo, null, 2) });
 
       // validation.json — component-by-component export report
       const dbNames = new Set(databaseFiles.map((f) => f.name));
@@ -389,7 +451,7 @@ sha256sum -c checksums.sha256
       });
       const validation = {
         generated_at: new Date().toISOString(),
-        backup_version: 2,
+        backup_version: 3,
         components: {
           "database/database.sql":   check(dbNames.has("database.sql"),   sqlDump ? undefined : "sql dump failed"),
           "database/schema.sql":     check(dbNames.has("schema.sql"),     sqlDump ? undefined : "sql dump failed"),
@@ -404,19 +466,118 @@ sha256sum -c checksums.sha256
           "database.json":           check(true),
           "media-manifest.json":     check(true),
           "media":                   check(files.length > 0, files.length === 0 ? "no media files" : undefined),
-          "project-info.json":       check(!!extras, extras ? undefined : "extras export failed"),
+          "project-info.json":       check(true),
           "backup-info.json":        check(true),
           "checksums.sha256":        check(true),
+          "health.json":             check(true),
+          "signature.json":          check(true),
+          "README.txt":              check(true),
           "restore/restore.sh":      check(true),
           "restore/restore.ps1":     check(true),
           "restore/verify.sh":       check(true),
         } as Record<string, { ok: boolean; reason?: string }>,
       };
-      const failed = Object.entries(validation.components).filter(([, v]) => !v.ok);
-      (validation as any).ok = failed.length === 0;
-      (validation as any).failed_count = failed.length;
+      const failedComponents = Object.entries(validation.components).filter(([, v]) => !v.ok);
+      (validation as any).ok = failedComponents.length === 0;
+      (validation as any).failed_count = failedComponents.length;
       parts.push({ name: "validation.json", content: JSON.stringify(validation, null, 2) });
-      const startedAt = Date.now();
+
+      // README.txt
+      const readme = `BooBubble Backup Package
+=========================
+Created:        ${startedAtDate.toISOString()}
+Backup version: 3
+App version:    ${APP_VERSION}
+Encrypted:      ${encryptEnabled ? "yes (AES-256)" : "no"}
+
+CONTENTS
+--------
+  manifest.json / backup-info.json  High-level summary
+  project-info.json                 Full DB + storage + app metadata
+  validation.json                   Per-file export report
+  health.json                       Health score & pass/fail per component
+  signature.json                    Unique backup identity (UUID + hashes)
+  checksums.sha256                  SHA-256 for every file in this ZIP
+  database.json                     JSON snapshot of app tables (portable)
+  database/database.sql             Full SQL dump (schema + data)
+  database/schema.sql               Schema only
+  database/data.sql                 Data only (INSERTs)
+  database/stats.json               Row counts + size stats
+  database/storage.sql              Storage bucket definitions
+  database/policies.sql             RLS policies
+  database/extensions.sql           Postgres extensions
+  database/cron.sql                 pg_cron scheduled jobs
+  database/auth.json                Auth providers metadata (no secrets)
+  database/realtime.json            Realtime publications
+  media-manifest.json               Storage file listing
+  media/<bucket>/<path>             Actual binary media files
+  restore/restore.sh                Linux/macOS restore driver
+  restore/restore.ps1               Windows PowerShell restore driver
+  restore/verify.sh                 Integrity check driver
+
+RESTORE
+-------
+1. Unzip this archive.
+2. If encrypted (*.enc), decrypt it via the Backup Center UI first.
+3. Verify integrity:
+     cd restore && bash verify.sh
+   (or: sha256sum -c checksums.sha256)
+4. Point the restore script at a fresh Postgres database:
+     export DATABASE_URL="postgres://user:pass@host:5432/db"
+     bash restore/restore.sh
+   The script applies files in this order:
+     extensions.sql -> schema.sql -> data.sql
+     -> policies.sql -> storage.sql -> cron.sql
+5. Re-upload media/ using the Backup Center "Restore" button
+   (uses the Supabase Storage API and preserves paths).
+
+VALIDATION
+----------
+- validation.json lists every expected file and whether it is present.
+- health.json gives an overall pass/fail score and per-component checks.
+- Any missing / empty file marks the backup as FAILED at creation time.
+
+TROUBLESHOOTING
+---------------
+- "psql: command not found"          -> install PostgreSQL client tools.
+- schema.sql errors on extensions    -> run extensions.sql first as superuser.
+- "role does not exist"              -> ensure target project has the same
+                                        roles (anon, authenticated, service_role).
+- data.sql conflicts                 -> restore into an empty database, or
+                                        the ON CONFLICT DO NOTHING clauses
+                                        will skip pre-existing rows.
+- Media upload fails                 -> re-run the Backup Center Restore.
+
+This package is self-describing and requires no manual editing.
+`;
+      parts.push({ name: "README.txt", content: readme });
+
+      // Signature.json (initial — hashes patched in second pass)
+      // Use crypto.randomUUID() when available for a stable backup UUID.
+      const backupUuid = (globalThis.crypto as any)?.randomUUID?.() ??
+        `bkp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      const signatureInit = {
+        backup_uuid: backupUuid,
+        created_at: startedAtDate.toISOString(),
+        app: "BooBubble",
+        app_version: APP_VERSION,
+        backup_version: 3,
+        generator_version: "backup-center/3.0",
+        sha256: null as string | null,
+        md5:    null as string | null,
+      };
+      parts.push({ name: "signature.json", content: JSON.stringify(signatureInit, null, 2) });
+
+      // Health.json (initial — score patched in second pass with final checks)
+      const healthInit = {
+        generated_at: new Date().toISOString(),
+        health_score: 100,
+        overall_status: "Production Ready",
+        checks: {} as Record<string, boolean>,
+      };
+      parts.push({ name: "health.json", content: JSON.stringify(healthInit, null, 2) });
+
+      // FIRST PASS BUILD
       const built = await buildFullZip(
         parts,
         "full",
@@ -431,8 +592,9 @@ sha256sum -c checksums.sha256
           total_users: extras?.project_info.total_users ?? null,
           total_files: extras?.project_info.total_files ?? null,
           extras_counts: extras?.counts ?? null,
-          export_duration_ms: Date.now() - startedAt,
           encrypted: encryptEnabled,
+          backup_uuid: backupUuid,
+          export_started_at: startedAtDate.toISOString(),
         },
         {
           skipDownload: true,
@@ -441,35 +603,188 @@ sha256sum -c checksums.sha256
         },
       );
 
+      // SECOND PASS — patch sizes/timing/health/signature/checksums into ZIP
+      setProgress({ label: "Finalizing (sizes + health + signature)", done: 4, total: 6 });
+      const compressedSize = built.blob.size;
+      const uncompressedSize =
+        parts.reduce((s, p) => s + new Blob([p.content]).size, 0) +
+        databaseFiles.reduce((s, f) => s + new Blob([f.content]).size, 0) +
+        mediaBytesTotal;
+      const compressionRatio = uncompressedSize
+        ? +(compressedSize / uncompressedSize).toFixed(4)
+        : null;
+
+      const finishedAtDate = new Date();
+      const durationMs = finishedAtDate.getTime() - startedAt;
+      const timing = {
+        export_started_at:  startedAtDate.toISOString(),
+        export_finished_at: finishedAtDate.toISOString(),
+        export_duration_ms: durationMs,
+        export_duration_seconds: +(durationMs / 1000).toFixed(2),
+      };
+      const sizes = {
+        database_size_bytes:      dbSizeBytes,
+        media_size_bytes:         mediaBytesTotal,
+        storage_size_bytes:       storageSizeBytes,
+        uncompressed_backup_bytes: uncompressedSize,
+        compressed_backup_bytes:   compressedSize,
+        compression_ratio:         compressionRatio,
+      };
+
+      const outerZip = await JSZip.loadAsync(built.blob);
+
+      // Merge sizes/timing into project-info.json
+      const patchedProjectInfo = { ...projectInfo, sizes, timing };
+      outerZip.file("project-info.json", JSON.stringify(patchedProjectInfo, null, 2));
+
+      // Merge sizes into database/stats.json (if present)
+      const statsEntry = outerZip.file("database/stats.json");
+      if (statsEntry) {
+        const existing = JSON.parse(await statsEntry.async("string"));
+        outerZip.file(
+          "database/stats.json",
+          JSON.stringify({ ...existing, sizes, timing }, null, 2),
+        );
+      }
+
+      // Merge timing into manifest.json + backup-info.json
+      for (const infoName of ["manifest.json", "backup-info.json"]) {
+        const e = outerZip.file(infoName);
+        if (e) {
+          const existing = JSON.parse(await e.async("string"));
+          outerZip.file(infoName, JSON.stringify({ ...existing, ...timing, sizes }, null, 2));
+        }
+      }
+
+      // Health checks — derived from actual ZIP contents (future-proof)
+      const has = (p: string) => !!outerZip.file(p);
+      const mediaFolder = outerZip.folder("media");
+      const hasMedia = !!(mediaFolder && Object.keys((mediaFolder as any).files ?? {}).length > 0)
+        || files.length > 0;
+      const checks: Record<string, boolean> = {
+        Database:        has("database/database.sql"),
+        Schema:          has("database/schema.sql"),
+        Data:            has("database/data.sql"),
+        Storage:         has("database/storage.sql"),
+        Policies:        has("database/policies.sql"),
+        Extensions:      has("database/extensions.sql"),
+        Realtime:        has("database/realtime.json"),
+        Auth:            has("database/auth.json"),
+        Media:           hasMedia,
+        Checksums:       has("checksums.sha256"),
+        "Restore Scripts": has("restore/restore.sh") && has("restore/restore.ps1"),
+        Validation:      has("validation.json"),
+      };
+      const passed = Object.values(checks).filter(Boolean).length;
+      const total = Object.values(checks).length;
+      const healthScore = Math.round((passed / total) * 100);
+      const overallStatus =
+        healthScore === 100 ? "Production Ready" :
+        healthScore >= 80  ? "Degraded" : "Failed";
+      const health = {
+        generated_at: new Date().toISOString(),
+        health_score: healthScore,
+        checks_passed: passed,
+        checks_total: total,
+        checks,
+        overall_status: overallStatus,
+      };
+      outerZip.file("health.json", JSON.stringify(health, null, 2));
+
+      // FAIL the backup if any expected file is missing / empty.
+      const emptyExports: string[] = [];
+      for (const dbFileName of ["database.sql", "schema.sql", "data.sql"]) {
+        const e = outerZip.file(`database/${dbFileName}`);
+        if (e) {
+          const s = await e.async("string");
+          if (!s.trim()) emptyExports.push(`database/${dbFileName}`);
+        }
+      }
+      // JSON files must parse
+      const badJson: string[] = [];
+      for (const jf of ["manifest.json","backup-info.json","project-info.json","validation.json","health.json","signature.json","media-manifest.json","database.json","database/stats.json","database/realtime.json","database/auth.json"]) {
+        const e = outerZip.file(jf);
+        if (!e) continue;
+        try { JSON.parse(await e.async("string")); } catch { badJson.push(jf); }
+      }
+      const productionReady = overallStatus === "Production Ready" && emptyExports.length === 0 && badJson.length === 0;
+
+      // Recompute checksums.sha256 over final content set (excluding itself + signature which we hash last).
+      outerZip.remove("checksums.sha256");
+      const entries: { path: string; obj: JSZip.JSZipObject }[] = [];
+      outerZip.forEach((relPath, obj) => {
+        if (!obj.dir && relPath !== "checksums.sha256" && relPath !== "signature.json") {
+          entries.push({ path: relPath, obj });
+        }
+      });
+      entries.sort((a, b) => a.path.localeCompare(b.path));
+      const chkLines: string[] = [];
+      for (const e of entries) {
+        const bytes = await e.obj.async("uint8array");
+        const hex = await sha256Hex(bytes);
+        chkLines.push(`${hex}  ${e.path}`);
+      }
+      const checksumsFileContent = chkLines.join("\n") + "\n";
+      outerZip.file("checksums.sha256", checksumsFileContent);
+
+      // Signature.json — hash the aggregated checksums file for a stable backup fingerprint
+      const chkBytes = new TextEncoder().encode(checksumsFileContent);
+      const contentSha = await sha256Hex(chkBytes);
+      const contentMd = md5Hex(chkBytes);
+      const signature = {
+        ...signatureInit,
+        finalized_at: new Date().toISOString(),
+        sha256: contentSha,
+        md5: contentMd,
+        production_ready: productionReady,
+        empty_exports: emptyExports,
+        invalid_json: badJson,
+      };
+      outerZip.file("signature.json", JSON.stringify(signature, null, 2));
+
+      // Re-generate the final ZIP blob.
+      const finalizedBlob = await outerZip.generateAsync({ type: "blob", compression: "DEFLATE" });
 
       // Verify the ZIP before we announce success.
-      setProgress({ label: "Verifying backup", done: 4, total: 5 });
-      const report = await verifyFullBackupZip(built.blob);
+      setProgress({ label: "Verifying backup", done: 5, total: 6 });
+      const report = await verifyFullBackupZip(finalizedBlob);
       setVerifyReport(report);
-      if (!report.ok) {
-        toast.error("Verification failed — see report below");
+      if (!report.ok || !productionReady) {
+        toast.error(
+          !productionReady
+            ? `Backup FAILED — missing/empty: ${[...emptyExports, ...badJson].join(", ") || "component check"}`
+            : "Verification failed — see report below",
+        );
         return;
       }
 
       // Checksums (of the plain ZIP; encrypted output also gets its own below).
-      const zipBytes = new Uint8Array(await built.blob.arrayBuffer());
+      const zipBytes = new Uint8Array(await finalizedBlob.arrayBuffer());
       const sha = await sha256Hex(zipBytes);
       const md = md5Hex(zipBytes);
       setLastChecksum({ sha256: sha, md5: md, filename: built.filename });
 
       // Companion checksums.json
       const checksumsBlob = new Blob(
-        [JSON.stringify({ filename: built.filename, size: built.blob.size, sha256: sha, md5: md }, null, 2)],
+        [JSON.stringify({
+          filename: built.filename,
+          size: finalizedBlob.size,
+          sha256: sha,
+          md5: md,
+          backup_uuid: backupUuid,
+          ...timing,
+          sizes,
+        }, null, 2)],
         { type: "application/json" },
       );
 
       // Optional encryption
-      let finalBlob: Blob = built.blob;
+      let finalBlob: Blob = finalizedBlob;
       let finalName = built.filename;
       let finalSha = sha;
       let finalMd = md;
       if (encryptEnabled) {
-        finalBlob = await encryptBlobAes256(built.blob, encryptPassword);
+        finalBlob = await encryptBlobAes256(finalizedBlob, encryptPassword);
         finalName = `${built.filename}.enc`;
         const encBytes = new Uint8Array(await finalBlob.arrayBuffer());
         finalSha = await sha256Hex(encBytes);
@@ -504,14 +819,16 @@ sha256sum -c checksums.sha256
         console.warn("history record failed:", e?.message);
       }
 
-      setProgress({ label: "Done", done: 5, total: 5 });
+      setProgress({ label: "Done", done: 6, total: 6 });
       toast.success(
-        `Full backup verified & downloaded (${files.length} media files${sqlDump ? `, ${sqlDump.stats.rows} rows in ${sqlDump.stats.tables} tables` : ""})`,
+        `Full backup verified & downloaded (${files.length} media files${sqlDump ? `, ${sqlDump.stats.rows} rows in ${sqlDump.stats.tables} tables` : ""}, ${fmtDur(Math.round(durationMs/1000))})`,
       );
     } catch (e: any) {
       toast.error(e?.message ?? "Full backup failed");
     } finally { setBusy(null); setProgress(null); }
   }
+
+
 
   // Dry-run validation of an uploaded ZIP without touching DB or storage.
   async function onValidate(file: File) {
