@@ -364,7 +364,32 @@ sha256sum -c checksums.sha256
       });
 
       const databaseFiles: { name: string; content: string }[] = [];
+      // SQL sanity: literal `\n);` or `\n;` outside of quoted strings means the
+      // exporter emitted a non-E-prefixed \n. Refuse to package such SQL.
+      const sqlLooksBroken = (sql: string): string | null => {
+        if (!sql) return null;
+        // The characteristic bug pattern: two-char sequence "\n" (0x5C 0x6E)
+        // sitting right before ")" / ";" — Postgres will syntax-error on it.
+        if (/\\n\s*\)\s*;/.test(sql)) return "literal \\n before closing ')' — invalid SQL";
+        if (/[A-Za-z0-9_"'\)]\\n[A-Za-z_]/.test(sql)) return "literal \\n between tokens — invalid SQL";
+        // Sanity: a real dump has many newlines. A totally single-line dump
+        // with lots of `\n` sequences is almost certainly broken.
+        const literalCount = (sql.match(/\\n/g) ?? []).length;
+        const realNewlines = (sql.match(/\n/g) ?? []).length;
+        if (literalCount > 20 && realNewlines < literalCount / 4) return "SQL contains literal \\n sequences instead of real newlines";
+        return null;
+      };
       if (sqlDump) {
+        const bad =
+          sqlLooksBroken(sqlDump.schema_sql) ||
+          sqlLooksBroken(sqlDump.data_sql) ||
+          sqlLooksBroken(sqlDump.full_sql);
+        if (bad) {
+          toast.error(`SQL export invalid — backup aborted: ${bad}`);
+          setBusy(null);
+          setProgress(null);
+          return;
+        }
         databaseFiles.push(
           { name: "database.sql", content: sqlDump.full_sql },
           { name: "schema.sql",   content: sqlDump.schema_sql },
@@ -372,6 +397,7 @@ sha256sum -c checksums.sha256
           { name: "stats.json",   content: JSON.stringify(sqlDump.stats, null, 2) },
         );
       }
+
       if (extras) {
         for (const [name, content] of Object.entries(extras.files)) {
           databaseFiles.push({ name, content: content as string });
@@ -476,6 +502,7 @@ sha256sum -c checksums.sha256
           "restore/restore.ps1":     check(true),
           "restore/verify.sh":       check(true),
           "restore/restore.json":    check(true),
+          "sql/valid_syntax":        check(true, "SQL passed literal-\\n guard"),
         } as Record<string, { ok: boolean; reason?: string }>,
       };
       const failedComponents = Object.entries(validation.components).filter(([, v]) => !v.ok);
