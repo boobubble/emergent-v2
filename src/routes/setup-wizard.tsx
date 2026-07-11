@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Navigate, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +13,15 @@ import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { getOwnerStatus, createOwner } from "@/lib/owner-setup.functions";
 
 export const Route = createFileRoute("/setup-wizard")({
+  beforeLoad: async () => {
+    const status = await getOwnerStatus({});
+    if (!status.installed) {
+      throw redirect({ to: "/installer" as any });
+    }
+    if (status.hasOwner) {
+      throw redirect({ to: "/login" as any });
+    }
+  },
   component: SetupWizardPage,
 });
 
