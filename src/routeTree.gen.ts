@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TrustRouteImport } from './routes/trust'
+import { Route as SetupWizardRouteImport } from './routes/setup-wizard'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as RadioRouteImport } from './routes/radio'
@@ -150,6 +151,11 @@ const WalletRoute = WalletRouteImport.update({
 const TrustRoute = TrustRouteImport.update({
   id: '/trust',
   path: '/trust',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupWizardRoute = SetupWizardRouteImport.update({
+  id: '/setup-wizard',
+  path: '/setup-wizard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -808,6 +814,7 @@ export interface FileRoutesByFullPath {
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/setup-wizard': typeof SetupWizardRoute
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
@@ -935,6 +942,7 @@ export interface FileRoutesByTo {
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/setup-wizard': typeof SetupWizardRoute
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
@@ -1065,6 +1073,7 @@ export interface FileRoutesById {
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/setup-wizard': typeof SetupWizardRoute
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
@@ -1196,6 +1205,7 @@ export interface FileRouteTypes {
     | '/radio'
     | '/reels'
     | '/reset-password'
+    | '/setup-wizard'
     | '/trust'
     | '/wallet'
     | '/welcome'
@@ -1323,6 +1333,7 @@ export interface FileRouteTypes {
     | '/radio'
     | '/reels'
     | '/reset-password'
+    | '/setup-wizard'
     | '/trust'
     | '/wallet'
     | '/welcome'
@@ -1452,6 +1463,7 @@ export interface FileRouteTypes {
     | '/radio'
     | '/reels'
     | '/reset-password'
+    | '/setup-wizard'
     | '/trust'
     | '/wallet'
     | '/welcome'
@@ -1582,6 +1594,7 @@ export interface RootRouteChildren {
   RadioRoute: typeof RadioRoute
   ReelsRoute: typeof ReelsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SetupWizardRoute: typeof SetupWizardRoute
   TrustRoute: typeof TrustRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -1619,6 +1632,13 @@ declare module '@tanstack/react-router' {
       path: '/trust'
       fullPath: '/trust'
       preLoaderRoute: typeof TrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup-wizard': {
+      id: '/setup-wizard'
+      path: '/setup-wizard'
+      fullPath: '/setup-wizard'
+      preLoaderRoute: typeof SetupWizardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -2737,6 +2757,7 @@ const rootRouteChildren: RootRouteChildren = {
   RadioRoute: RadioRoute,
   ReelsRoute: ReelsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SetupWizardRoute: SetupWizardRoute,
   TrustRoute: TrustRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,

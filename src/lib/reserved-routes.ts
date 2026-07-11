@@ -6,7 +6,7 @@ export const RESERVED_SLUGS = new Set<string>([
   "register", "signup", "logout", "auth", "account", "achievements",
   "leaderboard", "reset-password", "welcome", "banned", "confessions", "feedback", "u", "p", "assets", "static",
   "public", "favicon.ico", "robots.txt", "sitemap.xml", "manifest.json",
-  "_root", "__root", "index", "reels", "pages", "groups", "installer",
+  "_root", "__root", "index", "reels", "pages", "groups", "installer", "setup-wizard",
 ]);
 
 export function isReservedSlug(slug: string): boolean {
