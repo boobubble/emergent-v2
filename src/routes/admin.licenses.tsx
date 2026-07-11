@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Ban, Download, KeyRound, Loader2, Plus, RefreshCw, RotateCcw, Search, Server, ShieldCheck, ShieldX, Trash2, Zap } from "lucide-react";
+import { Ban, Download, Infinity as InfinityIcon, KeyRound, Loader2, Plus, RefreshCw, RotateCcw, Search, Server, ShieldCheck, ShieldX, Trash2, Zap } from "lucide-react";
 import {
   adminListLicenses,
   adminGetLicense,
