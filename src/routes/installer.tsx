@@ -735,7 +735,12 @@ function InstallerPage() {
                       <CheckCircle2 className="h-3.5 w-3.5" /> License verified ({licenseInfo.status})
                     </div>
                     {licenseInfo.customerName && <div className="mt-1 text-muted-foreground">Customer: {licenseInfo.customerName}</div>}
-                    {licenseInfo.expiryDate && <div className="text-muted-foreground">Expires: {new Date(licenseInfo.expiryDate).toLocaleDateString()}</div>}
+                    {licenseInfo.plan && <div className="text-muted-foreground">Plan: {licenseInfo.isLifetime ? "Lifetime" : licenseInfo.plan.charAt(0).toUpperCase() + licenseInfo.plan.slice(1)}</div>}
+                    {licenseInfo.isLifetime ? (
+                      <div className="text-muted-foreground">Expires: <strong>Lifetime</strong> (never expires)</div>
+                    ) : (
+                      licenseInfo.expiryDate && <div className="text-muted-foreground">Expires: {new Date(licenseInfo.expiryDate).toLocaleDateString()}</div>
+                    )}
                   </div>
                 )}
 
