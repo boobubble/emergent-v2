@@ -30,6 +30,7 @@ import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as DeployRouteImport } from './routes/deploy'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
+import { Route as CompetitionsRouteImport } from './routes/competitions'
 import { Route as ChatroomsRouteImport } from './routes/chatrooms'
 import { Route as ChatroomRouteImport } from './routes/chatroom'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -250,6 +251,11 @@ const ConfessionsRoute = ConfessionsRouteImport.update({
   path: '/confessions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompetitionsRoute = CompetitionsRouteImport.update({
+  id: '/competitions',
+  path: '/competitions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatroomsRoute = ChatroomsRouteImport.update({
   id: '/chatrooms',
   path: '/chatrooms',
@@ -301,9 +307,9 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
-  id: '/competitions/',
-  path: '/competitions/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompetitionsRoute,
 } as any)
 const BroadcasterIndexRoute = BroadcasterIndexRouteImport.update({
   id: '/',
@@ -841,6 +847,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
+  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
   '/feed': typeof FeedRouteWithChildren
@@ -1114,6 +1121,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
+  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
   '/feed': typeof FeedRouteWithChildren
@@ -1253,6 +1261,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
+    | '/competitions'
     | '/confessions'
     | '/deploy'
     | '/feed'
@@ -1525,6 +1534,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
+    | '/competitions'
     | '/confessions'
     | '/deploy'
     | '/feed'
@@ -1663,6 +1673,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   ChatroomRoute: typeof ChatroomRoute
   ChatroomsRoute: typeof ChatroomsRoute
+  CompetitionsRoute: typeof CompetitionsRouteWithChildren
   ConfessionsRoute: typeof ConfessionsRoute
   DeployRoute: typeof DeployRoute
   FeedRoute: typeof FeedRouteWithChildren
@@ -1687,7 +1698,6 @@ export interface RootRouteChildren {
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
-  CompetitionsIndexRoute: typeof CompetitionsIndexRoute
   ApiPublicBackupRetentionRoute: typeof ApiPublicBackupRetentionRoute
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
@@ -1853,6 +1863,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/competitions': {
+      id: '/competitions'
+      path: '/competitions'
+      fullPath: '/competitions'
+      preLoaderRoute: typeof CompetitionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chatrooms': {
       id: '/chatrooms'
       path: '/chatrooms'
@@ -1925,10 +1942,10 @@ declare module '@tanstack/react-router' {
     }
     '/competitions/': {
       id: '/competitions/'
-      path: '/competitions'
+      path: '/'
       fullPath: '/competitions/'
       preLoaderRoute: typeof CompetitionsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CompetitionsRoute
     }
     '/broadcaster/': {
       id: '/broadcaster/'
@@ -2848,6 +2865,22 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
   BroadcasterRouteChildren,
 )
 
+interface CompetitionsRouteChildren {
+  CompetitionsSlugRoute: typeof CompetitionsSlugRoute
+  CompetitionsLeaderboardRoute: typeof CompetitionsLeaderboardRoute
+  CompetitionsIndexRoute: typeof CompetitionsIndexRoute
+}
+
+const CompetitionsRouteChildren: CompetitionsRouteChildren = {
+  CompetitionsSlugRoute: CompetitionsSlugRoute,
+  CompetitionsLeaderboardRoute: CompetitionsLeaderboardRoute,
+  CompetitionsIndexRoute: CompetitionsIndexRoute,
+}
+
+const CompetitionsRouteWithChildren = CompetitionsRoute._addFileChildren(
+  CompetitionsRouteChildren,
+)
+
 interface FeedRouteChildren {
   FeedSlugRoute: typeof FeedSlugRoute
 }
@@ -2869,6 +2902,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   ChatroomRoute: ChatroomRoute,
   ChatroomsRoute: ChatroomsRoute,
+  CompetitionsRoute: CompetitionsRouteWithChildren,
   ConfessionsRoute: ConfessionsRoute,
   DeployRoute: DeployRoute,
   FeedRoute: FeedRouteWithChildren,
@@ -2893,7 +2927,6 @@ const rootRouteChildren: RootRouteChildren = {
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
-  CompetitionsIndexRoute: CompetitionsIndexRoute,
   ApiPublicBackupRetentionRoute: ApiPublicBackupRetentionRoute,
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
