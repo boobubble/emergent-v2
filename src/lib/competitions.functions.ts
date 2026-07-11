@@ -408,7 +408,7 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const media = data.banner_url ? [data.banner_url] : [];
         const desc = (data.description ?? "").trim();
-        const text = `🏆 New competition: ${data.name}\n\n${desc ? desc + "\n\n" : ""}Join now and compete for the top spot! → /competitions/${row.id}`;
+        const text = `🏆 New competition: ${data.name}\n\n${desc ? desc + "\n\n" : ""}Join now and compete for the top spot! → /competitions/${data.slug}`;
         const baseSlug = `competition-${data.slug}`.toLowerCase().replace(/[^a-z0-9-]+/g, "-").slice(0, 60);
         const slug = `${baseSlug}-${row.id.slice(0, 8)}`;
         await supabaseAdmin.from("posts").insert({
