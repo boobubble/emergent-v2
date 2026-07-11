@@ -655,29 +655,69 @@ function InstallerPage() {
 
             {current.id === "license" && (
               <div className="space-y-3">
-                <RadioGroup value={licenseType} onValueChange={(v) => setLicenseType(v as any)} className="grid grid-cols-2 gap-2">
-                  <label className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer ${licenseType==="envato" ? "border-primary bg-primary/5" : ""}`}>
-                    <RadioGroupItem value="envato" /><span className="text-sm">Envato Purchase Code</span>
-                  </label>
-                  <label className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer ${licenseType==="offline" ? "border-primary bg-primary/5" : ""}`}>
-                    <RadioGroupItem value="offline" /><span className="text-sm">Offline License Key</span>
-                  </label>
-                </RadioGroup>
                 <div>
-                  <Label>{licenseType === "envato" ? "Purchase Code" : "License Key"}</Label>
+                  <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">License Source</Label>
+                  <RadioGroup value={licenseSource} onValueChange={(v) => { setLicenseSource(v as LicenseSource); setLicenseOk(false); setLicenseInfo(null); }} className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {(["self", "envato", "codester"] as LicenseSource[]).map((src) => (
+                      <label key={src} className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer ${licenseSource===src ? "border-primary bg-primary/5" : ""}`}>
+                        <RadioGroupItem value={src} />
+                        <span className="text-sm">{LICENSE_SOURCE_LABEL[src]}</span>
+                      </label>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                <div>
+                  <Label>
+                    {licenseSource === "envato" ? "Envato Purchase Code" : licenseSource === "codester" ? "Codester License Key" : "License Key"}
+                  </Label>
                   <Input
                     value={licenseKey}
                     onChange={(e) => setLicenseKey(e.target.value)}
-                    placeholder={licenseType === "envato" ? "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" : "BOOB-XXXX-XXXX-XXXX-XXXX"}
+                    placeholder={
+                      licenseSource === "envato"
+                        ? "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                        : licenseSource === "codester"
+                        ? "CODESTER-XXXX-XXXX-XXXX"
+                        : "BOOB-XXXX-XXXX-XXXX-XXXX"
+                    }
                     className="font-mono"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {licenseType === "envato"
+                    {licenseSource === "envato"
                       ? "Find this in your Envato downloads → License certificate."
-                      : "Provided by your seller for direct (non-Envato) purchases."}
+                      : licenseSource === "codester"
+                      ? "Provided in your Codester purchase receipt."
+                      : "Direct-purchase key issued by us or generated in the admin panel."}
                   </p>
                 </div>
-                <Button onClick={verifyLicense} disabled={!licenseKey} className="w-full">Verify License</Button>
+
+                {licenseSource === "self" && (
+                  <div>
+                    <Label>Customer Email</Label>
+                    <Input
+                      type="email"
+                      value={licenseEmail}
+                      onChange={(e) => setLicenseEmail(e.target.value)}
+                      placeholder="you@yourdomain.com"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">The email the license was issued to.</p>
+                  </div>
+                )}
+
+                {licenseOk && licenseInfo && (
+                  <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-xs">
+                    <div className="flex items-center gap-2 font-medium text-emerald-700 dark:text-emerald-400">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> License verified ({licenseInfo.status})
+                    </div>
+                    {licenseInfo.customerName && <div className="mt-1 text-muted-foreground">Customer: {licenseInfo.customerName}</div>}
+                    {licenseInfo.expiryDate && <div className="text-muted-foreground">Expires: {new Date(licenseInfo.expiryDate).toLocaleDateString()}</div>}
+                  </div>
+                )}
+
+                <Button onClick={verifyLicense} disabled={!licenseKey || licenseVerifying} className="w-full">
+                  {licenseVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify License"}
+                </Button>
               </div>
             )}
 
