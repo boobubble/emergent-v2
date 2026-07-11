@@ -80,7 +80,7 @@ export class SelfLicenseProvider implements LicenseProvider {
     try {
       const controller = new AbortController();
       const t = setTimeout(() => controller.abort(), 8000);
-      const r = await fetch(new URL("/api/license/verify", url).toString(), {
+      const r = await fetch(new URL("/api/public/license/verify", url).toString(), {
         method: "POST",
         headers: {
           "content-type": "application/json",
