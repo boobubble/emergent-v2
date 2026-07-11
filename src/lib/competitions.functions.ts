@@ -46,29 +46,167 @@ export const adminListAllCompetitions = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+async function fetchCompetitionCore(sb: any, filter: { id?: string; slug?: string }) {
+  let q = sb.from("competitions").select("*, category:competition_categories(id,name,slug,color,icon_url)");
+  if (filter.id) q = q.eq("id", filter.id);
+  else if (filter.slug) q = q.eq("slug", filter.slug);
+  const { data: comp, error } = await q.maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!comp) return null;
+  const [{ data: participants }, { data: awards }, { data: competitors }] = await Promise.all([
+    sb.from("competition_participants")
+      .select("id,user_id,status,vote_count,rank,joined_at, profile:profiles(id,username,avatar_url,avatar_color)")
+      .eq("competition_id", comp.id)
+      .order("vote_count", { ascending: false }),
+    sb.from("competition_awards")
+      .select("*, profile:profiles(id,username,avatar_url,avatar_color)")
+      .eq("competition_id", comp.id)
+      .order("place", { ascending: true }),
+    sb.from("competition_competitors")
+      .select("*, linked_profile:profiles!competition_competitors_linked_user_id_fkey(id,username,avatar_url,avatar_color)")
+      .eq("competition_id", comp.id)
+      .order("sort_order", { ascending: true }),
+  ]);
+  return {
+    competition: comp,
+    participants: participants ?? [],
+    awards: awards ?? [],
+    competitors: competitors ?? [],
+  };
+}
+
 export const getCompetition = createServerFn({ method: "GET" })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
     const sb = await publicClient();
-    const { data: comp, error } = await sb
-      .from("competitions")
-      .select("*, category:competition_categories(id,name,slug,color,icon_url)")
-      .eq("id", data.id)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!comp) return null;
-    const { data: participants } = await sb
-      .from("competition_participants")
-      .select("id,user_id,status,vote_count,rank,joined_at, profile:profiles(id,username,avatar_url,avatar_color)")
-      .eq("competition_id", data.id)
-      .order("vote_count", { ascending: false });
-    const { data: awards } = await sb
-      .from("competition_awards")
-      .select("*, profile:profiles(id,username,avatar_url,avatar_color)")
-      .eq("competition_id", data.id)
-      .order("place", { ascending: true });
-    return { competition: comp, participants: participants ?? [], awards: awards ?? [] };
+    return fetchCompetitionCore(sb, { id: data.id });
   });
+
+export const getCompetitionBySlug = createServerFn({ method: "GET" })
+  .inputValidator((data: { slug: string }) => data)
+  .handler(async ({ data }) => {
+    const sb = await publicClient();
+    return fetchCompetitionCore(sb, { slug: data.slug });
+  });
+
+export const listRelatedCompetitions = createServerFn({ method: "GET" })
+  .inputValidator((data: { competitionId: string; categoryId?: string | null; limit?: number }) => data)
+  .handler(async ({ data }) => {
+    const sb = await publicClient();
+    const limit = data.limit ?? 6;
+    let q = sb.from("competitions")
+      .select("*, category:competition_categories(id,name,slug,color,icon_url)")
+      .neq("id", data.competitionId)
+      .neq("status", "draft")
+      .eq("is_published", true)
+      .order("start_at", { ascending: false })
+      .limit(limit);
+    if (data.categoryId) q = q.eq("category_id", data.categoryId);
+    const { data: rows } = await q;
+    return rows ?? [];
+  });
+
+export const incrementCompetitionViews = createServerFn({ method: "POST" })
+  .inputValidator((data: { competitionId: string }) => data)
+  .handler(async ({ data }) => {
+    const sb = await publicClient();
+    await sb.rpc("increment_competition_views", { _competition: data.competitionId });
+    return { ok: true };
+  });
+
+// ---------- Competitors (admin-managed entries) ----------
+
+export const listCompetitors = createServerFn({ method: "GET" })
+  .inputValidator((data: { competitionId: string }) => data)
+  .handler(async ({ data }) => {
+    const sb = await publicClient();
+    const { data: rows, error } = await sb
+      .from("competition_competitors")
+      .select("*, linked_profile:profiles!competition_competitors_linked_user_id_fkey(id,username,avatar_url,avatar_color)")
+      .eq("competition_id", data.competitionId)
+      .order("sort_order", { ascending: true });
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const adminSaveCompetitor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: {
+    id?: string;
+    competition_id: string;
+    name: string;
+    photo_url?: string | null;
+    description?: string | null;
+    linked_user_id?: string | null;
+    sort_order?: number;
+  }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = context.supabase as any;
+    if (data.id) {
+      const { id, ...rest } = data;
+      const { error } = await sb.from("competition_competitors").update(rest).eq("id", id);
+      if (error) throw new Error(error.message);
+      return { ok: true, id };
+    }
+    const { data: row, error } = await sb.from("competition_competitors").insert(data).select("id").single();
+    if (error) throw new Error(error.message);
+    return { ok: true, id: row.id };
+  });
+
+export const adminDeleteCompetitor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.from("competition_competitors").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminReorderCompetitors = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { orders: Array<{ id: string; sort_order: number }> }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    for (const o of data.orders) {
+      await context.supabase.from("competition_competitors").update({ sort_order: o.sort_order }).eq("id", o.id);
+    }
+    return { ok: true };
+  });
+
+export const voteForCompetitor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { competitionId: string; competitorId: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    // Delete existing vote (allows vote change), then insert new one
+    await supabase.from("competition_competitor_votes")
+      .delete()
+      .eq("competition_id", data.competitionId)
+      .eq("voter_id", userId);
+    const { error } = await supabase.from("competition_competitor_votes").insert({
+      competition_id: data.competitionId,
+      competitor_id: data.competitorId,
+      voter_id: userId,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const getMyCompetitorVote = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { competitionId: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { data: r } = await context.supabase
+      .from("competition_competitor_votes")
+      .select("competitor_id")
+      .eq("competition_id", data.competitionId)
+      .eq("voter_id", context.userId)
+      .maybeSingle();
+    return { competitorId: (r as any)?.competitor_id ?? null };
+  });
+
 
 export const getUserAchievements = createServerFn({ method: "GET" })
   .inputValidator((data: { userId: string }) => data)
