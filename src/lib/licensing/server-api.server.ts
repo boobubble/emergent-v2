@@ -22,6 +22,39 @@ export function corsPreflight() {
   return new Response(null, { status: 204, headers: CORS });
 }
 
+/* ------------------------- in-memory rate limit ------------------------- */
+// Per-IP + per-route sliding window. Ad-hoc because the Worker has no shared
+// primitive; each isolate keeps its own counter, which is acceptable for
+// abuse mitigation on a license server.
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 30;
+const rateBuckets = new Map<string, number[]>();
+
+function rateLimit(request: Request, route: string): Response | null {
+  const ip =
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown";
+  const key = `${ip}:${route}`;
+  const now = Date.now();
+  const bucket = (rateBuckets.get(key) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  if (bucket.length >= RATE_LIMIT_MAX) {
+    return new Response(JSON.stringify({ ok: false, message: "Rate limit exceeded" }), {
+      status: 429,
+      headers: { "Content-Type": "application/json", "Retry-After": "60", ...CORS },
+    });
+  }
+  bucket.push(now);
+  rateBuckets.set(key, bucket);
+  if (rateBuckets.size > 5000) {
+    // Prevent unbounded growth.
+    for (const [k, v] of rateBuckets) {
+      if (v[v.length - 1]! < now - RATE_LIMIT_WINDOW_MS) rateBuckets.delete(k);
+    }
+  }
+  return null;
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -111,6 +144,7 @@ async function log(licenseId: string | null, action: string, outcome: "ok" | "fa
 /* ------------------------------- verify ------------------------------- */
 
 export async function handleVerify(request: Request): Promise<Response> {
+  const rl = rateLimit(request, "verify"); if (rl) return rl;
   const v = await readVerifiedPayload(request);
   if (!v.ok) return v.response;
   const { key, email, domain, product_version } = v.payload ?? {};
@@ -134,6 +168,7 @@ export async function handleVerify(request: Request): Promise<Response> {
 /* ------------------------------ activate ------------------------------ */
 
 export async function handleActivate(request: Request): Promise<Response> {
+  const rl = rateLimit(request, "activate"); if (rl) return rl;
   const v = await readVerifiedPayload(request);
   if (!v.ok) return v.response;
   const { key, email, domain, server_ip, installation_id, product_version, runtime } = v.payload ?? {};
@@ -212,6 +247,7 @@ export async function handleActivate(request: Request): Promise<Response> {
 /* ----------------------------- deactivate ----------------------------- */
 
 export async function handleDeactivate(request: Request): Promise<Response> {
+  const rl = rateLimit(request, "deactivate"); if (rl) return rl;
   const v = await readVerifiedPayload(request);
   if (!v.ok) return v.response;
   const { key, email, domain } = v.payload ?? {};
@@ -246,6 +282,7 @@ export async function handleDeactivate(request: Request): Promise<Response> {
 /* ------------------------------- check ------------------------------- */
 
 export async function handleCheck(request: Request): Promise<Response> {
+  const rl = rateLimit(request, "check"); if (rl) return rl;
   const v = await readVerifiedPayload(request);
   if (!v.ok) return v.response;
   const { key, email, domain, product_version } = v.payload ?? {};
@@ -274,4 +311,34 @@ export async function handleCheck(request: Request): Promise<Response> {
     status,
     message: ok ? undefined : !domainOk ? `Bound to ${row.current_domain}` : `License is ${status}`,
   });
+}
+
+/* ------------------------------- reset ------------------------------- */
+
+export async function handleReset(request: Request): Promise<Response> {
+  const rl = rateLimit(request, "reset"); if (rl) return rl;
+  const v = await readVerifiedPayload(request);
+  if (!v.ok) return v.response;
+  const { key, email } = v.payload ?? {};
+  if (!key || !email) return json({ ok: false, message: "Missing key/email" }, 400);
+  const row = await findLicense(key, email);
+  if (!row) return json({ ok: false, message: "License not found" }, 404);
+  const now = new Date().toISOString();
+  await supabaseAdmin
+    .from("license_activations")
+    .update({ active: false, deactivated_at: now, updated_at: now } as any)
+    .eq("license_id", row.id)
+    .eq("active", true);
+  await supabaseAdmin
+    .from("licenses")
+    .update({
+      current_domain: null,
+      server_ip: null,
+      installation_id: null,
+      current_activations: 0,
+      updated_at: now,
+    } as any)
+    .eq("id", row.id);
+  await log(row.id, "reset", "ok", { via: "public_api" });
+  return json({ ok: true });
 }
