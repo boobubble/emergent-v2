@@ -442,6 +442,28 @@ function InstallerPage() {
       const t0 = Date.now();
       await completeInstallation({ license_type: licenseType, license_key: licenseKey, site_name: siteName, mode });
       pushLog("ok", "finish", "Installer lock written");
+      // Persist the unified license record + signed local cache.
+      try {
+        const activation = await runActivateLicense({
+          data: {
+            sourceId: licenseSource,
+            identity: {
+              key: licenseKey.trim(),
+              purchaseCode: licensePurchaseCode.trim() || undefined,
+              customerEmail: licenseEmail.trim() || undefined,
+            },
+            host: {
+              domain: window.location.hostname,
+              productVersion: APP_VERSION,
+              installationId: window.location.origin,
+            },
+          },
+        });
+        if (activation.ok) pushLog("ok", "finish", `License activated for ${window.location.hostname}`);
+        else pushLog("warn", "finish", `License activation: ${activation.message ?? "skipped"}`);
+      } catch (e: any) {
+        pushLog("warn", "finish", `License activation: ${e?.message ?? "skipped"}`);
+      }
       try {
         await supabase.from("app_settings").upsert({ key: "general", value: { site_name: siteName } }, { onConflict: "key" });
         pushLog("ok", "finish", `Site name saved: ${siteName}`);
