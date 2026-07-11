@@ -367,9 +367,12 @@ function GenerateDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenC
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [maxActivations, setMaxActivations] = useState(1);
+  const [plan, setPlan] = useState<PlanId>("monthly");
   const [expiry, setExpiry] = useState("");
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<any | null>(null);
+
+  const isLifetime = plan === "lifetime";
 
   async function submit() {
     if (!email) { toast.error("Customer email required"); return; }
@@ -380,11 +383,12 @@ function GenerateDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenC
           customerEmail: email,
           customerName: name || undefined,
           maxActivations,
-          expiryDate: expiry ? new Date(expiry).toISOString() : null,
+          plan,
+          expiryDate: isLifetime ? null : (expiry ? new Date(expiry).toISOString() : null),
         },
       });
       setCreated(res.license);
-      toast.success("License generated");
+      toast.success(isLifetime ? "Lifetime license generated" : "License generated");
       onDone();
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
     finally { setBusy(false); }
@@ -392,7 +396,7 @@ function GenerateDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenC
 
   function close() {
     onOpenChange(false);
-    setEmail(""); setName(""); setMaxActivations(1); setExpiry(""); setCreated(null);
+    setEmail(""); setName(""); setMaxActivations(1); setPlan("monthly"); setExpiry(""); setCreated(null);
   }
 
   return (
@@ -402,15 +406,35 @@ function GenerateDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenC
         {created ? (
           <div className="space-y-2">
             <div className="rounded-lg border bg-muted/50 p-3 font-mono text-sm">{created.license_key}</div>
-            <p className="text-xs text-muted-foreground">Send this key to <strong>{created.customer_email}</strong>.</p>
+            <p className="text-xs text-muted-foreground">
+              {created.license_plan === "lifetime" ? <><InfinityIcon className="inline h-3 w-3" /> Lifetime license — never expires. </> : null}
+              Send this key to <strong>{created.customer_email}</strong>.
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
             <div><Label>Customer email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
             <div><Label>Customer name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
             <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Plan</Label>
+                <Select value={plan} onValueChange={(v) => setPlan(v as PlanId)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{PLANS.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
               <div><Label>Max activations</Label><Input type="number" min={1} value={maxActivations} onChange={(e) => setMaxActivations(Number(e.target.value) || 1)} /></div>
-              <div><Label>Expires</Label><Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} /></div>
+            </div>
+            <div>
+              <Label>Expires</Label>
+              {isLifetime ? (
+                <div className="mt-1 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                  <InfinityIcon className="h-4 w-4" /> Lifetime — never expires
+                </div>
+              ) : (
+                <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
+              )}
+              {!isLifetime && <p className="mt-1 text-xs text-muted-foreground">Leave empty to use the default duration for the selected plan.</p>}
             </div>
           </div>
         )}
