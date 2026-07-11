@@ -15,6 +15,7 @@ export interface CompetitionSummary {
   end_at: string;
   total_votes: number;
   total_participants: number;
+  is_published?: boolean;
   category?: { name: string; color?: string | null; icon_url?: string | null } | null;
 }
 
@@ -25,7 +26,7 @@ const statusStyle: Record<string, string> = {
   draft: "bg-amber-500/20 text-amber-400 border-amber-500/40",
 };
 
-export function CompetitionCard({ c }: { c: CompetitionSummary }) {
+export function CompetitionCard({ c, onEdit }: { c: CompetitionSummary; onEdit?: (c: CompetitionSummary) => void }) {
   const color = c.category?.color ?? "#8b5cf6";
   return (
     <Link
