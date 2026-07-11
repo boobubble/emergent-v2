@@ -16,17 +16,32 @@ export const checkUsernameAvailable = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const check = validateUsername(data.username);
     if (!check.ok) return { available: false, reason: check.reason };
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row, error } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .ilike("username", check.value)
-      .maybeSingle();
-    if (error) return { available: false, reason: "Lookup failed. Try again." };
-    if (row && row.id !== data.excludeUserId) {
-      return { available: false, reason: "That username is already taken." };
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: row, error } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .ilike("username", check.value)
+        .maybeSingle();
+      if (error) {
+        console.error("[checkUsernameAvailable] Supabase error:", error);
+        return {
+          available: false,
+          reason: `Username lookup failed: ${error.message}. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the server.`,
+        };
+      }
+      if (row && row.id !== data.excludeUserId) {
+        return { available: false, reason: "That username is already taken." };
+      }
+      return { available: true as const };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      console.error("[checkUsernameAvailable] Unexpected error:", e);
+      return {
+        available: false,
+        reason: `Server configuration error: ${message}`,
+      };
     }
-    return { available: true as const };
   });
 
 
