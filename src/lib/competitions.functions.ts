@@ -403,15 +403,25 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = context.supabase as any;
+    // Strip any joined/computed fields that aren't real columns
+    const {
+      id: _id,
+      category: _category,
+      total_participants: _tp,
+      total_votes: _tv,
+      created_by: _cb,
+      created_at: _ca,
+      updated_at: _ua,
+      ...clean
+    } = data as any;
     if (data.id) {
-      const { id, ...rest } = data;
-      const { error } = await sb.from("competitions").update(rest).eq("id", id);
+      const { error } = await sb.from("competitions").update(clean).eq("id", data.id);
       if (error) throw new Error(error.message);
-      return { ok: true, id };
+      return { ok: true, id: data.id };
     }
     const { data: row, error } = await sb
       .from("competitions")
-      .insert({ ...data, created_by: context.userId })
+      .insert({ ...clean, created_by: context.userId })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
