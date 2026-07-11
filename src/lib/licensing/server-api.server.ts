@@ -91,13 +91,19 @@ async function readVerifiedPayload(request: Request): Promise<
   return { ok: true, payload };
 }
 
+function isLifetimeRow(row: any): boolean {
+  return row?.license_plan === "lifetime";
+}
+
 function normStatus(row: any): LicenseStatus {
   const now = new Date();
-  if (row.expiry_date && new Date(row.expiry_date) < now) return "expired";
+  // Lifetime licenses never expire — only suspended/revoked/disabled can invalidate them.
+  if (!isLifetimeRow(row) && row.expiry_date && new Date(row.expiry_date) < now) return "expired";
   return row.status as LicenseStatus;
 }
 
 function licenseToDto(row: any) {
+  const lifetime = isLifetimeRow(row);
   return {
     key: row.license_key,
     customer_email: row.customer_email,
@@ -105,11 +111,13 @@ function licenseToDto(row: any) {
     product: row.product,
     product_version: row.product_version,
     activation_date: row.activation_date,
-    expiry_date: row.expiry_date,
+    expiry_date: lifetime ? null : row.expiry_date,
     max_activations: row.max_activations,
     current_activations: row.current_activations,
     current_domain: row.current_domain,
     status: normStatus(row),
+    plan: row.license_plan ?? "monthly",
+    is_lifetime: lifetime,
   };
 }
 
