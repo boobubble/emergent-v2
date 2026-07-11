@@ -76,19 +76,21 @@ function LicensesPage() {
   const [search, setSearch] = useState("");
   const [sourceId, setSourceId] = useState<string>("");
   const [status, setStatus] = useState<string>("");
+  const [plan, setPlan] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [generateOpen, setGenerateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
   const statsQ = useQuery({ queryKey: ["licenses:stats"], queryFn: () => stats() });
   const listQ = useQuery({
-    queryKey: ["licenses:list", search, sourceId, status],
+    queryKey: ["licenses:list", search, sourceId, status, plan],
     queryFn: () =>
       list({
         data: {
           search: search || undefined,
           sourceId: sourceId || undefined,
           status: status || undefined,
+          plan: (plan || undefined) as PlanId | undefined,
           limit: 100,
           offset: 0,
         },
