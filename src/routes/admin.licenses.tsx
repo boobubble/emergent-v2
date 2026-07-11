@@ -306,15 +306,25 @@ function LicenseDrawer({ id, onClose, onChanged }: { id: string | null; onClose:
                 </div>
               </div>
               <div>
-                <Label className="text-xs">Extend expiry</Label>
-                <div className="mt-1 flex gap-2">
-                  <Input type="date" value={newExpiry} onChange={(e) => setNewExpiry(e.target.value)} className="text-xs" />
+                <Label className="text-xs">Plan / expiry</Label>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  <Input type="date" value={newExpiry} onChange={(e) => setNewExpiry(e.target.value)} className="text-xs flex-1 min-w-[120px]" disabled={license.license_plan === "lifetime"} />
                   <Button
                     size="sm"
                     onClick={wrap("Expiry updated", () =>
                       extend({ data: { id: license.id, expiryDate: newExpiry ? new Date(newExpiry).toISOString() : null } }),
                     )}
+                    disabled={license.license_plan === "lifetime"}
                   >Save</Button>
+                  {license.license_plan === "lifetime" ? (
+                    <Button size="sm" variant="outline" onClick={wrap("Converted to Monthly", () => extend({ data: { id: license.id, expiryDate: null, plan: "monthly" } }))}>
+                      Convert from Lifetime
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={wrap("Marked as Lifetime", () => extend({ data: { id: license.id, expiryDate: null, plan: "lifetime" } }))}>
+                      <InfinityIcon className="mr-1 h-3.5 w-3.5" />Make Lifetime
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
