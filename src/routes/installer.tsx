@@ -437,6 +437,8 @@ function InstallerPage() {
       setInstallFinishedAt(Date.now());
       pushLog("ok", "finish", "Installation complete 🎉");
       toast.success("Installation complete!");
+      // Auto-launch the Super Admin Setup Wizard after a successful first install.
+      navigate({ to: "/setup-wizard" as any });
     } catch (e: any) {
       setStage("finalize", { state: "fail", msg: e?.message });
       pushLog("error", "finish", e?.message ?? "Failed to finalize install");
