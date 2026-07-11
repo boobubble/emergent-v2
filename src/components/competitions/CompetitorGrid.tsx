@@ -23,6 +23,11 @@ export interface Competitor {
   sort_order: number;
   is_hidden?: boolean;
   is_disqualified?: boolean;
+  is_featured?: boolean;
+  is_pinned?: boolean;
+  country?: string | null;
+  website?: string | null;
+  social_links?: Record<string, string | null | undefined> | null;
   linked_profile?: { username?: string | null; avatar_url?: string | null; avatar_color?: string | null } | null;
 }
 
