@@ -388,12 +388,13 @@ function CompetitionDetail() {
             competitionId={c.id}
             competitors={competitors}
             myVote={myCompetitorVote?.competitorId ?? null}
-            canVote={!!userId && c.status === "live"}
-            hideCounts={!c.show_live_counts}
+            canVote={!!userId && votingOpen}
+            hideCounts={hideResults}
             isAdmin={isAdmin}
             onEdit={(comp) => setEditing({ ...comp })}
             invalidateKey={["competition-slug", slug]}
           />
+
         </section>
 
         <CompetitorEditorDialog
