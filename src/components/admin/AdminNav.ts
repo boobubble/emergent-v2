@@ -148,6 +148,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/updates",       label: "Updates",       icon: Sparkles, superOnly: true,                              keywords: ["update", "upgrade", "version", "release", "changelog", "migration"] },
       { to: "/admin/backup",        label: "Backup",        icon: Download, superOnly: true,                              keywords: ["backup", "restore", "database", "media", "zip"] },
       { to: "/admin/api",           label: "API & Webhooks", icon: KeyRound, advanced: true, superOnly: true,             keywords: ["api", "keys", "webhooks"] },
+      { to: "/admin/licenses",      label: "Licenses",      icon: KeyRound, superOnly: true,                              keywords: ["license", "licenses", "envato", "codester", "codecanyon", "activation", "purchase code"] },
     ],
   },
 ];
