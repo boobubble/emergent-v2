@@ -58,6 +58,7 @@ export function AdminCompetitionManageDialog({
   const setWinners = useServerFn(adminSetManualWinners);
   const finalize = useServerFn(adminFinalizeWinners);
   const [voteFilter, setVoteFilter] = useState("");
+  const [nomineeDraft, setNomineeDraft] = useState<CompetitorDraft | null>(null);
 
   const { data: manage } = useQuery({
     queryKey: ["competition-manage", competitionId],
