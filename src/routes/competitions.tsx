@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Plus, Trophy } from "lucide-react";
-import { listCompetitions, listCategories } from "@/lib/competitions.functions";
+import { listCompetitions, listCategories, adminListAllCompetitions } from "@/lib/competitions.functions";
 import { CompetitionCard, type CompetitionSummary } from "@/components/competitions/CompetitionCard";
 import { CompetitionEditorDialog, emptyCompetition } from "@/components/competitions/CompetitionEditorDialog";
 import { useMyRoles } from "@/lib/use-my-role";
