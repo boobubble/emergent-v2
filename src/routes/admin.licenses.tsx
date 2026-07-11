@@ -183,6 +183,7 @@ function LicensesPage() {
                   <TableRow>
                     <TableHead>License Key</TableHead>
                     <TableHead>Source</TableHead>
+                    <TableHead>Plan</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Domain</TableHead>
                     <TableHead>Activations</TableHead>
@@ -195,10 +196,15 @@ function LicensesPage() {
                     <TableRow key={r.id} className="cursor-pointer" onClick={() => setSelectedId(r.id)}>
                       <TableCell className="font-mono text-xs">{r.license_key}</TableCell>
                       <TableCell><Badge variant="outline">{r.source_id}</Badge></TableCell>
+                      <TableCell>
+                        {r.license_plan === "lifetime"
+                          ? <Badge className="gap-1"><InfinityIcon className="h-3 w-3" />Lifetime</Badge>
+                          : <Badge variant="secondary">{planLabel(r.license_plan)}</Badge>}
+                      </TableCell>
                       <TableCell className="text-xs">{r.customer_email ?? "—"}</TableCell>
                       <TableCell className="text-xs">{r.current_domain ?? "—"}</TableCell>
                       <TableCell className="text-xs">{r.current_activations}/{r.max_activations}</TableCell>
-                      <TableCell className="text-xs">{r.expiry_date ? new Date(r.expiry_date).toLocaleDateString() : "—"}</TableCell>
+                      <TableCell className="text-xs">{formatExpiryCell(r)}</TableCell>
                       <TableCell><Badge variant={statusVariant(r.status)}>{r.status}</Badge></TableCell>
                     </TableRow>
                   ))}
