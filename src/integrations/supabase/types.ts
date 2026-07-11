@@ -3058,13 +3058,6 @@ export type Database = {
             referencedRelation: "license_sources"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "licenses_source_id_fkey"
-            columns: ["source_id"]
-            isOneToOne: false
-            referencedRelation: "license_sources_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       message_highlights: {
@@ -5176,30 +5169,6 @@ export type Database = {
         }
         Relationships: []
       }
-      license_sources_public: {
-        Row: {
-          enabled: boolean | null
-          id: string | null
-          label: string | null
-          provider: string | null
-          sort_order: number | null
-        }
-        Insert: {
-          enabled?: boolean | null
-          id?: string | null
-          label?: string | null
-          provider?: string | null
-          sort_order?: number | null
-        }
-        Update: {
-          enabled?: boolean | null
-          id?: string | null
-          label?: string | null
-          provider?: string | null
-          sort_order?: number | null
-        }
-        Relationships: []
-      }
       license_statistics: {
         Row: {
           active: number | null
@@ -5216,21 +5185,6 @@ export type Database = {
           total: number | null
           trial: number | null
           yearly: number | null
-        }
-        Relationships: []
-      }
-      payment_providers_public: {
-        Row: {
-          enabled: boolean | null
-          key: string | null
-        }
-        Insert: {
-          enabled?: boolean | null
-          key?: string | null
-        }
-        Update: {
-          enabled?: boolean | null
-          key?: string | null
         }
         Relationships: []
       }
@@ -5760,6 +5714,13 @@ export type Database = {
       is_user_muted: {
         Args: { _channel: string; _user_id: string }
         Returns: boolean
+      }
+      list_enabled_payment_providers: {
+        Args: never
+        Returns: {
+          enabled: boolean
+          key: string
+        }[]
       }
       my_active_plan: {
         Args: never
