@@ -50,9 +50,22 @@ export function CompetitionCard({ c, onEdit }: { c: CompetitionSummary; onEdit?:
             </Badge>
           )}
         </div>
-        <div className="absolute right-3 top-3">
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          {c.is_published === false && (
+            <Badge className="border border-rose-500/40 bg-rose-500/20 text-rose-300 uppercase">Unpublished</Badge>
+          )}
           <Badge className={`border ${statusStyle[c.status]} uppercase`}>{c.status}</Badge>
         </div>
+        {onEdit && (
+          <button
+            type="button"
+            aria-label="Edit competition"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(c); }}
+            className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/50 px-3 py-1 text-xs font-medium text-white backdrop-blur hover:bg-black/70"
+          >
+            <Pencil className="h-3 w-3" /> Edit
+          </button>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div>
