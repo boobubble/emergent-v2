@@ -17,7 +17,7 @@ export const emptyCompetition = () => ({
   end_at: new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 16),
   max_participants: null as number | null,
   winner_count: 1,
-  status: "draft" as "draft" | "upcoming" | "live" | "completed",
+  status: "upcoming" as "draft" | "upcoming" | "live" | "completed",
   allow_vote_change: false,
   show_live_counts: true,
   require_approval: false,
