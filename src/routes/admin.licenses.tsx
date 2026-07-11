@@ -158,6 +158,13 @@ function LicensesPage() {
                 {STATUSES.map((st) => <SelectItem key={st} value={st}>{st}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={plan || "__all"} onValueChange={(v) => setPlan(v === "__all" ? "" : v)}>
+              <SelectTrigger className="w-32 text-xs"><SelectValue placeholder="Plan" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all">All plans</SelectItem>
+                {PLANS.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <Button size="sm" variant="outline" onClick={() => listQ.refetch()}><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Refresh</Button>
             <Button size="sm" variant="outline" onClick={handleExport}><Download className="mr-1.5 h-3.5 w-3.5" />Export CSV</Button>
             <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>Import</Button>
