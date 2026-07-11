@@ -408,7 +408,7 @@ function CompetitionDetail() {
           <section className="mt-6 grid gap-6 md:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
               <h2 className="mb-3 flex items-center gap-2 font-bold"><Trophy className="h-4 w-4 text-amber-400" /> Live Ranking</h2>
-              <TopThree participants={participants as any} hideCounts={!c.show_live_counts} />
+              <TopThree participants={participants as any} hideCounts={hideResults} />
             </div>
             <div className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
               <h2 className="mb-3 font-bold">Vote for a contestant</h2>
@@ -416,9 +416,10 @@ function CompetitionDetail() {
                 competitionId={c.id}
                 participants={participants as any}
                 myVote={myVote?.participantId ?? null}
-                canVote={!!userId && c.status === "live"}
-                hideCounts={!c.show_live_counts}
+                canVote={!!userId && votingOpen}
+                hideCounts={hideResults}
               />
+
             </div>
           </section>
         )}
