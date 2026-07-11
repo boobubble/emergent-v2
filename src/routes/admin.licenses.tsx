@@ -41,6 +41,25 @@ const SOURCES = [
 
 const STATUSES = ["active", "pending", "suspended", "revoked", "expired", "disabled", "development", "localhost", "unlimited"];
 
+const PLANS = [
+  { id: "trial", label: "Trial" },
+  { id: "monthly", label: "Monthly" },
+  { id: "yearly", label: "Yearly" },
+  { id: "lifetime", label: "Lifetime" },
+] as const;
+
+type PlanId = (typeof PLANS)[number]["id"];
+
+function planLabel(p?: string | null): string {
+  if (!p) return "—";
+  return p.charAt(0).toUpperCase() + p.slice(1);
+}
+
+function formatExpiryCell(row: any): string {
+  if (row.license_plan === "lifetime") return "Lifetime";
+  return row.expiry_date ? new Date(row.expiry_date).toLocaleDateString() : "—";
+}
+
 function statusVariant(s: string): "default" | "secondary" | "destructive" | "outline" {
   if (s === "active" || s === "unlimited" || s === "development" || s === "localhost") return "default";
   if (s === "pending") return "secondary";
