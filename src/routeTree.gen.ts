@@ -135,6 +135,7 @@ import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/de
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as ApiPublicBackupRetentionRouteImport } from './routes/api/public/backup-retention'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
+import { Route as ApiPublicHooksLicenseRevalidateRouteImport } from './routes/api/public/hooks/license-revalidate'
 import { Route as ApiPublicHooksFeedbotSummaryRouteImport } from './routes/api/public/hooks/feedbot-summary'
 import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/public/hooks/feedbot-dispatch'
 
@@ -772,6 +773,12 @@ const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   path: '/$key',
   getParentRoute: () => AdminUpcomingRoute,
 } as any)
+const ApiPublicHooksLicenseRevalidateRoute =
+  ApiPublicHooksLicenseRevalidateRouteImport.update({
+    id: '/api/public/hooks/license-revalidate',
+    path: '/api/public/hooks/license-revalidate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksFeedbotSummaryRoute =
   ApiPublicHooksFeedbotSummaryRouteImport.update({
     id: '/api/public/hooks/feedbot-summary',
@@ -914,6 +921,7 @@ export interface FileRoutesByFullPath {
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
+  '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -1042,6 +1050,7 @@ export interface FileRoutesByTo {
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
+  '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1173,6 +1182,7 @@ export interface FileRoutesById {
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
+  '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1305,6 +1315,7 @@ export interface FileRouteTypes {
     | '/api/public/landing'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
+    | '/api/public/hooks/license-revalidate'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1433,6 +1444,7 @@ export interface FileRouteTypes {
     | '/api/public/landing'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
+    | '/api/public/hooks/license-revalidate'
   id:
     | '__root__'
     | '/'
@@ -1563,6 +1575,7 @@ export interface FileRouteTypes {
     | '/api/public/landing'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
+    | '/api/public/hooks/license-revalidate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1609,6 +1622,7 @@ export interface RootRouteChildren {
   ApiPublicLandingRoute: typeof ApiPublicLandingRoute
   ApiPublicHooksFeedbotDispatchRoute: typeof ApiPublicHooksFeedbotDispatchRoute
   ApiPublicHooksFeedbotSummaryRoute: typeof ApiPublicHooksFeedbotSummaryRoute
+  ApiPublicHooksLicenseRevalidateRoute: typeof ApiPublicHooksLicenseRevalidateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2495,6 +2509,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUpcomingKeyRouteImport
       parentRoute: typeof AdminUpcomingRoute
     }
+    '/api/public/hooks/license-revalidate': {
+      id: '/api/public/hooks/license-revalidate'
+      path: '/api/public/hooks/license-revalidate'
+      fullPath: '/api/public/hooks/license-revalidate'
+      preLoaderRoute: typeof ApiPublicHooksLicenseRevalidateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/feedbot-summary': {
       id: '/api/public/hooks/feedbot-summary'
       path: '/api/public/hooks/feedbot-summary'
@@ -2772,6 +2793,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLandingRoute: ApiPublicLandingRoute,
   ApiPublicHooksFeedbotDispatchRoute: ApiPublicHooksFeedbotDispatchRoute,
   ApiPublicHooksFeedbotSummaryRoute: ApiPublicHooksFeedbotSummaryRoute,
+  ApiPublicHooksLicenseRevalidateRoute: ApiPublicHooksLicenseRevalidateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
