@@ -133,7 +133,9 @@ export interface SignedLicenseCache {
   domain: string;
   serverIp?: string;
   productVersion?: string;
-  expiryDate?: string;
+  expiryDate?: string | null;
+  plan?: LicensePlan;
+  isLifetime?: boolean;
   /** Grace period in seconds; runtime uses this when the network is down. */
   gracePeriodSeconds: number;
   /** HMAC-SHA256(payload, LICENSE_HMAC_SECRET) over the JSON-canonical payload. */
