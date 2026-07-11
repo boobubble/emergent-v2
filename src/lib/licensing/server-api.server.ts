@@ -269,9 +269,9 @@ export async function handleCheck(request: Request): Promise<Response> {
     .eq("id", row.id);
   await log(row.id, "check", ok ? "ok" : "warn", { domain }, ok ? undefined : `status=${status} domainOk=${domainOk}`);
   return json({
+    ...licenseToDto(row),
     ok,
     status,
     message: ok ? undefined : !domainOk ? `Bound to ${row.current_domain}` : `License is ${status}`,
-    ...licenseToDto(row),
   });
 }
