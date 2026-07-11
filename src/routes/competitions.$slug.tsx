@@ -314,7 +314,7 @@ function CompetitionDetail() {
             </div>
           )}
 
-          {userId && (c.status === "upcoming" || c.status === "live") && (
+          {userId && enableJoin && (c.status === "upcoming" || c.status === "live") && (
             <div className="mt-4">
               {iJoined ? (
                 <Button variant="outline" onClick={() => leaveM.mutate()} disabled={leaveM.isPending}>
@@ -328,6 +328,7 @@ function CompetitionDetail() {
             </div>
           )}
         </div>
+
 
         {/* Winner section */}
         {c.status === "completed" && awards.length > 0 && (
