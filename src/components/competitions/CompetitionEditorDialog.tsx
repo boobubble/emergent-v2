@@ -23,6 +23,7 @@ export const emptyCompetition = () => ({
   require_approval: false,
   rewards: { coins: 0, xp: 0, badge: "", premium_days: 0, custom: "" },
   announce_channels: [] as string[],
+  is_published: true,
 });
 
 interface Props {
@@ -101,6 +102,13 @@ export function CompetitionEditorDialog({ value, onChange, onSaved, invalidateKe
               <div className="flex items-center gap-2"><Switch checked={editing.allow_vote_change} onCheckedChange={(v) => set({ allow_vote_change: v })} /><Label>Allow vote change</Label></div>
               <div className="flex items-center gap-2"><Switch checked={editing.show_live_counts} onCheckedChange={(v) => set({ show_live_counts: v })} /><Label>Show live counts</Label></div>
               <div className="flex items-center gap-2"><Switch checked={editing.require_approval} onCheckedChange={(v) => set({ require_approval: v })} /><Label>Require approval</Label></div>
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
+              <div>
+                <Label className="text-sm font-semibold">Published</Label>
+                <div className="text-xs text-muted-foreground">When off, this competition is hidden from users.</div>
+              </div>
+              <Switch checked={editing.is_published ?? true} onCheckedChange={(v) => set({ is_published: v })} />
             </div>
             <div className="rounded-xl border p-3">
               <div className="mb-2 text-sm font-semibold">Rewards</div>

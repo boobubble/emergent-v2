@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Plus, Trophy } from "lucide-react";
-import { listCompetitions, listCategories } from "@/lib/competitions.functions";
+import { listCompetitions, listCategories, adminListAllCompetitions } from "@/lib/competitions.functions";
 import { CompetitionCard, type CompetitionSummary } from "@/components/competitions/CompetitionCard";
 import { CompetitionEditorDialog, emptyCompetition } from "@/components/competitions/CompetitionEditorDialog";
 import { useMyRoles } from "@/lib/use-my-role";
@@ -23,13 +23,40 @@ export const Route = createFileRoute("/competitions")({
 });
 
 function CompetitionsIndex() {
+  const { isAdmin } = useMyRoles();
   const list = useServerFn(listCompetitions);
+  const adminList = useServerFn(adminListAllCompetitions);
   const cats = useServerFn(listCategories);
-  const { data: comps = [] } = useQuery({ queryKey: ["competitions"], queryFn: () => list({}) });
+  const { data: comps = [] } = useQuery({
+    queryKey: ["competitions", isAdmin ? "admin" : "public"],
+    queryFn: () => (isAdmin ? adminList({}) : list({})),
+  });
   const { data: categories = [] } = useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
   const [category, setCategory] = useState<string>("all");
   const [editing, setEditing] = useState<any | null>(null);
-  const { isAdmin } = useMyRoles();
+
+  const openEdit = (c: any) => {
+    setEditing({
+      id: c.id,
+      name: c.name ?? "",
+      slug: c.slug ?? "",
+      description: c.description ?? "",
+      rules: c.rules ?? "",
+      banner_url: c.banner_url ?? "",
+      category_id: c.category_id ?? c.category?.id ?? null,
+      start_at: new Date(c.start_at).toISOString().slice(0, 16),
+      end_at: new Date(c.end_at).toISOString().slice(0, 16),
+      max_participants: c.max_participants ?? null,
+      winner_count: c.winner_count ?? 1,
+      status: c.status ?? "draft",
+      allow_vote_change: !!c.allow_vote_change,
+      show_live_counts: c.show_live_counts !== false,
+      require_approval: !!c.require_approval,
+      rewards: c.rewards ?? { coins: 0, xp: 0, badge: "", premium_days: 0, custom: "" },
+      announce_channels: c.announce_channels ?? [],
+      is_published: c.is_published !== false,
+    });
+  };
 
   const filtered = useMemo(() => {
     if (category === "all") return comps;
@@ -62,7 +89,11 @@ function CompetitionsIndex() {
         </div>
       </header>
 
-      <CompetitionEditorDialog value={editing} onChange={setEditing} />
+      <CompetitionEditorDialog
+        value={editing}
+        onChange={setEditing}
+        invalidateKeys={[["competitions", "admin"], ["competitions", "public"]]}
+      />
 
       <main className="mx-auto max-w-5xl px-4 py-6">
         <div className="mb-4 flex flex-wrap gap-2">
@@ -98,7 +129,7 @@ function CompetitionsIndex() {
                 </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {items.map((c) => <CompetitionCard key={c.id} c={c} />)}
+                  {items.map((c) => <CompetitionCard key={c.id} c={c} onEdit={isAdmin ? openEdit : undefined} />)}
                 </div>
               )}
             </TabsContent>

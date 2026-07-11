@@ -28,10 +28,23 @@ export const listCompetitions = createServerFn({ method: "GET" }).handler(async 
     .from("competitions")
     .select("*, category:competition_categories(id,name,slug,color,icon_url)")
     .neq("status", "draft")
+    .eq("is_published", true)
     .order("start_at", { ascending: false });
   if (error) throw new Error(error.message);
   return data ?? [];
 });
+
+export const adminListAllCompetitions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data, error } = await context.supabase
+      .from("competitions")
+      .select("*, category:competition_categories(id,name,slug,color,icon_url)")
+      .order("start_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
 
 export const getCompetition = createServerFn({ method: "GET" })
   .inputValidator((data: { id: string }) => data)
@@ -233,6 +246,7 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
     require_approval?: boolean;
     rewards?: Record<string, unknown>;
     announce_channels?: string[];
+    is_published?: boolean;
   }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);

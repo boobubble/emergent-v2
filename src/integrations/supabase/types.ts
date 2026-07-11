@@ -965,6 +965,7 @@ export type Database = {
           description: string | null
           end_at: string
           id: string
+          is_published: boolean
           max_participants: number | null
           name: string
           require_approval: boolean
@@ -989,6 +990,7 @@ export type Database = {
           description?: string | null
           end_at: string
           id?: string
+          is_published?: boolean
           max_participants?: number | null
           name: string
           require_approval?: boolean
@@ -1013,6 +1015,7 @@ export type Database = {
           description?: string | null
           end_at?: string
           id?: string
+          is_published?: boolean
           max_participants?: number | null
           name?: string
           require_approval?: boolean
@@ -5357,6 +5360,7 @@ export type Database = {
         Returns: undefined
       }
       claim_daily_reward: { Args: never; Returns: Json }
+      cleanup_ended_competitions: { Args: never; Returns: undefined }
       close_inactive_trio_rooms: { Args: never; Returns: undefined }
       complete_installation: { Args: { _payload: Json }; Returns: Json }
       create_coin_order: {
