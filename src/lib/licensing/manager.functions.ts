@@ -217,10 +217,24 @@ export const adminLicenseStats = createServerFn({ method: "GET" })
     return data ?? {};
   });
 
+const PlanSchema = z.enum(["trial", "monthly", "yearly", "lifetime"]);
+
+/** Compute a sensible default expiry when the admin doesn't provide one. */
+function planDefaultExpiry(plan: z.infer<typeof PlanSchema>): string | null {
+  const now = new Date();
+  switch (plan) {
+    case "trial":    now.setDate(now.getDate() + 14); return now.toISOString();
+    case "monthly":  now.setMonth(now.getMonth() + 1); return now.toISOString();
+    case "yearly":   now.setFullYear(now.getFullYear() + 1); return now.toISOString();
+    case "lifetime": return null;
+  }
+}
+
 const GenerateSelfInput = z.object({
   customerEmail: z.string().trim().email(),
   customerName: z.string().trim().max(120).optional(),
   productVersion: z.string().trim().max(32).optional(),
+  plan: PlanSchema.default("monthly"),
   expiryDate: z.string().datetime().nullable().optional(),
   maxActivations: z.number().int().min(1).max(1000).default(1),
 });
