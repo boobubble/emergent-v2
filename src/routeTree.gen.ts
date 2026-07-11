@@ -48,6 +48,7 @@ import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as CompetitionsLeaderboardRouteImport } from './routes/competitions.leaderboard'
+import { Route as CompetitionsSlugRouteImport } from './routes/competitions.$slug'
 import { Route as BroadcasterWidgetsRouteImport } from './routes/broadcaster.widgets'
 import { Route as BroadcasterScheduleRouteImport } from './routes/broadcaster.schedule'
 import { Route as BroadcasterQueueRouteImport } from './routes/broadcaster.queue'
@@ -337,6 +338,11 @@ const FeedSlugRoute = FeedSlugRouteImport.update({
 const CompetitionsLeaderboardRoute = CompetitionsLeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => CompetitionsRoute,
+} as any)
+const CompetitionsSlugRoute = CompetitionsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
   getParentRoute: () => CompetitionsRoute,
 } as any)
 const BroadcasterWidgetsRoute = BroadcasterWidgetsRouteImport.update({
@@ -937,6 +943,7 @@ export interface FileRoutesByFullPath {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
+  '/competitions/$slug': typeof CompetitionsSlugRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
@@ -1071,6 +1078,7 @@ export interface FileRoutesByTo {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
+  '/competitions/$slug': typeof CompetitionsSlugRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
@@ -1208,6 +1216,7 @@ export interface FileRoutesById {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
+  '/competitions/$slug': typeof CompetitionsSlugRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
@@ -1346,6 +1355,7 @@ export interface FileRouteTypes {
     | '/broadcaster/queue'
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
+    | '/competitions/$slug'
     | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
@@ -1480,6 +1490,7 @@ export interface FileRouteTypes {
     | '/broadcaster/queue'
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
+    | '/competitions/$slug'
     | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
@@ -1616,6 +1627,7 @@ export interface FileRouteTypes {
     | '/broadcaster/queue'
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
+    | '/competitions/$slug'
     | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
@@ -1965,6 +1977,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/competitions/leaderboard'
       preLoaderRoute: typeof CompetitionsLeaderboardRouteImport
+      parentRoute: typeof CompetitionsRoute
+    }
+    '/competitions/$slug': {
+      id: '/competitions/$slug'
+      path: '/$slug'
+      fullPath: '/competitions/$slug'
+      preLoaderRoute: typeof CompetitionsSlugRouteImport
       parentRoute: typeof CompetitionsRoute
     }
     '/broadcaster/widgets': {
@@ -2830,10 +2849,12 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
 )
 
 interface CompetitionsRouteChildren {
+  CompetitionsSlugRoute: typeof CompetitionsSlugRoute
   CompetitionsLeaderboardRoute: typeof CompetitionsLeaderboardRoute
 }
 
 const CompetitionsRouteChildren: CompetitionsRouteChildren = {
+  CompetitionsSlugRoute: CompetitionsSlugRoute,
   CompetitionsLeaderboardRoute: CompetitionsLeaderboardRoute,
 }
 

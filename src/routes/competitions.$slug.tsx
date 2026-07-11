@@ -216,10 +216,10 @@ function CompetitionDetail() {
     if (!reason) return;
     const { error } = await supabase.from("reports").insert({
       reporter_id: userId,
-      target_type: "competition",
+      target_type: "post" as any,
       target_id: c.id,
-      reason,
-    });
+      reason: `[competition] ${reason}`,
+    } as any);
     if (error) toast.error(error.message);
     else toast.success("Reported. Thanks for keeping the community safe.");
   };
