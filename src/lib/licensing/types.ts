@@ -50,7 +50,8 @@ export interface LicenseVerificationResult {
     maxActivations?: number;
   };
   /** Provider-side raw response echoed for logging. Never contains secrets. */
-  raw?: unknown;
+  // Use `any` here so the TanStack serializer accepts pass-through JSON.
+  raw?: any;
   /** Human-readable failure reason when `ok=false`. */
   message?: string;
 }
@@ -89,7 +90,7 @@ export interface LicenseRecord {
   lastValidationOk: boolean | null;
   status: LicenseStatus;
   notes: string | null;
-  metadata: Record<string, unknown>;
+  metadata: Record<string, any>;
   createdAt: string;
   updatedAt: string;
 }
