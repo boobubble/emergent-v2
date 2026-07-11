@@ -312,3 +312,33 @@ export async function handleCheck(request: Request): Promise<Response> {
     message: ok ? undefined : !domainOk ? `Bound to ${row.current_domain}` : `License is ${status}`,
   });
 }
+
+/* ------------------------------- reset ------------------------------- */
+
+export async function handleReset(request: Request): Promise<Response> {
+  const rl = rateLimit(request, "reset"); if (rl) return rl;
+  const v = await readVerifiedPayload(request);
+  if (!v.ok) return v.response;
+  const { key, email } = v.payload ?? {};
+  if (!key || !email) return json({ ok: false, message: "Missing key/email" }, 400);
+  const row = await findLicense(key, email);
+  if (!row) return json({ ok: false, message: "License not found" }, 404);
+  const now = new Date().toISOString();
+  await supabaseAdmin
+    .from("license_activations")
+    .update({ active: false, deactivated_at: now, updated_at: now } as any)
+    .eq("license_id", row.id)
+    .eq("active", true);
+  await supabaseAdmin
+    .from("licenses")
+    .update({
+      current_domain: null,
+      server_ip: null,
+      installation_id: null,
+      current_activations: 0,
+      updated_at: now,
+    } as any)
+    .eq("id", row.id);
+  await log(row.id, "reset", "ok", { via: "public_api" });
+  return json({ ok: true });
+}
