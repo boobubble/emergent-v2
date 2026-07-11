@@ -50,9 +50,14 @@ function InstallerPage() {
   const [mode, setMode] = useState<InstallMode>("cloud");
 
   // form state
+  const [licenseSource, setLicenseSource] = useState<LicenseSource>("envato");
   const [licenseType, setLicenseType] = useState<"envato" | "offline">("envato");
   const [licenseKey, setLicenseKey] = useState("");
+  const [licenseEmail, setLicenseEmail] = useState("");
+  const [licensePurchaseCode, setLicensePurchaseCode] = useState("");
   const [licenseOk, setLicenseOk] = useState(false);
+  const [licenseVerifying, setLicenseVerifying] = useState(false);
+  const [licenseInfo, setLicenseInfo] = useState<{ customerName?: string; expiryDate?: string; status?: string } | null>(null);
   const [reqsOk, setReqsOk] = useState(false);
   type HealthState = "pending" | "ok" | "fail" | "warn";
   type HealthKey = "db" | "storage" | "realtime" | "smtp" | "env" | "cron";
