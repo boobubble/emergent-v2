@@ -30,8 +30,8 @@ export function CompetitionCard({ c, onEdit }: { c: CompetitionSummary; onEdit?:
   const color = c.category?.color ?? "#8b5cf6";
   return (
     <Link
-      to="/competitions/$id"
-      params={{ id: c.id }}
+      to="/competitions/$slug"
+      params={{ slug: c.slug }}
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl shadow-lg transition-transform hover:-translate-y-0.5 hover:shadow-2xl"
     >
       <div
