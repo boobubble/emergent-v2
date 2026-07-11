@@ -385,7 +385,21 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
     rewards?: Record<string, unknown>;
     announce_channels?: string[];
     is_published?: boolean;
+    enable_voting?: boolean;
+    enable_reactions?: boolean;
+    enable_comments?: boolean;
+    enable_sharing?: boolean;
+    enable_join?: boolean;
+    hide_results_until_end?: boolean;
+    auto_close_voting?: boolean;
+    is_featured?: boolean;
+    is_pinned?: boolean;
+    allow_multiple_votes?: boolean;
+    max_votes_per_user?: number;
+    allow_guest_voting?: boolean;
+    allow_anonymous_voting?: boolean;
   }) => data)
+
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = context.supabase as any;
