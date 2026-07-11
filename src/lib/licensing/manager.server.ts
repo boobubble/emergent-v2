@@ -98,6 +98,8 @@ export async function readCache(): Promise<SignedLicenseCache | null> {
 /* -------------------------- DB record helpers -------------------------- */
 
 function rowToRecord(row: any): LicenseRecord {
+  const plan = (row.license_plan ?? "monthly") as LicenseRecord["plan"];
+  const isLifetime = plan === "lifetime";
   return {
     id: row.id,
     licenseKey: row.license_key,
@@ -108,7 +110,7 @@ function rowToRecord(row: any): LicenseRecord {
     product: row.product,
     productVersion: row.product_version,
     activationDate: row.activation_date,
-    expiryDate: row.expiry_date,
+    expiryDate: isLifetime ? null : row.expiry_date,
     maxActivations: row.max_activations,
     currentActivations: row.current_activations,
     currentDomain: row.current_domain,
@@ -119,6 +121,8 @@ function rowToRecord(row: any): LicenseRecord {
     status: row.status,
     notes: row.notes,
     metadata: row.metadata ?? {},
+    plan,
+    isLifetime,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
