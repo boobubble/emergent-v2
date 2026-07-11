@@ -24,7 +24,21 @@ export const emptyCompetition = () => ({
   rewards: { coins: 0, xp: 0, badge: "", premium_days: 0, custom: "" },
   announce_channels: [] as string[],
   is_published: true,
+  enable_voting: true,
+  enable_reactions: true,
+  enable_comments: true,
+  enable_sharing: true,
+  enable_join: true,
+  hide_results_until_end: false,
+  auto_close_voting: true,
+  is_featured: false,
+  is_pinned: false,
+  allow_multiple_votes: false,
+  max_votes_per_user: 1,
+  allow_guest_voting: false,
+  allow_anonymous_voting: false,
 });
+
 
 interface Props {
   value: any | null;
