@@ -246,6 +246,7 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
     require_approval?: boolean;
     rewards?: Record<string, unknown>;
     announce_channels?: string[];
+    is_published?: boolean;
   }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
