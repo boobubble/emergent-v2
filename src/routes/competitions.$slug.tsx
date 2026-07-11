@@ -197,7 +197,18 @@ function CompetitionDetail() {
     rewards.custom || null,
   ].filter(Boolean) as string[];
 
+  // Admin-configurable feature flags (default true when missing on legacy rows)
+  const enableVoting = c.enable_voting !== false;
+  const enableJoin = c.enable_join !== false;
+  const enableSharing = c.enable_sharing !== false;
+  const hideResults =
+    c.hide_results_until_end === true && c.status !== "completed"
+      ? true
+      : !c.show_live_counts;
+  const votingOpen = enableVoting && c.status === "live" && !(c.auto_close_voting !== false && new Date(c.end_at).getTime() < Date.now());
+
   const url = `${SITE}/competitions/${c.slug}`;
+
 
   const handleShare = async () => {
     try {
