@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Ban, Download, KeyRound, Loader2, Plus, RefreshCw, RotateCcw, Search, Server, ShieldCheck, ShieldX, Trash2, Zap } from "lucide-react";
+import { Ban, Download, Infinity as InfinityIcon, KeyRound, Loader2, Plus, RefreshCw, RotateCcw, Search, Server, ShieldCheck, ShieldX, Trash2, Zap } from "lucide-react";
 import {
   adminListLicenses,
   adminGetLicense,
@@ -41,6 +41,25 @@ const SOURCES = [
 
 const STATUSES = ["active", "pending", "suspended", "revoked", "expired", "disabled", "development", "localhost", "unlimited"];
 
+const PLANS = [
+  { id: "trial", label: "Trial" },
+  { id: "monthly", label: "Monthly" },
+  { id: "yearly", label: "Yearly" },
+  { id: "lifetime", label: "Lifetime" },
+] as const;
+
+type PlanId = (typeof PLANS)[number]["id"];
+
+function planLabel(p?: string | null): string {
+  if (!p) return "—";
+  return p.charAt(0).toUpperCase() + p.slice(1);
+}
+
+function formatExpiryCell(row: any): string {
+  if (row.license_plan === "lifetime") return "Lifetime";
+  return row.expiry_date ? new Date(row.expiry_date).toLocaleDateString() : "—";
+}
+
 function statusVariant(s: string): "default" | "secondary" | "destructive" | "outline" {
   if (s === "active" || s === "unlimited" || s === "development" || s === "localhost") return "default";
   if (s === "pending") return "secondary";
@@ -57,19 +76,21 @@ function LicensesPage() {
   const [search, setSearch] = useState("");
   const [sourceId, setSourceId] = useState<string>("");
   const [status, setStatus] = useState<string>("");
+  const [plan, setPlan] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [generateOpen, setGenerateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
   const statsQ = useQuery({ queryKey: ["licenses:stats"], queryFn: () => stats() });
   const listQ = useQuery({
-    queryKey: ["licenses:list", search, sourceId, status],
+    queryKey: ["licenses:list", search, sourceId, status, plan],
     queryFn: () =>
       list({
         data: {
           search: search || undefined,
           sourceId: sourceId || undefined,
           status: status || undefined,
+          plan: (plan || undefined) as PlanId | undefined,
           limit: 100,
           offset: 0,
         },
@@ -102,9 +123,16 @@ function LicensesPage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={<KeyRound className="h-4 w-4" />} label="Total" value={s.total_licenses ?? 0} />
-        <StatCard icon={<ShieldCheck className="h-4 w-4" />} label="Active" value={s.active_licenses ?? 0} />
-        <StatCard icon={<Ban className="h-4 w-4" />} label="Suspended / Revoked" value={(s.suspended_licenses ?? 0) + (s.revoked_licenses ?? 0)} />
+        <StatCard icon={<KeyRound className="h-4 w-4" />} label="Total" value={s.total ?? s.total_licenses ?? 0} />
+        <StatCard icon={<ShieldCheck className="h-4 w-4" />} label="Active" value={s.active ?? s.active_licenses ?? 0} />
+        <StatCard icon={<Ban className="h-4 w-4" />} label="Suspended / Revoked" value={(s.suspended ?? 0) + (s.revoked ?? 0)} />
+        <StatCard icon={<InfinityIcon className="h-4 w-4" />} label="Lifetime" value={s.lifetime ?? 0} />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard icon={<KeyRound className="h-4 w-4" />} label="Trial" value={s.trial ?? 0} />
+        <StatCard icon={<KeyRound className="h-4 w-4" />} label="Monthly" value={s.monthly ?? 0} />
+        <StatCard icon={<KeyRound className="h-4 w-4" />} label="Yearly" value={s.yearly ?? 0} />
         <StatCard icon={<Zap className="h-4 w-4" />} label="Activations" value={s.total_activations ?? 0} />
       </div>
 
@@ -130,6 +158,13 @@ function LicensesPage() {
                 {STATUSES.map((st) => <SelectItem key={st} value={st}>{st}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={plan || "__all"} onValueChange={(v) => setPlan(v === "__all" ? "" : v)}>
+              <SelectTrigger className="w-32 text-xs"><SelectValue placeholder="Plan" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all">All plans</SelectItem>
+                {PLANS.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <Button size="sm" variant="outline" onClick={() => listQ.refetch()}><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Refresh</Button>
             <Button size="sm" variant="outline" onClick={handleExport}><Download className="mr-1.5 h-3.5 w-3.5" />Export CSV</Button>
             <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>Import</Button>
@@ -148,6 +183,7 @@ function LicensesPage() {
                   <TableRow>
                     <TableHead>License Key</TableHead>
                     <TableHead>Source</TableHead>
+                    <TableHead>Plan</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Domain</TableHead>
                     <TableHead>Activations</TableHead>
@@ -160,10 +196,15 @@ function LicensesPage() {
                     <TableRow key={r.id} className="cursor-pointer" onClick={() => setSelectedId(r.id)}>
                       <TableCell className="font-mono text-xs">{r.license_key}</TableCell>
                       <TableCell><Badge variant="outline">{r.source_id}</Badge></TableCell>
+                      <TableCell>
+                        {r.license_plan === "lifetime"
+                          ? <Badge className="gap-1"><InfinityIcon className="h-3 w-3" />Lifetime</Badge>
+                          : <Badge variant="secondary">{planLabel(r.license_plan)}</Badge>}
+                      </TableCell>
                       <TableCell className="text-xs">{r.customer_email ?? "—"}</TableCell>
                       <TableCell className="text-xs">{r.current_domain ?? "—"}</TableCell>
                       <TableCell className="text-xs">{r.current_activations}/{r.max_activations}</TableCell>
-                      <TableCell className="text-xs">{r.expiry_date ? new Date(r.expiry_date).toLocaleDateString() : "—"}</TableCell>
+                      <TableCell className="text-xs">{formatExpiryCell(r)}</TableCell>
                       <TableCell><Badge variant={statusVariant(r.status)}>{r.status}</Badge></TableCell>
                     </TableRow>
                   ))}
@@ -242,7 +283,8 @@ function LicenseDrawer({ id, onClose, onChanged }: { id: string | null; onClose:
                 <div><span className="text-muted-foreground">Customer: </span>{license.customer_email ?? "—"}</div>
                 <div><span className="text-muted-foreground">Domain: </span>{license.current_domain ?? "—"}</div>
                 <div><span className="text-muted-foreground">Activations: </span>{license.current_activations}/{license.max_activations}</div>
-                <div><span className="text-muted-foreground">Expires: </span>{license.expiry_date ? new Date(license.expiry_date).toLocaleDateString() : "—"}</div>
+                <div><span className="text-muted-foreground">Plan: </span>{license.license_plan === "lifetime" ? <Badge className="gap-1"><InfinityIcon className="h-3 w-3" />Lifetime</Badge> : planLabel(license.license_plan)}</div>
+                <div><span className="text-muted-foreground">Expires: </span>{formatExpiryCell(license)}</div>
                 <div className="col-span-2"><span className="text-muted-foreground">Last check: </span>{license.last_validation_at ? new Date(license.last_validation_at).toLocaleString() : "—"}</div>
               </div>
             </div>
@@ -264,15 +306,25 @@ function LicenseDrawer({ id, onClose, onChanged }: { id: string | null; onClose:
                 </div>
               </div>
               <div>
-                <Label className="text-xs">Extend expiry</Label>
-                <div className="mt-1 flex gap-2">
-                  <Input type="date" value={newExpiry} onChange={(e) => setNewExpiry(e.target.value)} className="text-xs" />
+                <Label className="text-xs">Plan / expiry</Label>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  <Input type="date" value={newExpiry} onChange={(e) => setNewExpiry(e.target.value)} className="text-xs flex-1 min-w-[120px]" disabled={license.license_plan === "lifetime"} />
                   <Button
                     size="sm"
                     onClick={wrap("Expiry updated", () =>
                       extend({ data: { id: license.id, expiryDate: newExpiry ? new Date(newExpiry).toISOString() : null } }),
                     )}
+                    disabled={license.license_plan === "lifetime"}
                   >Save</Button>
+                  {license.license_plan === "lifetime" ? (
+                    <Button size="sm" variant="outline" onClick={wrap("Converted to Monthly", () => extend({ data: { id: license.id, expiryDate: null, plan: "monthly" } }))}>
+                      Convert from Lifetime
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={wrap("Marked as Lifetime", () => extend({ data: { id: license.id, expiryDate: null, plan: "lifetime" } }))}>
+                      <InfinityIcon className="mr-1 h-3.5 w-3.5" />Make Lifetime
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -315,9 +367,12 @@ function GenerateDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenC
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [maxActivations, setMaxActivations] = useState(1);
+  const [plan, setPlan] = useState<PlanId>("monthly");
   const [expiry, setExpiry] = useState("");
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<any | null>(null);
+
+  const isLifetime = plan === "lifetime";
 
   async function submit() {
     if (!email) { toast.error("Customer email required"); return; }
@@ -328,11 +383,12 @@ function GenerateDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenC
           customerEmail: email,
           customerName: name || undefined,
           maxActivations,
-          expiryDate: expiry ? new Date(expiry).toISOString() : null,
+          plan,
+          expiryDate: isLifetime ? null : (expiry ? new Date(expiry).toISOString() : null),
         },
       });
       setCreated(res.license);
-      toast.success("License generated");
+      toast.success(isLifetime ? "Lifetime license generated" : "License generated");
       onDone();
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
     finally { setBusy(false); }
@@ -340,7 +396,7 @@ function GenerateDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenC
 
   function close() {
     onOpenChange(false);
-    setEmail(""); setName(""); setMaxActivations(1); setExpiry(""); setCreated(null);
+    setEmail(""); setName(""); setMaxActivations(1); setPlan("monthly"); setExpiry(""); setCreated(null);
   }
 
   return (
@@ -350,15 +406,35 @@ function GenerateDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenC
         {created ? (
           <div className="space-y-2">
             <div className="rounded-lg border bg-muted/50 p-3 font-mono text-sm">{created.license_key}</div>
-            <p className="text-xs text-muted-foreground">Send this key to <strong>{created.customer_email}</strong>.</p>
+            <p className="text-xs text-muted-foreground">
+              {created.license_plan === "lifetime" ? <><InfinityIcon className="inline h-3 w-3" /> Lifetime license — never expires. </> : null}
+              Send this key to <strong>{created.customer_email}</strong>.
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
             <div><Label>Customer email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
             <div><Label>Customer name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
             <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Plan</Label>
+                <Select value={plan} onValueChange={(v) => setPlan(v as PlanId)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{PLANS.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
               <div><Label>Max activations</Label><Input type="number" min={1} value={maxActivations} onChange={(e) => setMaxActivations(Number(e.target.value) || 1)} /></div>
-              <div><Label>Expires</Label><Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} /></div>
+            </div>
+            <div>
+              <Label>Expires</Label>
+              {isLifetime ? (
+                <div className="mt-1 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                  <InfinityIcon className="h-4 w-4" /> Lifetime — never expires
+                </div>
+              ) : (
+                <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
+              )}
+              {!isLifetime && <p className="mt-1 text-xs text-muted-foreground">Leave empty to use the default duration for the selected plan.</p>}
             </div>
           </div>
         )}
@@ -381,9 +457,12 @@ function ImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenCha
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [maxActivations, setMaxActivations] = useState(1);
+  const [plan, setPlan] = useState<PlanId>("monthly");
   const [expiry, setExpiry] = useState("");
   const [status, setStatus] = useState("active");
   const [busy, setBusy] = useState(false);
+
+  const isLifetime = plan === "lifetime";
 
   async function submit() {
     if (!licenseKey) { toast.error("License key required"); return; }
@@ -397,11 +476,12 @@ function ImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenCha
           customerEmail: email || undefined,
           customerName: name || undefined,
           maxActivations,
-          expiryDate: expiry ? new Date(expiry).toISOString() : null,
+          plan,
+          expiryDate: isLifetime ? null : (expiry ? new Date(expiry).toISOString() : null),
           status,
         },
       });
-      toast.success("License imported");
+      toast.success(isLifetime ? "Lifetime license imported" : "License imported");
       onDone();
       onOpenChange(false);
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
@@ -435,9 +515,23 @@ function ImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenCha
             <div><Label>Customer email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
             <div><Label>Customer name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <Label>Plan</Label>
+              <Select value={plan} onValueChange={(v) => setPlan(v as PlanId)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{PLANS.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
             <div><Label>Max activations</Label><Input type="number" min={1} value={maxActivations} onChange={(e) => setMaxActivations(Number(e.target.value) || 1)} /></div>
-            <div><Label>Expires</Label><Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} /></div>
+            <div>
+              <Label>Expires</Label>
+              {isLifetime ? (
+                <div className="mt-1 flex items-center gap-1 rounded-md border bg-muted/40 px-2 py-1.5 text-xs"><InfinityIcon className="h-3.5 w-3.5" /> Lifetime</div>
+              ) : (
+                <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
+              )}
+            </div>
           </div>
         </div>
         <DialogFooter>

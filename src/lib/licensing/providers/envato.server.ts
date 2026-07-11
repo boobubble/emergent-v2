@@ -84,8 +84,10 @@ export class EnvatoLicenseProvider implements LicenseProvider {
           product: body?.item?.name ?? "boobubble",
           productVersion: host.productVersion,
           activationDate: body?.sold_at,
-          expiryDate: body?.supported_until ?? undefined,
+          // Envato "Extended License" grants lifetime updates; otherwise support may lapse but the license itself remains valid.
+          expiryDate: body?.license === "Extended License" ? null : (body?.supported_until ?? undefined),
           maxActivations: body?.license === "Extended License" ? 1 : 1,
+          plan: body?.license === "Extended License" ? "lifetime" : undefined,
         },
         raw: {
           buyer: body?.buyer,

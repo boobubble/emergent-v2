@@ -6,6 +6,30 @@
 
 export type LicenseSourceId = "self" | "envato" | "codester" | (string & {});
 
+/** Billing/entitlement plan attached to a license. */
+export type LicensePlan = "trial" | "monthly" | "yearly" | "lifetime";
+
+export const LICENSE_PLANS: LicensePlan[] = ["trial", "monthly", "yearly", "lifetime"];
+
+export function isLifetimePlan(plan: LicensePlan | null | undefined): boolean {
+  return plan === "lifetime";
+}
+
+/** Human-friendly expiry label — returns "Lifetime" for lifetime licenses. */
+export function formatExpiry(
+  plan: LicensePlan | null | undefined,
+  expiryDate: string | null | undefined,
+  locale?: string,
+): string {
+  if (isLifetimePlan(plan)) return "Lifetime";
+  if (!expiryDate) return "—";
+  try {
+    return new Date(expiryDate).toLocaleDateString(locale);
+  } catch {
+    return String(expiryDate);
+  }
+}
+
 export type LicenseStatus =
   | "active"
   | "suspended"
@@ -46,8 +70,10 @@ export interface LicenseVerificationResult {
     product?: string;
     productVersion?: string;
     activationDate?: string;
-    expiryDate?: string;
+    expiryDate?: string | null;
     maxActivations?: number;
+    plan?: LicensePlan;
+    isLifetime?: boolean;
   };
   /** Provider-side raw response echoed for logging. Never contains secrets. */
   // Use `any` here so the TanStack serializer accepts pass-through JSON.
@@ -82,6 +108,8 @@ export interface LicenseRecord {
   activationDate: string | null;
   expiryDate: string | null;
   maxActivations: number;
+  plan: LicensePlan;
+  isLifetime: boolean;
   currentActivations: number;
   currentDomain: string | null;
   serverIp: string | null;
@@ -105,7 +133,9 @@ export interface SignedLicenseCache {
   domain: string;
   serverIp?: string;
   productVersion?: string;
-  expiryDate?: string;
+  expiryDate?: string | null;
+  plan?: LicensePlan;
+  isLifetime?: boolean;
   /** Grace period in seconds; runtime uses this when the network is down. */
   gracePeriodSeconds: number;
   /** HMAC-SHA256(payload, LICENSE_HMAC_SECRET) over the JSON-canonical payload. */

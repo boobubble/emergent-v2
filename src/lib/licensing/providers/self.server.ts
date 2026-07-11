@@ -112,8 +112,10 @@ export class SelfLicenseProvider implements LicenseProvider {
           product: body?.product ?? "boobubble",
           productVersion: body?.product_version ?? host.productVersion,
           activationDate: body?.activation_date,
-          expiryDate: body?.expiry_date,
+          expiryDate: body?.plan === "lifetime" || body?.is_lifetime ? null : body?.expiry_date,
           maxActivations: body?.max_activations ?? 1,
+          plan: body?.plan ?? (body?.is_lifetime ? "lifetime" : undefined),
+          isLifetime: body?.plan === "lifetime" || body?.is_lifetime === true,
         },
         raw: body,
       };

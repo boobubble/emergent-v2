@@ -98,6 +98,8 @@ export async function readCache(): Promise<SignedLicenseCache | null> {
 /* -------------------------- DB record helpers -------------------------- */
 
 function rowToRecord(row: any): LicenseRecord {
+  const plan = (row.license_plan ?? "monthly") as LicenseRecord["plan"];
+  const isLifetime = plan === "lifetime";
   return {
     id: row.id,
     licenseKey: row.license_key,
@@ -108,7 +110,7 @@ function rowToRecord(row: any): LicenseRecord {
     product: row.product,
     productVersion: row.product_version,
     activationDate: row.activation_date,
-    expiryDate: row.expiry_date,
+    expiryDate: isLifetime ? null : row.expiry_date,
     maxActivations: row.max_activations,
     currentActivations: row.current_activations,
     currentDomain: row.current_domain,
@@ -119,6 +121,8 @@ function rowToRecord(row: any): LicenseRecord {
     status: row.status,
     notes: row.notes,
     metadata: row.metadata ?? {},
+    plan,
+    isLifetime,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -197,8 +201,9 @@ export const LicenseManager = {
       product: result.license.product ?? "boobubble",
       product_version: result.license.productVersion ?? host.productVersion ?? null,
       activation_date: result.license.activationDate ?? now,
-      expiry_date: result.license.expiryDate ?? null,
+      expiry_date: result.license.plan === "lifetime" ? null : (result.license.expiryDate ?? null),
       max_activations: result.license.maxActivations ?? 1,
+      license_plan: result.license.plan ?? (existing?.plan ?? undefined),
       current_domain: host.domain,
       server_ip: host.serverIp ?? null,
       installation_id: host.installationId ?? null,
@@ -298,7 +303,8 @@ export const LicenseManager = {
     if (!row) return { ok: false, status: "revoked", message: "License not found", cache };
     const record = rowToRecord(row);
     const now = new Date();
-    const expired = record.expiryDate ? new Date(record.expiryDate) < now : false;
+    // Lifetime licenses never expire — only suspended / revoked / disabled can invalidate them.
+    const expired = record.isLifetime ? false : record.expiryDate ? new Date(record.expiryDate) < now : false;
     const nextStatus: LicenseStatus = expired ? "expired" : record.status;
     const ok = nextStatus === "active" || nextStatus === "development" || nextStatus === "localhost" || nextStatus === "unlimited";
 

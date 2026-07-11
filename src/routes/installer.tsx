@@ -57,7 +57,7 @@ function InstallerPage() {
   const [licensePurchaseCode, setLicensePurchaseCode] = useState("");
   const [licenseOk, setLicenseOk] = useState(false);
   const [licenseVerifying, setLicenseVerifying] = useState(false);
-  const [licenseInfo, setLicenseInfo] = useState<{ customerName?: string; expiryDate?: string; status?: string } | null>(null);
+  const [licenseInfo, setLicenseInfo] = useState<{ customerName?: string; expiryDate?: string | null; status?: string; plan?: string; isLifetime?: boolean } | null>(null);
   const [reqsOk, setReqsOk] = useState(false);
   type HealthState = "pending" | "ok" | "fail" | "warn";
   type HealthKey = "db" | "storage" | "realtime" | "smtp" | "env" | "cron";
@@ -225,6 +225,8 @@ function InstallerPage() {
         customerName: result.license.customerName,
         expiryDate: result.license.expiryDate,
         status: result.status,
+        plan: result.license.plan,
+        isLifetime: result.license.plan === "lifetime" || result.license.isLifetime,
       });
       // Preserve back-compat with existing complete_installation RPC.
       setLicenseType(licenseSource === "envato" ? "envato" : "offline");
@@ -733,7 +735,12 @@ function InstallerPage() {
                       <CheckCircle2 className="h-3.5 w-3.5" /> License verified ({licenseInfo.status})
                     </div>
                     {licenseInfo.customerName && <div className="mt-1 text-muted-foreground">Customer: {licenseInfo.customerName}</div>}
-                    {licenseInfo.expiryDate && <div className="text-muted-foreground">Expires: {new Date(licenseInfo.expiryDate).toLocaleDateString()}</div>}
+                    {licenseInfo.plan && <div className="text-muted-foreground">Plan: {licenseInfo.isLifetime ? "Lifetime" : licenseInfo.plan.charAt(0).toUpperCase() + licenseInfo.plan.slice(1)}</div>}
+                    {licenseInfo.isLifetime ? (
+                      <div className="text-muted-foreground">Expires: <strong>Lifetime</strong> (never expires)</div>
+                    ) : (
+                      licenseInfo.expiryDate && <div className="text-muted-foreground">Expires: {new Date(licenseInfo.expiryDate).toLocaleDateString()}</div>
+                    )}
                   </div>
                 )}
 

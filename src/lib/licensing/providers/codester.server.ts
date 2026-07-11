@@ -78,8 +78,9 @@ export class CodesterLicenseProvider implements LicenseProvider {
           product: body?.item?.name ?? "boobubble",
           productVersion: host.productVersion,
           activationDate: body?.purchased_at,
-          expiryDate: body?.supported_until ?? undefined,
+          expiryDate: body?.plan === "lifetime" ? null : (body?.supported_until ?? undefined),
           maxActivations: 1,
+          plan: body?.plan ?? (body?.license_type as any) ?? undefined,
         },
         raw: body,
       };

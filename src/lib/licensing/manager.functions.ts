@@ -147,6 +147,7 @@ const AdminListInput = z.object({
   search: z.string().trim().max(120).optional(),
   status: z.string().trim().max(32).optional(),
   sourceId: z.string().trim().max(32).optional(),
+  plan: z.enum(["trial", "monthly", "yearly", "lifetime"]).optional(),
   limit: z.number().int().min(1).max(200).default(50),
   offset: z.number().int().min(0).default(0),
 });
@@ -164,6 +165,7 @@ export const adminListLicenses = createServerFn({ method: "POST" })
       .range(data.offset, data.offset + data.limit - 1);
     if (data.status) q = q.eq("status", data.status as any);
     if (data.sourceId) q = q.eq("source_id", data.sourceId);
+    if (data.plan) q = q.eq("license_plan", data.plan);
     if (data.search) {
       q = q.or(
         [
@@ -215,10 +217,24 @@ export const adminLicenseStats = createServerFn({ method: "GET" })
     return data ?? {};
   });
 
+const PlanSchema = z.enum(["trial", "monthly", "yearly", "lifetime"]);
+
+/** Compute a sensible default expiry when the admin doesn't provide one. */
+function planDefaultExpiry(plan: z.infer<typeof PlanSchema>): string | null {
+  const now = new Date();
+  switch (plan) {
+    case "trial":    now.setDate(now.getDate() + 14); return now.toISOString();
+    case "monthly":  now.setMonth(now.getMonth() + 1); return now.toISOString();
+    case "yearly":   now.setFullYear(now.getFullYear() + 1); return now.toISOString();
+    case "lifetime": return null;
+  }
+}
+
 const GenerateSelfInput = z.object({
   customerEmail: z.string().trim().email(),
   customerName: z.string().trim().max(120).optional(),
   productVersion: z.string().trim().max(32).optional(),
+  plan: PlanSchema.default("monthly"),
   expiryDate: z.string().datetime().nullable().optional(),
   maxActivations: z.number().int().min(1).max(1000).default(1),
 });
@@ -237,6 +253,10 @@ export const adminGenerateSelfLicense = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const key = randomSelfKey();
+    const expiry =
+      data.plan === "lifetime"
+        ? null
+        : (data.expiryDate ?? planDefaultExpiry(data.plan));
     const { data: row, error } = await supabaseAdmin
       .from("licenses")
       .insert({
@@ -247,7 +267,8 @@ export const adminGenerateSelfLicense = createServerFn({ method: "POST" })
         product: "boobubble",
         product_version: data.productVersion ?? APP_VERSION,
         max_activations: data.maxActivations,
-        expiry_date: data.expiryDate ?? null,
+        license_plan: data.plan,
+        expiry_date: expiry,
         status: "pending",
       } as any)
       .select("*")
@@ -258,7 +279,7 @@ export const adminGenerateSelfLicense = createServerFn({ method: "POST" })
       action: "generate",
       outcome: "ok",
       actor_user_id: context.userId,
-      context: { source: "self" },
+      context: { source: "self", plan: data.plan },
     } as any);
     return { license: row };
   });
@@ -270,6 +291,7 @@ const ImportInput = z.object({
   customerEmail: z.string().trim().email().optional(),
   customerName: z.string().trim().max(120).optional(),
   productVersion: z.string().trim().max(32).optional(),
+  plan: PlanSchema.default("monthly"),
   expiryDate: z.string().datetime().nullable().optional(),
   maxActivations: z.number().int().min(1).max(1000).default(1),
   status: z.string().trim().max(32).default("active"),
@@ -293,7 +315,8 @@ export const adminImportLicense = createServerFn({ method: "POST" })
           product: "boobubble",
           product_version: data.productVersion ?? APP_VERSION,
           max_activations: data.maxActivations,
-          expiry_date: data.expiryDate ?? null,
+          license_plan: data.plan,
+          expiry_date: data.plan === "lifetime" ? null : (data.expiryDate ?? planDefaultExpiry(data.plan)),
           status: data.status as any,
         } as any,
         { onConflict: "license_key" },
@@ -352,13 +375,26 @@ export const adminExtendExpiry = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) =>
     z
-      .object({ id: z.string().uuid(), expiryDate: z.string().datetime().nullable() })
+      .object({
+        id: z.string().uuid(),
+        expiryDate: z.string().datetime().nullable(),
+        plan: PlanSchema.optional(),
+      })
       .parse(v),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { LicenseManager } = await import("./manager.server");
-    return LicenseManager.extendExpiry(data.id, data.expiryDate, { actorUserId: context.userId });
+    // Allow admins to convert plans (e.g. Monthly -> Lifetime) alongside extending expiry.
+    if (data.plan) {
+      const newExpiry = data.plan === "lifetime" ? null : data.expiryDate;
+      await supabaseAdmin
+        .from("licenses")
+        .update({ license_plan: data.plan, expiry_date: newExpiry, updated_at: new Date().toISOString() } as any)
+        .eq("id", data.id);
+    }
+    return LicenseManager.extendExpiry(data.id, data.plan === "lifetime" ? null : data.expiryDate, { actorUserId: context.userId });
   });
 
 export const adminChangeDomain = createServerFn({ method: "POST" })
@@ -398,20 +434,22 @@ export const adminExportLicensesCsv = createServerFn({ method: "GET" })
     const { data, error } = await supabaseAdmin
       .from("licenses")
       .select(
-        "license_key,purchase_code,source_id,customer_email,customer_name,product,product_version,activation_date,expiry_date,max_activations,current_activations,current_domain,status,created_at",
+        "license_key,purchase_code,source_id,customer_email,customer_name,product,product_version,license_plan,activation_date,expiry_date,max_activations,current_activations,current_domain,status,created_at",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     const rows: LicenseRecord[] = (data ?? []) as any;
     const header =
-      "license_key,purchase_code,source,customer_email,customer_name,product,product_version,activation_date,expiry_date,max_activations,current_activations,current_domain,status,created_at";
+      "license_key,purchase_code,source,customer_email,customer_name,product,product_version,plan,activation_date,expiry_date,max_activations,current_activations,current_domain,status,created_at";
     const escape = (v: unknown) => {
       const s = v == null ? "" : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const body = rows
-      .map((r: any) =>
-        [
+      .map((r: any) => {
+        const plan = r.license_plan ?? "monthly";
+        const isLifetime = plan === "lifetime";
+        return [
           r.license_key,
           r.purchase_code,
           r.source_id,
@@ -419,8 +457,9 @@ export const adminExportLicensesCsv = createServerFn({ method: "GET" })
           r.customer_name,
           r.product,
           r.product_version,
+          plan,
           r.activation_date,
-          r.expiry_date,
+          isLifetime ? "Lifetime" : r.expiry_date,
           r.max_activations,
           r.current_activations,
           r.current_domain,
@@ -428,8 +467,8 @@ export const adminExportLicensesCsv = createServerFn({ method: "GET" })
           r.created_at,
         ]
           .map(escape)
-          .join(","),
-      )
+          .join(",");
+      })
       .join("\n");
     return { csv: `${header}\n${body}`, filename: `licenses-${Date.now()}.csv` };
   });
