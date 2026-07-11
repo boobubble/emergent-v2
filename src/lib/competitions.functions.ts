@@ -139,17 +139,34 @@ export const adminSaveCompetitor = createServerFn({ method: "POST" })
     description?: string | null;
     linked_user_id?: string | null;
     sort_order?: number;
+    country?: string | null;
+    website?: string | null;
+    social_links?: Record<string, string | null | undefined>;
+    is_featured?: boolean;
+    is_pinned?: boolean;
   }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = context.supabase as any;
+    const payload: Record<string, unknown> = {
+      competition_id: data.competition_id,
+      name: data.name,
+      photo_url: data.photo_url ?? null,
+      description: data.description ?? null,
+      linked_user_id: data.linked_user_id ?? null,
+      country: data.country?.trim() || null,
+      website: data.website?.trim() || null,
+      social_links: data.social_links ?? {},
+      is_featured: !!data.is_featured,
+      is_pinned: !!data.is_pinned,
+    };
+    if (typeof data.sort_order === "number") payload.sort_order = data.sort_order;
     if (data.id) {
-      const { id, ...rest } = data;
-      const { error } = await sb.from("competition_competitors").update(rest).eq("id", id);
+      const { error } = await sb.from("competition_competitors").update(payload).eq("id", data.id);
       if (error) throw new Error(error.message);
-      return { ok: true, id };
+      return { ok: true, id: data.id };
     }
-    const { data: row, error } = await sb.from("competition_competitors").insert(data).select("id").single();
+    const { data: row, error } = await sb.from("competition_competitors").insert(payload).select("id").single();
     if (error) throw new Error(error.message);
     return { ok: true, id: row.id };
   });
@@ -173,6 +190,75 @@ export const adminReorderCompetitors = createServerFn({ method: "POST" })
       await context.supabase.from("competition_competitors").update({ sort_order: o.sort_order }).eq("id", o.id);
     }
     return { ok: true };
+  });
+
+// Search existing BooBubble members for the nominee picker (admin-only).
+export const adminSearchProfiles = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { query: string; limit?: number }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const q = (data.query ?? "").trim();
+    if (q.length < 2) return [];
+    const limit = Math.min(Math.max(data.limit ?? 10, 1), 25);
+    const like = `%${q.replace(/[%_]/g, "")}%`;
+    const { data: rows, error } = await (context.supabase as any)
+      .from("profiles")
+      .select("id, username, display_name, avatar_url, avatar_color, verified")
+      .or(`username.ilike.${like},display_name.ilike.${like}`)
+      .limit(limit);
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+// ---------- Competition follows ----------
+
+export const followCompetition = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { competitionId: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { error } = await (context.supabase as any)
+      .from("competition_follows")
+      .upsert({ user_id: context.userId, competition_id: data.competitionId }, { onConflict: "user_id,competition_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const unfollowCompetition = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { competitionId: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { error } = await (context.supabase as any)
+      .from("competition_follows")
+      .delete()
+      .eq("user_id", context.userId)
+      .eq("competition_id", data.competitionId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const getMyCompetitionFollow = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { competitionId: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { data: row } = await (context.supabase as any)
+      .from("competition_follows")
+      .select("competition_id")
+      .eq("user_id", context.userId)
+      .eq("competition_id", data.competitionId)
+      .maybeSingle();
+    return { following: !!row };
+  });
+
+export const getCompetitionFollowerCount = createServerFn({ method: "GET" })
+  .inputValidator((data: { competitionId: string }) => data)
+  .handler(async ({ data }) => {
+    const sb = await publicClient();
+    const { count } = await (sb as any)
+      .from("competition_follows")
+      .select("competition_id", { count: "exact", head: true })
+      .eq("competition_id", data.competitionId);
+    return { count: count ?? 0 };
   });
 
 export const voteForCompetitor = createServerFn({ method: "POST" })
