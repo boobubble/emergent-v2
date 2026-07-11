@@ -10,7 +10,7 @@ import { useMyRoles } from "@/lib/use-my-role";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/competitions")({
+export const Route = createFileRoute("/competitions/")({
   head: () => ({
     meta: [
       { title: "Community Competitions" },

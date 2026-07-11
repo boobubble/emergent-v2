@@ -30,7 +30,6 @@ import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as DeployRouteImport } from './routes/deploy'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
-import { Route as CompetitionsRouteImport } from './routes/competitions'
 import { Route as ChatroomsRouteImport } from './routes/chatrooms'
 import { Route as ChatroomRouteImport } from './routes/chatroom'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -41,6 +40,7 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
 import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
@@ -250,11 +250,6 @@ const ConfessionsRoute = ConfessionsRouteImport.update({
   path: '/confessions',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CompetitionsRoute = CompetitionsRouteImport.update({
-  id: '/competitions',
-  path: '/competitions',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ChatroomsRoute = ChatroomsRouteImport.update({
   id: '/chatrooms',
   path: '/chatrooms',
@@ -305,6 +300,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
+  id: '/competitions/',
+  path: '/competitions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BroadcasterIndexRoute = BroadcasterIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -336,14 +336,14 @@ const FeedSlugRoute = FeedSlugRouteImport.update({
   getParentRoute: () => FeedRoute,
 } as any)
 const CompetitionsLeaderboardRoute = CompetitionsLeaderboardRouteImport.update({
-  id: '/leaderboard',
-  path: '/leaderboard',
-  getParentRoute: () => CompetitionsRoute,
+  id: '/competitions/leaderboard',
+  path: '/competitions/leaderboard',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CompetitionsSlugRoute = CompetitionsSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => CompetitionsRoute,
+  id: '/competitions/$slug',
+  path: '/competitions/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const BroadcasterWidgetsRoute = BroadcasterWidgetsRouteImport.update({
   id: '/widgets',
@@ -841,7 +841,6 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
-  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
   '/feed': typeof FeedRouteWithChildren
@@ -951,6 +950,7 @@ export interface FileRoutesByFullPath {
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
+  '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
@@ -976,7 +976,6 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
-  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
   '/feed': typeof FeedRouteWithChildren
@@ -1086,6 +1085,7 @@ export interface FileRoutesByTo {
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/broadcaster': typeof BroadcasterIndexRoute
+  '/competitions': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
@@ -1114,7 +1114,6 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
-  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
   '/feed': typeof FeedRouteWithChildren
@@ -1224,6 +1223,7 @@ export interface FileRoutesById {
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
+  '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
@@ -1253,7 +1253,6 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
-    | '/competitions'
     | '/confessions'
     | '/deploy'
     | '/feed'
@@ -1363,6 +1362,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin/'
     | '/broadcaster/'
+    | '/competitions/'
     | '/admin/upcoming/$key'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
@@ -1388,7 +1388,6 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
-    | '/competitions'
     | '/confessions'
     | '/deploy'
     | '/feed'
@@ -1498,6 +1497,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin'
     | '/broadcaster'
+    | '/competitions'
     | '/admin/upcoming/$key'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
@@ -1525,7 +1525,6 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
-    | '/competitions'
     | '/confessions'
     | '/deploy'
     | '/feed'
@@ -1635,6 +1634,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin/'
     | '/broadcaster/'
+    | '/competitions/'
     | '/admin/upcoming/$key'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
@@ -1663,7 +1663,6 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   ChatroomRoute: typeof ChatroomRoute
   ChatroomsRoute: typeof ChatroomsRoute
-  CompetitionsRoute: typeof CompetitionsRouteWithChildren
   ConfessionsRoute: typeof ConfessionsRoute
   DeployRoute: typeof DeployRoute
   FeedRoute: typeof FeedRouteWithChildren
@@ -1685,9 +1684,12 @@ export interface RootRouteChildren {
   TrustRoute: typeof TrustRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
+  CompetitionsSlugRoute: typeof CompetitionsSlugRoute
+  CompetitionsLeaderboardRoute: typeof CompetitionsLeaderboardRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  CompetitionsIndexRoute: typeof CompetitionsIndexRoute
   ApiPublicBackupRetentionRoute: typeof ApiPublicBackupRetentionRoute
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
@@ -1853,13 +1855,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/competitions': {
-      id: '/competitions'
-      path: '/competitions'
-      fullPath: '/competitions'
-      preLoaderRoute: typeof CompetitionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/chatrooms': {
       id: '/chatrooms'
       path: '/chatrooms'
@@ -1930,6 +1925,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/competitions/': {
+      id: '/competitions/'
+      path: '/competitions'
+      fullPath: '/competitions/'
+      preLoaderRoute: typeof CompetitionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/broadcaster/': {
       id: '/broadcaster/'
       path: '/'
@@ -1974,17 +1976,17 @@ declare module '@tanstack/react-router' {
     }
     '/competitions/leaderboard': {
       id: '/competitions/leaderboard'
-      path: '/leaderboard'
+      path: '/competitions/leaderboard'
       fullPath: '/competitions/leaderboard'
       preLoaderRoute: typeof CompetitionsLeaderboardRouteImport
-      parentRoute: typeof CompetitionsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/competitions/$slug': {
       id: '/competitions/$slug'
-      path: '/$slug'
+      path: '/competitions/$slug'
       fullPath: '/competitions/$slug'
       preLoaderRoute: typeof CompetitionsSlugRouteImport
-      parentRoute: typeof CompetitionsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/broadcaster/widgets': {
       id: '/broadcaster/widgets'
@@ -2848,20 +2850,6 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
   BroadcasterRouteChildren,
 )
 
-interface CompetitionsRouteChildren {
-  CompetitionsSlugRoute: typeof CompetitionsSlugRoute
-  CompetitionsLeaderboardRoute: typeof CompetitionsLeaderboardRoute
-}
-
-const CompetitionsRouteChildren: CompetitionsRouteChildren = {
-  CompetitionsSlugRoute: CompetitionsSlugRoute,
-  CompetitionsLeaderboardRoute: CompetitionsLeaderboardRoute,
-}
-
-const CompetitionsRouteWithChildren = CompetitionsRoute._addFileChildren(
-  CompetitionsRouteChildren,
-)
-
 interface FeedRouteChildren {
   FeedSlugRoute: typeof FeedSlugRoute
 }
@@ -2883,7 +2871,6 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   ChatroomRoute: ChatroomRoute,
   ChatroomsRoute: ChatroomsRoute,
-  CompetitionsRoute: CompetitionsRouteWithChildren,
   ConfessionsRoute: ConfessionsRoute,
   DeployRoute: DeployRoute,
   FeedRoute: FeedRouteWithChildren,
@@ -2905,9 +2892,12 @@ const rootRouteChildren: RootRouteChildren = {
   TrustRoute: TrustRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
+  CompetitionsSlugRoute: CompetitionsSlugRoute,
+  CompetitionsLeaderboardRoute: CompetitionsLeaderboardRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
+  CompetitionsIndexRoute: CompetitionsIndexRoute,
   ApiPublicBackupRetentionRoute: ApiPublicBackupRetentionRoute,
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
