@@ -290,11 +290,14 @@ function CompetitionDetail() {
 
           <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1"><Users className="h-4 w-4" /> {c.total_participants} participants</span>
-            <span className="inline-flex items-center gap-1"><Vote className="h-4 w-4" /> {c.total_votes} votes</span>
+            {!hideResults && (
+              <span className="inline-flex items-center gap-1"><Vote className="h-4 w-4" /> {c.total_votes} votes</span>
+            )}
             <span className="inline-flex items-center gap-1"><Eye className="h-4 w-4" /> {c.views_count ?? 0} views</span>
             <span className="inline-flex items-center gap-1"><Calendar className="h-4 w-4" /> {new Date(c.start_at).toLocaleDateString()} → {new Date(c.end_at).toLocaleDateString()}</span>
             <span className="inline-flex items-center gap-1"><Trophy className="h-4 w-4" /> {c.winner_count} winner{c.winner_count > 1 ? "s" : ""}</span>
           </div>
+
 
           {prizeParts.length > 0 && (
             <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
