@@ -1,0 +1,1 @@
+ALTER VIEW public.license_statistics SET (security_invoker = true);
