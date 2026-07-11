@@ -303,7 +303,8 @@ export const LicenseManager = {
     if (!row) return { ok: false, status: "revoked", message: "License not found", cache };
     const record = rowToRecord(row);
     const now = new Date();
-    const expired = record.expiryDate ? new Date(record.expiryDate) < now : false;
+    // Lifetime licenses never expire — only suspended / revoked / disabled can invalidate them.
+    const expired = record.isLifetime ? false : record.expiryDate ? new Date(record.expiryDate) < now : false;
     const nextStatus: LicenseStatus = expired ? "expired" : record.status;
     const ok = nextStatus === "active" || nextStatus === "development" || nextStatus === "localhost" || nextStatus === "unlimited";
 
