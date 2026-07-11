@@ -2804,6 +2804,7 @@ export type Database = {
           last_validation_at: string | null
           last_validation_ok: boolean | null
           license_key: string
+          license_plan: Database["public"]["Enums"]["license_plan"]
           max_activations: number
           metadata: Json
           notes: string | null
@@ -2829,6 +2830,7 @@ export type Database = {
           last_validation_at?: string | null
           last_validation_ok?: boolean | null
           license_key: string
+          license_plan?: Database["public"]["Enums"]["license_plan"]
           max_activations?: number
           metadata?: Json
           notes?: string | null
@@ -2854,6 +2856,7 @@ export type Database = {
           last_validation_at?: string | null
           last_validation_ok?: boolean | null
           license_key?: string
+          license_plan?: Database["public"]["Enums"]["license_plan"]
           max_activations?: number
           metadata?: Json
           notes?: string | null
@@ -4988,14 +4991,19 @@ export type Database = {
       license_statistics: {
         Row: {
           active: number | null
+          by_plan: Json | null
           by_source: Json | null
           by_version: Json | null
           disabled: number | null
           expired: number | null
+          lifetime: number | null
+          monthly: number | null
           pending: number | null
           revoked: number | null
           suspended: number | null
           total: number | null
+          trial: number | null
+          yearly: number | null
         }
         Relationships: []
       }
@@ -5722,6 +5730,7 @@ export type Database = {
       game_status: "waiting" | "active" | "finished" | "cancelled"
       game_type: "ludo_1v1" | "ludo_4p"
       game_visibility: "public" | "private"
+      license_plan: "trial" | "monthly" | "yearly" | "lifetime"
       license_status:
         | "active"
         | "suspended"
@@ -5946,6 +5955,7 @@ export const Constants = {
       game_status: ["waiting", "active", "finished", "cancelled"],
       game_type: ["ludo_1v1", "ludo_4p"],
       game_visibility: ["public", "private"],
+      license_plan: ["trial", "monthly", "yearly", "lifetime"],
       license_status: [
         "active",
         "suspended",
