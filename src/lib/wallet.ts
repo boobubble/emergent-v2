@@ -77,9 +77,13 @@ export async function fetchPackages(activeOnly = true): Promise<CoinPackage[]> {
 }
 
 export async function fetchProviders(): Promise<ProviderRow[]> {
-  const { data, error } = await sb.from("payment_providers").select("*");
+  // `config` is intentionally excluded — it may contain secrets and is server-only.
+  const { data, error } = await sb.from("payment_providers").select("key,enabled");
   if (error) throw error;
-  return (data ?? []) as ProviderRow[];
+  return (data ?? []).map((r: { key: ProviderRow["key"]; enabled: boolean }) => ({
+    ...r,
+    config: {},
+  })) as ProviderRow[];
 }
 
 export async function fetchTransactions(userId: string, since?: Date): Promise<CoinTransaction[]> {
