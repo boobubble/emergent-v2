@@ -23,13 +23,40 @@ export const Route = createFileRoute("/competitions")({
 });
 
 function CompetitionsIndex() {
+  const { isAdmin } = useMyRoles();
   const list = useServerFn(listCompetitions);
+  const adminList = useServerFn(adminListAllCompetitions);
   const cats = useServerFn(listCategories);
-  const { data: comps = [] } = useQuery({ queryKey: ["competitions"], queryFn: () => list({}) });
+  const { data: comps = [] } = useQuery({
+    queryKey: ["competitions", isAdmin ? "admin" : "public"],
+    queryFn: () => (isAdmin ? adminList({}) : list({})),
+  });
   const { data: categories = [] } = useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
   const [category, setCategory] = useState<string>("all");
   const [editing, setEditing] = useState<any | null>(null);
-  const { isAdmin } = useMyRoles();
+
+  const openEdit = (c: any) => {
+    setEditing({
+      id: c.id,
+      name: c.name ?? "",
+      slug: c.slug ?? "",
+      description: c.description ?? "",
+      rules: c.rules ?? "",
+      banner_url: c.banner_url ?? "",
+      category_id: c.category_id ?? c.category?.id ?? null,
+      start_at: new Date(c.start_at).toISOString().slice(0, 16),
+      end_at: new Date(c.end_at).toISOString().slice(0, 16),
+      max_participants: c.max_participants ?? null,
+      winner_count: c.winner_count ?? 1,
+      status: c.status ?? "draft",
+      allow_vote_change: !!c.allow_vote_change,
+      show_live_counts: c.show_live_counts !== false,
+      require_approval: !!c.require_approval,
+      rewards: c.rewards ?? { coins: 0, xp: 0, badge: "", premium_days: 0, custom: "" },
+      announce_channels: c.announce_channels ?? [],
+      is_published: c.is_published !== false,
+    });
+  };
 
   const filtered = useMemo(() => {
     if (category === "all") return comps;
