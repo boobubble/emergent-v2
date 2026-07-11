@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Navigate, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -6,13 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Shield, Loader2, PartyPopper, UserPlus } from "lucide-react";
+import { CheckCircle2, Loader2, PartyPopper, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { getOwnerStatus, createOwner } from "@/lib/owner-setup.functions";
 
 export const Route = createFileRoute("/setup-wizard")({
+  beforeLoad: async () => {
+    const status = await getOwnerStatus({});
+    if (!status.installed) {
+      throw redirect({ to: "/installer" as any });
+    }
+    if (status.hasOwner) {
+      throw redirect({ to: "/login" as any });
+    }
+  },
   component: SetupWizardPage,
 });
 
@@ -51,23 +60,9 @@ function SetupWizardPage() {
   // Not installed yet → send them to the installer.
   if (!status.installed) return <Navigate to={"/installer" as any} replace />;
 
-  // Owner already exists → wizard is permanently disabled.
+  // Owner already exists → wizard is permanently disabled; redirect to login.
   if (status.hasOwner) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-background px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Shield className="mx-auto h-10 w-10 text-muted-foreground" />
-            <CardTitle className="mt-2">Setup already completed</CardTitle>
-            <CardDescription>A Super Admin already exists. This wizard is disabled.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center gap-2">
-            <Button onClick={() => navigate({ to: "/login" as any })}>Go to Login</Button>
-            <Button variant="outline" onClick={() => navigate({ to: "/admin" as any })}>Admin Panel</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <Navigate to="/login" replace />;
   }
 
   async function handleCreate(e: React.FormEvent) {
