@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate, Navigate, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useNavigate, Navigate, redirect, Link } from "@tanstack/react-router";
+import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,11 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CheckCircle2, Loader2, PartyPopper, UserPlus, ArrowRight, Settings2 } from "lucide-react";
+import {
+  CheckCircle2, Loader2, PartyPopper, UserPlus, ArrowRight, Settings2,
+  Upload, Trash2, Image as ImageIcon, AlertTriangle, XCircle, ShieldCheck, Rocket,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
-import { getOwnerStatus, saveCommunitySetup, createOwner } from "@/lib/owner-setup.functions";
+import {
+  getOwnerStatus, saveCommunitySetup, createOwner,
+  uploadCommunityAsset, runInstallationHealthCheck,
+  type HealthCheck, type HealthState,
+} from "@/lib/owner-setup.functions";
+import { APP_VERSION } from "@/lib/app-version";
 
 export const Route = createFileRoute("/setup-wizard")({
   beforeLoad: async () => {
@@ -23,13 +31,16 @@ export const Route = createFileRoute("/setup-wizard")({
   component: SetupWizardPage,
 });
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4 | 5;
+type AssetKind = "logo" | "favicon" | "hero";
 
 function SetupWizardPage() {
   const navigate = useNavigate();
   const fetchStatus = useServerFn(getOwnerStatus);
   const runSaveCommunity = useServerFn(saveCommunitySetup);
   const runCreateOwner = useServerFn(createOwner);
+  const runUpload = useServerFn(uploadCommunityAsset);
+  const runHealth = useServerFn(runInstallationHealthCheck);
 
   const { data: status, isLoading } = useQuery({
     queryKey: ["owner-setup-status"],
@@ -52,6 +63,7 @@ function SetupWizardPage() {
   const [cCurrency, setCCurrency] = useState("USD");
   const [cLogo, setCLogo] = useState("");
   const [cFavicon, setCFavicon] = useState("");
+  const [cHero, setCHero] = useState("");
   const [homepage, setHomepage] = useState<"welcome" | "hero">("welcome");
 
   // Admin
@@ -60,6 +72,11 @@ function SetupWizardPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+
+  // Health
+  const [health, setHealth] = useState<HealthCheck[] | null>(null);
+  const [healthOk, setHealthOk] = useState<boolean | null>(null);
+  const [healthRunning, setHealthRunning] = useState(false);
 
   if (isLoading) {
     return (
@@ -70,7 +87,28 @@ function SetupWizardPage() {
   }
   if (!status) return <div className="grid min-h-screen place-items-center bg-background">Unable to verify status.</div>;
   if (!status.installed) return <Navigate to={"/installer" as any} replace />;
-  if (status.hasOwner || status.firstRunCompleted) return <Navigate to="/login" replace />;
+  // Only redirect away when we haven't started the wizard flow (step 1).
+  // Once the owner is created (step 4+), hasOwner becomes true and we must stay
+  // on the wizard to show the health check and ready screens.
+  if (step === 1 && (status.hasOwner || status.firstRunCompleted)) {
+    return <Navigate to="/login" replace />;
+  }
+
+  async function fileToBase64(file: File): Promise<string> {
+    const buf = await file.arrayBuffer();
+    let binary = "";
+    const bytes = new Uint8Array(buf);
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
+  async function uploadAsset(kind: AssetKind, file: File): Promise<string> {
+    const base64 = await fileToBase64(file);
+    const res = await runUpload({
+      data: { kind, filename: file.name, contentType: file.type || "application/octet-stream", base64 },
+    });
+    return res.url;
+  }
 
   async function handleSaveCommunity(e: React.FormEvent) {
     e.preventDefault();
@@ -82,14 +120,9 @@ function SetupWizardPage() {
     try {
       await runSaveCommunity({
         data: {
-          name: cName,
-          tagline: cTagline,
-          description: cDescription,
-          language: cLanguage,
-          timezone: cTimezone,
-          currency: cCurrency,
-          logoUrl: cLogo,
-          faviconUrl: cFavicon,
+          name: cName, tagline: cTagline, description: cDescription,
+          language: cLanguage, timezone: cTimezone, currency: cCurrency,
+          logoUrl: cLogo, faviconUrl: cFavicon,
           homepage,
         },
       });
@@ -99,6 +132,22 @@ function SetupWizardPage() {
       toast.error(err?.message || "Failed to save community settings.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function runHealthChecks() {
+    setHealthRunning(true);
+    setHealth(null);
+    setHealthOk(null);
+    try {
+      const res = await runHealth({});
+      setHealth(res.checks);
+      setHealthOk(res.ok);
+    } catch (err: any) {
+      toast.error(err?.message || "Health check failed.");
+      setHealthOk(false);
+    } finally {
+      setHealthRunning(false);
     }
   }
 
@@ -115,11 +164,10 @@ function SetupWizardPage() {
       const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
       if (signInErr) {
         toast.error(`Owner account created, but auto sign-in failed: ${signInErr.message}`);
-        navigate({ to: "/login" as any });
-        return;
       }
-      toast.success("Welcome to BooBubble! Your community has been configured successfully.");
-      navigate({ to: "/admin" as any });
+      setStep(4);
+      // Kick off health checks
+      void runHealthChecks();
     } catch (err: any) {
       toast.error(err?.message || "Failed to create Super Admin.");
     } finally {
@@ -158,7 +206,7 @@ function SetupWizardPage() {
               <CardTitle className="flex items-center gap-2">
                 <Settings2 className="h-5 w-5" /> Community Setup
               </CardTitle>
-              <CardDescription>Configure the basics for your community.</CardDescription>
+              <CardDescription>Configure the basics and upload your community assets.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSaveCommunity} className="space-y-4">
@@ -188,16 +236,43 @@ function SetupWizardPage() {
                     <Input id="cCurrency" value={cCurrency} onChange={(e) => setCCurrency(e.target.value)} placeholder="USD" />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="cLogo">Community Logo URL (optional)</Label>
-                    <Input id="cLogo" type="url" value={cLogo} onChange={(e) => setCLogo(e.target.value)} placeholder="https://…" />
+
+                <div className="space-y-3 rounded-md border border-dashed p-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Community Assets
                   </div>
-                  <div>
-                    <Label htmlFor="cFavicon">Favicon URL (optional)</Label>
-                    <Input id="cFavicon" type="url" value={cFavicon} onChange={(e) => setCFavicon(e.target.value)} placeholder="https://…" />
-                  </div>
+                  <AssetUploader
+                    kind="logo"
+                    label="Community Logo"
+                    hint="PNG, JPG, WEBP or SVG · max 2MB"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    value={cLogo}
+                    onChange={setCLogo}
+                    upload={(f) => uploadAsset("logo", f)}
+                  />
+                  <AssetUploader
+                    kind="favicon"
+                    label="Favicon"
+                    hint="PNG, JPG, WEBP, SVG or ICO · max 512KB"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon,image/vnd.microsoft.icon"
+                    value={cFavicon}
+                    onChange={setCFavicon}
+                    upload={(f) => uploadAsset("favicon", f)}
+                  />
+                  <AssetUploader
+                    kind="hero"
+                    label="Hero Banner (optional)"
+                    hint="PNG, JPG or WEBP · max 5MB"
+                    accept="image/png,image/jpeg,image/webp"
+                    value={cHero}
+                    onChange={setCHero}
+                    upload={(f) => uploadAsset("hero", f)}
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Leave any field empty to use the default BooBubble branding.
+                  </p>
                 </div>
+
                 <div>
                   <Label>Homepage</Label>
                   <RadioGroup
@@ -269,10 +344,82 @@ function SetupWizardPage() {
                   <Button type="button" variant="ghost" onClick={() => setStep(2)} disabled={busy}>Back</Button>
                   <Button type="submit" disabled={busy}>
                     {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Create Owner & Enter Dashboard
+                    Create Owner & Run Health Check
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 4 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5" /> Installation Health Check
+              </CardTitle>
+              <CardDescription>
+                Verifying that all core services are online and configured properly.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <HealthList checks={health} running={healthRunning} />
+
+              {health && health.some((c) => c.critical && c.state === "fail") && (
+                <div className="mt-4 space-y-2">
+                  {health.filter((c) => c.critical && c.state === "fail").map((c) => (
+                    <div key={c.key} className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs">
+                      <div className="font-semibold text-destructive">{c.label}</div>
+                      <div className="mt-1 text-muted-foreground">This service requires attention before your community goes live.</div>
+                      {c.problem && <div className="mt-2"><span className="font-medium">Problem:</span> {c.problem}</div>}
+                      {c.reason && <div><span className="font-medium">Possible reason:</span> {c.reason}</div>}
+                      {c.action && <div><span className="font-medium">Recommended action:</span> {c.action}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-between">
+                <Button variant="ghost" onClick={runHealthChecks} disabled={healthRunning}>
+                  {healthRunning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Re-run checks
+                </Button>
+                <Button
+                  disabled={healthRunning || healthOk !== true}
+                  onClick={() => setStep(5)}
+                >
+                  Continue <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 5 && (
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500/10 text-emerald-500">
+                <Rocket className="h-7 w-7" />
+              </div>
+              <CardTitle className="mt-2 text-2xl">🎉 Community Ready</CardTitle>
+              <CardDescription>Welcome to BooBubble! Your Super Admin account has been created successfully.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-2 rounded-md border bg-muted/30 p-4 text-sm sm:grid-cols-2">
+                <SummaryRow label="Community" value={cName || "—"} />
+                <SummaryRow label="Homepage" value={homepage === "hero" ? "Hero Homepage" : "Welcome Page"} />
+                <SummaryRow label="Owner" value={fullName ? `${fullName} (@${username})` : `@${username}`} />
+                <SummaryRow label="Installed Version" value={`v${APP_VERSION}`} />
+                <SummaryRow label="Status" value="Ready for Production" tone="ok" />
+              </div>
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-between">
+                <Button asChild variant="outline">
+                  <Link to={"/" as any}>Visit Community</Link>
+                </Button>
+                <Button onClick={() => navigate({ to: "/admin" as any })}>
+                  Enter Admin Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -281,14 +428,18 @@ function SetupWizardPage() {
   );
 }
 
+/* ------------------------------- UI bits ------------------------------- */
+
 function StepIndicator({ step }: { step: Step }) {
   const items = [
     { n: 1, label: "Install Complete" },
     { n: 2, label: "Community" },
     { n: 3, label: "Super Admin" },
+    { n: 4, label: "Health Check" },
+    { n: 5, label: "Ready" },
   ];
   return (
-    <ol className="mb-6 flex items-center justify-center gap-2 text-xs">
+    <ol className="mb-6 flex flex-wrap items-center justify-center gap-2 text-xs">
       {items.map((it, i) => (
         <li key={it.n} className="flex items-center gap-2">
           <span
@@ -305,5 +456,134 @@ function StepIndicator({ step }: { step: Step }) {
         </li>
       ))}
     </ol>
+  );
+}
+
+function AssetUploader({
+  kind, label, hint, accept, value, onChange, upload,
+}: {
+  kind: AssetKind;
+  label: string;
+  hint: string;
+  accept: string;
+  value: string;
+  onChange: (url: string) => void;
+  upload: (file: File) => Promise<string>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
+
+  async function handleFile(file: File | undefined | null) {
+    if (!file) return;
+    setBusy(true);
+    setProgress(10);
+    const tick = setInterval(() => setProgress((p) => Math.min(90, p + 10)), 150);
+    try {
+      const url = await upload(file);
+      onChange(url);
+      setProgress(100);
+      toast.success(`${label} uploaded.`);
+    } catch (e: any) {
+      toast.error(e?.message ?? `Failed to upload ${label.toLowerCase()}`);
+    } finally {
+      clearInterval(tick);
+      setBusy(false);
+      setTimeout(() => setProgress(0), 400);
+    }
+  }
+
+  return (
+    <div
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragOver(false);
+        const f = e.dataTransfer.files?.[0];
+        if (f) void handleFile(f);
+      }}
+      className={`flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-center ${
+        dragOver ? "border-primary bg-primary/5" : "border-border"
+      }`}
+    >
+      <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-md border bg-muted/40">
+        {value ? (
+          <img src={value} alt="" className="h-full w-full object-contain" />
+        ) : (
+          <ImageIcon className="h-5 w-5 text-muted-foreground" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-medium">{label}</div>
+        <div className="truncate text-[11px] text-muted-foreground">
+          {value ? "Uploaded · drag a new file or click Replace" : `Drag & drop or click to upload · ${hint}`}
+        </div>
+        {busy && (
+          <div className="mt-1 h-1 w-full overflow-hidden rounded bg-muted">
+            <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+          </div>
+        )}
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; void handleFile(f); e.target.value = ""; }}
+      />
+      <div className="flex items-center gap-1">
+        <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => inputRef.current?.click()} className="gap-1.5">
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+          {value ? "Replace" : "Upload"}
+        </Button>
+        {value && (
+          <Button type="button" variant="ghost" size="icon" disabled={busy} onClick={() => onChange("")} title={`Remove ${label}`}>
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        )}
+      </div>
+      <span className="sr-only">{kind}</span>
+    </div>
+  );
+}
+
+function HealthList({ checks, running }: { checks: HealthCheck[] | null; running: boolean }) {
+  if (!checks) {
+    return (
+      <div className="rounded-md border p-4 text-sm text-muted-foreground">
+        <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
+        {running ? "Running system checks…" : "Preparing checks…"}
+      </div>
+    );
+  }
+  return (
+    <ul className="divide-y rounded-md border">
+      {checks.map((c) => (
+        <li key={c.key} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+          <div className="flex items-center gap-2">
+            <StateIcon state={c.state} />
+            <span className="font-medium">{c.label}</span>
+          </div>
+          <span className="text-[11px] text-muted-foreground">{c.detail}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function StateIcon({ state }: { state: HealthState }) {
+  if (state === "ok") return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+  if (state === "warn") return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+  return <XCircle className="h-4 w-4 text-destructive" />;
+}
+
+function SummaryRow({ label, value, tone }: { label: string; value: string; tone?: "ok" }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b py-1 last:border-b-0">
+      <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className={`text-sm font-medium ${tone === "ok" ? "text-emerald-500" : ""}`}>{value}</span>
+    </div>
   );
 }
