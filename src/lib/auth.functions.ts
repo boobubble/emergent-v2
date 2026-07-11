@@ -16,32 +16,60 @@ export const checkUsernameAvailable = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const check = validateUsername(data.username);
     if (!check.ok) return { available: false, reason: check.reason };
+    // TEMP DIAGNOSTIC LOGGING — remove once root cause identified.
+    console.log("[checkUsernameAvailable] start", {
+      username: check.value,
+      hasSupabaseUrl: Boolean(process.env.SUPABASE_URL),
+      hasServiceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      serviceRoleKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length ?? 0,
+      serviceRoleKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 4) ?? null,
+      nodeEnv: process.env.NODE_ENV,
+    });
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const started = Date.now();
       const { data: row, error } = await supabaseAdmin
         .from("profiles")
         .select("id")
         .ilike("username", check.value)
         .maybeSingle();
+      const elapsedMs = Date.now() - started;
       if (error) {
-        console.error("[checkUsernameAvailable] Supabase error:", error);
+        console.error("[checkUsernameAvailable] Supabase error", {
+          elapsedMs,
+          code: (error as { code?: string }).code ?? null,
+          message: error.message ?? null,
+          details: (error as { details?: string }).details ?? null,
+          hint: (error as { hint?: string }).hint ?? null,
+          name: (error as { name?: string }).name ?? null,
+        });
         return {
           available: false,
-          reason: `Username lookup failed: ${error.message}. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the server.`,
+          reason: `Username lookup failed [${(error as { code?: string }).code ?? "unknown"}]: ${error.message}${
+            (error as { hint?: string }).hint ? ` — hint: ${(error as { hint?: string }).hint}` : ""
+          }`,
         };
       }
+      console.log("[checkUsernameAvailable] ok", { elapsedMs, found: Boolean(row) });
       if (row && row.id !== data.excludeUserId) {
         return { available: false, reason: "That username is already taken." };
       }
       return { available: true as const };
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      console.error("[checkUsernameAvailable] Unexpected error:", e);
+      const err = e as { name?: string; message?: string; code?: string; cause?: unknown; stack?: string };
+      console.error("[checkUsernameAvailable] Unexpected error", {
+        name: err?.name ?? null,
+        message: err?.message ?? null,
+        code: err?.code ?? null,
+        cause: err?.cause ?? null,
+        stack: err?.stack ?? null,
+      });
       return {
         available: false,
-        reason: `Server configuration error: ${message}`,
+        reason: `Server configuration error: ${err?.message ?? String(e)}`,
       };
     }
+
   });
 
 
