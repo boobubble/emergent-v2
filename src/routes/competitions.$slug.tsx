@@ -251,13 +251,16 @@ function CompetitionDetail() {
           <Link to="/competitions"><Button size="icon" variant="secondary"><ArrowLeft className="h-4 w-4" /></Button></Link>
         </div>
         <div className="absolute top-3 right-3 flex gap-2">
-          <Button size="sm" variant="secondary" onClick={handleShare}>
-            <Share2 className="mr-1 h-4 w-4" /> Share
-          </Button>
+          {enableSharing && (
+            <Button size="sm" variant="secondary" onClick={handleShare}>
+              <Share2 className="mr-1 h-4 w-4" /> Share
+            </Button>
+          )}
           <Button size="sm" variant="secondary" onClick={handleReport}>
             <Flag className="mr-1 h-4 w-4" /> Report
           </Button>
         </div>
+
       </div>
 
       <div className="mx-auto -mt-16 max-w-5xl px-4">
