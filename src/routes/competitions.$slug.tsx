@@ -197,7 +197,18 @@ function CompetitionDetail() {
     rewards.custom || null,
   ].filter(Boolean) as string[];
 
+  // Admin-configurable feature flags (default true when missing on legacy rows)
+  const enableVoting = c.enable_voting !== false;
+  const enableJoin = c.enable_join !== false;
+  const enableSharing = c.enable_sharing !== false;
+  const hideResults =
+    c.hide_results_until_end === true && c.status !== "completed"
+      ? true
+      : !c.show_live_counts;
+  const votingOpen = enableVoting && c.status === "live" && !(c.auto_close_voting !== false && new Date(c.end_at).getTime() < Date.now());
+
   const url = `${SITE}/competitions/${c.slug}`;
+
 
   const handleShare = async () => {
     try {
@@ -240,13 +251,16 @@ function CompetitionDetail() {
           <Link to="/competitions"><Button size="icon" variant="secondary"><ArrowLeft className="h-4 w-4" /></Button></Link>
         </div>
         <div className="absolute top-3 right-3 flex gap-2">
-          <Button size="sm" variant="secondary" onClick={handleShare}>
-            <Share2 className="mr-1 h-4 w-4" /> Share
-          </Button>
+          {enableSharing && (
+            <Button size="sm" variant="secondary" onClick={handleShare}>
+              <Share2 className="mr-1 h-4 w-4" /> Share
+            </Button>
+          )}
           <Button size="sm" variant="secondary" onClick={handleReport}>
             <Flag className="mr-1 h-4 w-4" /> Report
           </Button>
         </div>
+
       </div>
 
       <div className="mx-auto -mt-16 max-w-5xl px-4">
@@ -276,11 +290,14 @@ function CompetitionDetail() {
 
           <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1"><Users className="h-4 w-4" /> {c.total_participants} participants</span>
-            <span className="inline-flex items-center gap-1"><Vote className="h-4 w-4" /> {c.total_votes} votes</span>
+            {!hideResults && (
+              <span className="inline-flex items-center gap-1"><Vote className="h-4 w-4" /> {c.total_votes} votes</span>
+            )}
             <span className="inline-flex items-center gap-1"><Eye className="h-4 w-4" /> {c.views_count ?? 0} views</span>
             <span className="inline-flex items-center gap-1"><Calendar className="h-4 w-4" /> {new Date(c.start_at).toLocaleDateString()} → {new Date(c.end_at).toLocaleDateString()}</span>
             <span className="inline-flex items-center gap-1"><Trophy className="h-4 w-4" /> {c.winner_count} winner{c.winner_count > 1 ? "s" : ""}</span>
           </div>
+
 
           {prizeParts.length > 0 && (
             <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
@@ -297,7 +314,7 @@ function CompetitionDetail() {
             </div>
           )}
 
-          {userId && (c.status === "upcoming" || c.status === "live") && (
+          {userId && enableJoin && (c.status === "upcoming" || c.status === "live") && (
             <div className="mt-4">
               {iJoined ? (
                 <Button variant="outline" onClick={() => leaveM.mutate()} disabled={leaveM.isPending}>
@@ -311,6 +328,7 @@ function CompetitionDetail() {
             </div>
           )}
         </div>
+
 
         {/* Winner section */}
         {c.status === "completed" && awards.length > 0 && (
@@ -370,12 +388,13 @@ function CompetitionDetail() {
             competitionId={c.id}
             competitors={competitors}
             myVote={myCompetitorVote?.competitorId ?? null}
-            canVote={!!userId && c.status === "live"}
-            hideCounts={!c.show_live_counts}
+            canVote={!!userId && votingOpen}
+            hideCounts={hideResults}
             isAdmin={isAdmin}
             onEdit={(comp) => setEditing({ ...comp })}
             invalidateKey={["competition-slug", slug]}
           />
+
         </section>
 
         <CompetitorEditorDialog
@@ -389,7 +408,7 @@ function CompetitionDetail() {
           <section className="mt-6 grid gap-6 md:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
               <h2 className="mb-3 flex items-center gap-2 font-bold"><Trophy className="h-4 w-4 text-amber-400" /> Live Ranking</h2>
-              <TopThree participants={participants as any} hideCounts={!c.show_live_counts} />
+              <TopThree participants={participants as any} hideCounts={hideResults} />
             </div>
             <div className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
               <h2 className="mb-3 font-bold">Vote for a contestant</h2>
@@ -397,9 +416,10 @@ function CompetitionDetail() {
                 competitionId={c.id}
                 participants={participants as any}
                 myVote={myVote?.participantId ?? null}
-                canVote={!!userId && c.status === "live"}
-                hideCounts={!c.show_live_counts}
+                canVote={!!userId && votingOpen}
+                hideCounts={hideResults}
               />
+
             </div>
           </section>
         )}

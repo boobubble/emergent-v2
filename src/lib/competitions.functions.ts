@@ -385,7 +385,21 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
     rewards?: Record<string, unknown>;
     announce_channels?: string[];
     is_published?: boolean;
+    enable_voting?: boolean;
+    enable_reactions?: boolean;
+    enable_comments?: boolean;
+    enable_sharing?: boolean;
+    enable_join?: boolean;
+    hide_results_until_end?: boolean;
+    auto_close_voting?: boolean;
+    is_featured?: boolean;
+    is_pinned?: boolean;
+    allow_multiple_votes?: boolean;
+    max_votes_per_user?: number;
+    allow_guest_voting?: boolean;
+    allow_anonymous_voting?: boolean;
   }) => data)
+
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = context.supabase as any;
@@ -515,3 +529,124 @@ export const adminFinalizeWinners = createServerFn({ method: "POST" })
 
     return { ok: true, winners: rows.length };
   });
+
+// ---------- Competitor moderation ----------
+
+export const adminSetCompetitorFlags = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string; is_hidden?: boolean; is_disqualified?: boolean }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { id, ...patch } = data;
+    const { error } = await (context.supabase as any).from("competition_competitors").update(patch).eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ---------- Vote management ----------
+
+export const adminListCompetitorVotes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { competitionId: string }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data: rows, error } = await context.supabase
+      .from("competition_competitor_votes")
+      .select("id, created_at, voter_id, competitor_id")
+      .eq("competition_id", data.competitionId)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    const voterIds = Array.from(new Set((rows ?? []).map((r: any) => r.voter_id)));
+    const compIds = Array.from(new Set((rows ?? []).map((r: any) => r.competitor_id)));
+    const [profRes, compRes] = await Promise.all([
+      voterIds.length
+        ? context.supabase.from("profiles").select("id,username,avatar_url").in("id", voterIds)
+        : Promise.resolve({ data: [] as any[] }),
+      compIds.length
+        ? context.supabase.from("competition_competitors").select("id,name").in("id", compIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const pm = new Map(((profRes as any).data ?? []).map((p: any) => [p.id, p]));
+    const cm = new Map(((compRes as any).data ?? []).map((c: any) => [c.id, c]));
+    return (rows ?? []).map((r: any) => ({
+      ...r,
+      voter: pm.get(r.voter_id) ?? null,
+      competitor: cm.get(r.competitor_id) ?? null,
+    }));
+  });
+
+export const adminDeleteCompetitorVote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { voteId: string }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.from("competition_competitor_votes").delete().eq("id", data.voteId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminResetCompetitionVotes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { competitionId: string }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.rpc("admin_reset_competition_votes", { _competition: data.competitionId });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminResetCompetitorVotes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { competitorId: string }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.rpc("admin_reset_competitor_votes", { _competitor: data.competitorId });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ---------- Analytics ----------
+
+export const getCompetitionAnalytics = createServerFn({ method: "GET" })
+  .inputValidator((data: { competitionId: string }) => data)
+  .handler(async ({ data }) => {
+    const sb = await publicClient();
+    const { data: rows, error } = await sb.rpc("competition_analytics", { _competition: data.competitionId });
+    if (error) throw new Error(error.message);
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    return row ?? null;
+  });
+
+// ---------- Manual winners ----------
+
+export const adminSetManualWinners = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: {
+    competitionId: string;
+    winners: Array<{ user_id: string; place: number; badge_label?: string | null; participant_id?: string | null }>;
+    markCompleted?: boolean;
+  }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data: comp } = await context.supabase
+      .from("competitions").select("name,rewards,slug").eq("id", data.competitionId).maybeSingle();
+    if (!comp) throw new Error("Not found");
+    await context.supabase.from("competition_awards").delete().eq("competition_id", data.competitionId);
+    const rows = data.winners.map((w) => ({
+      competition_id: data.competitionId,
+      participant_id: w.participant_id ?? null,
+      user_id: w.user_id,
+      place: w.place,
+      badge_label: w.badge_label ?? `${(comp as any).name} — #${w.place}`,
+      rewards: (comp as any).rewards ?? {},
+    }));
+    if (rows.length) {
+      const { error } = await context.supabase.from("competition_awards").insert(rows);
+      if (error) throw new Error(error.message);
+    }
+    if (data.markCompleted) {
+      await context.supabase.from("competitions").update({ status: "completed" }).eq("id", data.competitionId);
+    }
+    return { ok: true, winners: rows.length };
+  });
+

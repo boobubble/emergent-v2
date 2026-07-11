@@ -1,11 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Pencil, Trash2, Trophy } from "lucide-react";
+import { Pencil, Trash2, Trophy, EyeOff, Eye, Ban, RotateCcw, Undo2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { adminDeleteCompetitor, voteForCompetitor } from "@/lib/competitions.functions";
+import {
+  adminDeleteCompetitor,
+  voteForCompetitor,
+  adminSetCompetitorFlags,
+  adminResetCompetitorVotes,
+} from "@/lib/competitions.functions";
 
 export interface Competitor {
   id: string;
@@ -16,8 +21,11 @@ export interface Competitor {
   linked_user_id?: string | null;
   vote_count: number;
   sort_order: number;
+  is_hidden?: boolean;
+  is_disqualified?: boolean;
   linked_profile?: { username?: string | null; avatar_url?: string | null; avatar_color?: string | null } | null;
 }
+
 
 export function CompetitorGrid({
   competitionId,
@@ -40,10 +48,14 @@ export function CompetitorGrid({
 }) {
   const vote = useServerFn(voteForCompetitor);
   const del = useServerFn(adminDeleteCompetitor);
+  const setFlags = useServerFn(adminSetCompetitorFlags);
+  const resetVotes = useServerFn(adminResetCompetitorVotes);
   const qc = useQueryClient();
 
-  const totalVotes = competitors.reduce((sum, c) => sum + (c.vote_count ?? 0), 0);
-  const sorted = [...competitors].sort((a, b) => b.vote_count - a.vote_count);
+  // Non-admins never see hidden competitors
+  const visible = isAdmin ? competitors : competitors.filter((c) => !c.is_hidden);
+  const totalVotes = visible.reduce((sum, c) => sum + (c.vote_count ?? 0), 0);
+  const sorted = [...visible].filter((c) => !c.is_disqualified).sort((a, b) => b.vote_count - a.vote_count);
   const leaderId = sorted[0]?.id;
 
   const voteM = useMutation({
@@ -65,25 +77,49 @@ export function CompetitorGrid({
     onError: (e: any) => toast.error(e?.message ?? "Failed"),
   });
 
-  if (competitors.length === 0) {
+  const flagsM = useMutation({
+    mutationFn: (v: { id: string; is_hidden?: boolean; is_disqualified?: boolean }) => setFlags({ data: v }),
+    onSuccess: () => { toast.success("Updated"); qc.invalidateQueries({ queryKey: invalidateKey }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+
+  const resetM = useMutation({
+    mutationFn: (competitorId: string) => resetVotes({ data: { competitorId } }),
+    onSuccess: () => { toast.success("Votes reset"); qc.invalidateQueries({ queryKey: invalidateKey }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+
+  if (visible.length === 0) {
     return <p className="text-sm text-muted-foreground">No competitors added yet.</p>;
   }
 
+
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {competitors.map((c) => {
+      {visible.map((c) => {
         const mine = myVote === c.id;
+        const disq = !!c.is_disqualified;
         const pct = totalVotes > 0 ? Math.round((c.vote_count / totalVotes) * 100) : 0;
-        const isLeader = leaderId === c.id && c.vote_count > 0;
+        const isLeader = leaderId === c.id && c.vote_count > 0 && !disq;
         return (
           <div
             key={c.id}
-            className="relative flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur"
+            className={`relative flex flex-col gap-3 rounded-2xl border p-4 backdrop-blur ${
+              disq ? "border-rose-500/30 bg-rose-500/5 opacity-70"
+              : c.is_hidden ? "border-white/10 bg-white/5 opacity-60"
+              : "border-white/10 bg-white/5"
+            }`}
           >
             {isLeader && !hideCounts && (
               <Badge className="absolute right-3 top-3 border border-amber-500/40 bg-amber-500/20 text-amber-300">
                 <Trophy className="mr-1 h-3 w-3" /> Leading
               </Badge>
+            )}
+            {(c.is_hidden || disq) && (
+              <div className="absolute left-3 top-3 flex gap-1">
+                {c.is_hidden && <Badge variant="outline" className="text-[10px]">Hidden</Badge>}
+                {disq && <Badge variant="destructive" className="text-[10px]">Disqualified</Badge>}
+              </div>
             )}
             <div className="flex items-start gap-3">
               <Avatar className="h-16 w-16 ring-2 ring-white/10">
@@ -115,26 +151,54 @@ export function CompetitorGrid({
               </div>
             )}
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 size="sm"
-                className="flex-1"
+                className="flex-1 min-w-[100px]"
                 variant={mine ? "secondary" : "default"}
-                disabled={!canVote || voteM.isPending}
+                disabled={!canVote || voteM.isPending || disq}
                 onClick={() => voteM.mutate(c.id)}
               >
                 {mine ? "Your Vote" : "Vote"}
               </Button>
               {isAdmin && (
                 <>
-                  <Button size="icon" variant="ghost" onClick={() => onEdit?.(c)} aria-label="Edit">
+                  <Button size="icon" variant="ghost" onClick={() => onEdit?.(c)} aria-label="Edit" title="Edit">
                     <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => flagsM.mutate({ id: c.id, is_hidden: !c.is_hidden })}
+                    aria-label={c.is_hidden ? "Show" : "Hide"}
+                    title={c.is_hidden ? "Unhide" : "Hide"}
+                  >
+                    {c.is_hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => flagsM.mutate({ id: c.id, is_disqualified: !c.is_disqualified })}
+                    aria-label={disq ? "Restore" : "Disqualify"}
+                    title={disq ? "Restore" : "Disqualify"}
+                  >
+                    {disq ? <Undo2 className="h-4 w-4" /> : <Ban className="h-4 w-4 text-rose-400" />}
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => confirm(`Reset votes for ${c.name}?`) && resetM.mutate(c.id)}
+                    aria-label="Reset votes"
+                    title="Reset votes"
+                  >
+                    <RotateCcw className="h-4 w-4" />
                   </Button>
                   <Button
                     size="icon"
                     variant="ghost"
                     onClick={() => confirm(`Remove ${c.name}?`) && delM.mutate(c.id)}
                     aria-label="Delete"
+                    title="Delete"
                   >
                     <Trash2 className="h-4 w-4 text-rose-400" />
                   </Button>
@@ -146,4 +210,5 @@ export function CompetitorGrid({
       })}
     </div>
   );
+
 }
