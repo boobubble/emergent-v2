@@ -27,12 +27,26 @@ export const Route = createFileRoute("/admin")({
 function AdminLayout() {
   const { user, ready } = useAuth();
   const fetchRoles = useServerFn(getMyRoles);
+  const fetchOwnerStatus = useServerFn(getOwnerStatus);
+  const { data: ownerStatus, isLoading: ownerLoading } = useQuery({
+    queryKey: ["owner-status-guard"],
+    queryFn: () => fetchOwnerStatus({}),
+    enabled: true,
+    staleTime: 60_000,
+  });
   const { data, isLoading, isError } = useQuery({
     queryKey: ["my-roles", user?.id],
     queryFn: () => fetchRoles({}),
     enabled: !!user && ready,
     staleTime: 30_000,
   });
+
+  if (ownerLoading) {
+    return <div className="grid min-h-screen place-items-center bg-background text-sm text-muted-foreground">Checking setup…</div>;
+  }
+  if (ownerStatus?.installed && !ownerStatus?.hasOwner) {
+    return <Navigate to="/setup-wizard" replace />;
+  }
 
   if (!ready || isLoading) {
     return <div className="grid min-h-screen place-items-center bg-background text-sm text-muted-foreground">Checking access…</div>;
