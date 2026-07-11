@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Trophy, Users, Vote } from "lucide-react";
+import { Pencil, Trophy, Users, Vote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Countdown } from "./Countdown";
 
 export interface CompetitionSummary {
