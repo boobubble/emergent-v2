@@ -149,6 +149,13 @@ export function ChatApp() {
 
     return () => { timers.forEach((t) => window.clearTimeout(t)); };
   }, []);
+
+  // Auto-dismiss the FeedBot reminder chip after 30s of inaction.
+  useEffect(() => {
+    if (!feedbotChip) return;
+    const t = window.setTimeout(() => setFeedbotChip(null), 30_000);
+    return () => window.clearTimeout(t);
+  }, [feedbotChip]);
   // Persist the user's sidebar open/closed choice across route switches and
   // browser resizes. Only fall back to auto-collapse on phones when the user
   // has never expressed a preference.
