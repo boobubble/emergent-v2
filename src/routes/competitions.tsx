@@ -2,9 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Plus, Trophy } from "lucide-react";
 import { listCompetitions, listCategories } from "@/lib/competitions.functions";
 import { CompetitionCard, type CompetitionSummary } from "@/components/competitions/CompetitionCard";
+import { CompetitionEditorDialog, emptyCompetition } from "@/components/competitions/CompetitionEditorDialog";
+import { useMyRoles } from "@/lib/use-my-role";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
@@ -26,6 +28,8 @@ function CompetitionsIndex() {
   const { data: comps = [] } = useQuery({ queryKey: ["competitions"], queryFn: () => list({}) });
   const { data: categories = [] } = useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
   const [category, setCategory] = useState<string>("all");
+  const [editing, setEditing] = useState<any | null>(null);
+  const { isAdmin } = useMyRoles();
 
   const filtered = useMemo(() => {
     if (category === "all") return comps;
@@ -47,11 +51,18 @@ function CompetitionsIndex() {
             </h1>
             <p className="text-xs text-muted-foreground">Vote, join, and win in community events.</p>
           </div>
+          {isAdmin && (
+            <Button size="sm" onClick={() => setEditing(emptyCompetition())}>
+              <Plus className="mr-1 h-4 w-4" /> New
+            </Button>
+          )}
           <Link to="/competitions/leaderboard">
             <Button variant="outline" size="sm">Leaderboard</Button>
           </Link>
         </div>
       </header>
+
+      <CompetitionEditorDialog value={editing} onChange={setEditing} />
 
       <main className="mx-auto max-w-5xl px-4 py-6">
         <div className="mb-4 flex flex-wrap gap-2">
