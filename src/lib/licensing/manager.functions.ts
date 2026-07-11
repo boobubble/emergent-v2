@@ -375,13 +375,26 @@ export const adminExtendExpiry = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) =>
     z
-      .object({ id: z.string().uuid(), expiryDate: z.string().datetime().nullable() })
+      .object({
+        id: z.string().uuid(),
+        expiryDate: z.string().datetime().nullable(),
+        plan: PlanSchema.optional(),
+      })
       .parse(v),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { LicenseManager } = await import("./manager.server");
-    return LicenseManager.extendExpiry(data.id, data.expiryDate, { actorUserId: context.userId });
+    // Allow admins to convert plans (e.g. Monthly -> Lifetime) alongside extending expiry.
+    if (data.plan) {
+      const newExpiry = data.plan === "lifetime" ? null : data.expiryDate;
+      await supabaseAdmin
+        .from("licenses")
+        .update({ license_plan: data.plan, expiry_date: newExpiry, updated_at: new Date().toISOString() } as any)
+        .eq("id", data.id);
+    }
+    return LicenseManager.extendExpiry(data.id, data.plan === "lifetime" ? null : data.expiryDate, { actorUserId: context.userId });
   });
 
 export const adminChangeDomain = createServerFn({ method: "POST" })
