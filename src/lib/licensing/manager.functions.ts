@@ -279,7 +279,7 @@ export const adminGenerateSelfLicense = createServerFn({ method: "POST" })
       action: "generate",
       outcome: "ok",
       actor_user_id: context.userId,
-      context: { source: "self" },
+      context: { source: "self", plan: data.plan },
     } as any);
     return { license: row };
   });
