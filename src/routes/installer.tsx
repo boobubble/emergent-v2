@@ -57,7 +57,7 @@ function InstallerPage() {
   const [licensePurchaseCode, setLicensePurchaseCode] = useState("");
   const [licenseOk, setLicenseOk] = useState(false);
   const [licenseVerifying, setLicenseVerifying] = useState(false);
-  const [licenseInfo, setLicenseInfo] = useState<{ customerName?: string; expiryDate?: string; status?: string } | null>(null);
+  const [licenseInfo, setLicenseInfo] = useState<{ customerName?: string; expiryDate?: string | null; status?: string; plan?: string; isLifetime?: boolean } | null>(null);
   const [reqsOk, setReqsOk] = useState(false);
   type HealthState = "pending" | "ok" | "fail" | "warn";
   type HealthKey = "db" | "storage" | "realtime" | "smtp" | "env" | "cron";
