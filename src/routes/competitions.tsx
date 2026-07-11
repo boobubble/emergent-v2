@@ -129,7 +129,7 @@ function CompetitionsIndex() {
                 </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {items.map((c) => <CompetitionCard key={c.id} c={c} />)}
+                  {items.map((c) => <CompetitionCard key={c.id} c={c} onEdit={isAdmin ? openEdit : undefined} />)}
                 </div>
               )}
             </TabsContent>
