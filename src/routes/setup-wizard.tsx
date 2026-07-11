@@ -1,33 +1,34 @@
 import { createFileRoute, useNavigate, Navigate, redirect } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Loader2, PartyPopper, UserPlus } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { CheckCircle2, Loader2, PartyPopper, UserPlus, ArrowRight, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
-import { getOwnerStatus, createOwner } from "@/lib/owner-setup.functions";
+import { getOwnerStatus, saveCommunitySetup, createOwner } from "@/lib/owner-setup.functions";
 
 export const Route = createFileRoute("/setup-wizard")({
   beforeLoad: async () => {
     const status = await getOwnerStatus({});
-    if (!status.installed) {
-      throw redirect({ to: "/installer" as any });
-    }
-    if (status.hasOwner) {
-      throw redirect({ to: "/login" as any });
-    }
+    if (!status.installed) throw redirect({ to: "/installer" as any });
+    if (status.hasOwner || status.firstRunCompleted) throw redirect({ to: "/login" as any });
   },
   component: SetupWizardPage,
 });
 
+type Step = 1 | 2 | 3;
+
 function SetupWizardPage() {
   const navigate = useNavigate();
   const fetchStatus = useServerFn(getOwnerStatus);
+  const runSaveCommunity = useServerFn(saveCommunitySetup);
   const runCreateOwner = useServerFn(createOwner);
 
   const { data: status, isLoading } = useQuery({
@@ -37,13 +38,28 @@ function SetupWizardPage() {
     refetchOnWindowFocus: false,
   });
 
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<Step>(1);
+  const [busy, setBusy] = useState(false);
+
+  // Community
+  const [cName, setCName] = useState("");
+  const [cTagline, setCTagline] = useState("");
+  const [cDescription, setCDescription] = useState("");
+  const [cLanguage, setCLanguage] = useState("en");
+  const [cTimezone, setCTimezone] = useState(
+    typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" : "UTC"
+  );
+  const [cCurrency, setCCurrency] = useState("USD");
+  const [cLogo, setCLogo] = useState("");
+  const [cFavicon, setCFavicon] = useState("");
+  const [homepage, setHomepage] = useState<"welcome" | "hero">("welcome");
+
+  // Admin
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [busy, setBusy] = useState(false);
 
   if (isLoading) {
     return (
@@ -52,44 +68,57 @@ function SetupWizardPage() {
       </div>
     );
   }
-
-  if (!status) {
-    return <div className="grid min-h-screen place-items-center bg-background">Unable to verify status.</div>;
-  }
-
-  // Not installed yet → send them to the installer.
+  if (!status) return <div className="grid min-h-screen place-items-center bg-background">Unable to verify status.</div>;
   if (!status.installed) return <Navigate to={"/installer" as any} replace />;
+  if (status.hasOwner || status.firstRunCompleted) return <Navigate to="/login" replace />;
 
-  // Owner already exists → wizard is permanently disabled; redirect to login.
-  if (status.hasOwner) {
-    return <Navigate to="/login" replace />;
-  }
-
-  async function handleCreate(e: React.FormEvent) {
+  async function handleSaveCommunity(e: React.FormEvent) {
     e.preventDefault();
-    if (password !== confirm) {
-      toast.error("Passwords do not match.");
-      return;
-    }
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
-      return;
-    }
-    if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) {
-      toast.error("Username must be 3–32 characters (letters, numbers, underscore).");
+    if (!cName.trim()) {
+      toast.error("Community name is required.");
       return;
     }
     setBusy(true);
     try {
+      await runSaveCommunity({
+        data: {
+          name: cName,
+          tagline: cTagline,
+          description: cDescription,
+          language: cLanguage,
+          timezone: cTimezone,
+          currency: cCurrency,
+          logoUrl: cLogo,
+          faviconUrl: cFavicon,
+          homepage,
+        },
+      });
+      toast.success("Community settings saved.");
+      setStep(3);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save community settings.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (password !== confirm) return toast.error("Passwords do not match.");
+    if (password.length < 8) return toast.error("Password must be at least 8 characters.");
+    if (!/^[a-zA-Z0-9_]{3,32}$/.test(username))
+      return toast.error("Username must be 3–32 characters (letters, numbers, underscore).");
+
+    setBusy(true);
+    try {
       await runCreateOwner({ data: { fullName, username, email, password } });
-      // Auto sign-in the freshly created owner.
       const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
       if (signInErr) {
-        toast.error(`Account created, but auto sign-in failed: ${signInErr.message}`);
+        toast.error(`Owner account created, but auto sign-in failed: ${signInErr.message}`);
         navigate({ to: "/login" as any });
         return;
       }
-      toast.success("Welcome to BooBubble! Your Super Admin account has been created successfully.");
+      toast.success("Welcome to BooBubble! Your community has been configured successfully.");
       navigate({ to: "/admin" as any });
     } catch (err: any) {
       toast.error(err?.message || "Failed to create Super Admin.");
@@ -100,33 +129,117 @@ function SetupWizardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 px-4 py-12">
-      <div className="mx-auto max-w-xl">
-        {step === 1 ? (
+      <div className="mx-auto max-w-2xl">
+        <StepIndicator step={step} />
+
+        {step === 1 && (
           <Card>
             <CardHeader className="text-center">
               <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
               <CardTitle className="mt-2 text-2xl">Installation Completed Successfully</CardTitle>
               <CardDescription>
-                Your community is ready.
+                Your BooBubble Community has been installed successfully.
                 <br />
-                Next, create your Super Administrator account.
+                Let's finish the final setup.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-4">
               <PartyPopper className="h-10 w-10 text-primary" />
               <Button size="lg" onClick={() => setStep(2)}>
-                <UserPlus className="mr-2 h-4 w-4" /> Create Super Admin
+                Continue Setup <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <p className="text-xs text-muted-foreground">
-                The first account created here becomes the permanent platform owner.
-              </p>
             </CardContent>
           </Card>
-        ) : (
+        )}
+
+        {step === 2 && (
           <Card>
             <CardHeader>
-              <CardTitle>Create Super Administrator</CardTitle>
-              <CardDescription>This account will have unrestricted access to every feature.</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Settings2 className="h-5 w-5" /> Community Setup
+              </CardTitle>
+              <CardDescription>Configure the basics for your community.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSaveCommunity} className="space-y-4">
+                <div>
+                  <Label htmlFor="cName">Community Name *</Label>
+                  <Input id="cName" value={cName} onChange={(e) => setCName(e.target.value)} required maxLength={120} />
+                </div>
+                <div>
+                  <Label htmlFor="cTagline">Tagline</Label>
+                  <Input id="cTagline" value={cTagline} onChange={(e) => setCTagline(e.target.value)} maxLength={200} />
+                </div>
+                <div>
+                  <Label htmlFor="cDescription">Description</Label>
+                  <Textarea id="cDescription" value={cDescription} onChange={(e) => setCDescription(e.target.value)} maxLength={2000} rows={3} />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div>
+                    <Label htmlFor="cLanguage">Default Language</Label>
+                    <Input id="cLanguage" value={cLanguage} onChange={(e) => setCLanguage(e.target.value)} placeholder="en" />
+                  </div>
+                  <div>
+                    <Label htmlFor="cTimezone">Timezone</Label>
+                    <Input id="cTimezone" value={cTimezone} onChange={(e) => setCTimezone(e.target.value)} placeholder="UTC" />
+                  </div>
+                  <div>
+                    <Label htmlFor="cCurrency">Currency</Label>
+                    <Input id="cCurrency" value={cCurrency} onChange={(e) => setCCurrency(e.target.value)} placeholder="USD" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="cLogo">Community Logo URL (optional)</Label>
+                    <Input id="cLogo" type="url" value={cLogo} onChange={(e) => setCLogo(e.target.value)} placeholder="https://…" />
+                  </div>
+                  <div>
+                    <Label htmlFor="cFavicon">Favicon URL (optional)</Label>
+                    <Input id="cFavicon" type="url" value={cFavicon} onChange={(e) => setCFavicon(e.target.value)} placeholder="https://…" />
+                  </div>
+                </div>
+                <div>
+                  <Label>Homepage</Label>
+                  <RadioGroup
+                    value={homepage}
+                    onValueChange={(v) => setHomepage(v as "welcome" | "hero")}
+                    className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2"
+                  >
+                    <label className="flex cursor-pointer items-start gap-3 rounded-md border p-3 hover:bg-muted/50">
+                      <RadioGroupItem value="welcome" id="hp-welcome" className="mt-1" />
+                      <div>
+                        <div className="font-medium">Welcome Page</div>
+                        <div className="text-xs text-muted-foreground">Show the welcome landing as the default homepage.</div>
+                      </div>
+                    </label>
+                    <label className="flex cursor-pointer items-start gap-3 rounded-md border p-3 hover:bg-muted/50">
+                      <RadioGroupItem value="hero" id="hp-hero" className="mt-1" />
+                      <div>
+                        <div className="font-medium">Hero Homepage</div>
+                        <div className="text-xs text-muted-foreground">Show the marketing hero as the default homepage.</div>
+                      </div>
+                    </label>
+                  </RadioGroup>
+                </div>
+                <div className="flex justify-between pt-2">
+                  <Button type="button" variant="ghost" onClick={() => setStep(1)} disabled={busy}>Back</Button>
+                  <Button type="submit" disabled={busy}>
+                    {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save & Continue
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 3 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserPlus className="h-5 w-5" /> Create Super Administrator
+              </CardTitle>
+              <CardDescription>This account will be the permanent platform owner with full permissions.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreate} className="space-y-4">
@@ -153,10 +266,10 @@ function SetupWizardPage() {
                   <Input id="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required autoComplete="new-password" />
                 </div>
                 <div className="flex justify-between pt-2">
-                  <Button type="button" variant="ghost" onClick={() => setStep(1)} disabled={busy}>Back</Button>
+                  <Button type="button" variant="ghost" onClick={() => setStep(2)} disabled={busy}>Back</Button>
                   <Button type="submit" disabled={busy}>
                     {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Create Admin Account
+                    Create Owner & Enter Dashboard
                   </Button>
                 </div>
               </form>
@@ -165,5 +278,32 @@ function SetupWizardPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function StepIndicator({ step }: { step: Step }) {
+  const items = [
+    { n: 1, label: "Install Complete" },
+    { n: 2, label: "Community" },
+    { n: 3, label: "Super Admin" },
+  ];
+  return (
+    <ol className="mb-6 flex items-center justify-center gap-2 text-xs">
+      {items.map((it, i) => (
+        <li key={it.n} className="flex items-center gap-2">
+          <span
+            className={`grid h-6 w-6 place-items-center rounded-full border ${
+              step >= (it.n as Step)
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-muted-foreground/30 text-muted-foreground"
+            }`}
+          >
+            {it.n}
+          </span>
+          <span className={step === (it.n as Step) ? "font-medium" : "text-muted-foreground"}>{it.label}</span>
+          {i < items.length - 1 && <span className="mx-1 h-px w-6 bg-muted-foreground/30" />}
+        </li>
+      ))}
+    </ol>
   );
 }
