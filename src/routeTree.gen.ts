@@ -336,14 +336,14 @@ const FeedSlugRoute = FeedSlugRouteImport.update({
   getParentRoute: () => FeedRoute,
 } as any)
 const CompetitionsLeaderboardRoute = CompetitionsLeaderboardRouteImport.update({
-  id: '/competitions/leaderboard',
-  path: '/competitions/leaderboard',
-  getParentRoute: () => rootRouteImport,
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => CompetitionsRoute,
 } as any)
 const CompetitionsSlugRoute = CompetitionsSlugRouteImport.update({
-  id: '/competitions/$slug',
-  path: '/competitions/$slug',
-  getParentRoute: () => rootRouteImport,
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => CompetitionsRoute,
 } as any)
 const BroadcasterWidgetsRoute = BroadcasterWidgetsRouteImport.update({
   id: '/widgets',
@@ -1684,8 +1684,6 @@ export interface RootRouteChildren {
   TrustRoute: typeof TrustRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
-  CompetitionsSlugRoute: typeof CompetitionsSlugRoute
-  CompetitionsLeaderboardRoute: typeof CompetitionsLeaderboardRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -1976,17 +1974,17 @@ declare module '@tanstack/react-router' {
     }
     '/competitions/leaderboard': {
       id: '/competitions/leaderboard'
-      path: '/competitions/leaderboard'
+      path: '/leaderboard'
       fullPath: '/competitions/leaderboard'
       preLoaderRoute: typeof CompetitionsLeaderboardRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CompetitionsRoute
     }
     '/competitions/$slug': {
       id: '/competitions/$slug'
-      path: '/competitions/$slug'
+      path: '/$slug'
       fullPath: '/competitions/$slug'
       preLoaderRoute: typeof CompetitionsSlugRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CompetitionsRoute
     }
     '/broadcaster/widgets': {
       id: '/broadcaster/widgets'
@@ -2892,8 +2890,6 @@ const rootRouteChildren: RootRouteChildren = {
   TrustRoute: TrustRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
-  CompetitionsSlugRoute: CompetitionsSlugRoute,
-  CompetitionsLeaderboardRoute: CompetitionsLeaderboardRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
@@ -2916,3 +2912,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
