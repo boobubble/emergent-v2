@@ -126,9 +126,9 @@ export async function handleVerify(request: Request): Promise<Response> {
   const active = status === "active" || status === "development" || status === "localhost" || status === "unlimited";
   await log(row.id, "verify", active ? "ok" : "fail", { domain, product_version });
   if (!active) {
-    return json({ ok: false, status, message: `License is ${status}`, ...licenseToDto(row) });
+    return json({ ...licenseToDto(row), ok: false, status, message: `License is ${status}` });
   }
-  return json({ ok: true, status, ...licenseToDto(row) });
+  return json({ ...licenseToDto(row), ok: true, status });
 }
 
 /* ------------------------------ activate ------------------------------ */
@@ -206,7 +206,7 @@ export async function handleActivate(request: Request): Promise<Response> {
 
   const { data: updated } = await supabaseAdmin.from("licenses").select("*").eq("id", row.id).maybeSingle();
   await log(row.id, "activate", "ok", { domain, product_version });
-  return json({ ok: true, status: normStatus(updated ?? row), ...licenseToDto(updated ?? row) });
+  return json({ ...licenseToDto(updated ?? row), ok: true, status: normStatus(updated ?? row) });
 }
 
 /* ----------------------------- deactivate ----------------------------- */
