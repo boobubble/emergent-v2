@@ -5652,6 +5652,10 @@ export type Database = {
       }
       get_active_chat_theme: { Args: { _user: string }; Returns: string }
       get_active_feed_theme: { Args: { _user: string }; Returns: string }
+      get_competition_follower_count: {
+        Args: { _competition_id: string }
+        Returns: number
+      }
       get_install_status: { Args: never; Returns: Json }
       get_my_phone: {
         Args: never
@@ -5710,6 +5714,13 @@ export type Database = {
       is_user_muted: {
         Args: { _channel: string; _user_id: string }
         Returns: boolean
+      }
+      list_enabled_payment_providers: {
+        Args: never
+        Returns: {
+          enabled: boolean
+          key: string
+        }[]
       }
       my_active_plan: {
         Args: never

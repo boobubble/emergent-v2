@@ -78,7 +78,8 @@ export async function fetchPackages(activeOnly = true): Promise<CoinPackage[]> {
 
 export async function fetchProviders(): Promise<ProviderRow[]> {
   // `config` is intentionally excluded — it may contain secrets and is server-only.
-  const { data, error } = await sb.from("payment_providers").select("key,enabled");
+  // Read via SECURITY DEFINER RPC so the base table SELECT policy can be admin-only.
+  const { data, error } = await sb.rpc("list_enabled_payment_providers");
   if (error) throw error;
   return (data ?? []).map((r: { key: ProviderRow["key"]; enabled: boolean }) => ({
     ...r,
