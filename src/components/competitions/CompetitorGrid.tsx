@@ -48,10 +48,14 @@ export function CompetitorGrid({
 }) {
   const vote = useServerFn(voteForCompetitor);
   const del = useServerFn(adminDeleteCompetitor);
+  const setFlags = useServerFn(adminSetCompetitorFlags);
+  const resetVotes = useServerFn(adminResetCompetitorVotes);
   const qc = useQueryClient();
 
-  const totalVotes = competitors.reduce((sum, c) => sum + (c.vote_count ?? 0), 0);
-  const sorted = [...competitors].sort((a, b) => b.vote_count - a.vote_count);
+  // Non-admins never see hidden competitors
+  const visible = isAdmin ? competitors : competitors.filter((c) => !c.is_hidden);
+  const totalVotes = visible.reduce((sum, c) => sum + (c.vote_count ?? 0), 0);
+  const sorted = [...visible].filter((c) => !c.is_disqualified).sort((a, b) => b.vote_count - a.vote_count);
   const leaderId = sorted[0]?.id;
 
   const voteM = useMutation({
@@ -73,9 +77,22 @@ export function CompetitorGrid({
     onError: (e: any) => toast.error(e?.message ?? "Failed"),
   });
 
-  if (competitors.length === 0) {
+  const flagsM = useMutation({
+    mutationFn: (v: { id: string; is_hidden?: boolean; is_disqualified?: boolean }) => setFlags({ data: v }),
+    onSuccess: () => { toast.success("Updated"); qc.invalidateQueries({ queryKey: invalidateKey }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+
+  const resetM = useMutation({
+    mutationFn: (competitorId: string) => resetVotes({ data: { competitorId } }),
+    onSuccess: () => { toast.success("Votes reset"); qc.invalidateQueries({ queryKey: invalidateKey }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+
+  if (visible.length === 0) {
     return <p className="text-sm text-muted-foreground">No competitors added yet.</p>;
   }
+
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
