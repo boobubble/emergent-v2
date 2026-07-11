@@ -877,6 +877,92 @@ export type Database = {
         }
         Relationships: []
       }
+      competition_competitor_votes: {
+        Row: {
+          competition_id: string
+          competitor_id: string
+          created_at: string
+          id: string
+          voter_id: string
+        }
+        Insert: {
+          competition_id: string
+          competitor_id: string
+          created_at?: string
+          id?: string
+          voter_id: string
+        }
+        Update: {
+          competition_id?: string
+          competitor_id?: string
+          created_at?: string
+          id?: string
+          voter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_competitor_votes_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_competitor_votes_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "competition_competitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_competitors: {
+        Row: {
+          competition_id: string
+          created_at: string
+          description: string | null
+          id: string
+          linked_user_id: string | null
+          name: string
+          photo_url: string | null
+          sort_order: number
+          updated_at: string
+          vote_count: number
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          linked_user_id?: string | null
+          name: string
+          photo_url?: string | null
+          sort_order?: number
+          updated_at?: string
+          vote_count?: number
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          linked_user_id?: string | null
+          name?: string
+          photo_url?: string | null
+          sort_order?: number
+          updated_at?: string
+          vote_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_competitors_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competition_participants: {
         Row: {
           competition_id: string
@@ -968,6 +1054,7 @@ export type Database = {
           is_published: boolean
           max_participants: number | null
           name: string
+          report_count: number
           require_approval: boolean
           rewards: Json
           rules: string | null
@@ -978,6 +1065,7 @@ export type Database = {
           total_participants: number
           total_votes: number
           updated_at: string
+          views_count: number
           winner_count: number
         }
         Insert: {
@@ -993,6 +1081,7 @@ export type Database = {
           is_published?: boolean
           max_participants?: number | null
           name: string
+          report_count?: number
           require_approval?: boolean
           rewards?: Json
           rules?: string | null
@@ -1003,6 +1092,7 @@ export type Database = {
           total_participants?: number
           total_votes?: number
           updated_at?: string
+          views_count?: number
           winner_count?: number
         }
         Update: {
@@ -1018,6 +1108,7 @@ export type Database = {
           is_published?: boolean
           max_participants?: number | null
           name?: string
+          report_count?: number
           require_approval?: boolean
           rewards?: Json
           rules?: string | null
@@ -1028,6 +1119,7 @@ export type Database = {
           total_participants?: number
           total_votes?: number
           updated_at?: string
+          views_count?: number
           winner_count?: number
         }
         Relationships: [
@@ -5482,6 +5574,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_competition_views: {
+        Args: { _competition: string }
+        Returns: undefined
       }
       installer_get_extras: { Args: never; Returns: Json }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
