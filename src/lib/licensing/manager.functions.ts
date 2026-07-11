@@ -434,20 +434,22 @@ export const adminExportLicensesCsv = createServerFn({ method: "GET" })
     const { data, error } = await supabaseAdmin
       .from("licenses")
       .select(
-        "license_key,purchase_code,source_id,customer_email,customer_name,product,product_version,activation_date,expiry_date,max_activations,current_activations,current_domain,status,created_at",
+        "license_key,purchase_code,source_id,customer_email,customer_name,product,product_version,license_plan,activation_date,expiry_date,max_activations,current_activations,current_domain,status,created_at",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     const rows: LicenseRecord[] = (data ?? []) as any;
     const header =
-      "license_key,purchase_code,source,customer_email,customer_name,product,product_version,activation_date,expiry_date,max_activations,current_activations,current_domain,status,created_at";
+      "license_key,purchase_code,source,customer_email,customer_name,product,product_version,plan,activation_date,expiry_date,max_activations,current_activations,current_domain,status,created_at";
     const escape = (v: unknown) => {
       const s = v == null ? "" : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const body = rows
-      .map((r: any) =>
-        [
+      .map((r: any) => {
+        const plan = r.license_plan ?? "monthly";
+        const isLifetime = plan === "lifetime";
+        return [
           r.license_key,
           r.purchase_code,
           r.source_id,
@@ -455,8 +457,9 @@ export const adminExportLicensesCsv = createServerFn({ method: "GET" })
           r.customer_name,
           r.product,
           r.product_version,
+          plan,
           r.activation_date,
-          r.expiry_date,
+          isLifetime ? "Lifetime" : r.expiry_date,
           r.max_activations,
           r.current_activations,
           r.current_domain,
@@ -464,8 +467,8 @@ export const adminExportLicensesCsv = createServerFn({ method: "GET" })
           r.created_at,
         ]
           .map(escape)
-          .join(","),
-      )
+          .join(",");
+      })
       .join("\n");
     return { csv: `${header}\n${body}`, filename: `licenses-${Date.now()}.csv` };
   });
