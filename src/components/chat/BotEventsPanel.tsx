@@ -13,8 +13,8 @@ function EventPill({ state }: { state: BotEventState }) {
   return (
     <div className={`flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-medium shadow-sm ${
       state.live
-        ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-100"
-        : "border-border/60 bg-background/60 text-muted-foreground"
+        ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-100"
+        : "border-border/60 bg-background/60 text-foreground/80"
     }`}>
       <span className="text-sm leading-none">{meta.emoji}</span>
       <span className="font-bold uppercase tracking-wider text-[10px]">
