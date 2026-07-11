@@ -147,6 +147,7 @@ const AdminListInput = z.object({
   search: z.string().trim().max(120).optional(),
   status: z.string().trim().max(32).optional(),
   sourceId: z.string().trim().max(32).optional(),
+  plan: z.enum(["trial", "monthly", "yearly", "lifetime"]).optional(),
   limit: z.number().int().min(1).max(200).default(50),
   offset: z.number().int().min(0).default(0),
 });
