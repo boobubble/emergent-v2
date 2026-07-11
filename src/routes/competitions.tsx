@@ -51,11 +51,18 @@ function CompetitionsIndex() {
             </h1>
             <p className="text-xs text-muted-foreground">Vote, join, and win in community events.</p>
           </div>
+          {isAdmin && (
+            <Button size="sm" onClick={() => setEditing(emptyCompetition())}>
+              <Plus className="mr-1 h-4 w-4" /> New
+            </Button>
+          )}
           <Link to="/competitions/leaderboard">
             <Button variant="outline" size="sm">Leaderboard</Button>
           </Link>
         </div>
       </header>
+
+      <CompetitionEditorDialog value={editing} onChange={setEditing} />
 
       <main className="mx-auto max-w-5xl px-4 py-6">
         <div className="mb-4 flex flex-wrap gap-2">
