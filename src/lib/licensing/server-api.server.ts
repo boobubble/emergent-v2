@@ -22,6 +22,39 @@ export function corsPreflight() {
   return new Response(null, { status: 204, headers: CORS });
 }
 
+/* ------------------------- in-memory rate limit ------------------------- */
+// Per-IP + per-route sliding window. Ad-hoc because the Worker has no shared
+// primitive; each isolate keeps its own counter, which is acceptable for
+// abuse mitigation on a license server.
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 30;
+const rateBuckets = new Map<string, number[]>();
+
+function rateLimit(request: Request, route: string): Response | null {
+  const ip =
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown";
+  const key = `${ip}:${route}`;
+  const now = Date.now();
+  const bucket = (rateBuckets.get(key) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  if (bucket.length >= RATE_LIMIT_MAX) {
+    return new Response(JSON.stringify({ ok: false, message: "Rate limit exceeded" }), {
+      status: 429,
+      headers: { "Content-Type": "application/json", "Retry-After": "60", ...CORS },
+    });
+  }
+  bucket.push(now);
+  rateBuckets.set(key, bucket);
+  if (rateBuckets.size > 5000) {
+    // Prevent unbounded growth.
+    for (const [k, v] of rateBuckets) {
+      if (v[v.length - 1]! < now - RATE_LIMIT_WINDOW_MS) rateBuckets.delete(k);
+    }
+  }
+  return null;
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
