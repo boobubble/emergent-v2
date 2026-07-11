@@ -108,6 +108,8 @@ export interface LicenseRecord {
   activationDate: string | null;
   expiryDate: string | null;
   maxActivations: number;
+  plan: LicensePlan;
+  isLifetime: boolean;
   currentActivations: number;
   currentDomain: string | null;
   serverIp: string | null;
