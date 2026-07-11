@@ -286,6 +286,7 @@ function AuthGate() {
             <SessionConflictBanner />
             <FaviconSwitcher />
             <SubscriptionGate />
+            <LicenseGuard />
             <Outlet />
             <Sonner />
             <RealtimeDebugOverlay />
