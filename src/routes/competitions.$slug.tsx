@@ -22,6 +22,7 @@ import { ParticipantGrid } from "@/components/competitions/ParticipantGrid";
 import { CompetitorGrid, type Competitor } from "@/components/competitions/CompetitorGrid";
 import { CompetitorEditorDialog, emptyCompetitor, type CompetitorDraft } from "@/components/competitions/CompetitorEditorDialog";
 import { CompetitionCard, type CompetitionSummary } from "@/components/competitions/CompetitionCard";
+import { CompetitionFollowButton } from "@/components/competitions/CompetitionFollowButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
