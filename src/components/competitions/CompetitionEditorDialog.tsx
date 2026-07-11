@@ -125,8 +125,42 @@ export function CompetitionEditorDialog({ value, onChange, onSaved, invalidateKe
               <Switch checked={editing.is_published ?? true} onCheckedChange={(v) => set({ is_published: v })} />
             </div>
             <div className="rounded-xl border p-3">
+              <div className="mb-2 text-sm font-semibold">Feature toggles</div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 md:grid-cols-3">
+                {([
+                  ["enable_voting", "Voting"],
+                  ["enable_reactions", "Reactions"],
+                  ["enable_comments", "Comments"],
+                  ["enable_sharing", "Sharing"],
+                  ["enable_join", "Join"],
+                  ["hide_results_until_end", "Hide results until end"],
+                  ["auto_close_voting", "Auto-close voting at end"],
+                  ["is_featured", "Featured"],
+                  ["is_pinned", "Pin to top"],
+                  ["allow_multiple_votes", "Allow multiple votes"],
+                  ["allow_guest_voting", "Guest voting"],
+                  ["allow_anonymous_voting", "Anonymous voting"],
+                ] as const).map(([k, label]) => (
+                  <div key={k} className="flex items-center gap-2">
+                    <Switch checked={!!editing[k]} onCheckedChange={(v) => set({ [k]: v })} />
+                    <Label className="text-xs">{label}</Label>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 max-w-[200px]">
+                <Label className="text-xs">Max votes per user</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={editing.max_votes_per_user ?? 1}
+                  onChange={(e) => set({ max_votes_per_user: Math.max(1, Number(e.target.value) || 1) })}
+                />
+              </div>
+            </div>
+            <div className="rounded-xl border p-3">
               <div className="mb-2 text-sm font-semibold">Rewards</div>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+
                 <div><Label>Coins</Label><Input type="number" value={editing.rewards?.coins ?? 0} onChange={(e) => set({ rewards: { ...editing.rewards, coins: Number(e.target.value) } })} /></div>
                 <div><Label>XP</Label><Input type="number" value={editing.rewards?.xp ?? 0} onChange={(e) => set({ rewards: { ...editing.rewards, xp: Number(e.target.value) } })} /></div>
                 <div><Label>Premium days</Label><Input type="number" value={editing.rewards?.premium_days ?? 0} onChange={(e) => set({ rewards: { ...editing.rewards, premium_days: Number(e.target.value) } })} /></div>
