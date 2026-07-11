@@ -22,6 +22,7 @@ import { ParticipantGrid } from "@/components/competitions/ParticipantGrid";
 import { CompetitorGrid, type Competitor } from "@/components/competitions/CompetitorGrid";
 import { CompetitorEditorDialog, emptyCompetitor, type CompetitorDraft } from "@/components/competitions/CompetitorEditorDialog";
 import { CompetitionCard, type CompetitionSummary } from "@/components/competitions/CompetitionCard";
+import { CompetitionFollowButton } from "@/components/competitions/CompetitionFollowButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -250,7 +251,8 @@ function CompetitionDetail() {
         <div className="absolute top-3 left-3">
           <Link to="/competitions"><Button size="icon" variant="secondary"><ArrowLeft className="h-4 w-4" /></Button></Link>
         </div>
-        <div className="absolute top-3 right-3 flex gap-2">
+        <div className="absolute top-3 right-3 flex flex-wrap justify-end gap-2">
+          <CompetitionFollowButton competitionId={c.id} userId={userId} />
           {enableSharing && (
             <Button size="sm" variant="secondary" onClick={handleShare}>
               <Share2 className="mr-1 h-4 w-4" /> Share

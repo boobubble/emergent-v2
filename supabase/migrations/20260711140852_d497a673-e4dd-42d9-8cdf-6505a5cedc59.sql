@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_competition_followers() FROM PUBLIC, anon, authenticated;

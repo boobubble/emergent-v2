@@ -20,7 +20,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus } from "lucide-react";
 import { useState } from "react";
+import { AdminCompetitorSortableGrid } from "./AdminCompetitorSortableGrid";
+import { CompetitorEditorDialog, emptyCompetitor, type CompetitorDraft } from "./CompetitorEditorDialog";
+import type { Competitor } from "./CompetitorGrid";
 
 function downloadCSV(filename: string, rows: Array<Record<string, unknown>>) {
   if (rows.length === 0) { toast.error("Nothing to export"); return; }
@@ -54,6 +58,7 @@ export function AdminCompetitionManageDialog({
   const setWinners = useServerFn(adminSetManualWinners);
   const finalize = useServerFn(adminFinalizeWinners);
   const [voteFilter, setVoteFilter] = useState("");
+  const [nomineeDraft, setNomineeDraft] = useState<CompetitorDraft | null>(null);
 
   const { data: manage } = useQuery({
     queryKey: ["competition-manage", competitionId],
@@ -146,6 +151,7 @@ export function AdminCompetitionManageDialog({
         <Tabs defaultValue="analytics">
           <TabsList className="flex-wrap">
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="nominees">Nominees ({competitors.length})</TabsTrigger>
             <TabsTrigger value="participants">Participants</TabsTrigger>
             <TabsTrigger value="votes">Votes ({votes.length})</TabsTrigger>
             <TabsTrigger value="winners">Winners</TabsTrigger>
@@ -195,7 +201,32 @@ export function AdminCompetitionManageDialog({
             )}
           </TabsContent>
 
+          <TabsContent value="nominees" className="mt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Drag rows to reorder. Featured/pinned nominees surface on the detail page.
+              </p>
+              <Button
+                size="sm"
+                onClick={() =>
+                  competitionId && setNomineeDraft(emptyCompetitor(competitionId, competitors.length))
+                }
+              >
+                <Plus className="mr-1 h-4 w-4" /> Add nominee
+              </Button>
+            </div>
+            {competitionId && (
+              <AdminCompetitorSortableGrid
+                competitionId={competitionId}
+                competitors={competitors as Competitor[]}
+                onEdit={(c) => setNomineeDraft({ ...(c as unknown as CompetitorDraft) })}
+                invalidateKey={["competition-manage", competitionId]}
+              />
+            )}
+          </TabsContent>
+
           <TabsContent value="participants" className="mt-4 space-y-2">
+
             {participants.length === 0 && <p className="text-sm text-muted-foreground">No participants yet.</p>}
             {participants.map((p) => (
               <div key={p.id} className="flex items-center gap-3 rounded-xl border p-2">
@@ -369,6 +400,12 @@ export function AdminCompetitionManageDialog({
           </TabsContent>
         </Tabs>
       </DialogContent>
+      <CompetitorEditorDialog
+        value={nomineeDraft}
+        onChange={setNomineeDraft}
+        invalidateKey={["competition-manage", competitionId ?? ""]}
+      />
     </Dialog>
   );
 }
+

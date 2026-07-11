@@ -919,49 +919,90 @@ export type Database = {
       competition_competitors: {
         Row: {
           competition_id: string
+          country: string | null
           created_at: string
           description: string | null
           id: string
           is_disqualified: boolean
+          is_featured: boolean
           is_hidden: boolean
+          is_pinned: boolean
           linked_user_id: string | null
           name: string
           photo_url: string | null
+          social_links: Json
           sort_order: number
           updated_at: string
           vote_count: number
+          website: string | null
         }
         Insert: {
           competition_id: string
+          country?: string | null
           created_at?: string
           description?: string | null
           id?: string
           is_disqualified?: boolean
+          is_featured?: boolean
           is_hidden?: boolean
+          is_pinned?: boolean
           linked_user_id?: string | null
           name: string
           photo_url?: string | null
+          social_links?: Json
           sort_order?: number
           updated_at?: string
           vote_count?: number
+          website?: string | null
         }
         Update: {
           competition_id?: string
+          country?: string | null
           created_at?: string
           description?: string | null
           id?: string
           is_disqualified?: boolean
+          is_featured?: boolean
           is_hidden?: boolean
+          is_pinned?: boolean
           linked_user_id?: string | null
           name?: string
           photo_url?: string | null
+          social_links?: Json
           sort_order?: number
           updated_at?: string
           vote_count?: number
+          website?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "competition_competitors_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_follows: {
+        Row: {
+          competition_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_follows_competition_id_fkey"
             columns: ["competition_id"]
             isOneToOne: false
             referencedRelation: "competitions"
