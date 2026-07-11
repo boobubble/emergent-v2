@@ -17,9 +17,17 @@ import { ensureRequiredBuckets } from "@/lib/backup.functions";
 import { getBootstrapStatus, runSchemaBootstrap, type BootstrapStatus, type BootstrapResult } from "@/lib/installer-bootstrap.functions";
 import { getEnvValidation, testDatabaseConnection, type EnvValidation, type DbConnectionResult } from "@/lib/installer-diagnostics.functions";
 import { getSystemCompatibility, type SystemCompatibility, type CompatState } from "@/lib/system-compatibility.functions";
+import { verifyLicense as verifyLicenseFn, activateLicense as activateLicenseFn, listLicenseSources } from "@/lib/licensing/manager.functions";
 
 import { toast } from "sonner";
 import { APP_VERSION } from "@/lib/app-version";
+
+type LicenseSource = "self" | "envato" | "codester";
+const LICENSE_SOURCE_LABEL: Record<LicenseSource, string> = {
+  self: "Direct / Self-Hosted License",
+  envato: "CodeCanyon (Envato)",
+  codester: "Codester",
+};
 
 export const Route = createFileRoute("/installer")({ component: InstallerPage });
 
