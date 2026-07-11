@@ -141,7 +141,7 @@ export const adminSaveCompetitor = createServerFn({ method: "POST" })
     sort_order?: number;
     country?: string | null;
     website?: string | null;
-    social_links?: Record<string, string | null | undefined>;
+    social_links?: Record<string, string | null | undefined> | null;
     is_featured?: boolean;
     is_pinned?: boolean;
   }) => data)
