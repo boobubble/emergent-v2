@@ -254,11 +254,10 @@ export const getCompetitionFollowerCount = createServerFn({ method: "GET" })
   .inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data }) => {
     const sb = await publicClient();
-    const { count } = await (sb as any)
-      .from("competition_follows")
-      .select("competition_id", { count: "exact", head: true })
-      .eq("competition_id", data.competitionId);
-    return { count: count ?? 0 };
+    const { data: count, error } = await (sb as any)
+      .rpc("get_competition_follower_count", { _competition_id: data.competitionId });
+    if (error) throw new Error(error.message);
+    return { count: typeof count === "number" ? count : Number(count ?? 0) };
   });
 
 export const voteForCompetitor = createServerFn({ method: "POST" })
