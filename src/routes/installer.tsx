@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, AlertCircle, Loader2, Rocket, Cloud, Server, Shield, KeyRound, Database, UserPlus, Palette, PartyPopper, Terminal, Copy, Trash2, ChevronDown, ChevronUp, Download, HardDrive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  detectInstallMode, fetchInstallStatus, isValidEnvatoCode, isValidOfflineKey,
+  detectInstallMode, fetchInstallStatus,
   completeInstallation, bootstrapFirstAdmin, type InstallMode,
 } from "@/lib/installer";
 import { useServerFn } from "@tanstack/react-start";
