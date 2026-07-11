@@ -30,6 +30,7 @@ import { AdsAutoLoader } from "@/components/AdSlot";
 import { BroadcasterAnnouncementsRunner } from "@/components/broadcaster/BroadcasterAnnouncements";
 import { TrioInvitesListener } from "@/components/chat/TrioInvitesListener";
 import { CompleteProfileModal } from "@/components/auth/CompleteProfileModal";
+import { LicenseGuard } from "@/components/LicenseGuard";
 import { useHomePageMode } from "@/lib/use-home-page-mode";
 import "@/i18n";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
@@ -285,6 +286,7 @@ function AuthGate() {
             <SessionConflictBanner />
             <FaviconSwitcher />
             <SubscriptionGate />
+            <LicenseGuard />
             <Outlet />
             <Sonner />
             <RealtimeDebugOverlay />
