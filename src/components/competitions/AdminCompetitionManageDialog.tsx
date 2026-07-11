@@ -146,6 +146,7 @@ export function AdminCompetitionManageDialog({
         <Tabs defaultValue="analytics">
           <TabsList className="flex-wrap">
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="nominees">Nominees ({competitors.length})</TabsTrigger>
             <TabsTrigger value="participants">Participants</TabsTrigger>
             <TabsTrigger value="votes">Votes ({votes.length})</TabsTrigger>
             <TabsTrigger value="winners">Winners</TabsTrigger>
