@@ -70,8 +70,10 @@ export interface LicenseVerificationResult {
     product?: string;
     productVersion?: string;
     activationDate?: string;
-    expiryDate?: string;
+    expiryDate?: string | null;
     maxActivations?: number;
+    plan?: LicensePlan;
+    isLifetime?: boolean;
   };
   /** Provider-side raw response echoed for logging. Never contains secrets. */
   // Use `any` here so the TanStack serializer accepts pass-through JSON.
