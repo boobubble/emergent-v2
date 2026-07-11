@@ -20,7 +20,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus } from "lucide-react";
 import { useState } from "react";
+import { AdminCompetitorSortableGrid } from "./AdminCompetitorSortableGrid";
+import { CompetitorEditorDialog, emptyCompetitor, type CompetitorDraft } from "./CompetitorEditorDialog";
+import type { Competitor } from "./CompetitorGrid";
 
 function downloadCSV(filename: string, rows: Array<Record<string, unknown>>) {
   if (rows.length === 0) { toast.error("Nothing to export"); return; }
