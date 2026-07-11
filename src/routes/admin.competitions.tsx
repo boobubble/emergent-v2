@@ -2,22 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Edit, Trophy, Users, Vote, Award } from "lucide-react";
+import { Plus, Trash2, Edit, Trophy, Users, Vote, Award, Pin, Star, Settings as SettingsIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
   listCompetitions, listCategories, adminSaveCompetition, adminDeleteCompetition,
-  adminFinalizeWinners, adminSetParticipantStatus, getCompetition,
+  adminFinalizeWinners, adminListAllCompetitions,
 } from "@/lib/competitions.functions";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { CompetitionEditorDialog, emptyCompetition } from "@/components/competitions/CompetitionEditorDialog";
+import { AdminCompetitionManageDialog } from "@/components/competitions/AdminCompetitionManageDialog";
+import { useMyRoles } from "@/lib/use-my-role";
+
 
 export const Route = createFileRoute("/admin/competitions")({
   component: AdminCompetitions,
