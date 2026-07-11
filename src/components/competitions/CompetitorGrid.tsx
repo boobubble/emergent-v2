@@ -1,11 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Pencil, Trash2, Trophy } from "lucide-react";
+import { Pencil, Trash2, Trophy, EyeOff, Eye, Ban, RotateCcw, Undo2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { adminDeleteCompetitor, voteForCompetitor } from "@/lib/competitions.functions";
+import {
+  adminDeleteCompetitor,
+  voteForCompetitor,
+  adminSetCompetitorFlags,
+  adminResetCompetitorVotes,
+} from "@/lib/competitions.functions";
 
 export interface Competitor {
   id: string;
@@ -16,8 +21,11 @@ export interface Competitor {
   linked_user_id?: string | null;
   vote_count: number;
   sort_order: number;
+  is_hidden?: boolean;
+  is_disqualified?: boolean;
   linked_profile?: { username?: string | null; avatar_url?: string | null; avatar_color?: string | null } | null;
 }
+
 
 export function CompetitorGrid({
   competitionId,
