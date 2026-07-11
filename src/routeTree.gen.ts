@@ -41,6 +41,7 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
 import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
@@ -304,6 +305,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompetitionsRoute,
 } as any)
 const BroadcasterIndexRoute = BroadcasterIndexRouteImport.update({
   id: '/',
@@ -951,6 +957,7 @@ export interface FileRoutesByFullPath {
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
+  '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
@@ -976,7 +983,6 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
-  '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
   '/feed': typeof FeedRouteWithChildren
@@ -1086,6 +1092,7 @@ export interface FileRoutesByTo {
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/broadcaster': typeof BroadcasterIndexRoute
+  '/competitions': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
@@ -1224,6 +1231,7 @@ export interface FileRoutesById {
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
+  '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
@@ -1363,6 +1371,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin/'
     | '/broadcaster/'
+    | '/competitions/'
     | '/admin/upcoming/$key'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
@@ -1388,7 +1397,6 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
-    | '/competitions'
     | '/confessions'
     | '/deploy'
     | '/feed'
@@ -1498,6 +1506,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin'
     | '/broadcaster'
+    | '/competitions'
     | '/admin/upcoming/$key'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
@@ -1635,6 +1644,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin/'
     | '/broadcaster/'
+    | '/competitions/'
     | '/admin/upcoming/$key'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
@@ -1929,6 +1939,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/competitions/': {
+      id: '/competitions/'
+      path: '/'
+      fullPath: '/competitions/'
+      preLoaderRoute: typeof CompetitionsIndexRouteImport
+      parentRoute: typeof CompetitionsRoute
     }
     '/broadcaster/': {
       id: '/broadcaster/'
@@ -2851,11 +2868,13 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
 interface CompetitionsRouteChildren {
   CompetitionsSlugRoute: typeof CompetitionsSlugRoute
   CompetitionsLeaderboardRoute: typeof CompetitionsLeaderboardRoute
+  CompetitionsIndexRoute: typeof CompetitionsIndexRoute
 }
 
 const CompetitionsRouteChildren: CompetitionsRouteChildren = {
   CompetitionsSlugRoute: CompetitionsSlugRoute,
   CompetitionsLeaderboardRoute: CompetitionsLeaderboardRoute,
+  CompetitionsIndexRoute: CompetitionsIndexRoute,
 }
 
 const CompetitionsRouteWithChildren = CompetitionsRoute._addFileChildren(
