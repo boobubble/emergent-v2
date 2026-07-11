@@ -457,9 +457,12 @@ function ImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenCha
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [maxActivations, setMaxActivations] = useState(1);
+  const [plan, setPlan] = useState<PlanId>("monthly");
   const [expiry, setExpiry] = useState("");
   const [status, setStatus] = useState("active");
   const [busy, setBusy] = useState(false);
+
+  const isLifetime = plan === "lifetime";
 
   async function submit() {
     if (!licenseKey) { toast.error("License key required"); return; }
@@ -473,11 +476,12 @@ function ImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenCha
           customerEmail: email || undefined,
           customerName: name || undefined,
           maxActivations,
-          expiryDate: expiry ? new Date(expiry).toISOString() : null,
+          plan,
+          expiryDate: isLifetime ? null : (expiry ? new Date(expiry).toISOString() : null),
           status,
         },
       });
-      toast.success("License imported");
+      toast.success(isLifetime ? "Lifetime license imported" : "License imported");
       onDone();
       onOpenChange(false);
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
@@ -511,9 +515,23 @@ function ImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenCha
             <div><Label>Customer email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
             <div><Label>Customer name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <Label>Plan</Label>
+              <Select value={plan} onValueChange={(v) => setPlan(v as PlanId)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{PLANS.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
             <div><Label>Max activations</Label><Input type="number" min={1} value={maxActivations} onChange={(e) => setMaxActivations(Number(e.target.value) || 1)} /></div>
-            <div><Label>Expires</Label><Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} /></div>
+            <div>
+              <Label>Expires</Label>
+              {isLifetime ? (
+                <div className="mt-1 flex items-center gap-1 rounded-md border bg-muted/40 px-2 py-1.5 text-xs"><InfinityIcon className="h-3.5 w-3.5" /> Lifetime</div>
+              ) : (
+                <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
+              )}
+            </div>
           </div>
         </div>
         <DialogFooter>
