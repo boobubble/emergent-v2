@@ -253,6 +253,10 @@ export const adminGenerateSelfLicense = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const key = randomSelfKey();
+    const expiry =
+      data.plan === "lifetime"
+        ? null
+        : (data.expiryDate ?? planDefaultExpiry(data.plan));
     const { data: row, error } = await supabaseAdmin
       .from("licenses")
       .insert({
@@ -263,7 +267,8 @@ export const adminGenerateSelfLicense = createServerFn({ method: "POST" })
         product: "boobubble",
         product_version: data.productVersion ?? APP_VERSION,
         max_activations: data.maxActivations,
-        expiry_date: data.expiryDate ?? null,
+        license_plan: data.plan,
+        expiry_date: expiry,
         status: "pending",
       } as any)
       .select("*")
