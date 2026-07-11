@@ -102,6 +102,8 @@ function InstallerPage() {
   const fetchEnvValidation = useServerFn(getEnvValidation);
   const runDbTest = useServerFn(testDatabaseConnection);
   const runCompat = useServerFn(getSystemCompatibility);
+  const runVerifyLicense = useServerFn(verifyLicenseFn);
+  const runActivateLicense = useServerFn(activateLicenseFn);
   const [compat, setCompat] = useState<SystemCompatibility | null>(null);
   const [compatBusy, setCompatBusy] = useState(false);
   async function loadCompat() {
