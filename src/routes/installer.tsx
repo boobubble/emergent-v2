@@ -225,6 +225,8 @@ function InstallerPage() {
         customerName: result.license.customerName,
         expiryDate: result.license.expiryDate,
         status: result.status,
+        plan: result.license.plan,
+        isLifetime: result.license.plan === "lifetime" || result.license.isLifetime,
       });
       // Preserve back-compat with existing complete_installation RPC.
       setLicenseType(licenseSource === "envato" ? "envato" : "offline");
