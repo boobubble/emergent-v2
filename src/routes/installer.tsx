@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, AlertCircle, Loader2, Rocket, Cloud, Server, Shield, KeyRound, Database, UserPlus, Palette, PartyPopper, Terminal, Copy, Trash2, ChevronDown, ChevronUp, Download, HardDrive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  detectInstallMode, fetchInstallStatus, isValidEnvatoCode, isValidOfflineKey,
+  detectInstallMode, fetchInstallStatus,
   completeInstallation, bootstrapFirstAdmin, type InstallMode,
 } from "@/lib/installer";
 import { useServerFn } from "@tanstack/react-start";
@@ -17,9 +17,17 @@ import { ensureRequiredBuckets } from "@/lib/backup.functions";
 import { getBootstrapStatus, runSchemaBootstrap, type BootstrapStatus, type BootstrapResult } from "@/lib/installer-bootstrap.functions";
 import { getEnvValidation, testDatabaseConnection, type EnvValidation, type DbConnectionResult } from "@/lib/installer-diagnostics.functions";
 import { getSystemCompatibility, type SystemCompatibility, type CompatState } from "@/lib/system-compatibility.functions";
+import { verifyLicense as verifyLicenseFn, activateLicense as activateLicenseFn, listLicenseSources } from "@/lib/licensing/manager.functions";
 
 import { toast } from "sonner";
 import { APP_VERSION } from "@/lib/app-version";
+
+type LicenseSource = "self" | "envato" | "codester";
+const LICENSE_SOURCE_LABEL: Record<LicenseSource, string> = {
+  self: "Direct / Self-Hosted License",
+  envato: "CodeCanyon (Envato)",
+  codester: "Codester",
+};
 
 export const Route = createFileRoute("/installer")({ component: InstallerPage });
 
@@ -42,9 +50,14 @@ function InstallerPage() {
   const [mode, setMode] = useState<InstallMode>("cloud");
 
   // form state
+  const [licenseSource, setLicenseSource] = useState<LicenseSource>("envato");
   const [licenseType, setLicenseType] = useState<"envato" | "offline">("envato");
   const [licenseKey, setLicenseKey] = useState("");
+  const [licenseEmail, setLicenseEmail] = useState("");
+  const [licensePurchaseCode, setLicensePurchaseCode] = useState("");
   const [licenseOk, setLicenseOk] = useState(false);
+  const [licenseVerifying, setLicenseVerifying] = useState(false);
+  const [licenseInfo, setLicenseInfo] = useState<{ customerName?: string; expiryDate?: string; status?: string } | null>(null);
   const [reqsOk, setReqsOk] = useState(false);
   type HealthState = "pending" | "ok" | "fail" | "warn";
   type HealthKey = "db" | "storage" | "realtime" | "smtp" | "env" | "cron";
@@ -89,6 +102,8 @@ function InstallerPage() {
   const fetchEnvValidation = useServerFn(getEnvValidation);
   const runDbTest = useServerFn(testDatabaseConnection);
   const runCompat = useServerFn(getSystemCompatibility);
+  const runVerifyLicense = useServerFn(verifyLicenseFn);
+  const runActivateLicense = useServerFn(activateLicenseFn);
   const [compat, setCompat] = useState<SystemCompatibility | null>(null);
   const [compatBusy, setCompatBusy] = useState(false);
   async function loadCompat() {
@@ -179,20 +194,49 @@ function InstallerPage() {
   }
 
   async function verifyLicense() {
-    pushLog("info", "license", `Verifying ${licenseType} key…`);
-    const ok = licenseType === "envato" ? isValidEnvatoCode(licenseKey) : isValidOfflineKey(licenseKey);
-    if (!ok) {
-      const m = licenseType === "envato"
-        ? "Invalid Envato purchase code (format: 8-4-4-4-12 hex)"
-        : "Invalid offline key (format: BOOB-XXXX-XXXX-XXXX-XXXX)";
-      pushLog("error", "license", m);
-      toast.error(m);
+    if (!licenseKey.trim()) { toast.error("Enter a license key"); return; }
+    if (licenseSource === "self" && !licenseEmail.trim()) {
+      toast.error("Customer email is required for direct licenses");
       return;
     }
-    setLicenseOk(true);
-    pushLog("ok", "license", "License accepted");
-    toast.success("License accepted");
-    go(1);
+    setLicenseVerifying(true);
+    setLicenseOk(false);
+    setLicenseInfo(null);
+    pushLog("info", "license", `Verifying ${LICENSE_SOURCE_LABEL[licenseSource]}…`);
+    try {
+      const host = {
+        domain: window.location.hostname,
+        productVersion: APP_VERSION,
+        installationId: window.location.origin,
+      };
+      const identity = {
+        key: licenseKey.trim(),
+        purchaseCode: licensePurchaseCode.trim() || undefined,
+        customerEmail: licenseEmail.trim() || undefined,
+      };
+      const result = await runVerifyLicense({ data: { sourceId: licenseSource, identity, host } });
+      if (!result.ok) {
+        pushLog("error", "license", result.message ?? "License verification failed");
+        toast.error(result.message ?? "License verification failed");
+        return;
+      }
+      setLicenseOk(true);
+      setLicenseInfo({
+        customerName: result.license.customerName,
+        expiryDate: result.license.expiryDate,
+        status: result.status,
+      });
+      // Preserve back-compat with existing complete_installation RPC.
+      setLicenseType(licenseSource === "envato" ? "envato" : "offline");
+      pushLog("ok", "license", `License valid (${result.status})`);
+      toast.success("License verified");
+      go(1);
+    } catch (e: any) {
+      pushLog("error", "license", e?.message ?? "Verification failed");
+      toast.error(e?.message ?? "Verification failed");
+    } finally {
+      setLicenseVerifying(false);
+    }
   }
 
   async function runRequirementsCheck() {
@@ -398,6 +442,28 @@ function InstallerPage() {
       const t0 = Date.now();
       await completeInstallation({ license_type: licenseType, license_key: licenseKey, site_name: siteName, mode });
       pushLog("ok", "finish", "Installer lock written");
+      // Persist the unified license record + signed local cache.
+      try {
+        const activation = await runActivateLicense({
+          data: {
+            sourceId: licenseSource,
+            identity: {
+              key: licenseKey.trim(),
+              purchaseCode: licensePurchaseCode.trim() || undefined,
+              customerEmail: licenseEmail.trim() || undefined,
+            },
+            host: {
+              domain: window.location.hostname,
+              productVersion: APP_VERSION,
+              installationId: window.location.origin,
+            },
+          },
+        });
+        if (activation.ok) pushLog("ok", "finish", `License activated for ${window.location.hostname}`);
+        else pushLog("warn", "finish", `License activation: ${activation.message ?? "skipped"}`);
+      } catch (e: any) {
+        pushLog("warn", "finish", `License activation: ${e?.message ?? "skipped"}`);
+      }
       try {
         await supabase.from("app_settings").upsert({ key: "general", value: { site_name: siteName } }, { onConflict: "key" });
         pushLog("ok", "finish", `Site name saved: ${siteName}`);
@@ -611,29 +677,69 @@ function InstallerPage() {
 
             {current.id === "license" && (
               <div className="space-y-3">
-                <RadioGroup value={licenseType} onValueChange={(v) => setLicenseType(v as any)} className="grid grid-cols-2 gap-2">
-                  <label className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer ${licenseType==="envato" ? "border-primary bg-primary/5" : ""}`}>
-                    <RadioGroupItem value="envato" /><span className="text-sm">Envato Purchase Code</span>
-                  </label>
-                  <label className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer ${licenseType==="offline" ? "border-primary bg-primary/5" : ""}`}>
-                    <RadioGroupItem value="offline" /><span className="text-sm">Offline License Key</span>
-                  </label>
-                </RadioGroup>
                 <div>
-                  <Label>{licenseType === "envato" ? "Purchase Code" : "License Key"}</Label>
+                  <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">License Source</Label>
+                  <RadioGroup value={licenseSource} onValueChange={(v) => { setLicenseSource(v as LicenseSource); setLicenseOk(false); setLicenseInfo(null); }} className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {(["self", "envato", "codester"] as LicenseSource[]).map((src) => (
+                      <label key={src} className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer ${licenseSource===src ? "border-primary bg-primary/5" : ""}`}>
+                        <RadioGroupItem value={src} />
+                        <span className="text-sm">{LICENSE_SOURCE_LABEL[src]}</span>
+                      </label>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                <div>
+                  <Label>
+                    {licenseSource === "envato" ? "Envato Purchase Code" : licenseSource === "codester" ? "Codester License Key" : "License Key"}
+                  </Label>
                   <Input
                     value={licenseKey}
                     onChange={(e) => setLicenseKey(e.target.value)}
-                    placeholder={licenseType === "envato" ? "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" : "BOOB-XXXX-XXXX-XXXX-XXXX"}
+                    placeholder={
+                      licenseSource === "envato"
+                        ? "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                        : licenseSource === "codester"
+                        ? "CODESTER-XXXX-XXXX-XXXX"
+                        : "BOOB-XXXX-XXXX-XXXX-XXXX"
+                    }
                     className="font-mono"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {licenseType === "envato"
+                    {licenseSource === "envato"
                       ? "Find this in your Envato downloads → License certificate."
-                      : "Provided by your seller for direct (non-Envato) purchases."}
+                      : licenseSource === "codester"
+                      ? "Provided in your Codester purchase receipt."
+                      : "Direct-purchase key issued by us or generated in the admin panel."}
                   </p>
                 </div>
-                <Button onClick={verifyLicense} disabled={!licenseKey} className="w-full">Verify License</Button>
+
+                {licenseSource === "self" && (
+                  <div>
+                    <Label>Customer Email</Label>
+                    <Input
+                      type="email"
+                      value={licenseEmail}
+                      onChange={(e) => setLicenseEmail(e.target.value)}
+                      placeholder="you@yourdomain.com"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">The email the license was issued to.</p>
+                  </div>
+                )}
+
+                {licenseOk && licenseInfo && (
+                  <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-xs">
+                    <div className="flex items-center gap-2 font-medium text-emerald-700 dark:text-emerald-400">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> License verified ({licenseInfo.status})
+                    </div>
+                    {licenseInfo.customerName && <div className="mt-1 text-muted-foreground">Customer: {licenseInfo.customerName}</div>}
+                    {licenseInfo.expiryDate && <div className="text-muted-foreground">Expires: {new Date(licenseInfo.expiryDate).toLocaleDateString()}</div>}
+                  </div>
+                )}
+
+                <Button onClick={verifyLicense} disabled={!licenseKey || licenseVerifying} className="w-full">
+                  {licenseVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify License"}
+                </Button>
               </div>
             )}
 
