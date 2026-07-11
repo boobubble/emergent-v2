@@ -922,6 +922,8 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_disqualified: boolean
+          is_hidden: boolean
           linked_user_id: string | null
           name: string
           photo_url: string | null
@@ -934,6 +936,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_disqualified?: boolean
+          is_hidden?: boolean
           linked_user_id?: string | null
           name: string
           photo_url?: string | null
@@ -946,6 +950,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_disqualified?: boolean
+          is_hidden?: boolean
           linked_user_id?: string | null
           name?: string
           photo_url?: string | null
@@ -1042,17 +1048,30 @@ export type Database = {
       }
       competitions: {
         Row: {
+          allow_anonymous_voting: boolean
+          allow_guest_voting: boolean
+          allow_multiple_votes: boolean
           allow_vote_change: boolean
           announce_channels: string[]
+          auto_close_voting: boolean
           banner_url: string | null
           category_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
+          enable_comments: boolean
+          enable_join: boolean
+          enable_reactions: boolean
+          enable_sharing: boolean
+          enable_voting: boolean
           end_at: string
+          hide_results_until_end: boolean
           id: string
+          is_featured: boolean
+          is_pinned: boolean
           is_published: boolean
           max_participants: number | null
+          max_votes_per_user: number
           name: string
           report_count: number
           require_approval: boolean
@@ -1069,17 +1088,30 @@ export type Database = {
           winner_count: number
         }
         Insert: {
+          allow_anonymous_voting?: boolean
+          allow_guest_voting?: boolean
+          allow_multiple_votes?: boolean
           allow_vote_change?: boolean
           announce_channels?: string[]
+          auto_close_voting?: boolean
           banner_url?: string | null
           category_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          enable_comments?: boolean
+          enable_join?: boolean
+          enable_reactions?: boolean
+          enable_sharing?: boolean
+          enable_voting?: boolean
           end_at: string
+          hide_results_until_end?: boolean
           id?: string
+          is_featured?: boolean
+          is_pinned?: boolean
           is_published?: boolean
           max_participants?: number | null
+          max_votes_per_user?: number
           name: string
           report_count?: number
           require_approval?: boolean
@@ -1096,17 +1128,30 @@ export type Database = {
           winner_count?: number
         }
         Update: {
+          allow_anonymous_voting?: boolean
+          allow_guest_voting?: boolean
+          allow_multiple_votes?: boolean
           allow_vote_change?: boolean
           announce_channels?: string[]
+          auto_close_voting?: boolean
           banner_url?: string | null
           category_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          enable_comments?: boolean
+          enable_join?: boolean
+          enable_reactions?: boolean
+          enable_sharing?: boolean
+          enable_voting?: boolean
           end_at?: string
+          hide_results_until_end?: boolean
           id?: string
+          is_featured?: boolean
+          is_pinned?: boolean
           is_published?: boolean
           max_participants?: number | null
+          max_votes_per_user?: number
           name?: string
           report_count?: number
           require_approval?: boolean
@@ -5428,6 +5473,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_reset_competition_votes: {
+        Args: { _competition: string }
+        Returns: undefined
+      }
+      admin_reset_competitor_votes: {
+        Args: { _competitor: string }
+        Returns: undefined
+      }
       admin_revoke_chat_theme: {
         Args: { _theme_key: string; _user: string }
         Returns: undefined
@@ -5454,6 +5507,19 @@ export type Database = {
       claim_daily_reward: { Args: never; Returns: Json }
       cleanup_ended_competitions: { Args: never; Returns: undefined }
       close_inactive_trio_rooms: { Args: never; Returns: undefined }
+      competition_analytics: {
+        Args: { _competition: string }
+        Returns: {
+          leading_competitor_id: string
+          leading_competitor_name: string
+          leading_competitor_votes: number
+          total_competitors: number
+          total_participants: number
+          total_views: number
+          total_votes: number
+          unique_voters: number
+        }[]
+      }
       complete_installation: { Args: { _payload: Json }; Returns: Json }
       create_coin_order: {
         Args: { _package_id: string; _provider: string }
