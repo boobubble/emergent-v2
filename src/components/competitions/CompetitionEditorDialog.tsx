@@ -23,6 +23,7 @@ export const emptyCompetition = () => ({
   require_approval: false,
   rewards: { coins: 0, xp: 0, badge: "", premium_days: 0, custom: "" },
   announce_channels: [] as string[],
+  is_published: true,
 });
 
 interface Props {
