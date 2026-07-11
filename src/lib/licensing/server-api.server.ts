@@ -144,6 +144,7 @@ async function log(licenseId: string | null, action: string, outcome: "ok" | "fa
 /* ------------------------------- verify ------------------------------- */
 
 export async function handleVerify(request: Request): Promise<Response> {
+  const rl = rateLimit(request, "verify"); if (rl) return rl;
   const v = await readVerifiedPayload(request);
   if (!v.ok) return v.response;
   const { key, email, domain, product_version } = v.payload ?? {};
@@ -167,6 +168,7 @@ export async function handleVerify(request: Request): Promise<Response> {
 /* ------------------------------ activate ------------------------------ */
 
 export async function handleActivate(request: Request): Promise<Response> {
+  const rl = rateLimit(request, "activate"); if (rl) return rl;
   const v = await readVerifiedPayload(request);
   if (!v.ok) return v.response;
   const { key, email, domain, server_ip, installation_id, product_version, runtime } = v.payload ?? {};
@@ -245,6 +247,7 @@ export async function handleActivate(request: Request): Promise<Response> {
 /* ----------------------------- deactivate ----------------------------- */
 
 export async function handleDeactivate(request: Request): Promise<Response> {
+  const rl = rateLimit(request, "deactivate"); if (rl) return rl;
   const v = await readVerifiedPayload(request);
   if (!v.ok) return v.response;
   const { key, email, domain } = v.payload ?? {};
@@ -279,6 +282,7 @@ export async function handleDeactivate(request: Request): Promise<Response> {
 /* ------------------------------- check ------------------------------- */
 
 export async function handleCheck(request: Request): Promise<Response> {
+  const rl = rateLimit(request, "check"); if (rl) return rl;
   const v = await readVerifiedPayload(request);
   if (!v.ok) return v.response;
   const { key, email, domain, product_version } = v.payload ?? {};
