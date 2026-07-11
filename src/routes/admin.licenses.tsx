@@ -283,7 +283,8 @@ function LicenseDrawer({ id, onClose, onChanged }: { id: string | null; onClose:
                 <div><span className="text-muted-foreground">Customer: </span>{license.customer_email ?? "—"}</div>
                 <div><span className="text-muted-foreground">Domain: </span>{license.current_domain ?? "—"}</div>
                 <div><span className="text-muted-foreground">Activations: </span>{license.current_activations}/{license.max_activations}</div>
-                <div><span className="text-muted-foreground">Expires: </span>{license.expiry_date ? new Date(license.expiry_date).toLocaleDateString() : "—"}</div>
+                <div><span className="text-muted-foreground">Plan: </span>{license.license_plan === "lifetime" ? <Badge className="gap-1"><InfinityIcon className="h-3 w-3" />Lifetime</Badge> : planLabel(license.license_plan)}</div>
+                <div><span className="text-muted-foreground">Expires: </span>{formatExpiryCell(license)}</div>
                 <div className="col-span-2"><span className="text-muted-foreground">Last check: </span>{license.last_validation_at ? new Date(license.last_validation_at).toLocaleString() : "—"}</div>
               </div>
             </div>
