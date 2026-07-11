@@ -291,6 +291,7 @@ const ImportInput = z.object({
   customerEmail: z.string().trim().email().optional(),
   customerName: z.string().trim().max(120).optional(),
   productVersion: z.string().trim().max(32).optional(),
+  plan: PlanSchema.default("monthly"),
   expiryDate: z.string().datetime().nullable().optional(),
   maxActivations: z.number().int().min(1).max(1000).default(1),
   status: z.string().trim().max(32).default("active"),
