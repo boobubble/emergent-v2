@@ -108,3 +108,30 @@ activations are rejected when both:
 `app_settings.license_cache`. `LicenseGuard` verifies the signature before
 trusting the cached status — tampering with the row directly is detected
 and treated as a fresh install.
+
+## License plans (Trial / Monthly / Yearly / Lifetime)
+
+Every license row has a `license_plan` column (enum
+`trial | monthly | yearly | lifetime`, default `monthly`). Admins pick a
+plan when generating or importing a license, and can convert an existing
+license to/from **Lifetime** from the admin drawer.
+
+### Lifetime semantics
+
+- Lifetime licenses store `expiry_date = NULL`. A DB trigger
+  (`licenses_enforce_lifetime_expiry`) clears the column whenever a row is
+  inserted or updated with `license_plan = 'lifetime'`, so the invariant
+  cannot drift.
+- Runtime validation (`LicenseManager.check` + `handleCheck` /
+  `handleVerify` in the public REST API) short-circuits the expiry
+  comparison for lifetime rows — only `suspended`, `revoked`, `disabled`,
+  or a domain-lock mismatch can invalidate them.
+- All surfaces render `Lifetime` in place of a date: installer summary,
+  admin table + drawer, CSV export, API DTOs (`plan`, `is_lifetime`,
+  `expiry_date: null`), and the signed local cache (no `expiryDate`
+  written for lifetime rows).
+- Providers may promote a license to Lifetime by returning `plan:
+  "lifetime"` (Self server), `plan: "lifetime"` (Codester extension), or
+  Envato's `license === "Extended License"` which the provider maps to
+  Lifetime automatically. Everything else falls back to `monthly` for
+  backward compatibility.
