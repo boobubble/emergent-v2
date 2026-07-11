@@ -60,23 +60,9 @@ function SetupWizardPage() {
   // Not installed yet → send them to the installer.
   if (!status.installed) return <Navigate to={"/installer" as any} replace />;
 
-  // Owner already exists → wizard is permanently disabled.
+  // Owner already exists → wizard is permanently disabled; redirect to login.
   if (status.hasOwner) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-background px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Shield className="mx-auto h-10 w-10 text-muted-foreground" />
-            <CardTitle className="mt-2">Setup already completed</CardTitle>
-            <CardDescription>A Super Admin already exists. This wizard is disabled.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center gap-2">
-            <Button onClick={() => navigate({ to: "/login" as any })}>Go to Login</Button>
-            <Button variant="outline" onClick={() => navigate({ to: "/admin" as any })}>Admin Panel</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <Navigate to="/login" replace />;
   }
 
   async function handleCreate(e: React.FormEvent) {
