@@ -137,6 +137,7 @@ import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/co
 import { Route as ApiPublicBackupRetentionRouteImport } from './routes/api/public/backup-retention'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 import { Route as ApiPublicLicenseVerifyRouteImport } from './routes/api/public/license/verify'
+import { Route as ApiPublicLicenseResetRouteImport } from './routes/api/public/license/reset'
 import { Route as ApiPublicLicenseDeactivateRouteImport } from './routes/api/public/license/deactivate'
 import { Route as ApiPublicLicenseCheckRouteImport } from './routes/api/public/license/check'
 import { Route as ApiPublicLicenseActivateRouteImport } from './routes/api/public/license/activate'
@@ -788,6 +789,11 @@ const ApiPublicLicenseVerifyRoute = ApiPublicLicenseVerifyRouteImport.update({
   path: '/api/public/license/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicLicenseResetRoute = ApiPublicLicenseResetRouteImport.update({
+  id: '/api/public/license/reset',
+  path: '/api/public/license/reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLicenseDeactivateRoute =
   ApiPublicLicenseDeactivateRouteImport.update({
     id: '/api/public/license/deactivate',
@@ -958,6 +964,7 @@ export interface FileRoutesByFullPath {
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
+  '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
 }
 export interface FileRoutesByTo {
@@ -1092,6 +1099,7 @@ export interface FileRoutesByTo {
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
+  '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
 }
 export interface FileRoutesById {
@@ -1229,6 +1237,7 @@ export interface FileRoutesById {
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
+  '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
 }
 export interface FileRouteTypes {
@@ -1367,6 +1376,7 @@ export interface FileRouteTypes {
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
+    | '/api/public/license/reset'
     | '/api/public/license/verify'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1501,6 +1511,7 @@ export interface FileRouteTypes {
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
+    | '/api/public/license/reset'
     | '/api/public/license/verify'
   id:
     | '__root__'
@@ -1637,6 +1648,7 @@ export interface FileRouteTypes {
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
+    | '/api/public/license/reset'
     | '/api/public/license/verify'
   fileRoutesById: FileRoutesById
 }
@@ -1688,6 +1700,7 @@ export interface RootRouteChildren {
   ApiPublicLicenseActivateRoute: typeof ApiPublicLicenseActivateRoute
   ApiPublicLicenseCheckRoute: typeof ApiPublicLicenseCheckRoute
   ApiPublicLicenseDeactivateRoute: typeof ApiPublicLicenseDeactivateRoute
+  ApiPublicLicenseResetRoute: typeof ApiPublicLicenseResetRoute
   ApiPublicLicenseVerifyRoute: typeof ApiPublicLicenseVerifyRoute
 }
 
@@ -2589,6 +2602,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLicenseVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/license/reset': {
+      id: '/api/public/license/reset'
+      path: '/api/public/license/reset'
+      fullPath: '/api/public/license/reset'
+      preLoaderRoute: typeof ApiPublicLicenseResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/license/deactivate': {
       id: '/api/public/license/deactivate'
       path: '/api/public/license/deactivate'
@@ -2900,6 +2920,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLicenseActivateRoute: ApiPublicLicenseActivateRoute,
   ApiPublicLicenseCheckRoute: ApiPublicLicenseCheckRoute,
   ApiPublicLicenseDeactivateRoute: ApiPublicLicenseDeactivateRoute,
+  ApiPublicLicenseResetRoute: ApiPublicLicenseResetRoute,
   ApiPublicLicenseVerifyRoute: ApiPublicLicenseVerifyRoute,
 }
 export const routeTree = rootRouteImport
