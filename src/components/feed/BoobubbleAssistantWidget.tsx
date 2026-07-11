@@ -276,8 +276,8 @@ export function BoobubbleAssistantWidget() {
             {liveComps.map((c) => (
               <Link
                 key={c.id}
-                to="/competitions/$id"
-                params={{ id: c.id }}
+                to="/competitions/$slug"
+                params={{ slug: c.slug }}
                 className="group flex items-center gap-3 overflow-hidden rounded-2xl border border-amber-500/15 bg-gradient-to-r from-amber-500/10 via-rose-500/5 to-transparent p-2.5 transition hover:-translate-y-0.5 hover:border-amber-400/30 hover:shadow-lg hover:shadow-amber-500/10"
               >
                 {c.banner_url ? (
