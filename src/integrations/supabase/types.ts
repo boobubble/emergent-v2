@@ -2651,6 +2651,231 @@ export type Database = {
         }
         Relationships: []
       }
+      license_activations: {
+        Row: {
+          activated_at: string
+          active: boolean
+          created_at: string
+          deactivated_at: string | null
+          domain: string
+          id: string
+          installation_id: string | null
+          last_seen_at: string
+          license_id: string
+          metadata: Json
+          product_version: string | null
+          runtime: string | null
+          server_ip: string | null
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string
+          active?: boolean
+          created_at?: string
+          deactivated_at?: string | null
+          domain: string
+          id?: string
+          installation_id?: string | null
+          last_seen_at?: string
+          license_id: string
+          metadata?: Json
+          product_version?: string | null
+          runtime?: string | null
+          server_ip?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string
+          active?: boolean
+          created_at?: string
+          deactivated_at?: string | null
+          domain?: string
+          id?: string
+          installation_id?: string | null
+          last_seen_at?: string
+          license_id?: string
+          metadata?: Json
+          product_version?: string | null
+          runtime?: string | null
+          server_ip?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "license_activations_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      license_logs: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          context: Json
+          created_at: string
+          id: string
+          ip_address: string | null
+          license_id: string | null
+          message: string | null
+          outcome: string
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          context?: Json
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          license_id?: string | null
+          message?: string | null
+          outcome: string
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          context?: Json
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          license_id?: string | null
+          message?: string | null
+          outcome?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "license_logs_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      license_sources: {
+        Row: {
+          config: Json
+          created_at: string
+          enabled: boolean
+          id: string
+          label: string
+          provider: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          id: string
+          label: string
+          provider: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          label?: string
+          provider?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      licenses: {
+        Row: {
+          activation_date: string | null
+          created_at: string
+          current_activations: number
+          current_domain: string | null
+          customer_email: string | null
+          customer_name: string | null
+          expiry_date: string | null
+          id: string
+          installation_id: string | null
+          last_validation_at: string | null
+          last_validation_ok: boolean | null
+          license_key: string
+          max_activations: number
+          metadata: Json
+          notes: string | null
+          owner_user_id: string | null
+          product: string
+          product_version: string | null
+          purchase_code: string | null
+          server_ip: string | null
+          source_id: string
+          status: Database["public"]["Enums"]["license_status"]
+          updated_at: string
+        }
+        Insert: {
+          activation_date?: string | null
+          created_at?: string
+          current_activations?: number
+          current_domain?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          expiry_date?: string | null
+          id?: string
+          installation_id?: string | null
+          last_validation_at?: string | null
+          last_validation_ok?: boolean | null
+          license_key: string
+          max_activations?: number
+          metadata?: Json
+          notes?: string | null
+          owner_user_id?: string | null
+          product?: string
+          product_version?: string | null
+          purchase_code?: string | null
+          server_ip?: string | null
+          source_id: string
+          status?: Database["public"]["Enums"]["license_status"]
+          updated_at?: string
+        }
+        Update: {
+          activation_date?: string | null
+          created_at?: string
+          current_activations?: number
+          current_domain?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          expiry_date?: string | null
+          id?: string
+          installation_id?: string | null
+          last_validation_at?: string | null
+          last_validation_ok?: boolean | null
+          license_key?: string
+          max_activations?: number
+          metadata?: Json
+          notes?: string | null
+          owner_user_id?: string | null
+          product?: string
+          product_version?: string | null
+          purchase_code?: string | null
+          server_ip?: string | null
+          source_id?: string
+          status?: Database["public"]["Enums"]["license_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licenses_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "license_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_highlights: {
         Row: {
           buyer_id: string
@@ -4760,6 +4985,20 @@ export type Database = {
         }
         Relationships: []
       }
+      license_statistics: {
+        Row: {
+          active: number | null
+          by_source: Json | null
+          by_version: Json | null
+          disabled: number | null
+          expired: number | null
+          pending: number | null
+          revoked: number | null
+          suspended: number | null
+          total: number | null
+        }
+        Relationships: []
+      }
       posts_safe: {
         Row: {
           author_id: string | null
@@ -5483,6 +5722,16 @@ export type Database = {
       game_status: "waiting" | "active" | "finished" | "cancelled"
       game_type: "ludo_1v1" | "ludo_4p"
       game_visibility: "public" | "private"
+      license_status:
+        | "active"
+        | "suspended"
+        | "revoked"
+        | "expired"
+        | "pending"
+        | "disabled"
+        | "development"
+        | "localhost"
+        | "unlimited"
       mod_action:
         | "ban"
         | "unban"
@@ -5697,6 +5946,17 @@ export const Constants = {
       game_status: ["waiting", "active", "finished", "cancelled"],
       game_type: ["ludo_1v1", "ludo_4p"],
       game_visibility: ["public", "private"],
+      license_status: [
+        "active",
+        "suspended",
+        "revoked",
+        "expired",
+        "pending",
+        "disabled",
+        "development",
+        "localhost",
+        "unlimited",
+      ],
       mod_action: [
         "ban",
         "unban",
