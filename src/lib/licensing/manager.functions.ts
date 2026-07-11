@@ -165,6 +165,7 @@ export const adminListLicenses = createServerFn({ method: "POST" })
       .range(data.offset, data.offset + data.limit - 1);
     if (data.status) q = q.eq("status", data.status as any);
     if (data.sourceId) q = q.eq("source_id", data.sourceId);
+    if (data.plan) q = q.eq("license_plan", data.plan);
     if (data.search) {
       q = q.or(
         [
