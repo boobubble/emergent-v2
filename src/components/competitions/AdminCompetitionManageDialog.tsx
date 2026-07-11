@@ -400,6 +400,12 @@ export function AdminCompetitionManageDialog({
           </TabsContent>
         </Tabs>
       </DialogContent>
+      <CompetitorEditorDialog
+        value={nomineeDraft}
+        onChange={setNomineeDraft}
+        invalidateKey={["competition-manage", competitionId ?? ""]}
+      />
     </Dialog>
   );
 }
+
