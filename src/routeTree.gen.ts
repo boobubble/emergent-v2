@@ -87,6 +87,7 @@ import { Route as AdminModulesRouteImport } from './routes/admin.modules'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminMediaApisRouteImport } from './routes/admin.media-apis'
 import { Route as AdminMaintenanceRouteImport } from './routes/admin.maintenance'
+import { Route as AdminLicensesRouteImport } from './routes/admin.licenses'
 import { Route as AdminLanguagesRouteImport } from './routes/admin.languages'
 import { Route as AdminLandingRouteImport } from './routes/admin.landing'
 import { Route as AdminInternalLinkingRouteImport } from './routes/admin.internal-linking'
@@ -530,6 +531,11 @@ const AdminMaintenanceRoute = AdminMaintenanceRouteImport.update({
   path: '/maintenance',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLicensesRoute = AdminLicensesRouteImport.update({
+  id: '/licenses',
+  path: '/licenses',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLanguagesRoute = AdminLanguagesRouteImport.update({
   id: '/languages',
   path: '/languages',
@@ -866,6 +872,7 @@ export interface FileRoutesByFullPath {
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/landing': typeof AdminLandingRoute
   '/admin/languages': typeof AdminLanguagesRoute
+  '/admin/licenses': typeof AdminLicensesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
@@ -995,6 +1002,7 @@ export interface FileRoutesByTo {
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/landing': typeof AdminLandingRoute
   '/admin/languages': typeof AdminLanguagesRoute
+  '/admin/licenses': typeof AdminLicensesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
@@ -1127,6 +1135,7 @@ export interface FileRoutesById {
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
   '/admin/landing': typeof AdminLandingRoute
   '/admin/languages': typeof AdminLanguagesRoute
+  '/admin/licenses': typeof AdminLicensesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
   '/admin/moderation': typeof AdminModerationRoute
@@ -1260,6 +1269,7 @@ export interface FileRouteTypes {
     | '/admin/internal-linking'
     | '/admin/landing'
     | '/admin/languages'
+    | '/admin/licenses'
     | '/admin/maintenance'
     | '/admin/media-apis'
     | '/admin/moderation'
@@ -1389,6 +1399,7 @@ export interface FileRouteTypes {
     | '/admin/internal-linking'
     | '/admin/landing'
     | '/admin/languages'
+    | '/admin/licenses'
     | '/admin/maintenance'
     | '/admin/media-apis'
     | '/admin/moderation'
@@ -1520,6 +1531,7 @@ export interface FileRouteTypes {
     | '/admin/internal-linking'
     | '/admin/landing'
     | '/admin/languages'
+    | '/admin/licenses'
     | '/admin/maintenance'
     | '/admin/media-apis'
     | '/admin/moderation'
@@ -2173,6 +2185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMaintenanceRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/licenses': {
+      id: '/admin/licenses'
+      path: '/licenses'
+      fullPath: '/admin/licenses'
+      preLoaderRoute: typeof AdminLicensesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/languages': {
       id: '/admin/languages'
       path: '/languages'
@@ -2587,6 +2606,7 @@ interface AdminRouteChildren {
   AdminInternalLinkingRoute: typeof AdminInternalLinkingRoute
   AdminLandingRoute: typeof AdminLandingRoute
   AdminLanguagesRoute: typeof AdminLanguagesRoute
+  AdminLicensesRoute: typeof AdminLicensesRoute
   AdminMaintenanceRoute: typeof AdminMaintenanceRoute
   AdminMediaApisRoute: typeof AdminMediaApisRoute
   AdminModerationRoute: typeof AdminModerationRoute
@@ -2664,6 +2684,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminInternalLinkingRoute: AdminInternalLinkingRoute,
   AdminLandingRoute: AdminLandingRoute,
   AdminLanguagesRoute: AdminLanguagesRoute,
+  AdminLicensesRoute: AdminLicensesRoute,
   AdminMaintenanceRoute: AdminMaintenanceRoute,
   AdminMediaApisRoute: AdminMediaApisRoute,
   AdminModerationRoute: AdminModerationRoute,
