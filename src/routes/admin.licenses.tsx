@@ -123,9 +123,16 @@ function LicensesPage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={<KeyRound className="h-4 w-4" />} label="Total" value={s.total_licenses ?? 0} />
-        <StatCard icon={<ShieldCheck className="h-4 w-4" />} label="Active" value={s.active_licenses ?? 0} />
-        <StatCard icon={<Ban className="h-4 w-4" />} label="Suspended / Revoked" value={(s.suspended_licenses ?? 0) + (s.revoked_licenses ?? 0)} />
+        <StatCard icon={<KeyRound className="h-4 w-4" />} label="Total" value={s.total ?? s.total_licenses ?? 0} />
+        <StatCard icon={<ShieldCheck className="h-4 w-4" />} label="Active" value={s.active ?? s.active_licenses ?? 0} />
+        <StatCard icon={<Ban className="h-4 w-4" />} label="Suspended / Revoked" value={(s.suspended ?? 0) + (s.revoked ?? 0)} />
+        <StatCard icon={<Infinity className="h-4 w-4" />} label="Lifetime" value={s.lifetime ?? 0} />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard icon={<KeyRound className="h-4 w-4" />} label="Trial" value={s.trial ?? 0} />
+        <StatCard icon={<KeyRound className="h-4 w-4" />} label="Monthly" value={s.monthly ?? 0} />
+        <StatCard icon={<KeyRound className="h-4 w-4" />} label="Yearly" value={s.yearly ?? 0} />
         <StatCard icon={<Zap className="h-4 w-4" />} label="Activations" value={s.total_activations ?? 0} />
       </div>
 
