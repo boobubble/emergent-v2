@@ -201,7 +201,32 @@ export function AdminCompetitionManageDialog({
             )}
           </TabsContent>
 
+          <TabsContent value="nominees" className="mt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Drag rows to reorder. Featured/pinned nominees surface on the detail page.
+              </p>
+              <Button
+                size="sm"
+                onClick={() =>
+                  competitionId && setNomineeDraft(emptyCompetitor(competitionId, competitors.length))
+                }
+              >
+                <Plus className="mr-1 h-4 w-4" /> Add nominee
+              </Button>
+            </div>
+            {competitionId && (
+              <AdminCompetitorSortableGrid
+                competitionId={competitionId}
+                competitors={competitors as Competitor[]}
+                onEdit={(c) => setNomineeDraft({ ...(c as unknown as CompetitorDraft) })}
+                invalidateKey={["competition-manage", competitionId]}
+              />
+            )}
+          </TabsContent>
+
           <TabsContent value="participants" className="mt-4 space-y-2">
+
             {participants.length === 0 && <p className="text-sm text-muted-foreground">No participants yet.</p>}
             {participants.map((p) => (
               <div key={p.id} className="flex items-center gap-3 rounded-xl border p-2">
