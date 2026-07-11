@@ -194,20 +194,49 @@ function InstallerPage() {
   }
 
   async function verifyLicense() {
-    pushLog("info", "license", `Verifying ${licenseType} key…`);
-    const ok = licenseType === "envato" ? isValidEnvatoCode(licenseKey) : isValidOfflineKey(licenseKey);
-    if (!ok) {
-      const m = licenseType === "envato"
-        ? "Invalid Envato purchase code (format: 8-4-4-4-12 hex)"
-        : "Invalid offline key (format: BOOB-XXXX-XXXX-XXXX-XXXX)";
-      pushLog("error", "license", m);
-      toast.error(m);
+    if (!licenseKey.trim()) { toast.error("Enter a license key"); return; }
+    if (licenseSource === "self" && !licenseEmail.trim()) {
+      toast.error("Customer email is required for direct licenses");
       return;
     }
-    setLicenseOk(true);
-    pushLog("ok", "license", "License accepted");
-    toast.success("License accepted");
-    go(1);
+    setLicenseVerifying(true);
+    setLicenseOk(false);
+    setLicenseInfo(null);
+    pushLog("info", "license", `Verifying ${LICENSE_SOURCE_LABEL[licenseSource]}…`);
+    try {
+      const host = {
+        domain: window.location.hostname,
+        productVersion: APP_VERSION,
+        installationId: window.location.origin,
+      };
+      const identity = {
+        key: licenseKey.trim(),
+        purchaseCode: licensePurchaseCode.trim() || undefined,
+        customerEmail: licenseEmail.trim() || undefined,
+      };
+      const result = await runVerifyLicense({ data: { sourceId: licenseSource, identity, host } });
+      if (!result.ok) {
+        pushLog("error", "license", result.message ?? "License verification failed");
+        toast.error(result.message ?? "License verification failed");
+        return;
+      }
+      setLicenseOk(true);
+      setLicenseInfo({
+        customerName: result.license.customerName,
+        expiryDate: result.license.expiryDate,
+        status: result.status,
+      });
+      // Preserve back-compat with existing complete_installation RPC.
+      setLicenseType(licenseSource === "envato" ? "envato" : "offline");
+      pushLog("ok", "license", `License valid (${result.status})`);
+      toast.success("License verified");
+      go(1);
+    } catch (e: any) {
+      pushLog("error", "license", e?.message ?? "Verification failed");
+      toast.error(e?.message ?? "Verification failed");
+    } finally {
+      setLicenseVerifying(false);
+    }
   }
 
   async function runRequirementsCheck() {
