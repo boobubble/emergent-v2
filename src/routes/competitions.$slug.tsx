@@ -19,7 +19,9 @@ import { useMyRoles } from "@/lib/use-my-role";
 import { Countdown } from "@/components/competitions/Countdown";
 import { TopThree } from "@/components/competitions/TopThree";
 import { ParticipantGrid } from "@/components/competitions/ParticipantGrid";
-import { CompetitorGrid, type Competitor } from "@/components/competitions/CompetitorGrid";
+import { type Competitor } from "@/components/competitions/CompetitorGrid";
+import { PremiumCompetitorGrid } from "@/components/competitions/PremiumCompetitorGrid";
+import { AnimatedCounter } from "@/components/competitions/AnimatedCounter";
 import { CompetitorEditorDialog, emptyCompetitor, type CompetitorDraft } from "@/components/competitions/CompetitorEditorDialog";
 import { CompetitionCard, type CompetitionSummary } from "@/components/competitions/CompetitionCard";
 import { CompetitionFollowButton } from "@/components/competitions/CompetitionFollowButton";
@@ -290,15 +292,16 @@ function CompetitionDetail() {
             )}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><Users className="h-4 w-4" /> {c.total_participants} participants</span>
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+            <StatTile icon={<Users className="h-4 w-4" />} label="Participants" value={c.total_participants ?? 0} />
             {!hideResults && (
-              <span className="inline-flex items-center gap-1"><Vote className="h-4 w-4" /> {c.total_votes} votes</span>
+              <StatTile icon={<Vote className="h-4 w-4" />} label="Votes" value={c.total_votes ?? 0} accent />
             )}
-            <span className="inline-flex items-center gap-1"><Eye className="h-4 w-4" /> {c.views_count ?? 0} views</span>
-            <span className="inline-flex items-center gap-1"><Calendar className="h-4 w-4" /> {new Date(c.start_at).toLocaleDateString()} → {new Date(c.end_at).toLocaleDateString()}</span>
-            <span className="inline-flex items-center gap-1"><Trophy className="h-4 w-4" /> {c.winner_count} winner{c.winner_count > 1 ? "s" : ""}</span>
+            <StatTile icon={<Eye className="h-4 w-4" />} label="Views" value={c.views_count ?? 0} />
+            <StatTile icon={<Trophy className="h-4 w-4" />} label={`Winner${(c.winner_count ?? 1) > 1 ? "s" : ""}`} value={c.winner_count ?? 1} />
+            <StatTile icon={<Calendar className="h-4 w-4" />} label="Ends" valueRaw={new Date(c.end_at).toLocaleDateString()} />
           </div>
+
 
 
           {prizeParts.length > 0 && (
@@ -373,31 +376,50 @@ function CompetitionDetail() {
           </section>
         )}
 
-        {/* Competitors (admin-managed) */}
-        <section className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+        {/* Voting-state banner */}
+        {c.status === "upcoming" && (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-400/30 bg-sky-500/10 p-4 backdrop-blur">
+            <div className="flex items-center gap-2 text-sm font-semibold text-sky-200">
+              <Calendar className="h-4 w-4" /> Voting opens in
+            </div>
+            <Countdown endAt={c.start_at} compact />
+          </div>
+        )}
+        {c.status === "completed" && (
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-center text-sm font-semibold backdrop-blur">
+            🏁 Voting Closed
+          </div>
+        )}
+
+        {/* Nominees */}
+        <section className="mt-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 font-bold"><Users className="h-4 w-4" /> Competitors</h2>
+            <h2 className="flex items-center gap-2 text-lg font-bold">
+              <Crown className="h-5 w-5 text-amber-400" /> Nominees
+              <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                {competitors.length}
+              </span>
+            </h2>
             {isAdmin && (
-              <Button
-                size="sm"
-                onClick={() => setEditing(emptyCompetitor(c.id, competitors.length))}
-              >
-                <Plus className="mr-1 h-4 w-4" /> Add competitor
+              <Button size="sm" onClick={() => setEditing(emptyCompetitor(c.id, competitors.length))}>
+                <Plus className="mr-1 h-4 w-4" /> Add nominee
               </Button>
             )}
           </div>
-          <CompetitorGrid
+          <PremiumCompetitorGrid
             competitionId={c.id}
             competitors={competitors}
             myVote={myCompetitorVote?.competitorId ?? null}
             canVote={!!userId && votingOpen}
             hideCounts={hideResults}
             isAdmin={isAdmin}
-            onEdit={(comp) => setEditing({ ...comp })}
+            votingClosed={c.status === "completed" || !votingOpen && c.status !== "upcoming"}
+            votingUpcoming={c.status === "upcoming"}
+            onEdit={(comp: Competitor) => setEditing({ ...comp })}
             invalidateKey={["competition-slug", slug]}
           />
-
         </section>
+
 
         <CompetitorEditorDialog
           value={editing}
@@ -443,3 +465,35 @@ function CompetitionDetail() {
     </div>
   );
 }
+
+function StatTile({
+  icon,
+  label,
+  value,
+  valueRaw,
+  accent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value?: number;
+  valueRaw?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={
+        "flex flex-col gap-1 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 backdrop-blur transition hover:border-white/20" +
+        (accent ? " ring-1 ring-amber-400/30" : "")
+      }
+    >
+      <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <div className={"text-lg font-bold tabular-nums" + (accent ? " text-amber-300" : "")}>
+        {valueRaw !== undefined ? valueRaw : <AnimatedCounter value={value ?? 0} />}
+      </div>
+    </div>
+  );
+}
+
