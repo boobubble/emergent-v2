@@ -9,7 +9,8 @@ export type ChatThemeKey =
   | "whatsapp"
   | "cyber_neon"
   | "minimal_modern"
-  | "vip_gold";
+  | "vip_gold"
+  | "gaming_arena";
 
 export type UnlockMode = "lifetime" | "days_30" | "days_7";
 
