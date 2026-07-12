@@ -291,21 +291,56 @@ function CompetitionDetail() {
     else toast.success("Reported. Thanks for keeping the community safe.");
   };
 
+  const layoutStyle = (c.layout_style ?? "auto") as CompetitionLayoutStyle;
+  const eligibleCount = competitors.filter((cc) => !cc.is_hidden && !cc.is_disqualified).length;
+  const resolvedLayout = resolveLayout(layoutStyle, eligibleCount);
+  const showBattleArenaHero = resolvedLayout === "vs_battle";
+
   return (
     <div className="min-h-screen bg-[#050308] pb-24 text-foreground">
-      {/* Premium Battle Arena hero */}
-      <BattleArena
-        competition={c}
-        competitors={competitors}
-        userId={userId}
-        hideCounts={hideResults}
-        votingOpen={votingOpen}
-        onVote={(id) => arenaVoteM.mutate(id)}
-        myVote={myCompetitorVote?.competitorId ?? null}
-        onShare={handleShare}
-        onReport={handleReport}
-        isVoting={arenaVoteM.isPending}
-      />
+      {/* Premium Battle Arena hero — only for VS Battle layout */}
+      {showBattleArenaHero && (
+        <BattleArena
+          competition={c}
+          competitors={competitors}
+          userId={userId}
+          hideCounts={hideResults}
+          votingOpen={votingOpen}
+          onVote={(id) => arenaVoteM.mutate(id)}
+          myVote={myCompetitorVote?.competitorId ?? null}
+          onShare={handleShare}
+          onReport={handleReport}
+          isVoting={arenaVoteM.isPending}
+        />
+      )}
+
+      {/* Compact hero for non-VS layouts */}
+      {!showBattleArenaHero && (
+        <div className="relative overflow-hidden border-b border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent px-4 pb-6 pt-6">
+          <div className="mx-auto max-w-5xl">
+            <div className="flex flex-wrap items-center gap-2">
+              {c.status === "live" && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/60 bg-rose-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-rose-200">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-rose-400" /> Live
+                </span>
+              )}
+              {c.status === "upcoming" && <Badge className="border-sky-400/50 bg-sky-500/20 text-sky-200">Upcoming</Badge>}
+              {c.status === "completed" && <Badge className="border-zinc-400/40 bg-zinc-500/20 text-zinc-200">Concluded</Badge>}
+              {category?.name && <Badge variant="outline" className="border-white/20 bg-white/5">{category.name}</Badge>}
+              <Badge variant="outline" className="border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-200 text-[10px] uppercase tracking-wider">
+                {resolvedLayout === "podium" ? "Podium" : resolvedLayout === "tournament" ? "Tournament" : "Leaderboard"}
+              </Badge>
+            </div>
+            <h1 className="mt-2 text-2xl font-black tracking-tight sm:text-4xl">{c.name}</h1>
+            {c.status !== "completed" && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-white/70">
+                <span>{c.status === "live" ? "Ends in" : "Starts in"}</span>
+                <Countdown endAt={c.status === "live" ? c.end_at : c.start_at} compact />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mx-auto max-w-5xl px-4">
         {c.description && (
