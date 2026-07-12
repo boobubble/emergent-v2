@@ -248,11 +248,18 @@ export const adminSearchProfiles = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await (supabaseAdmin as any)
       .from("profiles")
-      .select("id, username, display_name, avatar_url, avatar_color, verified")
+      .select("id, username, display_name, avatar_url, avatar_color, is_verified")
       .or(`username.ilike.${like},display_name.ilike.${like}`)
       .limit(limit);
     if (error) throw new Error(error.message);
-    return rows ?? [];
+    return (rows ?? []).map((row: any) => ({
+      id: row.id,
+      username: row.username,
+      display_name: row.display_name,
+      avatar_url: row.avatar_url,
+      avatar_color: row.avatar_color,
+      verified: !!row.is_verified,
+    }));
   });
 
 // ---------- Competition follows ----------
