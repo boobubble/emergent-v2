@@ -142,6 +142,7 @@ function AdminCompetitions() {
         value={editing}
         onChange={setEditing}
         invalidateKeys={[["competitions", "admin"], ["competitions"]]}
+        onSaved={({ id, isNew }) => { if (isNew) setManaging(id); }}
       />
 
       <AdminCompetitionManageDialog
