@@ -523,6 +523,20 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
       }
     }
 
+    // Prevent going live without at least one nominee/competitor.
+    if (data.status === "live" && data.id) {
+      const { count, error: nErr } = await sb
+        .from("competition_competitors")
+        .select("id", { count: "exact", head: true })
+        .eq("competition_id", data.id);
+      if (nErr) throw new Error(nErr.message);
+      if (!count || count < 1) {
+        throw new Error("Add at least one nominee before setting this competition to live.");
+      }
+    } else if (data.status === "live" && !data.id) {
+      throw new Error("Create the competition as draft or upcoming first, add at least one nominee, then set it to live.");
+    }
+
     if (data.id) {
       const { error } = await sb.from("competitions").update(clean).eq("id", data.id);
       if (error) throw new Error(error.message);
