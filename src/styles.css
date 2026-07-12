@@ -1160,7 +1160,150 @@
   }
 }
 
-/* ── Right-sidebar premium micro-interactions ─────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   Gaming Arena — premium eSports-lobby chatroom theme
+   Neon violet/cyan/magenta on deep space background with animated arena
+   backdrop, glowing cards, and gamified message bubbles.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@keyframes arena-grid-drift {
+  0%   { background-position: 0 0, 0 0, 0 0, 0 0; }
+  100% { background-position: 0 0, 0 0, 60px 60px, 60px 60px; }
+}
+@keyframes arena-pulse-glow {
+  0%, 100% { box-shadow: 0 0 24px oklch(0.72 0.22 300 / 0.35), inset 0 0 0 1px oklch(0.72 0.22 300 / 0.25); }
+  50%      { box-shadow: 0 0 42px oklch(0.72 0.22 300 / 0.7),  inset 0 0 0 1px oklch(0.78 0.22 320 / 0.6); }
+}
+@keyframes arena-border-scan {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+[data-chat-theme="gaming_arena"] {
+  --background: oklch(0.1 0.03 285);
+  --foreground: oklch(0.97 0.02 310);
+  --card: oklch(0.15 0.05 285 / 0.72);
+  --card-foreground: oklch(0.97 0.02 310);
+  --muted: oklch(0.2 0.05 285);
+  --muted-foreground: oklch(0.75 0.05 305);
+  --border: oklch(0.72 0.22 300 / 0.28);
+  --primary: oklch(0.72 0.22 300);
+  --primary-foreground: oklch(0.1 0.03 285);
+  --accent: oklch(0.78 0.22 200);
+  --ring: oklch(0.72 0.22 300);
+  --primary-glow: oklch(0.72 0.22 300 / 0.65);
+  --shadow-glow: 0 0 32px oklch(0.72 0.22 300 / 0.55);
+  --gradient-primary: linear-gradient(135deg, #22d3ee 0%, #a855f7 45%, #ec4899 100%);
+  --radius: 1rem;
+
+  position: relative;
+  isolation: isolate;
+  background-color: oklch(0.08 0.04 285);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 0%,   oklch(0.55 0.25 300 / 0.35), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 90% 15%,  oklch(0.55 0.25 200 / 0.3),  transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, oklch(0.55 0.25 330 / 0.28), transparent 60%),
+    linear-gradient(transparent 0 calc(100% - 1px), oklch(0.72 0.22 300 / 0.08) calc(100% - 1px) 100%),
+    linear-gradient(90deg, transparent 0 calc(100% - 1px), oklch(0.72 0.22 300 / 0.08) calc(100% - 1px) 100%);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 60px 60px, 60px 60px;
+  animation: arena-grid-drift 22s linear infinite;
+}
+
+/* Cards / bubbles get glass + neon rim */
+[data-chat-theme="gaming_arena"] .msg-bubble,
+[data-chat-theme="gaming_arena"] [data-message-role],
+[data-chat-theme="gaming_arena"] aside,
+[data-chat-theme="gaming_arena"] header {
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background-color: oklch(0.14 0.05 285 / 0.72);
+  border: 1px solid oklch(0.72 0.22 300 / 0.22);
+}
+
+[data-chat-theme="gaming_arena"] [data-message-role="me"],
+[data-chat-theme="gaming_arena"] .msg-mine {
+  background-image: linear-gradient(135deg,
+    oklch(0.42 0.22 300 / 0.85),
+    oklch(0.38 0.22 260 / 0.85));
+  color: oklch(0.98 0.02 310) !important;
+  border: 1px solid oklch(0.78 0.22 320 / 0.55) !important;
+  box-shadow: 0 8px 24px -12px oklch(0.55 0.28 300 / 0.7);
+}
+
+/* Avatars glow */
+[data-chat-theme="gaming_arena"] .chat-avatar {
+  box-shadow:
+    0 0 0 2px oklch(0.72 0.22 300 / 0.55),
+    0 0 18px -2px oklch(0.72 0.22 300 / 0.6);
+}
+
+/* Primary buttons — animated neon gradient */
+[data-chat-theme="gaming_arena"] [data-variant="default"],
+[data-chat-theme="gaming_arena"] button.bg-primary {
+  background: linear-gradient(90deg, #22d3ee, #a855f7, #ec4899, #a855f7, #22d3ee) !important;
+  background-size: 300% 100% !important;
+  color: oklch(0.98 0.02 310) !important;
+  border: 1px solid oklch(0.78 0.22 320 / 0.6) !important;
+  animation: arena-border-scan 6s linear infinite;
+  box-shadow: 0 0 22px -4px oklch(0.72 0.22 300 / 0.7);
+}
+
+/* Header / sidebar rim glow */
+[data-chat-theme="gaming_arena"] header,
+[data-chat-theme="gaming_arena"] aside {
+  border-color: oklch(0.72 0.22 300 / 0.28);
+  box-shadow: inset 0 -1px 0 oklch(0.72 0.22 300 / 0.35);
+}
+
+/* Active room / selected item pulsing arena glow */
+[data-chat-theme="gaming_arena"] [data-active="true"],
+[data-chat-theme="gaming_arena"] [aria-current="true"],
+[data-chat-theme="gaming_arena"] [aria-selected="true"] {
+  animation: arena-pulse-glow 3.2s ease-in-out infinite;
+  border-radius: 0.85rem;
+}
+
+/* Scrollbars — neon */
+[data-chat-theme="gaming_arena"] *::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #22d3ee, #a855f7, #ec4899) !important;
+  border-radius: 8px;
+}
+
+/* Inputs — glass with neon focus */
+[data-chat-theme="gaming_arena"] input,
+[data-chat-theme="gaming_arena"] textarea {
+  background-color: oklch(0.16 0.05 285 / 0.7) !important;
+  border-color: oklch(0.72 0.22 300 / 0.3) !important;
+}
+[data-chat-theme="gaming_arena"] input:focus,
+[data-chat-theme="gaming_arena"] textarea:focus {
+  border-color: oklch(0.78 0.22 320 / 0.8) !important;
+  box-shadow: 0 0 0 3px oklch(0.72 0.22 300 / 0.25), 0 0 18px -4px oklch(0.72 0.22 300 / 0.6) !important;
+  outline: none !important;
+}
+
+/* Badge / chip accents */
+[data-chat-theme="gaming_arena"] .badge,
+[data-chat-theme="gaming_arena"] [data-role="badge"] {
+  background: linear-gradient(135deg, oklch(0.55 0.24 300 / 0.35), oklch(0.55 0.24 200 / 0.35));
+  border: 1px solid oklch(0.72 0.22 300 / 0.45);
+  color: oklch(0.98 0.02 310);
+  text-shadow: 0 0 8px oklch(0.72 0.22 300 / 0.7);
+}
+
+/* Uppercase display accents for a broadcast/HUD feel */
+[data-chat-theme="gaming_arena"] header h1,
+[data-chat-theme="gaming_arena"] header h2,
+[data-chat-theme="gaming_arena"] aside h2 {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+
 
 /* Ambient violet border glow for the BooBubble Assistant card */
 @keyframes ai-border-glow {
