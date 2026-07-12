@@ -449,17 +449,19 @@ function CompetitionDetail() {
             )}
           </div>
           {competitors.length > 0 ? (
-            <PremiumCompetitorGrid
+            <DynamicCompetitionLayout
               competitionId={c.id}
               competitors={competitors}
+              layoutStyle={layoutStyle}
               myVote={myCompetitorVote?.competitorId ?? null}
               canVote={!!userId && votingOpen}
               hideCounts={hideResults}
               isAdmin={isAdmin}
-              votingClosed={c.status === "completed" || !votingOpen && c.status !== "upcoming"}
+              votingClosed={c.status === "completed" || (!votingOpen && c.status !== "upcoming")}
               votingUpcoming={c.status === "upcoming"}
               onEdit={(comp: Competitor) => setEditing({ ...comp })}
               invalidateKey={["competition-slug", slug]}
+              suppressVsBattle={showBattleArenaHero}
             />
           ) : approvedParticipants.length > 0 ? (
             <ParticipantGrid
@@ -471,18 +473,9 @@ function CompetitionDetail() {
               invalidateKey={["competition-slug", slug]}
             />
           ) : (
-            <PremiumCompetitorGrid
-              competitionId={c.id}
-              competitors={competitors}
-              myVote={myCompetitorVote?.competitorId ?? null}
-              canVote={!!userId && votingOpen}
-              hideCounts={hideResults}
-              isAdmin={isAdmin}
-              votingClosed={c.status === "completed" || !votingOpen && c.status !== "upcoming"}
-              votingUpcoming={c.status === "upcoming"}
-              onEdit={(comp: Competitor) => setEditing({ ...comp })}
-              invalidateKey={["competition-slug", slug]}
-            />
+            <div className="rounded-3xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-16 text-center text-sm text-muted-foreground">
+              No nominees have been added yet.
+            </div>
           )}
         </section>
 
