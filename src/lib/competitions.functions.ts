@@ -204,7 +204,8 @@ export const adminSearchProfiles = createServerFn({ method: "GET" })
     if (q.length < 2) return [];
     const limit = Math.min(Math.max(data.limit ?? 10, 1), 25);
     const like = `%${q.replace(/[%_]/g, "")}%`;
-    const { data: rows, error } = await (context.supabase as any)
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await (supabaseAdmin as any)
       .from("profiles")
       .select("id, username, display_name, avatar_url, avatar_color, verified")
       .or(`username.ilike.${like},display_name.ilike.${like}`)
