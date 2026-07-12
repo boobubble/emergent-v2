@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, Trophy } from "lucide-react";
 import { listCompetitions, listCategories, adminListAllCompetitions } from "@/lib/competitions.functions";
 import { CompetitionCard, type CompetitionSummary } from "@/components/competitions/CompetitionCard";
 import { CompetitionEditorDialog, emptyCompetition } from "@/components/competitions/CompetitionEditorDialog";
+import { AdminCompetitionManageDialog } from "@/components/competitions/AdminCompetitionManageDialog";
 import { useMyRoles } from "@/lib/use-my-role";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ function CompetitionsIndex() {
   const { data: categories = [] } = useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
   const [category, setCategory] = useState<string>("all");
   const [editing, setEditing] = useState<any | null>(null);
+  const [managing, setManaging] = useState<string | null>(null);
 
   const openEdit = (c: any) => {
     setEditing({
@@ -93,7 +95,10 @@ function CompetitionsIndex() {
         value={editing}
         onChange={setEditing}
         invalidateKeys={[["competitions", "admin"], ["competitions", "public"]]}
+        onSaved={({ id, isNew }) => { if (isNew && isAdmin) setManaging(id); }}
       />
+
+      <AdminCompetitionManageDialog competitionId={managing} onClose={() => setManaging(null)} />
 
       <main className="mx-auto max-w-5xl px-4 py-6">
         <div className="mb-4 flex flex-wrap gap-2">
