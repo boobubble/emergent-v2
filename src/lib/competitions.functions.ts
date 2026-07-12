@@ -149,13 +149,54 @@ export const adminSaveCompetitor = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = context.supabase as any;
+
+    // Server-side eligibility: nominees MUST be registered members.
+    const linkedUserId = data.linked_user_id ?? null;
+    if (!linkedUserId) {
+      throw new Error("Select a registered member to add as a nominee.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile, error: profErr } = await (supabaseAdmin as any)
+      .from("profiles")
+      .select("id, username, display_name, avatar_url")
+      .eq("id", linkedUserId)
+      .maybeSingle();
+    if (profErr) throw new Error(profErr.message);
+    if (!profile) throw new Error("This user is not registered and cannot be a nominee.");
+
+    // Reject banned users.
+    const { data: activeBan } = await (supabaseAdmin as any)
+      .from("user_bans")
+      .select("id, expires_at")
+      .eq("user_id", linkedUserId)
+      .eq("active", true)
+      .maybeSingle();
+    if (activeBan && (!activeBan.expires_at || new Date(activeBan.expires_at) > new Date())) {
+      throw new Error("This user is banned and is not eligible for competitions.");
+    }
+
+    // Prevent duplicate nominee entries for the same competition.
+    const dupQ = (supabaseAdmin as any)
+      .from("competition_competitors")
+      .select("id")
+      .eq("competition_id", data.competition_id)
+      .eq("linked_user_id", linkedUserId)
+      .limit(1);
+    const { data: dupRows, error: dupErr } = await dupQ;
+    if (dupErr) throw new Error(dupErr.message);
+    const duplicate = (dupRows ?? []).find((r: { id: string }) => r.id !== data.id);
+    if (duplicate) {
+      throw new Error("This member is already a nominee in this competition.");
+    }
+
+    const resolvedName = (data.name?.trim()) || profile.display_name || profile.username || "Nominee";
     const payload: Record<string, unknown> = {
       competition_id: data.competition_id,
-      name: data.name,
-      photo_url: data.photo_url ?? null,
+      name: resolvedName,
+      photo_url: data.photo_url ?? profile.avatar_url ?? null,
       cover_image_url: data.cover_image_url ?? null,
       description: data.description ?? null,
-      linked_user_id: data.linked_user_id ?? null,
+      linked_user_id: linkedUserId,
       country: data.country?.trim() || null,
       website: data.website?.trim() || null,
       social_links: data.social_links ?? {},
