@@ -5667,6 +5667,14 @@ export type Database = {
           phone_verified: boolean
         }[]
       }
+      get_my_profile_extras: {
+        Args: never
+        Returns: {
+          about_me: string
+          city: string
+          interests: string[]
+        }[]
+      }
       get_my_profile_visitors: {
         Args: { _limit?: number }
         Returns: {
