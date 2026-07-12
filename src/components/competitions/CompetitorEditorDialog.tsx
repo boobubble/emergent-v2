@@ -18,6 +18,7 @@ export interface CompetitorDraft {
   competition_id: string;
   name: string;
   photo_url?: string | null;
+  cover_image_url?: string | null;
   description?: string | null;
   linked_user_id?: string | null;
   sort_order?: number;
@@ -40,6 +41,7 @@ export function emptyCompetitor(competitionId: string, sortOrder = 0): Competito
     competition_id: competitionId,
     name: "",
     photo_url: "",
+    cover_image_url: "",
     description: "",
     linked_user_id: null,
     sort_order: sortOrder,
