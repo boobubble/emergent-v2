@@ -29,6 +29,7 @@ import {
   adminSetCompetitorFlags,
   adminSaveCompetitor,
 } from "@/lib/competitions.functions";
+import { flagFromCode } from "@/lib/country-flag";
 import type { Competitor } from "./CompetitorGrid";
 
 interface Props {
