@@ -199,7 +199,7 @@ function StatCard({
 
 /** Bottom activity ticker — Gaming Arena only. */
 export function GamingArenaLiveFeed({ channelId }: { channelId: string }) {
-  const { channelMessages } = useChat();
+  const { channelMessages, state } = useChat();
   const msgs = channelMessages(channelId);
   const items = useMemo(() => {
     const recent = msgs.slice(-8).reverse();
@@ -214,9 +214,10 @@ export function GamingArenaLiveFeed({ channelId }: { channelId: string }) {
     }
     return recent.map((m) => ({
       icon: m.kind === "system" ? "⚡" : "💬",
-      t: `${m.userName || "someone"}: ${(m.text || "").slice(0, 40)}`,
+      t: `${state.users[m.authorId]?.name || "someone"}: ${(m.text || "").slice(0, 40)}`,
     }));
-  }, [msgs]);
+  }, [msgs, state.users]);
+
 
   return (
     <div className="arena-livefeed sticky bottom-0 z-10 flex items-center gap-2 border-t border-primary/25 bg-card/70 px-3 py-1.5 text-[11px] backdrop-blur-md">
