@@ -30,13 +30,15 @@ export function GamingArenaHero({ channelId }: { channelId: string }) {
     const counts = new Map<string, { name: string; n: number }>();
     for (const m of msgs) {
       if (m.kind === "system") continue;
-      const prev = counts.get(m.userId) ?? { name: m.userName || "—", n: 0 };
-      counts.set(m.userId, { name: prev.name, n: prev.n + 1 });
+      const name = state.users[m.authorId]?.name ?? "—";
+      const prev = counts.get(m.authorId) ?? { name, n: 0 };
+      counts.set(m.authorId, { name, n: prev.n + 1 });
     }
     let best: { name: string; n: number } | null = null;
     for (const v of counts.values()) if (!best || v.n > best.n) best = v;
     return best?.name ?? "—";
-  }, [msgs]);
+  }, [msgs, state.users]);
+
 
   const roomLevel = 1 + Math.floor(Math.log2(Math.max(2, messagesToday + online)));
   const activityScore = Math.round(online * 8 + messagesToday * 2);
