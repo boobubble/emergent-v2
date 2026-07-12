@@ -292,15 +292,16 @@ function CompetitionDetail() {
             )}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><Users className="h-4 w-4" /> {c.total_participants} participants</span>
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+            <StatTile icon={<Users className="h-4 w-4" />} label="Participants" value={c.total_participants ?? 0} />
             {!hideResults && (
-              <span className="inline-flex items-center gap-1"><Vote className="h-4 w-4" /> {c.total_votes} votes</span>
+              <StatTile icon={<Vote className="h-4 w-4" />} label="Votes" value={c.total_votes ?? 0} accent />
             )}
-            <span className="inline-flex items-center gap-1"><Eye className="h-4 w-4" /> {c.views_count ?? 0} views</span>
-            <span className="inline-flex items-center gap-1"><Calendar className="h-4 w-4" /> {new Date(c.start_at).toLocaleDateString()} → {new Date(c.end_at).toLocaleDateString()}</span>
-            <span className="inline-flex items-center gap-1"><Trophy className="h-4 w-4" /> {c.winner_count} winner{c.winner_count > 1 ? "s" : ""}</span>
+            <StatTile icon={<Eye className="h-4 w-4" />} label="Views" value={c.views_count ?? 0} />
+            <StatTile icon={<Trophy className="h-4 w-4" />} label={`Winner${(c.winner_count ?? 1) > 1 ? "s" : ""}`} value={c.winner_count ?? 1} />
+            <StatTile icon={<Calendar className="h-4 w-4" />} label="Ends" valueRaw={new Date(c.end_at).toLocaleDateString()} />
           </div>
+
 
 
           {prizeParts.length > 0 && (
