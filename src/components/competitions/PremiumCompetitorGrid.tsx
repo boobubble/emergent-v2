@@ -20,7 +20,7 @@ import { flagFromCode } from "@/lib/country-flag";
 import type { Competitor } from "./CompetitorGrid";
 import { cn } from "@/lib/utils";
 
-const RANK_STYLES: Record<number, { ring: string; glow: string; badgeBg: string; label: string; icon: JSX.Element }> = {
+const RANK_STYLES: Record<number, { ring: string; glow: string; badgeBg: string; label: string; icon: ReactNode }> = {
   1: {
     ring: "ring-2 ring-amber-400/70",
     glow: "shadow-[0_0_40px_-8px_rgba(251,191,36,0.55)] border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-amber-400/5 to-transparent",
@@ -46,7 +46,7 @@ const RANK_STYLES: Record<number, { ring: string; glow: string; badgeBg: string;
 
 function SocialIcons({ links }: { links?: Record<string, string | null | undefined> | null }) {
   if (!links) return null;
-  const items: { key: string; url?: string | null; icon: JSX.Element; label: string }[] = [
+  const items: { key: string; url?: string | null; icon: ReactNode; label: string }[] = [
     { key: "instagram", url: links.instagram, icon: <Instagram className="h-4 w-4" />, label: "Instagram" },
     { key: "twitter", url: links.twitter, icon: <Twitter className="h-4 w-4" />, label: "Twitter/X" },
     { key: "tiktok", url: links.tiktok, icon: <Music2 className="h-4 w-4" />, label: "TikTok" },
