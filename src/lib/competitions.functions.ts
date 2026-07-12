@@ -501,6 +501,28 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
       updated_at: _ua,
       ...clean
     } = data as any;
+
+    // Prevent overlapping live/upcoming competitions in the same category.
+    // A category may only host one active (not-yet-ended) competition at a time.
+    if (data.category_id && data.status !== "draft" && data.status !== "completed") {
+      const nowIso = new Date().toISOString();
+      let conflictQ = sb
+        .from("competitions")
+        .select("id, name, end_at, status")
+        .eq("category_id", data.category_id)
+        .in("status", ["live", "upcoming"])
+        .gt("end_at", nowIso)
+        .limit(1);
+      if (data.id) conflictQ = conflictQ.neq("id", data.id);
+      const { data: conflict, error: cErr } = await conflictQ;
+      if (cErr) throw new Error(cErr.message);
+      if (conflict && conflict.length > 0) {
+        throw new Error(
+          `A competition ("${conflict[0].name}") is already running in this category. Wait for it to end or mark it completed before creating another.`
+        );
+      }
+    }
+
     if (data.id) {
       const { error } = await sb.from("competitions").update(clean).eq("id", data.id);
       if (error) throw new Error(error.message);
