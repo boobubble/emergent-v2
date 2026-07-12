@@ -12,6 +12,8 @@ import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { GameRoomCanvas } from "@/components/chat/GameRoomCanvas";
 import { DMChatBackground } from "@/components/chat/DMChatBackground";
+import { GamingArenaHero, GamingArenaLiveFeed } from "@/components/chat/GamingArenaHero";
+
 import { useDmTheme } from "@/lib/use-dm-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { useAppSettings } from "@/lib/app-settings";
