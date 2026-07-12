@@ -17,6 +17,7 @@ export interface Competitor {
   competition_id: string;
   name: string;
   photo_url?: string | null;
+  cover_image_url?: string | null;
   description?: string | null;
   linked_user_id?: string | null;
   vote_count: number;
