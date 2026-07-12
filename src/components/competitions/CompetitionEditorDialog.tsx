@@ -43,7 +43,7 @@ export const emptyCompetition = () => ({
 interface Props {
   value: any | null;
   onChange: (v: any | null) => void;
-  onSaved?: () => void;
+  onSaved?: (result: { id: string; isNew: boolean }) => void;
   invalidateKeys?: string[][];
 }
 
