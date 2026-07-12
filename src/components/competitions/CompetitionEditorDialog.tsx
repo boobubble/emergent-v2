@@ -115,6 +115,22 @@ export function CompetitionEditorDialog({ value, onChange, onSaved, invalidateKe
                 </Select>
               </div>
             </div>
+            <div>
+              <Label>Competition Layout</Label>
+              <Select value={editing.layout_style ?? "auto"} onValueChange={(v) => set({ layout_style: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto (recommended)</SelectItem>
+                  <SelectItem value="vs_battle">VS Battle (2 nominees)</SelectItem>
+                  <SelectItem value="podium">Podium (3 nominees)</SelectItem>
+                  <SelectItem value="tournament">Tournament Grid (4–8)</SelectItem>
+                  <SelectItem value="leaderboard">Live Leaderboard (9+)</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="mt-1 text-[11px] text-muted-foreground">
+                Auto picks the best layout based on how many nominees you add.
+              </div>
+            </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="flex items-center gap-2"><Switch checked={editing.allow_vote_change} onCheckedChange={(v) => set({ allow_vote_change: v })} /><Label>Allow vote change</Label></div>
               <div className="flex items-center gap-2"><Switch checked={editing.show_live_counts} onCheckedChange={(v) => set({ show_live_counts: v })} /><Label>Show live counts</Label></div>
