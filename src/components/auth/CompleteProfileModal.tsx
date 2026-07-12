@@ -30,17 +30,21 @@ export function CompleteProfileModal() {
       try { if (sessionStorage.getItem(`${SKIP_KEY}:${user.id}`) === "1") return; } catch { /* ignore */ }
       const { data } = await supabase
         .from("profiles")
-        .select("profile_completed, display_name, about_me, country_code, city, interests")
+        .select("profile_completed, display_name, country_code")
         .eq("id", user.id)
         .maybeSingle();
       if (cancel || !data) return;
       const d = data as Record<string, unknown>;
       if (d.profile_completed === true) return;
+      // Owner-only private fields (city, about_me, interests) are gated by column privileges.
+      // Fetch them through the SECURITY DEFINER accessor so the base table remains locked down.
+      const { data: extras } = await (supabase as any).rpc("get_my_profile_extras");
+      const extra = Array.isArray(extras) && extras.length > 0 ? extras[0] as Record<string, unknown> : {};
       setDisplayName((d.display_name as string) ?? "");
-      setAboutMe((d.about_me as string) ?? "");
+      setAboutMe((extra.about_me as string) ?? "");
       setCountry((d.country_code as string) ?? "");
-      setCity((d.city as string) ?? "");
-      const arr = Array.isArray(d.interests) ? (d.interests as string[]) : [];
+      setCity((extra.city as string) ?? "");
+      const arr = Array.isArray(extra.interests) ? (extra.interests as string[]) : [];
       setInterestsText(arr.join(", "));
       setLoaded(true);
       setOpen(true);
