@@ -141,7 +141,9 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
                   </button>
                   <span className="flex items-center gap-1 text-[10px]">
                     <span className="chat-online-dot" aria-hidden style={{ width: "0.4rem", height: "0.4rem" }} />
-                    <span className="font-semibold opacity-80">{r.members.length}</span>
+                    <span className="font-semibold opacity-80" title={`${Math.max(onlineCounts[id] ?? 0, r.members.length)} online`}>
+                      {Math.max(onlineCounts[id] ?? 0, r.members.length)}
+                    </span>
                     {isAdmin && (
                       <button
                         type="button"
