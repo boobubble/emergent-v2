@@ -82,6 +82,7 @@ export function AdminCompetitorSortableGrid({ competitionId: _competitionId, com
           competition_id: v.c.competition_id,
           name: v.c.name,
           photo_url: v.c.photo_url ?? null,
+          cover_image_url: v.c.cover_image_url ?? null,
           description: v.c.description ?? null,
           linked_user_id: v.c.linked_user_id ?? null,
           country: v.c.country ?? null,
