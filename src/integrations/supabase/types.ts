@@ -1128,6 +1128,7 @@ export type Database = {
           is_featured: boolean
           is_pinned: boolean
           is_published: boolean
+          layout_style: string
           max_participants: number | null
           max_votes_per_user: number
           name: string
@@ -1168,6 +1169,7 @@ export type Database = {
           is_featured?: boolean
           is_pinned?: boolean
           is_published?: boolean
+          layout_style?: string
           max_participants?: number | null
           max_votes_per_user?: number
           name: string
@@ -1208,6 +1210,7 @@ export type Database = {
           is_featured?: boolean
           is_pinned?: boolean
           is_published?: boolean
+          layout_style?: string
           max_participants?: number | null
           max_votes_per_user?: number
           name?: string

@@ -18,6 +18,7 @@ export const emptyCompetition = () => ({
   max_participants: null as number | null,
   winner_count: 1,
   status: "upcoming" as "draft" | "upcoming" | "live" | "completed",
+  layout_style: "auto" as "auto" | "vs_battle" | "podium" | "tournament" | "leaderboard",
   allow_vote_change: false,
   show_live_counts: true,
   require_approval: false,
@@ -112,6 +113,22 @@ export function CompetitionEditorDialog({ value, onChange, onSaved, invalidateKe
                     {["draft", "upcoming", "live", "completed"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Competition Layout</Label>
+              <Select value={editing.layout_style ?? "auto"} onValueChange={(v) => set({ layout_style: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto (recommended)</SelectItem>
+                  <SelectItem value="vs_battle">VS Battle (2 nominees)</SelectItem>
+                  <SelectItem value="podium">Podium (3 nominees)</SelectItem>
+                  <SelectItem value="tournament">Tournament Grid (4–8)</SelectItem>
+                  <SelectItem value="leaderboard">Live Leaderboard (9+)</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="mt-1 text-[11px] text-muted-foreground">
+                Auto picks the best layout based on how many nominees you add.
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
