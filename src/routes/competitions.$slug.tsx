@@ -247,100 +247,54 @@ function CompetitionDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24 text-foreground">
-      {/* Hero */}
-      <div
-        className="relative h-72 w-full overflow-hidden"
-        style={{
-          background: c.banner_url
-            ? `url(${c.banner_url}) center/cover`
-            : `linear-gradient(135deg, ${category?.color ?? "#8b5cf6"}, ${(category?.color ?? "#8b5cf6")}90)`,
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-        <div className="absolute top-3 left-3">
-          <Link to="/competitions"><Button size="icon" variant="secondary"><ArrowLeft className="h-4 w-4" /></Button></Link>
-        </div>
-        <div className="absolute top-3 right-3 flex flex-wrap justify-end gap-2">
-          <CompetitionFollowButton competitionId={c.id} userId={userId} />
-          {enableSharing && (
-            <Button size="sm" variant="secondary" onClick={handleShare}>
-              <Share2 className="mr-1 h-4 w-4" /> Share
-            </Button>
-          )}
-          <Button size="sm" variant="secondary" onClick={handleReport}>
-            <Flag className="mr-1 h-4 w-4" /> Report
-          </Button>
-        </div>
+    <div className="min-h-screen bg-[#050308] pb-24 text-foreground">
+      {/* Premium Battle Arena hero */}
+      <BattleArena
+        competition={c}
+        competitors={competitors}
+        userId={userId}
+        hideCounts={hideResults}
+        votingOpen={votingOpen}
+        onVote={(id) => arenaVoteM.mutate(id)}
+        myVote={myCompetitorVote?.competitorId ?? null}
+        onShare={handleShare}
+        onReport={handleReport}
+        isVoting={arenaVoteM.isPending}
+      />
 
-      </div>
+      <div className="mx-auto max-w-5xl px-4">
+        {c.description && (
+          <p className="mt-2 text-sm text-white/70">{c.description}</p>
+        )}
 
-      <div className="mx-auto -mt-16 max-w-5xl px-4">
-        <div className="rounded-3xl border border-white/10 bg-background/70 p-6 backdrop-blur-xl shadow-xl">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                {category?.name && <Badge variant="outline">{category.name}</Badge>}
-                <Badge className={
-                  c.status === "live" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                  : c.status === "upcoming" ? "bg-sky-500/20 text-sky-400 border border-sky-500/40"
-                  : "bg-zinc-500/20 text-zinc-400 border border-zinc-500/40"
-                }>{c.status}</Badge>
-              </div>
-              <h1 className="text-3xl font-bold">{c.name}</h1>
-              {c.description && <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{c.description}</p>}
+        {c.rules && (
+          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm backdrop-blur">
+            <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-300">
+              <Sparkles className="h-3.5 w-3.5" /> Match Rules
             </div>
-            {c.status !== "completed" && (
-              <div>
-                <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {c.status === "live" ? "Ends in" : "Starts in"}
-                </div>
-                <Countdown endAt={c.status === "live" ? c.end_at : c.start_at} />
-              </div>
+            <p className="whitespace-pre-wrap text-white/80">{c.rules}</p>
+          </div>
+        )}
+
+        {userId && enableJoin && (c.status === "upcoming" || c.status === "live") && (
+          <div className="mt-4">
+            {iJoined ? (
+              <Button variant="outline" onClick={() => leaveM.mutate()} disabled={leaveM.isPending}>
+                Leave Arena
+              </Button>
+            ) : (
+              <Button
+                onClick={() => joinM.mutate()}
+                disabled={joinM.isPending}
+                className="bg-gradient-to-r from-fuchsia-500 to-rose-500 font-bold text-white hover:from-fuchsia-400 hover:to-rose-400"
+              >
+                ⚔️ Enter the Arena
+              </Button>
             )}
           </div>
-
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5">
-            <StatTile icon={<Users className="h-4 w-4" />} label="Participants" value={c.total_participants ?? 0} />
-            {!hideResults && (
-              <StatTile icon={<Vote className="h-4 w-4" />} label="Votes" value={c.total_votes ?? 0} accent />
-            )}
-            <StatTile icon={<Eye className="h-4 w-4" />} label="Views" value={c.views_count ?? 0} />
-            <StatTile icon={<Trophy className="h-4 w-4" />} label={`Winner${(c.winner_count ?? 1) > 1 ? "s" : ""}`} value={c.winner_count ?? 1} />
-            <StatTile icon={<Calendar className="h-4 w-4" />} label="Ends" valueRaw={new Date(c.end_at).toLocaleDateString()} />
-          </div>
+        )}
 
 
-
-          {prizeParts.length > 0 && (
-            <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
-              <Sparkles className="h-4 w-4 text-amber-400" />
-              <span className="font-semibold text-amber-300">Prize:</span>
-              <span className="text-amber-100/90">{prizeParts.join(" · ")}</span>
-            </div>
-          )}
-
-          {c.rules && (
-            <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
-              <div className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Rules</div>
-              <p className="whitespace-pre-wrap">{c.rules}</p>
-            </div>
-          )}
-
-          {userId && enableJoin && (c.status === "upcoming" || c.status === "live") && (
-            <div className="mt-4">
-              {iJoined ? (
-                <Button variant="outline" onClick={() => leaveM.mutate()} disabled={leaveM.isPending}>
-                  Leave Competition
-                </Button>
-              ) : (
-                <Button onClick={() => joinM.mutate()} disabled={joinM.isPending}>
-                  Join Competition
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
 
 
         {/* Winner section */}
