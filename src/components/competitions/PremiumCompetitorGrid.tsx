@@ -301,11 +301,15 @@ export function PremiumCompetitorGrid({
                     style={{ width: `${pct}%` }}
                   />
                 </div>
-                {rank === 1 && c.vote_count > 0 && (
-                  <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300">
-                    <Trophy className="h-3 w-3 animate-pulse" /> Currently Leading
-                  </div>
-                )}
+                <div
+                  className={cn(
+                    "mt-1.5 inline-flex h-4 items-center gap-1 text-[11px] font-semibold transition-opacity duration-300",
+                    rank === 1 && c.vote_count > 0 ? "text-amber-300 opacity-100" : "opacity-0",
+                  )}
+                  aria-live="polite"
+                >
+                  <Trophy className="h-3 w-3 animate-pulse" /> Currently Leading
+                </div>
               </div>
             )}
 
