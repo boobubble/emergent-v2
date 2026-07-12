@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, Trophy } from "lucide-react";
 import { listCompetitions, listCategories, adminListAllCompetitions } from "@/lib/competitions.functions";
 import { CompetitionCard, type CompetitionSummary } from "@/components/competitions/CompetitionCard";
 import { CompetitionEditorDialog, emptyCompetition } from "@/components/competitions/CompetitionEditorDialog";
+import { AdminCompetitionManageDialog } from "@/components/competitions/AdminCompetitionManageDialog";
 import { useMyRoles } from "@/lib/use-my-role";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
