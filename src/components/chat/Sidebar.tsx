@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2, Gamepad2 } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useMyRoles } from "@/lib/use-my-role";
+import { useRoomOnlineCounts } from "@/lib/use-room-online-counts";
 import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,11 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
   const [newName, setNewName] = useState("");
   const [newTopic, setNewTopic] = useState("");
   const chatLogo = useBrandAsset("chat");
+  const publicRoomIds = useMemo(
+    () => state.roomOrder.filter((id) => state.rooms[id]?.kind !== "game"),
+    [state.roomOrder, state.rooms],
+  );
+  const onlineCounts = useRoomOnlineCounts(publicRoomIds);
 
   return (
     <aside className="flex h-full w-56 shrink-0 flex-col bg-transparent p-1">
@@ -135,7 +141,9 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
                   </button>
                   <span className="flex items-center gap-1 text-[10px]">
                     <span className="chat-online-dot" aria-hidden style={{ width: "0.4rem", height: "0.4rem" }} />
-                    <span className="font-semibold opacity-80">{r.members.length}</span>
+                    <span className="font-semibold opacity-80" title={`${Math.max(onlineCounts[id] ?? 0, r.members.length)} online`}>
+                      {Math.max(onlineCounts[id] ?? 0, r.members.length)}
+                    </span>
                     {isAdmin && (
                       <button
                         type="button"
