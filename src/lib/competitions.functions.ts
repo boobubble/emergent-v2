@@ -515,6 +515,7 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
     max_participants?: number | null;
     winner_count?: number;
     status?: "draft" | "upcoming" | "live" | "completed";
+    layout_style?: "auto" | "vs_battle" | "podium" | "tournament" | "leaderboard";
     allow_vote_change?: boolean;
     show_live_counts?: boolean;
     require_approval?: boolean;
