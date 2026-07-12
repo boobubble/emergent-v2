@@ -376,31 +376,50 @@ function CompetitionDetail() {
           </section>
         )}
 
-        {/* Competitors (admin-managed) */}
-        <section className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+        {/* Voting-state banner */}
+        {c.status === "upcoming" && (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-400/30 bg-sky-500/10 p-4 backdrop-blur">
+            <div className="flex items-center gap-2 text-sm font-semibold text-sky-200">
+              <Calendar className="h-4 w-4" /> Voting opens in
+            </div>
+            <Countdown endAt={c.start_at} compact />
+          </div>
+        )}
+        {c.status === "completed" && (
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-center text-sm font-semibold backdrop-blur">
+            🏁 Voting Closed
+          </div>
+        )}
+
+        {/* Nominees */}
+        <section className="mt-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 font-bold"><Users className="h-4 w-4" /> Competitors</h2>
+            <h2 className="flex items-center gap-2 text-lg font-bold">
+              <Crown className="h-5 w-5 text-amber-400" /> Nominees
+              <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                {competitors.length}
+              </span>
+            </h2>
             {isAdmin && (
-              <Button
-                size="sm"
-                onClick={() => setEditing(emptyCompetitor(c.id, competitors.length))}
-              >
-                <Plus className="mr-1 h-4 w-4" /> Add competitor
+              <Button size="sm" onClick={() => setEditing(emptyCompetitor(c.id, competitors.length))}>
+                <Plus className="mr-1 h-4 w-4" /> Add nominee
               </Button>
             )}
           </div>
-          <CompetitorGrid
+          <PremiumCompetitorGrid
             competitionId={c.id}
             competitors={competitors}
             myVote={myCompetitorVote?.competitorId ?? null}
             canVote={!!userId && votingOpen}
             hideCounts={hideResults}
             isAdmin={isAdmin}
-            onEdit={(comp) => setEditing({ ...comp })}
+            votingClosed={c.status === "completed" || !votingOpen && c.status !== "upcoming"}
+            votingUpcoming={c.status === "upcoming"}
+            onEdit={(comp: Competitor) => setEditing({ ...comp })}
             invalidateKey={["competition-slug", slug]}
           />
-
         </section>
+
 
         <CompetitorEditorDialog
           value={editing}
