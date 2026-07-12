@@ -18,6 +18,7 @@ export const emptyCompetition = () => ({
   max_participants: null as number | null,
   winner_count: 1,
   status: "upcoming" as "draft" | "upcoming" | "live" | "completed",
+  layout_style: "auto" as "auto" | "vs_battle" | "podium" | "tournament" | "leaderboard",
   allow_vote_change: false,
   show_live_counts: true,
   require_approval: false,
