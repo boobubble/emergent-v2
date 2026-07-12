@@ -433,6 +433,7 @@ function CompetitionDetail() {
               myVote={myVote?.participantId ?? null}
               canVote={!!userId && votingOpen}
               hideCounts={hideResults}
+              invalidateKey={["competition-slug", slug]}
             />
           ) : (
             <PremiumCompetitorGrid
@@ -472,6 +473,7 @@ function CompetitionDetail() {
                 myVote={myVote?.participantId ?? null}
                 canVote={!!userId && votingOpen}
                 hideCounts={hideResults}
+                invalidateKey={["competition-slug", slug]}
               />
 
             </div>

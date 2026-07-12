@@ -15,21 +15,23 @@ interface P {
 }
 
 export function ParticipantGrid({
-  competitionId, participants, myVote, canVote, hideCounts,
+  competitionId, participants, myVote, canVote, hideCounts, invalidateKey,
 }: {
   competitionId: string;
   participants: P[];
   myVote: string | null;
   canVote: boolean;
   hideCounts?: boolean;
+  invalidateKey?: (string | number)[];
 }) {
   const vote = useServerFn(castVote);
   const qc = useQueryClient();
+  const listKey = invalidateKey ?? ["competition", competitionId];
   const m = useMutation({
     mutationFn: (pid: string) => vote({ data: { competitionId, participantId: pid } }),
     onSuccess: () => {
       toast.success("Vote counted");
-      qc.invalidateQueries({ queryKey: ["competition", competitionId] });
+      qc.invalidateQueries({ queryKey: listKey });
       qc.invalidateQueries({ queryKey: ["competition-vote", competitionId] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Failed to vote"),
@@ -60,6 +62,7 @@ export function ParticipantGrid({
               variant={mine ? "secondary" : "default"}
               disabled={!canVote || m.isPending}
               onClick={() => m.mutate(p.id)}
+              aria-label={mine ? "You voted for this user" : `Vote for ${p.profile?.username ?? "user"}`}
             >
               {mine ? "Your Vote" : "Vote"}
             </Button>
