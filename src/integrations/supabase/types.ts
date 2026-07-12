@@ -920,6 +920,7 @@ export type Database = {
         Row: {
           competition_id: string
           country: string | null
+          cover_image_url: string | null
           created_at: string
           description: string | null
           id: string
@@ -939,6 +940,7 @@ export type Database = {
         Insert: {
           competition_id: string
           country?: string | null
+          cover_image_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -958,6 +960,7 @@ export type Database = {
         Update: {
           competition_id?: string
           country?: string | null
+          cover_image_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
