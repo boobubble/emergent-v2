@@ -27,6 +27,11 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
   const [newName, setNewName] = useState("");
   const [newTopic, setNewTopic] = useState("");
   const chatLogo = useBrandAsset("chat");
+  const publicRoomIds = useMemo(
+    () => state.roomOrder.filter((id) => state.rooms[id]?.kind !== "game"),
+    [state.roomOrder, state.rooms],
+  );
+  const onlineCounts = useRoomOnlineCounts(publicRoomIds);
 
   return (
     <aside className="flex h-full w-56 shrink-0 flex-col bg-transparent p-1">
