@@ -145,7 +145,7 @@ export function CompetitorEditorDialog({
 
   return (
     <Dialog open={!!draft} onOpenChange={(o) => !o && onChange(null)}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{draft.id ? "Edit nominee" : "Add nominee"}</DialogTitle>
         </DialogHeader>
