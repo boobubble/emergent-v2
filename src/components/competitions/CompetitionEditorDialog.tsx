@@ -61,11 +61,13 @@ export function CompetitionEditorDialog({ value, onChange, onSaved, invalidateKe
       if (!payload.max_participants) payload.max_participants = null;
       return save({ data: payload });
     },
-    onSuccess: () => {
+    onSuccess: (res: any, vars: any) => {
       toast.success("Saved");
       invalidateKeys.forEach((k) => qc.invalidateQueries({ queryKey: k }));
+      const savedId = res?.id ?? vars?.id;
+      const isNew = !vars?.id;
       onChange(null);
-      onSaved?.();
+      if (savedId) onSaved?.({ id: savedId, isNew });
     },
     onError: (e: any) => toast.error(e?.message ?? "Failed"),
   });
