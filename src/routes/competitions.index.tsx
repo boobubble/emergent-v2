@@ -95,7 +95,10 @@ function CompetitionsIndex() {
         value={editing}
         onChange={setEditing}
         invalidateKeys={[["competitions", "admin"], ["competitions", "public"]]}
+        onSaved={({ id, isNew }) => { if (isNew && isAdmin) setManaging(id); }}
       />
+
+      <AdminCompetitionManageDialog competitionId={managing} onClose={() => setManaging(null)} />
 
       <main className="mx-auto max-w-5xl px-4 py-6">
         <div className="mb-4 flex flex-wrap gap-2">
