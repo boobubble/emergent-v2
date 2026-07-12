@@ -307,9 +307,16 @@ export function ChatApp() {
                       paused={!chatVisible}
                     />
                   )}
+                  {!activeIsDM && chatTheme === "gaming_arena" && (
+                    <GamingArenaHero channelId={state.activeChannel} />
+                  )}
                   <MessageList channelId={state.activeChannel} />
                   <PresenceFeed channelId={state.activeChannel} />
+                  {!activeIsDM && chatTheme === "gaming_arena" && (
+                    <GamingArenaLiveFeed channelId={state.activeChannel} />
+                  )}
                 </div>
+
 
                 <PollDiscoveryWidget />
 
