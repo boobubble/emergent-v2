@@ -286,7 +286,7 @@ export function PremiumCompetitorGrid({
               <div>
                 <div className="mb-1 flex items-center justify-between text-xs">
                   <span className="font-semibold tabular-nums">
-                    {c.vote_count.toLocaleString()} <span className="font-normal text-muted-foreground">votes</span>
+                    <AnimatedCounter value={c.vote_count} /> <span className="font-normal text-muted-foreground">votes</span>
                   </span>
                   <span className="tabular-nums text-muted-foreground">{pct}%</span>
                 </div>
