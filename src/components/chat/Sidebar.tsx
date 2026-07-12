@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2, Gamepad2 } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useMyRoles } from "@/lib/use-my-role";
+import { useRoomOnlineCounts } from "@/lib/use-room-online-counts";
 import { Avatar } from "./Avatar";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
