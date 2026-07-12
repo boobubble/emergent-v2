@@ -110,6 +110,15 @@ export function AdminCompetitorSortableGrid({ competitionId: _competitionId, com
     return <p className="text-sm text-muted-foreground">No nominees yet. Add the first one above.</p>;
   }
 
+  const rankMap = useMemo(() => {
+    const eligible = items
+      .filter((c) => !c.is_hidden && !c.is_disqualified)
+      .sort((a, b) => b.vote_count - a.vote_count);
+    const map = new Map<string, number>();
+    eligible.forEach((c, i) => map.set(c.id, i + 1));
+    return map;
+  }, [items]);
+
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
@@ -118,6 +127,7 @@ export function AdminCompetitorSortableGrid({ competitionId: _competitionId, com
             <SortableRow
               key={c.id}
               c={c}
+              rank={rankMap.get(c.id) ?? null}
               onEdit={() => onEdit(c)}
               onDelete={() => confirm(`Remove ${c.name}?`) && delM.mutate(c.id)}
               onToggleHidden={() => flagsM.mutate({ id: c.id, is_hidden: !c.is_hidden })}
