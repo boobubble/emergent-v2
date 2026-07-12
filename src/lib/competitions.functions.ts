@@ -136,6 +136,7 @@ export const adminSaveCompetitor = createServerFn({ method: "POST" })
     competition_id: string;
     name: string;
     photo_url?: string | null;
+    cover_image_url?: string | null;
     description?: string | null;
     linked_user_id?: string | null;
     sort_order?: number;
@@ -152,6 +153,7 @@ export const adminSaveCompetitor = createServerFn({ method: "POST" })
       competition_id: data.competition_id,
       name: data.name,
       photo_url: data.photo_url ?? null,
+      cover_image_url: data.cover_image_url ?? null,
       description: data.description ?? null,
       linked_user_id: data.linked_user_id ?? null,
       country: data.country?.trim() || null,
