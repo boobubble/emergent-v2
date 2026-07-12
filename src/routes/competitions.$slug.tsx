@@ -196,6 +196,7 @@ function CompetitionDetail() {
   const awards = (data.awards ?? []) as any[];
   const category = c.category as { name?: string; color?: string | null } | null;
   const iJoined = !!userId && participants.some((p) => p.user_id === userId);
+  const approvedParticipants = participants.filter((p) => p.status === "approved");
 
   const rewards = (c.rewards ?? {}) as { coins?: number; xp?: number; badge?: string; premium_days?: number; custom?: string };
   const prizeParts = [
@@ -403,7 +404,7 @@ function CompetitionDetail() {
             <h2 className="flex items-center gap-2 text-lg font-bold">
               <Crown className="h-5 w-5 text-amber-400" /> Nominees
               <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                {competitors.length}
+                {competitors.length > 0 ? competitors.length : approvedParticipants.length}
               </span>
             </h2>
             {isAdmin && (
@@ -412,18 +413,41 @@ function CompetitionDetail() {
               </Button>
             )}
           </div>
-          <PremiumCompetitorGrid
-            competitionId={c.id}
-            competitors={competitors}
-            myVote={myCompetitorVote?.competitorId ?? null}
-            canVote={!!userId && votingOpen}
-            hideCounts={hideResults}
-            isAdmin={isAdmin}
-            votingClosed={c.status === "completed" || !votingOpen && c.status !== "upcoming"}
-            votingUpcoming={c.status === "upcoming"}
-            onEdit={(comp: Competitor) => setEditing({ ...comp })}
-            invalidateKey={["competition-slug", slug]}
-          />
+          {competitors.length > 0 ? (
+            <PremiumCompetitorGrid
+              competitionId={c.id}
+              competitors={competitors}
+              myVote={myCompetitorVote?.competitorId ?? null}
+              canVote={!!userId && votingOpen}
+              hideCounts={hideResults}
+              isAdmin={isAdmin}
+              votingClosed={c.status === "completed" || !votingOpen && c.status !== "upcoming"}
+              votingUpcoming={c.status === "upcoming"}
+              onEdit={(comp: Competitor) => setEditing({ ...comp })}
+              invalidateKey={["competition-slug", slug]}
+            />
+          ) : approvedParticipants.length > 0 ? (
+            <ParticipantGrid
+              competitionId={c.id}
+              participants={approvedParticipants as any}
+              myVote={myVote?.participantId ?? null}
+              canVote={!!userId && votingOpen}
+              hideCounts={hideResults}
+            />
+          ) : (
+            <PremiumCompetitorGrid
+              competitionId={c.id}
+              competitors={competitors}
+              myVote={myCompetitorVote?.competitorId ?? null}
+              canVote={!!userId && votingOpen}
+              hideCounts={hideResults}
+              isAdmin={isAdmin}
+              votingClosed={c.status === "completed" || !votingOpen && c.status !== "upcoming"}
+              votingUpcoming={c.status === "upcoming"}
+              onEdit={(comp: Competitor) => setEditing({ ...comp })}
+              invalidateKey={["competition-slug", slug]}
+            />
+          )}
         </section>
 
 
@@ -434,7 +458,7 @@ function CompetitionDetail() {
         />
 
         {/* Participants (existing user-join system) */}
-        {participants.length > 0 && (
+        {competitors.length > 0 && approvedParticipants.length > 0 && (
           <section className="mt-6 grid gap-6 md:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
               <h2 className="mb-3 flex items-center gap-2 font-bold"><Trophy className="h-4 w-4 text-amber-400" /> Live Ranking</h2>
