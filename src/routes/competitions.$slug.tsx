@@ -153,22 +153,28 @@ function CompetitionDetail() {
     }
   }, [competitionId, bumpViews]);
 
-  // Realtime updates
+  // Realtime updates — coalesce bursts (many votes / sec) into one refetch
   useEffect(() => {
     if (!competitionId) return;
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const bump = () => {
+      if (t) return;
+      t = setTimeout(() => {
+        t = null;
+        qc.invalidateQueries({ queryKey: ["competition-slug", slug] });
+      }, 350);
+    };
     const ch = supabase
       .channel(`competition:${competitionId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "competition_votes", filter: `competition_id=eq.${competitionId}` },
-        () => qc.invalidateQueries({ queryKey: ["competition-slug", slug] }))
-      .on("postgres_changes", { event: "*", schema: "public", table: "competition_participants", filter: `competition_id=eq.${competitionId}` },
-        () => qc.invalidateQueries({ queryKey: ["competition-slug", slug] }))
-      .on("postgres_changes", { event: "*", schema: "public", table: "competition_competitors", filter: `competition_id=eq.${competitionId}` },
-        () => qc.invalidateQueries({ queryKey: ["competition-slug", slug] }))
-      .on("postgres_changes", { event: "*", schema: "public", table: "competition_competitor_votes", filter: `competition_id=eq.${competitionId}` },
-        () => qc.invalidateQueries({ queryKey: ["competition-slug", slug] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "competition_votes", filter: `competition_id=eq.${competitionId}` }, bump)
+      .on("postgres_changes", { event: "*", schema: "public", table: "competition_participants", filter: `competition_id=eq.${competitionId}` }, bump)
+      .on("postgres_changes", { event: "*", schema: "public", table: "competition_competitors", filter: `competition_id=eq.${competitionId}` }, bump)
+      .on("postgres_changes", { event: "*", schema: "public", table: "competition_competitor_votes", filter: `competition_id=eq.${competitionId}` }, bump)
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => { if (t) clearTimeout(t); supabase.removeChannel(ch); };
   }, [competitionId, slug, qc]);
+
+
 
   const joinM = useMutation({
     mutationFn: () => join({ data: { competitionId: competitionId! } }),

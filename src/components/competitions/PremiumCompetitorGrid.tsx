@@ -10,6 +10,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AnimatedCounter } from "./AnimatedCounter";
 import {
   adminDeleteCompetitor,
   voteForCompetitor,
@@ -285,7 +286,7 @@ export function PremiumCompetitorGrid({
               <div>
                 <div className="mb-1 flex items-center justify-between text-xs">
                   <span className="font-semibold tabular-nums">
-                    {c.vote_count.toLocaleString()} <span className="font-normal text-muted-foreground">votes</span>
+                    <AnimatedCounter value={c.vote_count} /> <span className="font-normal text-muted-foreground">votes</span>
                   </span>
                   <span className="tabular-nums text-muted-foreground">{pct}%</span>
                 </div>
@@ -301,11 +302,15 @@ export function PremiumCompetitorGrid({
                     style={{ width: `${pct}%` }}
                   />
                 </div>
-                {rank === 1 && c.vote_count > 0 && (
-                  <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300">
-                    <Trophy className="h-3 w-3 animate-pulse" /> Currently Leading
-                  </div>
-                )}
+                <div
+                  className={cn(
+                    "mt-1.5 inline-flex h-4 items-center gap-1 text-[11px] font-semibold transition-opacity duration-300",
+                    rank === 1 && c.vote_count > 0 ? "text-amber-300 opacity-100" : "opacity-0",
+                  )}
+                  aria-live="polite"
+                >
+                  <Trophy className="h-3 w-3 animate-pulse" /> Currently Leading
+                </div>
               </div>
             )}
 
