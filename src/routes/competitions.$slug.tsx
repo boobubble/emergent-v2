@@ -1,9 +1,10 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Trophy, Users, Vote, Calendar, Eye, Share2, Flag, Plus, Crown, Coins, Sparkles } from "lucide-react";
+import { Trophy, Plus, Crown, Coins, Sparkles, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 import {
   getCompetitionBySlug,
   getMyVote,
@@ -12,6 +13,7 @@ import {
   leaveCompetition,
   incrementCompetitionViews,
   listRelatedCompetitions,
+  voteForCompetitor,
 } from "@/lib/competitions.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -21,10 +23,9 @@ import { TopThree } from "@/components/competitions/TopThree";
 import { ParticipantGrid } from "@/components/competitions/ParticipantGrid";
 import { type Competitor } from "@/components/competitions/CompetitorGrid";
 import { PremiumCompetitorGrid } from "@/components/competitions/PremiumCompetitorGrid";
-import { AnimatedCounter } from "@/components/competitions/AnimatedCounter";
+import { BattleArena } from "@/components/competitions/BattleArena";
 import { CompetitorEditorDialog, emptyCompetitor, type CompetitorDraft } from "@/components/competitions/CompetitorEditorDialog";
 import { CompetitionCard, type CompetitionSummary } from "@/components/competitions/CompetitionCard";
-import { CompetitionFollowButton } from "@/components/competitions/CompetitionFollowButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
