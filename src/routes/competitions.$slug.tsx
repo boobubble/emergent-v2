@@ -188,6 +188,51 @@ function CompetitionDetail() {
     onError: (e: any) => toast.error(e?.message ?? "Failed"),
   });
 
+  const voteCompetitor = useServerFn(voteForCompetitor);
+  const arenaVoteM = useMutation({
+    mutationFn: (competitorId: string) =>
+      voteCompetitor({ data: { competitionId: competitionId!, competitorId } }),
+    onMutate: async (competitorId: string) => {
+      await qc.cancelQueries({ queryKey: ["competition-slug", slug] });
+      const prev = qc.getQueryData<any>(["competition-slug", slug]);
+      if (prev?.competitors) {
+        const prevMy = myCompetitorVote?.competitorId ?? null;
+        const next = prev.competitors.map((cc: Competitor) => {
+          if (cc.id === competitorId) return { ...cc, vote_count: (cc.vote_count ?? 0) + 1 };
+          if (prevMy && cc.id === prevMy && competitorId !== prevMy) {
+            return { ...cc, vote_count: Math.max(0, (cc.vote_count ?? 0) - 1) };
+          }
+          return cc;
+        });
+        qc.setQueryData(["competition-slug", slug], { ...prev, competitors: next });
+      }
+      qc.setQueriesData({ queryKey: ["my-competitor-vote", competitionId] }, { competitorId });
+      return { prev };
+    },
+    onSuccess: () => {
+      toast.success("🔥 Vote counted");
+      // Confetti burst
+      const fire = (particleRatio: number, opts: confetti.Options) => {
+        confetti({
+          origin: { y: 0.6 },
+          particleCount: Math.floor(180 * particleRatio),
+          ...opts,
+        });
+      };
+      fire(0.25, { spread: 26, startVelocity: 55, colors: ["#38bdf8", "#f43f5e", "#fbbf24"] });
+      fire(0.2, { spread: 60, colors: ["#38bdf8", "#f43f5e", "#fbbf24"] });
+      fire(0.35, { spread: 100, decay: 0.91, scalar: 0.9, colors: ["#38bdf8", "#f43f5e", "#fbbf24"] });
+    },
+    onError: (e: any, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["competition-slug", slug], ctx.prev);
+      toast.error(e?.message ?? "Failed to vote");
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["competition-slug", slug] });
+      qc.invalidateQueries({ queryKey: ["my-competitor-vote", competitionId] });
+    },
+  });
+
   if (!data?.competition) {
     return <div className="grid min-h-screen place-items-center">Competition not found.</div>;
   }
