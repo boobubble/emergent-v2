@@ -335,6 +335,7 @@ export function CompetitorEditorDialog({
                 name: draft.name.trim(),
                 // Ensure a display name when linking to an existing user without editing.
                 photo_url: draft.photo_url?.trim() || null,
+                cover_image_url: draft.cover_image_url?.trim() || null,
                 description: draft.description?.trim() || null,
               };
               // Strip helper-only field before sending.
