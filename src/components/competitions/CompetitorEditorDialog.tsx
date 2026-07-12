@@ -18,6 +18,7 @@ export interface CompetitorDraft {
   competition_id: string;
   name: string;
   photo_url?: string | null;
+  cover_image_url?: string | null;
   description?: string | null;
   linked_user_id?: string | null;
   sort_order?: number;
@@ -40,6 +41,7 @@ export function emptyCompetitor(competitionId: string, sortOrder = 0): Competito
     competition_id: competitionId,
     name: "",
     photo_url: "",
+    cover_image_url: "",
     description: "",
     linked_user_id: null,
     sort_order: sortOrder,
@@ -143,7 +145,7 @@ export function CompetitorEditorDialog({
 
   return (
     <Dialog open={!!draft} onOpenChange={(o) => !o && onChange(null)}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{draft.id ? "Edit nominee" : "Add nominee"}</DialogTitle>
         </DialogHeader>
@@ -236,54 +238,76 @@ export function CompetitorEditorDialog({
 
           <TabsContent value="external" className="mt-4 space-y-3">
             <div>
-              <Label>Display name</Label>
+              <Label>Full name</Label>
               <Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
             </div>
-            <div>
-              <Label>Photo URL</Label>
-              <Input value={draft.photo_url ?? ""} onChange={(e) => setDraft({ ...draft, photo_url: e.target.value })} />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Profile photo URL</Label>
+                <Input value={draft.photo_url ?? ""} onChange={(e) => setDraft({ ...draft, photo_url: e.target.value })} />
+              </div>
+              <div>
+                <Label>Cover image URL</Label>
+                <Input
+                  placeholder="Optional"
+                  value={draft.cover_image_url ?? ""}
+                  onChange={(e) => setDraft({ ...draft, cover_image_url: e.target.value })}
+                />
+              </div>
             </div>
             <div>
               <Label>Bio</Label>
               <Textarea rows={3} value={draft.description ?? ""} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Country (ISO)</Label>
-                <Input
-                  placeholder="e.g. IN, US, PK"
-                  maxLength={3}
-                  value={draft.country ?? ""}
-                  onChange={(e) => setDraft({ ...draft, country: e.target.value.toUpperCase() })}
-                />
-              </div>
-              <div>
-                <Label>Website</Label>
-                <Input placeholder="https://…" value={draft.website ?? ""} onChange={(e) => setDraft({ ...draft, website: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Twitter/X URL</Label>
-                <Input value={socials.twitter ?? ""} onChange={(e) => setSocial("twitter", e.target.value)} />
-              </div>
-              <div>
-                <Label>Instagram URL</Label>
-                <Input value={socials.instagram ?? ""} onChange={(e) => setSocial("instagram", e.target.value)} />
-              </div>
-              <div>
-                <Label>TikTok URL</Label>
-                <Input value={socials.tiktok ?? ""} onChange={(e) => setSocial("tiktok", e.target.value)} />
-              </div>
-              <div>
-                <Label>YouTube URL</Label>
-                <Input value={socials.youtube ?? ""} onChange={(e) => setSocial("youtube", e.target.value)} />
-              </div>
-            </div>
           </TabsContent>
         </Tabs>
 
-        <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+        <div className="mt-4 space-y-3 rounded-xl border border-white/10 bg-white/5 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {draft.linked_user_id ? "Competition overrides" : "Details"}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Country (ISO)</Label>
+              <Input
+                placeholder="e.g. IN, US, PK"
+                maxLength={3}
+                value={draft.country ?? ""}
+                onChange={(e) => setDraft({ ...draft, country: e.target.value.toUpperCase() })}
+              />
+            </div>
+            <div>
+              <Label>Website</Label>
+              <Input placeholder="https://…" value={draft.website ?? ""} onChange={(e) => setDraft({ ...draft, website: e.target.value })} />
+            </div>
+            <div>
+              <Label>Instagram URL</Label>
+              <Input value={socials.instagram ?? ""} onChange={(e) => setSocial("instagram", e.target.value)} />
+            </div>
+            <div>
+              <Label>Twitter / X URL</Label>
+              <Input value={socials.twitter ?? ""} onChange={(e) => setSocial("twitter", e.target.value)} />
+            </div>
+            <div>
+              <Label>TikTok URL</Label>
+              <Input value={socials.tiktok ?? ""} onChange={(e) => setSocial("tiktok", e.target.value)} />
+            </div>
+            <div>
+              <Label>YouTube URL</Label>
+              <Input value={socials.youtube ?? ""} onChange={(e) => setSocial("youtube", e.target.value)} />
+            </div>
+            <div>
+              <Label>Display order</Label>
+              <Input
+                type="number"
+                value={draft.sort_order ?? 0}
+                onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) || 0 })}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
           <label className="flex items-center justify-between gap-3 text-sm">
             <span>Featured</span>
             <Switch
@@ -300,6 +324,7 @@ export function CompetitorEditorDialog({
           </label>
         </div>
 
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onChange(null)}>Cancel</Button>
           <Button
@@ -310,6 +335,7 @@ export function CompetitorEditorDialog({
                 name: draft.name.trim(),
                 // Ensure a display name when linking to an existing user without editing.
                 photo_url: draft.photo_url?.trim() || null,
+                cover_image_url: draft.cover_image_url?.trim() || null,
                 description: draft.description?.trim() || null,
               };
               // Strip helper-only field before sending.

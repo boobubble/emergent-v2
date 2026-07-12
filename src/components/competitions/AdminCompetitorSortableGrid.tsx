@@ -29,6 +29,7 @@ import {
   adminSetCompetitorFlags,
   adminSaveCompetitor,
 } from "@/lib/competitions.functions";
+import { flagFromCode } from "@/lib/country-flag";
 import type { Competitor } from "./CompetitorGrid";
 
 interface Props {
@@ -81,6 +82,7 @@ export function AdminCompetitorSortableGrid({ competitionId: _competitionId, com
           competition_id: v.c.competition_id,
           name: v.c.name,
           photo_url: v.c.photo_url ?? null,
+          cover_image_url: v.c.cover_image_url ?? null,
           description: v.c.description ?? null,
           linked_user_id: v.c.linked_user_id ?? null,
           country: v.c.country ?? null,
@@ -109,6 +111,15 @@ export function AdminCompetitorSortableGrid({ competitionId: _competitionId, com
     return <p className="text-sm text-muted-foreground">No nominees yet. Add the first one above.</p>;
   }
 
+  const rankMap = useMemo(() => {
+    const eligible = items
+      .filter((c) => !c.is_hidden && !c.is_disqualified)
+      .sort((a, b) => b.vote_count - a.vote_count);
+    const map = new Map<string, number>();
+    eligible.forEach((c, i) => map.set(c.id, i + 1));
+    return map;
+  }, [items]);
+
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
@@ -117,6 +128,7 @@ export function AdminCompetitorSortableGrid({ competitionId: _competitionId, com
             <SortableRow
               key={c.id}
               c={c}
+              rank={rankMap.get(c.id) ?? null}
               onEdit={() => onEdit(c)}
               onDelete={() => confirm(`Remove ${c.name}?`) && delM.mutate(c.id)}
               onToggleHidden={() => flagsM.mutate({ id: c.id, is_hidden: !c.is_hidden })}
@@ -132,9 +144,10 @@ export function AdminCompetitorSortableGrid({ competitionId: _competitionId, com
 }
 
 function SortableRow({
-  c, onEdit, onDelete, onToggleHidden, onToggleDisqualified, onToggleFeatured, onTogglePinned,
+  c, rank, onEdit, onDelete, onToggleHidden, onToggleDisqualified, onToggleFeatured, onTogglePinned,
 }: {
   c: Competitor;
+  rank: number | null;
   onEdit: () => void;
   onDelete: () => void;
   onToggleHidden: () => void;
@@ -148,6 +161,12 @@ function SortableRow({
     transition,
     opacity: isDragging ? 0.6 : 1,
   };
+  const flag = flagFromCode(c.country);
+  const rankTone =
+    rank === 1 ? "border-amber-400/50 bg-amber-400/15 text-amber-300"
+    : rank === 2 ? "border-slate-300/40 bg-slate-300/15 text-slate-200"
+    : rank === 3 ? "border-orange-400/40 bg-orange-400/15 text-orange-300"
+    : "border-white/10 bg-white/5 text-muted-foreground";
 
   return (
     <li
@@ -165,6 +184,11 @@ function SortableRow({
       >
         <GripVertical className="h-4 w-4" />
       </button>
+      {rank !== null && (
+        <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border text-xs font-bold ${rankTone}`}>
+          #{rank}
+        </span>
+      )}
       <Avatar className="h-10 w-10 shrink-0">
         <AvatarImage src={c.photo_url ?? c.linked_profile?.avatar_url ?? undefined} />
         <AvatarFallback style={{ background: c.linked_profile?.avatar_color ?? undefined }}>
@@ -173,6 +197,7 @@ function SortableRow({
       </Avatar>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
+          {flag && <span className="text-base leading-none" aria-label={c.country ?? ""}>{flag}</span>}
           <span className="truncate text-sm font-medium">{c.name}</span>
           {c.linked_profile?.username && (
             <span className="truncate text-xs text-muted-foreground">@{c.linked_profile.username}</span>
@@ -182,7 +207,7 @@ function SortableRow({
           {c.is_hidden && <Badge variant="outline" className="text-[10px]">Hidden</Badge>}
           {c.is_disqualified && <Badge variant="destructive" className="text-[10px]">Disqualified</Badge>}
         </div>
-        <div className="text-xs text-muted-foreground">{c.vote_count} votes</div>
+        <div className="text-xs text-muted-foreground">{c.vote_count.toLocaleString()} votes</div>
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <Button
