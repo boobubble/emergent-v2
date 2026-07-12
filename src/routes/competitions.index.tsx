@@ -35,6 +35,7 @@ function CompetitionsIndex() {
   const { data: categories = [] } = useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
   const [category, setCategory] = useState<string>("all");
   const [editing, setEditing] = useState<any | null>(null);
+  const [managing, setManaging] = useState<string | null>(null);
 
   const openEdit = (c: any) => {
     setEditing({
