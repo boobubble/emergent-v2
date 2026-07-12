@@ -19,7 +19,7 @@ import { useMyRoles } from "@/lib/use-my-role";
 import { Countdown } from "@/components/competitions/Countdown";
 import { TopThree } from "@/components/competitions/TopThree";
 import { ParticipantGrid } from "@/components/competitions/ParticipantGrid";
-import { CompetitorGrid, type Competitor } from "@/components/competitions/CompetitorGrid";
+import { type Competitor } from "@/components/competitions/CompetitorGrid";
 import { PremiumCompetitorGrid } from "@/components/competitions/PremiumCompetitorGrid";
 import { AnimatedCounter } from "@/components/competitions/AnimatedCounter";
 import { CompetitorEditorDialog, emptyCompetitor, type CompetitorDraft } from "@/components/competitions/CompetitorEditorDialog";
