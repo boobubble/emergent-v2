@@ -116,12 +116,40 @@ export function PremiumCompetitorGrid({
 
   const voteM = useMutation({
     mutationFn: (competitorId: string) => vote({ data: { competitionId, competitorId } }),
+    onMutate: async (competitorId: string) => {
+      await Promise.all([
+        qc.cancelQueries({ queryKey: invalidateKey }),
+        qc.cancelQueries({ queryKey: ["my-competitor-vote", competitionId] }),
+      ]);
+      const prevData = qc.getQueryData<any>(invalidateKey);
+      const prevMyVote = qc.getQueriesData<any>({ queryKey: ["my-competitor-vote", competitionId] });
+
+      if (prevData?.competitors) {
+        const nextCompetitors = prevData.competitors.map((c: Competitor) => {
+          if (c.id === competitorId) return { ...c, vote_count: (c.vote_count ?? 0) + 1 };
+          if (myVote && c.id === myVote && competitorId !== myVote) {
+            return { ...c, vote_count: Math.max(0, (c.vote_count ?? 0) - 1) };
+          }
+          return c;
+        });
+        qc.setQueryData(invalidateKey, { ...prevData, competitors: nextCompetitors });
+      }
+      qc.setQueriesData({ queryKey: ["my-competitor-vote", competitionId] }, { competitorId });
+
+      return { prevData, prevMyVote };
+    },
+    onError: (e: any, _v, ctx) => {
+      if (ctx?.prevData) qc.setQueryData(invalidateKey, ctx.prevData);
+      if (ctx?.prevMyVote) ctx.prevMyVote.forEach(([key, val]: [any, any]) => qc.setQueryData(key, val));
+      toast.error(e?.message ?? "Failed to vote");
+    },
     onSuccess: () => {
       toast.success("🗳 Vote counted");
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: invalidateKey });
       qc.invalidateQueries({ queryKey: ["my-competitor-vote", competitionId] });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Failed to vote"),
   });
   const delM = useMutation({
     mutationFn: (id: string) => del({ data: { id } }),
