@@ -465,3 +465,35 @@ function CompetitionDetail() {
     </div>
   );
 }
+
+function StatTile({
+  icon,
+  label,
+  value,
+  valueRaw,
+  accent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value?: number;
+  valueRaw?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={
+        "flex flex-col gap-1 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 backdrop-blur transition hover:border-white/20" +
+        (accent ? " ring-1 ring-amber-400/30" : "")
+      }
+    >
+      <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <div className={"text-lg font-bold tabular-nums" + (accent ? " text-amber-300" : "")}>
+        {valueRaw !== undefined ? valueRaw : <AnimatedCounter value={value ?? 0} />}
+      </div>
+    </div>
+  );
+}
+
