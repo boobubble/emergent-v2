@@ -1,19 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Zap, Radio, Megaphone, MessageSquare, Trophy, Shield, Sparkles, Activity } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
-import { useRoomOnlineCounts } from "@/lib/use-room-online-counts";
 import heroBg from "@/assets/gaming-arena-hero.jpg";
 
 /**
  * Gaming-Arena-only visual overlay: hero banner, announcement pill, and
  * stat strip. Mounts above the message list — never touches chat logic,
  * message rendering, or backend state. Purely presentational.
+ *
+ * Note: online count is derived from room membership so we don't open a
+ * second presence subscription to the same realtime channel the Sidebar
+ * already owns (Supabase realtime rejects `.on('presence', ...)` after
+ * the shared channel is subscribed).
  */
 export function GamingArenaHero({ channelId }: { channelId: string }) {
   const { state, channelLabel, channelMessages } = useChat();
   const room = state.rooms[channelId];
-  const onlineMap = useRoomOnlineCounts([channelId]);
-  const online = onlineMap[channelId] ?? Math.max(1, (room?.members?.length ?? 1) * 17);
+  const online = Math.max(1, room?.members?.length ?? 1);
+
 
   const label = channelLabel(channelId);
   const msgs = channelMessages(channelId);
