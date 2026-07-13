@@ -493,12 +493,13 @@ export const castVote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { competitionId: string; participantId: string }) => data)
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
     const { error } = await supabase.rpc("cast_competition_vote", {
       _competition: data.competitionId,
       _participant: data.participantId,
     });
     if (error) throw new Error(error.message);
+    await emitGam(supabase, userId, "competition_vote", { competition_id: data.competitionId, participant_id: data.participantId });
     return { ok: true };
   });
 
