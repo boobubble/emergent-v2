@@ -34,6 +34,7 @@ import { LicenseGuard } from "@/components/LicenseGuard";
 import { useHomePageMode } from "@/lib/use-home-page-mode";
 import "@/i18n";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
+import { DynamicBrandHead } from "@/components/DynamicBrandHead";
 
 import appCss from "../styles.css?url";
 
