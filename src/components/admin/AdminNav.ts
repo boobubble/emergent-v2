@@ -91,6 +91,8 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/pages",       label: "Custom Pages", icon: FileText,      keywords: ["cms", "landing"] },
       { to: "/admin/competitions", label: "Competitions", icon: Trophy, keywords: ["competitions", "voting", "contest", "winners", "rewards"] },
       { to: "/admin/competition-categories", label: "Competition Categories", icon: Trophy, keywords: ["competition", "category", "categories"] },
+      { to: "/admin/competitions-feed", label: "Competitions Feed", icon: Trophy, keywords: ["competition", "feed", "bot", "auto post", "announcements", "competitionsbot"] },
+      { to: "/admin/competition-analytics", label: "Competition Analytics", icon: Trophy, keywords: ["competition", "analytics", "stats", "metrics", "trends", "leaderboard", "top"] },
       { to: "/admin/feedback",    label: "Feedback",     icon: Bug,           keywords: ["bug", "bugs", "feedback", "feature request", "ui issue", "performance", "security", "reports"] },
     ],
   },

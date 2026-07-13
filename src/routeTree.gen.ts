@@ -110,8 +110,10 @@ import { Route as AdminDmWallpapersRouteImport } from './routes/admin.dm-wallpap
 import { Route as AdminDjRouteImport } from './routes/admin.dj'
 import { Route as AdminDemoRouteImport } from './routes/admin.demo'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
+import { Route as AdminCompetitionsFeedRouteImport } from './routes/admin.competitions-feed'
 import { Route as AdminCompetitionsRouteImport } from './routes/admin.competitions'
 import { Route as AdminCompetitionCategoriesRouteImport } from './routes/admin.competition-categories'
+import { Route as AdminCompetitionAnalyticsRouteImport } from './routes/admin.competition-analytics'
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
 import { Route as AdminChatThemesRouteImport } from './routes/admin.chat-themes'
 import { Route as AdminCallsRouteImport } from './routes/admin.calls'
@@ -146,6 +148,7 @@ import { Route as ApiPublicLicenseActivateRouteImport } from './routes/api/publi
 import { Route as ApiPublicHooksLicenseRevalidateRouteImport } from './routes/api/public/hooks/license-revalidate'
 import { Route as ApiPublicHooksFeedbotSummaryRouteImport } from './routes/api/public/hooks/feedbot-summary'
 import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/public/hooks/feedbot-dispatch'
+import { Route as ApiPublicOgCompetitionSlugRouteImport } from './routes/api/public/og/competition.$slug'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -653,6 +656,11 @@ const AdminConfessionsRoute = AdminConfessionsRouteImport.update({
   path: '/confessions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCompetitionsFeedRoute = AdminCompetitionsFeedRouteImport.update({
+  id: '/competitions-feed',
+  path: '/competitions-feed',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCompetitionsRoute = AdminCompetitionsRouteImport.update({
   id: '/competitions',
   path: '/competitions',
@@ -662,6 +670,12 @@ const AdminCompetitionCategoriesRoute =
   AdminCompetitionCategoriesRouteImport.update({
     id: '/competition-categories',
     path: '/competition-categories',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminCompetitionAnalyticsRoute =
+  AdminCompetitionAnalyticsRouteImport.update({
+    id: '/competition-analytics',
+    path: '/competition-analytics',
     getParentRoute: () => AdminRoute,
   } as any)
 const AdminChatroomsRoute = AdminChatroomsRouteImport.update({
@@ -841,6 +855,12 @@ const ApiPublicHooksFeedbotDispatchRoute =
     path: '/api/public/hooks/feedbot-dispatch',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicOgCompetitionSlugRoute =
+  ApiPublicOgCompetitionSlugRouteImport.update({
+    id: '/api/public/og/competition/$slug',
+    path: '/api/public/og/competition/$slug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -894,8 +914,10 @@ export interface FileRoutesByFullPath {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/competition-analytics': typeof AdminCompetitionAnalyticsRoute
   '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
   '/admin/competitions': typeof AdminCompetitionsRoute
+  '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -980,6 +1002,7 @@ export interface FileRoutesByFullPath {
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
+  '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -1030,8 +1053,10 @@ export interface FileRoutesByTo {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/competition-analytics': typeof AdminCompetitionAnalyticsRoute
   '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
   '/admin/competitions': typeof AdminCompetitionsRoute
+  '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -1116,6 +1141,7 @@ export interface FileRoutesByTo {
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
+  '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1170,8 +1196,10 @@ export interface FileRoutesById {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/competition-analytics': typeof AdminCompetitionAnalyticsRoute
   '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
   '/admin/competitions': typeof AdminCompetitionsRoute
+  '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -1256,6 +1284,7 @@ export interface FileRoutesById {
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
+  '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1311,8 +1340,10 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/competition-analytics'
     | '/admin/competition-categories'
     | '/admin/competitions'
+    | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -1397,6 +1428,7 @@ export interface FileRouteTypes {
     | '/api/public/license/deactivate'
     | '/api/public/license/reset'
     | '/api/public/license/verify'
+    | '/api/public/og/competition/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1447,8 +1479,10 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/competition-analytics'
     | '/admin/competition-categories'
     | '/admin/competitions'
+    | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -1533,6 +1567,7 @@ export interface FileRouteTypes {
     | '/api/public/license/deactivate'
     | '/api/public/license/reset'
     | '/api/public/license/verify'
+    | '/api/public/og/competition/$slug'
   id:
     | '__root__'
     | '/'
@@ -1586,8 +1621,10 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/competition-analytics'
     | '/admin/competition-categories'
     | '/admin/competitions'
+    | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -1672,6 +1709,7 @@ export interface FileRouteTypes {
     | '/api/public/license/deactivate'
     | '/api/public/license/reset'
     | '/api/public/license/verify'
+    | '/api/public/og/competition/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1724,6 +1762,7 @@ export interface RootRouteChildren {
   ApiPublicLicenseDeactivateRoute: typeof ApiPublicLicenseDeactivateRoute
   ApiPublicLicenseResetRoute: typeof ApiPublicLicenseResetRoute
   ApiPublicLicenseVerifyRoute: typeof ApiPublicLicenseVerifyRoute
+  ApiPublicOgCompetitionSlugRoute: typeof ApiPublicOgCompetitionSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2435,6 +2474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConfessionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/competitions-feed': {
+      id: '/admin/competitions-feed'
+      path: '/competitions-feed'
+      fullPath: '/admin/competitions-feed'
+      preLoaderRoute: typeof AdminCompetitionsFeedRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/competitions': {
       id: '/admin/competitions'
       path: '/competitions'
@@ -2447,6 +2493,13 @@ declare module '@tanstack/react-router' {
       path: '/competition-categories'
       fullPath: '/admin/competition-categories'
       preLoaderRoute: typeof AdminCompetitionCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/competition-analytics': {
+      id: '/admin/competition-analytics'
+      path: '/competition-analytics'
+      fullPath: '/admin/competition-analytics'
+      preLoaderRoute: typeof AdminCompetitionAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/chatrooms': {
@@ -2687,6 +2740,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksFeedbotDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/og/competition/$slug': {
+      id: '/api/public/og/competition/$slug'
+      path: '/api/public/og/competition/$slug'
+      fullPath: '/api/public/og/competition/$slug'
+      preLoaderRoute: typeof ApiPublicOgCompetitionSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -2722,8 +2782,10 @@ interface AdminRouteChildren {
   AdminCallsRoute: typeof AdminCallsRoute
   AdminChatThemesRoute: typeof AdminChatThemesRoute
   AdminChatroomsRoute: typeof AdminChatroomsRoute
+  AdminCompetitionAnalyticsRoute: typeof AdminCompetitionAnalyticsRoute
   AdminCompetitionCategoriesRoute: typeof AdminCompetitionCategoriesRoute
   AdminCompetitionsRoute: typeof AdminCompetitionsRoute
+  AdminCompetitionsFeedRoute: typeof AdminCompetitionsFeedRoute
   AdminConfessionsRoute: typeof AdminConfessionsRoute
   AdminDemoRoute: typeof AdminDemoRoute
   AdminDjRoute: typeof AdminDjRoute
@@ -2800,8 +2862,10 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCallsRoute: AdminCallsRoute,
   AdminChatThemesRoute: AdminChatThemesRoute,
   AdminChatroomsRoute: AdminChatroomsRoute,
+  AdminCompetitionAnalyticsRoute: AdminCompetitionAnalyticsRoute,
   AdminCompetitionCategoriesRoute: AdminCompetitionCategoriesRoute,
   AdminCompetitionsRoute: AdminCompetitionsRoute,
+  AdminCompetitionsFeedRoute: AdminCompetitionsFeedRoute,
   AdminConfessionsRoute: AdminConfessionsRoute,
   AdminDemoRoute: AdminDemoRoute,
   AdminDjRoute: AdminDjRoute,
@@ -2962,6 +3026,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLicenseDeactivateRoute: ApiPublicLicenseDeactivateRoute,
   ApiPublicLicenseResetRoute: ApiPublicLicenseResetRoute,
   ApiPublicLicenseVerifyRoute: ApiPublicLicenseVerifyRoute,
+  ApiPublicOgCompetitionSlugRoute: ApiPublicOgCompetitionSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

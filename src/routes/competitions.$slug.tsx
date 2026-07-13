@@ -67,7 +67,9 @@ export const Route = createFileRoute("/competitions/$slug")({
     }
     const title = `${c.name} — Competition`;
     const description = (c.description ?? "Join and vote in this community competition.").slice(0, 155);
-    const img = c.banner_url || undefined;
+    // Dynamic OG share card (SVG) — reflects live leader / vote count / countdown
+    const ogImage = `${SITE}/api/public/og/competition/${params.slug}${c.status === "completed" ? "?variant=winner" : ""}`;
+    const img = ogImage;
     const meta: any[] = [
       { title },
       { name: "description", content: description },
@@ -75,14 +77,12 @@ export const Route = createFileRoute("/competitions/$slug")({
       { property: "og:description", content: description },
       { property: "og:type", content: "article" },
       { property: "og:url", content: url },
-      { name: "twitter:card", content: img ? "summary_large_image" : "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },
+      { property: "og:image", content: img },
+      { name: "twitter:image", content: img },
     ];
-    if (img) {
-      meta.push({ property: "og:image", content: img });
-      meta.push({ name: "twitter:image", content: img });
-    }
     return {
       meta,
       links: [{ rel: "canonical", href: url }],

@@ -2056,6 +2056,7 @@ export type Database = {
           image_url: string | null
           kind: string
           payload: Json
+          persona_bot_id: string | null
           target_url: string | null
         }
         Insert: {
@@ -2068,6 +2069,7 @@ export type Database = {
           image_url?: string | null
           kind: string
           payload?: Json
+          persona_bot_id?: string | null
           target_url?: string | null
         }
         Update: {
@@ -2080,6 +2082,7 @@ export type Database = {
           image_url?: string | null
           kind?: string
           payload?: Json
+          persona_bot_id?: string | null
           target_url?: string | null
         }
         Relationships: []
@@ -2087,6 +2090,7 @@ export type Database = {
       feedbot_settings: {
         Row: {
           bot_user_id: string | null
+          competitions_bot_user_id: string | null
           daily_summary_enabled: boolean
           daily_summary_time: string
           digest_mode: boolean
@@ -2100,6 +2104,7 @@ export type Database = {
         }
         Insert: {
           bot_user_id?: string | null
+          competitions_bot_user_id?: string | null
           daily_summary_enabled?: boolean
           daily_summary_time?: string
           digest_mode?: boolean
@@ -2113,6 +2118,7 @@ export type Database = {
         }
         Update: {
           bot_user_id?: string | null
+          competitions_bot_user_id?: string | null
           daily_summary_enabled?: boolean
           daily_summary_time?: string
           digest_mode?: boolean
@@ -5637,6 +5643,19 @@ export type Database = {
           _image_url: string
           _kind: string
           _payload: Json
+          _target_url: string
+        }
+        Returns: undefined
+      }
+      feedbot_enqueue_persona: {
+        Args: {
+          _actor: string
+          _category: string
+          _dedupe: string
+          _image_url: string
+          _kind: string
+          _payload: Json
+          _persona: string
           _target_url: string
         }
         Returns: undefined
