@@ -106,7 +106,7 @@ export function BattleActivityFeed({
       id: `v-${v.voter_id}-${v.voted_at}`,
       kind: "vote" as const,
       ts: new Date(v.voted_at).getTime(),
-      text: `${v.username ?? "A supporter"} voted for ${v.competitor_name ?? "a nominee"}`,
+      text: `${v.username ?? "A supporter"} voted`,
       actor: v.username,
       target: v.competitor_name,
     }));
