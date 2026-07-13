@@ -163,13 +163,16 @@ export const announceCompetitionEvent = createServerFn({ method: "POST" })
     const dedupe = `${data.kind}:${comp.id}:${bucket}`;
     const payload = { name: comp.name, slug: comp.slug, end_at: comp.end_at };
     const target = `/competitions/${comp.slug ?? comp.id}`;
-    const { error } = await supabaseAdmin.rpc("feedbot_enqueue_persona", {
+    const { error } = await (supabaseAdmin.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ error: { message: string } | null }>)("feedbot_enqueue_persona", {
       _kind: data.kind,
       _category: data.kind,
       _actor: null,
       _payload: payload,
       _target_url: target,
-      _image_url: comp.banner_url,
+      _image_url: comp.banner_url ?? null,
       _dedupe: dedupe,
       _persona: settings?.competitions_bot_user_id ?? null,
     });
