@@ -68,6 +68,7 @@ export function AuthDialogs({
 }
 
 export function AuthScreen() {
+  const brand = useBrand();
   const [popup, setPopup] = useState<Popup>(null);
   const { loginAsGuest } = useAuth();
   const [guestCfg, setGuestCfg] = useState<GuestAccessConfig>(GUEST_ACCESS_DEFAULTS);
