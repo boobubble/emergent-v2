@@ -358,7 +358,7 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
 
   return (
     <article
-      className="group relative flex flex-col overflow-hidden rounded-[20px] border border-white/[0.08] bg-gradient-to-br from-slate-900/80 to-slate-950/90 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-400/25 hover:shadow-[0_16px_40px_-14px_rgba(139,92,246,0.25)]"
+      className="group relative flex flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-gradient-to-br from-slate-900/80 to-slate-950/90 shadow-[0_6px_20px_-10px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-400/25 hover:shadow-[0_12px_30px_-12px_rgba(139,92,246,0.25)]"
     >
       {/* Top strip: LIVE / category / countdown / watching */}
       <div className="flex items-center justify-between gap-2 px-3 pt-2.5">
