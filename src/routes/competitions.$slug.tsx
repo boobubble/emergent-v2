@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -48,6 +48,10 @@ export const Route = createFileRoute("/competitions/$slug")({
   loader: async ({ params }) => {
     const data = await getCompetitionBySlug({ data: { slug: params.slug } });
     if (!data?.competition) throw notFound();
+    const canonical = (data.competition as any).slug as string | undefined;
+    if (canonical && canonical !== params.slug) {
+      throw redirect({ to: "/competitions/$slug", params: { slug: canonical }, replace: true });
+    }
     return data;
   },
   head: ({ params, loaderData }) => {
