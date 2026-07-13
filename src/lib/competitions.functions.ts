@@ -652,14 +652,11 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
     if (data.status !== "draft") {
       try {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { getWebRequest } = await import("@tanstack/react-start/server");
         let origin = "";
         try {
-          const req = getWebRequest();
-          const h = req?.headers;
-          const proto = h?.get("x-forwarded-proto") ?? "https";
-          const host = h?.get("x-forwarded-host") ?? h?.get("host") ?? "";
-          if (host) origin = `${proto}://${host}`;
+          const { getRequestUrl } = await import("@tanstack/react-start/server");
+          const u = getRequestUrl({ xForwardedHost: true });
+          origin = u.origin;
         } catch {
           // ignore — fall back to env or relative
         }
