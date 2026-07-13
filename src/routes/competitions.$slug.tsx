@@ -512,7 +512,7 @@ function CompetitionDetail() {
         )}
 
         {/* Nominees */}
-        <section className="mt-5">
+        <section id="nominees-section" className="mt-5 scroll-mt-20">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="flex items-center gap-1.5 text-base font-bold">
               <Crown className="h-4 w-4 text-amber-400" /> Nominees
@@ -527,20 +527,31 @@ function CompetitionDetail() {
             )}
           </div>
           {competitors.length > 0 ? (
-            <DynamicCompetitionLayout
-              competitionId={c.id}
-              competitors={competitors}
-              layoutStyle={layoutStyle}
-              myVote={myCompetitorVote?.competitorId ?? null}
-              canVote={!!userId && votingOpen}
-              hideCounts={hideResults}
-              isAdmin={isAdmin}
-              votingClosed={c.status === "completed" || (!votingOpen && c.status !== "upcoming")}
-              votingUpcoming={c.status === "upcoming"}
-              onEdit={(comp: Competitor) => setEditing({ ...comp })}
-              invalidateKey={["competition-slug", slug]}
-              suppressVsBattle={showBattleArenaHero}
-            />
+            resolvedLayout === "leaderboard" && !isAdmin ? (
+              <PremiumNomineeCards
+                competitionId={c.id}
+                competitors={competitors}
+                myVote={myCompetitorVote?.competitorId ?? null}
+                canVote={!!userId && votingOpen}
+                hideCounts={hideResults}
+                invalidateKey={["competition-slug", slug]}
+              />
+            ) : (
+              <DynamicCompetitionLayout
+                competitionId={c.id}
+                competitors={competitors}
+                layoutStyle={layoutStyle}
+                myVote={myCompetitorVote?.competitorId ?? null}
+                canVote={!!userId && votingOpen}
+                hideCounts={hideResults}
+                isAdmin={isAdmin}
+                votingClosed={c.status === "completed" || (!votingOpen && c.status !== "upcoming")}
+                votingUpcoming={c.status === "upcoming"}
+                onEdit={(comp: Competitor) => setEditing({ ...comp })}
+                invalidateKey={["competition-slug", slug]}
+                suppressVsBattle={showBattleArenaHero}
+              />
+            )
           ) : approvedParticipants.length > 0 ? (
             <ParticipantGrid
               competitionId={c.id}
@@ -550,12 +561,20 @@ function CompetitionDetail() {
               hideCounts={hideResults}
               invalidateKey={["competition-slug", slug]}
             />
+          ) : c.status === "upcoming" ? (
+            <PremiumEmptyState kind="upcoming" />
+          ) : c.status === "completed" ? (
+            <PremiumEmptyState kind="closed" />
           ) : (
-            <div className="rounded-3xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-16 text-center text-sm text-muted-foreground">
-              No nominees have been added yet.
+            <PremiumEmptyState kind="no-nominees" />
+          )}
+          {competitors.length > 0 && totalCompetitorVotes === 0 && votingOpen && (
+            <div className="mt-4">
+              <PremiumEmptyState kind="no-votes" />
             </div>
           )}
         </section>
+
 
 
         <CompetitorEditorDialog
