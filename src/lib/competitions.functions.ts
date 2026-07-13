@@ -859,3 +859,139 @@ export const adminSetManualWinners = createServerFn({ method: "POST" })
     return { ok: true, winners: rows.length };
   });
 
+
+// ---------- Discovery & Hall of Fame ----------
+
+export type EnrichedCompetition = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  banner_url: string | null;
+  status: string;
+  start_at: string;
+  end_at: string;
+  total_votes: number;
+  total_participants: number;
+  views_count: number;
+  is_featured: boolean;
+  is_pinned: boolean;
+  is_published: boolean;
+  rewards: any;
+  category: { id: string; name: string; slug: string; color?: string | null; icon_url?: string | null } | null;
+  follower_count: number;
+  top_competitors: Array<{
+    id: string;
+    name: string;
+    photo_url: string | null;
+    votes: number;
+    is_verified?: boolean;
+  }>;
+};
+
+async function enrichCompetitions(sb: any, comps: any[]): Promise<EnrichedCompetition[]> {
+  if (!comps.length) return [];
+  const ids = comps.map((c) => c.id);
+  const [{ data: follows }, { data: competitors }] = await Promise.all([
+    sb.from("competition_follows").select("competition_id").in("competition_id", ids),
+    sb.from("competition_competitors")
+      .select("id, competition_id, name, photo_url, vote_count, is_hidden, is_disqualified, sort_order, linked_profile:profiles!competition_competitors_linked_user_id_fkey(is_verified)")
+      .in("competition_id", ids)
+      .order("vote_count", { ascending: false }),
+  ]);
+  const followMap = new Map<string, number>();
+  (follows ?? []).forEach((f: any) => followMap.set(f.competition_id, (followMap.get(f.competition_id) ?? 0) + 1));
+  const compMap = new Map<string, any[]>();
+  (competitors ?? []).forEach((c: any) => {
+    if (c.is_hidden || c.is_disqualified) return;
+    const arr = compMap.get(c.competition_id) ?? [];
+    if (arr.length < 3) arr.push(c);
+    compMap.set(c.competition_id, arr);
+  });
+  return comps.map((c) => ({
+    ...c,
+    follower_count: followMap.get(c.id) ?? 0,
+    top_competitors: (compMap.get(c.id) ?? []).map((x: any) => ({
+      id: x.id,
+      name: x.name,
+      photo_url: x.photo_url,
+      votes: x.vote_count ?? 0,
+      is_verified: !!x.linked_profile?.is_verified,
+    })),
+  }));
+}
+
+export const listCompetitionsEnriched = createServerFn({ method: "GET" }).handler(async () => {
+  const sb = await publicClient();
+  const { data, error } = await sb
+    .from("competitions")
+    .select("*, category:competition_categories(id,name,slug,color,icon_url)")
+    .neq("status", "draft")
+    .eq("is_published", true)
+    .order("start_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return enrichCompetitions(sb, data ?? []);
+});
+
+export const listMyFollowedCompetitions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: follows } = await context.supabase
+      .from("competition_follows")
+      .select("competition_id")
+      .eq("user_id", context.userId);
+    const ids = (follows ?? []).map((f: any) => f.competition_id);
+    if (!ids.length) return [];
+    const sb = await publicClient();
+    const { data, error } = await sb
+      .from("competitions")
+      .select("*, category:competition_categories(id,name,slug,color,icon_url)")
+      .in("id", ids)
+      .eq("is_published", true)
+      .order("start_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return enrichCompetitions(sb, data ?? []);
+  });
+
+export const listHallOfFame = createServerFn({ method: "GET" })
+  .inputValidator((data: { limit?: number } = {}) => data)
+  .handler(async ({ data }) => {
+    const sb = await publicClient();
+    const limit = Math.min(data.limit ?? 100, 200);
+    const { data: awards, error } = await sb
+      .from("competition_awards")
+      .select("id, place, badge_label, awarded_at, rewards, user_id, participant_id, competition:competitions(id,name,slug,banner_url,end_at,total_votes,total_participants,category:competition_categories(name,slug,color))")
+      .lte("place", 3)
+      .order("awarded_at", { ascending: false })
+      .limit(limit);
+    if (error) throw new Error(error.message);
+    const rows = awards ?? [];
+    const userIds = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
+    const partIds = Array.from(new Set(rows.map((r: any) => r.participant_id).filter(Boolean)));
+    const [{ data: profs }, { data: parts }] = await Promise.all([
+      userIds.length
+        ? sb.from("profiles").select("id,username,display_name,avatar_url,avatar_color,is_verified").in("id", userIds)
+        : Promise.resolve({ data: [] as any[] }),
+      partIds.length
+        ? sb.from("competition_participants").select("id,vote_count,competition_id").in("id", partIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const pmap = new Map(((profs as any).data ?? []).map((p: any) => [p.id, p]));
+    const partMap = new Map(((parts as any).data ?? []).map((p: any) => [p.id, p]));
+    return rows.map((r: any) => {
+      const part = partMap.get(r.participant_id);
+      const totalVotes = r.competition?.total_votes ?? 0;
+      const winningVotes = part?.vote_count ?? 0;
+      return {
+        id: r.id,
+        place: r.place,
+        badge_label: r.badge_label,
+        awarded_at: r.awarded_at,
+        rewards: r.rewards ?? {},
+        competition: r.competition,
+        profile: pmap.get(r.user_id) ?? null,
+        winning_votes: winningVotes,
+        winning_share: totalVotes > 0 ? winningVotes / totalVotes : 0,
+      };
+    });
+  });
