@@ -489,13 +489,13 @@ function CompetitionDetail() {
 
         {/* Participants (existing user-join system) */}
         {competitors.length > 0 && approvedParticipants.length > 0 && (
-          <section className="mt-6 grid gap-6 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-              <h2 className="mb-3 flex items-center gap-2 font-bold"><Trophy className="h-4 w-4 text-amber-400" /> Live Ranking</h2>
+          <section className="mt-5 grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+              <h2 className="mb-2 flex items-center gap-1.5 text-sm font-bold"><Trophy className="h-3.5 w-3.5 text-amber-400" /> Live Ranking</h2>
               <TopThree participants={participants as any} hideCounts={hideResults} />
             </div>
-            <div className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-              <h2 className="mb-3 font-bold">Vote for a contestant</h2>
+            <div className="md:col-span-2 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+              <h2 className="mb-2 text-sm font-bold">Vote for a contestant</h2>
               <ParticipantGrid
                 competitionId={c.id}
                 participants={participants as any}
