@@ -10,6 +10,7 @@ export interface FeedbotEvent {
   payload: Record<string, unknown>;
   target_url: string | null;
   image_url: string | null;
+  persona_bot_id?: string | null;
   created_at: string;
 }
 
