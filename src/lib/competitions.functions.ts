@@ -343,6 +343,29 @@ export const getMyCompetitorVote = createServerFn({ method: "GET" })
     return { competitorId: (r as any)?.competitor_id ?? null };
   });
 
+export const listRecentCompetitionVoters = createServerFn({ method: "GET" })
+  .inputValidator((data: { competitionId: string; limit?: number }) => data)
+  .handler(async ({ data }) => {
+    const sb = await publicClient();
+    const { data: rows, error } = await (sb as any).rpc("list_recent_competition_voters", {
+      _competition_id: data.competitionId,
+      _limit: data.limit ?? 30,
+    });
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as Array<{
+      voter_id: string;
+      competitor_id: string;
+      voted_at: string;
+      username: string | null;
+      avatar_url: string | null;
+      avatar_color: string | null;
+      is_verified: boolean;
+      competitor_name: string | null;
+    }>;
+  });
+
+
+
 
 export const getUserAchievements = createServerFn({ method: "GET" })
   .inputValidator((data: { userId: string }) => data)
