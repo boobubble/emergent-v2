@@ -267,6 +267,13 @@ export const adminSearchProfiles = createServerFn({ method: "GET" })
 
 // ---------- Competition follows ----------
 
+// Best-effort gamification emit. Never breaks the caller if the event isn't configured.
+async function emitGam(sb: any, userId: string, event: string, metadata: Record<string, unknown> = {}, amount = 1) {
+  try {
+    await sb.rpc("gam_emit", { _user_id: userId, _event_type: event, _amount: amount, _metadata: metadata });
+  } catch { /* swallow — XP is a side-effect, not core */ }
+}
+
 export const followCompetition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { competitionId: string }) => data)
@@ -275,6 +282,7 @@ export const followCompetition = createServerFn({ method: "POST" })
       .from("competition_follows")
       .upsert({ user_id: context.userId, competition_id: data.competitionId }, { onConflict: "user_id,competition_id" });
     if (error) throw new Error(error.message);
+    await emitGam(context.supabase, context.userId, "competition_follow", { competition_id: data.competitionId });
     return { ok: true };
   });
 
@@ -330,8 +338,21 @@ export const voteForCompetitor = createServerFn({ method: "POST" })
       voter_id: userId,
     });
     if (error) throw new Error(error.message);
+    await emitGam(supabase, userId, "competition_vote", { competition_id: data.competitionId, competitor_id: data.competitorId });
     return { ok: true };
   });
+
+export const shareCompetition = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { competitionId: string; channel?: string }) => data)
+  .handler(async ({ data, context }) => {
+    await emitGam(context.supabase, context.userId, "competition_share", {
+      competition_id: data.competitionId,
+      channel: data.channel ?? "link",
+    });
+    return { ok: true };
+  });
+
 
 export const getMyCompetitorVote = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
