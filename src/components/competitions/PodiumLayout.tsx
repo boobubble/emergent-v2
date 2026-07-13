@@ -55,7 +55,7 @@ export function PodiumLayout({ competitors, myVote, canVote, hideCounts, votingC
         </div>
       </div>
 
-      <div className="grid grid-cols-3 items-end gap-2 sm:gap-6">
+      <div className="grid grid-cols-3 items-end gap-1.5 sm:gap-4">
         {order.map((c, i) => {
           const rank = rankByIdx[i];
           const tier = TIERS[rank - 1];
@@ -67,7 +67,7 @@ export function PodiumLayout({ competitors, myVote, canVote, hideCounts, votingC
           return (
             <motion.div
               key={c.id}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.15, type: "spring", stiffness: 120 }}
               className={cn("flex flex-col items-center", tier.scale)}
@@ -75,40 +75,40 @@ export function PodiumLayout({ competitors, myVote, canVote, hideCounts, votingC
               {/* Avatar */}
               <div className="relative">
                 {rank === 1 && (
-                  <Crown className="absolute left-1/2 -top-6 h-6 w-6 -translate-x-1/2 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+                  <Crown className="absolute left-1/2 -top-4 h-4 w-4 -translate-x-1/2 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
                 )}
-                <Avatar className={cn("h-16 w-16 sm:h-24 sm:w-24", tier.ring, tier.glow)}>
+                <Avatar className={cn("h-12 w-12 sm:h-16 sm:w-16", tier.ring, tier.glow)}>
                   <AvatarImage src={c.photo_url ?? c.linked_profile?.avatar_url ?? undefined} />
                   <AvatarFallback style={{ background: c.linked_profile?.avatar_color ?? undefined }}>
                     {c.name.slice(0, 1).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 {flag && (
-                  <span className="absolute -bottom-1 -right-1 grid h-6 min-w-6 place-items-center rounded-full border border-white/20 bg-background/90 px-1 text-sm shadow">
+                  <span className="absolute -bottom-0.5 -right-0.5 grid h-5 min-w-5 place-items-center rounded-full border border-white/20 bg-background/90 px-1 text-xs shadow">
                     {flag}
                   </span>
                 )}
               </div>
 
               {/* Name */}
-              <div className="mt-2 flex items-center gap-1 text-center">
-                <span className="max-w-[8rem] truncate text-xs font-bold sm:text-sm">{c.name}</span>
-                {uname && <BadgeCheck className="h-3 w-3 shrink-0 text-sky-400" />}
+              <div className="mt-1.5 flex items-center gap-1 text-center">
+                <span className="max-w-[6rem] truncate text-[11px] font-bold sm:text-xs">{c.name}</span>
+                {uname && <BadgeCheck className="h-2.5 w-2.5 shrink-0 text-sky-400" />}
               </div>
 
               {/* Podium block */}
               <div
                 className={cn(
-                  "mt-2 grid w-full place-items-center rounded-t-xl bg-gradient-to-b text-black shadow-lg",
+                  "mt-1.5 grid w-full place-items-center rounded-t-lg bg-gradient-to-b text-black shadow-md",
                   tier.grad,
                   tier.h,
                 )}
               >
-                <div className="flex flex-col items-center gap-1">
-                  <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
-                  <div className="text-lg font-black leading-none sm:text-2xl">#{rank}</div>
+                <div className="flex flex-col items-center gap-0.5">
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <div className="text-base font-black leading-none sm:text-xl">#{rank}</div>
                   {!hideCounts && (
-                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-80 sm:text-xs">
+                    <div className="text-[9px] font-bold uppercase tracking-wider opacity-80 sm:text-[10px]">
                       <AnimatedCounter value={c.vote_count ?? 0} /> · {pct}%
                     </div>
                   )}
@@ -118,7 +118,7 @@ export function PodiumLayout({ competitors, myVote, canVote, hideCounts, votingC
               {/* Vote button */}
               <Button
                 size="sm"
-                className={cn("mt-2 w-full text-xs", mine && "bg-emerald-600 hover:bg-emerald-600/90")}
+                className={cn("mt-1.5 h-8 w-full text-[11px]", mine && "bg-emerald-600 hover:bg-emerald-600/90")}
                 disabled={!canVote || isVoting}
                 onClick={() => onVote(c.id)}
               >
