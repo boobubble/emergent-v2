@@ -477,35 +477,35 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1.5 border-t border-white/[0.06] p-2">
+      <div className="flex items-center gap-1 border-t border-white/[0.06] p-1.5">
         <Link
           to="/competitions/$slug"
           params={{ slug: c.slug }}
-          className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 py-1.5 text-[11px] font-black text-white shadow-lg shadow-violet-500/20 transition-transform hover:scale-[1.01]"
+          className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-gradient-to-r from-violet-500 to-fuchsia-500 py-1 text-[10px] font-black text-white shadow-md shadow-violet-500/20 transition-transform hover:scale-[1.01]"
         >
-          <Zap className="h-3 w-3" /> {c.status === "live" ? "Vote" : c.status === "upcoming" ? "Preview" : "Result"}
+          <Zap className="h-2.5 w-2.5" /> {c.status === "live" ? "Vote" : c.status === "upcoming" ? "Preview" : "Result"}
         </Link>
         <Link
           to="/competitions/$slug"
           params={{ slug: c.slug }}
-          className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[11px] font-bold text-slate-200 hover:bg-white/[0.06]"
+          className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] font-bold text-slate-200 hover:bg-white/[0.06]"
         >
           Open
         </Link>
         <button
           type="button"
           onClick={onShare}
-          className="rounded-lg border border-white/10 bg-white/[0.03] p-1.5 text-slate-300 hover:bg-white/[0.06]"
+          className="rounded-md border border-white/10 bg-white/[0.03] p-1 text-slate-300 hover:bg-white/[0.06]"
           title="Share"
         >
-          <Share2 className="h-3 w-3" />
+          <Share2 className="h-2.5 w-2.5" />
         </button>
         <button
           type="button"
-          className="rounded-lg border border-white/10 bg-white/[0.03] p-1.5 text-slate-300 hover:bg-white/[0.06]"
+          className="rounded-md border border-white/10 bg-white/[0.03] p-1 text-slate-300 hover:bg-white/[0.06]"
           title="Bookmark"
         >
-          <Bookmark className="h-3 w-3" />
+          <Bookmark className="h-2.5 w-2.5" />
         </button>
       </div>
     </article>
