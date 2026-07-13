@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Zap, Radio, Shield, Sparkles } from "lucide-react";
+import { Zap, Radio, Shield, Sparkles, Palette, Users } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import heroBg from "@/assets/gaming-arena-hero.jpg";
 
@@ -46,7 +46,32 @@ export function GamingArenaHero({ channelId }: { channelId: string }) {
         <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/45 to-background/10" />
         <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_10%_20%,oklch(0.55_0.28_300/0.35),transparent_60%)]" />
 
-        <div className="relative flex items-center gap-4 p-4 sm:p-5">
+        {/* Theme switcher + right-side members toggle — Gaming Arena hides the default ChatHeader, so replicate them here */}
+        <div className="absolute right-2 top-2 z-10 flex items-center gap-1.5 sm:right-3 sm:top-3">
+          <button
+            type="button"
+            className="chat-icon-btn"
+            title="Chatroom themes"
+            aria-label="Chatroom themes"
+            onClick={() => window.dispatchEvent(new Event("palrgo:open-chat-theme-store"))}
+          >
+            <Palette className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event("open-members-panel"))}
+            className="chat-icon-btn relative"
+            aria-label="Show members"
+            title="Members"
+          >
+            <Users className="h-4 w-4" />
+            <span className="absolute -right-1 -top-1 grid h-4 min-w-[16px] place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+              {online > 99 ? "99+" : online}
+            </span>
+          </button>
+        </div>
+
+        <div className="relative flex items-center gap-4 p-4 pr-20 sm:p-5 sm:pr-24">
           <div
             data-level-ring
             className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/40 to-accent/40 text-primary-foreground shadow-lg"
