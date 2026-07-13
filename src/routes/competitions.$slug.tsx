@@ -407,10 +407,23 @@ function CompetitionDetail() {
           </div>
         )}
 
-
-
+        {/* Premium battlefield sections: tournament progress, recent supporters, live activity feed */}
+        {showPremiumSections && (
+          <div className="mt-4 space-y-3">
+            <TournamentProgress startAt={c.start_at} endAt={c.end_at} status={c.status} />
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+              <RecentSupporters competitionId={c.id} />
+              <BattleActivityFeed
+                competitionId={c.id}
+                topLeaderName={topLeaderName}
+                totalVotes={totalCompetitorVotes}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Winner section */}
+
         {c.status === "completed" && awards.length > 0 && (
           <section className="mt-6 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-rose-500/5 p-6 backdrop-blur-xl">
             <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">
