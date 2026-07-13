@@ -21,9 +21,9 @@ interface Props {
 }
 
 const TIERS = [
-  { rank: 1, ring: "ring-4 ring-amber-400/70", grad: "from-amber-400 via-yellow-500 to-amber-600", glow: "shadow-[0_0_60px_-10px_rgba(251,191,36,0.7)]", label: "Champion", icon: Crown, h: "h-40 sm:h-56", scale: "scale-110" },
-  { rank: 2, ring: "ring-4 ring-zinc-300/60", grad: "from-zinc-200 via-zinc-300 to-zinc-400", glow: "shadow-[0_0_40px_-10px_rgba(212,212,216,0.5)]", label: "Runner-up", icon: Medal, h: "h-28 sm:h-40", scale: "" },
-  { rank: 3, ring: "ring-4 ring-orange-400/60", grad: "from-orange-400 via-amber-500 to-orange-600", glow: "shadow-[0_0_40px_-10px_rgba(251,146,60,0.5)]", label: "Third", icon: Medal, h: "h-20 sm:h-32", scale: "" },
+  { rank: 1, ring: "ring-[3px] ring-amber-400/70", grad: "from-amber-400 via-yellow-500 to-amber-600", glow: "shadow-[0_0_40px_-10px_rgba(251,191,36,0.6)]", label: "Champion", icon: Crown, h: "h-28 sm:h-40", scale: "scale-105" },
+  { rank: 2, ring: "ring-[3px] ring-zinc-300/60", grad: "from-zinc-200 via-zinc-300 to-zinc-400", glow: "shadow-[0_0_28px_-10px_rgba(212,212,216,0.45)]", label: "Runner-up", icon: Medal, h: "h-20 sm:h-28", scale: "" },
+  { rank: 3, ring: "ring-[3px] ring-orange-400/60", grad: "from-orange-400 via-amber-500 to-orange-600", glow: "shadow-[0_0_28px_-10px_rgba(251,146,60,0.45)]", label: "Third", icon: Medal, h: "h-14 sm:h-22", scale: "" },
 ];
 
 export function PodiumLayout({ competitors, myVote, canVote, hideCounts, votingClosed, votingUpcoming, onVote, isVoting }: Props) {
