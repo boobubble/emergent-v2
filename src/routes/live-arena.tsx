@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, Flame, Heart, Zap, Search, Crown, Clock, Trophy, Sparkles,
   Star, Eye, Users, MessageCircle, Bookmark, Share2, Radio, TrendingUp, Coins,
+  RefreshCw, LayoutGrid, Rows3,
 } from "lucide-react";
 import {
   listCompetitionsEnriched,
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/live-arena")({
 });
 
 type Filter = "all" | "live" | "upcoming" | "ending" | "featured" | "trending" | "prize" | "following" | "finished";
+type Density = "compact" | "expanded";
 
 function prizeValue(rewards: any): number {
   if (!rewards || typeof rewards !== "object") return 0;
@@ -55,7 +57,7 @@ function LiveArenaPage() {
   const cats = useServerFn(listCategories);
   const followedFn = useServerFn(listMyFollowedCompetitions);
 
-  const { data: comps = [] } = useQuery({
+  const { data: comps = [], dataUpdatedAt } = useQuery({
     queryKey: ["competitions-enriched", "live-arena"],
     queryFn: () => list({}),
     refetchInterval: 30_000,
@@ -70,7 +72,6 @@ function LiveArenaPage() {
     enabled: !!user,
   });
 
-  // Realtime: any vote inserted triggers a debounced refetch
   useEffect(() => {
     let t: any = null;
     const ch = supabase
@@ -89,6 +90,20 @@ function LiveArenaPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [category, setCategory] = useState<string>("all");
   const [q, setQ] = useState("");
+  const [density, setDensity] = useState<Density>("compact");
+  const [lastUpdated, setLastUpdated] = useState<string>("just now");
+
+  useEffect(() => {
+    const tick = () => {
+      const s = Math.max(0, Math.round((Date.now() - dataUpdatedAt) / 1000));
+      if (s < 5) setLastUpdated("just now");
+      else if (s < 60) setLastUpdated(`${s}s ago`);
+      else setLastUpdated(`${Math.floor(s / 60)}m ago`);
+    };
+    tick();
+    const i = setInterval(tick, 5000);
+    return () => clearInterval(i);
+  }, [dataUpdatedAt]);
 
   const arr = comps as EnrichedCompetition[];
   const followedIds = new Set((followed as EnrichedCompetition[]).map((c) => c.id));
@@ -119,7 +134,6 @@ function LiveArenaPage() {
       case "finished": return list.filter((c) => c.status === "completed");
       case "all":
       default:
-        // Live first, then upcoming, then rest
         return list.sort((a, b) => {
           const rank = (s: string) => (s === "live" ? 0 : s === "upcoming" ? 1 : 2);
           return rank(a.status) - rank(b.status);
@@ -133,64 +147,72 @@ function LiveArenaPage() {
   const totalPrize = arr.reduce((s, c) => s + prizeValue(c.rewards), 0);
 
   const filters: { key: Filter; label: string; icon: React.ReactNode }[] = [
-    { key: "all", label: "All", icon: <Sparkles className="h-3.5 w-3.5" /> },
-    { key: "live", label: "Live", icon: <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-rose-400" /> },
-    { key: "upcoming", label: "Upcoming", icon: <Clock className="h-3.5 w-3.5" /> },
-    { key: "ending", label: "Ending Soon", icon: <Flame className="h-3.5 w-3.5" /> },
-    { key: "featured", label: "Featured", icon: <Star className="h-3.5 w-3.5" /> },
-    { key: "trending", label: "Trending", icon: <TrendingUp className="h-3.5 w-3.5" /> },
-    { key: "prize", label: "Highest Prize", icon: <Trophy className="h-3.5 w-3.5" /> },
-    { key: "following", label: "Following", icon: <Heart className="h-3.5 w-3.5" /> },
-    { key: "finished", label: "Finished", icon: <Crown className="h-3.5 w-3.5" /> },
+    { key: "all", label: "All", icon: <Sparkles className="h-3 w-3" /> },
+    { key: "live", label: "Live", icon: <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> },
+    { key: "upcoming", label: "Upcoming", icon: <Clock className="h-3 w-3" /> },
+    { key: "ending", label: "Ending Soon", icon: <Flame className="h-3 w-3" /> },
+    { key: "featured", label: "Featured", icon: <Star className="h-3 w-3" /> },
+    { key: "trending", label: "Trending", icon: <TrendingUp className="h-3 w-3" /> },
+    { key: "prize", label: "Highest Prize", icon: <Trophy className="h-3 w-3" /> },
+    { key: "following", label: "Following", icon: <Heart className="h-3 w-3" /> },
+    { key: "finished", label: "Finished", icon: <Crown className="h-3 w-3" /> },
   ];
 
   return (
     <div
-      className="relative min-h-screen pb-24 text-white"
+      className="relative min-h-screen pb-16 text-white"
       style={{
         background:
-          "radial-gradient(1000px 500px at 15% -10%, rgba(124,58,237,0.18), transparent 60%)," +
-          "radial-gradient(800px 400px at 100% 0%, rgba(245,158,11,0.10), transparent 60%)," +
+          "radial-gradient(1200px 600px at 15% -10%, rgba(124,58,237,0.14), transparent 60%)," +
+          "radial-gradient(900px 500px at 100% 0%, rgba(245,158,11,0.08), transparent 60%)," +
+          "radial-gradient(700px 400px at 50% 100%, rgba(236,72,153,0.06), transparent 60%)," +
           "linear-gradient(180deg, #0F172A 0%, #0B1220 60%, #0A0F1C 100%)",
       }}
     >
       {/* Hero */}
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/60 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
-          <Link to="/competitions"><Button size="icon" variant="ghost"><ArrowLeft className="h-4 w-4" /></Button></Link>
-          <div className="min-w-0 flex-1">
-            <h1 className="flex items-center gap-2 text-lg font-black tracking-tight sm:text-xl">
-              <Zap className="h-5 w-5 text-amber-400" />
-              <span className="bg-gradient-to-r from-violet-300 via-fuchsia-200 to-amber-300 bg-clip-text text-transparent">LIVE ARENA</span>
-              <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-rose-400/30 bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold text-rose-300">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> REALTIME
-              </span>
-            </h1>
-            <p className="truncate text-xs text-slate-300/80">
-              Watch every live competition across BooBubble in one place · {liveCount} live now
-            </p>
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
+        <div className="mx-auto grid max-w-[1600px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5">
+          <Link to="/competitions">
+            <Button size="icon" variant="ghost" className="h-8 w-8"><ArrowLeft className="h-4 w-4" /></Button>
+          </Link>
+          <div className="min-w-0 flex items-center gap-3 flex-wrap">
+            <div className="min-w-0">
+              <h1 className="flex items-center gap-2 text-base font-black tracking-tight sm:text-lg">
+                <Zap className="h-4 w-4 text-amber-400" />
+                <span className="bg-gradient-to-r from-violet-300 via-fuchsia-200 to-amber-300 bg-clip-text text-transparent">LIVE ARENA</span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-rose-400/30 bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-bold text-rose-300">
+                  <span className="h-1 w-1 animate-pulse rounded-full bg-rose-400" /> REALTIME
+                </span>
+              </h1>
+              <p className="truncate text-[11px] text-slate-400">Watch every live competition across BooBubble in one place</p>
+            </div>
+            <div className="hidden lg:flex items-center gap-1.5">
+              <StatPill icon={<Radio className="h-3 w-3" />} label="Live Now" value={liveCount} tint="rose" />
+              <StatPill icon={<Eye className="h-3 w-3" />} label="Watching" value={totalWatching} tint="sky" />
+              <StatPill icon={<Heart className="h-3 w-3" />} label="Votes Today" value={totalVotes} tint="fuchsia" />
+              <StatPill icon={<Trophy className="h-3 w-3" />} label="Total Prize" value={totalPrize} tint="amber" />
+            </div>
           </div>
-          <div className="hidden items-center gap-2 md:flex">
-            <StatPill icon={<Radio className="h-3.5 w-3.5" />} label="Live" value={liveCount} tint="rose" />
-            <StatPill icon={<Eye className="h-3.5 w-3.5" />} label="Watching" value={totalWatching} tint="sky" />
-            <StatPill icon={<Heart className="h-3.5 w-3.5" />} label="Votes" value={totalVotes} tint="fuchsia" />
-            <StatPill icon={<Coins className="h-3.5 w-3.5" />} label="Prize" value={totalPrize} tint="amber" />
+          <div className="flex items-center gap-2 text-[10px] font-semibold text-slate-400">
+            <RefreshCw className="h-3 w-3" />
+            <span>Updated {lastUpdated}</span>
+            <span className="ml-1 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
           </div>
         </div>
 
         {/* Filter bar */}
         <div className="border-t border-white/5 bg-slate-950/40">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-2.5">
-            <div className="flex flex-1 flex-wrap gap-1.5">
+          <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-2 px-4 py-2">
+            <div className="flex flex-1 flex-wrap gap-1">
               {filters.map((f) => {
                 const active = filter === f.key;
                 return (
                   <button
                     key={f.key}
                     onClick={() => setFilter(f.key)}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+                    className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all ${
                       active
-                        ? "border-violet-400/50 bg-gradient-to-r from-violet-500/30 to-fuchsia-500/20 text-white shadow-[0_0_20px_rgba(139,92,246,0.35)]"
+                        ? "border-violet-400/50 bg-gradient-to-r from-violet-500/25 to-fuchsia-500/15 text-white shadow-[0_0_16px_rgba(139,92,246,0.30)]"
                         : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/20 hover:bg-white/[0.06]"
                     }`}
                   >
@@ -199,11 +221,11 @@ function LiveArenaPage() {
                 );
               })}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 outline-none hover:border-white/20"
+                className="h-7 rounded-full border border-white/10 bg-white/[0.04] px-2.5 text-[11px] font-semibold text-slate-200 outline-none hover:border-white/20"
               >
                 <option value="all">All categories</option>
                 {(categories as any[]).filter((c) => c.enabled).map((c) => (
@@ -211,26 +233,55 @@ function LiveArenaPage() {
                 ))}
               </select>
               <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
                 <Input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search competitions…"
-                  className="h-8 w-48 rounded-full border-white/10 bg-white/[0.04] pl-8 text-xs placeholder:text-slate-500"
+                  placeholder="Search…"
+                  className="h-7 w-40 rounded-full border-white/10 bg-white/[0.04] pl-7 text-[11px] placeholder:text-slate-500"
                 />
               </div>
+            </div>
+          </div>
+          {/* Density toggle row */}
+          <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 pb-2 pt-0.5">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
+              <span>View:</span>
+              <div className="inline-flex overflow-hidden rounded-full border border-white/10 bg-white/[0.03]">
+                <button
+                  onClick={() => setDensity("compact")}
+                  className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold ${density === "compact" ? "bg-violet-500/25 text-white" : "text-slate-400 hover:text-slate-200"}`}
+                >
+                  <Rows3 className="h-3 w-3" /> Compact
+                </button>
+                <button
+                  onClick={() => setDensity("expanded")}
+                  className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold ${density === "expanded" ? "bg-violet-500/25 text-white" : "text-slate-400 hover:text-slate-200"}`}
+                >
+                  <LayoutGrid className="h-3 w-3" /> Expanded
+                </button>
+              </div>
+            </div>
+            <div className="text-[10px] font-semibold text-slate-500">
+              {filtered.length} competition{filtered.length === 1 ? "" : "s"}
             </div>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-6">
+      <main className="mx-auto max-w-[1600px] px-4 py-4">
         {filtered.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.02] py-16 text-center text-sm text-slate-400">
+          <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] py-16 text-center text-sm text-slate-400">
             No competitions match your filters right now.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            className={
+              density === "compact"
+                ? "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3"
+                : "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+            }
+          >
             {filtered.map((c) => <ArenaCard key={c.id} c={c} />)}
           </div>
         )}
@@ -241,16 +292,18 @@ function LiveArenaPage() {
 
 function StatPill({ icon, label, value, tint }: { icon: React.ReactNode; label: string; value: number; tint: "rose" | "sky" | "fuchsia" | "amber" }) {
   const tints: Record<string, string> = {
-    rose: "border-rose-400/30 bg-rose-500/10 text-rose-200",
-    sky: "border-sky-400/30 bg-sky-500/10 text-sky-200",
-    fuchsia: "border-fuchsia-400/30 bg-fuchsia-500/10 text-fuchsia-200",
-    amber: "border-amber-400/30 bg-amber-500/10 text-amber-200",
+    rose: "border-rose-400/25 bg-rose-500/10 text-rose-200",
+    sky: "border-sky-400/25 bg-sky-500/10 text-sky-200",
+    fuchsia: "border-fuchsia-400/25 bg-fuchsia-500/10 text-fuchsia-200",
+    amber: "border-amber-400/25 bg-amber-500/10 text-amber-200",
   };
   return (
-    <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${tints[tint]}`}>
-      {icon}
-      <AnimatedCounter value={value} className="tabular-nums" />
-      <span className="uppercase tracking-wider opacity-75">{label}</span>
+    <div className={`inline-flex flex-col items-center rounded-xl border px-2.5 py-1 leading-tight ${tints[tint]}`}>
+      <div className="inline-flex items-center gap-1 text-[12px] font-black">
+        {icon}
+        <AnimatedCounter value={value} className="tabular-nums" />
+      </div>
+      <span className="text-[8.5px] font-bold uppercase tracking-wider opacity-70">{label}</span>
     </div>
   );
 }
@@ -259,18 +312,18 @@ function battleStatus(c: EnrichedCompetition): { label: string; className: strin
   const now = Date.now();
   const endsIn = new Date(c.end_at).getTime() - now;
   if (c.status === "live" && endsIn > 0 && endsIn < 3600_000) {
-    return { label: "⏳ Final Hour", className: "border-rose-400/40 bg-rose-500/15 text-rose-200" };
+    return { label: "⏳ FINAL HOUR", className: "border-rose-400/40 bg-gradient-to-r from-rose-500/20 to-orange-500/15 text-rose-200" };
   }
   const top = c.top_competitors ?? [];
   const total = top.reduce((s, x) => s + (x.votes ?? 0), 0);
   if (c.status === "live" && total > 0 && top.length >= 2) {
     const leadPct = (top[0].votes / total) * 100;
     const gap = leadPct - ((top[1].votes / total) * 100);
-    if (leadPct >= 70) return { label: "👑 Dominating", className: "border-amber-400/40 bg-amber-500/15 text-amber-200" };
-    if (gap < 5) return { label: "🔥 Neck to Neck", className: "border-orange-400/40 bg-orange-500/15 text-orange-200" };
+    if (leadPct >= 70) return { label: "👑 DOMINATING", className: "border-emerald-400/40 bg-gradient-to-r from-emerald-500/20 to-teal-500/15 text-emerald-200" };
+    if (gap < 5) return { label: "🔥 NECK TO NECK", className: "border-orange-400/40 bg-gradient-to-r from-orange-500/20 to-amber-500/15 text-orange-200" };
   }
   if (c.status === "live" && (c.total_votes ?? 0) > 100) {
-    return { label: "⚡ Rising Fast", className: "border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-200" };
+    return { label: "⚡ RISING FAST", className: "border-fuchsia-400/40 bg-gradient-to-r from-fuchsia-500/20 to-violet-500/15 text-fuchsia-200" };
   }
   return null;
 }
@@ -283,7 +336,8 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
   const rankIcons = ["👑", "🥈", "🥉"];
   const shareFn = useServerFn(shareCompetition);
 
-  const onShare = async () => {
+  const onShare = async (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
     const url = `${window.location.origin}/competitions/${c.slug}`;
     try {
       if (navigator.share) await navigator.share({ title: c.name, url });
@@ -292,179 +346,179 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
     } catch { /* user cancelled */ }
   };
 
+  const barTint = (i: number) =>
+    i === 0
+      ? "from-amber-400 via-orange-400 to-rose-400"
+      : i === 1
+      ? "from-fuchsia-400 to-violet-500"
+      : "from-slate-400 to-slate-500";
+
   return (
     <article
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900/70 to-slate-950/70 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/30 hover:shadow-[0_20px_60px_-20px_rgba(139,92,246,0.35)]"
+      className="group relative flex flex-col overflow-hidden rounded-[20px] border border-white/[0.08] bg-gradient-to-br from-slate-900/80 to-slate-950/90 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-400/25 hover:shadow-[0_16px_40px_-14px_rgba(139,92,246,0.25)]"
     >
-      {/* Gradient border sheen */}
-      <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.12), transparent 40%, rgba(245,158,11,0.10))" }}
-      />
-
-      {/* Banner */}
-      <div className="relative h-36 w-full overflow-hidden">
-        {c.banner_url ? (
-          <img src={c.banner_url} alt={c.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-        ) : (
-          <div className="h-full w-full bg-gradient-to-br from-violet-900/60 via-fuchsia-900/40 to-amber-900/40" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-        {/* Top-left: LIVE / status */}
-        <div className="absolute left-3 top-3 flex items-center gap-1.5">
+      {/* Top strip: LIVE / category / countdown / watching */}
+      <div className="flex items-center justify-between gap-2 px-3 pt-2.5">
+        <div className="flex min-w-0 items-center gap-1.5">
           {c.status === "live" && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/90 px-2 py-0.5 text-[10px] font-black tracking-wider text-white shadow-lg">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> LIVE
+            <span className="inline-flex items-center gap-1 rounded-md bg-rose-500 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white shadow-[0_0_10px_rgba(244,63,94,0.4)]">
+              <span className="h-1 w-1 animate-pulse rounded-full bg-white" /> LIVE
             </span>
           )}
           {c.status === "upcoming" && (
-            <span className="rounded-full bg-sky-500/90 px-2 py-0.5 text-[10px] font-black tracking-wider text-white">UPCOMING</span>
+            <span className="rounded-md bg-sky-500 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white">UPCOMING</span>
           )}
           {c.status === "completed" && (
-            <span className="rounded-full bg-slate-700/90 px-2 py-0.5 text-[10px] font-black tracking-wider text-white">ENDED</span>
+            <span className="rounded-md bg-slate-700 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white">ENDED</span>
           )}
           {c.category && (
             <span
-              className="rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur"
+              className="truncate rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-bold text-slate-300"
               style={{ color: c.category.color ?? undefined }}
             >
               {c.category.name}
             </span>
           )}
           {c.is_featured && (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-400/95 px-2 py-0.5 text-[10px] font-black text-slate-900">
-              <Star className="h-3 w-3" /> Featured
+            <span className="inline-flex items-center gap-0.5 rounded-md bg-amber-400/95 px-1.5 py-0.5 text-[9px] font-black text-slate-900">
+              <Star className="h-2.5 w-2.5" />
             </span>
           )}
         </div>
-        {/* Top-right: countdown */}
-        <div className="absolute right-3 top-3 rounded-full border border-white/15 bg-black/50 px-2 py-1 backdrop-blur">
-          {c.status !== "completed" ? (
-            <Countdown endAt={c.status === "upcoming" ? c.start_at : c.end_at} compact />
-          ) : (
-            <span className="text-[10px] font-bold text-slate-300">Finished</span>
-          )}
+        <div className="flex shrink-0 items-center gap-1.5 text-[9px] font-bold text-slate-400">
+          <span className="inline-flex items-center gap-0.5">
+            <Users className="h-2.5 w-2.5" /> {formatK(c.views_count ?? 0)}
+          </span>
         </div>
-        {/* Title over banner */}
-        <div className="absolute bottom-2 left-3 right-3">
-          <h3 className="line-clamp-1 text-base font-black tracking-tight text-white drop-shadow-lg">{c.name}</h3>
-          <div className="mt-0.5 flex items-center gap-2 text-[10px] font-semibold text-slate-300/90">
-            {prize > 0 && <span className="inline-flex items-center gap-0.5"><Coins className="h-3 w-3 text-amber-300" />{prize.toLocaleString()}</span>}
-            {status && <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-black ${status.className}`}>{status.label}</span>}
+      </div>
+
+      {/* Body: left banner + right nominees */}
+      <div className="flex gap-3 px-3 pt-2">
+        {/* LEFT */}
+        <div className="flex w-[38%] shrink-0 flex-col">
+          <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-white/5">
+            {c.banner_url ? (
+              <img src={c.banner_url} alt={c.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            ) : (
+              <div className="h-full w-full bg-gradient-to-br from-violet-900/60 via-fuchsia-900/40 to-amber-900/40" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
+            {status && (
+              <div className="absolute inset-x-1 bottom-1">
+                <span className={`block truncate rounded-md border px-1.5 py-0.5 text-center text-[8.5px] font-black tracking-wider ${status.className}`}>
+                  {status.label}
+                </span>
+              </div>
+            )}
+          </div>
+          <h3 className="mt-2 line-clamp-1 text-[13px] font-black tracking-tight text-white">{c.name}</h3>
+          <p className="line-clamp-1 text-[10px] font-semibold text-slate-400">{c.category?.name ?? "General"}</p>
+          {prize > 0 && (
+            <p className="mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-black text-amber-300">
+              <Coins className="h-3 w-3" /> {prize.toLocaleString()}
+            </p>
+          )}
+          <div className="mt-0.5 text-[9.5px] font-bold text-slate-400">
+            {c.status !== "completed" ? (
+              <Countdown endAt={c.status === "upcoming" ? c.start_at : c.end_at} compact />
+            ) : (
+              <span>Finished</span>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Mini ticker */}
-      <div className="flex items-center gap-2 border-b border-white/5 bg-white/[0.02] px-4 py-1.5 text-[10px] font-semibold text-slate-400">
-        <TickerText c={c} />
-      </div>
-
-      {/* Nominees / bars */}
-      <div className="flex-1 space-y-2 px-4 py-3">
-        {top.length === 0 ? (
-          <div className="py-4 text-center text-xs text-slate-500">No nominees yet</div>
-        ) : (
-          top.map((n, i) => {
-            const pct = Math.round((n.votes / total) * 100);
-            const barTint = i === 0
-              ? "from-amber-400 to-amber-500"
-              : i === 1 ? "from-slate-300 to-slate-400" : "from-orange-400 to-rose-400";
-            return (
-              <div key={n.id} className="space-y-1">
-                <div className="flex items-center justify-between text-[11px]">
-                  <div className="flex min-w-0 items-center gap-1.5">
-                    <span className="w-4 text-center">{rankIcons[i]}</span>
-                    {n.photo_url ? (
-                      <img src={n.photo_url} alt="" className="h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-white/20" />
-                    ) : (
-                      <div className="h-5 w-5 shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500" />
-                    )}
-                    <span className="truncate font-semibold text-slate-100">{n.name}</span>
+        {/* RIGHT — nominees */}
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5">
+          {top.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-white/10 bg-white/[0.02] py-4 text-center text-[10px] text-slate-500">
+              No nominees yet
+            </div>
+          ) : (
+            top.map((n, i) => {
+              const pct = Math.round((n.votes / total) * 100);
+              return (
+                <div key={n.id} className="space-y-0.5">
+                  <div className="flex items-center justify-between gap-2 text-[10.5px]">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <span className="w-3 shrink-0 text-center text-[11px] leading-none">{rankIcons[i]}</span>
+                      {n.photo_url ? (
+                        <img src={n.photo_url} alt="" className={`h-4 w-4 shrink-0 rounded-full object-cover ring-1 ${i === 0 ? "ring-amber-300/60" : "ring-white/15"}`} />
+                      ) : (
+                        <div className="h-4 w-4 shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500" />
+                      )}
+                      <span className={`truncate font-bold ${i === 0 ? "text-white" : "text-slate-200"}`}>{n.name}</span>
+                    </div>
+                    <span className="shrink-0 text-[10.5px] font-black tabular-nums text-slate-100">{pct}%</span>
                   </div>
-                  <span className="shrink-0 font-bold tabular-nums text-slate-200">{pct}%</span>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.05]">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${barTint(i)} transition-[width] duration-700 ease-out`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
-                  <div
-                    className={`h-full rounded-full bg-gradient-to-r ${barTint} transition-[width] duration-700 ease-out`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })
-        )}
+              );
+            })
+          )}
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-5 gap-1 border-t border-white/5 bg-white/[0.02] px-4 py-2 text-center text-[10px] text-slate-300">
-        <Stat icon={<Heart className="h-3 w-3 text-rose-300" />} value={c.total_votes} />
-        <Stat icon={<Eye className="h-3 w-3 text-sky-300" />} value={c.views_count ?? 0} />
-        <Stat icon={<Users className="h-3 w-3 text-violet-300" />} value={c.total_participants} />
-        <Stat icon={<Star className="h-3 w-3 text-amber-300" />} value={c.follower_count} />
-        <Stat icon={<MessageCircle className="h-3 w-3 text-emerald-300" />} value={0} />
+      {/* Stats row */}
+      <div className="mt-2.5 flex items-center gap-3 border-t border-white/[0.06] bg-white/[0.015] px-3 py-1.5 text-[10px] text-slate-400">
+        <MiniStat icon={<Heart className="h-3 w-3 text-rose-300" />} value={c.total_votes} />
+        <MiniStat icon={<MessageCircle className="h-3 w-3 text-emerald-300" />} value={0} />
+        <MiniStat icon={<Star className="h-3 w-3 text-amber-300" />} value={c.follower_count} />
+        <MiniStat icon={<Eye className="h-3 w-3 text-sky-300" />} value={c.views_count ?? 0} />
+        <MiniStat icon={<Users className="h-3 w-3 text-violet-300" />} value={c.total_participants} />
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1.5 border-t border-white/5 p-3">
+      <div className="flex items-center gap-1.5 border-t border-white/[0.06] p-2">
         <Link
           to="/competitions/$slug"
           params={{ slug: c.slug }}
-          className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 py-2 text-xs font-bold text-white shadow-lg shadow-violet-500/25 transition-transform hover:scale-[1.02]"
+          className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 py-1.5 text-[11px] font-black text-white shadow-lg shadow-violet-500/20 transition-transform hover:scale-[1.01]"
         >
-          <Zap className="h-3.5 w-3.5" /> {c.status === "live" ? "Vote Now" : c.status === "upcoming" ? "Preview" : "View Result"}
+          <Zap className="h-3 w-3" /> {c.status === "live" ? "Vote" : c.status === "upcoming" ? "Preview" : "Result"}
         </Link>
         <Link
           to="/competitions/$slug"
           params={{ slug: c.slug }}
-          className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/[0.06]"
+          className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[11px] font-bold text-slate-200 hover:bg-white/[0.06]"
         >
-          Open Battle
+          Open
         </Link>
         <button
           type="button"
           onClick={onShare}
-          className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-slate-300 hover:bg-white/[0.06]"
+          className="rounded-lg border border-white/10 bg-white/[0.03] p-1.5 text-slate-300 hover:bg-white/[0.06]"
           title="Share"
         >
-          <Share2 className="h-3.5 w-3.5" />
+          <Share2 className="h-3 w-3" />
         </button>
         <button
           type="button"
-          className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-slate-300 hover:bg-white/[0.06]"
+          className="rounded-lg border border-white/10 bg-white/[0.03] p-1.5 text-slate-300 hover:bg-white/[0.06]"
           title="Bookmark"
         >
-          <Bookmark className="h-3.5 w-3.5" />
+          <Bookmark className="h-3 w-3" />
         </button>
       </div>
     </article>
   );
 }
 
-function Stat({ icon, value }: { icon: React.ReactNode; value: number }) {
+function MiniStat({ icon, value }: { icon: React.ReactNode; value: number }) {
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <div>{icon}</div>
-      <AnimatedCounter value={value ?? 0} className="font-bold tabular-nums text-slate-100" />
+    <div className="inline-flex items-center gap-1">
+      {icon}
+      <span className="font-bold tabular-nums text-slate-200">{formatK(value ?? 0)}</span>
     </div>
   );
 }
 
-function TickerText({ c }: { c: EnrichedCompetition }) {
-  const msgs: string[] = [];
-  if (c.status === "live") {
-    if ((c.total_votes ?? 0) > 0) msgs.push(`🗳️ ${c.total_votes.toLocaleString()} total votes`);
-    if ((c.views_count ?? 0) > 0) msgs.push(`👥 ${c.views_count.toLocaleString()} watching`);
-    const gap = (() => {
-      const t = c.top_competitors ?? [];
-      if (t.length < 2) return null;
-      const sum = t.reduce((s, x) => s + x.votes, 0) || 1;
-      return Math.round(((t[0].votes - t[1].votes) / sum) * 100);
-    })();
-    if (gap !== null) msgs.push(gap < 5 ? "🔥 Battle heating up" : `⚡ Leader by ${gap}%`);
-  } else if (c.status === "upcoming") {
-    msgs.push("⏳ Starting soon");
-  } else {
-    msgs.push("🏁 Competition finished");
-  }
-  return <span className="truncate">{msgs.join("  ·  ")}</span>;
+function formatK(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
 }
