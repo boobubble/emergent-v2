@@ -979,7 +979,7 @@ export const listHallOfFame = createServerFn({ method: "GET" })
     const pmap = new Map(((profs as any).data ?? []).map((p: any) => [p.id, p]));
     const partMap = new Map(((parts as any).data ?? []).map((p: any) => [p.id, p]));
     return rows.map((r: any) => {
-      const part = partMap.get(r.participant_id);
+      const part = partMap.get(r.participant_id) as { vote_count?: number } | undefined;
       const totalVotes = r.competition?.total_votes ?? 0;
       const winningVotes = part?.vote_count ?? 0;
       return {
