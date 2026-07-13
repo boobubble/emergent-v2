@@ -76,6 +76,56 @@ export function formatFeedbotEvent(ev: FeedbotEvent): FormattedBotMessage {
         text: `🥇 Winners announced for ${p.name ?? "the competition"}!\n🔗 ${link}`,
         attachmentUrl: img,
       };
+    case "competition_published":
+      return {
+        text: `📣 New competition announced: ${p.name ?? ""}\nGet ready to compete and vote.\n🔗 ${link}`,
+        attachmentUrl: img,
+      };
+    case "competition_registration_open":
+      return {
+        text: `📝 Registration is OPEN for ${p.name ?? "a competition"}.\nJoin now!\n🔗 ${link}`,
+        attachmentUrl: img,
+      };
+    case "competition_registration_close":
+      return {
+        text: `🔒 Registration closed for ${p.name ?? "the competition"}. Voting is starting!\n🔗 ${link}`,
+        attachmentUrl: img,
+      };
+    case "competition_ending":
+      return {
+        text: `⏳ ${p.name ?? "The competition"} ends soon — last chance to vote!\n🔗 ${link}`,
+        attachmentUrl: img,
+      };
+    case "competition_ended":
+      return {
+        text: `🏁 Voting closed for ${p.name ?? "the competition"}. Winners coming up!\n🔗 ${link}`,
+        attachmentUrl: img,
+      };
+    case "competition_featured":
+      return {
+        text: `⭐ Featured competition: ${p.name ?? ""}\nDon't miss this one.\n🔗 ${link}`,
+        attachmentUrl: img,
+      };
+    case "competition_trending":
+      return {
+        text: `🔥 Trending now: ${p.name ?? "a competition"} — activity spiking!\n🔗 ${link}`,
+        attachmentUrl: img,
+      };
+    case "competition_vote_milestone":
+      return {
+        text: `🎯 ${p.name ?? "A competition"} just crossed ${(p.milestone as number) ?? "?"} votes! Total: ${(p.total_votes as number) ?? "?"}\n🔗 ${link}`,
+        attachmentUrl: img,
+      };
+    case "competition_leader_change":
+      return {
+        text: `👑 New leader in ${p.name ?? "a competition"}: ${p.leader ?? "?"} with ${(p.votes as number) ?? 0} votes.\n🔗 ${link}`,
+        attachmentUrl: img,
+      };
+    case "competition_nominee_joined":
+      return {
+        text: `🙋 ${p.username ?? "A new nominee"} joined ${p.name ?? "the competition"}.\n🔗 ${link}`,
+        attachmentUrl: img,
+      };
     case "radio_live":
       return {
         text: `🎙 ${p.host ?? "The RJ"} is now LIVE on Radio.\n🔗 ${link}`,
