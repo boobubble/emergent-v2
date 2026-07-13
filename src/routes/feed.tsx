@@ -948,6 +948,7 @@ function FeedPage() {
           { label: "Achievements", icon: Award, color: "from-yellow-500 to-amber-500", onClick: () => setView("achievements") },
           { label: "Leaderboard", icon: Trophy, color: "from-amber-500 to-orange-500", onClick: () => setView("leaderboard") },
           { label: "Competitions", icon: Trophy, color: "from-amber-400 to-yellow-500", onClick: () => navigate({ to: "/competitions" }) },
+          { label: "Live Arena", icon: Radio, color: "from-rose-500 to-red-500", onClick: () => navigate({ to: "/live-arena" }) },
           { label: "Daily Chest", icon: Gift, color: "from-rose-500 to-fuchsia-500", onClick: () => setView("dailyChest") },
           { label: "Daily Spin", icon: Sparkles, color: "from-violet-500 to-purple-500", onClick: () => setView("spin") },
           { label: "Shop", icon: Coins, color: "from-emerald-500 to-green-500", onClick: () => setView("shop") },
