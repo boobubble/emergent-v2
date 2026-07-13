@@ -145,12 +145,13 @@ function Page() {
           </p>
           <div className="grid gap-2 md:grid-cols-2">
             {(roomsQ.data ?? []).map((r) => (
-              <AdminToggle
-                key={r.id}
-                label={r.name}
-                checked={state.target_chatrooms.includes(r.id)}
-                onChange={(v) => toggleRoom(r.id, v)}
-              />
+              <label key={r.id} className="flex items-center justify-between gap-2 rounded border border-border/60 p-2 text-sm">
+                <span>{r.name}</span>
+                <AdminToggle
+                  checked={state.target_chatrooms.includes(r.id)}
+                  onCheckedChange={(v: boolean) => toggleRoom(r.id, v)}
+                />
+              </label>
             ))}
           </div>
         </CardContent>
