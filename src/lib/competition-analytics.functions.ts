@@ -35,7 +35,7 @@ export const getCompetitionAnalytics = createServerFn({ method: "POST" })
     const since = windowStart(data.window);
 
     // 1) Competition counts by status (filtered by creator if provided)
-    let compQ = supabaseAdmin.from("competitions").select("id, name, slug, status, category_id, banner_url, total_votes, total_participants, total_views, is_featured, created_at, created_by, end_at");
+    let compQ = supabaseAdmin.from("competitions").select("id, name, slug, status, category_id, banner_url, total_votes, total_participants, views_count, is_featured, created_at, created_by, end_at");
     if (data.creatorId) compQ = compQ.eq("created_by", data.creatorId);
     const { data: comps = [] } = await compQ;
     const rows = comps ?? [];
@@ -95,7 +95,7 @@ export const getCompetitionAnalytics = createServerFn({ method: "POST" })
       votes: c.total_votes ?? 0,
       votesInWindow: votesByComp.get(c.id) ?? 0,
       participants: c.total_participants ?? 0,
-      views: c.total_views ?? 0,
+      views: c.views_count ?? 0,
       category_id: c.category_id,
     }));
 
@@ -149,7 +149,7 @@ export const getCompetitionAnalytics = createServerFn({ method: "POST" })
         votesInWindow: voteRows.length,
         uniqueVoters,
         followers: followersCount,
-        views: rows.reduce((s, c) => s + (c.total_views ?? 0), 0),
+        views: rows.reduce((s, c) => s + (c.views_count ?? 0), 0),
       },
       topCompetitions,
       fastestGrowing,
