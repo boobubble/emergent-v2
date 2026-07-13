@@ -400,7 +400,15 @@ function CompetitionDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-[#050308] pb-24 text-white">
+    <div
+      className="relative min-h-screen pb-24 text-white"
+      style={{
+        background:
+          "radial-gradient(1200px 600px at 50% -10%, rgba(124,58,237,0.18), transparent 60%)," +
+          "radial-gradient(900px 500px at 100% 0%, rgba(245,158,11,0.10), transparent 55%)," +
+          "linear-gradient(180deg, #0F172A 0%, #0B1220 100%)",
+      }}
+    >
 
       {showPremiumSections && <FloatingReactions competitionId={c.id} />}
       {showPremiumSections && votingOpen && <LiveLeaderBanner topLeaderName={topLeaderName} />}
@@ -431,7 +439,7 @@ function CompetitionDetail() {
 
       {/* Compact hero for non-VS layouts */}
       {!showBattleArenaHero && (
-        <div className="relative overflow-hidden border-b border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent px-4 pb-4 pt-4">
+        <div className="relative overflow-hidden border-b border-white/10 bg-gradient-to-b from-violet-500/[0.10] via-white/[0.02] to-transparent px-4 pb-5 pt-5">
           <div className="mx-auto max-w-5xl">
             <div className="flex flex-wrap items-center gap-1.5">
               {c.status === "live" && (
