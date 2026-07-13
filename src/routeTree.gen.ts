@@ -147,6 +147,7 @@ import { Route as ApiPublicLicenseActivateRouteImport } from './routes/api/publi
 import { Route as ApiPublicHooksLicenseRevalidateRouteImport } from './routes/api/public/hooks/license-revalidate'
 import { Route as ApiPublicHooksFeedbotSummaryRouteImport } from './routes/api/public/hooks/feedbot-summary'
 import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/public/hooks/feedbot-dispatch'
+import { Route as ApiPublicOgCompetitionSlugRouteImport } from './routes/api/public/og/competition.$slug'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -847,6 +848,12 @@ const ApiPublicHooksFeedbotDispatchRoute =
     path: '/api/public/hooks/feedbot-dispatch',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicOgCompetitionSlugRoute =
+  ApiPublicOgCompetitionSlugRouteImport.update({
+    id: '/api/public/og/competition/$slug',
+    path: '/api/public/og/competition/$slug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -987,6 +994,7 @@ export interface FileRoutesByFullPath {
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
+  '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -1124,6 +1132,7 @@ export interface FileRoutesByTo {
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
+  '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1265,6 +1274,7 @@ export interface FileRoutesById {
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
+  '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1407,6 +1417,7 @@ export interface FileRouteTypes {
     | '/api/public/license/deactivate'
     | '/api/public/license/reset'
     | '/api/public/license/verify'
+    | '/api/public/og/competition/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1544,6 +1555,7 @@ export interface FileRouteTypes {
     | '/api/public/license/deactivate'
     | '/api/public/license/reset'
     | '/api/public/license/verify'
+    | '/api/public/og/competition/$slug'
   id:
     | '__root__'
     | '/'
@@ -1684,6 +1696,7 @@ export interface FileRouteTypes {
     | '/api/public/license/deactivate'
     | '/api/public/license/reset'
     | '/api/public/license/verify'
+    | '/api/public/og/competition/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1736,6 +1749,7 @@ export interface RootRouteChildren {
   ApiPublicLicenseDeactivateRoute: typeof ApiPublicLicenseDeactivateRoute
   ApiPublicLicenseResetRoute: typeof ApiPublicLicenseResetRoute
   ApiPublicLicenseVerifyRoute: typeof ApiPublicLicenseVerifyRoute
+  ApiPublicOgCompetitionSlugRoute: typeof ApiPublicOgCompetitionSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2706,6 +2720,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksFeedbotDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/og/competition/$slug': {
+      id: '/api/public/og/competition/$slug'
+      path: '/api/public/og/competition/$slug'
+      fullPath: '/api/public/og/competition/$slug'
+      preLoaderRoute: typeof ApiPublicOgCompetitionSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -2983,6 +3004,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLicenseDeactivateRoute: ApiPublicLicenseDeactivateRoute,
   ApiPublicLicenseResetRoute: ApiPublicLicenseResetRoute,
   ApiPublicLicenseVerifyRoute: ApiPublicLicenseVerifyRoute,
+  ApiPublicOgCompetitionSlugRoute: ApiPublicOgCompetitionSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
