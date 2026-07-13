@@ -12,9 +12,12 @@ import {
   listCompetitionsEnriched,
   listCategories,
   listMyFollowedCompetitions,
+  listRecentCompetitionVoters,
   shareCompetition,
   type EnrichedCompetition,
 } from "@/lib/competitions.functions";
+import { AnimatePresence, motion } from "framer-motion";
+import { BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AnimatedCounter } from "@/components/competitions/AnimatedCounter";
