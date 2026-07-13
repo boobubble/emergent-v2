@@ -31,9 +31,9 @@ export function GamingArenaHero({ channelId }: { channelId: string }) {
   const roomIdShort = (channelId || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6) || "GA245";
 
   return (
-    <div className="arena-hero relative mx-3 mt-3 flex flex-col gap-3">
+    <div className="arena-hero relative mx-2 mt-2 flex flex-col gap-1.5">
       {/* Hero banner */}
-      <div className="arena-hero__banner relative overflow-hidden rounded-2xl border border-primary/30 shadow-[0_20px_60px_-24px_oklch(0.55_0.28_300/0.75)]">
+      <div className="arena-hero__banner relative overflow-hidden rounded-2xl border border-primary/30 shadow-[0_16px_48px_-20px_oklch(0.55_0.28_300/0.75)]">
         <img
           src={heroBg}
           alt=""
@@ -47,7 +47,7 @@ export function GamingArenaHero({ channelId }: { channelId: string }) {
         <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_10%_20%,oklch(0.55_0.28_300/0.35),transparent_60%)]" />
 
         {/* Theme switcher + right-side members toggle — Gaming Arena hides the default ChatHeader, so replicate them here */}
-        <div className="absolute right-2 top-2 z-10 flex items-center gap-1.5 sm:right-3 sm:top-3">
+        <div className="absolute right-2 top-2 z-10 flex items-center gap-1.5 sm:right-3 sm:top-2.5">
           <button
             type="button"
             className="chat-icon-btn"
@@ -71,33 +71,33 @@ export function GamingArenaHero({ channelId }: { channelId: string }) {
           </button>
         </div>
 
-        <div className="relative flex items-center gap-4 p-4 pr-20 sm:p-5 sm:pr-24">
+        <div className="relative flex items-center gap-3 p-2.5 pr-20 sm:p-3 sm:pr-24">
           <div
             data-level-ring
-            className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/40 to-accent/40 text-primary-foreground shadow-lg"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/40 to-accent/40 text-primary-foreground shadow-lg sm:h-11 sm:w-11"
           >
-            <Shield className="h-6 w-6 text-white" />
+            <Shield className="h-5 w-5 text-white" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-yellow-300" />
-              <h1 className="truncate text-lg font-black tracking-wide sm:text-2xl">
+            <div className="flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5 text-yellow-300" />
+              <h1 className="truncate text-base font-black tracking-wide sm:text-xl">
                 {label}
               </h1>
-              <Sparkles className="h-4 w-4 text-primary" />
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
             </div>
-            <p className="mt-0.5 truncate text-[11px] text-muted-foreground sm:text-xs">
+            <p className="truncate text-[11px] leading-tight text-muted-foreground sm:text-xs">
               {room?.topic || "Where gamers unite & dominate"}
             </p>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] sm:text-[11px]">
-              <span className="inline-flex items-center gap-1 rounded-full bg-red-500/90 px-2 py-0.5 font-bold text-white shadow-[0_0_12px_-2px_oklch(0.65_0.25_25/0.9)]">
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-500/90 px-1.5 py-0.5 font-bold text-white shadow-[0_0_10px_-2px_oklch(0.65_0.25_25/0.9)]">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> LIVE
               </span>
-              <span className="rounded-full bg-background/60 px-2 py-0.5 font-semibold text-foreground backdrop-blur">
+              <span className="rounded-full bg-background/60 px-1.5 py-0.5 font-semibold text-foreground backdrop-blur">
                 {online.toLocaleString()} Online
               </span>
-              <span className="rounded-full bg-background/60 px-2 py-0.5 font-mono text-muted-foreground backdrop-blur">
-                Room ID: #{roomIdShort}
+              <span className="rounded-full bg-background/60 px-1.5 py-0.5 font-mono text-muted-foreground backdrop-blur">
+                ID: #{roomIdShort}
               </span>
             </div>
           </div>
