@@ -34,6 +34,7 @@ import { LicenseGuard } from "@/components/LicenseGuard";
 import { useHomePageMode } from "@/lib/use-home-page-mode";
 import "@/i18n";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
+import { DynamicBrandHead } from "@/components/DynamicBrandHead";
 
 import appCss from "../styles.css?url";
 
@@ -96,26 +97,24 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
+    // Static SSR defaults — <DynamicBrandHead /> overrides these at runtime
+    // with values from app_settings.whitelabel / branding once loaded.
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#3B82F6" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Palrgo" },
+      { name: "apple-mobile-web-app-title", content: "App" },
       { name: "mobile-web-app-capable", content: "yes" },
-      { title: "Chatroom Test" },
-      { name: "description", content: "Testing App Chatroom" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Chatroom Test" },
-      { property: "og:description", content: "Testing App Chatroom" },
+      { title: "App" },
+      { name: "description", content: "Chat rooms, DMs, games and more." },
+      { property: "og:title", content: "App" },
+      { property: "og:description", content: "Chat rooms, DMs, games and more." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Chatroom Test" },
-      { name: "twitter:description", content: "Testing App Chatroom" },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6114dd7e-4f62-4356-9288-08a4f9004c65/id-preview-3949a20f--18cb7521-83eb-440b-8f96-fe1f394ccca4.lovable.app-1779440985646.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6114dd7e-4f62-4356-9288-08a4f9004c65/id-preview-3949a20f--18cb7521-83eb-440b-8f96-fe1f394ccca4.lovable.app-1779440985646.png" },
+      { name: "twitter:title", content: "App" },
+      { name: "twitter:description", content: "Chat rooms, DMs, games and more." },
     ],
     links: [
       { rel: "icon", type: "image/png", href: "/favicon-blue.png" },
@@ -156,11 +155,14 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <AuthProvider>
-          <AuthGate />
-        </AuthProvider>
-      </LanguageProvider>
+      <AppSettingsProvider>
+        <LanguageProvider>
+          <DynamicBrandHead />
+          <AuthProvider>
+            <AuthGate />
+          </AuthProvider>
+        </LanguageProvider>
+      </AppSettingsProvider>
     </QueryClientProvider>
   );
 }
@@ -273,27 +275,25 @@ function AuthGate() {
 
 
   return (
-    <AppSettingsProvider>
-      <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
-        <FeedPrefsProvider>
-          <IgnoreProvider>
-            <AuthenticatedHooks userId={user.id} />
-            <BroadcasterAnnouncementsRunner />
-            <TrioInvitesListener />
-            <CompleteProfileModal />
-            <HeadFootScripts />
-            <AdsAutoLoader />
-            <SessionConflictBanner />
-            <FaviconSwitcher />
-            <SubscriptionGate />
-            <LicenseGuard />
-            <Outlet />
-            <Sonner />
-            <RealtimeDebugOverlay />
-          </IgnoreProvider>
-        </FeedPrefsProvider>
-      </ChatProvider>
-    </AppSettingsProvider>
+    <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
+      <FeedPrefsProvider>
+        <IgnoreProvider>
+          <AuthenticatedHooks userId={user.id} />
+          <BroadcasterAnnouncementsRunner />
+          <TrioInvitesListener />
+          <CompleteProfileModal />
+          <HeadFootScripts />
+          <AdsAutoLoader />
+          <SessionConflictBanner />
+          <FaviconSwitcher />
+          <SubscriptionGate />
+          <LicenseGuard />
+          <Outlet />
+          <Sonner />
+          <RealtimeDebugOverlay />
+        </IgnoreProvider>
+      </FeedPrefsProvider>
+    </ChatProvider>
   );
 }
 
