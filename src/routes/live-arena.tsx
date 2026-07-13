@@ -205,7 +205,7 @@ function LiveArenaPage() {
 
         {/* Filter bar */}
         <div className="border-t border-white/5 bg-slate-950/40">
-          <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-2 px-4 py-2">
+          <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-1.5 px-4 py-1.5">
             <div className="flex flex-1 flex-wrap gap-1">
               {filters.map((f) => {
                 const active = filter === f.key;
@@ -247,7 +247,7 @@ function LiveArenaPage() {
             </div>
           </div>
           {/* Density toggle row */}
-          <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 pb-2 pt-0.5">
+          <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 pb-1.5 pt-0.5">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
               <span>View:</span>
               <div className="inline-flex overflow-hidden rounded-full border border-white/10 bg-white/[0.03]">
@@ -272,7 +272,7 @@ function LiveArenaPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1600px] px-4 py-4">
+      <main className="mx-auto max-w-[1600px] px-3 py-3">
         {filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] py-16 text-center text-sm text-slate-400">
             No competitions match your filters right now.
@@ -281,8 +281,8 @@ function LiveArenaPage() {
           <div
             className={
               density === "compact"
-                ? "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3"
-                : "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+                ? "grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+                : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             }
           >
             {filtered.map((c) => <ArenaCard key={c.id} c={c} />)}
@@ -358,48 +358,48 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
 
   return (
     <article
-      className="group relative flex flex-col overflow-hidden rounded-[20px] border border-white/[0.08] bg-gradient-to-br from-slate-900/80 to-slate-950/90 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-400/25 hover:shadow-[0_16px_40px_-14px_rgba(139,92,246,0.25)]"
+      className="group relative flex flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-gradient-to-br from-slate-900/80 to-slate-950/90 shadow-[0_6px_20px_-10px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-400/25 hover:shadow-[0_12px_30px_-12px_rgba(139,92,246,0.25)]"
     >
       {/* Top strip: LIVE / category / countdown / watching */}
-      <div className="flex items-center justify-between gap-2 px-3 pt-2.5">
-        <div className="flex min-w-0 items-center gap-1.5">
+      <div className="flex items-center justify-between gap-1.5 px-2 pt-1.5">
+        <div className="flex min-w-0 items-center gap-1">
           {c.status === "live" && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-rose-500 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white shadow-[0_0_10px_rgba(244,63,94,0.4)]">
+            <span className="inline-flex items-center gap-1 rounded bg-rose-500 px-1 py-[1px] text-[8px] font-black tracking-wider text-white shadow-[0_0_8px_rgba(244,63,94,0.4)]">
               <span className="h-1 w-1 animate-pulse rounded-full bg-white" /> LIVE
             </span>
           )}
           {c.status === "upcoming" && (
-            <span className="rounded-md bg-sky-500 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white">UPCOMING</span>
+            <span className="rounded bg-sky-500 px-1 py-[1px] text-[8px] font-black tracking-wider text-white">UPCOMING</span>
           )}
           {c.status === "completed" && (
-            <span className="rounded-md bg-slate-700 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white">ENDED</span>
+            <span className="rounded bg-slate-700 px-1 py-[1px] text-[8px] font-black tracking-wider text-white">ENDED</span>
           )}
           {c.category && (
             <span
-              className="truncate rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-bold text-slate-300"
+              className="truncate rounded border border-white/10 bg-white/[0.04] px-1 py-[1px] text-[8px] font-bold text-slate-300"
               style={{ color: c.category.color ?? undefined }}
             >
               {c.category.name}
             </span>
           )}
           {c.is_featured && (
-            <span className="inline-flex items-center gap-0.5 rounded-md bg-amber-400/95 px-1.5 py-0.5 text-[9px] font-black text-slate-900">
-              <Star className="h-2.5 w-2.5" />
+            <span className="inline-flex items-center gap-0.5 rounded bg-amber-400/95 px-1 py-[1px] text-[8px] font-black text-slate-900">
+              <Star className="h-2 w-2" />
             </span>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-1.5 text-[9px] font-bold text-slate-400">
+        <div className="flex shrink-0 items-center gap-1 text-[8px] font-bold text-slate-400">
           <span className="inline-flex items-center gap-0.5">
-            <Users className="h-2.5 w-2.5" /> {formatK(c.views_count ?? 0)}
+            <Users className="h-2 w-2" /> {formatK(c.views_count ?? 0)}
           </span>
         </div>
       </div>
 
       {/* Body: left banner + right nominees */}
-      <div className="flex gap-3 px-3 pt-2">
+      <div className="flex gap-2 px-2 pt-1.5">
         {/* LEFT */}
-        <div className="flex w-[38%] shrink-0 flex-col">
-          <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-white/5">
+        <div className="flex w-[32%] shrink-0 flex-col">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-white/5">
             {c.banner_url ? (
               <img src={c.banner_url} alt={c.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
             ) : (
@@ -408,20 +408,20 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
             {status && (
               <div className="absolute inset-x-1 bottom-1">
-                <span className={`block truncate rounded-md border px-1.5 py-0.5 text-center text-[8.5px] font-black tracking-wider ${status.className}`}>
+                <span className={`block truncate rounded border px-1 py-[1px] text-center text-[7.5px] font-black tracking-wider ${status.className}`}>
                   {status.label}
                 </span>
               </div>
             )}
           </div>
-          <h3 className="mt-2 line-clamp-1 text-[13px] font-black tracking-tight text-white">{c.name}</h3>
-          <p className="line-clamp-1 text-[10px] font-semibold text-slate-400">{c.category?.name ?? "General"}</p>
+          <h3 className="mt-1 line-clamp-1 text-[12px] font-black tracking-tight text-white">{c.name}</h3>
+          <p className="line-clamp-1 text-[9px] font-semibold text-slate-400">{c.category?.name ?? "General"}</p>
           {prize > 0 && (
-            <p className="mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-black text-amber-300">
-              <Coins className="h-3 w-3" /> {prize.toLocaleString()}
+            <p className="mt-0.5 inline-flex items-center gap-0.5 text-[10px] font-black text-amber-300">
+              <Coins className="h-2.5 w-2.5" /> {prize.toLocaleString()}
             </p>
           )}
-          <div className="mt-0.5 text-[9.5px] font-bold text-slate-400">
+          <div className="mt-0.5 text-[9px] font-bold text-slate-400">
             {c.status !== "completed" ? (
               <Countdown endAt={c.status === "upcoming" ? c.start_at : c.end_at} compact />
             ) : (
@@ -432,29 +432,29 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
         </div>
 
         {/* RIGHT — nominees */}
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5">
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
           {top.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-white/10 bg-white/[0.02] py-4 text-center text-[10px] text-slate-500">
+            <div className="rounded-md border border-dashed border-white/10 bg-white/[0.02] py-3 text-center text-[9px] text-slate-500">
               No nominees yet
             </div>
           ) : (
             top.map((n, i) => {
               const pct = Math.round((n.votes / total) * 100);
               return (
-                <div key={n.id} className="space-y-0.5">
-                  <div className="flex items-center justify-between gap-2 text-[10.5px]">
-                    <div className="flex min-w-0 items-center gap-1.5">
-                      <span className="w-3 shrink-0 text-center text-[11px] leading-none">{rankIcons[i]}</span>
+                <div key={n.id} className="space-y-[1px]">
+                  <div className="flex items-center justify-between gap-1.5 text-[9.5px]">
+                    <div className="flex min-w-0 items-center gap-1">
+                      <span className="w-2.5 shrink-0 text-center text-[10px] leading-none">{rankIcons[i]}</span>
                       {n.photo_url ? (
-                        <img src={n.photo_url} alt="" className={`h-4 w-4 shrink-0 rounded-full object-cover ring-1 ${i === 0 ? "ring-amber-300/60" : "ring-white/15"}`} />
+                        <img src={n.photo_url} alt="" className={`h-3.5 w-3.5 shrink-0 rounded-full object-cover ring-1 ${i === 0 ? "ring-amber-300/60" : "ring-white/15"}`} />
                       ) : (
-                        <div className="h-4 w-4 shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500" />
+                        <div className="h-3.5 w-3.5 shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500" />
                       )}
                       <span className={`truncate font-bold ${i === 0 ? "text-white" : "text-slate-200"}`}>{n.name}</span>
                     </div>
-                    <span className="shrink-0 text-[10.5px] font-black tabular-nums text-slate-100">{pct}%</span>
+                    <span className="shrink-0 text-[9.5px] font-black tabular-nums text-slate-100">{pct}%</span>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.05]">
+                  <div className="h-1 overflow-hidden rounded-full bg-white/[0.05]">
                     <div
                       className={`h-full rounded-full bg-gradient-to-r ${barTint(i)} transition-[width] duration-700 ease-out`}
                       style={{ width: `${pct}%` }}
@@ -468,44 +468,44 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
       </div>
 
       {/* Stats row */}
-      <div className="mt-2.5 flex items-center gap-3 border-t border-white/[0.06] bg-white/[0.015] px-3 py-1.5 text-[10px] text-slate-400">
-        <MiniStat icon={<Heart className="h-3 w-3 text-rose-300" />} value={c.total_votes} />
-        <MiniStat icon={<MessageCircle className="h-3 w-3 text-emerald-300" />} value={0} />
-        <MiniStat icon={<Star className="h-3 w-3 text-amber-300" />} value={c.follower_count} />
-        <MiniStat icon={<Eye className="h-3 w-3 text-sky-300" />} value={c.views_count ?? 0} />
-        <MiniStat icon={<Users className="h-3 w-3 text-violet-300" />} value={c.total_participants} />
+      <div className="mt-1.5 flex items-center justify-between border-t border-white/[0.06] bg-white/[0.015] px-2 py-1 text-[9px] text-slate-400">
+        <MiniStat icon={<Heart className="h-2.5 w-2.5 text-rose-300" />} value={c.total_votes} />
+        <MiniStat icon={<MessageCircle className="h-2.5 w-2.5 text-emerald-300" />} value={0} />
+        <MiniStat icon={<Star className="h-2.5 w-2.5 text-amber-300" />} value={c.follower_count} />
+        <MiniStat icon={<Eye className="h-2.5 w-2.5 text-sky-300" />} value={c.views_count ?? 0} />
+        <MiniStat icon={<Users className="h-2.5 w-2.5 text-violet-300" />} value={c.total_participants} />
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1.5 border-t border-white/[0.06] p-2">
+      <div className="flex items-center gap-1 border-t border-white/[0.06] p-1.5">
         <Link
           to="/competitions/$slug"
           params={{ slug: c.slug }}
-          className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 py-1.5 text-[11px] font-black text-white shadow-lg shadow-violet-500/20 transition-transform hover:scale-[1.01]"
+          className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-gradient-to-r from-violet-500 to-fuchsia-500 py-1 text-[10px] font-black text-white shadow-md shadow-violet-500/20 transition-transform hover:scale-[1.01]"
         >
-          <Zap className="h-3 w-3" /> {c.status === "live" ? "Vote" : c.status === "upcoming" ? "Preview" : "Result"}
+          <Zap className="h-2.5 w-2.5" /> {c.status === "live" ? "Vote" : c.status === "upcoming" ? "Preview" : "Result"}
         </Link>
         <Link
           to="/competitions/$slug"
           params={{ slug: c.slug }}
-          className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[11px] font-bold text-slate-200 hover:bg-white/[0.06]"
+          className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] font-bold text-slate-200 hover:bg-white/[0.06]"
         >
           Open
         </Link>
         <button
           type="button"
           onClick={onShare}
-          className="rounded-lg border border-white/10 bg-white/[0.03] p-1.5 text-slate-300 hover:bg-white/[0.06]"
+          className="rounded-md border border-white/10 bg-white/[0.03] p-1 text-slate-300 hover:bg-white/[0.06]"
           title="Share"
         >
-          <Share2 className="h-3 w-3" />
+          <Share2 className="h-2.5 w-2.5" />
         </button>
         <button
           type="button"
-          className="rounded-lg border border-white/10 bg-white/[0.03] p-1.5 text-slate-300 hover:bg-white/[0.06]"
+          className="rounded-md border border-white/10 bg-white/[0.03] p-1 text-slate-300 hover:bg-white/[0.06]"
           title="Bookmark"
         >
-          <Bookmark className="h-3 w-3" />
+          <Bookmark className="h-2.5 w-2.5" />
         </button>
       </div>
     </article>
@@ -590,20 +590,20 @@ function CardLiveSupporters({ competitionId }: { competitionId: string }) {
 
   if (voters.length === 0) {
     return (
-      <div className="mt-2 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-2 py-1.5 text-center text-[9.5px] font-semibold text-slate-400">
-        ✨ Be the first supporter
+      <div className="mt-1 rounded-md border border-dashed border-white/10 bg-white/[0.02] px-1.5 py-1 text-center text-[8px] font-semibold text-slate-400">
+        ✨ Be first
       </div>
     );
   }
 
-  const stack = voters.slice(0, 6);
+  const stack = voters.slice(0, 5);
   const extra = Math.max(0, voters.length - stack.length);
-  const strip = voters.slice(0, 3);
+  const strip = voters.slice(0, 2);
 
   return (
-    <div className="mt-2 space-y-1.5">
+    <div className="mt-1 space-y-1">
       <div className="flex items-center gap-1">
-        <div className="flex -space-x-2">
+        <div className="flex -space-x-1.5">
           <AnimatePresence initial={false}>
             {stack.map((v) => (
               <motion.div
@@ -613,45 +613,44 @@ function CardLiveSupporters({ competitionId }: { competitionId: string }) {
                 animate={{ opacity: 1, scale: 1, x: 0 }}
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={{ type: "spring", stiffness: 320, damping: 24 }}
-                className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full border border-slate-900 ring-1 ring-white/10"
+                className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full border border-slate-900 ring-1 ring-white/10"
                 style={{ background: v.avatar_color ?? "#334155" }}
                 title={v.username ?? "Supporter"}
               >
                 {v.avatar_url ? (
                   <img src={v.avatar_url} alt="" className="h-full w-full object-cover" />
                 ) : (
-                  <span className="flex h-full w-full items-center justify-center text-[8px] font-black text-white">
+                  <span className="flex h-full w-full items-center justify-center text-[7px] font-black text-white">
                     {(v.username ?? "?").slice(0, 1).toUpperCase()}
                   </span>
                 )}
                 {v.is_verified && (
-                  <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-2 w-2 text-sky-400" />
+                  <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 text-sky-400" />
                 )}
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
         {extra > 0 && (
-          <span className="ml-1 text-[9px] font-bold text-slate-400">+{extra} more</span>
+          <span className="ml-0.5 text-[8px] font-bold text-slate-400">+{extra}</span>
         )}
       </div>
 
       {engagement && (
-        <span className={`inline-block rounded-full border px-1.5 py-[1px] text-[8.5px] font-black tracking-wide ${engagement.cls}`}>
+        <span className={`inline-block rounded-full border px-1 py-[1px] text-[7.5px] font-black tracking-wide ${engagement.cls}`}>
           {engagement.label}
         </span>
       )}
 
       <div>
-        <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-500">Recently supported</div>
-        <ul className="mt-0.5 space-y-[1px]">
+        <ul className="space-y-[1px]">
           {strip.map((v) => (
-            <li key={`${v.voter_id}-${v.voted_at}-r`} className="flex items-center justify-between gap-1 text-[9.5px]">
+            <li key={`${v.voter_id}-${v.voted_at}-r`} className="flex items-center justify-between gap-1 text-[8.5px]">
               <span className="flex min-w-0 items-center gap-0.5">
                 <span className="truncate font-bold text-slate-200">{v.username ?? "Supporter"}</span>
                 {v.is_verified && <BadgeCheck className="h-2 w-2 shrink-0 text-sky-400" />}
               </span>
-              <span className="shrink-0 text-[8.5px] font-semibold text-slate-500">{timeAgoShort(v.voted_at)}</span>
+              <span className="shrink-0 text-[8px] font-semibold text-slate-500">{timeAgoShort(v.voted_at)}</span>
             </li>
           ))}
         </ul>
