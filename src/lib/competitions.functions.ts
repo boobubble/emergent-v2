@@ -86,8 +86,11 @@ export const getCompetitionBySlug = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string }) => data)
   .handler(async ({ data }) => {
     const sb = await publicClient();
-    return fetchCompetitionCore(sb, { slug: data.slug });
+    // Normalize: trim + collapse whitespace -> dashes so legacy dirty slugs still resolve
+    const normalized = (data.slug ?? "").trim().replace(/\s+/g, "-");
+    return fetchCompetitionCore(sb, { slug: normalized });
   });
+
 
 export const listRelatedCompetitions = createServerFn({ method: "GET" })
   .inputValidator((data: { competitionId: string; categoryId?: string | null; limit?: number }) => data)

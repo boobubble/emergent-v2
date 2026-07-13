@@ -31,6 +31,12 @@ import { RecentSupporters } from "@/components/competitions/RecentSupporters";
 import { BattleActivityFeed } from "@/components/competitions/BattleActivityFeed";
 import { AudienceCounter } from "@/components/competitions/AudienceCounter";
 import { FloatingReactions } from "@/components/competitions/FloatingReactions";
+import { HeadToHeadBattle, BattleIntensityMeter, LiveLeaderBanner, VoteMilestones } from "@/components/competitions/BattleWidgets";
+import { TopSupporters } from "@/components/competitions/TopSupporters";
+import { PremiumNomineeCards } from "@/components/competitions/PremiumNomineeCards";
+import { StickyMobileVoteBar } from "@/components/competitions/StickyMobileVoteBar";
+import { PremiumEmptyState } from "@/components/competitions/PremiumEmptyState";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -327,6 +333,15 @@ function CompetitionDetail() {
   return (
     <div className="min-h-screen bg-[#050308] pb-24 text-foreground">
       {showPremiumSections && <FloatingReactions competitionId={c.id} />}
+      {showPremiumSections && votingOpen && <LiveLeaderBanner topLeaderName={topLeaderName} />}
+      <StickyMobileVoteBar
+        canVote={!!userId && votingOpen}
+        hasVoted={!!myCompetitorVote?.competitorId || !!myVote?.participantId}
+        onClick={() => {
+          document.getElementById("nominees-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+      />
+
 
       {/* Premium Battle Arena hero — only for VS Battle layout */}
       {showBattleArenaHero && (
@@ -407,10 +422,25 @@ function CompetitionDetail() {
           </div>
         )}
 
-        {/* Premium battlefield sections: tournament progress, recent supporters, live activity feed */}
+        {/* Premium battlefield sections: tournament progress, intensity, recent supporters, live activity feed */}
         {showPremiumSections && (
           <div className="mt-4 space-y-3">
             <TournamentProgress startAt={c.start_at} endAt={c.end_at} status={c.status} />
+            {votingOpen && sortedCompetitors.length >= 2 && (
+              <div className="grid gap-3 md:grid-cols-2">
+                <BattleIntensityMeter competitionId={c.id} />
+                <VoteMilestones totalVotes={totalCompetitorVotes} />
+              </div>
+            )}
+            {!showBattleArenaHero && sortedCompetitors.length >= 2 && !hideResults && (
+              <HeadToHeadBattle
+                competitors={sortedCompetitors}
+                canVote={!!userId && votingOpen}
+                onVote={(id) => arenaVoteM.mutate(id)}
+                isVoting={arenaVoteM.isPending}
+                myVote={myCompetitorVote?.competitorId ?? null}
+              />
+            )}
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
               <RecentSupporters competitionId={c.id} />
               <BattleActivityFeed
@@ -419,8 +449,10 @@ function CompetitionDetail() {
                 totalVotes={totalCompetitorVotes}
               />
             </div>
+            <TopSupporters competitionId={c.id} />
           </div>
         )}
+
 
         {/* Winner section */}
 
@@ -480,7 +512,7 @@ function CompetitionDetail() {
         )}
 
         {/* Nominees */}
-        <section className="mt-5">
+        <section id="nominees-section" className="mt-5 scroll-mt-20">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="flex items-center gap-1.5 text-base font-bold">
               <Crown className="h-4 w-4 text-amber-400" /> Nominees
@@ -495,20 +527,31 @@ function CompetitionDetail() {
             )}
           </div>
           {competitors.length > 0 ? (
-            <DynamicCompetitionLayout
-              competitionId={c.id}
-              competitors={competitors}
-              layoutStyle={layoutStyle}
-              myVote={myCompetitorVote?.competitorId ?? null}
-              canVote={!!userId && votingOpen}
-              hideCounts={hideResults}
-              isAdmin={isAdmin}
-              votingClosed={c.status === "completed" || (!votingOpen && c.status !== "upcoming")}
-              votingUpcoming={c.status === "upcoming"}
-              onEdit={(comp: Competitor) => setEditing({ ...comp })}
-              invalidateKey={["competition-slug", slug]}
-              suppressVsBattle={showBattleArenaHero}
-            />
+            resolvedLayout === "leaderboard" && !isAdmin ? (
+              <PremiumNomineeCards
+                competitionId={c.id}
+                competitors={competitors}
+                myVote={myCompetitorVote?.competitorId ?? null}
+                canVote={!!userId && votingOpen}
+                hideCounts={hideResults}
+                invalidateKey={["competition-slug", slug]}
+              />
+            ) : (
+              <DynamicCompetitionLayout
+                competitionId={c.id}
+                competitors={competitors}
+                layoutStyle={layoutStyle}
+                myVote={myCompetitorVote?.competitorId ?? null}
+                canVote={!!userId && votingOpen}
+                hideCounts={hideResults}
+                isAdmin={isAdmin}
+                votingClosed={c.status === "completed" || (!votingOpen && c.status !== "upcoming")}
+                votingUpcoming={c.status === "upcoming"}
+                onEdit={(comp: Competitor) => setEditing({ ...comp })}
+                invalidateKey={["competition-slug", slug]}
+                suppressVsBattle={showBattleArenaHero}
+              />
+            )
           ) : approvedParticipants.length > 0 ? (
             <ParticipantGrid
               competitionId={c.id}
@@ -518,12 +561,20 @@ function CompetitionDetail() {
               hideCounts={hideResults}
               invalidateKey={["competition-slug", slug]}
             />
+          ) : c.status === "upcoming" ? (
+            <PremiumEmptyState kind="upcoming" />
+          ) : c.status === "completed" ? (
+            <PremiumEmptyState kind="closed" />
           ) : (
-            <div className="rounded-3xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-16 text-center text-sm text-muted-foreground">
-              No nominees have been added yet.
+            <PremiumEmptyState kind="no-nominees" />
+          )}
+          {competitors.length > 0 && totalCompetitorVotes === 0 && votingOpen && (
+            <div className="mt-4">
+              <PremiumEmptyState kind="no-votes" />
             </div>
           )}
         </section>
+
 
 
         <CompetitorEditorDialog
