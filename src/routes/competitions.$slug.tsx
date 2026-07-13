@@ -460,6 +460,9 @@ function CompetitionDetail() {
       )}
 
       <div className="mx-auto max-w-5xl px-4">
+        {/* Podium / Nominees pushed above the fold so viewers see the competitors immediately */}
+        {nomineesSection}
+
         {c.description && (
           <p className="mt-2 text-sm text-white/70">{c.description}</p>
         )}
