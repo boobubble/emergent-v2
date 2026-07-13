@@ -12,18 +12,23 @@ export const Route = createFileRoute("/manifest.webmanifest")({
   server: {
     handlers: {
       GET: async () => {
-        let rawBranding: any = {};
+        let branding: any = {};
+        let whitelabel: any = {};
+        let general: any = {};
         try {
           const { data } = await supabaseAdmin
             .from("app_settings")
-            .select("value")
-            .eq("key", "branding")
-            .maybeSingle();
-          rawBranding = data?.value ?? {};
+            .select("key,value")
+            .in("key", ["branding", "whitelabel", "general"]);
+          for (const row of data ?? []) {
+            if (row.key === "branding") branding = row.value ?? {};
+            else if (row.key === "whitelabel") whitelabel = row.value ?? {};
+            else if (row.key === "general") general = row.value ?? {};
+          }
         } catch {
           // fall through — defaults kick in
         }
-        const brand = buildBrand(rawBranding, "light");
+        const brand = buildBrand(branding, whitelabel, general, "light");
         const icon192 = brand.logoLight || brand.favicon || "/pwa-192.png";
         const icon512 = brand.logoLight || brand.favicon || "/pwa-512.png";
         const manifest = {
