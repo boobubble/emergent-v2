@@ -103,26 +103,44 @@ function resolvedTheme(): "light" | "dark" {
 }
 
 /**
- * Build a WhiteLabelBrand from the raw app_settings.branding blob.
- * Missing fields fall back to BRAND_DEFAULTS so existing installs keep working.
+ * Build a WhiteLabelBrand by merging:
+ *  - `app_settings.branding` (BrandingMap: logos, favicons, per-room, sizes)
+ *  - `app_settings.whitelabel` (text/legal/meta/color fields)
+ *  - `app_settings.general` (site_name, site_tagline, site_description) — fallbacks
+ * against BRAND_DEFAULTS.
  */
-export function buildBrand(raw: any, theme?: "light" | "dark"): WhiteLabelBrand {
-  const b = (raw ?? {}) as Partial<WhiteLabelBrand> & BrandingMap;
+export function buildBrand(
+  brandingRaw: any,
+  whitelabelRaw?: any,
+  generalRaw?: any,
+  theme?: "light" | "dark",
+): WhiteLabelBrand {
+  const bAssets = (brandingRaw ?? {}) as BrandingMap;
+  const wl = (whitelabelRaw ?? {}) as Partial<WhiteLabelBrand>;
+  const gen = (generalRaw ?? {}) as { site_name?: string; site_tagline?: string; site_description?: string };
   const t = theme ?? resolvedTheme();
-  const logoLight = b.logo_light || (b as any).logoLight || "";
-  const logoDark = b.logo_dark || (b as any).logoDark || "";
-  const favicon = (t === "dark" ? b.favicon_dark : b.favicon_light) || b.favicon_light || b.favicon_dark || BRAND_DEFAULTS.favicon;
+
+  const logoLight = bAssets.logo_light || "";
+  const logoDark = bAssets.logo_dark || "";
+  const favicon =
+    (t === "dark" ? bAssets.favicon_dark : bAssets.favicon_light) ||
+    bAssets.favicon_light ||
+    bAssets.favicon_dark ||
+    BRAND_DEFAULTS.favicon;
   const logo = (t === "dark" ? logoDark : logoLight) || logoLight || logoDark || BRAND_DEFAULTS.logo;
+
   const merged: WhiteLabelBrand = {
     ...BRAND_DEFAULTS,
-    ...(b as any),
+    ...(gen.site_name ? { name: gen.site_name, shortName: gen.site_name, company: gen.site_name } : {}),
+    ...(gen.site_tagline ? { tagline: gen.site_tagline } : {}),
+    ...(gen.site_description ? { metaDescription: gen.site_description } : {}),
+    ...wl,
     favicon,
     logo,
     logoLight,
     logoDark,
-    raw: (raw as BrandingMap) ?? {},
+    raw: bAssets,
   };
-  // Auto-derive sensible fallbacks
   if (!merged.senderName) merged.senderName = merged.name;
   if (!merged.shortName) merged.shortName = merged.name;
   if (!merged.metaTitle) merged.metaTitle = `${merged.name} — ${merged.tagline}`;
@@ -137,5 +155,8 @@ export function buildBrand(raw: any, theme?: "light" | "dark"): WhiteLabelBrand 
  */
 export function useBrand(): WhiteLabelBrand {
   const { raw } = useAppSettings();
-  return useMemo(() => buildBrand(raw?.branding), [raw?.branding]);
+  return useMemo(
+    () => buildBrand(raw?.branding, raw?.whitelabel, raw?.general),
+    [raw?.branding, raw?.whitelabel, raw?.general],
+  );
 }
