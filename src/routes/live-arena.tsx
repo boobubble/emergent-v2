@@ -396,10 +396,10 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
       </div>
 
       {/* Body: left banner + right nominees */}
-      <div className="flex gap-3 px-3 pt-2">
+      <div className="flex gap-2 px-2 pt-1.5">
         {/* LEFT */}
-        <div className="flex w-[38%] shrink-0 flex-col">
-          <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-white/5">
+        <div className="flex w-[32%] shrink-0 flex-col">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-white/5">
             {c.banner_url ? (
               <img src={c.banner_url} alt={c.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
             ) : (
@@ -408,20 +408,20 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
             {status && (
               <div className="absolute inset-x-1 bottom-1">
-                <span className={`block truncate rounded-md border px-1.5 py-0.5 text-center text-[8.5px] font-black tracking-wider ${status.className}`}>
+                <span className={`block truncate rounded border px-1 py-[1px] text-center text-[7.5px] font-black tracking-wider ${status.className}`}>
                   {status.label}
                 </span>
               </div>
             )}
           </div>
-          <h3 className="mt-2 line-clamp-1 text-[13px] font-black tracking-tight text-white">{c.name}</h3>
-          <p className="line-clamp-1 text-[10px] font-semibold text-slate-400">{c.category?.name ?? "General"}</p>
+          <h3 className="mt-1 line-clamp-1 text-[12px] font-black tracking-tight text-white">{c.name}</h3>
+          <p className="line-clamp-1 text-[9px] font-semibold text-slate-400">{c.category?.name ?? "General"}</p>
           {prize > 0 && (
-            <p className="mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-black text-amber-300">
-              <Coins className="h-3 w-3" /> {prize.toLocaleString()}
+            <p className="mt-0.5 inline-flex items-center gap-0.5 text-[10px] font-black text-amber-300">
+              <Coins className="h-2.5 w-2.5" /> {prize.toLocaleString()}
             </p>
           )}
-          <div className="mt-0.5 text-[9.5px] font-bold text-slate-400">
+          <div className="mt-0.5 text-[9px] font-bold text-slate-400">
             {c.status !== "completed" ? (
               <Countdown endAt={c.status === "upcoming" ? c.start_at : c.end_at} compact />
             ) : (
