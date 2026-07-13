@@ -247,7 +247,7 @@ function LiveArenaPage() {
             </div>
           </div>
           {/* Density toggle row */}
-          <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 pb-2 pt-0.5">
+          <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 pb-1.5 pt-0.5">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
               <span>View:</span>
               <div className="inline-flex overflow-hidden rounded-full border border-white/10 bg-white/[0.03]">
