@@ -18,6 +18,7 @@ import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as RadioRouteImport } from './routes/radio'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PagesRouteImport } from './routes/pages'
+import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LiveArenaRouteImport } from './routes/live-arena'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
@@ -194,6 +195,11 @@ const PricingRoute = PricingRouteImport.update({
 const PagesRoute = PagesRouteImport.update({
   id: '/pages',
   path: '/pages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
+  id: '/manifest.webmanifest',
+  path: '/manifest.webmanifest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -893,6 +899,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof LeaderboardRoute
   '/live-arena': typeof LiveArenaRoute
   '/login': typeof LoginRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/pages': typeof PagesRoute
   '/pricing': typeof PricingRoute
   '/radio': typeof RadioRoute
@@ -1033,6 +1040,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardRoute
   '/live-arena': typeof LiveArenaRoute
   '/login': typeof LoginRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/pages': typeof PagesRoute
   '/pricing': typeof PricingRoute
   '/radio': typeof RadioRoute
@@ -1177,6 +1185,7 @@ export interface FileRoutesById {
   '/leaderboard': typeof LeaderboardRoute
   '/live-arena': typeof LiveArenaRoute
   '/login': typeof LoginRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/pages': typeof PagesRoute
   '/pricing': typeof PricingRoute
   '/radio': typeof RadioRoute
@@ -1322,6 +1331,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/live-arena'
     | '/login'
+    | '/manifest.webmanifest'
     | '/pages'
     | '/pricing'
     | '/radio'
@@ -1462,6 +1472,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/live-arena'
     | '/login'
+    | '/manifest.webmanifest'
     | '/pages'
     | '/pricing'
     | '/radio'
@@ -1605,6 +1616,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/live-arena'
     | '/login'
+    | '/manifest.webmanifest'
     | '/pages'
     | '/pricing'
     | '/radio'
@@ -1749,6 +1761,7 @@ export interface RootRouteChildren {
   LeaderboardRoute: typeof LeaderboardRoute
   LiveArenaRoute: typeof LiveArenaRoute
   LoginRoute: typeof LoginRoute
+  ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   PagesRoute: typeof PagesRoute
   PricingRoute: typeof PricingRoute
   RadioRoute: typeof RadioRoute
@@ -1841,6 +1854,13 @@ declare module '@tanstack/react-router' {
       path: '/pages'
       fullPath: '/pages'
       preLoaderRoute: typeof PagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manifest.webmanifest': {
+      id: '/manifest.webmanifest'
+      path: '/manifest.webmanifest'
+      fullPath: '/manifest.webmanifest'
+      preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -3021,6 +3041,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeaderboardRoute: LeaderboardRoute,
   LiveArenaRoute: LiveArenaRoute,
   LoginRoute: LoginRoute,
+  ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   PagesRoute: PagesRoute,
   PricingRoute: PricingRoute,
   RadioRoute: RadioRoute,

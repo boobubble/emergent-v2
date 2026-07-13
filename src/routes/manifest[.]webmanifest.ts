@@ -8,7 +8,7 @@ import { buildBrand } from "@/lib/branding";
  *
  * Served at /manifest.webmanifest thanks to the [.] escape in the filename.
  */
-export const Route = createFileRoute("/manifest[.]webmanifest")({
+export const Route = createFileRoute("/manifest.webmanifest")({
   server: {
     handlers: {
       GET: async () => {
