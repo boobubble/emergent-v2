@@ -31,6 +31,12 @@ import { RecentSupporters } from "@/components/competitions/RecentSupporters";
 import { BattleActivityFeed } from "@/components/competitions/BattleActivityFeed";
 import { AudienceCounter } from "@/components/competitions/AudienceCounter";
 import { FloatingReactions } from "@/components/competitions/FloatingReactions";
+import { HeadToHeadBattle, BattleIntensityMeter, LiveLeaderBanner, VoteMilestones } from "@/components/competitions/BattleWidgets";
+import { TopSupporters } from "@/components/competitions/TopSupporters";
+import { PremiumNomineeCards } from "@/components/competitions/PremiumNomineeCards";
+import { StickyMobileVoteBar } from "@/components/competitions/StickyMobileVoteBar";
+import { PremiumEmptyState } from "@/components/competitions/PremiumEmptyState";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
