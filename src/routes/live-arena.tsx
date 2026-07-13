@@ -281,8 +281,8 @@ function LiveArenaPage() {
           <div
             className={
               density === "compact"
-                ? "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3"
-                : "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+                ? "grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+                : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             }
           >
             {filtered.map((c) => <ArenaCard key={c.id} c={c} />)}
