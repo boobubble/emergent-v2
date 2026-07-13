@@ -1220,6 +1220,24 @@
   border: 1px solid oklch(0.72 0.22 300 / 0.22);
 }
 
+/* Hero header controls must stay readable over the busy arena background image */
+[data-chat-theme="gaming_arena"] .arena-hero__banner .chat-icon-btn {
+  background-color: oklch(0.1 0.03 285 / 0.92);
+  color: oklch(0.97 0.02 310);
+  border-color: oklch(0.72 0.22 300 / 0.45);
+  box-shadow: 0 4px 14px -4px oklch(0.1 0.03 285 / 0.6);
+  backdrop-filter: blur(8px);
+}
+[data-chat-theme="gaming_arena"] .arena-hero__banner .chat-icon-btn:hover {
+  background-color: oklch(0.15 0.05 285 / 0.95);
+  color: oklch(0.72 0.22 300);
+  border-color: oklch(0.72 0.22 300 / 0.75);
+  box-shadow: 0 6px 20px -4px oklch(0.72 0.22 300 / 0.45);
+}
+[data-chat-theme="gaming_arena"] .arena-hero__banner .chat-icon-btn span.absolute {
+  box-shadow: 0 0 0 1.5px oklch(0.1 0.03 285 / 0.92);
+}
+
 [data-chat-theme="gaming_arena"] [data-message-role="me"],
 [data-chat-theme="gaming_arena"] .msg-mine {
   background-image: linear-gradient(135deg,
