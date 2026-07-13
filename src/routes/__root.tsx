@@ -157,11 +157,14 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <AuthProvider>
-          <AuthGate />
-        </AuthProvider>
-      </LanguageProvider>
+      <AppSettingsProvider>
+        <LanguageProvider>
+          <DynamicBrandHead />
+          <AuthProvider>
+            <AuthGate />
+          </AuthProvider>
+        </LanguageProvider>
+      </AppSettingsProvider>
     </QueryClientProvider>
   );
 }
