@@ -316,24 +316,24 @@ function CompetitionDetail() {
 
       {/* Compact hero for non-VS layouts */}
       {!showBattleArenaHero && (
-        <div className="relative overflow-hidden border-b border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent px-4 pb-6 pt-6">
+        <div className="relative overflow-hidden border-b border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent px-4 pb-4 pt-4">
           <div className="mx-auto max-w-5xl">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               {c.status === "live" && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/60 bg-rose-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-rose-200">
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-rose-400" /> Live
+                <span className="inline-flex items-center gap-1 rounded-full border border-rose-400/60 bg-rose-500/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-rose-200">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> Live
                 </span>
               )}
-              {c.status === "upcoming" && <Badge className="border-sky-400/50 bg-sky-500/20 text-sky-200">Upcoming</Badge>}
-              {c.status === "completed" && <Badge className="border-zinc-400/40 bg-zinc-500/20 text-zinc-200">Concluded</Badge>}
-              {category?.name && <Badge variant="outline" className="border-white/20 bg-white/5">{category.name}</Badge>}
-              <Badge variant="outline" className="border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-200 text-[10px] uppercase tracking-wider">
+              {c.status === "upcoming" && <Badge className="border-sky-400/50 bg-sky-500/20 text-sky-200 text-[10px]">Upcoming</Badge>}
+              {c.status === "completed" && <Badge className="border-zinc-400/40 bg-zinc-500/20 text-zinc-200 text-[10px]">Concluded</Badge>}
+              {category?.name && <Badge variant="outline" className="border-white/20 bg-white/5 text-[10px]">{category.name}</Badge>}
+              <Badge variant="outline" className="border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-200 text-[9px] uppercase tracking-wider">
                 {resolvedLayout === "podium" ? "Podium" : resolvedLayout === "tournament" ? "Tournament" : "Leaderboard"}
               </Badge>
             </div>
-            <h1 className="mt-2 text-2xl font-black tracking-tight sm:text-4xl">{c.name}</h1>
+            <h1 className="mt-1.5 text-xl font-black tracking-tight sm:text-3xl">{c.name}</h1>
             {c.status !== "completed" && (
-              <div className="mt-2 flex items-center gap-2 text-xs text-white/70">
+              <div className="mt-1.5 flex items-center gap-2 text-[11px] text-white/70">
                 <span>{c.status === "live" ? "Ends in" : "Starts in"}</span>
                 <Countdown endAt={c.status === "live" ? c.end_at : c.start_at} compact />
               </div>
@@ -348,25 +348,26 @@ function CompetitionDetail() {
         )}
 
         {c.rules && (
-          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm backdrop-blur">
-            <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-300">
-              <Sparkles className="h-3.5 w-3.5" /> Match Rules
+          <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-xs backdrop-blur">
+            <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-amber-300">
+              <Sparkles className="h-3 w-3" /> Match Rules
             </div>
             <p className="whitespace-pre-wrap text-white/80">{c.rules}</p>
           </div>
         )}
 
         {userId && enableJoin && (c.status === "upcoming" || c.status === "live") && (
-          <div className="mt-4">
+          <div className="mt-3">
             {iJoined ? (
-              <Button variant="outline" onClick={() => leaveM.mutate()} disabled={leaveM.isPending}>
+              <Button size="sm" variant="outline" onClick={() => leaveM.mutate()} disabled={leaveM.isPending}>
                 Leave Arena
               </Button>
             ) : (
               <Button
+                size="sm"
                 onClick={() => joinM.mutate()}
                 disabled={joinM.isPending}
-                className="bg-gradient-to-r from-fuchsia-500 to-rose-500 font-bold text-white hover:from-fuchsia-400 hover:to-rose-400"
+                className="bg-gradient-to-r from-fuchsia-500 to-rose-500 text-sm font-bold text-white hover:from-fuchsia-400 hover:to-rose-400"
               >
                 ⚔️ Enter the Arena
               </Button>
@@ -434,17 +435,17 @@ function CompetitionDetail() {
         )}
 
         {/* Nominees */}
-        <section className="mt-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-bold">
-              <Crown className="h-5 w-5 text-amber-400" /> Nominees
-              <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+        <section className="mt-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 text-base font-bold">
+              <Crown className="h-4 w-4 text-amber-400" /> Nominees
+              <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                 {competitors.length > 0 ? competitors.length : approvedParticipants.length}
               </span>
             </h2>
             {isAdmin && (
-              <Button size="sm" onClick={() => setEditing(emptyCompetitor(c.id, competitors.length))}>
-                <Plus className="mr-1 h-4 w-4" /> Add nominee
+              <Button size="sm" className="h-8 text-xs" onClick={() => setEditing(emptyCompetitor(c.id, competitors.length))}>
+                <Plus className="mr-1 h-3.5 w-3.5" /> Add nominee
               </Button>
             )}
           </div>
@@ -488,13 +489,13 @@ function CompetitionDetail() {
 
         {/* Participants (existing user-join system) */}
         {competitors.length > 0 && approvedParticipants.length > 0 && (
-          <section className="mt-6 grid gap-6 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-              <h2 className="mb-3 flex items-center gap-2 font-bold"><Trophy className="h-4 w-4 text-amber-400" /> Live Ranking</h2>
+          <section className="mt-5 grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+              <h2 className="mb-2 flex items-center gap-1.5 text-sm font-bold"><Trophy className="h-3.5 w-3.5 text-amber-400" /> Live Ranking</h2>
               <TopThree participants={participants as any} hideCounts={hideResults} />
             </div>
-            <div className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-              <h2 className="mb-3 font-bold">Vote for a contestant</h2>
+            <div className="md:col-span-2 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+              <h2 className="mb-2 text-sm font-bold">Vote for a contestant</h2>
               <ParticipantGrid
                 competitionId={c.id}
                 participants={participants as any}
