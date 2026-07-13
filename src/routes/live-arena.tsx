@@ -468,12 +468,12 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
       </div>
 
       {/* Stats row */}
-      <div className="mt-2.5 flex items-center gap-3 border-t border-white/[0.06] bg-white/[0.015] px-3 py-1.5 text-[10px] text-slate-400">
-        <MiniStat icon={<Heart className="h-3 w-3 text-rose-300" />} value={c.total_votes} />
-        <MiniStat icon={<MessageCircle className="h-3 w-3 text-emerald-300" />} value={0} />
-        <MiniStat icon={<Star className="h-3 w-3 text-amber-300" />} value={c.follower_count} />
-        <MiniStat icon={<Eye className="h-3 w-3 text-sky-300" />} value={c.views_count ?? 0} />
-        <MiniStat icon={<Users className="h-3 w-3 text-violet-300" />} value={c.total_participants} />
+      <div className="mt-1.5 flex items-center justify-between border-t border-white/[0.06] bg-white/[0.015] px-2 py-1 text-[9px] text-slate-400">
+        <MiniStat icon={<Heart className="h-2.5 w-2.5 text-rose-300" />} value={c.total_votes} />
+        <MiniStat icon={<MessageCircle className="h-2.5 w-2.5 text-emerald-300" />} value={0} />
+        <MiniStat icon={<Star className="h-2.5 w-2.5 text-amber-300" />} value={c.follower_count} />
+        <MiniStat icon={<Eye className="h-2.5 w-2.5 text-sky-300" />} value={c.views_count ?? 0} />
+        <MiniStat icon={<Users className="h-2.5 w-2.5 text-violet-300" />} value={c.total_participants} />
       </div>
 
       {/* Actions */}
