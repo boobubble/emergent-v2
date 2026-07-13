@@ -360,7 +360,9 @@ function CompetitionDetail() {
               <Badge variant="outline" className="border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-200 text-[9px] uppercase tracking-wider">
                 {resolvedLayout === "podium" ? "Podium" : resolvedLayout === "tournament" ? "Tournament" : "Leaderboard"}
               </Badge>
+              {showPremiumSections && <AudienceCounter competitionId={c.id} />}
             </div>
+
             <h1 className="mt-1.5 text-xl font-black tracking-tight sm:text-3xl">{c.name}</h1>
             {c.status !== "completed" && (
               <div className="mt-1.5 flex items-center gap-2 text-[11px] text-white/70">
