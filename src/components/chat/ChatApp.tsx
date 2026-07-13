@@ -252,6 +252,49 @@ export function ChatApp() {
     return () => window.removeEventListener("palrgo:open-chat-theme-store", open);
   }, []);
 
+  // Gaming Arena is a dark-only theme: force dark mode while active and
+  // restore the user's previous preference when switching away.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (chatTheme !== "gaming_arena") return;
+    const root = document.documentElement;
+    const prevMode = typeof localStorage !== "undefined" ? localStorage.getItem("palrgo-theme-mode") : null;
+    const prevClass = root.classList.contains("light") ? "light" : root.classList.contains("dark") ? "dark" : null;
+    root.classList.remove("light");
+    root.classList.add("dark");
+    root.setAttribute("data-theme", "dark");
+    root.setAttribute("data-force-dark", "gaming_arena");
+
+    // Keep it locked: if anything flips to light while active, snap back.
+    const observer = new MutationObserver(() => {
+      if (root.classList.contains("light") || root.getAttribute("data-theme") === "light") {
+        root.classList.remove("light");
+        root.classList.add("dark");
+        root.setAttribute("data-theme", "dark");
+      }
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ["class", "data-theme"] });
+
+    return () => {
+      observer.disconnect();
+      root.removeAttribute("data-force-dark");
+      if (prevMode === "light") {
+        root.classList.remove("dark");
+        root.classList.add("light");
+        root.setAttribute("data-theme", "light");
+      } else if (prevMode === "system" && typeof window !== "undefined") {
+        const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        root.classList.remove("light", "dark");
+        root.classList.add(dark ? "dark" : "light");
+        root.setAttribute("data-theme", dark ? "dark" : "light");
+      } else if (prevClass === "light") {
+        root.classList.remove("dark");
+        root.classList.add("light");
+        root.setAttribute("data-theme", "light");
+      }
+    };
+  }, [chatTheme]);
+
 
   return (
     <>
