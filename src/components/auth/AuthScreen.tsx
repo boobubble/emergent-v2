@@ -169,6 +169,7 @@ export function AuthScreen() {
 /* ---------------- Sign in ---------------- */
 function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: boolean; onOpenChange: (v: boolean) => void; onForgot: () => void; onSwitchSignup: () => void }) {
   const { login } = useAuth();
+  const brand = useBrand();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -218,6 +219,7 @@ function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: 
 /* ---------------- Sign up ---------------- */
 function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; onOpenChange: (v: boolean) => void; onSwitchSignin: () => void }) {
   const { signup } = useAuth();
+  const brand = useBrand();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
