@@ -199,7 +199,7 @@ function ChatroomMockup() {
   return (
     <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#0b0b1a]/90 shadow-[0_30px_80px_-20px_rgba(168,85,247,0.45)] ring-1 ring-fuchsia-400/10 backdrop-blur-2xl">
       <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 text-xs text-white/60">
-        <div className="flex items-center gap-2"><Sparkles className="h-3.5 w-3.5 text-fuchsia-300" /> BooBubble</div>
+        <div className="flex items-center gap-2"><Sparkles className="h-3.5 w-3.5 text-fuchsia-300" /> Assistant</div>
         <div className="hidden sm:flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-rose-400/80" />
           <span className="h-2 w-2 rounded-full bg-amber-400/80" />
@@ -296,7 +296,7 @@ function FeedMockup() {
         <aside className="col-span-12 border-l border-white/5 p-4 sm:col-span-4">
           <div className="text-xs font-semibold opacity-80">🔥 Trending</div>
           <div className="mt-2 space-y-2">
-            {["GoodVibes · 12.6k","MusicLovers · 8.2k","BooBubble · 7.1k","GameNight · 6.3k"].map((t) => (
+            {["GoodVibes · 12.6k","MusicLovers · 8.2k","Vibes · 7.1k","GameNight · 6.3k"].map((t) => (
               <div key={t} className="rounded-lg bg-white/[0.04] px-3 py-2 text-xs">{t}</div>
             ))}
           </div>
@@ -747,7 +747,7 @@ function HeroHomepage() {
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               {[
-                { n: "Alex", role: "Community Star", q: "BooBubble is more than an app, it's a family. I've made amazing friends here!" },
+                { n: "Alex", role: "Community Star", q: "This community is more than an app, it's a family. I've made amazing friends here!" },
                 { n: "Emma", role: "Top Radio Host", q: "The radio feature is incredible. I love hosting my own shows!" },
                 { n: "Luna", role: "Super Active", q: "The best community platform ever! So much fun and positive vibes." },
               ].map((t, i) => (

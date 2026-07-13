@@ -287,7 +287,7 @@ export const PostCard = memo(function PostCard({
             const authorName = author?.name ?? "Anonymous";
             const title = post.text
               ? `${authorName}: ${post.text.slice(0, 60)}${post.text.length > 60 ? "…" : ""}`
-              : `${authorName} on Palrgo`;
+              : authorName;
             const shareText = post.text ? post.text : `Check out this post by ${authorName}`;
             const payload: SharePayload = { title, text: shareText, url };
             earnShare({ data: { postId: post.id } }).catch(() => {});

@@ -68,7 +68,7 @@ export const Route = createFileRoute("/feed")({
       { title: "Feed" },
       { name: "description", content: "Share posts, react, comment, and connect with friends ." },
       { property: "og:title", content: "Feed" },
-      { property: "og:description", content: "Lightweight social feed for the Palrgo community." },
+      { property: "og:description", content: "Lightweight social feed for the community." },
     ],
   }),
   component: FeedPage,
@@ -536,7 +536,7 @@ function FeedPage() {
                 fallback={<div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold shadow-[0_4px_14px_-4px_var(--primary-glow)]">P</div>}
               />
             </span>
-            <BrandText slot="feed" defaultText="Palrgo" className="hidden text-[17px] font-bold tracking-tight sm:inline" />
+            <BrandText slot="feed" defaultText="Feed" className="hidden text-[17px] font-bold tracking-tight sm:inline" />
           </Link>
           <div className="relative mx-auto hidden w-full max-w-md md:block">
             <div className="flex items-center gap-2 rounded-full bg-muted/60 px-4 py-2 text-sm ring-1 ring-border focus-within:ring-primary/40 transition">

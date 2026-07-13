@@ -52,7 +52,7 @@ export const Route = createFileRoute("/feed/$slug")({
     const rawText = (post.text || "").replace(/\s+/g, " ").trim();
     const title = rawText
       ? `${authorName}: ${rawText.slice(0, 60)}${rawText.length > 60 ? "…" : ""}`
-      : `${authorName} shared a post on Palrgo`;
+      : `${authorName} shared a post`;
     const description = rawText
       ? rawText.slice(0, 160)
       : `See ${authorName}'s latest post .`;

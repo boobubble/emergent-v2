@@ -190,7 +190,7 @@ function BackupPage() {
     const meta = {
       kind: label,
       generated_at: new Date().toISOString(),
-      app: "BooBubble",
+      app: "platform",
       app_version: APP_VERSION,
       parts: parts.map((p) => p.name),
       media_files: mediaFiles?.length ?? 0,
@@ -244,7 +244,7 @@ function BackupPage() {
   // Restore scripts (templates — user customizes DB URL / project ref).
   function restoreScripts(): { name: string; content: string }[] {
     const sh = `#!/usr/bin/env bash
-# BooBubble backup restore (Linux/macOS)
+# Backup restore (Linux/macOS)
 # Usage: DATABASE_URL=postgres://... ./restore.sh
 set -euo pipefail
 : "\${DATABASE_URL:?Set DATABASE_URL to the target Postgres connection string}"
@@ -257,7 +257,7 @@ echo "==> Storage cfg"; psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$HERE/databa
 echo "==> Cron jobs";   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$HERE/database/cron.sql" || true
 echo "Done. Media files under $HERE/media/ must be re-uploaded via the Backup Center Restore button or the Supabase Storage API."
 `;
-    const ps1 = `# BooBubble backup restore (Windows PowerShell)
+    const ps1 = `# Backup restore (Windows PowerShell)
 # Usage: $env:DATABASE_URL="postgres://..."; .\\restore.ps1
 $ErrorActionPreference = "Stop"
 if (-not $env:DATABASE_URL) { throw "Set DATABASE_URL to the target Postgres connection string" }
@@ -503,7 +503,7 @@ sha256sum -c checksums.sha256
         generated_at: new Date().toISOString(),
         backup_version: 3,
         app: {
-          name: "BooBubble",
+          name: "platform",
           version: APP_VERSION,
           environment: (import.meta as any).env?.MODE ?? "production",
           migration_count: (extras?.project_info?.migration_count ?? 0),
@@ -580,7 +580,7 @@ sha256sum -c checksums.sha256
       parts.push({ name: "validation.json", content: JSON.stringify(validation, null, 2) });
 
       // README.txt
-      const readme = `BooBubble Backup Package
+      const readme = `Backup Package
 =========================
 Created:        ${startedAtDate.toISOString()}
 Backup version: 3
@@ -656,7 +656,7 @@ This package is self-describing and requires no manual editing.
       const signatureInit = {
         backup_uuid: backupUuid,
         created_at: startedAtDate.toISOString(),
-        app: "BooBubble",
+        app: "platform",
         app_version: APP_VERSION,
         backup_version: 3,
         generator_version: "backup-center/3.0",
@@ -811,7 +811,7 @@ This package is self-describing and requires no manual editing.
       const restoreManifest = {
         backup_version: "2.0",
         manifest_version: 1,
-        app: "BooBubble",
+        app: "platform",
         app_version: APP_VERSION,
         generated_at: new Date().toISOString(),
         backup_uuid: backupUuid,

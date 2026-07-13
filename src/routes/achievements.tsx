@@ -8,9 +8,9 @@ export const Route = createFileRoute("/achievements")({
   head: () => ({
     meta: [
       { title: "Achievements" },
-      { name: "description", content: "Track your unlocked badges and progress across Palrgo achievements." },
+      { name: "description", content: "Track your unlocked badges and progress across your achievements." },
       { property: "og:title", content: "Achievements" },
-      { property: "og:description", content: "Track your unlocked badges and progress across Palrgo achievements." },
+      { property: "og:description", content: "Track your unlocked badges and progress across your achievements." },
     ],
   }),
   component: AchievementsPage,

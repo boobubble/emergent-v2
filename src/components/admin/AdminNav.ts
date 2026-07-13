@@ -68,7 +68,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/bots",        label: "Chat Bots",   icon: Bot,       keywords: ["fish", "trivia", "commands"] },
       { to: "/admin/bot-events",   label: "Bot Events",  icon: Bot,       keywords: ["fish", "dig", "wine", "event", "schedule", "global", "community", "golden", "cooldown"] },
       { to: "/admin/ai-chatbots",  label: "AI Chat Bots", icon: Sparkles, keywords: ["ai", "openrouter", "gpt", "gemini", "claude", "auto reply", "assistant"] },
-      { to: "/admin/boobubble",    label: "BooBubble Assistant", icon: Sparkles, keywords: ["assistant", "official", "verified", "welcome", "system", "bot", "boobubble"] },
+      { to: "/admin/boobubble",    label: "AI Assistant", icon: Sparkles, keywords: ["assistant", "official", "verified", "welcome", "system", "bot", "boobubble"] },
       { to: "/admin/feedbot",      label: "FeedBot",            icon: Megaphone, keywords: ["feedbot", "bot", "announcements", "system", "feed", "auto", "digest", "summary"] },
       { to: "/admin/calls",        label: "Call Settings", icon: PhoneCall, keywords: ["calls", "voice", "video", "audio", "livekit", "agora", "group call", "trio", "billing", "coins", "provider"] },
       { to: "/admin/voice-notes",  label: "Voice Notes",   icon: PhoneCall, keywords: ["voice", "note", "mic", "recording", "audio", "lobby", "dm", "trio", "duration"] },
