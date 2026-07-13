@@ -32,8 +32,8 @@ import {
 export const Route = createFileRoute("/wallet")({
   head: () => ({
     meta: [
-      { title: "Wallet & Coins Store · BooBubble" },
-      { name: "description", content: "Manage your BooBubble coins: buy, earn, spend, and track every transaction." },
+      { title: "Wallet & Coins Store" },
+      { name: "description", content: "Manage your coins: buy, earn, spend, and track every transaction." },
     ],
   }),
   component: WalletPage,
@@ -149,7 +149,7 @@ function WalletPage() {
           <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
             <Coins className="h-7 w-7 text-yellow-500" /> Wallet & Coins Store
           </h1>
-          <p className="text-sm text-muted-foreground">Buy, earn and spend BooBubble coins.</p>
+          <p className="text-sm text-muted-foreground">Buy, earn and spend platform coins.</p>
         </div>
         {stats?.wallet_frozen && (
           <Badge variant="destructive" className="gap-1"><Snowflake className="h-3 w-3" /> Frozen</Badge>

@@ -30,8 +30,8 @@ export const Route = createFileRoute("/live-arena")({
   head: () => ({
     meta: [
       { title: "Live Arena — Watch Every Live Competition in Real Time" },
-      { name: "description", content: "A realtime dashboard of every live BooBubble competition — votes, leaders, and battles as they happen." },
-      { property: "og:title", content: "Live Arena — BooBubble" },
+      { name: "description", content: "A realtime dashboard of every live competition — votes, leaders, and battles as they happen." },
+      { property: "og:title", content: "Live Arena" },
       { property: "og:description", content: "Every live competition, all in one premium realtime arena." },
       { property: "og:type", content: "website" },
     ],
@@ -187,7 +187,7 @@ function LiveArenaPage() {
                   <span className="h-1 w-1 animate-pulse rounded-full bg-rose-400" /> REALTIME
                 </span>
               </h1>
-              <p className="truncate text-[11px] text-slate-400">Watch every live competition across BooBubble in one place</p>
+              <p className="truncate text-[11px] text-slate-400">Watch every live competition across the platform in one place</p>
             </div>
             <div className="hidden lg:flex items-center gap-1.5">
               <StatPill icon={<Radio className="h-3 w-3" />} label="Live Now" value={liveCount} tint="rose" />

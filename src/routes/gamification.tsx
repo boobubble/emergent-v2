@@ -7,7 +7,7 @@ import { getMyGamification, claimSeasonTier } from "@/lib/gamification-engine.fu
 export const Route = createFileRoute("/gamification")({
   head: () => ({
     meta: [
-      { title: "Achievements & Quests — BooBubble" },
+      { title: "Achievements & Quests" },
       { name: "description", content: "Track your achievements, daily quests, milestones and season pass progress." },
     ],
   }),

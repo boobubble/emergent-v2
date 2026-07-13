@@ -37,10 +37,10 @@ export const Route = createFileRoute("/feed/$slug")({
     if (!loaderData?.headData) {
       return {
         meta: [
-          { title: "Post — Palrgo" },
-          { name: "description", content: "View this post on Palrgo." },
-          { property: "og:title", content: "Post — Palrgo" },
-          { property: "og:description", content: "View this post on Palrgo." },
+          { title: "Post" },
+          { name: "description", content: "View this post ." },
+          { property: "og:title", content: "Post" },
+          { property: "og:description", content: "View this post ." },
           { property: "og:url", content: url },
           { property: "og:type", content: "article" },
           { name: "twitter:card", content: "summary_large_image" },
@@ -55,7 +55,7 @@ export const Route = createFileRoute("/feed/$slug")({
       : `${authorName} shared a post on Palrgo`;
     const description = rawText
       ? rawText.slice(0, 160)
-      : `See ${authorName}'s latest post on Palrgo.`;
+      : `See ${authorName}'s latest post .`;
     const image = post.media_urls && post.media_urls.length > 0 ? post.media_urls[0] : undefined;
     const meta: Array<Record<string, string>> = [
       { title },

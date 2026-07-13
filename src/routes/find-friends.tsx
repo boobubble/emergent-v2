@@ -10,9 +10,9 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/find-friends")({
   head: () => ({
     meta: [
-      { title: "Find Friends — Palrgo" },
-      { name: "description", content: "Discover people, accept requests, and grow your network on Palrgo." },
-      { property: "og:title", content: "Find Friends — Palrgo" },
+      { title: "Find Friends" },
+      { name: "description", content: "Discover people, accept requests, and grow your network ." },
+      { property: "og:title", content: "Find Friends" },
       { property: "og:description", content: "Suggestions, requests, search and mutuals — all in one place." },
     ],
   }),

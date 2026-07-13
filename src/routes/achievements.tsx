@@ -7,9 +7,9 @@ import { BADGES, TIER_COLOR } from "@/lib/achievements";
 export const Route = createFileRoute("/achievements")({
   head: () => ({
     meta: [
-      { title: "Achievements — Palrgo" },
+      { title: "Achievements" },
       { name: "description", content: "Track your unlocked badges and progress across Palrgo achievements." },
-      { property: "og:title", content: "Achievements — Palrgo" },
+      { property: "og:title", content: "Achievements" },
       { property: "og:description", content: "Track your unlocked badges and progress across Palrgo achievements." },
     ],
   }),

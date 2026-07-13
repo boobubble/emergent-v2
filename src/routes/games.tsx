@@ -48,7 +48,7 @@ export const Route = createFileRoute("/games")({
     meta: [
       { title: "Games — Realtime Ludo & more" },
       { name: "description", content: "Play realtime multiplayer Ludo with friends. Earn XP, coins, and climb the leaderboard." },
-      { property: "og:title", content: "Games — Palrgo" },
+      { property: "og:title", content: "Games" },
       { property: "og:description", content: "Realtime multiplayer Ludo. Quick match, invite friends, earn rewards." },
     ],
   }),

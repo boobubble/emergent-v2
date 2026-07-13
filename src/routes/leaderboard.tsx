@@ -10,10 +10,10 @@ import { BADGE_MAP } from "@/lib/achievements";
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
     meta: [
-      { title: "Leaderboard — Palrgo" },
-      { name: "description", content: "Top members by XP and daily streaks on Palrgo." },
-      { property: "og:title", content: "Leaderboard — Palrgo" },
-      { property: "og:description", content: "Top members by XP and daily streaks on Palrgo." },
+      { title: "Leaderboard" },
+      { name: "description", content: "Top members by XP and daily streaks ." },
+      { property: "og:title", content: "Leaderboard" },
+      { property: "og:description", content: "Top members by XP and daily streaks ." },
     ],
   }),
   component: LeaderboardPage,

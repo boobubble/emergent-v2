@@ -231,7 +231,7 @@ function seed(name = "user0000"): State {
   SEED_ROOMS.forEach(r => (rooms[r.id] = r));
   const messages: Record<string, Message[]> = {};
   rooms.lobby && (messages.lobby = [
-    { id: "seed-welcome", channelId: "lobby", authorId: "bot-gamebot", text: `🎉 Welcome to Palrgo, @${name}! Glad to have you here. Type !help to see commands, customize your profile from the account page, and jump into a game anytime.`, ts: SEED_TIME - 60000 },
+    { id: "seed-welcome", channelId: "lobby", authorId: "bot-gamebot", text: `🎉 Welcome, @${name}! Glad to have you here. Type !help to see commands, customize your profile from the account page, and jump into a game anytime.`, ts: SEED_TIME - 60000 },
     { id: "seed-nova", channelId: "lobby", authorId: "bot-nova", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
     { id: "seed-ryze", channelId: "lobby", authorId: "bot-ryze", text: "anyone up for trivia?", ts: SEED_TIME - 20000 },
   ]);
@@ -260,7 +260,7 @@ function ensureWelcome(state: State, name: string): State {
   const hasDmWelcome = dmMsgs.some(m => m.id === "seed-dm-welcome");
   if (hasWelcome && hasDmWelcome) return state;
   const welcomeLobby: Message[] = hasWelcome ? [] : [
-    { id: "seed-welcome", channelId: "lobby", authorId: "bot-gamebot", text: `🎉 Welcome to Palrgo, @${name}! Glad to have you here. Type !help to see commands, customize your profile from the account page, and jump into a game anytime.`, ts: SEED_TIME - 60000 },
+    { id: "seed-welcome", channelId: "lobby", authorId: "bot-gamebot", text: `🎉 Welcome, @${name}! Glad to have you here. Type !help to see commands, customize your profile from the account page, and jump into a game anytime.`, ts: SEED_TIME - 60000 },
     { id: "seed-nova", channelId: "lobby", authorId: "bot-nova", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
   ];
   const welcomeDm: Message[] = hasDmWelcome ? [] : [

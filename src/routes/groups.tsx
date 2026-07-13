@@ -5,10 +5,10 @@ import { ComingSoon } from "./reels";
 export const Route = createFileRoute("/groups")({
   head: () => ({
     meta: [
-      { title: "Groups — Palrgo" },
-      { name: "description", content: "Join groups around your interests on Palrgo." },
-      { property: "og:title", content: "Groups — Palrgo" },
-      { property: "og:description", content: "Join groups around your interests on Palrgo." },
+      { title: "Groups" },
+      { name: "description", content: "Join groups around your interests ." },
+      { property: "og:title", content: "Groups" },
+      { property: "og:description", content: "Join groups around your interests ." },
     ],
   }),
   component: () => <ComingSoon icon={Users2} title="Groups" tagline="Hang out with people who share your interests." />,

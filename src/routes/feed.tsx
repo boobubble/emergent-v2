@@ -65,9 +65,9 @@ const PanelFallback = () => (
 export const Route = createFileRoute("/feed")({
   head: () => ({
     meta: [
-      { title: "Feed — Palrgo" },
-      { name: "description", content: "Share posts, react, comment, and connect with friends on Palrgo." },
-      { property: "og:title", content: "Feed — Palrgo" },
+      { title: "Feed" },
+      { name: "description", content: "Share posts, react, comment, and connect with friends ." },
+      { property: "og:title", content: "Feed" },
       { property: "og:description", content: "Lightweight social feed for the Palrgo community." },
     ],
   }),
