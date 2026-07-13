@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { Zap, Radio, Megaphone, MessageSquare, Trophy, Shield, Sparkles, Activity } from "lucide-react";
+import { useMemo } from "react";
+import { Zap, Radio, Shield, Sparkles } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import heroBg from "@/assets/gaming-arena-hero.jpg";
 
 /**
- * Gaming-Arena-only visual overlay: hero banner, announcement pill, and
- * stat strip. Mounts above the message list — never touches chat logic,
- * message rendering, or backend state. Purely presentational.
+ * Gaming-Arena-only visual overlay: hero banner and live event ticker.
+ * Mounts above the message list — never touches chat logic, message
+ * rendering, or backend state. Purely presentational.
  *
  * Note: online count is derived from room membership so we don't open a
  * second presence subscription to the same realtime channel the Sidebar
@@ -18,7 +18,6 @@ export function GamingArenaHero({ channelId }: { channelId: string }) {
   const room = state.rooms[channelId];
   const online = Math.max(1, room?.members?.length ?? 1);
 
-
   const label = channelLabel(channelId);
   const msgs = channelMessages(channelId);
 
@@ -28,30 +27,6 @@ export function GamingArenaHero({ channelId }: { channelId: string }) {
     start.setHours(0, 0, 0, 0);
     return msgs.filter((m) => m.ts >= start.getTime() && m.kind !== "system").length;
   }, [msgs]);
-
-  // Top chatter: most messages today
-  const topChatter = useMemo(() => {
-    const counts = new Map<string, { name: string; n: number }>();
-    for (const m of msgs) {
-      if (m.kind === "system") continue;
-      const name = state.users[m.authorId]?.name ?? "—";
-      const prev = counts.get(m.authorId) ?? { name, n: 0 };
-      counts.set(m.authorId, { name, n: prev.n + 1 });
-    }
-    let best: { name: string; n: number } | null = null;
-    for (const v of counts.values()) if (!best || v.n > best.n) best = v;
-    return best?.name ?? "—";
-  }, [msgs, state.users]);
-
-
-  const roomLevel = 1 + Math.floor(Math.log2(Math.max(2, messagesToday + online)));
-  const activityScore = Math.round(online * 8 + messagesToday * 2);
-
-  const [beat, setBeat] = useState(0);
-  useEffect(() => {
-    const t = window.setInterval(() => setBeat((b) => b + 1), 1600);
-    return () => window.clearInterval(t);
-  }, []);
 
   const roomIdShort = (channelId || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6) || "GA245";
 
@@ -127,76 +102,12 @@ export function GamingArenaHero({ channelId }: { channelId: string }) {
         </div>
       </div>
 
-      {/* Announcement pill */}
-      <div className="flex items-center gap-2 rounded-xl border border-primary/25 bg-card/60 px-3 py-2 backdrop-blur">
-        <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500/90 to-orange-500/90 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white shadow">
-          <Megaphone className="h-3 w-3" /> Announcement
-        </span>
-        <span className="truncate text-[12px] text-foreground/90">
-          Welcome to {label}! Follow the rules and have fun.
-        </span>
-      </div>
-
-      {/* Stat strip */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-        <StatCard icon={<MessageSquare className="h-4 w-4" />} label="Messages Today" value={messagesToday.toLocaleString()} tint="cyan" />
-        <StatCard icon={<Zap className="h-4 w-4" />} label="XP Boost" value="2.0x" hint="Active" tint="violet" pulse />
-        <StatCard icon={<Trophy className="h-4 w-4" />} label="Top Chatter" value={topChatter} tint="pink" small />
-        <StatCard icon={<Shield className="h-4 w-4" />} label="Room Level" value={`Lv. ${roomLevel}`} tint="amber" />
-        <StatCard icon={<Activity className="h-4 w-4" />} label="Activity Score" value={activityScore.toLocaleString()} tint="lime" beat={beat} />
-      </div>
-
       {/* Radio strip — subtle */}
       <div className="sr-only" aria-live="polite">
         Gaming Arena • {online} online • {messagesToday} messages today
       </div>
       {/* keep Radio icon warning silenced */}
       <Radio className="hidden" />
-    </div>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-  hint,
-  tint = "violet",
-  small,
-  pulse,
-  beat: _beat,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  hint?: string;
-  tint?: "violet" | "cyan" | "pink" | "amber" | "lime";
-  small?: boolean;
-  pulse?: boolean;
-  beat?: number;
-}) {
-  const tintMap: Record<string, string> = {
-    violet: "from-fuchsia-500/25 to-violet-500/10 text-fuchsia-200",
-    cyan: "from-cyan-500/25 to-sky-500/10 text-cyan-200",
-    pink: "from-pink-500/25 to-rose-500/10 text-pink-200",
-    amber: "from-amber-500/25 to-orange-500/10 text-amber-200",
-    lime: "from-lime-400/25 to-emerald-500/10 text-lime-200",
-  };
-  return (
-    <div className="group relative overflow-hidden rounded-xl border border-primary/20 bg-card/70 p-2.5 backdrop-blur transition hover:-translate-y-0.5 hover:border-primary/50">
-      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${tintMap[tint]} opacity-70`} />
-      <div className="relative flex items-center gap-2">
-        <div className={`grid h-8 w-8 place-items-center rounded-lg bg-background/50 ring-1 ring-primary/25 ${pulse ? "animate-pulse" : ""}`}>
-          {icon}
-        </div>
-        <div className="min-w-0 flex-1 leading-tight">
-          <div className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-          <div className={`truncate font-black text-foreground ${small ? "text-sm" : "text-base"}`}>
-            {value}
-            {hint && <span className="ml-1 text-[10px] font-semibold text-primary">{hint}</span>}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
