@@ -348,25 +348,26 @@ function CompetitionDetail() {
         )}
 
         {c.rules && (
-          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm backdrop-blur">
-            <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-300">
-              <Sparkles className="h-3.5 w-3.5" /> Match Rules
+          <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-xs backdrop-blur">
+            <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-amber-300">
+              <Sparkles className="h-3 w-3" /> Match Rules
             </div>
             <p className="whitespace-pre-wrap text-white/80">{c.rules}</p>
           </div>
         )}
 
         {userId && enableJoin && (c.status === "upcoming" || c.status === "live") && (
-          <div className="mt-4">
+          <div className="mt-3">
             {iJoined ? (
-              <Button variant="outline" onClick={() => leaveM.mutate()} disabled={leaveM.isPending}>
+              <Button size="sm" variant="outline" onClick={() => leaveM.mutate()} disabled={leaveM.isPending}>
                 Leave Arena
               </Button>
             ) : (
               <Button
+                size="sm"
                 onClick={() => joinM.mutate()}
                 disabled={joinM.isPending}
-                className="bg-gradient-to-r from-fuchsia-500 to-rose-500 font-bold text-white hover:from-fuchsia-400 hover:to-rose-400"
+                className="bg-gradient-to-r from-fuchsia-500 to-rose-500 text-sm font-bold text-white hover:from-fuchsia-400 hover:to-rose-400"
               >
                 ⚔️ Enter the Arena
               </Button>
