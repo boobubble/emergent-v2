@@ -648,7 +648,11 @@ function CardLiveSupporters({ competitionId }: { competitionId: string }) {
           {strip.map((v) => (
             <li key={`${v.voter_id}-${v.voted_at}-r`} className="flex items-center justify-between gap-1 text-[8.5px]">
               <span className="flex min-w-0 items-center gap-0.5">
-                <span className="truncate font-bold text-slate-200">{v.username ?? "Supporter"}</span>
+                <span className="truncate">
+                  <span className="font-bold text-slate-200">{v.username ?? "Supporter"}</span>
+                  <span className="text-slate-500"> voted for </span>
+                  <span className="font-semibold text-violet-300">{v.competitor_name ?? "nominee"}</span>
+                </span>
                 {v.is_verified && <BadgeCheck className="h-2 w-2 shrink-0 text-sky-400" />}
               </span>
               <span className="shrink-0 text-[8px] font-semibold text-slate-500">{timeAgoShort(v.voted_at)}</span>
