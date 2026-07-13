@@ -67,7 +67,7 @@ export const Route = createFileRoute("/api/public/hooks/feedbot-dispatch")({
               if (recentSet.has(key)) continue;
               rows.push({
                 channel_id: chatroomId,
-                author_id: settings.bot_user_id,
+                author_id: ev.persona_bot_id ?? settings.bot_user_id,
                 text,
                 kind: "text",
                 attachment: attachmentUrl
