@@ -435,17 +435,17 @@ function CompetitionDetail() {
         )}
 
         {/* Nominees */}
-        <section className="mt-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-bold">
-              <Crown className="h-5 w-5 text-amber-400" /> Nominees
-              <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+        <section className="mt-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 text-base font-bold">
+              <Crown className="h-4 w-4 text-amber-400" /> Nominees
+              <span className="ml-1 rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                 {competitors.length > 0 ? competitors.length : approvedParticipants.length}
               </span>
             </h2>
             {isAdmin && (
-              <Button size="sm" onClick={() => setEditing(emptyCompetitor(c.id, competitors.length))}>
-                <Plus className="mr-1 h-4 w-4" /> Add nominee
+              <Button size="sm" className="h-8 text-xs" onClick={() => setEditing(emptyCompetitor(c.id, competitors.length))}>
+                <Plus className="mr-1 h-3.5 w-3.5" /> Add nominee
               </Button>
             )}
           </div>
