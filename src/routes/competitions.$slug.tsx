@@ -26,9 +26,15 @@ import { BattleArena } from "@/components/competitions/BattleArena";
 import { DynamicCompetitionLayout, resolveLayout, type CompetitionLayoutStyle } from "@/components/competitions/DynamicCompetitionLayout";
 import { CompetitorEditorDialog, emptyCompetitor, type CompetitorDraft } from "@/components/competitions/CompetitorEditorDialog";
 import { CompetitionCard, type CompetitionSummary } from "@/components/competitions/CompetitionCard";
+import { TournamentProgress } from "@/components/competitions/TournamentProgress";
+import { RecentSupporters } from "@/components/competitions/RecentSupporters";
+import { BattleActivityFeed } from "@/components/competitions/BattleActivityFeed";
+import { AudienceCounter } from "@/components/competitions/AudienceCounter";
+import { FloatingReactions } from "@/components/competitions/FloatingReactions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 
 const SITE = "https://holo-chat-quest.lovable.app";
 
