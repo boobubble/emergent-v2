@@ -215,8 +215,21 @@ function CompetitionDetail() {
       qc.setQueriesData({ queryKey: ["my-competitor-vote", competitionId] }, { competitorId });
       return { prev };
     },
-    onSuccess: () => {
+    onSuccess: (_res, competitorId) => {
       toast.success("🔥 Vote counted");
+      // Broadcast to peers viewing this competition — powers RecentSupporters
+      // refetch, BattleActivityFeed line, and FloatingReactions burst.
+      if (competitionId) {
+        const target = competitors.find((cc) => cc.id === competitorId)?.name ?? null;
+        supabase
+          .channel(`comp-broadcast:${competitionId}`)
+          .send({
+            type: "broadcast",
+            event: "vote",
+            payload: { voter: user?.user_metadata?.username ?? "Someone", target },
+          })
+          .catch(() => {});
+      }
       // Confetti burst
       const fire = (particleRatio: number, opts: confetti.Options) => {
         confetti({
@@ -225,10 +238,11 @@ function CompetitionDetail() {
           ...opts,
         });
       };
-      fire(0.25, { spread: 26, startVelocity: 55, colors: ["#38bdf8", "#f43f5e", "#fbbf24"] });
-      fire(0.2, { spread: 60, colors: ["#38bdf8", "#f43f5e", "#fbbf24"] });
-      fire(0.35, { spread: 100, decay: 0.91, scalar: 0.9, colors: ["#38bdf8", "#f43f5e", "#fbbf24"] });
+      fire(0.25, { spread: 26, startVelocity: 55, colors: ["#a855f7", "#f43f5e", "#fbbf24"] });
+      fire(0.2, { spread: 60, colors: ["#a855f7", "#f43f5e", "#fbbf24"] });
+      fire(0.35, { spread: 100, decay: 0.91, scalar: 0.9, colors: ["#a855f7", "#f43f5e", "#fbbf24"] });
     },
+
     onError: (e: any, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["competition-slug", slug], ctx.prev);
       toast.error(e?.message ?? "Failed to vote");
