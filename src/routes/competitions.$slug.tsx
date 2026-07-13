@@ -26,9 +26,15 @@ import { BattleArena } from "@/components/competitions/BattleArena";
 import { DynamicCompetitionLayout, resolveLayout, type CompetitionLayoutStyle } from "@/components/competitions/DynamicCompetitionLayout";
 import { CompetitorEditorDialog, emptyCompetitor, type CompetitorDraft } from "@/components/competitions/CompetitorEditorDialog";
 import { CompetitionCard, type CompetitionSummary } from "@/components/competitions/CompetitionCard";
+import { TournamentProgress } from "@/components/competitions/TournamentProgress";
+import { RecentSupporters } from "@/components/competitions/RecentSupporters";
+import { BattleActivityFeed } from "@/components/competitions/BattleActivityFeed";
+import { AudienceCounter } from "@/components/competitions/AudienceCounter";
+import { FloatingReactions } from "@/components/competitions/FloatingReactions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 
 const SITE = "https://holo-chat-quest.lovable.app";
 
@@ -209,8 +215,21 @@ function CompetitionDetail() {
       qc.setQueriesData({ queryKey: ["my-competitor-vote", competitionId] }, { competitorId });
       return { prev };
     },
-    onSuccess: () => {
+    onSuccess: (_res, competitorId) => {
       toast.success("🔥 Vote counted");
+      // Broadcast to peers viewing this competition — powers RecentSupporters
+      // refetch, BattleActivityFeed line, and FloatingReactions burst.
+      if (competitionId) {
+        const target = competitors.find((cc) => cc.id === competitorId)?.name ?? null;
+        supabase
+          .channel(`comp-broadcast:${competitionId}`)
+          .send({
+            type: "broadcast",
+            event: "vote",
+            payload: { voter: (user as any)?.username ?? "Someone", target },
+          })
+          .catch(() => {});
+      }
       // Confetti burst
       const fire = (particleRatio: number, opts: confetti.Options) => {
         confetti({
@@ -219,10 +238,11 @@ function CompetitionDetail() {
           ...opts,
         });
       };
-      fire(0.25, { spread: 26, startVelocity: 55, colors: ["#38bdf8", "#f43f5e", "#fbbf24"] });
-      fire(0.2, { spread: 60, colors: ["#38bdf8", "#f43f5e", "#fbbf24"] });
-      fire(0.35, { spread: 100, decay: 0.91, scalar: 0.9, colors: ["#38bdf8", "#f43f5e", "#fbbf24"] });
+      fire(0.25, { spread: 26, startVelocity: 55, colors: ["#a855f7", "#f43f5e", "#fbbf24"] });
+      fire(0.2, { spread: 60, colors: ["#a855f7", "#f43f5e", "#fbbf24"] });
+      fire(0.35, { spread: 100, decay: 0.91, scalar: 0.9, colors: ["#a855f7", "#f43f5e", "#fbbf24"] });
     },
+
     onError: (e: any, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["competition-slug", slug], ctx.prev);
       toast.error(e?.message ?? "Failed to vote");
@@ -296,8 +316,18 @@ function CompetitionDetail() {
   const resolvedLayout = resolveLayout(layoutStyle, eligibleCount);
   const showBattleArenaHero = resolvedLayout === "vs_battle";
 
+  // Premium battlefield derived state
+  const sortedCompetitors = [...competitors]
+    .filter((cc) => !cc.is_hidden && !cc.is_disqualified)
+    .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
+  const topLeaderName = sortedCompetitors[0]?.name ?? null;
+  const totalCompetitorVotes = sortedCompetitors.reduce((s, cc) => s + (cc.vote_count ?? 0), 0);
+  const showPremiumSections = c.status !== "draft";
+
   return (
     <div className="min-h-screen bg-[#050308] pb-24 text-foreground">
+      {showPremiumSections && <FloatingReactions competitionId={c.id} />}
+
       {/* Premium Battle Arena hero — only for VS Battle layout */}
       {showBattleArenaHero && (
         <BattleArena
@@ -330,7 +360,9 @@ function CompetitionDetail() {
               <Badge variant="outline" className="border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-200 text-[9px] uppercase tracking-wider">
                 {resolvedLayout === "podium" ? "Podium" : resolvedLayout === "tournament" ? "Tournament" : "Leaderboard"}
               </Badge>
+              {showPremiumSections && <AudienceCounter competitionId={c.id} />}
             </div>
+
             <h1 className="mt-1.5 text-xl font-black tracking-tight sm:text-3xl">{c.name}</h1>
             {c.status !== "completed" && (
               <div className="mt-1.5 flex items-center gap-2 text-[11px] text-white/70">
@@ -375,10 +407,23 @@ function CompetitionDetail() {
           </div>
         )}
 
-
-
+        {/* Premium battlefield sections: tournament progress, recent supporters, live activity feed */}
+        {showPremiumSections && (
+          <div className="mt-4 space-y-3">
+            <TournamentProgress startAt={c.start_at} endAt={c.end_at} status={c.status} />
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+              <RecentSupporters competitionId={c.id} />
+              <BattleActivityFeed
+                competitionId={c.id}
+                topLeaderName={topLeaderName}
+                totalVotes={totalCompetitorVotes}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Winner section */}
+
         {c.status === "completed" && awards.length > 0 && (
           <section className="mt-6 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-rose-500/5 p-6 backdrop-blur-xl">
             <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">

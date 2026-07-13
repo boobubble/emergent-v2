@@ -5750,6 +5750,19 @@ export type Database = {
           key: string
         }[]
       }
+      list_recent_competition_voters: {
+        Args: { _competition_id: string; _limit?: number }
+        Returns: {
+          avatar_color: string
+          avatar_url: string
+          competitor_id: string
+          competitor_name: string
+          is_verified: boolean
+          username: string
+          voted_at: string
+          voter_id: string
+        }[]
+      }
       my_active_plan: {
         Args: never
         Returns: {
