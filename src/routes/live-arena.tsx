@@ -272,7 +272,7 @@ function LiveArenaPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1600px] px-4 py-4">
+      <main className="mx-auto max-w-[1600px] px-3 py-3">
         {filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] py-16 text-center text-sm text-slate-400">
             No competitions match your filters right now.
