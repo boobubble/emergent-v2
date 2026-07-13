@@ -95,6 +95,9 @@ export function ProfilePanel({ username, onBack }: { username: string; onBack: (
         )}
       </section>
 
+      {!user.isBot && <UserCompetitionShowcase username={user.name} />}
+
+
       <section>
         <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Rooms ({sharedRooms.length})</h2>
         <div className="grid gap-2">
