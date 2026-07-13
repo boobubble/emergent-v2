@@ -226,7 +226,7 @@ function CompetitionDetail() {
           .send({
             type: "broadcast",
             event: "vote",
-            payload: { voter: user?.user_metadata?.username ?? "Someone", target },
+            payload: { voter: (user as any)?.username ?? "Someone", target },
           })
           .catch(() => {});
       }
