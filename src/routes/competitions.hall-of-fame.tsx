@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo } from "react";
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/competitions/hall-of-fame")({
   component: HallOfFamePage,
 });
 
-const placeStyle: Record<number, { icon: JSX.Element; color: string; label: string }> = {
+const placeStyle: Record<number, { icon: React.ReactNode; color: string; label: string }> = {
   1: { icon: <Crown className="h-4 w-4" />, color: "from-amber-400 to-yellow-500", label: "Champion" },
   2: { icon: <Medal className="h-4 w-4" />, color: "from-slate-300 to-slate-400", label: "Runner Up" },
   3: { icon: <Award className="h-4 w-4" />, color: "from-orange-400 to-amber-600", label: "Third Place" },

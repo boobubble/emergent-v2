@@ -49,6 +49,7 @@ import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as CompetitionsLeaderboardRouteImport } from './routes/competitions.leaderboard'
+import { Route as CompetitionsHallOfFameRouteImport } from './routes/competitions.hall-of-fame'
 import { Route as CompetitionsSlugRouteImport } from './routes/competitions.$slug'
 import { Route as BroadcasterWidgetsRouteImport } from './routes/broadcaster.widgets'
 import { Route as BroadcasterScheduleRouteImport } from './routes/broadcaster.schedule'
@@ -344,6 +345,11 @@ const FeedSlugRoute = FeedSlugRouteImport.update({
 const CompetitionsLeaderboardRoute = CompetitionsLeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => CompetitionsRoute,
+} as any)
+const CompetitionsHallOfFameRoute = CompetitionsHallOfFameRouteImport.update({
+  id: '/hall-of-fame',
+  path: '/hall-of-fame',
   getParentRoute: () => CompetitionsRoute,
 } as any)
 const CompetitionsSlugRoute = CompetitionsSlugRouteImport.update({
@@ -950,6 +956,7 @@ export interface FileRoutesByFullPath {
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
   '/competitions/$slug': typeof CompetitionsSlugRoute
+  '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
@@ -1085,6 +1092,7 @@ export interface FileRoutesByTo {
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
   '/competitions/$slug': typeof CompetitionsSlugRoute
+  '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
@@ -1224,6 +1232,7 @@ export interface FileRoutesById {
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
   '/competitions/$slug': typeof CompetitionsSlugRoute
+  '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/p/$slug': typeof PSlugRoute
@@ -1364,6 +1373,7 @@ export interface FileRouteTypes {
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
     | '/competitions/$slug'
+    | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
@@ -1499,6 +1509,7 @@ export interface FileRouteTypes {
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
     | '/competitions/$slug'
+    | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
@@ -1637,6 +1648,7 @@ export interface FileRouteTypes {
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
     | '/competitions/$slug'
+    | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/p/$slug'
@@ -1994,6 +2006,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/competitions/leaderboard'
       preLoaderRoute: typeof CompetitionsLeaderboardRouteImport
+      parentRoute: typeof CompetitionsRoute
+    }
+    '/competitions/hall-of-fame': {
+      id: '/competitions/hall-of-fame'
+      path: '/hall-of-fame'
+      fullPath: '/competitions/hall-of-fame'
+      preLoaderRoute: typeof CompetitionsHallOfFameRouteImport
       parentRoute: typeof CompetitionsRoute
     }
     '/competitions/$slug': {
@@ -2867,12 +2886,14 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
 
 interface CompetitionsRouteChildren {
   CompetitionsSlugRoute: typeof CompetitionsSlugRoute
+  CompetitionsHallOfFameRoute: typeof CompetitionsHallOfFameRoute
   CompetitionsLeaderboardRoute: typeof CompetitionsLeaderboardRoute
   CompetitionsIndexRoute: typeof CompetitionsIndexRoute
 }
 
 const CompetitionsRouteChildren: CompetitionsRouteChildren = {
   CompetitionsSlugRoute: CompetitionsSlugRoute,
+  CompetitionsHallOfFameRoute: CompetitionsHallOfFameRoute,
   CompetitionsLeaderboardRoute: CompetitionsLeaderboardRoute,
   CompetitionsIndexRoute: CompetitionsIndexRoute,
 }
