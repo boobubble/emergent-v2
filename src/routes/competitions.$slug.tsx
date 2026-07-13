@@ -448,7 +448,7 @@ function CompetitionDetail() {
               {showPremiumSections && <AudienceCounter competitionId={c.id} />}
             </div>
 
-            <h1 className="mt-1.5 text-xl font-black tracking-tight sm:text-3xl">{c.name}</h1>
+            <h1 className="mt-1.5 text-xl font-black tracking-tight text-white sm:text-3xl">{c.name}</h1>
             {c.status !== "completed" && (
               <div className="mt-1.5 flex items-center gap-2 text-[11px] text-white/70">
                 <span>{c.status === "live" ? "Ends in" : "Starts in"}</span>
