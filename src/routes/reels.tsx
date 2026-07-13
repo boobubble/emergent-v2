@@ -4,10 +4,10 @@ import { ArrowLeft, Film, Sparkles } from "lucide-react";
 export const Route = createFileRoute("/reels")({
   head: () => ({
     meta: [
-      { title: "Reels — Palrgo" },
-      { name: "description", content: "Short videos from the Palrgo community." },
-      { property: "og:title", content: "Reels — Palrgo" },
-      { property: "og:description", content: "Short videos from the Palrgo community." },
+      { title: "Reels" },
+      { name: "description", content: "Short videos from the community." },
+      { property: "og:title", content: "Reels" },
+      { property: "og:description", content: "Short videos from the community." },
     ],
   }),
   component: ReelsPage,

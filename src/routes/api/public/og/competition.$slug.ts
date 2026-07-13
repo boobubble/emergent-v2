@@ -92,7 +92,7 @@ function render(data: CardData): string {
   <text x="80" y="230" fill="#fff" font-family="Inter, system-ui, sans-serif" font-size="64" font-weight="800">${esc(truncate(data.title, 34))}</text>
   <text x="80" y="290" fill="#cbd5e1" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="500">${esc(truncate(data.subtitle, 60))}</text>
   ${statBoxes}
-  <text x="${W - 80}" y="${H - 40}" text-anchor="end" fill="rgba(255,255,255,0.6)" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="600">BooBubble</text>
+  <text x="${W - 80}" y="${H - 40}" text-anchor="end" fill="rgba(255,255,255,0.6)" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="600">Community</text>
 </svg>`;
 }
 

@@ -186,7 +186,7 @@ function SetupWizardPage() {
               <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
               <CardTitle className="mt-2 text-2xl">Installation Completed Successfully</CardTitle>
               <CardDescription>
-                Your BooBubble Community has been installed successfully.
+                Your community has been installed successfully.
                 <br />
                 Let's finish the final setup.
               </CardDescription>
@@ -269,7 +269,7 @@ function SetupWizardPage() {
                     upload={(f) => uploadAsset("hero", f)}
                   />
                   <p className="text-[11px] text-muted-foreground">
-                    Leave any field empty to use the default BooBubble branding.
+                    Leave any field empty to use the platform defaults.
                   </p>
                 </div>
 
@@ -402,7 +402,7 @@ function SetupWizardPage() {
                 <Rocket className="h-7 w-7" />
               </div>
               <CardTitle className="mt-2 text-2xl">🎉 Community Ready</CardTitle>
-              <CardDescription>Welcome to BooBubble! Your Super Admin account has been created successfully.</CardDescription>
+              <CardDescription>Welcome! Your Super Admin account has been created successfully.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-2 rounded-md border bg-muted/30 p-4 text-sm sm:grid-cols-2">

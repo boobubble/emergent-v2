@@ -136,7 +136,7 @@ export function CommunityHub({ open, onOpenChange, isMobile }: Props) {
           )}
 
           {/* Boobubble Assistant */}
-          <HubCard icon={<Bot className="h-4 w-4" />} title="BooBubble Assistant" tone="from-violet-500/25 via-fuchsia-500/10">
+          <HubCard icon={<Bot className="h-4 w-4" />} title="AI Assistant" tone="from-violet-500/25 via-fuchsia-500/10">
             <p className="text-xs text-muted-foreground">Ask AI, get community help, quick tips.</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <Link to="/feed" className="hub-chip"><Sparkles className="h-3 w-3" /> Ask AI</Link>

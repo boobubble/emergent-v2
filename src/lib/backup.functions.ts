@@ -289,7 +289,7 @@ export const dumpDatabaseSql = createServerFn({ method: "POST" })
     // 3) Emit INSERT statements per table, wrapped so triggers/RLS don't fire.
     const PAGE = 1000;
     let dataSql = "-- ============================================\n";
-    dataSql += "-- BooBubble Data Dump\n";
+    dataSql += "-- Platform Data Dump\n";
     dataSql += `-- Generated: ${new Date().toISOString()}\n`;
     dataSql += "-- ============================================\n\n";
     dataSql += "SET session_replication_role = replica;\n\n";
@@ -407,7 +407,7 @@ export const exportBackupExtras = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
 
     // storage.sql — bucket definitions (idempotent upserts)
-    let storageSql = `-- BooBubble Storage Dump\n-- Generated: ${now}\n\n`;
+    let storageSql = `-- Platform Storage Dump\n-- Generated: ${now}\n\n`;
     for (const b of x.storage_buckets ?? []) {
       storageSql +=
         `INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types, avif_autodetection, owner)\n` +
@@ -421,7 +421,7 @@ export const exportBackupExtras = createServerFn({ method: "POST" })
     }
 
     // policies.sql — every RLS policy across public + storage
-    let policiesSql = `-- BooBubble RLS Policies\n-- Generated: ${now}\n\n`;
+    let policiesSql = `-- Platform RLS Policies\n-- Generated: ${now}\n\n`;
     const tablesSeen = new Set<string>();
     for (const p of x.policies ?? []) {
       const qual = p.qualified_table ?? `${p.schemaname}.${p.tablename}`;
@@ -441,13 +441,13 @@ export const exportBackupExtras = createServerFn({ method: "POST" })
     }
 
     // extensions.sql
-    let extensionsSql = `-- BooBubble Extensions\n-- Generated: ${now}\n\n`;
+    let extensionsSql = `-- Platform Extensions\n-- Generated: ${now}\n\n`;
     for (const e of x.extensions ?? []) {
       extensionsSql += `CREATE EXTENSION IF NOT EXISTS ${ident(e.name)} WITH SCHEMA ${ident(e.schema)};\n`;
     }
 
     // cron.sql — safe re-schedule via cron.schedule
-    let cronSql = `-- BooBubble Scheduled Jobs (pg_cron)\n-- Generated: ${now}\n\n`;
+    let cronSql = `-- Platform Scheduled Jobs (pg_cron)\n-- Generated: ${now}\n\n`;
     if ((x.cron_jobs ?? []).length === 0) {
       cronSql += `-- No cron jobs found (pg_cron may be disabled or empty).\n`;
     } else {

@@ -97,7 +97,7 @@ export const HERO_SECTION_LABELS: Record<HeroSectionKey, { label: string; emoji:
 
 export const HERO_DEFAULTS: HeroConfig = {
   enabled: true,
-  brandName: "Palrgo",
+  brandName: "Community",
   headline: "Connect, Chat, Share & Grow Together 💫",
   subheadline:
     "Join realtime chatrooms, discover social feeds, listen to live radio, play games, and become part of a thriving community.",

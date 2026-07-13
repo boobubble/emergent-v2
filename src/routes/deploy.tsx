@@ -22,7 +22,7 @@ export const Route = createFileRoute("/deploy")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Deployment Wizard — BooBubble" },
+      { title: "Deployment Wizard" },
       { name: "description", content: "One-click deployment checker: verify runtime, backend, environment, storage, and services before install." },
       { name: "robots", content: "noindex" },
     ],

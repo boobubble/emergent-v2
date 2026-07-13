@@ -52,7 +52,7 @@ function LoginRoute() {
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Community sign in — Palrgo" },
+      { title: "Community sign in" },
       { name: "description", content: "Optional community sign-in page." },
       { name: "robots", content: "noindex" },
     ],

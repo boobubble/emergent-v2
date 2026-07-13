@@ -83,7 +83,7 @@ export async function verifyFullBackupZip(blob: Blob): Promise<VerifyReport> {
   const sqlEntry = zip.file("database/database.sql");
   if (sqlEntry) {
     const head = (await sqlEntry.async("text")).slice(0, 300);
-    const hasHeader = head.includes("BooBubble Schema Dump");
+    const hasHeader = head.includes("Platform Schema Dump");
     checks.push({
       name: "database.sql header",
       ok: hasHeader,

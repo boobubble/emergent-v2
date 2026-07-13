@@ -76,7 +76,7 @@ function InstallerPage() {
   const [adminUser, setAdminUser] = useState("");
   const [adminRecovery, setAdminRecovery] = useState("");
   const [admin2FA, setAdmin2FA] = useState(false);
-  const [siteName, setSiteName] = useState("BooBubble");
+  const [siteName, setSiteName] = useState("");
   const [busy, setBusy] = useState(false);
   const [smtpTestEmail, setSmtpTestEmail] = useState("");
   const [smtpTesting, setSmtpTesting] = useState(false);
@@ -549,7 +549,7 @@ function InstallerPage() {
     const r = buildReport();
     const line = (l: string) => l;
     const lines: string[] = [];
-    lines.push("BooBubble Installation Report");
+    lines.push("Installation Report");
     lines.push("=".repeat(40));
     lines.push(`Generated:      ${r.generated_at}`);
     lines.push(`App version:    ${r.app_version}`);
@@ -620,7 +620,7 @@ function InstallerPage() {
           <div className="flex items-center gap-3">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground"><Rocket className="h-5 w-5" /></div>
             <div>
-              <h1 className="text-xl font-bold">BooBubble Installer</h1>
+              <h1 className="text-xl font-bold">Platform Installer</h1>
               <p className="text-xs text-muted-foreground">v1.0.0 • Setup Wizard</p>
             </div>
           </div>
@@ -665,7 +665,7 @@ function InstallerPage() {
           <CardContent className="space-y-4">
             {current.id === "welcome" && (
               <div className="space-y-3 text-sm">
-                <p>Welcome to <strong>BooBubble</strong>. This wizard will set up your site in under 2 minutes.</p>
+                <p>Welcome to the <strong>Platform Installer</strong>. This wizard will set up your site in under 2 minutes.</p>
                 <div className="rounded-lg border bg-muted/40 p-3">
                   <div className="font-medium mb-1">Detected: {mode === "cloud" ? "Lovable Cloud" : "Self-Hosted"}</div>
                   <p className="text-xs text-muted-foreground">
@@ -1052,7 +1052,7 @@ function InstallerPage() {
               <div className="space-y-3">
                 <div>
                   <Label>Site Name</Label>
-                  <Input value={siteName} onChange={(e) => setSiteName(e.target.value)} placeholder="BooBubble" />
+                  <Input value={siteName} onChange={(e) => setSiteName(e.target.value)} placeholder="My Platform" />
                 </div>
                 <p className="text-xs text-muted-foreground">You can change colors, logo, and more from Admin → Themes after install.</p>
                 <Button onClick={() => go(1)} className="w-full">Continue</Button>
@@ -1379,7 +1379,7 @@ function HealthRow({ label, state, msg }: { label: string; state: "pending"|"ok"
 
 function stepDescription(id: string, mode: InstallMode): string {
   switch (id) {
-    case "welcome":  return "Let's get your BooBubble site running.";
+    case "welcome":  return "Let's get your platform up and running.";
     case "license":  return "Verify your purchase to activate the app.";
     case "reqs":     return "Checking that your environment is ready.";
     case "schema":   return "Automatically create tables, indexes, RLS, functions, triggers, and seed data.";

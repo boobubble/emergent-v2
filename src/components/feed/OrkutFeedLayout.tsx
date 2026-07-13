@@ -211,7 +211,7 @@ export function OrkutFeedLayout(props: Props) {
       </div>
 
       <footer className="mt-6 border-t border-[#b5c7e0] bg-[#e8eef5] py-4 text-center text-[11px] text-[#5a6b85]">
-        <span className="orkut-brand">{brandLabel}</span> · classic retro layout · powered by BooBubble · {new Date().getFullYear()}
+        <span className="orkut-brand">{brandLabel}</span> · classic retro layout · powered by the platform · {new Date().getFullYear()}
       </footer>
     </div>
   );
@@ -686,7 +686,7 @@ function OrkutFriendSuggestions({
     <div className="orkut-card">
       <div className="orkut-card-header">
         <UserPlus className="h-3.5 w-3.5" />
-        <span>friend suggestions by BooBubble</span>
+        <span>friend suggestions</span>
       </div>
       <div className="flex gap-2 overflow-x-auto bg-white p-3">
         {visible.map((u) => {
