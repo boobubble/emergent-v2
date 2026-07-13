@@ -205,7 +205,7 @@ function LiveArenaPage() {
 
         {/* Filter bar */}
         <div className="border-t border-white/5 bg-slate-950/40">
-          <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-2 px-4 py-2">
+          <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-1.5 px-4 py-1.5">
             <div className="flex flex-1 flex-wrap gap-1">
               {filters.map((f) => {
                 const active = filter === f.key;
