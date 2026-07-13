@@ -7,7 +7,7 @@ import {
   UserPlus,
   Trophy,
   Award,
-  Medal,
+  Swords,
   Users,
   ChevronRight,
 } from "lucide-react";
@@ -18,7 +18,7 @@ const SHORTCUTS = [
   { to: "/find-friends", label: "Find Friends", icon: UserPlus, gradient: "from-orange-500 to-amber-500" },
   { to: "/leaderboard", label: "Leaderboard", icon: Trophy, gradient: "from-purple-500 to-fuchsia-500" },
   { to: "/achievements", label: "Achievements", icon: Award, gradient: "from-emerald-500 to-teal-500" },
-  { to: "/competitions", label: "Competition", icon: Medal, gradient: "from-cyan-500 to-sky-500" },
+  { to: "/live-arena", label: "Live Arena", icon: Swords, gradient: "from-cyan-500 to-sky-500" },
   { to: "/groups", label: "Groups", icon: Users, gradient: "from-violet-500 to-purple-500" },
 ] as const;
 
