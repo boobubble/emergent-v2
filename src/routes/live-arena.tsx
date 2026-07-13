@@ -428,6 +428,7 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
               <span>Finished</span>
             )}
           </div>
+          {c.status !== "completed" && <CardLiveSupporters competitionId={c.id} />}
         </div>
 
         {/* RIGHT — nominees */}
