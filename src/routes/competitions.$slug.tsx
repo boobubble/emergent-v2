@@ -422,10 +422,25 @@ function CompetitionDetail() {
           </div>
         )}
 
-        {/* Premium battlefield sections: tournament progress, recent supporters, live activity feed */}
+        {/* Premium battlefield sections: tournament progress, intensity, recent supporters, live activity feed */}
         {showPremiumSections && (
           <div className="mt-4 space-y-3">
             <TournamentProgress startAt={c.start_at} endAt={c.end_at} status={c.status} />
+            {votingOpen && sortedCompetitors.length >= 2 && (
+              <div className="grid gap-3 md:grid-cols-2">
+                <BattleIntensityMeter competitionId={c.id} />
+                <VoteMilestones totalVotes={totalCompetitorVotes} />
+              </div>
+            )}
+            {!showBattleArenaHero && sortedCompetitors.length >= 2 && !hideResults && (
+              <HeadToHeadBattle
+                competitors={sortedCompetitors}
+                canVote={!!userId && votingOpen}
+                onVote={(id) => arenaVoteM.mutate(id)}
+                isVoting={arenaVoteM.isPending}
+                myVote={myCompetitorVote?.competitorId ?? null}
+              />
+            )}
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
               <RecentSupporters competitionId={c.id} />
               <BattleActivityFeed
@@ -434,8 +449,10 @@ function CompetitionDetail() {
                 totalVotes={totalCompetitorVotes}
               />
             </div>
+            <TopSupporters competitionId={c.id} />
           </div>
         )}
+
 
         {/* Winner section */}
 
