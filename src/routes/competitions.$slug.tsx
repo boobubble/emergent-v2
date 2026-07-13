@@ -333,6 +333,15 @@ function CompetitionDetail() {
   return (
     <div className="min-h-screen bg-[#050308] pb-24 text-foreground">
       {showPremiumSections && <FloatingReactions competitionId={c.id} />}
+      {showPremiumSections && votingOpen && <LiveLeaderBanner topLeaderName={topLeaderName} />}
+      <StickyMobileVoteBar
+        canVote={!!userId && votingOpen}
+        hasVoted={!!myCompetitorVote?.competitorId || !!myVote?.participantId}
+        onClick={() => {
+          document.getElementById("nominees-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+      />
+
 
       {/* Premium Battle Arena hero — only for VS Battle layout */}
       {showBattleArenaHero && (
