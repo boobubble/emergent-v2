@@ -574,6 +574,7 @@ function CardLiveSupporters({ competitionId }: { competitionId: string }) {
     avatar_url: string | null;
     avatar_color: string | null;
     is_verified: boolean;
+    competitor_name: string | null;
   }>;
 
   // Engagement badge — votes in last 10 minutes
