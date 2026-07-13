@@ -471,6 +471,7 @@ export const joinCompetition = createServerFn({ method: "POST" })
       status: comp.require_approval ? "pending" : "approved",
     });
     if (error) throw new Error(error.message);
+    await emitGam(supabase, userId, "competition_join", { competition_id: data.competitionId });
     return { ok: true };
   });
 
