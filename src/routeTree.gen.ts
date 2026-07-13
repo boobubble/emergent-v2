@@ -110,6 +110,7 @@ import { Route as AdminDmWallpapersRouteImport } from './routes/admin.dm-wallpap
 import { Route as AdminDjRouteImport } from './routes/admin.dj'
 import { Route as AdminDemoRouteImport } from './routes/admin.demo'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
+import { Route as AdminCompetitionsFeedRouteImport } from './routes/admin.competitions-feed'
 import { Route as AdminCompetitionsRouteImport } from './routes/admin.competitions'
 import { Route as AdminCompetitionCategoriesRouteImport } from './routes/admin.competition-categories'
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
@@ -653,6 +654,11 @@ const AdminConfessionsRoute = AdminConfessionsRouteImport.update({
   path: '/confessions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCompetitionsFeedRoute = AdminCompetitionsFeedRouteImport.update({
+  id: '/competitions-feed',
+  path: '/competitions-feed',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCompetitionsRoute = AdminCompetitionsRouteImport.update({
   id: '/competitions',
   path: '/competitions',
@@ -896,6 +902,7 @@ export interface FileRoutesByFullPath {
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
   '/admin/competitions': typeof AdminCompetitionsRoute
+  '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -1032,6 +1039,7 @@ export interface FileRoutesByTo {
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
   '/admin/competitions': typeof AdminCompetitionsRoute
+  '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -1172,6 +1180,7 @@ export interface FileRoutesById {
   '/admin/chatrooms': typeof AdminChatroomsRoute
   '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
   '/admin/competitions': typeof AdminCompetitionsRoute
+  '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/dj': typeof AdminDjRoute
@@ -1313,6 +1322,7 @@ export interface FileRouteTypes {
     | '/admin/chatrooms'
     | '/admin/competition-categories'
     | '/admin/competitions'
+    | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -1449,6 +1459,7 @@ export interface FileRouteTypes {
     | '/admin/chatrooms'
     | '/admin/competition-categories'
     | '/admin/competitions'
+    | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -1588,6 +1599,7 @@ export interface FileRouteTypes {
     | '/admin/chatrooms'
     | '/admin/competition-categories'
     | '/admin/competitions'
+    | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
     | '/admin/dj'
@@ -2435,6 +2447,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConfessionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/competitions-feed': {
+      id: '/admin/competitions-feed'
+      path: '/competitions-feed'
+      fullPath: '/admin/competitions-feed'
+      preLoaderRoute: typeof AdminCompetitionsFeedRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/competitions': {
       id: '/admin/competitions'
       path: '/competitions'
@@ -2724,6 +2743,7 @@ interface AdminRouteChildren {
   AdminChatroomsRoute: typeof AdminChatroomsRoute
   AdminCompetitionCategoriesRoute: typeof AdminCompetitionCategoriesRoute
   AdminCompetitionsRoute: typeof AdminCompetitionsRoute
+  AdminCompetitionsFeedRoute: typeof AdminCompetitionsFeedRoute
   AdminConfessionsRoute: typeof AdminConfessionsRoute
   AdminDemoRoute: typeof AdminDemoRoute
   AdminDjRoute: typeof AdminDjRoute
@@ -2802,6 +2822,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminChatroomsRoute: AdminChatroomsRoute,
   AdminCompetitionCategoriesRoute: AdminCompetitionCategoriesRoute,
   AdminCompetitionsRoute: AdminCompetitionsRoute,
+  AdminCompetitionsFeedRoute: AdminCompetitionsFeedRoute,
   AdminConfessionsRoute: AdminConfessionsRoute,
   AdminDemoRoute: AdminDemoRoute,
   AdminDjRoute: AdminDjRoute,

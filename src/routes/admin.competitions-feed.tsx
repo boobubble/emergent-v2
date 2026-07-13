@@ -124,12 +124,13 @@ function Page() {
           <div className="mb-3 text-sm font-semibold">Event toggles</div>
           <div className="grid gap-2 md:grid-cols-2">
             {COMPETITION_CATEGORY_KEYS.map((k) => (
-              <AdminToggle
-                key={k}
-                label={CATEGORY_LABELS[k] ?? k}
-                checked={!!state.event_flags[k]}
-                onChange={(v) => toggleFlag(k, v)}
-              />
+              <label key={k} className="flex items-center justify-between gap-2 rounded border border-border/60 p-2 text-sm">
+                <span>{CATEGORY_LABELS[k] ?? k}</span>
+                <AdminToggle
+                  checked={!!state.event_flags[k]}
+                  onCheckedChange={(v: boolean) => toggleFlag(k, v)}
+                />
+              </label>
             ))}
           </div>
         </CardContent>
