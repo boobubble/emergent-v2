@@ -124,7 +124,7 @@ export function AuthScreen() {
           style={{ boxShadow: "var(--shadow-panel)" }}
         >
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-3xl font-bold text-primary-foreground" style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}>P</div>
-        <h1 className="mt-4 text-2xl font-bold">Welcome to Palrgo</h1>
+        <h1 className="mt-4 text-2xl font-bold">Welcome to {brand.name}</h1>
         <p className="mt-1 text-xs text-muted-foreground">Chat, post, and play with friends.</p>
 
         <div className="mt-6 space-y-2.5">
@@ -187,7 +187,7 @@ function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: 
       <DialogContent className="max-w-sm rounded-3xl">
         <DialogHeader>
           <DialogTitle>Sign in</DialogTitle>
-          <DialogDescription>Welcome back to Palrgo.</DialogDescription>
+          <DialogDescription>Welcome back to {brand.name}.</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
@@ -281,7 +281,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
       <DialogContent className="max-h-[90vh] max-w-sm overflow-y-auto rounded-3xl">
         <DialogHeader>
           <DialogTitle>Create your account</DialogTitle>
-          <DialogDescription>Join Palrgo in a few seconds.</DialogDescription>
+          <DialogDescription>Join {brand.name} in a few seconds.</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
