@@ -590,20 +590,20 @@ function CardLiveSupporters({ competitionId }: { competitionId: string }) {
 
   if (voters.length === 0) {
     return (
-      <div className="mt-2 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-2 py-1.5 text-center text-[9.5px] font-semibold text-slate-400">
-        ✨ Be the first supporter
+      <div className="mt-1 rounded-md border border-dashed border-white/10 bg-white/[0.02] px-1.5 py-1 text-center text-[8px] font-semibold text-slate-400">
+        ✨ Be first
       </div>
     );
   }
 
-  const stack = voters.slice(0, 6);
+  const stack = voters.slice(0, 5);
   const extra = Math.max(0, voters.length - stack.length);
-  const strip = voters.slice(0, 3);
+  const strip = voters.slice(0, 2);
 
   return (
-    <div className="mt-2 space-y-1.5">
+    <div className="mt-1 space-y-1">
       <div className="flex items-center gap-1">
-        <div className="flex -space-x-2">
+        <div className="flex -space-x-1.5">
           <AnimatePresence initial={false}>
             {stack.map((v) => (
               <motion.div
@@ -613,45 +613,44 @@ function CardLiveSupporters({ competitionId }: { competitionId: string }) {
                 animate={{ opacity: 1, scale: 1, x: 0 }}
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={{ type: "spring", stiffness: 320, damping: 24 }}
-                className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full border border-slate-900 ring-1 ring-white/10"
+                className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full border border-slate-900 ring-1 ring-white/10"
                 style={{ background: v.avatar_color ?? "#334155" }}
                 title={v.username ?? "Supporter"}
               >
                 {v.avatar_url ? (
                   <img src={v.avatar_url} alt="" className="h-full w-full object-cover" />
                 ) : (
-                  <span className="flex h-full w-full items-center justify-center text-[8px] font-black text-white">
+                  <span className="flex h-full w-full items-center justify-center text-[7px] font-black text-white">
                     {(v.username ?? "?").slice(0, 1).toUpperCase()}
                   </span>
                 )}
                 {v.is_verified && (
-                  <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-2 w-2 text-sky-400" />
+                  <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 text-sky-400" />
                 )}
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
         {extra > 0 && (
-          <span className="ml-1 text-[9px] font-bold text-slate-400">+{extra} more</span>
+          <span className="ml-0.5 text-[8px] font-bold text-slate-400">+{extra}</span>
         )}
       </div>
 
       {engagement && (
-        <span className={`inline-block rounded-full border px-1.5 py-[1px] text-[8.5px] font-black tracking-wide ${engagement.cls}`}>
+        <span className={`inline-block rounded-full border px-1 py-[1px] text-[7.5px] font-black tracking-wide ${engagement.cls}`}>
           {engagement.label}
         </span>
       )}
 
       <div>
-        <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-500">Recently supported</div>
-        <ul className="mt-0.5 space-y-[1px]">
+        <ul className="space-y-[1px]">
           {strip.map((v) => (
-            <li key={`${v.voter_id}-${v.voted_at}-r`} className="flex items-center justify-between gap-1 text-[9.5px]">
+            <li key={`${v.voter_id}-${v.voted_at}-r`} className="flex items-center justify-between gap-1 text-[8.5px]">
               <span className="flex min-w-0 items-center gap-0.5">
                 <span className="truncate font-bold text-slate-200">{v.username ?? "Supporter"}</span>
                 {v.is_verified && <BadgeCheck className="h-2 w-2 shrink-0 text-sky-400" />}
               </span>
-              <span className="shrink-0 text-[8.5px] font-semibold text-slate-500">{timeAgoShort(v.voted_at)}</span>
+              <span className="shrink-0 text-[8px] font-semibold text-slate-500">{timeAgoShort(v.voted_at)}</span>
             </li>
           ))}
         </ul>
