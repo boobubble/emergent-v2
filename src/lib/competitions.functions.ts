@@ -267,6 +267,13 @@ export const adminSearchProfiles = createServerFn({ method: "GET" })
 
 // ---------- Competition follows ----------
 
+// Best-effort gamification emit. Never breaks the caller if the event isn't configured.
+async function emitGam(sb: any, userId: string, event: string, metadata: Record<string, unknown> = {}, amount = 1) {
+  try {
+    await sb.rpc("gam_emit", { _user_id: userId, _event_type: event, _amount: amount, _metadata: metadata });
+  } catch { /* swallow — XP is a side-effect, not core */ }
+}
+
 export const followCompetition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { competitionId: string }) => data)
@@ -275,6 +282,7 @@ export const followCompetition = createServerFn({ method: "POST" })
       .from("competition_follows")
       .upsert({ user_id: context.userId, competition_id: data.competitionId }, { onConflict: "user_id,competition_id" });
     if (error) throw new Error(error.message);
+    await emitGam(context.supabase, context.userId, "competition_follow", { competition_id: data.competitionId });
     return { ok: true };
   });
 
@@ -330,8 +338,21 @@ export const voteForCompetitor = createServerFn({ method: "POST" })
       voter_id: userId,
     });
     if (error) throw new Error(error.message);
+    await emitGam(supabase, userId, "competition_vote", { competition_id: data.competitionId, competitor_id: data.competitorId });
     return { ok: true };
   });
+
+export const shareCompetition = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { competitionId: string; channel?: string }) => data)
+  .handler(async ({ data, context }) => {
+    await emitGam(context.supabase, context.userId, "competition_share", {
+      competition_id: data.competitionId,
+      channel: data.channel ?? "link",
+    });
+    return { ok: true };
+  });
+
 
 export const getMyCompetitorVote = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -450,6 +471,7 @@ export const joinCompetition = createServerFn({ method: "POST" })
       status: comp.require_approval ? "pending" : "approved",
     });
     if (error) throw new Error(error.message);
+    await emitGam(supabase, userId, "competition_join", { competition_id: data.competitionId });
     return { ok: true };
   });
 
@@ -471,12 +493,13 @@ export const castVote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { competitionId: string; participantId: string }) => data)
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
     const { error } = await supabase.rpc("cast_competition_vote", {
       _competition: data.competitionId,
       _participant: data.participantId,
     });
     if (error) throw new Error(error.message);
+    await emitGam(supabase, userId, "competition_vote", { competition_id: data.competitionId, participant_id: data.participantId });
     return { ok: true };
   });
 
@@ -736,6 +759,21 @@ export const adminFinalizeWinners = createServerFn({ method: "POST" })
     }));
     if (notifRows.length) await context.supabase.from("notifications").insert(notifRows);
 
+    // Emit gamification events for badge/XP awards (place-tiered)
+    const { supabaseAdmin: adminSb } = await import("@/integrations/supabase/client.server");
+    for (const r of rows) {
+      const event =
+        r.place === 1 ? "competition_win_1st" :
+        r.place === 2 ? "competition_win_2nd" :
+        r.place === 3 ? "competition_win_3rd" : "competition_win";
+      try {
+        await adminSb.rpc("gam_emit", {
+          _user_id: r.user_id, _event_type: event, _amount: 1,
+          _metadata: { competition_id: data.competitionId, name: comp.name, place: r.place },
+        });
+      } catch { /* best-effort */ }
+    }
+
     return { ok: true, winners: rows.length };
   });
 
@@ -855,6 +893,20 @@ export const adminSetManualWinners = createServerFn({ method: "POST" })
     }
     if (data.markCompleted) {
       await context.supabase.from("competitions").update({ status: "completed" }).eq("id", data.competitionId);
+    }
+    // Emit gamification events for manual-award winners
+    const { supabaseAdmin: adminSb2 } = await import("@/integrations/supabase/client.server");
+    for (const r of rows) {
+      const event =
+        r.place === 1 ? "competition_win_1st" :
+        r.place === 2 ? "competition_win_2nd" :
+        r.place === 3 ? "competition_win_3rd" : "competition_win";
+      try {
+        await adminSb2.rpc("gam_emit", {
+          _user_id: r.user_id, _event_type: event, _amount: 1,
+          _metadata: { competition_id: data.competitionId, name: (comp as any).name, place: r.place, manual: true },
+        });
+      } catch { /* best-effort */ }
     }
     return { ok: true, winners: rows.length };
   });
@@ -994,4 +1046,174 @@ export const listHallOfFame = createServerFn({ method: "GET" })
         winning_share: totalVotes > 0 ? winningVotes / totalVotes : 0,
       };
     });
+  });
+
+// ---------- User Competition Showcase ----------
+
+export const getUserCompetitionShowcase = createServerFn({ method: "GET" })
+  .inputValidator((data: { username: string }) => data)
+  .handler(async ({ data }) => {
+    const sb = await publicClient();
+    const uname = (data.username ?? "").trim();
+    if (!uname) throw new Error("username required");
+
+    const { data: profile } = await sb
+      .from("profiles")
+      .select("id,username,display_name,avatar_url,avatar_color,is_verified,country")
+      .ilike("username", uname)
+      .maybeSingle();
+    if (!profile) return { profile: null };
+
+    const uid = (profile as any).id as string;
+
+    const [
+      awardsRes,
+      participantsRes,
+      competitorRowsRes,
+      followedRes,
+      coinsRes,
+      xpEventsRes,
+    ] = await Promise.all([
+      sb.from("competition_awards")
+        .select("id, place, badge_label, awarded_at, participant_id, rewards, competition:competitions(id,name,slug,banner_url,end_at,status,category:competition_categories(name,slug,color))")
+        .eq("user_id", uid)
+        .order("awarded_at", { ascending: false }),
+      sb.from("competition_participants")
+        .select("id, competition_id, vote_count, rank, joined_at, status, competition:competitions(id,name,slug,banner_url,status,end_at,start_at,is_featured,category:competition_categories(name,slug,color))")
+        .eq("user_id", uid)
+        .order("joined_at", { ascending: false }),
+      sb.from("competition_competitors")
+        .select("id, name, competition_id, vote_count, is_featured, is_hidden, is_disqualified, photo_url, competition:competitions(id,name,slug,banner_url,status,end_at,start_at,is_featured,category:competition_categories(name,slug,color))")
+        .eq("linked_user_id", uid),
+      sb.from("competition_follows")
+        .select("competition_id")
+        .eq("user_id", uid),
+      sb.from("coin_transactions")
+        .select("amount, created_at, reason, ref_id")
+        .eq("user_id", uid)
+        .eq("ref_type", "competition"),
+      sb.from("gam_event_log")
+        .select("event_type, amount, created_at, metadata")
+        .eq("user_id", uid)
+        .like("event_type", "competition_%")
+        .order("created_at", { ascending: false })
+        .limit(200),
+    ]);
+
+    const awards = (awardsRes.data ?? []) as any[];
+    const participants = (participantsRes.data ?? []) as any[];
+    const competitorRows = (competitorRowsRes.data ?? []) as any[];
+    const followed = (followedRes.data ?? []) as any[];
+    const coinTx = (coinsRes.data ?? []) as any[];
+    const xpEvents = (xpEventsRes.data ?? []) as any[];
+
+    const wins = awards.filter((a) => a.place === 1);
+    const runnersUp = awards.filter((a) => a.place === 2);
+    const thirds = awards.filter((a) => a.place === 3);
+
+    const currentLive = competitorRows.filter((c) => !c.is_hidden && !c.is_disqualified && c.competition?.status === "live");
+    const featuredNominee = competitorRows.filter((c) => c.is_featured);
+    const votesReceived =
+      participants.reduce((acc, p) => acc + (p.vote_count ?? 0), 0) +
+      competitorRows.reduce((acc, c) => acc + (c.vote_count ?? 0), 0);
+
+    const bestRank = participants
+      .map((p) => p.rank)
+      .filter((r) => typeof r === "number" && r > 0)
+      .reduce<number | null>((min, r) => (min == null || r < min ? r : min), null);
+
+    // Followers earned = sum of followers on all competitions where user is a nominee
+    const nomineeCompIds = Array.from(new Set(competitorRows.map((c) => c.competition_id)));
+    let followersEarned = 0;
+    if (nomineeCompIds.length) {
+      const { data: fRows } = await sb
+        .from("competition_follows")
+        .select("competition_id")
+        .in("competition_id", nomineeCompIds);
+      followersEarned = (fRows ?? []).length;
+    }
+
+    const coinsEarned = coinTx.reduce((acc, t) => acc + Math.max(0, Number(t.amount ?? 0)), 0);
+    const xpEarned = xpEvents.reduce((acc, e) => acc + Math.max(0, Number(e.amount ?? 0)), 0);
+
+    // Timeline: awards + joins, newest first
+    const timeline = [
+      ...awards.map((a) => ({
+        kind: "award" as const,
+        at: a.awarded_at,
+        place: a.place,
+        badge_label: a.badge_label,
+        competition: a.competition,
+      })),
+      ...participants.slice(0, 30).map((p) => ({
+        kind: "join" as const,
+        at: p.joined_at,
+        vote_count: p.vote_count ?? 0,
+        competition: p.competition,
+      })),
+    ]
+      .filter((t) => t.competition)
+      .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+      .slice(0, 20);
+
+    // Recent activity (last 12 events)
+    const recentActivity = xpEvents.slice(0, 12).map((e) => ({
+      event_type: e.event_type,
+      amount: e.amount,
+      at: e.created_at,
+      metadata: e.metadata ?? {},
+    }));
+
+    // Competition badges: aggregate from award badge_label + auto-derived
+    const badges: Array<{ id: string; name: string; emoji: string; tint: string }> = [];
+    if (wins.length >= 1) badges.push({ id: "champion", name: "Champion", emoji: "🏆", tint: "from-amber-400 to-yellow-500" });
+    if (wins.length >= 5) badges.push({ id: "legend", name: "Competition Legend", emoji: "👑", tint: "from-fuchsia-400 to-purple-600" });
+    if (runnersUp.length >= 1) badges.push({ id: "runner_up", name: "Runner Up", emoji: "🥈", tint: "from-slate-300 to-slate-400" });
+    if (thirds.length >= 1) badges.push({ id: "third", name: "Third Place", emoji: "🥉", tint: "from-orange-400 to-amber-600" });
+    if (featuredNominee.length >= 1) badges.push({ id: "featured_nominee", name: "Featured Nominee", emoji: "⭐", tint: "from-amber-300 to-orange-400" });
+    if (votesReceived >= 100) badges.push({ id: "top_100_votes", name: "Top 100 Votes", emoji: "🏅", tint: "from-emerald-300 to-teal-500" });
+    if (votesReceived >= 1000) badges.push({ id: "top_1k_votes", name: "Top 1000 Votes", emoji: "🏅", tint: "from-cyan-300 to-blue-500" });
+    if (participants.length >= 10 || competitorRows.length >= 10)
+      badges.push({ id: "most_active", name: "Most Active Competitor", emoji: "🎖", tint: "from-purple-300 to-pink-400" });
+    if (followersEarned >= 500) badges.push({ id: "fan_favorite", name: "Fan Favorite", emoji: "🔥", tint: "from-rose-400 to-red-500" });
+    if (followersEarned >= 100 && wins.length === 0)
+      badges.push({ id: "rising_star", name: "Rising Star", emoji: "⚡", tint: "from-yellow-300 to-amber-400" });
+    if ((profile as any).country) badges.push({ id: "international", name: "International", emoji: "🌍", tint: "from-blue-300 to-indigo-500" });
+
+    // Showcase: 1 champion win + 1 runner-up + featured nominee + current live
+    const showcase: Array<{ label: string; emoji: string; competition: any; extra?: string }> = [];
+    if (wins[0]) showcase.push({ label: `Champion — ${wins[0].competition?.name ?? "Competition"}`, emoji: "👑", competition: wins[0].competition });
+    if (runnersUp[0]) showcase.push({ label: `Runner Up — ${runnersUp[0].competition?.name ?? "Competition"}`, emoji: "🥈", competition: runnersUp[0].competition });
+    if (currentLive[0]) showcase.push({ label: "Currently Competing", emoji: "🔥", competition: currentLive[0].competition, extra: `${currentLive[0].vote_count ?? 0} votes` });
+    if (featuredNominee[0]) showcase.push({ label: "Fan Favorite", emoji: "⭐", competition: featuredNominee[0].competition });
+
+    return {
+      profile,
+      totals: {
+        joined: participants.length + competitorRows.length,
+        wins: wins.length,
+        runner_ups: runnersUp.length,
+        third_places: thirds.length,
+        votes_received: votesReceived,
+        followers_earned: followersEarned,
+        following_count: followed.length,
+        featured_count: featuredNominee.length,
+        live_count: currentLive.length,
+        best_rank: bestRank,
+        coins_earned: coinsEarned,
+        xp_earned: xpEarned,
+      },
+      badges,
+      showcase,
+      currentLive: currentLive.slice(0, 6).map((c) => ({
+        id: c.id,
+        name: c.name,
+        photo_url: c.photo_url,
+        vote_count: c.vote_count ?? 0,
+        competition: c.competition,
+      })),
+      recentAwards: awards.slice(0, 6),
+      timeline,
+      recentActivity,
+    };
   });

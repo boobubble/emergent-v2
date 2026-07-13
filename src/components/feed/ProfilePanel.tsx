@@ -5,6 +5,7 @@ import { Avatar } from "@/components/chat/Avatar";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
 import { useRecordProfileView } from "@/lib/use-profile-views";
+import { UserCompetitionShowcase } from "@/components/competitions/UserCompetitionShowcase";
 
 export function ProfilePanel({ username, onBack }: { username: string; onBack: () => void }) {
   const navigate = useNavigate();
@@ -93,6 +94,9 @@ export function ProfilePanel({ username, onBack }: { username: string; onBack: (
           </div>
         )}
       </section>
+
+      {!user.isBot && <UserCompetitionShowcase username={user.name} />}
+
 
       <section>
         <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Rooms ({sharedRooms.length})</h2>
