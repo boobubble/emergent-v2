@@ -109,8 +109,156 @@ function Appearance() {
         </CardContent>
       </Card>
 
+      <WhiteLabelCard />
       <BrandAssetsCard />
     </div>
+  );
+}
+
+interface WhiteLabelValues {
+  name: string;
+  shortName: string;
+  tagline: string;
+  company: string;
+  supportEmail: string;
+  supportUrl: string;
+  privacyUrl: string;
+  termsUrl: string;
+  copyright: string;
+  footerText: string;
+  themeColor: string;
+  accentColor: string;
+  metaTitle: string;
+  metaDescription: string;
+  metaKeywords: string;
+  ogImage: string;
+  placeholderImage: string;
+  appleTouchIcon: string;
+  senderName: string;
+  replyTo: string;
+  defaultLanguage: string;
+  timezone: string;
+  currency: string;
+  assistantName: string;
+}
+
+const WHITELABEL_DEFAULTS: WhiteLabelValues = {
+  name: "", shortName: "", tagline: "", company: "",
+  supportEmail: "", supportUrl: "", privacyUrl: "", termsUrl: "",
+  copyright: "", footerText: "",
+  themeColor: "#3B82F6", accentColor: "#3B82F6",
+  metaTitle: "", metaDescription: "", metaKeywords: "",
+  ogImage: "", placeholderImage: "", appleTouchIcon: "",
+  senderName: "", replyTo: "",
+  defaultLanguage: "en", timezone: "UTC", currency: "USD",
+  assistantName: "",
+};
+
+function WhiteLabelCard() {
+  const { values, set, save, saving } =
+    useAdminSetting<WhiteLabelValues>("whitelabel", WHITELABEL_DEFAULTS);
+  const field = (k: keyof WhiteLabelValues, label: string, placeholder = "", type: "text" | "email" | "url" | "color" = "text") => (
+    <div className="space-y-1.5">
+      <Label htmlFor={`wl-${String(k)}`} className="text-xs">{label}</Label>
+      <Input
+        id={`wl-${String(k)}`}
+        type={type}
+        value={(values[k] as string) ?? ""}
+        placeholder={placeholder}
+        onChange={(e) => set(k, e.target.value as any)}
+      />
+    </div>
+  );
+  return (
+    <Card>
+      <CardContent className="space-y-5 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-sm font-bold">White-Label Branding</div>
+            <div className="text-xs text-muted-foreground">Rename the platform, set legal URLs, meta tags and email sender.</div>
+          </div>
+          <Button size="sm" onClick={() => save()} disabled={saving}>{saving ? "Saving…" : "Save"}</Button>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {field("name", "Platform name", "Acme")}
+          {field("shortName", "Short name (PWA)", "Acme")}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {field("tagline", "Tagline")}
+          {field("company", "Company / legal entity")}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {field("supportEmail", "Support email", "support@acme.com", "email")}
+          {field("supportUrl", "Support URL", "https://help.acme.com", "url")}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {field("privacyUrl", "Privacy URL", "/p/privacy", "url")}
+          {field("termsUrl", "Terms URL", "/p/terms", "url")}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {field("copyright", "Copyright text", "© 2026 Acme Inc.")}
+          {field("footerText", "Extra footer text")}
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Theme color</Label>
+            <div className="flex items-center gap-2">
+              <Input type="color" className="h-9 w-14 p-1" value={values.themeColor || "#3B82F6"} onChange={(e) => set("themeColor", e.target.value)} />
+              <Input value={values.themeColor} onChange={(e) => set("themeColor", e.target.value)} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Accent color</Label>
+            <div className="flex items-center gap-2">
+              <Input type="color" className="h-9 w-14 p-1" value={values.accentColor || "#3B82F6"} onChange={(e) => set("accentColor", e.target.value)} />
+              <Input value={values.accentColor} onChange={(e) => set("accentColor", e.target.value)} />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <div className="mb-2 text-xs font-semibold text-muted-foreground">SEO / Social</div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {field("metaTitle", "Meta title")}
+            {field("metaDescription", "Meta description")}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 mt-3">
+            {field("metaKeywords", "Meta keywords", "chat, community, games")}
+            {field("ogImage", "Open Graph image URL", "https://…/og.png", "url")}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 mt-3">
+            {field("appleTouchIcon", "Apple touch icon URL", "/apple-touch-icon.png", "url")}
+            {field("placeholderImage", "Default placeholder image URL", "https://…/placeholder.png", "url")}
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <div className="mb-2 text-xs font-semibold text-muted-foreground">Email</div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {field("senderName", "Email sender name")}
+            {field("replyTo", "Reply-To address", "support@acme.com", "email")}
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <div className="mb-2 text-xs font-semibold text-muted-foreground">Locale</div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {field("defaultLanguage", "Default language", "en")}
+            {field("timezone", "Timezone", "UTC")}
+            {field("currency", "Currency", "USD")}
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <div className="mb-2 text-xs font-semibold text-muted-foreground">AI Assistant</div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {field("assistantName", "Assistant display name", "Aria")}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
