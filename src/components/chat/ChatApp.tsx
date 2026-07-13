@@ -314,9 +314,7 @@ export function ChatApp() {
                   )}
                   <MessageList channelId={state.activeChannel} />
                   <PresenceFeed channelId={state.activeChannel} />
-                  {!activeIsDM && chatTheme === "gaming_arena" && (
-                    <GamingArenaLiveFeed channelId={state.activeChannel} />
-                  )}
+
                 </div>
 
 
