@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Zap, Radio, Shield, Sparkles } from "lucide-react";
+import { Zap, Radio, Shield, Sparkles, Palette, Users } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import heroBg from "@/assets/gaming-arena-hero.jpg";
 
