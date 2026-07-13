@@ -90,7 +90,7 @@ export function BattleActivityFeed({
             id: `bc-${Date.now()}-${Math.random()}`,
             kind: "vote" as const,
             ts: Date.now(),
-            text: `${payload.voter ?? "Someone"} voted for ${payload.target ?? "a nominee"}`,
+            text: `${payload.voter ?? "Someone"} voted`,
           },
           ...prev,
         ].slice(0, MAX));
@@ -106,7 +106,7 @@ export function BattleActivityFeed({
       id: `v-${v.voter_id}-${v.voted_at}`,
       kind: "vote" as const,
       ts: new Date(v.voted_at).getTime(),
-      text: `${v.username ?? "A supporter"} voted for ${v.competitor_name ?? "a nominee"}`,
+      text: `${v.username ?? "A supporter"} voted`,
       actor: v.username,
       target: v.competitor_name,
     }));
