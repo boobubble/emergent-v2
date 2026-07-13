@@ -432,29 +432,29 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
         </div>
 
         {/* RIGHT — nominees */}
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5">
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
           {top.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-white/10 bg-white/[0.02] py-4 text-center text-[10px] text-slate-500">
+            <div className="rounded-md border border-dashed border-white/10 bg-white/[0.02] py-3 text-center text-[9px] text-slate-500">
               No nominees yet
             </div>
           ) : (
             top.map((n, i) => {
               const pct = Math.round((n.votes / total) * 100);
               return (
-                <div key={n.id} className="space-y-0.5">
-                  <div className="flex items-center justify-between gap-2 text-[10.5px]">
-                    <div className="flex min-w-0 items-center gap-1.5">
-                      <span className="w-3 shrink-0 text-center text-[11px] leading-none">{rankIcons[i]}</span>
+                <div key={n.id} className="space-y-[1px]">
+                  <div className="flex items-center justify-between gap-1.5 text-[9.5px]">
+                    <div className="flex min-w-0 items-center gap-1">
+                      <span className="w-2.5 shrink-0 text-center text-[10px] leading-none">{rankIcons[i]}</span>
                       {n.photo_url ? (
-                        <img src={n.photo_url} alt="" className={`h-4 w-4 shrink-0 rounded-full object-cover ring-1 ${i === 0 ? "ring-amber-300/60" : "ring-white/15"}`} />
+                        <img src={n.photo_url} alt="" className={`h-3.5 w-3.5 shrink-0 rounded-full object-cover ring-1 ${i === 0 ? "ring-amber-300/60" : "ring-white/15"}`} />
                       ) : (
-                        <div className="h-4 w-4 shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500" />
+                        <div className="h-3.5 w-3.5 shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500" />
                       )}
                       <span className={`truncate font-bold ${i === 0 ? "text-white" : "text-slate-200"}`}>{n.name}</span>
                     </div>
-                    <span className="shrink-0 text-[10.5px] font-black tabular-nums text-slate-100">{pct}%</span>
+                    <span className="shrink-0 text-[9.5px] font-black tabular-nums text-slate-100">{pct}%</span>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.05]">
+                  <div className="h-1 overflow-hidden rounded-full bg-white/[0.05]">
                     <div
                       className={`h-full rounded-full bg-gradient-to-r ${barTint(i)} transition-[width] duration-700 ease-out`}
                       style={{ width: `${pct}%` }}
