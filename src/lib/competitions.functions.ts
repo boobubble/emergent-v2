@@ -652,9 +652,20 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
     if (data.status !== "draft") {
       try {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        let origin = "";
+        try {
+          const { getRequestUrl } = await import("@tanstack/react-start/server");
+          const u = getRequestUrl({ xForwardedHost: true });
+          origin = u.origin;
+        } catch {
+          // ignore — fall back to env or relative
+        }
+        if (!origin) origin = process.env.SITE_URL ?? process.env.VITE_SITE_URL ?? "";
+        const compPath = `/competitions/${data.slug}`;
+        const compUrl = origin ? `${origin}${compPath}` : compPath;
         const media = data.banner_url ? [data.banner_url] : [];
         const desc = (data.description ?? "").trim();
-        const text = `🏆 New competition: ${data.name}\n\n${desc ? desc + "\n\n" : ""}Join now and compete for the top spot! → /competitions/${data.slug}`;
+        const text = `🏆 New competition: ${data.name}\n\n${desc ? desc + "\n\n" : ""}Join now and compete for the top spot!\n\n🔗 ${compUrl}`;
         const baseSlug = `competition-${data.slug}`.toLowerCase().replace(/[^a-z0-9-]+/g, "-").slice(0, 60);
         const slug = `${baseSlug}-${row.id.slice(0, 8)}`;
         await supabaseAdmin.from("posts").insert({
