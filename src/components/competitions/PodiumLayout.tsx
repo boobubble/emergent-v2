@@ -41,17 +41,17 @@ export function PodiumLayout({ competitors, myVote, canVote, hideCounts, votingC
   const voteCta = votingClosed ? "🏁 Closed" : votingUpcoming ? "Soon" : "Vote";
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-4 backdrop-blur-xl sm:p-6">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-3 backdrop-blur-xl sm:p-4">
       {/* Spotlight backdrop */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-0 h-64 w-64 -translate-x-1/2 rounded-full bg-amber-500/20 blur-3xl" />
-        <div className="absolute left-1/4 top-10 h-40 w-40 rounded-full bg-zinc-400/10 blur-3xl" />
-        <div className="absolute right-1/4 top-10 h-40 w-40 rounded-full bg-orange-500/15 blur-3xl" />
+        <div className="absolute left-1/2 top-0 h-48 w-48 -translate-x-1/2 rounded-full bg-amber-500/20 blur-3xl" />
+        <div className="absolute left-1/4 top-8 h-28 w-28 rounded-full bg-zinc-400/10 blur-3xl" />
+        <div className="absolute right-1/4 top-8 h-28 w-28 rounded-full bg-orange-500/15 blur-3xl" />
       </div>
 
-      <div className="mb-4 text-center">
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-200">
-          <Crown className="h-3 w-3" /> Podium
+      <div className="mb-3 text-center">
+        <div className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/10 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-amber-200">
+          <Crown className="h-2.5 w-2.5" /> Podium
         </div>
       </div>
 
