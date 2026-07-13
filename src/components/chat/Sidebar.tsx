@@ -53,7 +53,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
         />
         {!chatLogo && (
           <div className="min-w-0 flex-1 leading-tight">
-            <BrandText slot="chat" defaultText="Palrgo" className="block font-bold text-foreground" alwaysShow />
+            <BrandText slot="chat" defaultText="Chat" className="block font-bold text-foreground" alwaysShow />
             <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               Social Chat
             </div>
