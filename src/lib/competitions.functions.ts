@@ -894,6 +894,20 @@ export const adminSetManualWinners = createServerFn({ method: "POST" })
     if (data.markCompleted) {
       await context.supabase.from("competitions").update({ status: "completed" }).eq("id", data.competitionId);
     }
+    // Emit gamification events for manual-award winners
+    const { supabaseAdmin: adminSb2 } = await import("@/integrations/supabase/client.server");
+    for (const r of rows) {
+      const event =
+        r.place === 1 ? "competition_win_1st" :
+        r.place === 2 ? "competition_win_2nd" :
+        r.place === 3 ? "competition_win_3rd" : "competition_win";
+      try {
+        await adminSb2.rpc("gam_emit", {
+          _user_id: r.user_id, _event_type: event, _amount: 1,
+          _metadata: { competition_id: data.competitionId, name: (comp as any).name, place: r.place, manual: true },
+        });
+      } catch { /* best-effort */ }
+    }
     return { ok: true, winners: rows.length };
   });
 
