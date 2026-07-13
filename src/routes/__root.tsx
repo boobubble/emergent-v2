@@ -277,27 +277,25 @@ function AuthGate() {
 
 
   return (
-    <AppSettingsProvider>
-      <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
-        <FeedPrefsProvider>
-          <IgnoreProvider>
-            <AuthenticatedHooks userId={user.id} />
-            <BroadcasterAnnouncementsRunner />
-            <TrioInvitesListener />
-            <CompleteProfileModal />
-            <HeadFootScripts />
-            <AdsAutoLoader />
-            <SessionConflictBanner />
-            <FaviconSwitcher />
-            <SubscriptionGate />
-            <LicenseGuard />
-            <Outlet />
-            <Sonner />
-            <RealtimeDebugOverlay />
-          </IgnoreProvider>
-        </FeedPrefsProvider>
-      </ChatProvider>
-    </AppSettingsProvider>
+    <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
+      <FeedPrefsProvider>
+        <IgnoreProvider>
+          <AuthenticatedHooks userId={user.id} />
+          <BroadcasterAnnouncementsRunner />
+          <TrioInvitesListener />
+          <CompleteProfileModal />
+          <HeadFootScripts />
+          <AdsAutoLoader />
+          <SessionConflictBanner />
+          <FaviconSwitcher />
+          <SubscriptionGate />
+          <LicenseGuard />
+          <Outlet />
+          <Sonner />
+          <RealtimeDebugOverlay />
+        </IgnoreProvider>
+      </FeedPrefsProvider>
+    </ChatProvider>
   );
 }
 
