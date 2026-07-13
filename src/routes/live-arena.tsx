@@ -361,36 +361,36 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
       className="group relative flex flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-gradient-to-br from-slate-900/80 to-slate-950/90 shadow-[0_6px_20px_-10px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-400/25 hover:shadow-[0_12px_30px_-12px_rgba(139,92,246,0.25)]"
     >
       {/* Top strip: LIVE / category / countdown / watching */}
-      <div className="flex items-center justify-between gap-2 px-3 pt-2.5">
-        <div className="flex min-w-0 items-center gap-1.5">
+      <div className="flex items-center justify-between gap-1.5 px-2 pt-1.5">
+        <div className="flex min-w-0 items-center gap-1">
           {c.status === "live" && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-rose-500 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white shadow-[0_0_10px_rgba(244,63,94,0.4)]">
+            <span className="inline-flex items-center gap-1 rounded bg-rose-500 px-1 py-[1px] text-[8px] font-black tracking-wider text-white shadow-[0_0_8px_rgba(244,63,94,0.4)]">
               <span className="h-1 w-1 animate-pulse rounded-full bg-white" /> LIVE
             </span>
           )}
           {c.status === "upcoming" && (
-            <span className="rounded-md bg-sky-500 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white">UPCOMING</span>
+            <span className="rounded bg-sky-500 px-1 py-[1px] text-[8px] font-black tracking-wider text-white">UPCOMING</span>
           )}
           {c.status === "completed" && (
-            <span className="rounded-md bg-slate-700 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white">ENDED</span>
+            <span className="rounded bg-slate-700 px-1 py-[1px] text-[8px] font-black tracking-wider text-white">ENDED</span>
           )}
           {c.category && (
             <span
-              className="truncate rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-bold text-slate-300"
+              className="truncate rounded border border-white/10 bg-white/[0.04] px-1 py-[1px] text-[8px] font-bold text-slate-300"
               style={{ color: c.category.color ?? undefined }}
             >
               {c.category.name}
             </span>
           )}
           {c.is_featured && (
-            <span className="inline-flex items-center gap-0.5 rounded-md bg-amber-400/95 px-1.5 py-0.5 text-[9px] font-black text-slate-900">
-              <Star className="h-2.5 w-2.5" />
+            <span className="inline-flex items-center gap-0.5 rounded bg-amber-400/95 px-1 py-[1px] text-[8px] font-black text-slate-900">
+              <Star className="h-2 w-2" />
             </span>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-1.5 text-[9px] font-bold text-slate-400">
+        <div className="flex shrink-0 items-center gap-1 text-[8px] font-bold text-slate-400">
           <span className="inline-flex items-center gap-0.5">
-            <Users className="h-2.5 w-2.5" /> {formatK(c.views_count ?? 0)}
+            <Users className="h-2 w-2" /> {formatK(c.views_count ?? 0)}
           </span>
         </div>
       </div>
