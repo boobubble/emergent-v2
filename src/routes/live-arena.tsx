@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
@@ -131,7 +132,7 @@ function LiveArenaPage() {
   const totalVotes = arr.reduce((s, c) => s + (c.total_votes ?? 0), 0);
   const totalPrize = arr.reduce((s, c) => s + prizeValue(c.rewards), 0);
 
-  const filters: { key: Filter; label: string; icon: JSX.Element }[] = [
+  const filters: { key: Filter; label: string; icon: React.ReactNode }[] = [
     { key: "all", label: "All", icon: <Sparkles className="h-3.5 w-3.5" /> },
     { key: "live", label: "Live", icon: <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-rose-400" /> },
     { key: "upcoming", label: "Upcoming", icon: <Clock className="h-3.5 w-3.5" /> },
@@ -238,7 +239,7 @@ function LiveArenaPage() {
   );
 }
 
-function StatPill({ icon, label, value, tint }: { icon: JSX.Element; label: string; value: number; tint: "rose" | "sky" | "fuchsia" | "amber" }) {
+function StatPill({ icon, label, value, tint }: { icon: React.ReactNode; label: string; value: number; tint: "rose" | "sky" | "fuchsia" | "amber" }) {
   const tints: Record<string, string> = {
     rose: "border-rose-400/30 bg-rose-500/10 text-rose-200",
     sky: "border-sky-400/30 bg-sky-500/10 text-sky-200",
@@ -439,7 +440,7 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
   );
 }
 
-function Stat({ icon, value }: { icon: JSX.Element; value: number }) {
+function Stat({ icon, value }: { icon: React.ReactNode; value: number }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
       <div>{icon}</div>

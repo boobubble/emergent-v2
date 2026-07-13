@@ -19,6 +19,7 @@ import { Route as RadioRouteImport } from './routes/radio'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PagesRouteImport } from './routes/pages'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LiveArenaRouteImport } from './routes/live-arena'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as InstallerRouteImport } from './routes/installer'
 import { Route as HeropageRouteImport } from './routes/heropage'
@@ -198,6 +199,11 @@ const PagesRoute = PagesRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveArenaRoute = LiveArenaRouteImport.update({
+  id: '/live-arena',
+  path: '/live-arena',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
@@ -885,6 +891,7 @@ export interface FileRoutesByFullPath {
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/live-arena': typeof LiveArenaRoute
   '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
   '/pricing': typeof PricingRoute
@@ -1024,6 +1031,7 @@ export interface FileRoutesByTo {
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/live-arena': typeof LiveArenaRoute
   '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
   '/pricing': typeof PricingRoute
@@ -1167,6 +1175,7 @@ export interface FileRoutesById {
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/live-arena': typeof LiveArenaRoute
   '/login': typeof LoginRoute
   '/pages': typeof PagesRoute
   '/pricing': typeof PricingRoute
@@ -1311,6 +1320,7 @@ export interface FileRouteTypes {
     | '/heropage'
     | '/installer'
     | '/leaderboard'
+    | '/live-arena'
     | '/login'
     | '/pages'
     | '/pricing'
@@ -1450,6 +1460,7 @@ export interface FileRouteTypes {
     | '/heropage'
     | '/installer'
     | '/leaderboard'
+    | '/live-arena'
     | '/login'
     | '/pages'
     | '/pricing'
@@ -1592,6 +1603,7 @@ export interface FileRouteTypes {
     | '/heropage'
     | '/installer'
     | '/leaderboard'
+    | '/live-arena'
     | '/login'
     | '/pages'
     | '/pricing'
@@ -1735,6 +1747,7 @@ export interface RootRouteChildren {
   HeropageRoute: typeof HeropageRoute
   InstallerRoute: typeof InstallerRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  LiveArenaRoute: typeof LiveArenaRoute
   LoginRoute: typeof LoginRoute
   PagesRoute: typeof PagesRoute
   PricingRoute: typeof PricingRoute
@@ -1835,6 +1848,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live-arena': {
+      id: '/live-arena'
+      path: '/live-arena'
+      fullPath: '/live-arena'
+      preLoaderRoute: typeof LiveArenaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leaderboard': {
@@ -2999,6 +3019,7 @@ const rootRouteChildren: RootRouteChildren = {
   HeropageRoute: HeropageRoute,
   InstallerRoute: InstallerRoute,
   LeaderboardRoute: LeaderboardRoute,
+  LiveArenaRoute: LiveArenaRoute,
   LoginRoute: LoginRoute,
   PagesRoute: PagesRoute,
   PricingRoute: PricingRoute,
