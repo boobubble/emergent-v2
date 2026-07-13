@@ -526,3 +526,136 @@ function formatK(n: number): string {
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(n);
 }
+
+function timeAgoShort(iso: string): string {
+  const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return `${s || 1}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function CardLiveSupporters({ competitionId }: { competitionId: string }) {
+  const fetcher = useServerFn(listRecentCompetitionVoters);
+  const { data = [], refetch } = useQuery({
+    queryKey: ["arena-card-voters", competitionId],
+    queryFn: () => fetcher({ data: { competitionId, limit: 30 } }),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+
+  // Realtime — reuse existing broadcast channel emitted on vote
+  useEffect(() => {
+    const ch = supabase
+      .channel(`arena-card:${competitionId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "competition_votes", filter: `competition_id=eq.${competitionId}` },
+        () => refetch(),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [competitionId, refetch]);
+
+  // Keep "X min ago" fresh
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const voters = data as Array<{
+    voter_id: string;
+    voted_at: string;
+    username: string | null;
+    avatar_url: string | null;
+    avatar_color: string | null;
+    is_verified: boolean;
+  }>;
+
+  // Engagement badge — votes in last 10 minutes
+  const recent10m = useMemo(() => {
+    const cutoff = Date.now() - 10 * 60_000;
+    return voters.filter((v) => new Date(v.voted_at).getTime() >= cutoff).length;
+  }, [voters]);
+
+  const engagement = recent10m > 50
+    ? { label: "⚡ Voting Frenzy", cls: "border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-200" }
+    : recent10m > 10
+      ? { label: "🔥 Crowd is Active", cls: "border-orange-400/40 bg-orange-500/15 text-orange-200" }
+      : null;
+
+  if (voters.length === 0) {
+    return (
+      <div className="mt-2 rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-2 py-1.5 text-center text-[9.5px] font-semibold text-slate-400">
+        ✨ Be the first supporter
+      </div>
+    );
+  }
+
+  const stack = voters.slice(0, 6);
+  const extra = Math.max(0, voters.length - stack.length);
+  const strip = voters.slice(0, 3);
+
+  return (
+    <div className="mt-2 space-y-1.5">
+      <div className="flex items-center gap-1">
+        <div className="flex -space-x-2">
+          <AnimatePresence initial={false}>
+            {stack.map((v) => (
+              <motion.div
+                key={`${v.voter_id}-${v.voted_at}`}
+                layout
+                initial={{ opacity: 0, scale: 0.5, x: -8 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ type: "spring", stiffness: 320, damping: 24 }}
+                className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full border border-slate-900 ring-1 ring-white/10"
+                style={{ background: v.avatar_color ?? "#334155" }}
+                title={v.username ?? "Supporter"}
+              >
+                {v.avatar_url ? (
+                  <img src={v.avatar_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center text-[8px] font-black text-white">
+                    {(v.username ?? "?").slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+                {v.is_verified && (
+                  <BadgeCheck className="absolute -bottom-0.5 -right-0.5 h-2 w-2 text-sky-400" />
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+        {extra > 0 && (
+          <span className="ml-1 text-[9px] font-bold text-slate-400">+{extra} more</span>
+        )}
+      </div>
+
+      {engagement && (
+        <span className={`inline-block rounded-full border px-1.5 py-[1px] text-[8.5px] font-black tracking-wide ${engagement.cls}`}>
+          {engagement.label}
+        </span>
+      )}
+
+      <div>
+        <div className="text-[8.5px] font-bold uppercase tracking-wider text-slate-500">Recently supported</div>
+        <ul className="mt-0.5 space-y-[1px]">
+          {strip.map((v) => (
+            <li key={`${v.voter_id}-${v.voted_at}-r`} className="flex items-center justify-between gap-1 text-[9.5px]">
+              <span className="flex min-w-0 items-center gap-0.5">
+                <span className="truncate font-bold text-slate-200">{v.username ?? "Supporter"}</span>
+                {v.is_verified && <BadgeCheck className="h-2 w-2 shrink-0 text-sky-400" />}
+              </span>
+              <span className="shrink-0 text-[8.5px] font-semibold text-slate-500">{timeAgoShort(v.voted_at)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
