@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -138,7 +139,7 @@ function CompetitionsIndex() {
   const sections: Array<{
     key: string;
     title: string;
-    icon: JSX.Element;
+    icon: React.ReactNode;
     items: EnrichedCompetition[];
     empty?: string;
     tint?: string;
@@ -277,7 +278,7 @@ function SectionRow({
   onEdit,
 }: {
   title: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   items: EnrichedCompetition[];
   empty?: string;
   tint?: string;
