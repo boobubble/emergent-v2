@@ -43,6 +43,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/general",       label: "General",       icon: SlidersHorizontal, keywords: ["site name", "tagline", "basics"] },
       { to: "/admin/landing",       label: "Landing Pages", icon: Home,              keywords: ["landing", "home", "homepage", "welcome", "hero", "heropage", "marketing", "public", "tabs"] },
       { to: "/admin/appearance",    label: "Themes",        icon: Palette,           keywords: ["theme", "colors", "logo", "favicon"] },
+      { to: "/admin/branding-check", label: "White Label Checker", icon: ShieldAlert,  keywords: ["white label", "branding", "audit", "checker", "score", "readiness", "whitelabel"] },
       { to: "/admin/social-layout", label: "Layout",        icon: LayoutGrid,        keywords: ["layout", "sidebar", "widgets"] },
       { to: "/admin/feed-themes",   label: "Feed Themes",   icon: Palette,           keywords: ["feed", "skins", "themes", "store", "coins", "premium", "layout"] },
       { to: "/admin/chat-themes",   label: "Chatroom Themes", icon: Palette,         keywords: ["chatroom", "chat", "skins", "themes", "store", "coins", "premium", "override", "event", "layout"] },
