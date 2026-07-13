@@ -400,7 +400,15 @@ function CompetitionDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-[#050308] pb-24 text-white">
+    <div
+      className="relative min-h-screen pb-24 text-white"
+      style={{
+        background:
+          "radial-gradient(1200px 600px at 50% -10%, rgba(124,58,237,0.18), transparent 60%)," +
+          "radial-gradient(900px 500px at 100% 0%, rgba(245,158,11,0.10), transparent 55%)," +
+          "linear-gradient(180deg, #0F172A 0%, #0B1220 100%)",
+      }}
+    >
 
       {showPremiumSections && <FloatingReactions competitionId={c.id} />}
       {showPremiumSections && votingOpen && <LiveLeaderBanner topLeaderName={topLeaderName} />}
