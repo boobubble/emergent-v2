@@ -316,8 +316,18 @@ function CompetitionDetail() {
   const resolvedLayout = resolveLayout(layoutStyle, eligibleCount);
   const showBattleArenaHero = resolvedLayout === "vs_battle";
 
+  // Premium battlefield derived state
+  const sortedCompetitors = [...competitors]
+    .filter((cc) => !cc.is_hidden && !cc.is_disqualified)
+    .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
+  const topLeaderName = sortedCompetitors[0]?.name ?? null;
+  const totalCompetitorVotes = sortedCompetitors.reduce((s, cc) => s + (cc.vote_count ?? 0), 0);
+  const showPremiumSections = c.status !== "draft";
+
   return (
     <div className="min-h-screen bg-[#050308] pb-24 text-foreground">
+      {showPremiumSections && <FloatingReactions competitionId={c.id} />}
+
       {/* Premium Battle Arena hero — only for VS Battle layout */}
       {showBattleArenaHero && (
         <BattleArena
