@@ -759,6 +759,21 @@ export const adminFinalizeWinners = createServerFn({ method: "POST" })
     }));
     if (notifRows.length) await context.supabase.from("notifications").insert(notifRows);
 
+    // Emit gamification events for badge/XP awards (place-tiered)
+    const { supabaseAdmin: adminSb } = await import("@/integrations/supabase/client.server");
+    for (const r of rows) {
+      const event =
+        r.place === 1 ? "competition_win_1st" :
+        r.place === 2 ? "competition_win_2nd" :
+        r.place === 3 ? "competition_win_3rd" : "competition_win";
+      try {
+        await adminSb.rpc("gam_emit", {
+          _user_id: r.user_id, _event_type: event, _amount: 1,
+          _metadata: { competition_id: data.competitionId, name: comp.name, place: r.place },
+        });
+      } catch { /* best-effort */ }
+    }
+
     return { ok: true, winners: rows.length };
   });
 
