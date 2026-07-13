@@ -50,7 +50,7 @@ export function BattleActivityFeed({
       setExtras((prev) => [
         {
           id: `leader-${Date.now()}`,
-          kind: "leader",
+          kind: "leader" as const,
           ts: Date.now(),
           text: `${topLeaderName} took the lead 👑`,
         },
@@ -69,7 +69,7 @@ export function BattleActivityFeed({
       setExtras((prev) => [
         {
           id: `ms-${bucket}`,
-          kind: "milestone",
+          kind: "milestone" as const,
           ts: Date.now(),
           text: `🏆 ${bucket * 100} votes reached!`,
         },
@@ -88,7 +88,7 @@ export function BattleActivityFeed({
         setExtras((prev) => [
           {
             id: `bc-${Date.now()}-${Math.random()}`,
-            kind: "vote",
+            kind: "vote" as const,
             ts: Date.now(),
             text: `${payload.voter ?? "Someone"} voted for ${payload.target ?? "a nominee"}`,
           },
@@ -104,7 +104,7 @@ export function BattleActivityFeed({
   const items = useMemo<FeedItem[]>(() => {
     const voteItems: FeedItem[] = (data as any[]).map((v) => ({
       id: `v-${v.voter_id}-${v.voted_at}`,
-      kind: "vote",
+      kind: "vote" as const,
       ts: new Date(v.voted_at).getTime(),
       text: `${v.username ?? "A supporter"} voted for ${v.competitor_name ?? "a nominee"}`,
       actor: v.username,
