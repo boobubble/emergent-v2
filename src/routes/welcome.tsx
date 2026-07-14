@@ -103,6 +103,14 @@ function LandingPage() {
   const [pollChoice, setPollChoice] = useState<number | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [authPopup, setAuthPopup] = useState<AuthPopup>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const handleNav = (to: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setMenuOpen(false);
+    if (!user) { setAuthPopup("signin"); return; }
+    navigate({ to });
+  };
 
   useEffect(() => {
     try {
