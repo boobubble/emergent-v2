@@ -295,7 +295,7 @@ function LandingPage() {
 
           <nav className="ml-6 hidden items-center gap-1 lg:flex">
             {navLinks.map((l) => (
-              <Link key={l.to + l.label} to={l.to}
+              <Link key={l.to + l.label} to={l.to} onClick={handleNav(l.to)}
                 className="rounded-full px-3.5 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white"
                 activeProps={{ className: "rounded-full px-3.5 py-2 text-sm font-semibold text-white bg-white/10" }}>
                 {l.label}
