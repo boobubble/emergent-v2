@@ -19,6 +19,7 @@ import { earnFeedReaction, earnFeedComment, earnFeedShare, boostPost } from "@/l
 import { claimShareReward } from "@/lib/boobubble.functions";
 import { SPEND } from "@/lib/economy-config";
 import { FeedVideo } from "@/components/feed/FeedVideo";
+import { useAuthGate } from "@/lib/auth-gate";
 
 
 function timeAgo(iso: string) {
