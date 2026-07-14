@@ -465,10 +465,9 @@ function HeroHomepage() {
   }, [dark]);
   const [popup, setPopup] = useState<AuthPopup>(null);
   const navigate = useNavigate();
-  const goOrPopup = (to: string) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!user) { setPopup("signin"); return; }
-    navigate({ to });
+  const goOrPopup = (_to: string) => (_e: React.MouseEvent) => {
+    // Allow normal navigation. Popups for login/signup are shown only when
+    // guests attempt an action (post, vote, message), not on nav click.
   };
 
   
