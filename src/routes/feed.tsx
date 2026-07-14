@@ -761,17 +761,19 @@ function FeedPage() {
             </PullToRefresh>
           ) : (
             <>
-              <div className="mb-4 space-y-3 lg:hidden">
-                <Suspense fallback={<RewardsWidgetSkeleton />}>
-                  <RewardsWidget
-                    meId={meId}
-                    onOpenChest={() => setView("dailyChest")}
-                    onOpenSpin={() => setView("spin")}
-                    onOpenShop={() => setView("shop")}
-                  />
-                </Suspense>
-                <DailyChallengesWidget meId={meId} />
-              </div>
+              {meId && (
+                <div className="mb-4 space-y-3 lg:hidden">
+                  <Suspense fallback={<RewardsWidgetSkeleton />}>
+                    <RewardsWidget
+                      meId={meId}
+                      onOpenChest={() => setView("dailyChest")}
+                      onOpenSpin={() => setView("spin")}
+                      onOpenShop={() => setView("shop")}
+                    />
+                  </Suspense>
+                  <DailyChallengesWidget meId={meId} />
+                </div>
+              )}
               <BroadcasterTicker target="feed" className="mb-3 rounded-md" />
               <StoryTray />
               {meId ? (
