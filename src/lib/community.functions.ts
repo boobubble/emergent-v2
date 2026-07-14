@@ -221,20 +221,19 @@ export const joinCommunity = createServerFn({ method: "POST" })
       }, { onConflict: "community_id,user_id" });
     if (memErr) throw new Error(memErr.message);
 
-    // Increment invite uses (best-effort)
-    if (inviteId) {
-      await supabase.rpc("increment_invite_uses" as never, { _invite: inviteId } as never).then(() => undefined).catch(() => undefined);
-      // Fallback direct update if RPC not present
-      await supabase.from("community_invites").update({ uses: 1 } as never).eq("id", inviteId).select().then(() => undefined).catch(() => undefined);
-    }
-
-    // Bump member_count via admin (avoid needing extra policy)
+    // Increment invite uses + member count via admin (server-only, avoids extra policies).
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.rpc("increment_community_members" as never, { _community: data.communityId } as never).catch(async () => {
-      await supabaseAdmin.from("communities").select("member_count").eq("id", data.communityId).single().then(async ({ data: row }) => {
-        if (row) await supabaseAdmin.from("communities").update({ member_count: (row.member_count ?? 0) + 1 }).eq("id", data.communityId);
-      });
-    });
+    if (inviteId) {
+      try {
+        const { data: invRow } = await supabaseAdmin.from("community_invites").select("uses").eq("id", inviteId).single();
+        if (invRow) await supabaseAdmin.from("community_invites").update({ uses: (invRow.uses ?? 0) + 1 }).eq("id", inviteId);
+      } catch { /* best-effort */ }
+    }
+    try {
+      const { data: cRow } = await supabaseAdmin.from("communities").select("member_count").eq("id", data.communityId).single();
+      if (cRow) await supabaseAdmin.from("communities").update({ member_count: (cRow.member_count ?? 0) + 1 }).eq("id", data.communityId);
+    } catch { /* best-effort */ }
+
 
     return { ok: true, state: "joined" as const };
   });
