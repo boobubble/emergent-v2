@@ -464,6 +464,13 @@ function HeroHomepage() {
     }
   }, [dark]);
   const [popup, setPopup] = useState<AuthPopup>(null);
+  const navigate = useNavigate();
+  const goOrPopup = (to: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user) { setPopup("signin"); return; }
+    navigate({ to });
+  };
+
   
   const [scrolled, setScrolled] = useState(false);
 
