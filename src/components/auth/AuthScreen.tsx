@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-store";
 import { useBrand } from "@/lib/branding";
 import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
-import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-config";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
 import { LiveCommunityBackground } from "@/components/auth/LiveCommunityBackground";
@@ -18,7 +17,7 @@ function UsernameHint({ status }: { status: UsernameStatus }) {
   return <p className="mt-1 text-[10px] font-semibold text-destructive">{status.message}</p>;
 }
 
-export type AuthPopup = null | "signin" | "signup" | "guest" | "forgot";
+export type AuthPopup = null | "signin" | "signup" | "forgot";
 type Popup = AuthPopup;
 
 /**
