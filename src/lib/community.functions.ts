@@ -321,7 +321,8 @@ export const updateCommunityBranding = createServerFn({ method: "POST" })
 
     const { error } = await context.supabase
       .from("communities")
-      .update(payload)
+      .update(payload as never)
+
       .eq("id", communityId);
     if (error) throw new Error(error.message);
     return { ok: true };
