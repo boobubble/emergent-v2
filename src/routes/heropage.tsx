@@ -823,13 +823,14 @@ function HeroHomepage() {
             <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-lg shadow-lg">✨</div>
             <span className="text-lg font-bold tracking-tight">{cfg.brandName}</span>
           </div>
-          <nav className="hidden items-center gap-6 text-sm opacity-80 md:flex">
-            <a href="#top" className="hover:opacity-100">Home</a>
-            <a href="#chatrooms" className="hover:opacity-100">Chatrooms</a>
-            <a href="#feed" className="hover:opacity-100">Feed</a>
-            <a href="#radio" className="hover:opacity-100">Radio</a>
-            <a href="#games" className="hover:opacity-100">Games</a>
-            <a href="#rewards" className="hover:opacity-100">Rewards</a>
+          <nav className="hidden items-center gap-5 text-sm opacity-80 md:flex">
+            <a href="/heropage" onClick={goOrPopup("/heropage")} className="hover:opacity-100">Home</a>
+            <a href="/" onClick={goOrPopup("/")} className="hover:opacity-100">Chatrooms</a>
+            <a href="/feed" onClick={goOrPopup("/feed")} className="hover:opacity-100">Feed</a>
+            <a href="/confessions" onClick={goOrPopup("/confessions")} className="hover:opacity-100">Confessions</a>
+            <a href="/live-arena" onClick={goOrPopup("/live-arena")} className="hover:opacity-100">Live Arena</a>
+            <a href="/games" onClick={goOrPopup("/games")} className="hover:opacity-100">Games</a>
+            <a href="/leaderboard" onClick={goOrPopup("/leaderboard")} className="hover:opacity-100">Leaderboard</a>
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle dark={dark} setDark={setDark} />
