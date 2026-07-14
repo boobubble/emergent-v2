@@ -396,7 +396,7 @@ export const setMemberState = createServerFn({ method: "POST" })
     const payload: Record<string, unknown> = {};
     if (data.role) payload.role = data.role;
     if (data.status) payload.status = data.status;
-    const { error } = await context.supabase.from("community_members").update(payload).eq("id", data.memberId);
+    const { error } = await context.supabase.from("community_members").update(payload as never).eq("id", data.memberId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
