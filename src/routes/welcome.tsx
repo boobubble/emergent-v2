@@ -105,11 +105,11 @@ function LandingPage() {
   const [authPopup, setAuthPopup] = useState<AuthPopup>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const handleNav = (to: string) => (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleNav = (_to: string) => (_e: React.MouseEvent) => {
+    // Let <Link> navigate normally. Guests will land on the target page
+    // (or be sent back to landing by AuthGate). Login/signup popup is
+    // only triggered by action attempts (post, vote, message), not by nav.
     setMenuOpen(false);
-    if (!user) { setAuthPopup("signin"); return; }
-    navigate({ to });
   };
 
   useEffect(() => {
