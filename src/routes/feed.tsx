@@ -191,7 +191,6 @@ function FeedPage() {
   }
 
   useEffect(() => {
-    if (!meId) return;
     loadPosts();
     const ch = supabase.channel("feed-posts")
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, (payload) => {
@@ -341,25 +340,7 @@ function FeedPage() {
   };
 
 
-
-
-  if (!user) return null;
-  if (user.isGuest) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-background p-6 text-center text-foreground">
-        <div className="max-w-sm rounded-3xl border border-border bg-card p-8">
-          <div className="text-3xl">👤</div>
-          <h1 className="mt-3 text-lg font-bold">Feed isn't available for guests</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Guests can chat in the lobby only. Create an account to post, react, and follow friends in the feed.
-          </p>
-          <Link to="/chatroom" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-            <ArrowLeft className="h-4 w-4" /> Back to chat
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const displayUsername = user?.username ?? "Visitor";
 
   const TABS: { id: Tab; label: string; icon: typeof Sparkles }[] = [
     { id: "foryou", label: "For You", icon: Sparkles },
@@ -463,7 +444,7 @@ function FeedPage() {
         />
         <OrkutFeedLayout
           meId={meId}
-          user={{ username: user.username }}
+          user={{ username: displayUsername }}
           profiles={profiles}
           posts={filtered}
           friendIds={friendIds}
@@ -633,8 +614,8 @@ function FeedPage() {
               <MessageCircle className="h-5 w-5 text-foreground" />
             </button>
             <UserMenu
-              username={user.username}
-              onProfile={() => { setProfileUsername(user.username); setView("profile"); }}
+              username={displayUsername}
+              onProfile={() => { setProfileUsername(displayUsername); setView("profile"); }}
               onSettings={() => setView("account")}
             />
 
@@ -926,7 +907,7 @@ function FeedPage() {
           </button>
         </div>
         <button onClick={() => setView("explore")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "explore" ? "text-primary" : "text-muted-foreground"}`}><Compass className="h-5 w-5" /> Explore</button>
-        <button onClick={() => { setProfileUsername(user.username); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
+        <button onClick={() => { setProfileUsername(displayUsername); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
       </nav>
 
       {/* Mobile quick-actions speed dial (left-bottom, opposite the theme toggle) */}

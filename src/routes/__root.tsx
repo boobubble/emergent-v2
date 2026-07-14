@@ -16,7 +16,7 @@ import { IgnoreProvider } from "@/lib/ignore-store";
 import { AppSettingsProvider } from "@/lib/app-settings";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
 import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
@@ -170,21 +170,15 @@ function RootComponent() {
 // Paths an unauthenticated visitor can reach directly (no AuthScreen takeover).
 const PUBLIC_PATH_PREFIXES = ["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/p/", "/api/", "/installer"];
 const PUBLIC_EXACT = new Set(["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/installer"]);
+const READ_ONLY_PUBLIC_APP_PREFIXES = ["/feed", "/chatroom", "/chatrooms", "/confessions", "/live-arena", "/leaderboard"];
 
 
-// Routes guests may browse without a full account. Visiting these while
-// signed out auto-creates an anonymous guest session (if guest access is
-// enabled), so the page loads. Individual actions inside (post, vote, DM)
-// still upgrade the guest to a real signup via GuestUpgradePrompt.
-const GUEST_BROWSABLE_PREFIXES = ["/feed", "/chatroom", "/chatrooms", "/confessions", "/live-arena", "/leaderboard", "/games", "/reels", "/find-friends", "/groups", "/achievements", "/gamification", "/competitions", "/pricing", "/pages", "/trust", "/feedback"];
-const GUEST_BROWSABLE_EXACT = new Set(["/"]);
-
-function isGuestBrowsablePath(pathname: string) {
-  if (GUEST_BROWSABLE_EXACT.has(pathname)) return true;
-  return GUEST_BROWSABLE_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+function isReadOnlyPublicAppPath(pathname: string) {
+  return READ_ONLY_PUBLIC_APP_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
 function isPublicPath(pathname: string) {
+  if (isReadOnlyPublicAppPath(pathname)) return true;
   if (PUBLIC_EXACT.has(pathname)) return true;
   return PUBLIC_PATH_PREFIXES.some((p) => pathname.startsWith(p));
 }
@@ -210,26 +204,6 @@ function AuthenticatedHooks({ userId }: { userId: string }) {
   return null;
 }
 
-function GuestAutoSignIn({ fallback }: { fallback: string }) {
-  const { loginAsGuest } = useAuth();
-  const [failed, setFailed] = useState(false);
-  const triedRef = useRef(false);
-  useEffect(() => {
-    if (triedRef.current) return;
-    triedRef.current = true;
-    loginAsGuest().catch((e) => {
-      console.warn("Guest auto sign-in failed:", e);
-      setFailed(true);
-    });
-  }, [loginAsGuest]);
-  if (failed) return <Navigate to={fallback} replace />;
-  return (
-    <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">
-      <p>Loading…</p>
-    </div>
-  );
-}
-
 function AuthGate() {
   const { user, ready } = useAuth();
   const location = useLocation();
@@ -239,16 +213,7 @@ function AuthGate() {
   const landingPath = homeMode === "hero" ? "/heropage" : "/welcome";
 
   if (!user && isPublicPath(path)) {
-    return (
-      <>
-        <HeadFootScripts />
-        <AdsAutoLoader />
-        <SessionConflictBanner />
-        <Outlet />
-        <Sonner />
-        <RealtimeDebugOverlay />
-      </>
-    );
+    return <PublicOutlet readOnlyApp={isReadOnlyPublicAppPath(path)} />;
   }
 
   // No stored session at all → send guests to landing immediately.
@@ -275,18 +240,7 @@ function AuthGate() {
 
   if (!user) {
     // Public, self-contained routes (landing, login, password reset, public post pages) render normally.
-    if (isPublicPath(path)) {
-      return (
-        <>
-          <HeadFootScripts />
-          <AdsAutoLoader />
-          <SessionConflictBanner />
-          <Outlet />
-          <Sonner />
-          <RealtimeDebugOverlay />
-        </>
-      );
-    }
+    if (isPublicPath(path)) return <PublicOutlet readOnlyApp={isReadOnlyPublicAppPath(path)} />;
     // Wait for the home_page setting before redirecting so guests don't get
     // briefly sent to /welcome while the admin-selected mode is still loading.
     if (!homeReady) {
@@ -295,12 +249,6 @@ function AuthGate() {
           <p>Loading…</p>
         </div>
       );
-    }
-    // Guest-browsable routes → transparently sign in as an anonymous guest
-    // so the page renders. Falls through to the landing redirect if guest
-    // access is disabled or the anonymous sign-in fails.
-    if (isGuestBrowsablePath(path)) {
-      return <GuestAutoSignIn fallback={landingPath} />;
     }
     // Everything else → send guests to the configured landing page first.
     return <Navigate to={landingPath} replace />;
@@ -331,6 +279,27 @@ function AuthGate() {
           <Sonner />
           <RealtimeDebugOverlay />
         </IgnoreProvider>
+      </FeedPrefsProvider>
+    </ChatProvider>
+  );
+}
+
+function PublicOutlet({ readOnlyApp }: { readOnlyApp: boolean }) {
+  const content = (
+    <>
+      <HeadFootScripts />
+      <AdsAutoLoader />
+      <SessionConflictBanner />
+      <Outlet />
+      <Sonner />
+      <RealtimeDebugOverlay />
+    </>
+  );
+  if (!readOnlyApp) return content;
+  return (
+    <ChatProvider username="Visitor" authUserId={null} isGuest>
+      <FeedPrefsProvider>
+        <IgnoreProvider>{content}</IgnoreProvider>
       </FeedPrefsProvider>
     </ChatProvider>
   );
