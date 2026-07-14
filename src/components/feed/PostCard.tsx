@@ -364,7 +364,7 @@ export const PostCard = memo(function PostCard({
                 <EmojiPicker onPick={(e) => setCommentText((t) => t + e)} />
               </PopoverContent>
             </Popover>
-            <button onClick={addComment} disabled={sending || !commentText.trim()} className="rounded-full bg-gradient-to-br from-primary to-primary/80 p-2.5 text-primary-foreground shadow-[0_8px_22px_-8px_var(--primary-glow)] hover:scale-[1.06] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100">
+            <button onClick={() => requireAuth(addComment)} disabled={sending || !commentText.trim()} className="rounded-full bg-gradient-to-br from-primary to-primary/80 p-2.5 text-primary-foreground shadow-[0_8px_22px_-8px_var(--primary-glow)] hover:scale-[1.06] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
           </div>
