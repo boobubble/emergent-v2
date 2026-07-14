@@ -1,11 +1,10 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { loginWithIdentifier, deleteGuestAccount } from "@/lib/auth.functions";
+import { loginWithIdentifier } from "@/lib/auth.functions";
 import { deleteDemoAccount } from "@/lib/demo-account.functions";
 import { checkDeviceBan, recordDevice } from "@/lib/device.functions";
 import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
-import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-config";
 
 async function loadSignupAccess(): Promise<SignupAccessConfig> {
   try {
@@ -14,13 +13,6 @@ async function loadSignupAccess(): Promise<SignupAccessConfig> {
     return { ...SIGNUP_ACCESS_DEFAULTS, ...v };
   } catch { return SIGNUP_ACCESS_DEFAULTS; }
 }
-async function loadGuestAccess(): Promise<GuestAccessConfig> {
-  try {
-    const { data } = await supabase.from("app_settings").select("value").eq("key", "guest_access").maybeSingle();
-    const v = (data?.value as Partial<GuestAccessConfig> | null) ?? {};
-    return { ...GUEST_ACCESS_DEFAULTS, ...v };
-  } catch { return GUEST_ACCESS_DEFAULTS; }
-}
 
 import type { Session } from "@supabase/supabase-js";
 
@@ -28,6 +20,7 @@ export interface AuthUser {
   id: string;
   email: string;
   username: string;
+  /** @deprecated Guest accounts have been removed. Always false. */
   isGuest: boolean;
   isDemo: boolean;
 }
@@ -46,7 +39,6 @@ interface Ctx {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string, gender: "male" | "female" | "other", extras?: SignupExtras) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginAsGuest: (username?: string, gender?: "male" | "female" | "other") => Promise<void>;
   logout: () => Promise<void>;
   refreshUsername: () => Promise<void>;
 }
@@ -150,30 +142,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let isReady = false;
 
     // Immediate AuthUser derived purely from the session (no network).
-    // username starts as a best-effort placeholder; the real profile.username
-    // is fetched in the background and patched in.
     function userFromSession(session: Session): AuthUser {
       const u = session.user;
-      const isGuest = Boolean((u as { is_anonymous?: boolean }).is_anonymous);
       const meta = (u.user_metadata ?? {}) as { username?: string; is_demo?: boolean };
       const isDemo = meta.is_demo === true;
       const placeholder =
         getCachedUsername(u.id) ||
         meta.username?.trim() ||
         u.email?.split("@")[0] ||
-        (isGuest ? "guest" : "user");
-      return { id: u.id, email: u.email ?? "", username: placeholder, isGuest, isDemo };
+        "user";
+      return { id: u.id, email: u.email ?? "", username: placeholder, isGuest: false, isDemo };
     }
 
 
     // Background side effects + real username fetch. Never blocks `ready`.
     function hydrateProfileBackground(session: Session) {
       const u = session.user;
-      const isGuest = Boolean((u as { is_anonymous?: boolean }).is_anonymous);
       const email = u.email ?? undefined;
-      if (!isGuest) {
-        void flushPendingAvatar(u.id, email).then(() => publishWelcomePost(u.id, email));
-      }
+      void flushPendingAvatar(u.id, email).then(() => publishWelcomePost(u.id, email));
       void import("@/lib/sound-prefs").then((m) => m.hydrateSoundPrefsFromServer());
       void (async () => {
         try {
@@ -257,24 +243,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [user?.id]);
-
-  // Flush guest accounts when the tab closes / page hides.
-  useEffect(() => {
-    if (!user?.isGuest) return;
-    const onExit = () => {
-      supabase.auth.getSession().then(({ data }) => {
-        const token = data.session?.access_token;
-        if (!token) return;
-        const body = new Blob([JSON.stringify({ access_token: token })], { type: "application/json" });
-        try {
-          if (navigator.sendBeacon) navigator.sendBeacon("/api/public/guest-cleanup", body);
-          else fetch("/api/public/guest-cleanup", { method: "POST", body, keepalive: true });
-        } catch { /* noop */ }
-      });
-    };
-    window.addEventListener("pagehide", onExit);
-    return () => window.removeEventListener("pagehide", onExit);
-  }, [user?.isGuest]);
 
   // Flush demo accounts when the tab closes / page hides so all their
   // posts/friendships/etc. are wiped even if the user never clicks Logout.
@@ -371,25 +339,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error(error.message || "Google sign-in failed");
   }, []);
 
-  const loginAsGuest = useCallback(async (username?: string, gender?: "male" | "female" | "other") => {
-    const [signupCfg, guestCfg] = await Promise.all([loadSignupAccess(), loadGuestAccess()]);
-    if (!signupCfg.guestEnabled || !guestCfg.enabled) {
-      throw new Error(signupCfg.disabledMessage || "Guest logins are temporarily disabled.");
-    }
-    const cleaned = (username ?? "").trim();
-    const letterCount = cleaned.replace(/[^a-zA-Z]/g, "").length;
-    if (cleaned && (letterCount < 2 || letterCount > 10)) {
-      throw new Error("Guest name must contain 2 to 10 letters.");
-    }
-    const g: "male" | "female" | "other" = gender && ["male", "female", "other"].includes(gender) ? gender : "other";
-    const meta: Record<string, string> = { gender: g };
-    if (cleaned) meta.username = cleaned;
-    const { error } = await supabase.auth.signInAnonymously({ options: { data: meta } });
-    if (error) throw new Error(error.message);
-  }, []);
-
   const logout = useCallback(async () => {
-    const wasGuest = user?.isGuest === true;
     // Detect demo accounts by their auth metadata flag before we sign out.
     let wasDemo = false;
     try {
@@ -402,15 +352,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const endFn = (window as unknown as { __lovableEndMyLudoGames?: () => Promise<void> }).__lovableEndMyLudoGames;
       if (typeof endFn === "function") await endFn();
     } catch (e) { console.error("end-ludo-on-logout failed", e); }
-    if (wasGuest) {
-      try { await deleteGuestAccount(); } catch (e) { console.error("Guest cleanup failed", e); }
-    }
     if (wasDemo) {
       try { await deleteDemoAccount(); } catch (e) { console.error("Demo cleanup failed", e); }
     }
     await supabase.auth.signOut();
     setUser(null);
-  }, [user?.isGuest]);
+  }, []);
 
   const refreshUsername = useCallback(async () => {
     const { data } = await supabase.auth.getSession();
@@ -423,7 +370,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(prev => prev ? { ...prev, username: next } : prev);
   }, []);
 
-  const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, loginAsGuest, logout, refreshUsername }), [user, ready, login, signup, loginWithGoogle, loginAsGuest, logout, refreshUsername]);
+  const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, logout, refreshUsername }), [user, ready, login, signup, loginWithGoogle, logout, refreshUsername]);
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 
