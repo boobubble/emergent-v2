@@ -22,17 +22,17 @@ type Popup = AuthPopup;
 
 /**
  * Embeddable auth dialogs. Use from any page (e.g. the Welcome landing) to
- * provide sign in / sign up / forgot password / guest entry without sending
- * users to a separate /login page.
+ * provide sign in / sign up / forgot password without sending users to a
+ * separate /login page.
  */
 export function AuthDialogs({
   popup,
   setPopup,
-  guestEnabled = true,
   signupEnabled = true,
 }: {
   popup: AuthPopup;
   setPopup: (p: AuthPopup) => void;
+  /** @deprecated Guest access has been removed. Ignored. */
   guestEnabled?: boolean;
   signupEnabled?: boolean;
 }) {
@@ -51,12 +51,6 @@ export function AuthDialogs({
           onSwitchSignin={() => setPopup("signin")}
         />
       )}
-      {guestEnabled && (
-        <GuestDialog
-          open={popup === "guest"}
-          onOpenChange={(v) => setPopup(v ? "guest" : null)}
-        />
-      )}
       <ForgotDialog
         open={popup === "forgot"}
         onOpenChange={(v) => setPopup(v ? "forgot" : null)}
@@ -69,14 +63,9 @@ export function AuthDialogs({
 export function AuthScreen() {
   const brand = useBrand();
   const [popup, setPopup] = useState<Popup>(null);
-  const { loginAsGuest } = useAuth();
-  const [guestCfg, setGuestCfg] = useState<GuestAccessConfig>(GUEST_ACCESS_DEFAULTS);
   const [signupCfg, setSignupCfg] = useState<SignupAccessConfig>(SIGNUP_ACCESS_DEFAULTS);
-  const [cfgReady, setCfgReady] = useState(false);
-  const autoTriedRef = useRef(false);
 
-
-  // Load guest-access + signup-access config directly from app_settings —
+  // Load signup-access config directly from app_settings —
   // AuthScreen runs outside AppSettingsProvider (which mounts after login).
   useEffect(() => {
     let cancel = false;
@@ -84,36 +73,18 @@ export function AuthScreen() {
       try {
         const { data } = await supabase
           .from("app_settings")
-          .select("key, value")
-          .in("key", ["guest_access", "signup_access"]);
+          .select("value")
+          .eq("key", "signup_access")
+          .maybeSingle();
         if (cancel) return;
-        const byKey = new Map((data ?? []).map((r) => [r.key, r.value as Record<string, unknown> | null]));
-        const guest = (byKey.get("guest_access") as Partial<GuestAccessConfig> | null) ?? {};
-        const signup = (byKey.get("signup_access") as Partial<SignupAccessConfig> | null) ?? {};
-        setGuestCfg({
-          ...GUEST_ACCESS_DEFAULTS,
-          ...guest,
-          permissions: { ...GUEST_ACCESS_DEFAULTS.permissions, ...(guest.permissions ?? {}) },
-        });
+        const signup = (data?.value as Partial<SignupAccessConfig> | null) ?? {};
         setSignupCfg({ ...SIGNUP_ACCESS_DEFAULTS, ...signup });
       } catch { /* keep defaults */ }
-      finally { if (!cancel) setCfgReady(true); }
     })();
     return () => { cancel = true; };
   }, []);
 
-  const guestAvailable = guestCfg.enabled && signupCfg.guestEnabled;
   const signupAvailable = signupCfg.signupEnabled;
-
-  // Auto Guest Login — opt-in via admin settings.
-  useEffect(() => {
-    if (!cfgReady || autoTriedRef.current) return;
-    if (!guestAvailable || !guestCfg.autoLogin) return;
-    // Honor an explicit opt-out (e.g. after a guest logs out and wants the choice screen).
-    try { if (sessionStorage.getItem("guest-auto-skip") === "1") return; } catch { /* ignore */ }
-    autoTriedRef.current = true;
-    loginAsGuest().catch(() => { /* fall back to the manual screen */ });
-  }, [cfgReady, guestAvailable, guestCfg.autoLogin, loginAsGuest]);
 
   return (
     <LiveCommunityBackground>
@@ -146,24 +117,17 @@ export function AuthScreen() {
               {signupCfg.disabledMessage}
             </div>
           )}
-          {guestAvailable && (
-            <button
-              onClick={() => setPopup("guest")}
-              className="w-full rounded-full border border-dashed border-border bg-background px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-              👤 Continue as guest
-            </button>
-          )}
           </div>
 
         </div>
         <FeedbackShowcase surface="signup" />
       </div>
 
-      <AuthDialogs popup={popup} setPopup={setPopup} guestEnabled={guestAvailable} signupEnabled={signupAvailable} />
+      <AuthDialogs popup={popup} setPopup={setPopup} signupEnabled={signupAvailable} />
     </LiveCommunityBackground>
   );
 }
+
 
 /* ---------------- Sign in ---------------- */
 function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: boolean; onOpenChange: (v: boolean) => void; onForgot: () => void; onSwitchSignup: () => void }) {
