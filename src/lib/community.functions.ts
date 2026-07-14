@@ -535,5 +535,5 @@ export const getMyCommunity = createServerFn({ method: "GET" })
       .select("*")
       .eq("owner_id", context.userId)
       .maybeSingle();
-    return row as unknown as Community | null;
+    return row as any;
   });
