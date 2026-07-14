@@ -19,6 +19,7 @@ import type { Attachment } from "@/lib/chat-types";
 import { supabase } from "@/integrations/supabase/client";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { VOICE_NOTES_DEFAULTS, maxDurationForChannel, type VoiceNotesConfig } from "@/lib/voice-notes-config";
+import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
 
 
 const COMMANDS = [
@@ -30,6 +31,7 @@ const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 export function MessageInput() {
   const { send, state, replyingTo, setReplyingTo, pushSystem, wipeChannel } = useChat();
   const { user } = useAuth();
+  const [authPopup, setAuthPopup] = useState<AuthPopup>(null);
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
   const { typers, sendTyping } = useTyping(state.activeChannel, me, !!me);
   const [text, setText] = useState("");
@@ -203,6 +205,10 @@ export function MessageInput() {
 
   function submit() {
     if (!text.trim() && !attachment) return;
+    if (!user || user.isGuest) {
+      setAuthPopup("signin");
+      return;
+    }
     const trimmed = text.trim();
     if (/^\/clearcache\b/i.test(trimmed)) {
       setText(""); setAttachment(null); setAttachError("");
@@ -284,6 +290,7 @@ export function MessageInput() {
 
   return (
     <div className="px-3 py-0 sm:px-6">
+      <AuthDialogs popup={authPopup} setPopup={setAuthPopup} />
       {replyingTo && (
         <div className="mb-2 flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
           <Reply className="h-3.5 w-3.5 shrink-0 text-primary" />
