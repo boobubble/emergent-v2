@@ -82,7 +82,7 @@ export const getCommunityBySlug = createServerFn({ method: "GET" })
       .eq("status", "active")
       .maybeSingle();
     if (!row) return null;
-    return row as unknown as Community;
+    return row as any;
   });
 
 /** List active public communities (for a directory page). */
