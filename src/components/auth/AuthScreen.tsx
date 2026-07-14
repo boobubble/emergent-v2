@@ -325,43 +325,8 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
   );
 }
 
-/* ---------------- Guest ---------------- */
-function GuestDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const { loginAsGuest } = useAuth();
-  const [guestName, setGuestName] = useState("");
-  const [err, setErr] = useState("");
-  const [busy, setBusy] = useState(false);
-  const status = useUsernameCheck(open ? guestName : "");
 
-  async function go() {
-    setErr(""); setBusy(true);
-    try { await loginAsGuest(guestName); }
-    catch (e) { setErr(e instanceof Error ? e.message : "Guest login failed"); setBusy(false); }
-  }
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-3xl">
-        <DialogHeader>
-          <DialogTitle>Continue as guest</DialogTitle>
-          <DialogDescription>Your guest profile is temporary and removed when you leave.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Pick a guest name</label>
-            <input value={guestName} onChange={(e) => setGuestName(e.target.value)} maxLength={20} placeholder="e.g. nova" className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" />
-            <UsernameHint status={status} />
-            <p className="mt-1 text-[10px] text-muted-foreground">2–10 letters.</p>
-          </div>
-          {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
-          <button onClick={go} disabled={busy} className="w-full rounded-full bg-primary px-3 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">
-            {busy ? "..." : "Enter as guest"}
-          </button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 /* ---------------- Forgot ---------------- */
 function ForgotDialog({ open, onOpenChange, onBack }: { open: boolean; onOpenChange: (v: boolean) => void; onBack: () => void }) {
