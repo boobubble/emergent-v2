@@ -191,7 +191,6 @@ function FeedPage() {
   }
 
   useEffect(() => {
-    if (!meId) return;
     loadPosts();
     const ch = supabase.channel("feed-posts")
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, (payload) => {

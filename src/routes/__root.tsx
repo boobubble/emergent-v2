@@ -213,16 +213,7 @@ function AuthGate() {
   const landingPath = homeMode === "hero" ? "/heropage" : "/welcome";
 
   if (!user && isPublicPath(path)) {
-    return (
-      <>
-        <HeadFootScripts />
-        <AdsAutoLoader />
-        <SessionConflictBanner />
-        <Outlet />
-        <Sonner />
-        <RealtimeDebugOverlay />
-      </>
-    );
+    return <PublicOutlet readOnlyApp={isReadOnlyPublicAppPath(path)} />;
   }
 
   // No stored session at all → send guests to landing immediately.
