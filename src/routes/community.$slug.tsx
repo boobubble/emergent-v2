@@ -217,7 +217,7 @@ function CommunityHomePage() {
                 <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Links</h2>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(community.social_links).map(([k, v]) => (
-                    <a key={k} href={v} target="_blank" rel="noopener noreferrer"
+                    <a key={k} href={String(v)} target="_blank" rel="noopener noreferrer"
                        className="rounded-full border px-3 py-1 text-xs hover:bg-muted">
                       {k}
                     </a>
