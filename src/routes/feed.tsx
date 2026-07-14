@@ -341,7 +341,7 @@ function FeedPage() {
   };
 
 
-  const displayUsername = user?.username ?? "Visitor";
+  const displayUsername = user?.username ?? "";
 
   const TABS: { id: Tab; label: string; icon: typeof Sparkles }[] = [
     { id: "foryou", label: "For You", icon: Sparkles },
