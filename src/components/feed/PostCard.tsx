@@ -274,7 +274,7 @@ export const PostCard = memo(function PostCard({
         </button>
         {post.owner_id !== meId && (
           <button
-            onClick={boost}
+            onClick={() => requireAuth(boost)}
             disabled={boosting}
             className="inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500 disabled:opacity-50 transition-all duration-200 active:scale-[0.97]"
             title={`Boost (${SPEND.boost_post.coins} coins)`}
