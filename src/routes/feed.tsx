@@ -1287,3 +1287,31 @@ function LayoutSwitcher({
   );
 }
 
+
+function SignInToPostCard() {
+  const { openSignIn, openSignUp } = useAuthGate();
+  return (
+    <div className="feed-card mt-4 p-6 text-center">
+      <h3 className="text-base font-bold">Join the conversation</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Sign in to post, react, comment and follow other members.
+      </p>
+      <div className="mt-4 flex items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={openSignIn}
+          className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow hover:opacity-90"
+        >
+          Sign in
+        </button>
+        <button
+          type="button"
+          onClick={openSignUp}
+          className="rounded-full border px-5 py-2 text-sm font-semibold hover:bg-muted"
+        >
+          Create account
+        </button>
+      </div>
+    </div>
+  );
+}
