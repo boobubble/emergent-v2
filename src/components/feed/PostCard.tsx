@@ -253,7 +253,7 @@ export const PostCard = memo(function PostCard({
       <footer className="mt-3 flex items-center gap-1 border-t border-border/70 pt-2">
         <div className="relative flex-1">
           <button
-            onClick={() => { ensureReactions(); setPickerOpen(!pickerOpen); }}
+            onClick={() => requireAuth(() => { ensureReactions(); setPickerOpen(!pickerOpen); })}
             className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${myReaction ? "text-primary bg-primary/10 ring-1 ring-inset ring-primary/20" : "text-muted-foreground hover:bg-accent/25 hover:text-foreground"}`}
           >
             <span className={`text-lg ${myReaction ? "like-burst" : ""}`}>{myReaction ? REACTION_EMOJI[myReaction.type] : "👍"}</span>
@@ -262,7 +262,7 @@ export const PostCard = memo(function PostCard({
           {pickerOpen && (
             <div className="feed-glass absolute bottom-full left-0 z-10 mb-2 flex gap-1 rounded-full p-1.5 animate-scale-in">
               {REACTION_ORDER.map((r) => (
-                <button key={r} onClick={() => react(r)} className="rounded-full p-1.5 text-xl transition-transform duration-200 hover:scale-[1.45] hover:-translate-y-1 active:scale-110">
+                <button key={r} onClick={() => requireAuth(() => react(r))} className="rounded-full p-1.5 text-xl transition-transform duration-200 hover:scale-[1.45] hover:-translate-y-1 active:scale-110">
                   {REACTION_EMOJI[r]}
                 </button>
               ))}
