@@ -276,6 +276,12 @@ function AuthGate() {
         </div>
       );
     }
+    // Guest-browsable routes → transparently sign in as an anonymous guest
+    // so the page renders. Falls through to the landing redirect if guest
+    // access is disabled or the anonymous sign-in fails.
+    if (isGuestBrowsablePath(path)) {
+      return <GuestAutoSignIn fallback={landingPath} />;
+    }
     // Everything else → send guests to the configured landing page first.
     return <Navigate to={landingPath} replace />;
   }
