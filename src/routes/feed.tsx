@@ -41,6 +41,7 @@ import { FeedThemeStore } from "@/components/feed/FeedThemeStore";
 import { useActiveFeedTheme, activateFeedTheme, type FeedThemeKey } from "@/lib/feed-themes";
 import { feedVariantFor } from "@/lib/theme-variants";
 import { OrkutFeedLayout } from "@/components/feed/OrkutFeedLayout";
+import { useAuthGate } from "@/lib/auth-gate";
 
 import { Palette } from "lucide-react";
 
