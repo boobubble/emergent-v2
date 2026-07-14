@@ -137,7 +137,6 @@ import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
 import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
-import { Route as ApiPublicGuestCleanupRouteImport } from './routes/api/public/guest-cleanup'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
@@ -796,11 +795,6 @@ const ApiPublicLandingRoute = ApiPublicLandingRouteImport.update({
   path: '/api/public/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicGuestCleanupRoute = ApiPublicGuestCleanupRouteImport.update({
-  id: '/api/public/guest-cleanup',
-  path: '/api/public/guest-cleanup',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicFeedbackShowcaseRoute =
   ApiPublicFeedbackShowcaseRouteImport.update({
     id: '/api/public/feedback-showcase',
@@ -1013,7 +1007,6 @@ export interface FileRoutesByFullPath {
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
-  '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1155,7 +1148,6 @@ export interface FileRoutesByTo {
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
-  '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1301,7 +1293,6 @@ export interface FileRoutesById {
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
-  '/api/public/guest-cleanup': typeof ApiPublicGuestCleanupRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1448,7 +1439,6 @@ export interface FileRouteTypes {
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
-    | '/api/public/guest-cleanup'
     | '/api/public/landing'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -1590,7 +1580,6 @@ export interface FileRouteTypes {
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
-    | '/api/public/guest-cleanup'
     | '/api/public/landing'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -1735,7 +1724,6 @@ export interface FileRouteTypes {
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
-    | '/api/public/guest-cleanup'
     | '/api/public/landing'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -1790,7 +1778,6 @@ export interface RootRouteChildren {
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
-  ApiPublicGuestCleanupRoute: typeof ApiPublicGuestCleanupRoute
   ApiPublicLandingRoute: typeof ApiPublicLandingRoute
   ApiPublicHooksFeedbotDispatchRoute: typeof ApiPublicHooksFeedbotDispatchRoute
   ApiPublicHooksFeedbotSummaryRoute: typeof ApiPublicHooksFeedbotSummaryRoute
@@ -2701,13 +2688,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLandingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/guest-cleanup': {
-      id: '/api/public/guest-cleanup'
-      path: '/api/public/guest-cleanup'
-      fullPath: '/api/public/guest-cleanup'
-      preLoaderRoute: typeof ApiPublicGuestCleanupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/feedback-showcase': {
       id: '/api/public/feedback-showcase'
       path: '/api/public/feedback-showcase'
@@ -3079,7 +3059,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
-  ApiPublicGuestCleanupRoute: ApiPublicGuestCleanupRoute,
   ApiPublicLandingRoute: ApiPublicLandingRoute,
   ApiPublicHooksFeedbotDispatchRoute: ApiPublicHooksFeedbotDispatchRoute,
   ApiPublicHooksFeedbotSummaryRoute: ApiPublicHooksFeedbotSummaryRoute,
@@ -3094,13 +3073,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

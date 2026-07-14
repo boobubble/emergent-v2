@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-store";
 import { useBrand } from "@/lib/branding";
 import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
-import { GUEST_ACCESS_DEFAULTS, type GuestAccessConfig } from "@/lib/guest-config";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
 import { LiveCommunityBackground } from "@/components/auth/LiveCommunityBackground";
@@ -18,22 +17,22 @@ function UsernameHint({ status }: { status: UsernameStatus }) {
   return <p className="mt-1 text-[10px] font-semibold text-destructive">{status.message}</p>;
 }
 
-export type AuthPopup = null | "signin" | "signup" | "guest" | "forgot";
+export type AuthPopup = null | "signin" | "signup" | "forgot";
 type Popup = AuthPopup;
 
 /**
  * Embeddable auth dialogs. Use from any page (e.g. the Welcome landing) to
- * provide sign in / sign up / forgot password / guest entry without sending
- * users to a separate /login page.
+ * provide sign in / sign up / forgot password without sending users to a
+ * separate /login page.
  */
 export function AuthDialogs({
   popup,
   setPopup,
-  guestEnabled = true,
   signupEnabled = true,
 }: {
   popup: AuthPopup;
   setPopup: (p: AuthPopup) => void;
+  /** @deprecated Guest access has been removed. Ignored. */
   guestEnabled?: boolean;
   signupEnabled?: boolean;
 }) {
@@ -52,12 +51,6 @@ export function AuthDialogs({
           onSwitchSignin={() => setPopup("signin")}
         />
       )}
-      {guestEnabled && (
-        <GuestDialog
-          open={popup === "guest"}
-          onOpenChange={(v) => setPopup(v ? "guest" : null)}
-        />
-      )}
       <ForgotDialog
         open={popup === "forgot"}
         onOpenChange={(v) => setPopup(v ? "forgot" : null)}
@@ -70,14 +63,9 @@ export function AuthDialogs({
 export function AuthScreen() {
   const brand = useBrand();
   const [popup, setPopup] = useState<Popup>(null);
-  const { loginAsGuest } = useAuth();
-  const [guestCfg, setGuestCfg] = useState<GuestAccessConfig>(GUEST_ACCESS_DEFAULTS);
   const [signupCfg, setSignupCfg] = useState<SignupAccessConfig>(SIGNUP_ACCESS_DEFAULTS);
-  const [cfgReady, setCfgReady] = useState(false);
-  const autoTriedRef = useRef(false);
 
-
-  // Load guest-access + signup-access config directly from app_settings —
+  // Load signup-access config directly from app_settings —
   // AuthScreen runs outside AppSettingsProvider (which mounts after login).
   useEffect(() => {
     let cancel = false;
@@ -85,36 +73,18 @@ export function AuthScreen() {
       try {
         const { data } = await supabase
           .from("app_settings")
-          .select("key, value")
-          .in("key", ["guest_access", "signup_access"]);
+          .select("value")
+          .eq("key", "signup_access")
+          .maybeSingle();
         if (cancel) return;
-        const byKey = new Map((data ?? []).map((r) => [r.key, r.value as Record<string, unknown> | null]));
-        const guest = (byKey.get("guest_access") as Partial<GuestAccessConfig> | null) ?? {};
-        const signup = (byKey.get("signup_access") as Partial<SignupAccessConfig> | null) ?? {};
-        setGuestCfg({
-          ...GUEST_ACCESS_DEFAULTS,
-          ...guest,
-          permissions: { ...GUEST_ACCESS_DEFAULTS.permissions, ...(guest.permissions ?? {}) },
-        });
+        const signup = (data?.value as Partial<SignupAccessConfig> | null) ?? {};
         setSignupCfg({ ...SIGNUP_ACCESS_DEFAULTS, ...signup });
       } catch { /* keep defaults */ }
-      finally { if (!cancel) setCfgReady(true); }
     })();
     return () => { cancel = true; };
   }, []);
 
-  const guestAvailable = guestCfg.enabled && signupCfg.guestEnabled;
   const signupAvailable = signupCfg.signupEnabled;
-
-  // Auto Guest Login — opt-in via admin settings.
-  useEffect(() => {
-    if (!cfgReady || autoTriedRef.current) return;
-    if (!guestAvailable || !guestCfg.autoLogin) return;
-    // Honor an explicit opt-out (e.g. after a guest logs out and wants the choice screen).
-    try { if (sessionStorage.getItem("guest-auto-skip") === "1") return; } catch { /* ignore */ }
-    autoTriedRef.current = true;
-    loginAsGuest().catch(() => { /* fall back to the manual screen */ });
-  }, [cfgReady, guestAvailable, guestCfg.autoLogin, loginAsGuest]);
 
   return (
     <LiveCommunityBackground>
@@ -147,24 +117,17 @@ export function AuthScreen() {
               {signupCfg.disabledMessage}
             </div>
           )}
-          {guestAvailable && (
-            <button
-              onClick={() => setPopup("guest")}
-              className="w-full rounded-full border border-dashed border-border bg-background px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-              👤 Continue as guest
-            </button>
-          )}
           </div>
 
         </div>
         <FeedbackShowcase surface="signup" />
       </div>
 
-      <AuthDialogs popup={popup} setPopup={setPopup} guestEnabled={guestAvailable} signupEnabled={signupAvailable} />
+      <AuthDialogs popup={popup} setPopup={setPopup} signupEnabled={signupAvailable} />
     </LiveCommunityBackground>
   );
 }
+
 
 /* ---------------- Sign in ---------------- */
 function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: boolean; onOpenChange: (v: boolean) => void; onForgot: () => void; onSwitchSignup: () => void }) {
@@ -362,43 +325,8 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
   );
 }
 
-/* ---------------- Guest ---------------- */
-function GuestDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const { loginAsGuest } = useAuth();
-  const [guestName, setGuestName] = useState("");
-  const [err, setErr] = useState("");
-  const [busy, setBusy] = useState(false);
-  const status = useUsernameCheck(open ? guestName : "");
 
-  async function go() {
-    setErr(""); setBusy(true);
-    try { await loginAsGuest(guestName); }
-    catch (e) { setErr(e instanceof Error ? e.message : "Guest login failed"); setBusy(false); }
-  }
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-3xl">
-        <DialogHeader>
-          <DialogTitle>Continue as guest</DialogTitle>
-          <DialogDescription>Your guest profile is temporary and removed when you leave.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">Pick a guest name</label>
-            <input value={guestName} onChange={(e) => setGuestName(e.target.value)} maxLength={20} placeholder="e.g. nova" className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" />
-            <UsernameHint status={status} />
-            <p className="mt-1 text-[10px] text-muted-foreground">2–10 letters.</p>
-          </div>
-          {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
-          <button onClick={go} disabled={busy} className="w-full rounded-full bg-primary px-3 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">
-            {busy ? "..." : "Enter as guest"}
-          </button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 /* ---------------- Forgot ---------------- */
 function ForgotDialog({ open, onOpenChange, onBack }: { open: boolean; onOpenChange: (v: boolean) => void; onBack: () => void }) {
