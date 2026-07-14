@@ -10,6 +10,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { AuthProvider, useAuth } from "@/lib/auth-store";
+import { AuthGateProvider } from "@/lib/auth-gate";
 import { ChatProvider } from "@/lib/chat-store";
 import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { IgnoreProvider } from "@/lib/ignore-store";
