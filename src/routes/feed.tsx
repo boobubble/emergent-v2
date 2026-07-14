@@ -112,6 +112,7 @@ function getInitialView(): { view: View; username: string } {
 
 function FeedPage() {
   const { user } = useAuth();
+  const { openSignIn, openSignUp } = useAuthGate();
   const { profiles } = useRemoteProfiles();
   const { prefs } = useFeedPrefs();
   const { savedIds } = useSavedPosts();
