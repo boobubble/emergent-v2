@@ -691,19 +691,23 @@ function FeedPage() {
 
               
             </nav>
-            <Suspense fallback={<RewardsWidgetSkeleton />}>
-              <RewardsWidget
-                meId={meId}
-                onOpenChest={() => setView("dailyChest")}
-                onOpenSpin={() => setView("spin")}
-                onOpenShop={() => setView("shop")}
-              />
-            </Suspense>
-            <FriendsListCard
-              friendIds={friendIds}
-              profiles={profiles}
-              onChat={() => setDmOpenKey(k => k + 1)}
-            />
+            {meId && (
+              <>
+                <Suspense fallback={<RewardsWidgetSkeleton />}>
+                  <RewardsWidget
+                    meId={meId}
+                    onOpenChest={() => setView("dailyChest")}
+                    onOpenSpin={() => setView("spin")}
+                    onOpenShop={() => setView("shop")}
+                  />
+                </Suspense>
+                <FriendsListCard
+                  friendIds={friendIds}
+                  profiles={profiles}
+                  onChat={() => setDmOpenKey(k => k + 1)}
+                />
+              </>
+            )}
           </div>
         </aside>
 
