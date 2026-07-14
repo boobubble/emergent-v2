@@ -97,7 +97,6 @@ import { Route as AdminLandingRouteImport } from './routes/admin.landing'
 import { Route as AdminInternalLinkingRouteImport } from './routes/admin.internal-linking'
 import { Route as AdminHomepageRouteImport } from './routes/admin.homepage'
 import { Route as AdminHeroPageRouteImport } from './routes/admin.hero-page'
-import { Route as AdminGuestAccessRouteImport } from './routes/admin.guest-access'
 import { Route as AdminGeneralRouteImport } from './routes/admin.general'
 import { Route as AdminGamificationRouteImport } from './routes/admin.gamification'
 import { Route as AdminGamesRouteImport } from './routes/admin.games'
@@ -593,11 +592,6 @@ const AdminHeroPageRoute = AdminHeroPageRouteImport.update({
   path: '/hero-page',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminGuestAccessRoute = AdminGuestAccessRouteImport.update({
-  id: '/guest-access',
-  path: '/guest-access',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminGeneralRoute = AdminGeneralRouteImport.update({
   id: '/general',
   path: '/general',
@@ -947,7 +941,6 @@ export interface FileRoutesByFullPath {
   '/admin/games': typeof AdminGamesRoute
   '/admin/gamification': typeof AdminGamificationRoute
   '/admin/general': typeof AdminGeneralRoute
-  '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/hero-page': typeof AdminHeroPageRoute
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
@@ -1088,7 +1081,6 @@ export interface FileRoutesByTo {
   '/admin/games': typeof AdminGamesRoute
   '/admin/gamification': typeof AdminGamificationRoute
   '/admin/general': typeof AdminGeneralRoute
-  '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/hero-page': typeof AdminHeroPageRoute
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
@@ -1233,7 +1225,6 @@ export interface FileRoutesById {
   '/admin/games': typeof AdminGamesRoute
   '/admin/gamification': typeof AdminGamificationRoute
   '/admin/general': typeof AdminGeneralRoute
-  '/admin/guest-access': typeof AdminGuestAccessRoute
   '/admin/hero-page': typeof AdminHeroPageRoute
   '/admin/homepage': typeof AdminHomepageRoute
   '/admin/internal-linking': typeof AdminInternalLinkingRoute
@@ -1379,7 +1370,6 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/gamification'
     | '/admin/general'
-    | '/admin/guest-access'
     | '/admin/hero-page'
     | '/admin/homepage'
     | '/admin/internal-linking'
@@ -1520,7 +1510,6 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/gamification'
     | '/admin/general'
-    | '/admin/guest-access'
     | '/admin/hero-page'
     | '/admin/homepage'
     | '/admin/internal-linking'
@@ -1664,7 +1653,6 @@ export interface FileRouteTypes {
     | '/admin/games'
     | '/admin/gamification'
     | '/admin/general'
-    | '/admin/guest-access'
     | '/admin/hero-page'
     | '/admin/homepage'
     | '/admin/internal-linking'
@@ -2408,13 +2396,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminHeroPageRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/guest-access': {
-      id: '/admin/guest-access'
-      path: '/guest-access'
-      fullPath: '/admin/guest-access'
-      preLoaderRoute: typeof AdminGuestAccessRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/general': {
       id: '/admin/general'
       path: '/general'
@@ -2840,7 +2821,6 @@ interface AdminRouteChildren {
   AdminGamesRoute: typeof AdminGamesRoute
   AdminGamificationRoute: typeof AdminGamificationRoute
   AdminGeneralRoute: typeof AdminGeneralRoute
-  AdminGuestAccessRoute: typeof AdminGuestAccessRoute
   AdminHeroPageRoute: typeof AdminHeroPageRoute
   AdminHomepageRoute: typeof AdminHomepageRoute
   AdminInternalLinkingRoute: typeof AdminInternalLinkingRoute
@@ -2921,7 +2901,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGamesRoute: AdminGamesRoute,
   AdminGamificationRoute: AdminGamificationRoute,
   AdminGeneralRoute: AdminGeneralRoute,
-  AdminGuestAccessRoute: AdminGuestAccessRoute,
   AdminHeroPageRoute: AdminHeroPageRoute,
   AdminHomepageRoute: AdminHomepageRoute,
   AdminInternalLinkingRoute: AdminInternalLinkingRoute,

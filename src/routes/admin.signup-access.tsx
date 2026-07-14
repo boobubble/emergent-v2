@@ -43,16 +43,8 @@ function SignupAccessPage() {
             <AdminToggle checked={values.signupEnabled} onCheckedChange={(v) => set("signupEnabled", v)} />
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <p className="text-sm font-semibold">Allow guest logins</p>
-              <p className="text-xs text-muted-foreground">
-                When off, "Continue as guest" is hidden and anonymous logins are blocked.
-                You can also fine-tune guest permissions in Guest Access.
-              </p>
-            </div>
-            <AdminToggle checked={values.guestEnabled} onCheckedChange={(v) => set("guestEnabled", v)} />
-          </div>
+
+
 
           <div>
             <Label className="text-xs">Disabled message</Label>
