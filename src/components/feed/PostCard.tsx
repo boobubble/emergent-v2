@@ -350,7 +350,7 @@ export const PostCard = memo(function PostCard({
             <input
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addComment(); } }}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); requireAuth(addComment); } }}
               placeholder="Write a comment…"
               className="flex-1 rounded-full border border-border/70 bg-background/60 px-4 py-2.5 text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all duration-200"
             />
