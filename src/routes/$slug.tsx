@@ -1,6 +1,8 @@
 import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
 import { getPublishedPage } from "@/lib/pages.functions";
+import { getCommunityBySlug } from "@/lib/community.functions";
 import { isReservedSlug } from "@/lib/reserved-routes";
+
 import { sanitizeHtml } from "@/lib/pages-io";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
