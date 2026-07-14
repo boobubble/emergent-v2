@@ -333,7 +333,7 @@ function LandingPage() {
           <div className="border-t border-white/10 bg-[#070713]/95 px-4 pb-4 pt-2 lg:hidden">
             <nav className="grid gap-1">
               {navLinks.map((l) => (
-                <Link key={l.to + l.label} to={l.to} onClick={() => setMenuOpen(false)}
+                <Link key={l.to + l.label} to={l.to} onClick={handleNav(l.to)}
                       className="rounded-xl px-3 py-2.5 text-sm font-medium text-white/80 hover:bg-white/5">
                   {l.label}
                 </Link>
