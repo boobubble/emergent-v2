@@ -497,6 +497,7 @@ export type Database = {
           avatar_url: string | null
           background_image_url: string | null
           category: string | null
+          community_id: string | null
           cover_image_url: string | null
           created_at: string
           description: string | null
@@ -518,6 +519,7 @@ export type Database = {
           avatar_url?: string | null
           background_image_url?: string | null
           category?: string | null
+          community_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -539,6 +541,7 @@ export type Database = {
           avatar_url?: string | null
           background_image_url?: string | null
           category?: string | null
+          community_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -554,7 +557,15 @@ export type Database = {
           visibility?: string
           welcome_message?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chatrooms_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coin_feature_flags: {
         Row: {
@@ -780,6 +791,198 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "posts_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communities: {
+        Row: {
+          accent_color: string | null
+          announcement: string | null
+          background_url: string | null
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          join_password_hash: string | null
+          logo_url: string | null
+          member_count: number
+          meta: Json
+          name: string
+          online_count: number
+          owner_id: string
+          privacy_mode: Database["public"]["Enums"]["community_privacy"]
+          rules: string | null
+          slug: string
+          social_links: Json
+          status: string
+          updated_at: string
+          welcome_text: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          announcement?: string | null
+          background_url?: string | null
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          join_password_hash?: string | null
+          logo_url?: string | null
+          member_count?: number
+          meta?: Json
+          name: string
+          online_count?: number
+          owner_id: string
+          privacy_mode?: Database["public"]["Enums"]["community_privacy"]
+          rules?: string | null
+          slug: string
+          social_links?: Json
+          status?: string
+          updated_at?: string
+          welcome_text?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          announcement?: string | null
+          background_url?: string | null
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          join_password_hash?: string | null
+          logo_url?: string | null
+          member_count?: number
+          meta?: Json
+          name?: string
+          online_count?: number
+          owner_id?: string
+          privacy_mode?: Database["public"]["Enums"]["community_privacy"]
+          rules?: string | null
+          slug?: string
+          social_links?: Json
+          status?: string
+          updated_at?: string
+          welcome_text?: string | null
+        }
+        Relationships: []
+      }
+      community_invites: {
+        Row: {
+          code: string
+          community_id: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          uses: number
+        }
+        Insert: {
+          code: string
+          community_id: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          uses?: number
+        }
+        Update: {
+          code?: string
+          community_id?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          uses?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_invites_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_join_requests: {
+        Row: {
+          community_id: string
+          created_at: string
+          id: string
+          message: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_join_requests_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          role: Database["public"]["Enums"]["community_member_role"]
+          status: Database["public"]["Enums"]["community_member_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          role?: Database["public"]["Enums"]["community_member_role"]
+          status?: Database["public"]["Enums"]["community_member_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          role?: Database["public"]["Enums"]["community_member_role"]
+          status?: Database["public"]["Enums"]["community_member_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
             referencedColumns: ["id"]
           },
         ]
@@ -1114,6 +1317,7 @@ export type Database = {
           auto_close_voting: boolean
           banner_url: string | null
           category_id: string | null
+          community_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -1155,6 +1359,7 @@ export type Database = {
           auto_close_voting?: boolean
           banner_url?: string | null
           category_id?: string | null
+          community_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1196,6 +1401,7 @@ export type Database = {
           auto_close_voting?: boolean
           banner_url?: string | null
           category_id?: string | null
+          community_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1234,6 +1440,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "competition_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitions_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
             referencedColumns: ["id"]
           },
         ]
@@ -3330,6 +3543,7 @@ export type Database = {
         Row: {
           author_id: string | null
           comment_count: number
+          community_id: string | null
           created_at: string
           hashtags: string[]
           id: string
@@ -3348,6 +3562,7 @@ export type Database = {
         Insert: {
           author_id?: string | null
           comment_count?: number
+          community_id?: string | null
           created_at?: string
           hashtags?: string[]
           id?: string
@@ -3366,6 +3581,7 @@ export type Database = {
         Update: {
           author_id?: string | null
           comment_count?: number
+          community_id?: string | null
           created_at?: string
           hashtags?: string[]
           id?: string
@@ -3394,6 +3610,13 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
             referencedColumns: ["id"]
           },
           {
@@ -5689,6 +5912,7 @@ export type Database = {
         Args: { _cadence: string; _now?: string }
         Returns: string
       }
+      generate_community_slug: { Args: { _base: string }; Returns: string }
       get_active_chat_theme: { Args: { _user: string }; Returns: string }
       get_active_feed_theme: { Args: { _user: string }; Returns: string }
       get_competition_follower_count: {
@@ -5739,6 +5963,14 @@ export type Database = {
       }
       installer_get_extras: { Args: never; Returns: Json }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_community_owner: {
+        Args: { _community: string; _user: string }
+        Returns: boolean
+      }
+      is_community_staff: {
+        Args: { _community: string; _user: string }
+        Returns: boolean
+      }
       is_device_banned: { Args: { _fp: string }; Returns: boolean }
       is_dm_channel_allowed: {
         Args: { _channel: string; _user: string }
@@ -5798,6 +6030,7 @@ export type Database = {
       }
       my_coin_balance: { Args: never; Returns: number }
       my_competition_vote: { Args: { _competition: string }; Returns: string }
+      provision_community_for_user: { Args: { _user: string }; Returns: string }
       purchase_dm_wallpaper: {
         Args: {
           _channel_id?: string
@@ -5966,6 +6199,14 @@ export type Database = {
     Enums: {
       app_role: "super_admin" | "admin" | "moderator" | "user" | "dj" | "rj"
       ban_type: "ban" | "temp_ban" | "shadow_ban" | "ip_ban"
+      community_member_role: "owner" | "moderator" | "member"
+      community_member_status: "active" | "pending" | "banned" | "muted"
+      community_privacy:
+        | "public"
+        | "private"
+        | "invite_only"
+        | "password"
+        | "invite_password"
       confession_display_mode:
         | "fully_anonymous"
         | "random_id"
@@ -6186,6 +6427,15 @@ export const Constants = {
     Enums: {
       app_role: ["super_admin", "admin", "moderator", "user", "dj", "rj"],
       ban_type: ["ban", "temp_ban", "shadow_ban", "ip_ban"],
+      community_member_role: ["owner", "moderator", "member"],
+      community_member_status: ["active", "pending", "banned", "muted"],
+      community_privacy: [
+        "public",
+        "private",
+        "invite_only",
+        "password",
+        "invite_password",
+      ],
       confession_display_mode: [
         "fully_anonymous",
         "random_id",

@@ -1,6 +1,8 @@
 import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
 import { getPublishedPage } from "@/lib/pages.functions";
+import { getCommunityBySlug } from "@/lib/community.functions";
 import { isReservedSlug } from "@/lib/reserved-routes";
+
 import { sanitizeHtml } from "@/lib/pages-io";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,10 +51,16 @@ export const Route = createFileRoute("/$slug")({
   loader: async ({ params }) => {
     // Reserved slugs should never reach a published page; bail early.
     if (isReservedSlug(params.slug)) redirectReservedSlug(params.slug);
+    // Vanity resolver: community slugs take priority over custom pages.
+    const community = await getCommunityBySlug({ data: { slug: params.slug } });
+    if (community) {
+      throw redirect({ to: "/community/$slug", params: { slug: params.slug }, replace: true });
+    }
     const page = await getPublishedPage({ data: { slug: params.slug } });
     if (!page) throw notFound();
     return { page };
   },
+
   head: ({ loaderData, params }) => {
     const p = loaderData?.page;
     if (!p) return {};
