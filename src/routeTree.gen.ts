@@ -33,6 +33,7 @@ import { Route as FeedRouteImport } from './routes/feed'
 import { Route as DeployRouteImport } from './routes/deploy'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as CompetitionsRouteImport } from './routes/competitions'
+import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ChatroomsRouteImport } from './routes/chatrooms'
 import { Route as ChatroomRouteImport } from './routes/chatroom'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -269,6 +270,11 @@ const ConfessionsRoute = ConfessionsRouteImport.update({
 const CompetitionsRoute = CompetitionsRouteImport.update({
   id: '/competitions',
   path: '/competitions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatroomsRoute = ChatroomsRouteImport.update({
@@ -879,6 +885,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
+  '/community': typeof CommunityRoute
   '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
@@ -1020,6 +1027,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
+  '/community': typeof CommunityRoute
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
   '/feed': typeof FeedRouteWithChildren
@@ -1163,6 +1171,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
+  '/community': typeof CommunityRoute
   '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
@@ -1308,6 +1317,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
+    | '/community'
     | '/competitions'
     | '/confessions'
     | '/deploy'
@@ -1449,6 +1459,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
+    | '/community'
     | '/confessions'
     | '/deploy'
     | '/feed'
@@ -1591,6 +1602,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
+    | '/community'
     | '/competitions'
     | '/confessions'
     | '/deploy'
@@ -1735,6 +1747,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   ChatroomRoute: typeof ChatroomRoute
   ChatroomsRoute: typeof ChatroomsRoute
+  CommunityRoute: typeof CommunityRoute
   CompetitionsRoute: typeof CompetitionsRouteWithChildren
   ConfessionsRoute: typeof ConfessionsRoute
   DeployRoute: typeof DeployRoute
@@ -1946,6 +1959,13 @@ declare module '@tanstack/react-router' {
       path: '/competitions'
       fullPath: '/competitions'
       preLoaderRoute: typeof CompetitionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chatrooms': {
@@ -3007,6 +3027,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   ChatroomRoute: ChatroomRoute,
   ChatroomsRoute: ChatroomsRoute,
+  CommunityRoute: CommunityRoute,
   CompetitionsRoute: CompetitionsRouteWithChildren,
   ConfessionsRoute: ConfessionsRoute,
   DeployRoute: DeployRoute,
