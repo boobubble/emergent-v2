@@ -112,6 +112,7 @@ function getInitialView(): { view: View; username: string } {
 
 function FeedPage() {
   const { user } = useAuth();
+  const { openSignIn, openSignUp } = useAuthGate();
   const { profiles } = useRemoteProfiles();
   const { prefs } = useFeedPrefs();
   const { savedIds } = useSavedPosts();
@@ -341,7 +342,7 @@ function FeedPage() {
   };
 
 
-  const displayUsername = user?.username ?? "Visitor";
+  const displayUsername = user?.username ?? "";
 
   const TABS: { id: Tab; label: string; icon: typeof Sparkles }[] = [
     { id: "foryou", label: "For You", icon: Sparkles },
@@ -434,7 +435,7 @@ function FeedPage() {
   const [themeStoreOpen, setThemeStoreOpen] = useState(false);
 
   // Premium flagship layout: Orkut Retro replaces the entire feed UI.
-  if (feedTheme === "orkut_retro") {
+  if (feedTheme === "orkut_retro" && user) {
     return (
       <div data-feed-theme={feedTheme} data-theme-variant={feedVariantFor(feedTheme)}>
         <FeedThemeStore
@@ -604,23 +605,44 @@ function FeedPage() {
           </div>
 
           <div className="ml-auto flex items-center gap-1.5">
-            
-            <FeedNotifications meId={meId} profiles={profiles} />
-            <button
-              onClick={() => setDmOpenKey(k => k + 1)}
-              className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent/30 transition"
-              title="Messages"
-              aria-label="Messages"
-            >
-              <MessageCircle className="h-5 w-5 text-foreground" />
-            </button>
-            <UserMenu
-              username={displayUsername}
-              onProfile={() => { setProfileUsername(displayUsername); setView("profile"); }}
-              onSettings={() => setView("account")}
-            />
+            {user ? (
+              <>
+                <FeedNotifications meId={meId} profiles={profiles} />
+                <button
+                  onClick={() => setDmOpenKey(k => k + 1)}
+                  className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent/30 transition"
+                  title="Messages"
+                  aria-label="Messages"
+                >
+                  <MessageCircle className="h-5 w-5 text-foreground" />
+                </button>
+                <UserMenu
+                  username={displayUsername}
+                  onProfile={() => { setProfileUsername(displayUsername); setView("profile"); }}
+                  onSettings={() => setView("account")}
+                />
+              </>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={openSignIn}
+                  className="rounded-full px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-accent/30"
+                >
+                  Sign in
+                </button>
+                <button
+                  type="button"
+                  onClick={openSignUp}
+                  className="rounded-full bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground shadow hover:opacity-90"
+                >
+                  Create account
+                </button>
+              </div>
+            )}
 
           </div>
+
         </div>
       </header>
 
@@ -685,19 +707,23 @@ function FeedPage() {
 
               
             </nav>
-            <Suspense fallback={<RewardsWidgetSkeleton />}>
-              <RewardsWidget
-                meId={meId}
-                onOpenChest={() => setView("dailyChest")}
-                onOpenSpin={() => setView("spin")}
-                onOpenShop={() => setView("shop")}
-              />
-            </Suspense>
-            <FriendsListCard
-              friendIds={friendIds}
-              profiles={profiles}
-              onChat={() => setDmOpenKey(k => k + 1)}
-            />
+            {meId && (
+              <>
+                <Suspense fallback={<RewardsWidgetSkeleton />}>
+                  <RewardsWidget
+                    meId={meId}
+                    onOpenChest={() => setView("dailyChest")}
+                    onOpenSpin={() => setView("spin")}
+                    onOpenShop={() => setView("shop")}
+                  />
+                </Suspense>
+                <FriendsListCard
+                  friendIds={friendIds}
+                  profiles={profiles}
+                  onChat={() => setDmOpenKey(k => k + 1)}
+                />
+              </>
+            )}
           </div>
         </aside>
 
@@ -751,17 +777,19 @@ function FeedPage() {
             </PullToRefresh>
           ) : (
             <>
-              <div className="mb-4 space-y-3 lg:hidden">
-                <Suspense fallback={<RewardsWidgetSkeleton />}>
-                  <RewardsWidget
-                    meId={meId}
-                    onOpenChest={() => setView("dailyChest")}
-                    onOpenSpin={() => setView("spin")}
-                    onOpenShop={() => setView("shop")}
-                  />
-                </Suspense>
-                <DailyChallengesWidget meId={meId} />
-              </div>
+              {meId && (
+                <div className="mb-4 space-y-3 lg:hidden">
+                  <Suspense fallback={<RewardsWidgetSkeleton />}>
+                    <RewardsWidget
+                      meId={meId}
+                      onOpenChest={() => setView("dailyChest")}
+                      onOpenSpin={() => setView("spin")}
+                      onOpenShop={() => setView("shop")}
+                    />
+                  </Suspense>
+                  <DailyChallengesWidget meId={meId} />
+                </div>
+              )}
               <BroadcasterTicker target="feed" className="mb-3 rounded-md" />
               <StoryTray />
               {meId ? (
@@ -912,7 +940,11 @@ function FeedPage() {
           </button>
         </div>
         <button onClick={() => setView("explore")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "explore" ? "text-primary" : "text-muted-foreground"}`}><Compass className="h-5 w-5" /> Explore</button>
-        <button onClick={() => { setProfileUsername(displayUsername); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
+        {user ? (
+          <button onClick={() => { setProfileUsername(displayUsername); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
+        ) : (
+          <button onClick={openSignIn} className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted-foreground"><UserCircle className="h-5 w-5" /> Sign in</button>
+        )}
       </nav>
 
       {/* Mobile quick-actions speed dial (left-bottom, opposite the theme toggle) */}
