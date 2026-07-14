@@ -311,10 +311,10 @@ export const PostCard = memo(function PostCard({
           <Share2 className="h-4 w-4" /> <span>Share</span>
         </button>
         <button
-          onClick={() => {
+          onClick={() => requireAuth(() => {
             const nowSaved = toggleSaved(post.id);
             toast.success(nowSaved ? "Saved to bookmarks" : "Removed from bookmarks");
-          }}
+          })}
           aria-pressed={saved}
           title={saved ? "Remove bookmark" : "Save post"}
           className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${saved ? "text-amber-400 bg-amber-500/10 ring-1 ring-inset ring-amber-500/25" : "text-muted-foreground hover:bg-accent/25 hover:text-foreground"}`}
