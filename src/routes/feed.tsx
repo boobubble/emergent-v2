@@ -623,7 +623,22 @@ function FeedPage() {
                 />
               </>
             ) : (
-              <SignedOutHeaderActions />
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={openSignIn}
+                  className="rounded-full px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-accent/30"
+                >
+                  Sign in
+                </button>
+                <button
+                  type="button"
+                  onClick={openSignUp}
+                  className="rounded-full bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground shadow hover:opacity-90"
+                >
+                  Create account
+                </button>
+              </div>
             )}
 
           </div>
