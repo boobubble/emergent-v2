@@ -56,19 +56,15 @@ export const listConfessions = createServerFn({ method: "GET" })
       limit: z.number().min(1).max(100).default(30),
     }).parse(d ?? {}),
   )
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ data, context }) => {
-    const viewerId = context.userId;
-    const admin = await isAdmin(viewerId);
-
+  .handler(async ({ data }) => {
     const sb = await getSupabaseAdmin();
     let q = sb
       .from("confessions")
       .select("*")
       .or("expires_at.is.null,expires_at.gt." + new Date().toISOString())
+      .eq("status", "approved")
       .limit(data.limit);
 
-    if (!admin) q = q.eq("status", "approved");
     if (data.category && data.category !== "all") q = q.eq("category", data.category);
 
     if (data.sort === "trending") {
@@ -84,23 +80,9 @@ export const listConfessions = createServerFn({ method: "GET" })
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
 
-    // attach viewer's reactions
-    const ids = (rows ?? []).map((r) => r.id);
-    let myReactions: Record<string, string[]> = {};
-    if (ids.length) {
-      const { data: rx } = await (await getSupabaseAdmin())
-        .from("confession_reactions")
-        .select("confession_id, type")
-        .eq("user_id", viewerId)
-        .in("confession_id", ids);
-      for (const r of rx ?? []) {
-        (myReactions[r.confession_id] ||= []).push(r.type as string);
-      }
-    }
-
     return (rows ?? []).map((r) => ({
-      ...maskAuthor(r as any, r.author_id === viewerId, admin),
-      myReactions: myReactions[r.id] ?? [],
+      ...maskAuthor(r as any, false, false),
+      myReactions: [],
     }));
   });
 
@@ -223,9 +205,7 @@ export const toggleReaction = createServerFn({ method: "POST" })
 // ============== REPLIES ==============
 export const listReplies = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ confessionId: z.string().uuid() }).parse(d))
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ data, context }) => {
-    const admin = await isAdmin(context.userId);
+  .handler(async ({ data }) => {
     const { data: rows, error } = await (await getSupabaseAdmin())
       .from("confession_replies")
       .select("*")
@@ -233,7 +213,7 @@ export const listReplies = createServerFn({ method: "GET" })
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
     return (rows ?? []).map((r) => {
-      const reveal = admin || r.author_id === context.userId || !r.is_anonymous;
+      const reveal = !r.is_anonymous;
       return reveal ? r : { ...r, author_id: null };
     });
   });
