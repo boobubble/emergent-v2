@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BrandMark, BrandText } from "@/components/BrandMark";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -15,6 +15,7 @@ import {
   type LandingConfessionItem, type LandingBlogPost, type LandingActivity,
 } from "@/lib/landing-config";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
+import { useAuth } from "@/lib/auth-store";
 
 interface LandingStats {
   members: number; online: number; activeRooms: number;
