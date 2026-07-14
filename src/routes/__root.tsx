@@ -16,7 +16,7 @@ import { IgnoreProvider } from "@/lib/ignore-store";
 import { AppSettingsProvider } from "@/lib/app-settings";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
 import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
