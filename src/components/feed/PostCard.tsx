@@ -19,6 +19,7 @@ import { earnFeedReaction, earnFeedComment, earnFeedShare, boostPost } from "@/l
 import { claimShareReward } from "@/lib/boobubble.functions";
 import { SPEND } from "@/lib/economy-config";
 import { FeedVideo } from "@/components/feed/FeedVideo";
+import { useAuthGate } from "@/lib/auth-gate";
 
 
 function timeAgo(iso: string) {
@@ -55,6 +56,7 @@ export const PostCard = memo(function PostCard({
   const [boosting, setBoosting] = useState(false);
   const { isSaved, toggle: toggleSaved } = useSavedPosts();
   const saved = isSaved(post.id);
+  const { requireAuth } = useAuthGate();
 
   const earnReaction = useServerFn(earnFeedReaction);
   const earnComment = useServerFn(earnFeedComment);
@@ -251,7 +253,7 @@ export const PostCard = memo(function PostCard({
       <footer className="mt-3 flex items-center gap-1 border-t border-border/70 pt-2">
         <div className="relative flex-1">
           <button
-            onClick={() => { ensureReactions(); setPickerOpen(!pickerOpen); }}
+            onClick={() => requireAuth(() => { ensureReactions(); setPickerOpen(!pickerOpen); })}
             className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${myReaction ? "text-primary bg-primary/10 ring-1 ring-inset ring-primary/20" : "text-muted-foreground hover:bg-accent/25 hover:text-foreground"}`}
           >
             <span className={`text-lg ${myReaction ? "like-burst" : ""}`}>{myReaction ? REACTION_EMOJI[myReaction.type] : "👍"}</span>
@@ -260,7 +262,7 @@ export const PostCard = memo(function PostCard({
           {pickerOpen && (
             <div className="feed-glass absolute bottom-full left-0 z-10 mb-2 flex gap-1 rounded-full p-1.5 animate-scale-in">
               {REACTION_ORDER.map((r) => (
-                <button key={r} onClick={() => react(r)} className="rounded-full p-1.5 text-xl transition-transform duration-200 hover:scale-[1.45] hover:-translate-y-1 active:scale-110">
+                <button key={r} onClick={() => requireAuth(() => react(r))} className="rounded-full p-1.5 text-xl transition-transform duration-200 hover:scale-[1.45] hover:-translate-y-1 active:scale-110">
                   {REACTION_EMOJI[r]}
                 </button>
               ))}
@@ -272,7 +274,7 @@ export const PostCard = memo(function PostCard({
         </button>
         {post.owner_id !== meId && (
           <button
-            onClick={boost}
+            onClick={() => requireAuth(boost)}
             disabled={boosting}
             className="inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500 disabled:opacity-50 transition-all duration-200 active:scale-[0.97]"
             title={`Boost (${SPEND.boost_post.coins} coins)`}
@@ -309,10 +311,10 @@ export const PostCard = memo(function PostCard({
           <Share2 className="h-4 w-4" /> <span>Share</span>
         </button>
         <button
-          onClick={() => {
+          onClick={() => requireAuth(() => {
             const nowSaved = toggleSaved(post.id);
             toast.success(nowSaved ? "Saved to bookmarks" : "Removed from bookmarks");
-          }}
+          })}
           aria-pressed={saved}
           title={saved ? "Remove bookmark" : "Save post"}
           className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${saved ? "text-amber-400 bg-amber-500/10 ring-1 ring-inset ring-amber-500/25" : "text-muted-foreground hover:bg-accent/25 hover:text-foreground"}`}
@@ -348,7 +350,7 @@ export const PostCard = memo(function PostCard({
             <input
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addComment(); } }}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); requireAuth(addComment); } }}
               placeholder="Write a comment…"
               className="flex-1 rounded-full border border-border/70 bg-background/60 px-4 py-2.5 text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all duration-200"
             />
@@ -362,7 +364,7 @@ export const PostCard = memo(function PostCard({
                 <EmojiPicker onPick={(e) => setCommentText((t) => t + e)} />
               </PopoverContent>
             </Popover>
-            <button onClick={addComment} disabled={sending || !commentText.trim()} className="rounded-full bg-gradient-to-br from-primary to-primary/80 p-2.5 text-primary-foreground shadow-[0_8px_22px_-8px_var(--primary-glow)] hover:scale-[1.06] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100">
+            <button onClick={() => requireAuth(addComment)} disabled={sending || !commentText.trim()} className="rounded-full bg-gradient-to-br from-primary to-primary/80 p-2.5 text-primary-foreground shadow-[0_8px_22px_-8px_var(--primary-glow)] hover:scale-[1.06] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
           </div>

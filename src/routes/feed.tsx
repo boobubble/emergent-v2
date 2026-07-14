@@ -41,6 +41,7 @@ import { FeedThemeStore } from "@/components/feed/FeedThemeStore";
 import { useActiveFeedTheme, activateFeedTheme, type FeedThemeKey } from "@/lib/feed-themes";
 import { feedVariantFor } from "@/lib/theme-variants";
 import { OrkutFeedLayout } from "@/components/feed/OrkutFeedLayout";
+import { useAuthGate } from "@/lib/auth-gate";
 
 import { Palette } from "lucide-react";
 
@@ -763,9 +764,13 @@ function FeedPage() {
               </div>
               <BroadcasterTicker target="feed" className="mb-3 rounded-md" />
               <StoryTray />
-              <div className="feed-card mt-4">
-                <Composer authorId={meId} onPosted={loadPosts} />
-              </div>
+              {meId ? (
+                <div className="feed-card mt-4">
+                  <Composer authorId={meId} onPosted={loadPosts} />
+                </div>
+              ) : (
+                <SignInToPostCard />
+              )}
 
               <div className="mt-4 flex gap-1 overflow-x-auto rounded-full feed-card p-1.5 feed-scrollbar-hide">
                 {TABS.map((t) => {
@@ -1282,3 +1287,31 @@ function LayoutSwitcher({
   );
 }
 
+
+function SignInToPostCard() {
+  const { openSignIn, openSignUp } = useAuthGate();
+  return (
+    <div className="feed-card mt-4 p-6 text-center">
+      <h3 className="text-base font-bold">Join the conversation</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Sign in to post, react, comment and follow other members.
+      </p>
+      <div className="mt-4 flex items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={openSignIn}
+          className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow hover:opacity-90"
+        >
+          Sign in
+        </button>
+        <button
+          type="button"
+          onClick={openSignUp}
+          className="rounded-full border px-5 py-2 text-sm font-semibold hover:bg-muted"
+        >
+          Create account
+        </button>
+      </div>
+    </div>
+  );
+}
