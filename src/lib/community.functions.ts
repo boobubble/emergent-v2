@@ -347,7 +347,7 @@ export const updateCommunityPrivacy = createServerFn({ method: "POST" })
     } else if (!needsPassword) {
       payload.join_password_hash = null;
     }
-    const { error } = await context.supabase.from("communities").update(payload).eq("id", data.communityId);
+    const { error } = await context.supabase.from("communities").update(payload as never).eq("id", data.communityId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
