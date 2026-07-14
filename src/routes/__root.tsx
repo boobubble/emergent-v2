@@ -16,7 +16,7 @@ import { IgnoreProvider } from "@/lib/ignore-store";
 import { AppSettingsProvider } from "@/lib/app-settings";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { FaviconSwitcher } from "@/components/FaviconSwitcher";
 import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
@@ -171,6 +171,19 @@ function RootComponent() {
 const PUBLIC_PATH_PREFIXES = ["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/p/", "/api/", "/installer"];
 const PUBLIC_EXACT = new Set(["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/installer"]);
 
+
+// Routes guests may browse without a full account. Visiting these while
+// signed out auto-creates an anonymous guest session (if guest access is
+// enabled), so the page loads. Individual actions inside (post, vote, DM)
+// still upgrade the guest to a real signup via GuestUpgradePrompt.
+const GUEST_BROWSABLE_PREFIXES = ["/feed", "/chatroom", "/chatrooms", "/confessions", "/live-arena", "/leaderboard", "/games", "/reels", "/find-friends", "/groups", "/achievements", "/gamification", "/competitions", "/pricing", "/pages", "/trust", "/feedback"];
+const GUEST_BROWSABLE_EXACT = new Set(["/"]);
+
+function isGuestBrowsablePath(pathname: string) {
+  if (GUEST_BROWSABLE_EXACT.has(pathname)) return true;
+  return GUEST_BROWSABLE_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 function isPublicPath(pathname: string) {
   if (PUBLIC_EXACT.has(pathname)) return true;
   return PUBLIC_PATH_PREFIXES.some((p) => pathname.startsWith(p));
@@ -195,6 +208,26 @@ function AuthenticatedHooks({ userId }: { userId: string }) {
   useSessionChangeDetector();
   useBanGuard(userId);
   return null;
+}
+
+function GuestAutoSignIn({ fallback }: { fallback: string }) {
+  const { loginAsGuest } = useAuth();
+  const [failed, setFailed] = useState(false);
+  const triedRef = useRef(false);
+  useEffect(() => {
+    if (triedRef.current) return;
+    triedRef.current = true;
+    loginAsGuest().catch((e) => {
+      console.warn("Guest auto sign-in failed:", e);
+      setFailed(true);
+    });
+  }, [loginAsGuest]);
+  if (failed) return <Navigate to={fallback} replace />;
+  return (
+    <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">
+      <p>Loading…</p>
+    </div>
+  );
 }
 
 function AuthGate() {
@@ -262,6 +295,12 @@ function AuthGate() {
           <p>Loading…</p>
         </div>
       );
+    }
+    // Guest-browsable routes → transparently sign in as an anonymous guest
+    // so the page renders. Falls through to the landing redirect if guest
+    // access is disabled or the anonymous sign-in fails.
+    if (isGuestBrowsablePath(path)) {
+      return <GuestAutoSignIn fallback={landingPath} />;
     }
     // Everything else → send guests to the configured landing page first.
     return <Navigate to={landingPath} replace />;
