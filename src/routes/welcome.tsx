@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BrandMark, BrandText } from "@/components/BrandMark";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -15,6 +15,7 @@ import {
   type LandingConfessionItem, type LandingBlogPost, type LandingActivity,
 } from "@/lib/landing-config";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
+import { useAuth } from "@/lib/auth-store";
 
 interface LandingStats {
   members: number; online: number; activeRooms: number;
@@ -102,6 +103,14 @@ function LandingPage() {
   const [pollChoice, setPollChoice] = useState<number | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [authPopup, setAuthPopup] = useState<AuthPopup>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const handleNav = (to: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setMenuOpen(false);
+    if (!user) { setAuthPopup("signin"); return; }
+    navigate({ to });
+  };
 
   useEffect(() => {
     try {
@@ -176,6 +185,7 @@ function LandingPage() {
     { label: "Chatrooms",   to: "/"            },
     { label: "Games",       to: "/games"       },
     { label: "Confessions", to: "/confessions" },
+    { label: "Live Arena",  to: "/live-arena"  },
     { label: "Leaderboard", to: "/leaderboard" },
   ], []);
 
@@ -285,7 +295,7 @@ function LandingPage() {
 
           <nav className="ml-6 hidden items-center gap-1 lg:flex">
             {navLinks.map((l) => (
-              <Link key={l.to + l.label} to={l.to}
+              <Link key={l.to + l.label} to={l.to} onClick={handleNav(l.to)}
                 className="rounded-full px-3.5 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white"
                 activeProps={{ className: "rounded-full px-3.5 py-2 text-sm font-semibold text-white bg-white/10" }}>
                 {l.label}
@@ -323,7 +333,7 @@ function LandingPage() {
           <div className="border-t border-white/10 bg-[#070713]/95 px-4 pb-4 pt-2 lg:hidden">
             <nav className="grid gap-1">
               {navLinks.map((l) => (
-                <Link key={l.to + l.label} to={l.to} onClick={() => setMenuOpen(false)}
+                <Link key={l.to + l.label} to={l.to} onClick={handleNav(l.to)}
                       className="rounded-xl px-3 py-2.5 text-sm font-medium text-white/80 hover:bg-white/5">
                   {l.label}
                 </Link>
