@@ -763,9 +763,13 @@ function FeedPage() {
               </div>
               <BroadcasterTicker target="feed" className="mb-3 rounded-md" />
               <StoryTray />
-              <div className="feed-card mt-4">
-                <Composer authorId={meId} onPosted={loadPosts} />
-              </div>
+              {meId ? (
+                <div className="feed-card mt-4">
+                  <Composer authorId={meId} onPosted={loadPosts} />
+                </div>
+              ) : (
+                <SignInToPostCard />
+              )}
 
               <div className="mt-4 flex gap-1 overflow-x-auto rounded-full feed-card p-1.5 feed-scrollbar-hide">
                 {TABS.map((t) => {
