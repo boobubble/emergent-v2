@@ -210,6 +210,26 @@ function AuthenticatedHooks({ userId }: { userId: string }) {
   return null;
 }
 
+function GuestAutoSignIn({ fallback }: { fallback: string }) {
+  const { loginAsGuest } = useAuth();
+  const [failed, setFailed] = useState(false);
+  const triedRef = useRef(false);
+  useEffect(() => {
+    if (triedRef.current) return;
+    triedRef.current = true;
+    loginAsGuest().catch((e) => {
+      console.warn("Guest auto sign-in failed:", e);
+      setFailed(true);
+    });
+  }, [loginAsGuest]);
+  if (failed) return <Navigate to={fallback} replace />;
+  return (
+    <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">
+      <p>Loading…</p>
+    </div>
+  );
+}
+
 function AuthGate() {
   const { user, ready } = useAuth();
   const location = useLocation();
