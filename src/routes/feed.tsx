@@ -604,23 +604,29 @@ function FeedPage() {
           </div>
 
           <div className="ml-auto flex items-center gap-1.5">
-            
-            <FeedNotifications meId={meId} profiles={profiles} />
-            <button
-              onClick={() => setDmOpenKey(k => k + 1)}
-              className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent/30 transition"
-              title="Messages"
-              aria-label="Messages"
-            >
-              <MessageCircle className="h-5 w-5 text-foreground" />
-            </button>
-            <UserMenu
-              username={displayUsername}
-              onProfile={() => { setProfileUsername(displayUsername); setView("profile"); }}
-              onSettings={() => setView("account")}
-            />
+            {user ? (
+              <>
+                <FeedNotifications meId={meId} profiles={profiles} />
+                <button
+                  onClick={() => setDmOpenKey(k => k + 1)}
+                  className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent/30 transition"
+                  title="Messages"
+                  aria-label="Messages"
+                >
+                  <MessageCircle className="h-5 w-5 text-foreground" />
+                </button>
+                <UserMenu
+                  username={displayUsername}
+                  onProfile={() => { setProfileUsername(displayUsername); setView("profile"); }}
+                  onSettings={() => setView("account")}
+                />
+              </>
+            ) : (
+              <SignedOutHeaderActions />
+            )}
 
           </div>
+
         </div>
       </header>
 
