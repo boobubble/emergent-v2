@@ -171,6 +171,21 @@ function RootComponent() {
 const PUBLIC_PATH_PREFIXES = ["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/p/", "/api/", "/installer"];
 const PUBLIC_EXACT = new Set(["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/installer"]);
 
+const PUBLIC_PATH_PREFIXES = ["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/p/", "/api/", "/installer"];
+const PUBLIC_EXACT = new Set(["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/installer"]);
+
+// Routes guests may browse without a full account. Visiting these while
+// signed out auto-creates an anonymous guest session (if guest access is
+// enabled), so the page loads. Individual actions inside (post, vote, DM)
+// still upgrade the guest to a real signup via GuestUpgradePrompt.
+const GUEST_BROWSABLE_PREFIXES = ["/feed", "/chatroom", "/chatrooms", "/confessions", "/live-arena", "/leaderboard", "/games", "/reels", "/find-friends", "/groups", "/achievements", "/gamification", "/competitions", "/pricing", "/pages", "/trust", "/feedback"];
+const GUEST_BROWSABLE_EXACT = new Set(["/"]);
+
+function isGuestBrowsablePath(pathname: string) {
+  if (GUEST_BROWSABLE_EXACT.has(pathname)) return true;
+  return GUEST_BROWSABLE_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 function isPublicPath(pathname: string) {
   if (PUBLIC_EXACT.has(pathname)) return true;
   return PUBLIC_PATH_PREFIXES.some((p) => pathname.startsWith(p));
