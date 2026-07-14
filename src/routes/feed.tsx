@@ -924,7 +924,11 @@ function FeedPage() {
           </button>
         </div>
         <button onClick={() => setView("explore")} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "explore" ? "text-primary" : "text-muted-foreground"}`}><Compass className="h-5 w-5" /> Explore</button>
-        <button onClick={() => { setProfileUsername(displayUsername); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
+        {user ? (
+          <button onClick={() => { setProfileUsername(displayUsername); setView("profile"); }} className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${view === "profile" ? "text-primary" : "text-muted-foreground"}`}><UserCircle className="h-5 w-5" /> Me</button>
+        ) : (
+          <button onClick={openSignIn} className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted-foreground"><UserCircle className="h-5 w-5" /> Sign in</button>
+        )}
       </nav>
 
       {/* Mobile quick-actions speed dial (left-bottom, opposite the theme toggle) */}
