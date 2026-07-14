@@ -51,10 +51,16 @@ export const Route = createFileRoute("/$slug")({
   loader: async ({ params }) => {
     // Reserved slugs should never reach a published page; bail early.
     if (isReservedSlug(params.slug)) redirectReservedSlug(params.slug);
+    // Vanity resolver: community slugs take priority over custom pages.
+    const community = await getCommunityBySlug({ data: { slug: params.slug } });
+    if (community) {
+      throw redirect({ to: "/community/$slug", params: { slug: params.slug }, replace: true });
+    }
     const page = await getPublishedPage({ data: { slug: params.slug } });
     if (!page) throw notFound();
     return { page };
   },
+
   head: ({ loaderData, params }) => {
     const p = loaderData?.page;
     if (!p) return {};
