@@ -23,6 +23,7 @@ interface Props {
 export function Sidebar({ onOpenProfile, onCollapse }: Props) {
   const { state, setActive, createRoom, deleteRoom, reset } = useChat();
   const { logout, user } = useAuth();
+  const { openSignIn, openSignUp } = useAuthGate();
   const { isAdmin } = useMyRoles();
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
