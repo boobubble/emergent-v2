@@ -160,7 +160,9 @@ function RootComponent() {
         <LanguageProvider>
           <DynamicBrandHead />
           <AuthProvider>
-            <AuthGate />
+            <AuthGateProvider>
+              <AuthGate />
+            </AuthGateProvider>
           </AuthProvider>
         </LanguageProvider>
       </AppSettingsProvider>
