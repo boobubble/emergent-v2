@@ -56,6 +56,7 @@ export const PostCard = memo(function PostCard({
   const [boosting, setBoosting] = useState(false);
   const { isSaved, toggle: toggleSaved } = useSavedPosts();
   const saved = isSaved(post.id);
+  const { requireAuth } = useAuthGate();
 
   const earnReaction = useServerFn(earnFeedReaction);
   const earnComment = useServerFn(earnFeedComment);
