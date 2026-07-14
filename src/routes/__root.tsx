@@ -300,7 +300,7 @@ function PublicOutlet({ readOnlyApp }: { readOnlyApp: boolean }) {
   );
   if (!readOnlyApp) return content;
   return (
-    <ChatProvider username="Visitor" authUserId={null} isGuest>
+    <ChatProvider username="__public__" authUserId={null} isGuest>
       <FeedPrefsProvider>
         <IgnoreProvider>{content}</IgnoreProvider>
       </FeedPrefsProvider>
