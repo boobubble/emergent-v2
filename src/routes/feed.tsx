@@ -434,7 +434,7 @@ function FeedPage() {
   const [themeStoreOpen, setThemeStoreOpen] = useState(false);
 
   // Premium flagship layout: Orkut Retro replaces the entire feed UI.
-  if (feedTheme === "orkut_retro") {
+  if (feedTheme === "orkut_retro" && user) {
     return (
       <div data-feed-theme={feedTheme} data-theme-variant={feedVariantFor(feedTheme)}>
         <FeedThemeStore
