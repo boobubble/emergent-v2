@@ -282,7 +282,130 @@ function PrivacySection({ community }: { community: Community }) {
   );
 }
 
+function VisibilitySection({ community }: { community: Community }) {
+  const [visibility, setVisibility] = useState<CommunityVisibility>(community.visibility ?? "public");
+  const [category, setCategory] = useState<string>(community.category ?? "");
+  const [tagsText, setTagsText] = useState<string>((community.tags ?? []).join(", "));
+  const [language, setLanguage] = useState<string>(community.language ?? "");
+  const [country, setCountry] = useState<string>(community.country ?? "");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const qc = useQueryClient();
+  const fn = useServerFn(updateCommunityVisibility);
+
+  const buildPayload = (confirmLargeChange = false) => ({
+    communityId: community.id,
+    visibility,
+    category: category.trim() ? category.trim() : null,
+    tags: tagsText.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 15),
+    language: language.trim() ? language.trim() : null,
+    country: country.trim() ? country.trim() : null,
+    confirmLargeChange,
+  });
+
+  const mut = useMutation({
+    mutationFn: (confirmLargeChange: boolean) => fn({ data: buildPayload(confirmLargeChange) }),
+    onSuccess: () => {
+      toast.success("Visibility updated");
+      setConfirmOpen(false);
+      qc.invalidateQueries();
+    },
+    onError: (e: Error) => {
+      if (e.message === "CONFIRM_LARGE_HIDE") {
+        setConfirmOpen(true);
+        return;
+      }
+      toast.error(e.message);
+    },
+  });
+
+  const needsConfirm =
+    community.visibility === "public" &&
+    visibility === "hidden" &&
+    (community.member_count ?? 0) > 10_000;
+
+  const VIS_OPTIONS: { value: CommunityVisibility; title: string; desc: string; icon: React.ReactNode }[] = [
+    { value: "public", title: "Public", desc: "Discoverable everywhere: directory, search, trending, recommendations.", icon: <span>🌍</span> },
+    { value: "hidden", title: "Hidden", desc: "Hidden from directory, search, and recommendations. Access only via direct URL or invite.", icon: <span>👁</span> },
+    { value: "unlisted", title: "Unlisted", desc: "Not searchable and not indexed. Anyone with the link can open it.", icon: <span>🚧</span> },
+    { value: "featured_only", title: "Featured Only", desc: "Only appears in discovery if a platform admin marks it Featured.", icon: <span>⭐</span> },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border bg-card p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold">Discovery visibility</h3>
+            <p className="text-xs text-muted-foreground">Separate from Privacy — visibility controls who can DISCOVER this community.</p>
+          </div>
+          <Badge variant="outline" className="capitalize">{community.visibility ?? "public"}</Badge>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          {VIS_OPTIONS.map((opt) => {
+            const active = visibility === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setVisibility(opt.value)}
+                className={`flex items-start gap-3 rounded-lg border p-3 text-left transition ${
+                  active ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-accent"
+                }`}
+              >
+                <div className="text-lg">{opt.icon}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium">{opt.title}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{opt.desc}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid gap-3 rounded-lg border bg-card p-4 sm:grid-cols-2">
+        <Field label="Category" hint="Used in the discovery directory.">
+          <Input value={category} onChange={(e) => setCategory(e.target.value.toLowerCase())} placeholder="gaming, music, tech, art…" />
+        </Field>
+        <Field label="Tags" hint="Comma-separated, up to 15.">
+          <Input value={tagsText} onChange={(e) => setTagsText(e.target.value)} placeholder="minecraft, speedrun, hindi" />
+        </Field>
+        <Field label="Language">
+          <Input value={language} onChange={(e) => setLanguage(e.target.value)} placeholder="en, hi, es…" />
+        </Field>
+        <Field label="Country">
+          <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="IN, US…" />
+        </Field>
+      </div>
+
+      <Button onClick={() => mut.mutate(needsConfirm)} disabled={mut.isPending}>Save visibility</Button>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Hide this community?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {community.name} has {(community.member_count ?? 0).toLocaleString()} members. Switching to <b>Hidden</b> will
+              immediately remove it from discovery, search, recommendations, and search engines. Existing members and direct
+              links will keep working, but you'll lose new organic growth. You can switch back to Public any time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={mut.isPending}>Stay Public</AlertDialogCancel>
+            <AlertDialogAction onClick={() => mut.mutate(true)} disabled={mut.isPending}>Yes, hide community</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
 function MembersSection({ community }: { community: Community }) {
+
   const listFn = useServerFn(listCommunityMembers);
   const { data: members, refetch } = useQuery({
     queryKey: ["community-members", community.id],
