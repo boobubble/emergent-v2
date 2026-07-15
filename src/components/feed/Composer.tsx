@@ -166,6 +166,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
           privacy,
           is_anonymous: anonymous,
           hashtags,
+          ...(communityId ? { community_id: communityId } : {}),
         });
         if (error) throw new Error(error.message);
       } else {
