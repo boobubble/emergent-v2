@@ -140,6 +140,7 @@ function DashboardPage() {
             <TabsTrigger value="analytics" className="justify-start"><BarChart3 className="mr-2 h-4 w-4" />Analytics</TabsTrigger>
             <TabsTrigger value="monetization" className="justify-start"><DollarSign className="mr-2 h-4 w-4" />Monetization</TabsTrigger>
             <TabsTrigger value="trust" className="justify-start"><BadgeCheck className="mr-2 h-4 w-4" />Trust &amp; Verification</TabsTrigger>
+            <TabsTrigger value="premium-url" className="justify-start"><Link2 className="mr-2 h-4 w-4" />Premium URL</TabsTrigger>
             <TabsTrigger value="settings" className="justify-start"><SettingsIcon className="mr-2 h-4 w-4" />Settings</TabsTrigger>
 
           </TabsList>
