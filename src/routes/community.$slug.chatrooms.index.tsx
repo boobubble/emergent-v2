@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-store";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Users, Lock } from "lucide-react";
 
-export const Route = createFileRoute("/community/$slug/chatrooms")({
+export const Route = createFileRoute("/community/$slug/chatrooms/")({
   component: CommunityChatrooms,
 });
 
@@ -108,7 +108,12 @@ function CommunityChatrooms() {
                 size="sm"
                 variant="outline"
                 disabled={!user || (!isMember && !isOwner)}
-                onClick={() => navigate({ to: "/chatroom", search: { room: r.slug } as never } as never)}
+                onClick={() =>
+                  navigate({
+                    to: "/community/$slug/chatrooms/$roomSlug",
+                    params: { slug: community.slug, roomSlug: r.slug },
+                  })
+                }
               >
                 Enter
               </Button>

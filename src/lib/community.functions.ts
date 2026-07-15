@@ -539,13 +539,62 @@ export const getMyCommunity = createServerFn({ method: "GET" })
   });
 
 /**
- * Public-facing member directory. Signed-in only, but does not require
- * ownership — any authenticated user can browse a community's active members.
+ * Public-facing member directory for PUBLIC communities. Requires no auth —
+ * signed-out visitors can browse.
+ *
+ * For non-public privacy modes this returns [], and the client should call
+ * `listCommunityMembersAuthed` (which requires a signed-in active member).
+ * No fake/guest identity is created anywhere.
  */
 export const listCommunityMembersPublic = createServerFn({ method: "GET" })
+  .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: comm, error: commErr } = await supabaseAdmin
+      .from("communities")
+      .select("id,privacy_mode,status")
+      .eq("id", data.communityId)
+      .maybeSingle();
+    if (commErr) throw new Error(commErr.message);
+    if (!comm || comm.status !== "active" || comm.privacy_mode !== "public") return [];
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("community_members")
+      .select("id,user_id,role,status,created_at,user:profiles!community_members_user_id_fkey(id,username,display_name,avatar_url,avatar_color)")
+      .eq("community_id", data.communityId)
+      .eq("status", "active")
+      .order("role", { ascending: true })
+      .order("created_at", { ascending: true })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+/**
+ * Member directory for non-public communities. Requires the caller to be an
+ * active member (or the owner). Returns [] otherwise.
+ */
+export const listCommunityMembersAuthed = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    const { data: membership } = await context.supabase
+      .from("community_members")
+      .select("role,status")
+      .eq("community_id", data.communityId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    const isActive = !!membership && membership.status === "active";
+    if (!isActive) {
+      // Owners always allowed even if they somehow lack a member row.
+      const { data: comm } = await context.supabase
+        .from("communities")
+        .select("owner_id")
+        .eq("id", data.communityId)
+        .maybeSingle();
+      if (!comm || comm.owner_id !== context.userId) return [];
+    }
     const { data: rows, error } = await context.supabase
       .from("community_members")
       .select("id,user_id,role,status,created_at,user:profiles!community_members_user_id_fkey(id,username,display_name,avatar_url,avatar_color)")

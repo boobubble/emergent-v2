@@ -187,7 +187,13 @@ function FeedPage() {
   // Load posts
   async function loadPosts() {
     setLoading(true);
-    const { data } = await postsSafe().select("*").order("created_at", { ascending: false }).limit(50);
+    // Global feed: platform-wide posts only. Community-scoped posts stay
+    // exclusive to their community feed.
+    const { data } = await postsSafe()
+      .select("*")
+      .is("community_id", null)
+      .order("created_at", { ascending: false })
+      .limit(50);
     setPosts(((data ?? []) as Partial<FeedPost>[]).map(normalizePost));
     setLoading(false);
   }
@@ -196,6 +202,9 @@ function FeedPage() {
     loadPosts();
     const ch = supabase.channel("feed-posts")
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, (payload) => {
+        // Skip any post scoped to a community — global feed is platform-wide only.
+        const row = (payload.new ?? payload.old) as Partial<FeedPost> & { community_id?: string | null };
+        if (row && row.community_id) return;
         if (payload.eventType === "INSERT") setPosts((p) => [normalizePost(payload.new as Partial<FeedPost>), ...p]);
         else if (payload.eventType === "DELETE") setPosts((p) => p.filter((x) => x.id !== (payload.old as FeedPost).id));
         else if (payload.eventType === "UPDATE") setPosts((p) => p.map((x) => x.id === (payload.new as FeedPost).id ? normalizePost(payload.new as Partial<FeedPost>) : x));
