@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { enforceRateLimit, RateLimitError, getClientIp } from "./rate-limit.server";
 import { validateUsername } from "./username-validation";
+
 
 export const checkUsernameAvailable = createServerFn({ method: "POST" })
   .inputValidator((input: { username: string; excludeUserId?: string }) => {
@@ -94,7 +96,17 @@ export const loginWithIdentifier = createServerFn({ method: "POST" })
     return { identifier, password };
   })
   .handler(async ({ data }) => {
+    const ip = getClientIp();
+    try {
+      await enforceRateLimit({ action: "auth.login", ip });
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        throw new Error(`Too many login attempts. Try again in ${e.retryAfter}s.`);
+      }
+      throw e;
+    }
     let email = data.identifier;
+
 
     if (!email.includes("@")) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

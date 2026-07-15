@@ -142,6 +142,7 @@ import { Route as AdminAiChatbotsRouteImport } from './routes/admin.ai-chatbots'
 import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
 import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
+import { Route as AdminAbuseProtectionRouteImport } from './routes/admin.abuse-protection'
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
 import { Route as CommunitySlugMembersRouteImport } from './routes/community.$slug.members'
 import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
@@ -834,6 +835,11 @@ const AdminActivityLogsRoute = AdminActivityLogsRouteImport.update({
   path: '/activity-logs',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAbuseProtectionRoute = AdminAbuseProtectionRouteImport.update({
+  id: '/abuse-protection',
+  path: '/abuse-protection',
+  getParentRoute: () => AdminRoute,
+} as any)
 const CommunitySlugIndexRoute = CommunitySlugIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -993,6 +999,7 @@ export interface FileRoutesByFullPath {
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/abuse-protection': typeof AdminAbuseProtectionRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
@@ -1147,6 +1154,7 @@ export interface FileRoutesByTo {
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/abuse-protection': typeof AdminAbuseProtectionRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
@@ -1304,6 +1312,7 @@ export interface FileRoutesById {
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/abuse-protection': typeof AdminAbuseProtectionRoute
   '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/ad-placements': typeof AdminAdPlacementsRoute
   '/admin/ads-scripts': typeof AdminAdsScriptsRoute
@@ -1463,6 +1472,7 @@ export interface FileRouteTypes {
     | '/trust'
     | '/wallet'
     | '/welcome'
+    | '/admin/abuse-protection'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
@@ -1617,6 +1627,7 @@ export interface FileRouteTypes {
     | '/trust'
     | '/wallet'
     | '/welcome'
+    | '/admin/abuse-protection'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
@@ -1773,6 +1784,7 @@ export interface FileRouteTypes {
     | '/trust'
     | '/wallet'
     | '/welcome'
+    | '/admin/abuse-protection'
     | '/admin/activity-logs'
     | '/admin/ad-placements'
     | '/admin/ads-scripts'
@@ -2884,6 +2896,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminActivityLogsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/abuse-protection': {
+      id: '/admin/abuse-protection'
+      path: '/abuse-protection'
+      fullPath: '/admin/abuse-protection'
+      preLoaderRoute: typeof AdminAbuseProtectionRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/community/$slug/': {
       id: '/community/$slug/'
       path: '/'
@@ -3054,6 +3073,7 @@ const AdminUpcomingRouteWithChildren = AdminUpcomingRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAbuseProtectionRoute: typeof AdminAbuseProtectionRoute
   AdminActivityLogsRoute: typeof AdminActivityLogsRoute
   AdminAdPlacementsRoute: typeof AdminAdPlacementsRoute
   AdminAdsScriptsRoute: typeof AdminAdsScriptsRoute
@@ -3137,6 +3157,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAbuseProtectionRoute: AdminAbuseProtectionRoute,
   AdminActivityLogsRoute: AdminActivityLogsRoute,
   AdminAdPlacementsRoute: AdminAdPlacementsRoute,
   AdminAdsScriptsRoute: AdminAdsScriptsRoute,
