@@ -201,7 +201,11 @@ function CommunityHeader({
               )}
             </div>
             <div className="pb-1">
-              <h1 className="text-xl font-bold sm:text-2xl">{community.name}</h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold sm:text-2xl">{community.name}</h1>
+                <CommunityBadges c={community as never} size="md" showFeatured />
+              </div>
+
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" />{community.member_count} members</span>
                 <PrivacyBadge mode={community.privacy_mode} />
