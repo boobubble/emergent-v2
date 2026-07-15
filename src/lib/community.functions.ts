@@ -702,3 +702,70 @@ export const listCommunityMembersAuthed = createServerFn({ method: "GET" })
     return rows ?? [];
   });
 
+// =========================================================================
+// VISIBILITY & DISCOVERY (owner-only, separate from privacy)
+// =========================================================================
+
+/**
+ * Update discovery visibility. Separate from privacy_mode:
+ *   - privacy_mode controls who can ENTER
+ *   - visibility controls who can DISCOVER
+ * Also lets the owner set category / tags / language / country used by
+ * the discovery directory. is_featured/is_verified/is_official are
+ * platform-admin flags and NOT settable here.
+ */
+export const updateCommunityVisibility = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    communityId: string;
+    visibility: CommunityVisibility;
+    category?: string | null;
+    tags?: string[];
+    language?: string | null;
+    country?: string | null;
+    confirmLargeChange?: boolean;
+  }) => z.object({
+    communityId: z.string().uuid(),
+    visibility: z.enum(["public", "hidden", "unlisted", "featured_only"]),
+    category: z.string().max(60).nullable().optional(),
+    tags: z.array(z.string().min(1).max(30)).max(15).optional(),
+    language: z.string().max(10).nullable().optional(),
+    country: z.string().max(10).nullable().optional(),
+    confirmLargeChange: z.boolean().optional(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    // Only the owner can change visibility (not moderators, not platform admins
+    // — admins can still see hidden communities, but they should not silently
+    // hide someone else's community).
+    const { data: comm } = await context.supabase
+      .from("communities")
+      .select("owner_id,visibility,member_count")
+      .eq("id", data.communityId)
+      .maybeSingle();
+    if (!comm) throw new Error("Community not found");
+    if (comm.owner_id !== context.userId) throw new Error("Only the community owner can change visibility");
+
+    // Safety confirmation for large communities going Public → Hidden.
+    if (
+      comm.visibility === "public" &&
+      data.visibility === "hidden" &&
+      (comm.member_count ?? 0) > 10_000 &&
+      !data.confirmLargeChange
+    ) {
+      throw new Error("CONFIRM_LARGE_HIDE");
+    }
+
+    const payload: Record<string, unknown> = { visibility: data.visibility };
+    if (data.category !== undefined) payload.category = data.category;
+    if (data.tags !== undefined) payload.tags = data.tags;
+    if (data.language !== undefined) payload.language = data.language;
+    if (data.country !== undefined) payload.country = data.country;
+
+    const { error } = await context.supabase
+      .from("communities")
+      .update(payload as never)
+      .eq("id", data.communityId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
