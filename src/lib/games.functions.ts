@@ -3,7 +3,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
-import { withRateLimit } from "./rate-limit-middleware";
   applyMove,
   applyRoll,
   initLudoState,
@@ -13,6 +12,7 @@ import { withRateLimit } from "./rate-limit-middleware";
   SEAT_COLORS,
 } from "./games-engine";
 
+import { withRateLimit } from "./rate-limit-middleware";
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;

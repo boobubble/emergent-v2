@@ -3,7 +3,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
-import { withRateLimit } from "./rate-limit-middleware";
   CONFESSIONS_DEFAULTS,
   expiryToTimestamp,
   pickRandomAvatar,
@@ -12,6 +11,7 @@ import { withRateLimit } from "./rate-limit-middleware";
   type ConfessionDisplayMode,
 } from "@/lib/confessions-config";
 
+import { withRateLimit } from "./rate-limit-middleware";
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
