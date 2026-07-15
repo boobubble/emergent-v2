@@ -39,7 +39,7 @@ import { toast } from "sonner";
 import {
   LayoutDashboard, Users, Palette, Shield, Eye, UserPlus, Rss, MessageSquare, Trophy, Radio,
   BarChart3, DollarSign, Settings as SettingsIcon, ArrowLeft, Copy, Trash2, AlertTriangle,
-  BadgeCheck,
+  BadgeCheck, Link2,
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { CommunityBadges } from "@/components/community/CommunityBadges";
