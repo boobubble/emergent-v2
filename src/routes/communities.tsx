@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedCounter } from "@/components/competitions/AnimatedCounter";
+import { CommunityBadges } from "@/components/community/CommunityBadges";
+
 import {
   Search, Users, Sparkles, Flame, Shield, BadgeCheck, Star, TrendingUp,
   Clock, Gamepad2, Music, Film, Code2, Palette, Trophy, Laugh, GraduationCap,
