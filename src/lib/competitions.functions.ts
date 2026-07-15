@@ -584,10 +584,23 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
     max_votes_per_user?: number;
     allow_guest_voting?: boolean;
     allow_anonymous_voting?: boolean;
+    community_id?: string | null;
   }) => data)
 
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    // Platform admins can save any competition. Community owners can save
+    // competitions scoped to their own community (community_id matches).
+    let allowed = false;
+    try { await assertAdmin(context.supabase, context.userId); allowed = true; } catch { /* fall through */ }
+    if (!allowed && data.community_id) {
+      const { data: comm } = await context.supabase
+        .from("communities")
+        .select("owner_id")
+        .eq("id", data.community_id)
+        .maybeSingle();
+      if (comm?.owner_id === context.userId) allowed = true;
+    }
+    if (!allowed) throw new Error("Forbidden");
     const sb = context.supabase as any;
     // Strip any joined/computed fields that aren't real columns
     const {
@@ -984,17 +997,22 @@ async function enrichCompetitions(sb: any, comps: any[]): Promise<EnrichedCompet
   }));
 }
 
-export const listCompetitionsEnriched = createServerFn({ method: "GET" }).handler(async () => {
-  const sb = await publicClient();
-  const { data, error } = await sb
-    .from("competitions")
-    .select("*, category:competition_categories(id,name,slug,color,icon_url)")
-    .neq("status", "draft")
-    .eq("is_published", true)
-    .order("start_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return enrichCompetitions(sb, data ?? []);
-});
+export const listCompetitionsEnriched = createServerFn({ method: "GET" })
+  .inputValidator((d: { communityId?: string | null } = {}) => d)
+  .handler(async ({ data }) => {
+    const sb = await publicClient();
+    let q = sb
+      .from("competitions")
+      .select("*, category:competition_categories(id,name,slug,color,icon_url)")
+      .neq("status", "draft")
+      .eq("is_published", true)
+      .order("start_at", { ascending: false });
+    if (data?.communityId) q = q.eq("community_id", data.communityId);
+    else q = q.is("community_id", null);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return enrichCompetitions(sb, rows ?? []);
+  });
 
 export const listMyFollowedCompetitions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

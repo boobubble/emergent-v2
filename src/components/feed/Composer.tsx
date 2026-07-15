@@ -49,7 +49,7 @@ function validateAndFilter(incoming: File[]): { ok: File[]; rejected: string[] }
 
 type ComposerMode = "post" | "poll" | "confession";
 
-export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: () => void }) {
+export function Composer({ authorId, onPosted, communityId }: { authorId: string; onPosted?: () => void; communityId?: string | null }) {
   const [text, setText] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(DRAFT_KEY) || "" : ""));
   const [files, setFiles] = useState<File[]>([]);
   const [privacy, setPrivacy] = useState<PostPrivacy>("public");
@@ -166,6 +166,7 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           privacy,
           is_anonymous: anonymous,
           hashtags,
+          ...(communityId ? { community_id: communityId } : {}),
         });
         if (error) throw new Error(error.message);
       } else {
@@ -182,6 +183,7 @@ export function Composer({ authorId, onPosted }: { authorId: string; onPosted?: 
           privacy,
           is_anonymous: anonymous,
           hashtags,
+          ...(communityId ? { community_id: communityId } : {}),
         });
         if (error) throw new Error(error.message);
       }

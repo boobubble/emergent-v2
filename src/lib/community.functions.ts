@@ -537,3 +537,24 @@ export const getMyCommunity = createServerFn({ method: "GET" })
       .maybeSingle();
     return row as any;
   });
+
+/**
+ * Public-facing member directory. Signed-in only, but does not require
+ * ownership — any authenticated user can browse a community's active members.
+ */
+export const listCommunityMembersPublic = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("community_members")
+      .select("id,user_id,role,status,created_at,user:profiles!community_members_user_id_fkey(id,username,display_name,avatar_url,avatar_color)")
+      .eq("community_id", data.communityId)
+      .eq("status", "active")
+      .order("role", { ascending: true })
+      .order("created_at", { ascending: true })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+

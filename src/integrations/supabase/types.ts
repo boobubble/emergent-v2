@@ -5441,6 +5441,7 @@ export type Database = {
         Row: {
           author_id: string | null
           comment_count: number | null
+          community_id: string | null
           created_at: string | null
           hashtags: string[] | null
           id: string | null
@@ -5459,13 +5460,14 @@ export type Database = {
         Insert: {
           author_id?: string | null
           comment_count?: number | null
+          community_id?: string | null
           created_at?: string | null
           hashtags?: string[] | null
           id?: string | null
           is_anonymous?: boolean | null
           kind?: Database["public"]["Enums"]["post_kind"] | null
           media_urls?: string[] | null
-          owner_id?: never
+          owner_id?: string | null
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"] | null
           reaction_count?: number | null
@@ -5477,13 +5479,14 @@ export type Database = {
         Update: {
           author_id?: string | null
           comment_count?: number | null
+          community_id?: string | null
           created_at?: string | null
           hashtags?: string[] | null
           id?: string | null
           is_anonymous?: boolean | null
           kind?: Database["public"]["Enums"]["post_kind"] | null
           media_urls?: string[] | null
-          owner_id?: never
+          owner_id?: string | null
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"] | null
           reaction_count?: number | null
@@ -5503,6 +5506,27 @@ export type Database = {
           {
             foreignKeyName: "posts_author_id_profiles_fkey"
             columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_owner_id_profiles_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_owner_id_profiles_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles_directory"
             referencedColumns: ["id"]

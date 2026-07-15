@@ -137,7 +137,12 @@ import { Route as AdminAiChatbotsRouteImport } from './routes/admin.ai-chatbots'
 import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
 import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
+import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
+import { Route as CommunitySlugMembersRouteImport } from './routes/community.$slug.members'
+import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
+import { Route as CommunitySlugCompetitionsRouteImport } from './routes/community.$slug.competitions'
+import { Route as CommunitySlugChatroomsRouteImport } from './routes/community.$slug.chatrooms'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
@@ -797,9 +802,35 @@ const AdminActivityLogsRoute = AdminActivityLogsRouteImport.update({
   path: '/activity-logs',
   getParentRoute: () => AdminRoute,
 } as any)
+const CommunitySlugIndexRoute = CommunitySlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
+const CommunitySlugMembersRoute = CommunitySlugMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
+const CommunitySlugFeedRoute = CommunitySlugFeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
 const CommunitySlugDashboardRoute = CommunitySlugDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
+const CommunitySlugCompetitionsRoute =
+  CommunitySlugCompetitionsRouteImport.update({
+    id: '/competitions',
+    path: '/competitions',
+    getParentRoute: () => CommunitySlugRoute,
+  } as any)
+const CommunitySlugChatroomsRoute = CommunitySlugChatroomsRouteImport.update({
+  id: '/chatrooms',
+  path: '/chatrooms',
   getParentRoute: () => CommunitySlugRoute,
 } as any)
 const ApiPublicLandingRoute = ApiPublicLandingRouteImport.update({
@@ -1021,7 +1052,12 @@ export interface FileRoutesByFullPath {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
+  '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
+  '/community/$slug/feed': typeof CommunitySlugFeedRoute
+  '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
@@ -1147,7 +1183,6 @@ export interface FileRoutesByTo {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
-  '/community/$slug': typeof CommunitySlugRouteWithChildren
   '/competitions/$slug': typeof CompetitionsSlugRoute
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
@@ -1164,7 +1199,12 @@ export interface FileRoutesByTo {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
+  '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
+  '/community/$slug/feed': typeof CommunitySlugFeedRoute
+  '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/community/$slug': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
@@ -1311,7 +1351,12 @@ export interface FileRoutesById {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
+  '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
+  '/community/$slug/feed': typeof CommunitySlugFeedRoute
+  '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
@@ -1459,7 +1504,12 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
+    | '/community/$slug/chatrooms'
+    | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
+    | '/community/$slug/feed'
+    | '/community/$slug/members'
+    | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
@@ -1585,7 +1635,6 @@ export interface FileRouteTypes {
     | '/broadcaster/queue'
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
-    | '/community/$slug'
     | '/competitions/$slug'
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
@@ -1602,7 +1651,12 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
+    | '/community/$slug/chatrooms'
+    | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
+    | '/community/$slug/feed'
+    | '/community/$slug/members'
+    | '/community/$slug'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
@@ -1748,7 +1802,12 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
+    | '/community/$slug/chatrooms'
+    | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
+    | '/community/$slug/feed'
+    | '/community/$slug/members'
+    | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
@@ -2713,11 +2772,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminActivityLogsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/community/$slug/': {
+      id: '/community/$slug/'
+      path: '/'
+      fullPath: '/community/$slug/'
+      preLoaderRoute: typeof CommunitySlugIndexRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
+    '/community/$slug/members': {
+      id: '/community/$slug/members'
+      path: '/members'
+      fullPath: '/community/$slug/members'
+      preLoaderRoute: typeof CommunitySlugMembersRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
+    '/community/$slug/feed': {
+      id: '/community/$slug/feed'
+      path: '/feed'
+      fullPath: '/community/$slug/feed'
+      preLoaderRoute: typeof CommunitySlugFeedRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
     '/community/$slug/dashboard': {
       id: '/community/$slug/dashboard'
       path: '/dashboard'
       fullPath: '/community/$slug/dashboard'
       preLoaderRoute: typeof CommunitySlugDashboardRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
+    '/community/$slug/competitions': {
+      id: '/community/$slug/competitions'
+      path: '/competitions'
+      fullPath: '/community/$slug/competitions'
+      preLoaderRoute: typeof CommunitySlugCompetitionsRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
+    '/community/$slug/chatrooms': {
+      id: '/community/$slug/chatrooms'
+      path: '/chatrooms'
+      fullPath: '/community/$slug/chatrooms'
+      preLoaderRoute: typeof CommunitySlugChatroomsRouteImport
       parentRoute: typeof CommunitySlugRoute
     }
     '/api/public/landing': {
@@ -3027,11 +3121,21 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
 )
 
 interface CommunitySlugRouteChildren {
+  CommunitySlugChatroomsRoute: typeof CommunitySlugChatroomsRoute
+  CommunitySlugCompetitionsRoute: typeof CommunitySlugCompetitionsRoute
   CommunitySlugDashboardRoute: typeof CommunitySlugDashboardRoute
+  CommunitySlugFeedRoute: typeof CommunitySlugFeedRoute
+  CommunitySlugMembersRoute: typeof CommunitySlugMembersRoute
+  CommunitySlugIndexRoute: typeof CommunitySlugIndexRoute
 }
 
 const CommunitySlugRouteChildren: CommunitySlugRouteChildren = {
+  CommunitySlugChatroomsRoute: CommunitySlugChatroomsRoute,
+  CommunitySlugCompetitionsRoute: CommunitySlugCompetitionsRoute,
   CommunitySlugDashboardRoute: CommunitySlugDashboardRoute,
+  CommunitySlugFeedRoute: CommunitySlugFeedRoute,
+  CommunitySlugMembersRoute: CommunitySlugMembersRoute,
+  CommunitySlugIndexRoute: CommunitySlugIndexRoute,
 }
 
 const CommunitySlugRouteWithChildren = CommunitySlugRoute._addFileChildren(
@@ -3135,13 +3239,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
