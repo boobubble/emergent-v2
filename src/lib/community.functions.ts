@@ -995,8 +995,10 @@ export const adminDecideVerificationRequest = createServerFn({ method: "POST" })
 export const getInviteLanding = createServerFn({ method: "GET" })
   .inputValidator((d: { code: string }) => z.object({ code: z.string().min(3).max(80) }).parse(d))
   .handler(async ({ data }) => {
-    const sb = await serverPublicClient();
-    const { data: inv } = await sb
+    // Invite codes are no longer publicly readable; use admin client for the
+    // scoped lookup by code so anonymous users cannot enumerate all invites.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: inv } = await supabaseAdmin
       .from("community_invites")
       .select("id,community_id,code,max_uses,uses,expires_at,created_at")
       .eq("code", data.code)
