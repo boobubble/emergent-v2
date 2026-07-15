@@ -8,7 +8,8 @@ export const RESERVED_SLUGS = new Set<string>([
   "public", "favicon.ico", "robots.txt", "sitemap.xml", "manifest.json",
   "_root", "__root", "index", "reels", "pages", "groups", "installer", "setup-wizard",
   "community", "communities", "pricing", "wallet", "radio", "trust", "heropage", "live-arena",
-  "broadcaster", "gamification", "deploy",
+  "broadcaster", "gamification", "deploy", "invite",
+
 
 ]);
 
