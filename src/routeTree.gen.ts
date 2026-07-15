@@ -138,6 +138,7 @@ import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
 import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
+import { Route as CommunitySlugMembersRouteImport } from './routes/community.$slug.members'
 import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
 import { Route as CommunitySlugCompetitionsRouteImport } from './routes/community.$slug.competitions'
@@ -806,6 +807,11 @@ const CommunitySlugIndexRoute = CommunitySlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CommunitySlugRoute,
 } as any)
+const CommunitySlugMembersRoute = CommunitySlugMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
 const CommunitySlugFeedRoute = CommunitySlugFeedRouteImport.update({
   id: '/feed',
   path: '/feed',
@@ -1050,6 +1056,7 @@ export interface FileRoutesByFullPath {
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
+  '/community/$slug/members': typeof CommunitySlugMembersRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1196,6 +1203,7 @@ export interface FileRoutesByTo {
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
+  '/community/$slug/members': typeof CommunitySlugMembersRoute
   '/community/$slug': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1347,6 +1355,7 @@ export interface FileRoutesById {
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
+  '/community/$slug/members': typeof CommunitySlugMembersRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1499,6 +1508,7 @@ export interface FileRouteTypes {
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
+    | '/community/$slug/members'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -1645,6 +1655,7 @@ export interface FileRouteTypes {
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
+    | '/community/$slug/members'
     | '/community/$slug'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -1795,6 +1806,7 @@ export interface FileRouteTypes {
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
+    | '/community/$slug/members'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -2767,6 +2779,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunitySlugIndexRouteImport
       parentRoute: typeof CommunitySlugRoute
     }
+    '/community/$slug/members': {
+      id: '/community/$slug/members'
+      path: '/members'
+      fullPath: '/community/$slug/members'
+      preLoaderRoute: typeof CommunitySlugMembersRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
     '/community/$slug/feed': {
       id: '/community/$slug/feed'
       path: '/feed'
@@ -3106,6 +3125,7 @@ interface CommunitySlugRouteChildren {
   CommunitySlugCompetitionsRoute: typeof CommunitySlugCompetitionsRoute
   CommunitySlugDashboardRoute: typeof CommunitySlugDashboardRoute
   CommunitySlugFeedRoute: typeof CommunitySlugFeedRoute
+  CommunitySlugMembersRoute: typeof CommunitySlugMembersRoute
   CommunitySlugIndexRoute: typeof CommunitySlugIndexRoute
 }
 
@@ -3114,6 +3134,7 @@ const CommunitySlugRouteChildren: CommunitySlugRouteChildren = {
   CommunitySlugCompetitionsRoute: CommunitySlugCompetitionsRoute,
   CommunitySlugDashboardRoute: CommunitySlugDashboardRoute,
   CommunitySlugFeedRoute: CommunitySlugFeedRoute,
+  CommunitySlugMembersRoute: CommunitySlugMembersRoute,
   CommunitySlugIndexRoute: CommunitySlugIndexRoute,
 }
 
