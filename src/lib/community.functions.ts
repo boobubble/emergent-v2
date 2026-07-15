@@ -1030,4 +1030,261 @@ export const getInviteLanding = createServerFn({ method: "GET" })
     };
   });
 
+// =========================================================================
+// PREMIUM URL CLAIM SYSTEM (Phase 3)
+// =========================================================================
+
+export type PremiumSlugRequestStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+export interface PremiumSlugRequest {
+  id: string;
+  community_id: string;
+  requested_by: string;
+  current_slug: string;
+  requested_slug: string;
+  reason: string | null;
+  status: PremiumSlugRequestStatus;
+  review_note: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+const SLUG_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
+
+/** Resolve a slug: returns the community's current slug if the incoming slug is an old alias. */
+export const resolveCommunitySlug = createServerFn({ method: "GET" })
+  .inputValidator((d: { slug: string }) => z.object({ slug: z.string().min(1).max(80) }).parse(d))
+  .handler(async ({ data }) => {
+    const sb = await serverPublicClient();
+    // Check active slug first
+    const { data: active } = await sb
+      .from("communities")
+      .select("slug")
+      .eq("slug", data.slug)
+      .maybeSingle();
+    if (active) return { slug: (active as any).slug, redirected: false };
+    // Check history
+    const { data: hist } = await sb
+      .from("community_slug_history" as never)
+      .select("community_id")
+      .eq("old_slug", data.slug)
+      .maybeSingle();
+    if (!hist) return { slug: null, redirected: false };
+    const { data: comm } = await sb
+      .from("communities")
+      .select("slug")
+      .eq("id", (hist as any).community_id)
+      .maybeSingle();
+    if (!comm) return { slug: null, redirected: false };
+    return { slug: (comm as any).slug as string, redirected: true };
+  });
+
+/** Owner: submit a request to claim a new (usually premium) slug for their community. */
+export const requestPremiumSlug = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { communityId: string; requestedSlug: string; reason?: string }) =>
+    z.object({
+      communityId: z.string().uuid(),
+      requestedSlug: z.string().min(2).max(40).regex(SLUG_RE, "Invalid slug format"),
+      reason: z.string().max(500).optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const requested = data.requestedSlug.toLowerCase();
+
+    // Ownership check
+    const { data: comm } = await supabase
+      .from("communities")
+      .select("id,slug,owner_id")
+      .eq("id", data.communityId)
+      .maybeSingle();
+    if (!comm) throw new Error("Community not found");
+    if ((comm as any).owner_id !== userId) throw new Error("Only the owner can request a premium URL");
+    if ((comm as any).slug === requested) throw new Error("This is already your slug");
+
+    // Reserved-route conflict
+    const { isReservedSlug } = await import("./reserved-routes");
+    if (isReservedSlug(requested)) throw new Error("This slug is reserved by the platform");
+
+    // Already in use by another community
+    const { data: taken } = await supabase
+      .from("communities")
+      .select("id")
+      .eq("slug", requested)
+      .maybeSingle();
+    if (taken) throw new Error("This slug is already in use");
+
+    // Already claimed in slug history by another community
+    const { data: hist } = await supabase
+      .from("community_slug_history" as never)
+      .select("community_id")
+      .eq("old_slug", requested)
+      .maybeSingle();
+    if (hist && (hist as any).community_id !== data.communityId) {
+      throw new Error("This slug was previously used by another community");
+    }
+
+    // Pending duplicate
+    const { data: pending } = await supabase
+      .from("community_premium_slug_requests" as never)
+      .select("id")
+      .eq("requested_slug", requested)
+      .eq("status", "pending")
+      .maybeSingle();
+    if (pending) throw new Error("Another request is already pending for this slug");
+
+    const { data: row, error } = await supabase
+      .from("community_premium_slug_requests" as never)
+      .insert({
+        community_id: data.communityId,
+        requested_by: userId,
+        current_slug: (comm as any).slug,
+        requested_slug: requested,
+        reason: data.reason ?? null,
+      })
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return row as unknown as PremiumSlugRequest;
+  });
+
+/** Owner or admin: list requests for a community. */
+export const listPremiumSlugRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { communityId: string }) =>
+    z.object({ communityId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: rows } = await context.supabase
+      .from("community_premium_slug_requests" as never)
+      .select("*")
+      .eq("community_id", data.communityId)
+      .order("created_at", { ascending: false });
+    return (rows ?? []) as unknown as PremiumSlugRequest[];
+  });
+
+/** Owner: cancel a pending request. */
+export const cancelPremiumSlugRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { requestId: string }) =>
+    z.object({ requestId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("community_premium_slug_requests" as never)
+      .update({ status: "cancelled" })
+      .eq("id", data.requestId)
+      .eq("requested_by", context.userId)
+      .eq("status", "pending");
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Admin: list all premium slug requests, optionally filtered by status. */
+export const adminListPremiumSlugRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { status?: PremiumSlugRequestStatus | "all" }) =>
+    z.object({ status: z.enum(["all", "pending", "approved", "rejected", "cancelled"]).optional() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertPlatformAdmin(context.supabase, context.userId);
+    let q = context.supabase
+      .from("community_premium_slug_requests" as never)
+      .select("*, community:communities!community_premium_slug_requests_community_id_fkey(id,slug,name,logo_url,banner_url,accent_color,member_count,is_verified,is_official,is_partner,is_trusted)")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (data.status && data.status !== "all") q = q.eq("status", data.status);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as any[];
+  });
+
+/** Admin: approve or reject a premium slug request. On approve, rename the community + record history. */
+export const reviewPremiumSlugRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { requestId: string; decision: "approved" | "rejected"; note?: string }) =>
+    z.object({
+      requestId: z.string().uuid(),
+      decision: z.enum(["approved", "rejected"]),
+      note: z.string().max(500).optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertPlatformAdmin(supabase, userId);
+
+    const { data: req } = await supabase
+      .from("community_premium_slug_requests" as never)
+      .select("id,community_id,current_slug,requested_slug,status")
+      .eq("id", data.requestId)
+      .maybeSingle();
+    if (!req) throw new Error("Request not found");
+    if ((req as any).status !== "pending") throw new Error("Request is not pending");
+
+    if (data.decision === "rejected") {
+      const { error } = await supabase
+        .from("community_premium_slug_requests" as never)
+        .update({
+          status: "rejected",
+          review_note: data.note ?? null,
+          reviewed_by: userId,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", data.requestId);
+      if (error) throw new Error(error.message);
+      return { ok: true, applied: false };
+    }
+
+    // Approve: rename community, record old slug in history, mark tier premium.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const requested = (req as any).requested_slug as string;
+    const communityId = (req as any).community_id as string;
+    const currentSlug = (req as any).current_slug as string;
+
+    // Re-verify slug is still free
+    const { data: taken } = await supabaseAdmin
+      .from("communities")
+      .select("id")
+      .eq("slug", requested)
+      .neq("id", communityId)
+      .maybeSingle();
+    if (taken) throw new Error("Slug was taken by another community");
+
+    // Determine tier
+    const { isPremiumSlug } = await import("./premium-slugs");
+    const tier = isPremiumSlug(requested) ? "premium" : "standard";
+
+    // Record old slug in history (ignore duplicate — same community re-claiming)
+    if (currentSlug && currentSlug !== requested) {
+      await supabaseAdmin
+        .from("community_slug_history" as never)
+        .upsert({ community_id: communityId, old_slug: currentSlug }, { onConflict: "old_slug" });
+    }
+
+    // Rename community
+    const { error: upErr } = await supabaseAdmin
+      .from("communities")
+      .update({ slug: requested, slug_tier: tier })
+      .eq("id", communityId);
+    if (upErr) throw new Error(upErr.message);
+
+    // Mark request approved
+    const { error: rvErr } = await supabaseAdmin
+      .from("community_premium_slug_requests" as never)
+      .update({
+        status: "approved",
+        review_note: data.note ?? null,
+        reviewed_by: userId,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", data.requestId);
+    if (rvErr) throw new Error(rvErr.message);
+
+    return { ok: true, applied: true, newSlug: requested };
+  });
+
+
 
