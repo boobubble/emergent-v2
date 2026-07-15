@@ -270,7 +270,7 @@ function CommunityTabs({ slug, accent }: { slug: string; accent: string }) {
         <Link
           key={it.label}
           to={it.to as never}
-          params={{ slug }}
+          params={{ slug } as never}
           activeOptions={{ exact: !!it.exact }}
           className="group flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground data-[status=active]:border-current data-[status=active]:text-foreground"
           style={{ ["--community-accent-hover" as never]: accent } as never}
