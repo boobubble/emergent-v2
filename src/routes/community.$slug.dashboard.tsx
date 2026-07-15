@@ -118,6 +118,8 @@ function DashboardPage() {
             <TabsTrigger value="overview" className="justify-start"><LayoutDashboard className="mr-2 h-4 w-4" />Overview</TabsTrigger>
             <TabsTrigger value="branding" className="justify-start"><Palette className="mr-2 h-4 w-4" />Branding</TabsTrigger>
             <TabsTrigger value="privacy" className="justify-start"><Shield className="mr-2 h-4 w-4" />Privacy</TabsTrigger>
+            <TabsTrigger value="visibility" className="justify-start"><Eye className="mr-2 h-4 w-4" />Visibility</TabsTrigger>
+
             <TabsTrigger value="members" className="justify-start"><Users className="mr-2 h-4 w-4" />Members</TabsTrigger>
             <TabsTrigger value="requests" className="justify-start"><UserPlus className="mr-2 h-4 w-4" />Requests</TabsTrigger>
             <TabsTrigger value="invites" className="justify-start"><UserPlus className="mr-2 h-4 w-4" />Invites</TabsTrigger>
