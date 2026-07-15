@@ -1267,7 +1267,7 @@ export const reviewPremiumSlugRequest = createServerFn({ method: "POST" })
     // Rename community
     const { error: upErr } = await supabaseAdmin
       .from("communities")
-      .update({ slug: requested, slug_tier: tier })
+      .update({ slug: requested, slug_tier: tier } as never)
       .eq("id", communityId);
     if (upErr) throw new Error(upErr.message);
 
