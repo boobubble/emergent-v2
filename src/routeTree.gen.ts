@@ -137,6 +137,7 @@ import { Route as AdminAiChatbotsRouteImport } from './routes/admin.ai-chatbots'
 import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
 import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
+import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
@@ -797,6 +798,11 @@ const AdminActivityLogsRoute = AdminActivityLogsRouteImport.update({
   path: '/activity-logs',
   getParentRoute: () => AdminRoute,
 } as any)
+const CommunitySlugIndexRoute = CommunitySlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
 const CommunitySlugDashboardRoute = CommunitySlugDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -1022,6 +1028,7 @@ export interface FileRoutesByFullPath {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
+  '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
@@ -1147,7 +1154,6 @@ export interface FileRoutesByTo {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
-  '/community/$slug': typeof CommunitySlugRouteWithChildren
   '/competitions/$slug': typeof CompetitionsSlugRoute
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
@@ -1165,6 +1171,7 @@ export interface FileRoutesByTo {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
+  '/community/$slug': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
@@ -1312,6 +1319,7 @@ export interface FileRoutesById {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
+  '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
@@ -1460,6 +1468,7 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
     | '/community/$slug/dashboard'
+    | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
@@ -1585,7 +1594,6 @@ export interface FileRouteTypes {
     | '/broadcaster/queue'
     | '/broadcaster/schedule'
     | '/broadcaster/widgets'
-    | '/community/$slug'
     | '/competitions/$slug'
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
@@ -1603,6 +1611,7 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
     | '/community/$slug/dashboard'
+    | '/community/$slug'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
@@ -1749,6 +1758,7 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
     | '/community/$slug/dashboard'
+    | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
@@ -2713,6 +2723,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminActivityLogsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/community/$slug/': {
+      id: '/community/$slug/'
+      path: '/'
+      fullPath: '/community/$slug/'
+      preLoaderRoute: typeof CommunitySlugIndexRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
     '/community/$slug/dashboard': {
       id: '/community/$slug/dashboard'
       path: '/dashboard'
@@ -3028,10 +3045,12 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
 
 interface CommunitySlugRouteChildren {
   CommunitySlugDashboardRoute: typeof CommunitySlugDashboardRoute
+  CommunitySlugIndexRoute: typeof CommunitySlugIndexRoute
 }
 
 const CommunitySlugRouteChildren: CommunitySlugRouteChildren = {
   CommunitySlugDashboardRoute: CommunitySlugDashboardRoute,
+  CommunitySlugIndexRoute: CommunitySlugIndexRoute,
 }
 
 const CommunitySlugRouteWithChildren = CommunitySlugRoute._addFileChildren(
