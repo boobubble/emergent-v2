@@ -87,6 +87,7 @@ import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
 import { Route as AdminRealtimeRouteImport } from './routes/admin.realtime'
 import { Route as AdminProgressionRouteImport } from './routes/admin.progression'
+import { Route as AdminPremiumSlugsRouteImport } from './routes/admin.premium-slugs'
 import { Route as AdminPopupsRouteImport } from './routes/admin.popups'
 import { Route as AdminPollWidgetRouteImport } from './routes/admin.poll-widget'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
@@ -552,6 +553,11 @@ const AdminRealtimeRoute = AdminRealtimeRouteImport.update({
 const AdminProgressionRoute = AdminProgressionRouteImport.update({
   id: '/progression',
   path: '/progression',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPremiumSlugsRoute = AdminPremiumSlugsRouteImport.update({
+  id: '/premium-slugs',
+  path: '/premium-slugs',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPopupsRoute = AdminPopupsRouteImport.update({
@@ -1034,6 +1040,7 @@ export interface FileRoutesByFullPath {
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
+  '/admin/premium-slugs': typeof AdminPremiumSlugsRoute
   '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/referrals': typeof AdminReferralsRoute
@@ -1186,6 +1193,7 @@ export interface FileRoutesByTo {
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
+  '/admin/premium-slugs': typeof AdminPremiumSlugsRoute
   '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/referrals': typeof AdminReferralsRoute
@@ -1341,6 +1349,7 @@ export interface FileRoutesById {
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
+  '/admin/premium-slugs': typeof AdminPremiumSlugsRoute
   '/admin/progression': typeof AdminProgressionRoute
   '/admin/realtime': typeof AdminRealtimeRoute
   '/admin/referrals': typeof AdminReferralsRoute
@@ -1498,6 +1507,7 @@ export interface FileRouteTypes {
     | '/admin/performance'
     | '/admin/poll-widget'
     | '/admin/popups'
+    | '/admin/premium-slugs'
     | '/admin/progression'
     | '/admin/realtime'
     | '/admin/referrals'
@@ -1650,6 +1660,7 @@ export interface FileRouteTypes {
     | '/admin/performance'
     | '/admin/poll-widget'
     | '/admin/popups'
+    | '/admin/premium-slugs'
     | '/admin/progression'
     | '/admin/realtime'
     | '/admin/referrals'
@@ -1804,6 +1815,7 @@ export interface FileRouteTypes {
     | '/admin/performance'
     | '/admin/poll-widget'
     | '/admin/popups'
+    | '/admin/premium-slugs'
     | '/admin/progression'
     | '/admin/realtime'
     | '/admin/referrals'
@@ -2475,6 +2487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProgressionRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/premium-slugs': {
+      id: '/admin/premium-slugs'
+      path: '/premium-slugs'
+      fullPath: '/admin/premium-slugs'
+      preLoaderRoute: typeof AdminPremiumSlugsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/popups': {
       id: '/admin/popups'
       path: '/popups'
@@ -3069,6 +3088,7 @@ interface AdminRouteChildren {
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPollWidgetRoute: typeof AdminPollWidgetRoute
   AdminPopupsRoute: typeof AdminPopupsRoute
+  AdminPremiumSlugsRoute: typeof AdminPremiumSlugsRoute
   AdminProgressionRoute: typeof AdminProgressionRoute
   AdminRealtimeRoute: typeof AdminRealtimeRoute
   AdminReferralsRoute: typeof AdminReferralsRoute
@@ -3150,6 +3170,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPollWidgetRoute: AdminPollWidgetRoute,
   AdminPopupsRoute: AdminPopupsRoute,
+  AdminPremiumSlugsRoute: AdminPremiumSlugsRoute,
   AdminProgressionRoute: AdminProgressionRoute,
   AdminRealtimeRoute: AdminRealtimeRoute,
   AdminReferralsRoute: AdminReferralsRoute,
