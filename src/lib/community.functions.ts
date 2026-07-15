@@ -1008,6 +1008,7 @@ export const getInviteLanding = createServerFn({ method: "GET" })
     const expired = inv.expires_at && new Date(inv.expires_at as string).getTime() < Date.now();
     const exhausted = inv.max_uses != null && (inv.uses ?? 0) >= (inv.max_uses as number);
 
+    const sb = await serverPublicClient();
     const { data: comm } = await sb
       .from("communities")
       .select("id,slug,name,description,welcome_text,logo_url,banner_url,accent_color,rules,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,is_partner,is_trusted,verification_status,language,country,status,member_count,online_count,owner_id")
