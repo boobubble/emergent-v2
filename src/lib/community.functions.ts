@@ -87,7 +87,7 @@ export const getCommunityBySlug = createServerFn({ method: "GET" })
     const sb = await serverPublicClient();
     const { data: row } = await sb
       .from("communities")
-      .select("id,owner_id,slug,name,description,welcome_text,logo_url,banner_url,background_url,accent_color,rules,announcement,social_links,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,language,country,status,member_count,online_count,meta,created_at,updated_at")
+      .select("id,owner_id,slug,name,description,welcome_text,logo_url,banner_url,background_url,accent_color,rules,announcement,social_links,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,is_partner,is_trusted,verification_status,language,country,status,member_count,online_count,meta,created_at,updated_at")
       .eq("slug", data.slug)
       .eq("status", "active")
       .maybeSingle();
@@ -1006,7 +1006,7 @@ export const getInviteLanding = createServerFn({ method: "GET" })
 
     const { data: comm } = await sb
       .from("communities")
-      .select("id,slug,name,description,welcome_text,logo_url,banner_url,accent_color,rules,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,language,country,status,member_count,online_count,owner_id")
+      .select("id,slug,name,description,welcome_text,logo_url,banner_url,accent_color,rules,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,is_partner,is_trusted,verification_status,language,country,status,member_count,online_count,owner_id")
       .eq("id", inv.community_id as string)
       .eq("status", "active")
       .maybeSingle();
