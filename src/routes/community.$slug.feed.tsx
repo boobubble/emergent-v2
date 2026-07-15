@@ -2,7 +2,27 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { postsSafe } from "@/lib/posts-safe";
-import { normalizePost, type FeedPost } from "@/lib/feed-types";
+import { type FeedPost } from "@/lib/feed-types";
+
+function normalizePost(row: Partial<FeedPost>): FeedPost {
+  return {
+    id: row.id ?? "",
+    author_id: row.author_id ?? "",
+    owner_id: row.owner_id ?? row.author_id ?? "",
+    kind: row.kind ?? "text",
+    text: row.text ?? "",
+    slug: row.slug ?? row.id ?? "post",
+    media_urls: Array.isArray(row.media_urls) ? row.media_urls : [],
+    poll: row.poll ?? null,
+    privacy: row.privacy ?? "public",
+    is_anonymous: Boolean(row.is_anonymous),
+    hashtags: Array.isArray(row.hashtags) ? row.hashtags : [],
+    reaction_count: row.reaction_count ?? 0,
+    comment_count: row.comment_count ?? 0,
+    trending_score: row.trending_score ?? 0,
+    created_at: row.created_at ?? new Date().toISOString(),
+  };
+}
 import type { User } from "@/lib/chat-types";
 import { Composer } from "@/components/feed/Composer";
 import { PostCard } from "@/components/feed/PostCard";
