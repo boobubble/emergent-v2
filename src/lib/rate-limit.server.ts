@@ -161,7 +161,7 @@ export async function logAbuseEvent(params: {
       ip: params.ip ?? null,
       severity: params.severity ?? "warn",
       reason: params.reason,
-      meta: params.meta ?? {},
+      meta: (params.meta ?? {}) as never,
     });
   } catch (e) {
     console.error("[abuse-event] insert failed", e);
