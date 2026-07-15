@@ -155,7 +155,9 @@ function DashboardPage() {
             <TabsContent value="radio" className="mt-0"><ModulePlaceholder title="Radio" hint="Owner-controlled schedule, playlist and live status." /></TabsContent>
             <TabsContent value="analytics" className="mt-0"><ModulePlaceholder title="Analytics" hint="Members, active today, messages, feed posts, reactions, votes, growth, retention." /></TabsContent>
             <TabsContent value="monetization" className="mt-0"><ModulePlaceholder title="Monetization" hint="Paid memberships, tips, and creator earnings — coming soon." /></TabsContent>
+            <TabsContent value="trust" className="mt-0"><TrustSection community={community} /></TabsContent>
             <TabsContent value="settings" className="mt-0"><SettingsSection community={community} /></TabsContent>
+
           </div>
         </Tabs>
       </main>
