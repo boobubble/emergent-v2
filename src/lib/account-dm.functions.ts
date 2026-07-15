@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -17,7 +18,7 @@ function dmChannelFor(meId: string, peerId: string): string {
 
 // Delete the caller's own account (auth + all data). Super admins are blocked.
 export const deleteMyAccount = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("chat.message")])
   .handler(async ({ context }) => {
     const { userId } = context as { userId: string };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -42,7 +43,7 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
 
 // Delete a DM conversation (both sides). Gated by app_settings.dm_chat_delete.min_role.
 export const deleteMyDmConversation = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("chat.message")])
   .inputValidator((input: { peerId: string }) => {
     if (!input || typeof input.peerId !== "string" || !UUID_RE.test(input.peerId)) {
       throw new Error("Invalid peer id");

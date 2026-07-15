@@ -4,6 +4,7 @@
  * Does not touch bootstrap or migration logic.
  */
 import { createServerFn } from "@tanstack/react-start";
+import { withRateLimit } from "./rate-limit-middleware";
 
 export type CompatState = "ok" | "warn" | "fail" | "unknown";
 
@@ -26,7 +27,7 @@ export interface SystemCompatibility {
 
 const MIN_PG_MAJOR = 14;
 
-export const getSystemCompatibility = createServerFn({ method: "POST" }).handler(
+export const getSystemCompatibility = createServerFn({ method: "POST" }).middleware([withRateLimit("api")]).handler(
   async (): Promise<SystemCompatibility> => {
     const { assertInstallerAllowed } = await import("./installer-guard.server");
     await assertInstallerAllowed();

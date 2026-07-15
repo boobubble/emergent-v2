@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 // Tables that are safe to snapshot. Keep this list explicit so we never
 // accidentally export auth/internal data.
@@ -36,7 +37,7 @@ async function requireAdmin(context: any) {
 }
 
 export const backupDatabase = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -71,7 +72,7 @@ export const backupDatabase = createServerFn({ method: "POST" })
   });
 
 export const backupMediaManifest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -110,7 +111,7 @@ export const backupMediaManifest = createServerFn({ method: "POST" })
   });
 
 export const restoreBackupDryRun = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((d: unknown) =>
     z.object({ summary: z.record(z.string(), z.number()) }).parse(d),
   )
@@ -152,7 +153,7 @@ function fromBase64(b64: string): Uint8Array {
 }
 
 export const downloadMediaFile = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((d: unknown) => bucketPathSchema.parse(d))
   .handler(async ({ context, data }) => {
     await requireAdmin(context);
@@ -170,7 +171,7 @@ export const downloadMediaFile = createServerFn({ method: "POST" })
   });
 
 export const ensureStorageBucket = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((d: unknown) =>
     z.object({ name: z.string().min(1).max(63), public: z.boolean().default(false) }).parse(d),
   )
@@ -190,7 +191,7 @@ export const ensureStorageBucket = createServerFn({ method: "POST" })
   });
 
 export const uploadMediaFile = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((d: unknown) =>
     bucketPathSchema.extend({
       contentBase64: z.string(),
@@ -222,7 +223,7 @@ const REQUIRED_BUCKETS: { name: string; public: boolean }[] = [
 ];
 
 export const ensureRequiredBuckets = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -265,7 +266,7 @@ function sqlLiteral(v: any): string {
 }
 
 export const dumpDatabaseSql = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -398,7 +399,7 @@ function lit(v: any): string {
 }
 
 export const exportBackupExtras = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { data, error } = await (context.supabase as any).rpc("admin_export_extras");
@@ -515,7 +516,7 @@ export const exportBackupExtras = createServerFn({ method: "POST" })
 // Extended metadata (v2): richer counts + sizes. Additive; does not affect
 // the original exportBackupExtras output.
 export const exportBackupMetadataV2 = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { data, error } = await (context.supabase as any).rpc("admin_export_metadata_v2");

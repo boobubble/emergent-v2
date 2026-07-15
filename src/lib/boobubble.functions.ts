@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { DAILY_MISSIONS } from "./economy-config";
+import { withRateLimit } from "./rate-limit-middleware";
 
 /**
  * AI Assistant — the single official AI-powered system account.
@@ -158,7 +159,7 @@ export const getBoobubblePublic = createServerFn({ method: "GET" }).handler(asyn
 
 // ---- Admin: read full settings ----
 export const getBoobubbleSettings = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     return readSettings();
@@ -166,7 +167,7 @@ export const getBoobubbleSettings = createServerFn({ method: "GET" })
 
 // ---- Admin: save settings ----
 export const saveBoobubbleSettings = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .inputValidator((input) =>
     z.object({
       enabled: z.boolean(),
@@ -225,7 +226,7 @@ export const saveBoobubbleSettings = createServerFn({ method: "POST" })
 
 // ---- Admin: provision (create) the bot auth user once ----
 export const provisionBoobubbleAssistant = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     const supabaseAdmin = await getSupabaseAdmin();
     await assertAdmin(context.userId);
@@ -276,7 +277,7 @@ export const provisionBoobubbleAssistant = createServerFn({ method: "POST" })
 
 // ---- User: read my prefs (auto-create row on first read) ----
 export const getMyAssistantPrefs = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     const supabaseAdmin = await getSupabaseAdmin();
     const { data } = await supabaseAdmin
@@ -295,7 +296,7 @@ export const getMyAssistantPrefs = createServerFn({ method: "GET" })
 
 // ---- User: update my prefs ----
 export const saveMyAssistantPrefs = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .inputValidator((input) =>
     z.object({
       muted: z.boolean().optional(),
@@ -363,7 +364,7 @@ async function buildWelcomeMessage(username: string, personalize: boolean): Prom
 
 // ---- Welcome trigger: idempotent, fires once per user ----
 export const triggerWelcomeIfNeeded = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
@@ -435,7 +436,7 @@ export interface AssistantRecommendation {
 }
 
 export const getAssistantFeedRecommendations = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
@@ -650,7 +651,7 @@ async function sendAssistantDM(botId: string, userId: string, text: string, kind
  * on every app mount.
  */
 export const triggerMissionDigestIfNeeded = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
@@ -727,7 +728,7 @@ export const triggerMissionDigestIfNeeded = createServerFn({ method: "POST" })
 // ============================================================
 
 export const triggerRewardDigestIfNeeded = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
@@ -812,7 +813,7 @@ export interface FriendSuggestion {
 }
 
 export const getFriendSuggestions = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
@@ -888,7 +889,7 @@ export const getFriendSuggestions = createServerFn({ method: "GET" })
 // ============================================================
 
 export const triggerEventAnnouncementIfNeeded = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
@@ -939,7 +940,7 @@ export const triggerEventAnnouncementIfNeeded = createServerFn({ method: "POST" 
 // ============================================================
 
 export const triggerSecurityDigestIfNeeded = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     const supabaseAdmin = await getSupabaseAdmin();
     const settings = await readSettings();
@@ -1042,7 +1043,7 @@ export const triggerSecurityDigestIfNeeded = createServerFn({ method: "POST" })
 // ============================================================
 
 export const claimShareReward = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .inputValidator((i) => z.object({
     postId: z.string().uuid(),
     target: z.enum(["whatsapp","telegram","facebook","x","linkedin","copy","native"]),
@@ -1137,7 +1138,7 @@ function maskKey(k: string): string {
 
 // Admin: status (does a key exist + masked preview). Never returns the raw key.
 export const getBoobubbleOpenAIKeyStatus = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const stored = await readStoredOpenAIKey();
@@ -1148,7 +1149,7 @@ export const getBoobubbleOpenAIKeyStatus = createServerFn({ method: "GET" })
   });
 
 export const getBoobubbleGeminiKeyStatus = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const stored = await readStoredGeminiKey();
@@ -1160,7 +1161,7 @@ export const getBoobubbleGeminiKeyStatus = createServerFn({ method: "GET" })
 
 // Admin: set or clear the OpenAI API key (stored in app_settings, server-only).
 export const setBoobubbleOpenAIKey = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .inputValidator((input) =>
     z.object({ key: z.string().trim().max(256) }).parse(input),
   )
@@ -1185,7 +1186,7 @@ export const setBoobubbleOpenAIKey = createServerFn({ method: "POST" })
 
 // Admin: set or clear the Gemini API key.
 export const setBoobubbleGeminiKey = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .inputValidator((input) =>
     z.object({ key: z.string().trim().max(256) }).parse(input),
   )
@@ -1258,7 +1259,7 @@ async function callGemini(apiKey: string, model: string, systemPrompt: string, u
 }
 
 export const askBoobubbleInLobby = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .inputValidator((input) =>
     z.object({
       channel_id: z.string().min(1).max(128),

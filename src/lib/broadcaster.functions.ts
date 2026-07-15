@@ -10,6 +10,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRateLimit } from "./rate-limit-middleware";
 
 const BROADCASTER_ROLES = ["admin", "super_admin", "dj", "rj"] as const;
 
@@ -38,7 +39,7 @@ async function assertAdmin(userId: string) {
 
 // ---------------- Roles surface ----------------
 export const getBroadcasterAccess = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .handler(async ({ context }) => {
     const roles = await getMyRoles(context.userId);
     return {
@@ -69,7 +70,7 @@ export const listWidgets = createServerFn({ method: "GET" }).handler(async () =>
 });
 
 export const createWidget = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: { name: string; description?: string; accent_color?: string; cover_url?: string; stream_url?: string }) => d)
   .handler(async ({ data, context }) => {
     await assertBroadcaster(context.userId);
@@ -108,7 +109,7 @@ export const createWidget = createServerFn({ method: "POST" })
 
 
 export const updateWidget = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: {
     id: string;
     name?: string;
@@ -159,7 +160,7 @@ export const updateWidget = createServerFn({ method: "POST" })
 
 
 export const deleteWidget = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -188,7 +189,7 @@ async function assertWidgetHostOrAdmin(userId: string, widgetId: string) {
 }
 
 export const goLive = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: { widget_id: string; show_title?: string }) => d)
   .handler(async ({ data, context }) => {
     await assertWidgetHostOrAdmin(context.userId, data.widget_id);
@@ -209,7 +210,7 @@ export const goLive = createServerFn({ method: "POST" })
   });
 
 export const endLive = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: { widget_id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertWidgetHostOrAdmin(context.userId, data.widget_id);
@@ -232,7 +233,7 @@ export const endLive = createServerFn({ method: "POST" })
   });
 
 export const setMic = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: { widget_id: string; active: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertWidgetHostOrAdmin(context.userId, data.widget_id);
@@ -245,7 +246,7 @@ export const setMic = createServerFn({ method: "POST" })
   });
 
 export const updateNowPlaying = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: {
     widget_id: string;
     track_title?: string | null;
@@ -292,7 +293,7 @@ export const listSchedules = createServerFn({ method: "GET" })
   });
 
 export const createSchedule = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: z.infer<typeof scheduleSchema>) => scheduleSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertBroadcaster(context.userId);
@@ -322,7 +323,7 @@ export const createSchedule = createServerFn({ method: "POST" })
   });
 
 export const cancelSchedule = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     const roles = await getMyRoles(context.userId);
@@ -364,7 +365,7 @@ export const listQueue = createServerFn({ method: "GET" })
   });
 
 export const addQueueItem = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: { widget_id: string; url: string; title?: string; channel?: string }) => d)
   .handler(async ({ data, context }) => {
     await assertWidgetHostOrAdmin(context.userId, data.widget_id);
@@ -403,7 +404,7 @@ export const addQueueItem = createServerFn({ method: "POST" })
   });
 
 export const removeQueueItem = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: { id: string; widget_id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertWidgetHostOrAdmin(context.userId, data.widget_id);
@@ -422,7 +423,7 @@ export const removeQueueItem = createServerFn({ method: "POST" })
   });
 
 export const clearQueue = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: { widget_id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertWidgetHostOrAdmin(context.userId, data.widget_id);
@@ -440,7 +441,7 @@ export const clearQueue = createServerFn({ method: "POST" })
   });
 
 export const markPlayed = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: { id: string; widget_id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertWidgetHostOrAdmin(context.userId, data.widget_id);
@@ -464,7 +465,7 @@ export const getBroadcasterSettings = createServerFn({ method: "GET" }).handler(
 });
 
 export const updateBroadcasterSettings = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: {
     disclaimer_text?: string;
     disclaimer_enabled?: boolean;
@@ -533,7 +534,7 @@ const announcementInput = z.object({
 });
 
 export const createAnnouncement = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: z.infer<typeof announcementInput>) => announcementInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertBroadcaster(context.userId);
@@ -559,7 +560,7 @@ export const createAnnouncement = createServerFn({ method: "POST" })
   });
 
 export const updateAnnouncement = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: Partial<z.infer<typeof announcementInput>> & { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertBroadcaster(context.userId);
@@ -579,7 +580,7 @@ export const updateAnnouncement = createServerFn({ method: "POST" })
   });
 
 export const deleteAnnouncement = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("radio.write")])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertBroadcaster(context.userId);

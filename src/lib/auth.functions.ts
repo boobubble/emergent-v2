@@ -3,10 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enforceRateLimit, RateLimitError, getClientIp } from "./rate-limit.server";
 import { validateUsername } from "./username-validation";
+import { withRateLimit } from "./rate-limit-middleware";
 
 
 export const checkUsernameAvailable = createServerFn({ method: "POST" })
-  .inputValidator((input: { username: string; excludeUserId?: string }) => {
+  .middleware([withRateLimit("auth.write")]).inputValidator((input: { username: string; excludeUserId?: string }) => {
     if (!input || typeof input.username !== "string") throw new Error("Invalid username");
     const v = input.username.trim();
     if (v.length < 1 || v.length > 32) throw new Error("Invalid username");
@@ -85,7 +86,7 @@ export const checkUsernameAvailable = createServerFn({ method: "POST" })
  * resulting session tokens are returned to the client.
  */
 export const loginWithIdentifier = createServerFn({ method: "POST" })
-  .inputValidator((input: { identifier: string; password: string }) => {
+  .middleware([withRateLimit("auth.write")]).inputValidator((input: { identifier: string; password: string }) => {
     if (!input || typeof input.identifier !== "string" || typeof input.password !== "string") {
       throw new Error("Invalid credentials");
     }
@@ -140,7 +141,7 @@ export const loginWithIdentifier = createServerFn({ method: "POST" })
 // Delete the current guest (anonymous) user: profile + auth user.
 // Refuses if the caller is not an anonymous user.
 export const deleteGuestAccount = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("auth.write")])
   .handler(async ({ context }) => {
     const { userId, claims } = context as { userId: string; claims: Record<string, unknown> };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

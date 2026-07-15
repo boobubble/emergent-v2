@@ -12,6 +12,7 @@ import {
   SEAT_COLORS,
 } from "./games-engine";
 
+import { withRateLimit } from "./rate-limit-middleware";
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
@@ -188,7 +189,7 @@ async function findUserOpenGame(userId: string) {
 }
 
 export const createLudoMatch = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("game.write")])
   .inputValidator((input) =>
     z.object({
       type: z.enum(["ludo_1v1", "ludo_4p"]),
@@ -228,7 +229,7 @@ export const createLudoMatch = createServerFn({ method: "POST" })
   });
 
 export const joinQuickMatch = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("game.write")])
   .inputValidator((input) =>
     z.object({ type: z.enum(["ludo_1v1", "ludo_4p"]) }).parse(input),
   )
@@ -297,7 +298,7 @@ export const joinQuickMatch = createServerFn({ method: "POST" })
   });
 
 export const inviteToGame = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("game.write")])
   .inputValidator((input) =>
     z.object({
       gameId: z.string().uuid(),
@@ -336,7 +337,7 @@ export const inviteToGame = createServerFn({ method: "POST" })
   });
 
 export const respondToInvite = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("game.write")])
   .inputValidator((input) =>
     z.object({
       inviteId: z.string().uuid(),
@@ -395,7 +396,7 @@ export const respondToInvite = createServerFn({ method: "POST" })
   });
 
 export const rollDice = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("game.write")])
   .inputValidator((input) => z.object({ gameId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -423,7 +424,7 @@ export const rollDice = createServerFn({ method: "POST" })
   });
 
 export const moveToken = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("game.write")])
   .inputValidator((input) =>
     z.object({
       gameId: z.string().uuid(),
@@ -468,7 +469,7 @@ export const moveToken = createServerFn({ method: "POST" })
   });
 
 export const leaveGame = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("game.write")])
   .inputValidator((input) => z.object({ gameId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -506,7 +507,7 @@ export const leaveGame = createServerFn({ method: "POST" })
   });
 
 export const listMyGames = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("game.write")])
   .handler(async ({ context }) => {
     const { userId } = context;
     const { data: rows } = await supabaseAdmin
@@ -519,7 +520,7 @@ export const listMyGames = createServerFn({ method: "GET" })
   });
 
 export const listLeaderboard = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("game.write")])
   .handler(async () => {
     // Aggregate XP from game_rewards in last 7 days
     const since = new Date(Date.now() - 7 * 24 * 3600_000).toISOString();

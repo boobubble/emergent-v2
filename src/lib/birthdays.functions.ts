@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -18,7 +19,7 @@ export interface FriendBirthday {
 
 /** Returns friends whose birthday is *today* (server clock, MM-DD match). */
 export const getFriendBirthdaysToday = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .handler(async ({ context }) => {
     const me = context.userId;
     const { data: friends } = await supabaseAdmin

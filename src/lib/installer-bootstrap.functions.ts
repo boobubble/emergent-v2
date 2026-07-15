@@ -16,6 +16,7 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { BUNDLED_MIGRATIONS, BUNDLED_MIGRATION_COUNT } from "./bundled-migrations";
+import { withRateLimit } from "./rate-limit-middleware";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -137,7 +138,7 @@ export const getBootstrapStatus = createServerFn({ method: "GET" }).handler(asyn
 
 // ── Run bootstrap (idempotent, resumable) ────────────────────────────────
 
-export const runSchemaBootstrap = createServerFn({ method: "POST" }).handler(async (): Promise<BootstrapResult> => {
+export const runSchemaBootstrap = createServerFn({ method: "POST" }).middleware([withRateLimit("admin.write")]).handler(async (): Promise<BootstrapResult> => {
   const { assertInstallerAllowed } = await import("./installer-guard.server");
   await assertInstallerAllowed();
   const started = Date.now();
@@ -261,7 +262,7 @@ export const verifyInstallation = createServerFn({ method: "GET" }).handler(asyn
 // ── Reset (destructive; dev only — gated by explicit token) ──────────────
 
 export const resetBootstrapTracker = createServerFn({ method: "POST" })
-  .inputValidator((d: { confirm: string }) => d)
+  .middleware([withRateLimit("admin.write")]).inputValidator((d: { confirm: string }) => d)
   .handler(async ({ data }) => {
     const { assertInstallerAllowed, assertDestructiveInstallerAllowed } = await import("./installer-guard.server");
     await assertInstallerAllowed();

@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { withRateLimit } from "./rate-limit-middleware";
 
 /**
  * Public, unauthenticated preflight for the Deployment Wizard.
@@ -85,7 +86,7 @@ async function cached(
 }
 
 export const clearDeployCheckCache = createServerFn({ method: "POST" })
-  .inputValidator((d: { category?: CheckCategory } | undefined) => d ?? {})
+  .middleware([withRateLimit("api")]).inputValidator((d: { category?: CheckCategory } | undefined) => d ?? {})
   .handler(async ({ data }) => {
     if (data.category) _cache.delete(data.category);
     else _cache.clear();

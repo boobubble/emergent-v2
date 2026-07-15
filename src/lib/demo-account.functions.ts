@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 
 /**
@@ -11,7 +12,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * of "Try the demo" on a landing page. Each call provisions a brand-new
  * account; existing accounts are never touched.
  */
-export const createDemoAccount = createServerFn({ method: "POST" }).handler(async () => {
+export const createDemoAccount = createServerFn({ method: "POST" }).middleware([withRateLimit("auth.write")]).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   // Random short suffix keeps usernames/emails unique.
@@ -65,7 +66,7 @@ export const createDemoAccount = createServerFn({ method: "POST" }).handler(asyn
  * deletes the auth user. Called automatically when a demo account logs out.
  */
 export const deleteDemoAccount = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("auth.write")])
   .handler(async ({ context }) => {
     const { userId } = context as { userId: string };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

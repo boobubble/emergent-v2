@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { FEEDBACK_DEFAULTS, type FeedbackConfig } from "@/lib/feedback-config";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -55,7 +56,7 @@ export const listFeedback = createServerFn({ method: "GET" })
       limit: z.number().min(1).max(100).default(50),
     }).parse(d ?? {}),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feedback.write")])
   .handler(async ({ data, context }) => {
     const supabaseAdmin = await getSupabaseAdmin();
     let q = supabaseAdmin.from("feedback_reports").select("*").limit(data.limit);
@@ -86,7 +87,7 @@ export const listFeedback = createServerFn({ method: "GET" })
 // ============== GET ONE ==============
 export const getFeedback = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feedback.write")])
   .handler(async ({ data, context }) => {
     const { data: row, error } = await supabaseAdmin
       .from("feedback_reports").select("*").eq("id", data.id).maybeSingle();
@@ -105,7 +106,7 @@ export const getFeedback = createServerFn({ method: "GET" })
 
 // ============== CREATE ==============
 export const createFeedback = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
+  .middleware([withRateLimit("feedback.write")]).inputValidator((d: unknown) =>
     z.object({
       title: z.string().trim().min(4).max(140),
       description: z.string().trim().max(8000).default(""),
@@ -117,7 +118,7 @@ export const createFeedback = createServerFn({ method: "POST" })
       is_anonymous: z.boolean().default(false),
     }).parse(d),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feedback.write")])
   .handler(async ({ data, context }) => {
     const cfg = await getConfig();
     if (!cfg.enabled) throw new Error("Feedback module is disabled.");
@@ -153,7 +154,7 @@ export const findSimilarFeedback = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) =>
     z.object({ title: z.string().trim().min(3).max(140) }).parse(d),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feedback.write")])
   .handler(async ({ data }) => {
     const words = data.title.toLowerCase().split(/\s+/).filter((w) => w.length >= 4).slice(0, 4);
     if (words.length === 0) return [];
@@ -169,8 +170,8 @@ export const findSimilarFeedback = createServerFn({ method: "GET" })
 
 // ============== VOTE ==============
 export const toggleVote = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ reportId: z.string().uuid() }).parse(d))
-  .middleware([requireSupabaseAuth])
+  .middleware([withRateLimit("feedback.write")]).inputValidator((d: unknown) => z.object({ reportId: z.string().uuid() }).parse(d))
+  .middleware([requireSupabaseAuth, withRateLimit("feedback.write")])
   .handler(async ({ data, context }) => {
     const { data: existing } = await supabaseAdmin
       .from("feedback_votes").select("id")
@@ -188,13 +189,13 @@ export const toggleVote = createServerFn({ method: "POST" })
 
 // ============== COMMENT ==============
 export const postComment = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
+  .middleware([withRateLimit("feedback.write")]).inputValidator((d: unknown) =>
     z.object({
       reportId: z.string().uuid(),
       text: z.string().trim().min(1).max(2000),
     }).parse(d),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feedback.write")])
   .handler(async ({ data, context }) => {
     const cfg = await getConfig();
     if (!cfg.allowComments) throw new Error("Comments are disabled.");
@@ -214,7 +215,7 @@ export const postComment = createServerFn({ method: "POST" })
 
 // ============== ADMIN ==============
 export const adminUpdateFeedback = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
+  .middleware([withRateLimit("feedback.write")]).inputValidator((d: unknown) =>
     z.object({
       id: z.string().uuid(),
       status: z.enum(["open","investigating","planned","in_progress","fixed","closed","rejected"]).optional(),
@@ -226,7 +227,7 @@ export const adminUpdateFeedback = createServerFn({ method: "POST" })
       reward: z.object({ xp: z.number().int().min(0).max(1000), coins: z.number().int().min(0).max(1000) }).optional(),
     }).parse(d),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feedback.write")])
   .handler(async ({ data, context }) => {
     if (!(await isAdmin(context.userId))) throw new Error("Forbidden");
     const cfg = await getConfig();
@@ -287,8 +288,8 @@ export const adminUpdateFeedback = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteFeedback = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .middleware([requireSupabaseAuth])
+  .middleware([withRateLimit("feedback.write")]).inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .middleware([requireSupabaseAuth, withRateLimit("feedback.write")])
   .handler(async ({ data, context }) => {
     if (!(await isAdmin(context.userId))) throw new Error("Forbidden");
     const { error } = await (await getSupabaseAdmin()).from("feedback_reports").delete().eq("id", data.id);
@@ -298,7 +299,7 @@ export const adminDeleteFeedback = createServerFn({ method: "POST" })
 
 // ============== ANALYTICS ==============
 export const getFeedbackStats = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feedback.write")])
   .handler(async ({ context }) => {
     if (!(await isAdmin(context.userId))) throw new Error("Forbidden");
 

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { SHOP_BY_ID } from "./shop-catalog";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -43,7 +44,7 @@ async function logTx(userId: string, kind: "xp" | "coins", amount: number, reaso
 
 /** Claim the daily chest. Idempotent: returns alreadyClaimed=true if already done today. */
 export const claimDailyChest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .handler(async ({ context }) => {
     const { userId } = context;
     const today = todayUtc();
@@ -88,7 +89,7 @@ export const claimDailyChest = createServerFn({ method: "POST" })
 
 /** Daily spin wheel. One spin per UTC day. */
 export const spinDailyWheel = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .handler(async ({ context }) => {
     const { userId } = context;
     const today = todayUtc();
@@ -132,7 +133,7 @@ export const spinDailyWheel = createServerFn({ method: "POST" })
 
 /** Buy a shop item. Atomic: validate price, debit coins, insert inventory row. */
 export const purchaseItem = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((input) => z.object({ itemId: z.string().min(1).max(64) }).parse(input))
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -172,7 +173,7 @@ export const purchaseItem = createServerFn({ method: "POST" })
 
 /** Equip or unequip an owned item. Only one item per category can be equipped at a time. */
 export const equipItem = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((input) => z.object({
     itemId: z.string().min(1).max(64),
     equipped: z.boolean(),
@@ -208,7 +209,7 @@ export const equipItem = createServerFn({ method: "POST" })
 
 /** Get current user's inventory and balance. */
 export const getMyInventory = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .handler(async ({ context }) => {
     const { userId } = context;
     const [invRes, profRes] = await Promise.all([
@@ -223,7 +224,7 @@ export const getMyInventory = createServerFn({ method: "GET" })
 
 /** Recent reward history for the current user. */
 export const getMyTransactions = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .handler(async ({ context }) => {
     const { userId } = context;
     const { data } = await supabaseAdmin

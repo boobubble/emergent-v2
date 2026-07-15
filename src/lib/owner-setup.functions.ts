@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { withRateLimit } from "./rate-limit-middleware";
 
 /**
  * Post-Installation Setup Wizard — server functions.
@@ -68,7 +69,7 @@ const CommunityInput = z.object({
  * Only allowed while wizard is open (no owner + first_run not completed).
  */
 export const saveCommunitySetup = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => CommunityInput.parse(data))
+  .middleware([withRateLimit("admin.write")]).inputValidator((data: unknown) => CommunityInput.parse(data))
   .handler(async ({ data }) => {
     await assertWizardOpen();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -137,7 +138,7 @@ const CreateOwnerInput = z.object({
 });
 
 export const createOwner = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => CreateOwnerInput.parse(data))
+  .middleware([withRateLimit("admin.write")]).inputValidator((data: unknown) => CreateOwnerInput.parse(data))
   .handler(async ({ data }) => {
     await assertWizardOpen();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -220,7 +221,7 @@ const MAX_BYTES: Record<"logo" | "favicon" | "hero", number> = {
 };
 
 export const uploadCommunityAsset = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => AssetInput.parse(data))
+  .middleware([withRateLimit("admin.write")]).inputValidator((data: unknown) => AssetInput.parse(data))
   .handler(async ({ data }) => {
     await assertWizardOpen();
     const allowed = ALLOWED_MIME[data.kind];
@@ -273,7 +274,7 @@ async function pingHttp(url: string, headers: Record<string, string>, timeoutMs 
   }
 }
 
-export const runInstallationHealthCheck = createServerFn({ method: "POST" }).handler(
+export const runInstallationHealthCheck = createServerFn({ method: "POST" }).middleware([withRateLimit("admin.write")]).handler(
   async (): Promise<{ ok: boolean; checks: HealthCheck[]; checkedAt: string }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const checks: HealthCheck[] = [];

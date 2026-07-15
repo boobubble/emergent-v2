@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 const FEEDBOT_BOT_USERNAME = "FeedBot";
 const FEEDBOT_BOT_BIO =
@@ -24,7 +25,7 @@ async function assertAdmin(userId: string) {
 }
 
 export const getFeedbotSettings = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -47,7 +48,7 @@ const SaveInput = z.object({
 });
 
 export const saveFeedbotSettings = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((raw: unknown) => SaveInput.parse(raw))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -61,7 +62,7 @@ export const saveFeedbotSettings = createServerFn({ method: "POST" })
   });
 
 export const provisionFeedbot = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -123,7 +124,7 @@ export const provisionFeedbot = createServerFn({ method: "POST" })
   });
 
 export const sendTestAnnouncement = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -147,7 +148,7 @@ export const sendTestAnnouncement = createServerFn({ method: "POST" })
   });
 
 export const listChatroomsForFeedbot = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

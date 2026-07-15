@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -31,7 +32,7 @@ const DAILY_CAP: Record<XpAction, number> = {
 
 /** Award XP to the current user for a named, server-priced action. */
 export const awardXp = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
   .inputValidator((input: { action: XpAction }) => {
     if (!input || typeof input.action !== "string" || !(input.action in XP_ACTIONS)) {
       throw new Error("Invalid XP action");
@@ -90,7 +91,7 @@ export const awardXp = createServerFn({ method: "POST" })
 
 /** Daily streak ping. Server-side so the gamification trigger allows the write. */
 export const pingDailyStreak = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
   .handler(async ({ context }) => {
     const { userId } = context;
     const today = new Date().toISOString().slice(0, 10);

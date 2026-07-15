@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 // ---------- Public reads ----------
 
@@ -41,7 +42,7 @@ export const getSubscriptionMode = createServerFn({ method: "GET" }).handler(asy
 // ---------- User-scoped ----------
 
 export const getMySubscription = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data: sub } = await supabase
@@ -65,7 +66,7 @@ export const getMySubscription = createServerFn({ method: "GET" })
   });
 
 export const requestSubscription = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((d: { planId: string; cycle: "monthly" | "yearly"; proofReference?: string }) =>
     z.object({
       planId: z.string().uuid(),
@@ -126,7 +127,7 @@ export const requestSubscription = createServerFn({ method: "POST" })
   });
 
 export const cancelMySubscription = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase
@@ -166,7 +167,7 @@ async function assertAdmin(supabase: any, userId: string) {
 }
 
 export const adminUpsertPlan = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((d: unknown) => planInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -183,7 +184,7 @@ export const adminUpsertPlan = createServerFn({ method: "POST" })
   });
 
 export const adminDeletePlan = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -193,7 +194,7 @@ export const adminDeletePlan = createServerFn({ method: "POST" })
   });
 
 export const adminListPayments = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((d: { status?: string } = {}) =>
     z.object({ status: z.enum(["pending", "approved", "rejected", "all"]).default("pending") }).parse(d),
   )
@@ -211,7 +212,7 @@ export const adminListPayments = createServerFn({ method: "GET" })
   });
 
 export const adminApprovePayment = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((d: { paymentId: string; note?: string }) =>
     z.object({ paymentId: z.string().uuid(), note: z.string().max(500).optional() }).parse(d),
   )
@@ -253,7 +254,7 @@ export const adminApprovePayment = createServerFn({ method: "POST" })
   });
 
 export const adminRejectPayment = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((d: { paymentId: string; note?: string }) =>
     z.object({ paymentId: z.string().uuid(), note: z.string().max(500).optional() }).parse(d),
   )
@@ -281,7 +282,7 @@ export const adminRejectPayment = createServerFn({ method: "POST" })
   });
 
 export const adminSetSubscriptionMode = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((d: { mode: "off" | "optional" | "required"; payment_instructions?: string; default_currency?: string; default_currency_symbol?: string }) =>
     z.object({
       mode: z.enum(["off", "optional", "required"]),
@@ -301,7 +302,7 @@ export const adminSetSubscriptionMode = createServerFn({ method: "POST" })
   });
 
 export const adminSubscriptionStats = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
     const [{ count: total }, { count: active }, { count: expired }, { count: pending }] = await Promise.all([
