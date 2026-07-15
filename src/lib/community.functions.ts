@@ -244,7 +244,9 @@ export const joinCommunity = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const { data: comm, error: cErr } = await supabase
+    // join_password_hash is restricted from client roles; read via admin client server-side.
+    const { supabaseAdmin: _sbAdminForJoin } = await import("@/integrations/supabase/client.server");
+    const { data: comm, error: cErr } = await _sbAdminForJoin
       .from("communities")
       .select("id,privacy_mode,join_password_hash,status")
       .eq("id", data.communityId)
