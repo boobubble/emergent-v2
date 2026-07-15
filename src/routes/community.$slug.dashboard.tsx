@@ -541,8 +541,10 @@ function InvitesSection({ community }: { community: Community }) {
               {i.expires_at ? ` · expires ${new Date(i.expires_at).toLocaleDateString()}` : ""}
             </span>
             <Button size="sm" variant="ghost" onClick={() => {
-              void navigator.clipboard.writeText(i.code);
-              toast.success("Copied");
+              const url = typeof window !== "undefined" ? `${window.location.origin}/invite/${i.code}` : `/invite/${i.code}`;
+              void navigator.clipboard.writeText(url);
+              toast.success("Invite link copied");
+
             }}><Copy className="h-3 w-3" /></Button>
             <Button size="sm" variant="ghost" className="ml-auto" onClick={() => revokeMut.mutate(i.id)}>
               <Trash2 className="h-4 w-4" />
