@@ -1175,7 +1175,7 @@ export const cancelPremiumSlugRequest = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("community_premium_slug_requests" as never)
-      .update({ status: "cancelled" })
+      .update({ status: "cancelled" } as never)
       .eq("id", data.requestId)
       .eq("requested_by", context.userId)
       .eq("status", "pending");
