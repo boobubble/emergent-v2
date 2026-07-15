@@ -10,6 +10,8 @@ import {
   type Community,
 } from "@/lib/community.functions";
 import { CommunityProvider, useCommunity } from "@/lib/community-context";
+import { CommunityBadges } from "@/components/community/CommunityBadges";
+
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { Button } from "@/components/ui/button";
