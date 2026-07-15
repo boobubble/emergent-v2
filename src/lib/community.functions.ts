@@ -87,7 +87,7 @@ export const getCommunityBySlug = createServerFn({ method: "GET" })
     const sb = await serverPublicClient();
     const { data: row } = await sb
       .from("communities")
-      .select("id,owner_id,slug,name,description,welcome_text,logo_url,banner_url,background_url,accent_color,rules,announcement,social_links,privacy_mode,status,member_count,online_count,meta,created_at,updated_at")
+      .select("id,owner_id,slug,name,description,welcome_text,logo_url,banner_url,background_url,accent_color,rules,announcement,social_links,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,language,country,status,member_count,online_count,meta,created_at,updated_at")
       .eq("slug", data.slug)
       .eq("status", "active")
       .maybeSingle();
@@ -95,18 +95,120 @@ export const getCommunityBySlug = createServerFn({ method: "GET" })
     return row as any;
   });
 
-/** List active public communities (for a directory page). */
+/**
+ * List active communities for the public directory.
+ * Filters out hidden/unlisted communities. featured_only visibility is included
+ * only when the community is also marked is_featured=true.
+ */
 export const listPublicCommunities = createServerFn({ method: "GET" })
+  .inputValidator((d: {
+    category?: string;
+    sort?: "trending" | "newest" | "members" | "active";
+    featuredOnly?: boolean;
+    limit?: number;
+  } | undefined) =>
+    z.object({
+      category: z.string().max(60).optional(),
+      sort: z.enum(["trending", "newest", "members", "active"]).optional(),
+      featuredOnly: z.boolean().optional(),
+      limit: z.number().int().min(1).max(120).optional(),
+    }).partial().parse(d ?? {}),
+  )
+  .handler(async ({ data }) => {
+    const sb = await serverPublicClient();
+    let q = sb
+      .from("communities")
+      .select("id,slug,name,description,logo_url,banner_url,accent_color,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,member_count,online_count,created_at")
+      .eq("status", "active")
+      // discovery-visible = public OR (featured_only AND is_featured)
+      .or("visibility.eq.public,and(visibility.eq.featured_only,is_featured.eq.true)");
+    if (data.category) q = q.eq("category", data.category);
+    if (data.featuredOnly) q = q.eq("is_featured", true);
+    switch (data.sort) {
+      case "newest": q = q.order("created_at", { ascending: false }); break;
+      case "active": q = q.order("online_count", { ascending: false }); break;
+      case "trending":
+        q = q.order("is_featured", { ascending: false })
+             .order("online_count", { ascending: false })
+             .order("member_count", { ascending: false });
+        break;
+      case "members":
+      default:
+        q = q.order("member_count", { ascending: false });
+    }
+    const { data: rows } = await q.limit(data.limit ?? 60);
+    return rows ?? [];
+  });
+
+/**
+ * Search discovery-visible communities by name / description / slug / tags.
+ * Same visibility rules as listPublicCommunities.
+ */
+export const searchCommunities = createServerFn({ method: "GET" })
+  .inputValidator((d: { q: string; category?: string; limit?: number }) =>
+    z.object({
+      q: z.string().min(1).max(80),
+      category: z.string().max(60).optional(),
+      limit: z.number().int().min(1).max(60).optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const sb = await serverPublicClient();
+    const term = data.q.replace(/[%_,]/g, " ").trim();
+    if (!term) return [];
+    const like = `%${term}%`;
+    let q = sb
+      .from("communities")
+      .select("id,slug,name,description,logo_url,banner_url,accent_color,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,member_count,online_count")
+      .eq("status", "active")
+      .or("visibility.eq.public,and(visibility.eq.featured_only,is_featured.eq.true)")
+      .or(`name.ilike.${like},slug.ilike.${like},description.ilike.${like}`);
+    if (data.category) q = q.eq("category", data.category);
+    const { data: rows } = await q
+      .order("is_featured", { ascending: false })
+      .order("member_count", { ascending: false })
+      .limit(data.limit ?? 30);
+    return rows ?? [];
+  });
+
+/** Aggregate stats for the discovery hero. */
+export const getDiscoveryStats = createServerFn({ method: "GET" })
   .handler(async () => {
     const sb = await serverPublicClient();
-    const { data } = await sb
+    const { count: total } = await sb
       .from("communities")
-      .select("id,slug,name,description,logo_url,banner_url,accent_color,privacy_mode,member_count")
+      .select("id", { count: "exact", head: true })
       .eq("status", "active")
-      .order("member_count", { ascending: false })
-      .limit(60);
-    return data ?? [];
+      .or("visibility.eq.public,and(visibility.eq.featured_only,is_featured.eq.true)");
+    const { data: agg } = await sb
+      .from("communities")
+      .select("member_count,online_count")
+      .eq("status", "active")
+      .or("visibility.eq.public,and(visibility.eq.featured_only,is_featured.eq.true)")
+      .limit(1000);
+    const members = (agg ?? []).reduce((s, r: any) => s + (r.member_count ?? 0), 0);
+    const online = (agg ?? []).reduce((s, r: any) => s + (r.online_count ?? 0), 0);
+    return { total: total ?? 0, members, online };
   });
+
+// =========================================================================
+// MEMBERSHIP (auth required)
+// =========================================================================
+
+/** Current user's membership in a community, if any. */
+export const getMyMembership = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: row } = await context.supabase
+      .from("community_members")
+      .select("id,role,status,created_at")
+      .eq("community_id", data.communityId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    return row;
+  });
+
 
 // =========================================================================
 // MEMBERSHIP (auth required)
