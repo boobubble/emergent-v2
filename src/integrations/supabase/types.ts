@@ -822,6 +822,7 @@ export type Database = {
           privacy_mode: Database["public"]["Enums"]["community_privacy"]
           rules: string | null
           slug: string
+          slug_tier: string
           social_links: Json
           status: string
           tags: string[]
@@ -856,6 +857,7 @@ export type Database = {
           privacy_mode?: Database["public"]["Enums"]["community_privacy"]
           rules?: string | null
           slug: string
+          slug_tier?: string
           social_links?: Json
           status?: string
           tags?: string[]
@@ -890,6 +892,7 @@ export type Database = {
           privacy_mode?: Database["public"]["Enums"]["community_privacy"]
           rules?: string | null
           slug?: string
+          slug_tier?: string
           social_links?: Json
           status?: string
           tags?: string[]
@@ -1013,6 +1016,88 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_premium_slug_requests: {
+        Row: {
+          community_id: string
+          created_at: string
+          current_slug: string
+          id: string
+          reason: string | null
+          requested_by: string
+          requested_slug: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          current_slug: string
+          id?: string
+          reason?: string | null
+          requested_by: string
+          requested_slug: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          current_slug?: string
+          id?: string
+          reason?: string | null
+          requested_by?: string
+          requested_slug?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_premium_slug_requests_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_slug_history: {
+        Row: {
+          community_id: string
+          id: string
+          old_slug: string
+          released_at: string
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          old_slug: string
+          released_at?: string
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          old_slug?: string
+          released_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_slug_history_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
