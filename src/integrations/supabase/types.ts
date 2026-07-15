@@ -808,6 +808,8 @@ export type Database = {
           id: string
           is_featured: boolean
           is_official: boolean
+          is_partner: boolean
+          is_trusted: boolean
           is_verified: boolean
           join_password_hash: string | null
           language: string | null
@@ -824,6 +826,7 @@ export type Database = {
           status: string
           tags: string[]
           updated_at: string
+          verification_status: string
           visibility: Database["public"]["Enums"]["community_visibility"]
           welcome_text: string | null
         }
@@ -839,6 +842,8 @@ export type Database = {
           id?: string
           is_featured?: boolean
           is_official?: boolean
+          is_partner?: boolean
+          is_trusted?: boolean
           is_verified?: boolean
           join_password_hash?: string | null
           language?: string | null
@@ -855,6 +860,7 @@ export type Database = {
           status?: string
           tags?: string[]
           updated_at?: string
+          verification_status?: string
           visibility?: Database["public"]["Enums"]["community_visibility"]
           welcome_text?: string | null
         }
@@ -870,6 +876,8 @@ export type Database = {
           id?: string
           is_featured?: boolean
           is_official?: boolean
+          is_partner?: boolean
+          is_trusted?: boolean
           is_verified?: boolean
           join_password_hash?: string | null
           language?: string | null
@@ -886,6 +894,7 @@ export type Database = {
           status?: string
           tags?: string[]
           updated_at?: string
+          verification_status?: string
           visibility?: Database["public"]["Enums"]["community_visibility"]
           welcome_text?: string | null
         }
@@ -1004,6 +1013,71 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_verification_requests: {
+        Row: {
+          admin_notes: string | null
+          business_email: string | null
+          community_id: string
+          community_name: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          doc_urls: string[]
+          history: Json
+          id: string
+          reason: string | null
+          socials: Json
+          status: string
+          submitted_by: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          business_email?: string | null
+          community_id: string
+          community_name: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          doc_urls?: string[]
+          history?: Json
+          id?: string
+          reason?: string | null
+          socials?: Json
+          status?: string
+          submitted_by: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          business_email?: string | null
+          community_id?: string
+          community_name?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          doc_urls?: string[]
+          history?: Json
+          id?: string
+          reason?: string | null
+          socials?: Json
+          status?: string
+          submitted_by?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_verification_requests_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
