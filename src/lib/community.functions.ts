@@ -769,3 +769,265 @@ export const updateCommunityVisibility = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// =========================================================================
+// TRUST & VERIFICATION
+// =========================================================================
+
+export type VerificationStatus = "not_verified" | "pending" | "needs_changes" | "rejected" | "approved";
+
+export interface CommunityVerificationRequest {
+  id: string;
+  community_id: string;
+  submitted_by: string;
+  status: VerificationStatus;
+  community_name: string;
+  website: string | null;
+  socials: Record<string, string>;
+  business_email: string | null;
+  reason: string | null;
+  doc_urls: string[];
+  admin_notes: string | null;
+  history: Array<{ at: string; by: string | null; action: string; note?: string }>;
+  decided_by: string | null;
+  decided_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+const verificationInput = z.object({
+  communityId: z.string().uuid(),
+  community_name: z.string().min(1).max(120),
+  website: z.string().url().max(300).nullable().optional(),
+  socials: z.record(z.string().max(300)).optional(),
+  business_email: z.string().email().max(200).nullable().optional(),
+  reason: z.string().max(2000).nullable().optional(),
+  doc_urls: z.array(z.string().url().max(500)).max(10).optional(),
+});
+
+/** Owner submits (or resubmits after "needs_changes") a verification request. */
+export const submitVerificationRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => verificationInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, context.userId, data.communityId);
+
+    // If an open request exists (pending / needs_changes), update it. Otherwise insert new.
+    const { data: existing } = await context.supabase
+      .from("community_verification_requests" as never)
+      .select("id,status,history")
+      .eq("community_id", data.communityId)
+      .in("status", ["pending", "needs_changes"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const now = new Date().toISOString();
+    const payload = {
+      community_name: data.community_name,
+      website: data.website ?? null,
+      socials: data.socials ?? {},
+      business_email: data.business_email ?? null,
+      reason: data.reason ?? null,
+      doc_urls: data.doc_urls ?? [],
+      status: "pending" as const,
+    };
+
+    if (existing) {
+      const nextHistory = [
+        ...((existing as any).history ?? []),
+        { at: now, by: context.userId, action: (existing as any).status === "needs_changes" ? "resubmitted" : "updated" },
+      ];
+      const { error } = await context.supabase
+        .from("community_verification_requests" as never)
+        .update({ ...payload, history: nextHistory } as never)
+        .eq("id", (existing as any).id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await context.supabase
+        .from("community_verification_requests" as never)
+        .insert({
+          ...payload,
+          community_id: data.communityId,
+          submitted_by: context.userId,
+          history: [{ at: now, by: context.userId, action: "submitted" }],
+        } as never);
+      if (error) throw new Error(error.message);
+    }
+
+    // Reflect status on the community for cheap reads
+    await context.supabase
+      .from("communities")
+      .update({ verification_status: "pending" } as never)
+      .eq("id", data.communityId);
+
+    return { ok: true };
+  });
+
+/** Owner reads the latest verification request for their community. */
+export const getMyVerificationRequest = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, context.userId, data.communityId);
+    const { data: row } = await context.supabase
+      .from("community_verification_requests" as never)
+      .select("*")
+      .eq("community_id", data.communityId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return (row ?? null) as CommunityVerificationRequest | null;
+  });
+
+async function assertPlatformAdmin(supabase: any, userId: string) {
+  const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+  const { data: isSuper } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
+  if (!isAdmin && !isSuper) throw new Error("Forbidden");
+}
+
+/** Admin: list verification requests, optionally filtered by status. */
+export const adminListVerificationRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { status?: VerificationStatus | "all" }) =>
+    z.object({ status: z.enum(["all", "pending", "needs_changes", "rejected", "approved"]).optional() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertPlatformAdmin(context.supabase, context.userId);
+    let q = context.supabase
+      .from("community_verification_requests" as never)
+      .select("*, community:communities!community_verification_requests_community_id_fkey(id,slug,name,logo_url,banner_url,accent_color,member_count,is_verified,is_official,is_partner,is_trusted)")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (data.status && data.status !== "all") q = q.eq("status", data.status);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as any[];
+  });
+
+const decideInput = z.object({
+  requestId: z.string().uuid(),
+  action: z.enum(["approve", "reject", "needs_changes"]),
+  admin_notes: z.string().max(2000).optional(),
+  // Independent badge flags applied on approve. Ignored otherwise.
+  is_verified: z.boolean().optional(),
+  is_official: z.boolean().optional(),
+  is_partner: z.boolean().optional(),
+  is_trusted: z.boolean().optional(),
+});
+
+/** Admin: approve / reject / request changes. Sets community badge flags on approve. */
+export const adminDecideVerificationRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => decideInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertPlatformAdmin(context.supabase, context.userId);
+    const { data: req, error: rerr } = await context.supabase
+      .from("community_verification_requests" as never)
+      .select("id,community_id,status,history")
+      .eq("id", data.requestId)
+      .maybeSingle();
+    if (rerr) throw new Error(rerr.message);
+    if (!req) throw new Error("Request not found");
+
+    const nextStatus: VerificationStatus =
+      data.action === "approve" ? "approved" : data.action === "reject" ? "rejected" : "needs_changes";
+    const now = new Date().toISOString();
+    const history = [
+      ...(((req as any).history ?? []) as any[]),
+      { at: now, by: context.userId, action: data.action, note: data.admin_notes ?? undefined },
+    ];
+
+    const { error: uerr } = await context.supabase
+      .from("community_verification_requests" as never)
+      .update({
+        status: nextStatus,
+        admin_notes: data.admin_notes ?? null,
+        history,
+        decided_by: context.userId,
+        decided_at: now,
+      } as never)
+      .eq("id", data.requestId);
+    if (uerr) throw new Error(uerr.message);
+
+    // Update community reflection + badge flags
+    const patch: Record<string, unknown> = { verification_status: nextStatus };
+    if (data.action === "approve") {
+      if (data.is_verified !== undefined) patch.is_verified = data.is_verified;
+      if (data.is_official !== undefined) patch.is_official = data.is_official;
+      if (data.is_partner !== undefined) patch.is_partner = data.is_partner;
+      if (data.is_trusted !== undefined) patch.is_trusted = data.is_trusted;
+      // Default: if admin didn't set any flag, at least mark verified.
+      if (
+        data.is_verified === undefined &&
+        data.is_official === undefined &&
+        data.is_partner === undefined &&
+        data.is_trusted === undefined
+      ) {
+        patch.is_verified = true;
+      }
+    } else if (data.action === "reject") {
+      // Clear verified/official on explicit rejection so cards no longer show badges.
+      patch.is_verified = false;
+      patch.is_official = false;
+      patch.is_partner = false;
+      patch.is_trusted = false;
+    }
+
+    const { error: cerr } = await context.supabase
+      .from("communities")
+      .update(patch as never)
+      .eq("id", (req as any).community_id);
+    if (cerr) throw new Error(cerr.message);
+
+    return { ok: true, status: nextStatus };
+  });
+
+// =========================================================================
+// INVITE LANDING (public preview — no instant join)
+// =========================================================================
+
+/**
+ * Public read for an invite code. Returns the invite's community preview
+ * plus a validity flag. Never creates a membership. Guests may preview.
+ */
+export const getInviteLanding = createServerFn({ method: "GET" })
+  .inputValidator((d: { code: string }) => z.object({ code: z.string().min(3).max(80) }).parse(d))
+  .handler(async ({ data }) => {
+    const sb = await serverPublicClient();
+    const { data: inv } = await sb
+      .from("community_invites")
+      .select("id,community_id,code,max_uses,uses,expires_at,created_at")
+      .eq("code", data.code)
+      .maybeSingle();
+    if (!inv) return { valid: false as const, reason: "not_found" as const, community: null, invite: null };
+
+    const expired = inv.expires_at && new Date(inv.expires_at as string).getTime() < Date.now();
+    const exhausted = inv.max_uses != null && (inv.uses ?? 0) >= (inv.max_uses as number);
+
+    const { data: comm } = await sb
+      .from("communities")
+      .select("id,slug,name,description,welcome_text,logo_url,banner_url,accent_color,rules,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,language,country,status,member_count,online_count,owner_id")
+      .eq("id", inv.community_id as string)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (!comm) return { valid: false as const, reason: "community_missing" as const, community: null, invite: inv };
+
+    // Owner display name (best-effort, public columns only)
+    const { data: owner } = await sb
+      .from("profiles")
+      .select("id,username,display_name,avatar_url")
+      .eq("id", (comm as any).owner_id as string)
+      .maybeSingle();
+
+    const reason: "expired" | "exhausted" | null = expired ? "expired" : exhausted ? "exhausted" : null;
+    return {
+      valid: !reason,
+      reason,
+      community: { ...(comm as any), is_partner: (comm as any).is_partner ?? false, is_trusted: (comm as any).is_trusted ?? false, verification_status: (comm as any).verification_status ?? "not_verified" },
+      invite: inv,
+      owner: owner ?? null,
+    };
+  });
+
+
