@@ -1279,7 +1279,7 @@ export const reviewPremiumSlugRequest = createServerFn({ method: "POST" })
         review_note: data.note ?? null,
         reviewed_by: userId,
         reviewed_at: new Date().toISOString(),
-      })
+      } as never)
       .eq("id", data.requestId);
     if (rvErr) throw new Error(rvErr.message);
 
