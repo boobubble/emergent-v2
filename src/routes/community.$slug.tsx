@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, notFound, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, notFound, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,6 +7,7 @@ import {
   getMyMembership,
   joinCommunity,
   leaveCommunity,
+  resolveCommunitySlug,
   type Community,
 } from "@/lib/community.functions";
 import { CommunityProvider, useCommunity } from "@/lib/community-context";
