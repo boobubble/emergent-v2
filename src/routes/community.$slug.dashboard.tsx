@@ -161,7 +161,7 @@ function DashboardPage() {
             <TabsContent value="chatrooms" className="mt-0"><ModulePlaceholder title="Chatrooms" hint="Rooms with community_id set to this community. Create rooms from the main Chatrooms module." /></TabsContent>
             <TabsContent value="competitions" className="mt-0"><ModulePlaceholder title="Competitions" hint="Competitions scoped to this community." /></TabsContent>
             <TabsContent value="radio" className="mt-0"><ModulePlaceholder title="Radio" hint="Owner-controlled schedule, playlist and live status." /></TabsContent>
-            <TabsContent value="analytics" className="mt-0"><ModulePlaceholder title="Analytics" hint="Members, active today, messages, feed posts, reactions, votes, growth, retention." /></TabsContent>
+            <TabsContent value="analytics" className="mt-0"><AnalyticsSection community={community} /></TabsContent>
             <TabsContent value="monetization" className="mt-0"><ModulePlaceholder title="Monetization" hint="Paid memberships, tips, and creator earnings — coming soon." /></TabsContent>
             <TabsContent value="trust" className="mt-0"><TrustSection community={community} /></TabsContent>
             <TabsContent value="premium-url" className="mt-0"><PremiumUrlSection community={community} /></TabsContent>
