@@ -210,23 +210,6 @@ export const getMyMembership = createServerFn({ method: "GET" })
   });
 
 
-// =========================================================================
-// MEMBERSHIP (auth required)
-// =========================================================================
-
-/** Current user's membership in a community, if any. */
-export const getMyMembership = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
-  .handler(async ({ data, context }) => {
-    const { data: row } = await context.supabase
-      .from("community_members")
-      .select("id,role,status,created_at")
-      .eq("community_id", data.communityId)
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    return row;
-  });
 
 /** All communities I belong to. */
 export const listMyCommunities = createServerFn({ method: "GET" })
