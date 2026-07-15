@@ -391,7 +391,7 @@ export const updateCommunityBranding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => brandingInput.parse(d))
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, context.userId, data.communityId);
+    await assertCommunityOwner(context.supabase, context.userId, data.communityId);
     const { communityId, slug, ...rest } = data;
 
     if (slug) {
@@ -434,7 +434,7 @@ export const updateCommunityPrivacy = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, context.userId, data.communityId);
+    await assertCommunityOwner(context.supabase, context.userId, data.communityId);
     const payload: Record<string, unknown> = { privacy_mode: data.privacy_mode };
     const needsPassword = data.privacy_mode === "password" || data.privacy_mode === "invite_password";
     if (needsPassword && data.password) {
@@ -457,7 +457,7 @@ export const listCommunityMembers = createServerFn({ method: "GET" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, context.userId, data.communityId);
+    await assertCommunityOwner(context.supabase, context.userId, data.communityId);
     let q = context.supabase
       .from("community_members")
       .select("id,user_id,role,status,created_at,user:profiles!community_members_user_id_fkey(id,username,avatar_url,avatar_color)")
@@ -487,7 +487,7 @@ export const setMemberState = createServerFn({ method: "POST" })
       .eq("id", data.memberId)
       .maybeSingle();
     if (!row) throw new Error("Member not found");
-    await assertOwner(context.supabase, context.userId, row.community_id);
+    await assertCommunityOwner(context.supabase, context.userId, row.community_id);
     const payload: Record<string, unknown> = {};
     if (data.role) payload.role = data.role;
     if (data.status) payload.status = data.status;
@@ -508,7 +508,7 @@ export const removeMember = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!row) throw new Error("Member not found");
     if (row.role === "owner") throw new Error("Cannot remove owner");
-    await assertOwner(context.supabase, context.userId, row.community_id);
+    await assertCommunityOwner(context.supabase, context.userId, row.community_id);
     const { error } = await context.supabase.from("community_members").delete().eq("id", data.memberId);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -520,7 +520,7 @@ export const listJoinRequests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, context.userId, data.communityId);
+    await assertCommunityOwner(context.supabase, context.userId, data.communityId);
     const { data: rows } = await context.supabase
       .from("community_join_requests")
       .select("id,user_id,message,status,created_at,user:profiles!community_join_requests_user_id_fkey(id,username,avatar_url,avatar_color)")
@@ -542,7 +542,7 @@ export const decideJoinRequest = createServerFn({ method: "POST" })
       .eq("id", data.requestId)
       .maybeSingle();
     if (!req) throw new Error("Request not found");
-    await assertOwner(context.supabase, context.userId, req.community_id);
+    await assertCommunityOwner(context.supabase, context.userId, req.community_id);
 
     if (data.approve) {
       await context.supabase.from("community_members").upsert({
@@ -565,7 +565,7 @@ export const listInvites = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, context.userId, data.communityId);
+    await assertCommunityOwner(context.supabase, context.userId, data.communityId);
     const { data: rows } = await context.supabase
       .from("community_invites")
       .select("*")
@@ -585,7 +585,7 @@ export const createInvite = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, context.userId, data.communityId);
+    await assertCommunityOwner(context.supabase, context.userId, data.communityId);
     const { randomBytes } = await import("node:crypto");
     const code = randomBytes(6).toString("base64url");
     const { error, data: row } = await context.supabase
@@ -613,7 +613,7 @@ export const revokeInvite = createServerFn({ method: "POST" })
       .eq("id", data.inviteId)
       .maybeSingle();
     if (!inv) throw new Error("Invite not found");
-    await assertOwner(context.supabase, context.userId, inv.community_id);
+    await assertCommunityOwner(context.supabase, context.userId, inv.community_id);
     const { error } = await context.supabase.from("community_invites").delete().eq("id", data.inviteId);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -809,7 +809,7 @@ export const submitVerificationRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => verificationInput.parse(d))
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, context.userId, data.communityId);
+    await assertCommunityOwner(context.supabase, context.userId, data.communityId);
 
     // If an open request exists (pending / needs_changes), update it. Otherwise insert new.
     const { data: existing } = await context.supabase
@@ -868,7 +868,7 @@ export const getMyVerificationRequest = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, context.userId, data.communityId);
+    await assertCommunityOwner(context.supabase, context.userId, data.communityId);
     const { data: row } = await context.supabase
       .from("community_verification_requests" as never)
       .select("*")
@@ -1305,7 +1305,7 @@ export const archiveCommunity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, data.communityId, context.userId);
+    await assertCommunityOwner(context.supabase, data.communityId, context.userId);
     const { error } = await context.supabase
       .from("communities")
       .update({ status: "archived" } as never)
@@ -1319,7 +1319,7 @@ export const restoreCommunity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, data.communityId, context.userId);
+    await assertCommunityOwner(context.supabase, data.communityId, context.userId);
     const { error } = await context.supabase
       .from("communities")
       .update({ status: "active" } as never)
@@ -1345,7 +1345,7 @@ export const getCommunityAnalytics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, data.communityId, context.userId);
+    await assertCommunityOwner(context.supabase, data.communityId, context.userId);
     const cid = data.communityId;
     const now = new Date();
     const d7 = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
