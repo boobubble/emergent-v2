@@ -539,14 +539,57 @@ export const getMyCommunity = createServerFn({ method: "GET" })
   });
 
 /**
- * Public-facing member directory. Signed-in only, but does not require
- * ownership — any authenticated user can browse a community's active members.
+ * Public-facing member directory.
+ *
+ * Visibility rules:
+ *  - PUBLIC communities: anyone (including signed-out visitors) can browse
+ *    the member list.
+ *  - Private / invite_only / password / invite_password: only active members
+ *    or the owner may read the directory.
+ *
+ * This reuses the existing member store — it only adjusts who is allowed
+ * to read it, so protected actions still gate through AuthGate on the
+ * client. No fake/guest identity is created.
  */
 export const listCommunityMembersPublic = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
-  .handler(async ({ data, context }) => {
-    const { data: rows, error } = await context.supabase
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // 1. Look up privacy mode so we can decide who's allowed to read members.
+    const { data: comm, error: commErr } = await supabaseAdmin
+      .from("communities")
+      .select("id,privacy_mode,status")
+      .eq("id", data.communityId)
+      .maybeSingle();
+    if (commErr) throw new Error(commErr.message);
+    if (!comm || comm.status !== "active") return [];
+
+    if (comm.privacy_mode !== "public") {
+      // Non-public communities require an authenticated member. We reach for
+      // the current bearer token (attached by the client-side middleware);
+      // when none is present, refuse.
+      const { getRequestHeaders } = await import("@tanstack/react-start/server");
+      const headers = getRequestHeaders();
+      const authHeader = headers?.["authorization"] || headers?.["Authorization"];
+      const token = typeof authHeader === "string" && authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : null;
+      if (!token) return [];
+      const { data: userRes } = await supabaseAdmin.auth.getUser(token);
+      const userId = userRes?.user?.id;
+      if (!userId) return [];
+      const { data: membership } = await supabaseAdmin
+        .from("community_members")
+        .select("role,status")
+        .eq("community_id", data.communityId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      const isActiveMember = !!membership && membership.status === "active";
+      if (!isActiveMember) return [];
+    }
+
+    const { data: rows, error } = await supabaseAdmin
       .from("community_members")
       .select("id,user_id,role,status,created_at,user:profiles!community_members_user_id_fkey(id,username,display_name,avatar_url,avatar_color)")
       .eq("community_id", data.communityId)
