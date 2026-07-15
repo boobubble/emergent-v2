@@ -51,6 +51,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as CompetitionsLeaderboardRouteImport } from './routes/competitions.leaderboard'
 import { Route as CompetitionsHallOfFameRouteImport } from './routes/competitions.hall-of-fame'
@@ -370,6 +371,11 @@ const PagesEditorIdRoute = PagesEditorIdRouteImport.update({
 const PSlugRoute = PSlugRouteImport.update({
   id: '/p/$slug',
   path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteCodeRoute = InviteCodeRouteImport.update({
+  id: '/invite/$code',
+  path: '/invite/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedSlugRoute = FeedSlugRouteImport.update({
@@ -1063,6 +1069,7 @@ export interface FileRoutesByFullPath {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -1213,6 +1220,7 @@ export interface FileRoutesByTo {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -1368,6 +1376,7 @@ export interface FileRoutesById {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -1524,6 +1533,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/invite/$code'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
@@ -1674,6 +1684,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/invite/$code'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
@@ -1828,6 +1839,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/invite/$code'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
@@ -1895,6 +1907,7 @@ export interface RootRouteChildren {
   TrustRoute: typeof TrustRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
+  InviteCodeRoute: typeof InviteCodeRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -2208,6 +2221,13 @@ declare module '@tanstack/react-router' {
       path: '/p/$slug'
       fullPath: '/p/$slug'
       preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$code': {
+      id: '/invite/$code'
+      path: '/invite/$code'
+      fullPath: '/invite/$code'
+      preLoaderRoute: typeof InviteCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed/$slug': {
@@ -3284,6 +3304,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrustRoute: TrustRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
+  InviteCodeRoute: InviteCodeRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
