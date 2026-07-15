@@ -41,8 +41,8 @@ function AdminCommunityVerification() {
       <AdminPageHeader
         title="Community Verification"
         description="Review requests and grant Verified / Official / Partner / Trusted badges."
-        icon={ShieldCheck}
       />
+
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-muted-foreground">Filter:</span>

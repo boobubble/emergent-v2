@@ -118,6 +118,7 @@ import { Route as AdminCompetitionsFeedRouteImport } from './routes/admin.compet
 import { Route as AdminCompetitionsRouteImport } from './routes/admin.competitions'
 import { Route as AdminCompetitionCategoriesRouteImport } from './routes/admin.competition-categories'
 import { Route as AdminCompetitionAnalyticsRouteImport } from './routes/admin.competition-analytics'
+import { Route as AdminCommunityVerificationRouteImport } from './routes/admin.community-verification'
 import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
 import { Route as AdminChatThemesRouteImport } from './routes/admin.chat-themes'
 import { Route as AdminCallsRouteImport } from './routes/admin.calls'
@@ -709,6 +710,12 @@ const AdminCompetitionAnalyticsRoute =
     path: '/competition-analytics',
     getParentRoute: () => AdminRoute,
   } as any)
+const AdminCommunityVerificationRoute =
+  AdminCommunityVerificationRouteImport.update({
+    id: '/community-verification',
+    path: '/community-verification',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminChatroomsRoute = AdminChatroomsRouteImport.update({
   id: '/chatrooms',
   path: '/chatrooms',
@@ -988,6 +995,7 @@ export interface FileRoutesByFullPath {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/community-verification': typeof AdminCommunityVerificationRoute
   '/admin/competition-analytics': typeof AdminCompetitionAnalyticsRoute
   '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
   '/admin/competitions': typeof AdminCompetitionsRoute
@@ -1138,6 +1146,7 @@ export interface FileRoutesByTo {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/community-verification': typeof AdminCommunityVerificationRoute
   '/admin/competition-analytics': typeof AdminCompetitionAnalyticsRoute
   '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
   '/admin/competitions': typeof AdminCompetitionsRoute
@@ -1291,6 +1300,7 @@ export interface FileRoutesById {
   '/admin/calls': typeof AdminCallsRoute
   '/admin/chat-themes': typeof AdminChatThemesRoute
   '/admin/chatrooms': typeof AdminChatroomsRoute
+  '/admin/community-verification': typeof AdminCommunityVerificationRoute
   '/admin/competition-analytics': typeof AdminCompetitionAnalyticsRoute
   '/admin/competition-categories': typeof AdminCompetitionCategoriesRoute
   '/admin/competitions': typeof AdminCompetitionsRoute
@@ -1446,6 +1456,7 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/community-verification'
     | '/admin/competition-analytics'
     | '/admin/competition-categories'
     | '/admin/competitions'
@@ -1596,6 +1607,7 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/community-verification'
     | '/admin/competition-analytics'
     | '/admin/competition-categories'
     | '/admin/competitions'
@@ -1748,6 +1760,7 @@ export interface FileRouteTypes {
     | '/admin/calls'
     | '/admin/chat-themes'
     | '/admin/chatrooms'
+    | '/admin/community-verification'
     | '/admin/competition-analytics'
     | '/admin/competition-categories'
     | '/admin/competitions'
@@ -2666,6 +2679,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCompetitionAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/community-verification': {
+      id: '/admin/community-verification'
+      path: '/community-verification'
+      fullPath: '/admin/community-verification'
+      preLoaderRoute: typeof AdminCommunityVerificationRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/chatrooms': {
       id: '/admin/chatrooms'
       path: '/chatrooms'
@@ -2996,6 +3016,7 @@ interface AdminRouteChildren {
   AdminCallsRoute: typeof AdminCallsRoute
   AdminChatThemesRoute: typeof AdminChatThemesRoute
   AdminChatroomsRoute: typeof AdminChatroomsRoute
+  AdminCommunityVerificationRoute: typeof AdminCommunityVerificationRoute
   AdminCompetitionAnalyticsRoute: typeof AdminCompetitionAnalyticsRoute
   AdminCompetitionCategoriesRoute: typeof AdminCompetitionCategoriesRoute
   AdminCompetitionsRoute: typeof AdminCompetitionsRoute
@@ -3076,6 +3097,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCallsRoute: AdminCallsRoute,
   AdminChatThemesRoute: AdminChatThemesRoute,
   AdminChatroomsRoute: AdminChatroomsRoute,
+  AdminCommunityVerificationRoute: AdminCommunityVerificationRoute,
   AdminCompetitionAnalyticsRoute: AdminCompetitionAnalyticsRoute,
   AdminCompetitionCategoriesRoute: AdminCompetitionCategoriesRoute,
   AdminCompetitionsRoute: AdminCompetitionsRoute,
