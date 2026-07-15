@@ -50,19 +50,22 @@ export const Route = createFileRoute("/community/$slug")({
     const title = `${c.name} — Community`;
     const desc = c.description || `Join the ${c.name} community.`;
     const url = `https://holo-chat-quest.lovable.app/community/${params.slug}`;
+    const noIndex = c.visibility === "hidden" || c.visibility === "unlisted";
     return {
       meta: [
         { title },
         { name: "description", content: desc },
+        ...(noIndex ? [{ name: "robots", content: "noindex,nofollow" }] : []),
         { property: "og:title", content: title },
         { property: "og:description", content: desc },
         { property: "og:type", content: "website" },
         { property: "og:url", content: url },
-        ...(c.banner_url ? [{ property: "og:image", content: c.banner_url }] : []),
+        ...(c.banner_url && !noIndex ? [{ property: "og:image", content: c.banner_url }] : []),
       ],
-      links: [{ rel: "canonical", href: url }],
+      links: noIndex ? [] : [{ rel: "canonical", href: url }],
     };
   },
+
   notFoundComponent: () => (
     <div className="grid min-h-screen place-items-center bg-background text-foreground">
       <div className="text-center">
