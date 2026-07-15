@@ -140,6 +140,7 @@ import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-l
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
 import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
+import { Route as CommunitySlugChatroomsRouteImport } from './routes/community.$slug.chatrooms'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
@@ -814,6 +815,11 @@ const CommunitySlugDashboardRoute = CommunitySlugDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => CommunitySlugRoute,
 } as any)
+const CommunitySlugChatroomsRoute = CommunitySlugChatroomsRouteImport.update({
+  id: '/chatrooms',
+  path: '/chatrooms',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
 const ApiPublicLandingRoute = ApiPublicLandingRouteImport.update({
   id: '/api/public/landing',
   path: '/api/public/landing',
@@ -1033,6 +1039,7 @@ export interface FileRoutesByFullPath {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
@@ -1177,6 +1184,7 @@ export interface FileRoutesByTo {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug': typeof CommunitySlugIndexRoute
@@ -1326,6 +1334,7 @@ export interface FileRoutesById {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
@@ -1476,6 +1485,7 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
+    | '/community/$slug/chatrooms'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/'
@@ -1620,6 +1630,7 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
+    | '/community/$slug/chatrooms'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug'
@@ -1768,6 +1779,7 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
+    | '/community/$slug/chatrooms'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/'
@@ -2756,6 +2768,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunitySlugDashboardRouteImport
       parentRoute: typeof CommunitySlugRoute
     }
+    '/community/$slug/chatrooms': {
+      id: '/community/$slug/chatrooms'
+      path: '/chatrooms'
+      fullPath: '/community/$slug/chatrooms'
+      preLoaderRoute: typeof CommunitySlugChatroomsRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
     '/api/public/landing': {
       id: '/api/public/landing'
       path: '/api/public/landing'
@@ -3063,12 +3082,14 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
 )
 
 interface CommunitySlugRouteChildren {
+  CommunitySlugChatroomsRoute: typeof CommunitySlugChatroomsRoute
   CommunitySlugDashboardRoute: typeof CommunitySlugDashboardRoute
   CommunitySlugFeedRoute: typeof CommunitySlugFeedRoute
   CommunitySlugIndexRoute: typeof CommunitySlugIndexRoute
 }
 
 const CommunitySlugRouteChildren: CommunitySlugRouteChildren = {
+  CommunitySlugChatroomsRoute: CommunitySlugChatroomsRoute,
   CommunitySlugDashboardRoute: CommunitySlugDashboardRoute,
   CommunitySlugFeedRoute: CommunitySlugFeedRoute,
   CommunitySlugIndexRoute: CommunitySlugIndexRoute,

@@ -984,17 +984,22 @@ async function enrichCompetitions(sb: any, comps: any[]): Promise<EnrichedCompet
   }));
 }
 
-export const listCompetitionsEnriched = createServerFn({ method: "GET" }).handler(async () => {
-  const sb = await publicClient();
-  const { data, error } = await sb
-    .from("competitions")
-    .select("*, category:competition_categories(id,name,slug,color,icon_url)")
-    .neq("status", "draft")
-    .eq("is_published", true)
-    .order("start_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return enrichCompetitions(sb, data ?? []);
-});
+export const listCompetitionsEnriched = createServerFn({ method: "GET" })
+  .inputValidator((d: { communityId?: string | null } = {}) => d)
+  .handler(async ({ data }) => {
+    const sb = await publicClient();
+    let q = sb
+      .from("competitions")
+      .select("*, category:competition_categories(id,name,slug,color,icon_url)")
+      .neq("status", "draft")
+      .eq("is_published", true)
+      .order("start_at", { ascending: false });
+    if (data?.communityId) q = q.eq("community_id", data.communityId);
+    else q = q.is("community_id", null);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return enrichCompetitions(sb, rows ?? []);
+  });
 
 export const listMyFollowedCompetitions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
