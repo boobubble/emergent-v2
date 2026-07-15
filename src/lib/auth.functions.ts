@@ -96,7 +96,17 @@ export const loginWithIdentifier = createServerFn({ method: "POST" })
     return { identifier, password };
   })
   .handler(async ({ data }) => {
+    const ip = getClientIp();
+    try {
+      await enforceRateLimit({ action: "auth.login", ip });
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        throw new Error(`Too many login attempts. Try again in ${e.retryAfter}s.`);
+      }
+      throw e;
+    }
     let email = data.identifier;
+
 
     if (!email.includes("@")) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
