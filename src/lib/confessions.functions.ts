@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
+import { withRateLimit } from "./rate-limit-middleware";
   CONFESSIONS_DEFAULTS,
   expiryToTimestamp,
   pickRandomAvatar,
@@ -88,7 +89,7 @@ export const listConfessions = createServerFn({ method: "GET" })
 
 // ============== CREATE ==============
 export const createConfession = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
+  .middleware([withRateLimit("feed.write")]).inputValidator((d: unknown) =>
     z.object({
       kind: z.enum(["text", "poll", "image", "question", "advice"]).default("text"),
       category: z.string().min(1).max(64),
@@ -102,7 +103,7 @@ export const createConfession = createServerFn({ method: "POST" })
       expiry: z.enum(["never", "24h", "7d", "30d"]).optional(),
     }).parse(d),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ data, context }) => {
     const cfg = await getConfig();
     if (!cfg.enabled) throw new Error("Confessions module is disabled.");
@@ -176,13 +177,13 @@ function pickAnimalName(emoji: string): string {
 
 // ============== REACT ==============
 export const toggleReaction = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
+  .middleware([withRateLimit("feed.write")]).inputValidator((d: unknown) =>
     z.object({
       confessionId: z.string().uuid(),
       type: z.enum(["like", "funny", "shock", "sad", "hot", "love"]),
     }).parse(d),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ data, context }) => {
     const { data: existing } = await (await getSupabaseAdmin())
       .from("confession_reactions")
@@ -219,14 +220,14 @@ export const listReplies = createServerFn({ method: "GET" })
   });
 
 export const createReply = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
+  .middleware([withRateLimit("feed.write")]).inputValidator((d: unknown) =>
     z.object({
       confessionId: z.string().uuid(),
       text: z.string().min(1).max(1500),
       anonymous: z.boolean().default(true),
     }).parse(d),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ data, context }) => {
     const cfg = await getConfig();
     if (!cfg.enabled || !cfg.allowReplies) throw new Error("Replies are disabled.");
@@ -260,13 +261,13 @@ export const createReply = createServerFn({ method: "POST" })
 
 // ============== ADMIN MOD ==============
 export const moderateConfession = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
+  .middleware([withRateLimit("feed.write")]).inputValidator((d: unknown) =>
     z.object({
       id: z.string().uuid(),
       action: z.enum(["approve", "reject", "pin", "unpin", "feature", "unfeature", "remove"]),
     }).parse(d),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ data, context }) => {
     if (!(await isAdmin(context.userId))) throw new Error("Forbidden");
 
@@ -294,7 +295,7 @@ export const moderateConfession = createServerFn({ method: "POST" })
 
 // ============== ANALYTICS ==============
 export const getConfessionStats = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("feed.write")])
   .handler(async ({ context }) => {
     if (!(await isAdmin(context.userId))) throw new Error("Forbidden");
 

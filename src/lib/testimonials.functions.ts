@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -29,7 +30,7 @@ export const listTestimonialsForUser = createServerFn({ method: "GET" })
       })
       .parse(d ?? {}),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("profile.write")])
   .handler(async ({ data, context }) => {
     const admin = await getAdmin();
     const target = data.targetUserId ?? context.userId;
@@ -63,7 +64,7 @@ export const listTestimonialsForUser = createServerFn({ method: "GET" })
 
 // Create or update (upsert) a testimonial about another user
 export const writeTestimonial = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
+  .middleware([withRateLimit("profile.write")]).inputValidator((d: unknown) =>
     z
       .object({
         targetUserId: z.string().uuid(),
@@ -71,7 +72,7 @@ export const writeTestimonial = createServerFn({ method: "POST" })
       })
       .parse(d),
   )
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("profile.write")])
   .handler(async ({ data, context }) => {
     if (data.targetUserId === context.userId) {
       throw new Error("You cannot write a testimonial about yourself.");
@@ -95,8 +96,8 @@ export const writeTestimonial = createServerFn({ method: "POST" })
   });
 
 export const deleteTestimonial = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .middleware([requireSupabaseAuth])
+  .middleware([withRateLimit("profile.write")]).inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .middleware([requireSupabaseAuth, withRateLimit("profile.write")])
   .handler(async ({ data, context }) => {
     const admin = await getAdmin();
     const { data: row } = await admin

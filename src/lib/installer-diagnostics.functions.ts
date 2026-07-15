@@ -3,6 +3,7 @@
  * Kept separate from installer-bootstrap.functions.ts (bootstrap logic is untouched).
  */
 import { createServerFn } from "@tanstack/react-start";
+import { withRateLimit } from "./rate-limit-middleware";
 
 export interface EnvVarStatus {
   name: string;
@@ -54,7 +55,7 @@ export const getEnvValidation = createServerFn({ method: "GET" }).handler(async 
   return { ok: vars.every((v) => !v.required || v.present), vars };
 });
 
-export const testDatabaseConnection = createServerFn({ method: "POST" }).handler(async (): Promise<DbConnectionResult> => {
+export const testDatabaseConnection = createServerFn({ method: "POST" }).middleware([withRateLimit("admin.write")]).handler(async (): Promise<DbConnectionResult> => {
   const { assertInstallerAllowed } = await import("./installer-guard.server");
   await assertInstallerAllowed();
   if (!process.env.SUPABASE_DB_URL) {

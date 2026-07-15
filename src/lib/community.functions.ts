@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 // ---------- Types ----------
 export type CommunityPrivacy = "public" | "private" | "invite_only" | "password" | "invite_password";
@@ -197,7 +198,7 @@ export const getDiscoveryStats = createServerFn({ method: "GET" })
 
 /** Current user's membership in a community, if any. */
 export const getMyMembership = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: row } = await context.supabase
@@ -213,7 +214,7 @@ export const getMyMembership = createServerFn({ method: "GET" })
 
 /** All communities I belong to. */
 export const listMyCommunities = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .handler(async ({ context }) => {
     const { data } = await context.supabase
       .from("community_members")
@@ -232,7 +233,7 @@ export const listMyCommunities = createServerFn({ method: "GET" })
  *  - invite_password → requires both
  */
 export const joinCommunity = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string; inviteCode?: string; password?: string; message?: string }) =>
     z.object({
       communityId: z.string().uuid(),
@@ -336,7 +337,7 @@ export const joinCommunity = createServerFn({ method: "POST" })
   });
 
 export const leaveCommunity = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     // Owners can't leave (they must transfer or delete first)
@@ -390,7 +391,7 @@ const brandingInput = z.object({
 
 /** Update branding / basic info. Slug change validated for uniqueness. */
 export const updateCommunityBranding = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: unknown) => brandingInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId, data.communityId);
@@ -427,7 +428,7 @@ export const updateCommunityBranding = createServerFn({ method: "POST" })
 
 /** Update privacy mode (and password, if applicable). */
 export const updateCommunityPrivacy = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string; privacy_mode: CommunityPrivacy; password?: string | null }) =>
     z.object({
       communityId: z.string().uuid(),
@@ -451,7 +452,7 @@ export const updateCommunityPrivacy = createServerFn({ method: "POST" })
 
 /** List members of a community (owner/staff view). */
 export const listCommunityMembers = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string; status?: CommunityMemberStatus }) =>
     z.object({
       communityId: z.string().uuid(),
@@ -474,7 +475,7 @@ export const listCommunityMembers = createServerFn({ method: "GET" })
 
 /** Owner action on a member: ban / mute / kick / promote / demote. */
 export const setMemberState = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { memberId: string; role?: CommunityMemberRole; status?: CommunityMemberStatus }) =>
     z.object({
       memberId: z.string().uuid(),
@@ -500,7 +501,7 @@ export const setMemberState = createServerFn({ method: "POST" })
 
 /** Kick (delete) a member. */
 export const removeMember = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { memberId: string }) => z.object({ memberId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: row } = await context.supabase
@@ -519,7 +520,7 @@ export const removeMember = createServerFn({ method: "POST" })
 // ---------- Join requests ----------
 
 export const listJoinRequests = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId, data.communityId);
@@ -533,7 +534,7 @@ export const listJoinRequests = createServerFn({ method: "GET" })
   });
 
 export const decideJoinRequest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { requestId: string; approve: boolean }) =>
     z.object({ requestId: z.string().uuid(), approve: z.boolean() }).parse(d),
   )
@@ -564,7 +565,7 @@ export const decideJoinRequest = createServerFn({ method: "POST" })
 // ---------- Invites ----------
 
 export const listInvites = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId, data.communityId);
@@ -578,7 +579,7 @@ export const listInvites = createServerFn({ method: "GET" })
   });
 
 export const createInvite = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string; maxUses?: number; expiresAt?: string | null }) =>
     z.object({
       communityId: z.string().uuid(),
@@ -606,7 +607,7 @@ export const createInvite = createServerFn({ method: "POST" })
   });
 
 export const revokeInvite = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { inviteId: string }) => z.object({ inviteId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: inv } = await context.supabase
@@ -625,7 +626,7 @@ export const revokeInvite = createServerFn({ method: "POST" })
 
 /** Get the community owned by the current user (if any). */
 export const getMyCommunity = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .handler(async ({ context }) => {
     const { data: row } = await context.supabase
       .from("communities")
@@ -673,7 +674,7 @@ export const listCommunityMembersPublic = createServerFn({ method: "GET" })
  * active member (or the owner). Returns [] otherwise.
  */
 export const listCommunityMembersAuthed = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: membership } = await context.supabase
@@ -717,7 +718,7 @@ export const listCommunityMembersAuthed = createServerFn({ method: "GET" })
  * platform-admin flags and NOT settable here.
  */
 export const updateCommunityVisibility = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: {
     communityId: string;
     visibility: CommunityVisibility;
@@ -808,7 +809,7 @@ const verificationInput = z.object({
 
 /** Owner submits (or resubmits after "needs_changes") a verification request. */
 export const submitVerificationRequest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: unknown) => verificationInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId, data.communityId);
@@ -867,7 +868,7 @@ export const submitVerificationRequest = createServerFn({ method: "POST" })
 
 /** Owner reads the latest verification request for their community. */
 export const getMyVerificationRequest = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId, data.communityId);
@@ -889,7 +890,7 @@ async function assertPlatformAdmin(supabase: any, userId: string) {
 
 /** Admin: list verification requests, optionally filtered by status. */
 export const adminListVerificationRequests = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { status?: VerificationStatus | "all" }) =>
     z.object({ status: z.enum(["all", "pending", "needs_changes", "rejected", "approved"]).optional() }).parse(d),
   )
@@ -919,7 +920,7 @@ const decideInput = z.object({
 
 /** Admin: approve / reject / request changes. Sets community badge flags on approve. */
 export const adminDecideVerificationRequest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: unknown) => decideInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertPlatformAdmin(context.supabase, context.userId);
@@ -1088,7 +1089,7 @@ export const resolveCommunitySlug = createServerFn({ method: "GET" })
 
 /** Owner: submit a request to claim a new (usually premium) slug for their community. */
 export const requestPremiumSlug = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string; requestedSlug: string; reason?: string }) =>
     z.object({
       communityId: z.string().uuid(),
@@ -1158,7 +1159,7 @@ export const requestPremiumSlug = createServerFn({ method: "POST" })
 
 /** Owner or admin: list requests for a community. */
 export const listPremiumSlugRequests = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string }) =>
     z.object({ communityId: z.string().uuid() }).parse(d),
   )
@@ -1173,7 +1174,7 @@ export const listPremiumSlugRequests = createServerFn({ method: "GET" })
 
 /** Owner: cancel a pending request. */
 export const cancelPremiumSlugRequest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { requestId: string }) =>
     z.object({ requestId: z.string().uuid() }).parse(d),
   )
@@ -1190,7 +1191,7 @@ export const cancelPremiumSlugRequest = createServerFn({ method: "POST" })
 
 /** Admin: list all premium slug requests, optionally filtered by status. */
 export const adminListPremiumSlugRequests = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { status?: PremiumSlugRequestStatus | "all" }) =>
     z.object({ status: z.enum(["all", "pending", "approved", "rejected", "cancelled"]).optional() }).parse(d),
   )
@@ -1209,7 +1210,7 @@ export const adminListPremiumSlugRequests = createServerFn({ method: "GET" })
 
 /** Admin: approve or reject a premium slug request. On approve, rename the community + record history. */
 export const reviewPremiumSlugRequest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { requestId: string; decision: "approved" | "rejected"; note?: string }) =>
     z.object({
       requestId: z.string().uuid(),
@@ -1299,7 +1300,7 @@ export const reviewPremiumSlugRequest = createServerFn({ method: "POST" })
 
 /** Owner: archive a community. Hides it from discovery and freezes the surface (read-only). */
 export const archiveCommunity = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId, data.communityId);
@@ -1313,7 +1314,7 @@ export const archiveCommunity = createServerFn({ method: "POST" })
 
 /** Owner: restore an archived community. */
 export const restoreCommunity = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId, data.communityId);
@@ -1339,7 +1340,7 @@ export interface CommunityAnalytics {
 
 /** Owner: community analytics overview. */
 export const getCommunityAnalytics = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId, data.communityId);
@@ -1388,7 +1389,7 @@ export const getCommunityAnalytics = createServerFn({ method: "GET" })
 
 /** Admin: platform-wide community reporting overview. */
 export const adminCommunityReport = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("community.write")])
   .handler(async ({ context }) => {
     await assertPlatformAdmin(context.supabase, context.userId);
     const sb = context.supabase;

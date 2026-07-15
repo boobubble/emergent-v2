@@ -8,6 +8,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { DAILY_MISSIONS, MISSION_BY_ID } from "./economy-config";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -36,7 +37,7 @@ async function bumpProfile(userId: string, addXp: number, addCoins: number) {
 
 /** Return today's missions list with progress + claim state for the current user. */
 export const getTodayMissions = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
   .handler(async ({ context }) => {
     const { userId } = context;
     const day = todayUtc();
@@ -64,7 +65,7 @@ export const getTodayMissions = createServerFn({ method: "GET" })
 
 /** Claim a completed mission. Idempotent per day. */
 export const claimMission = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
   .inputValidator((i) => z.object({ missionId: z.string().min(1).max(64) }).parse(i))
   .handler(async ({ data, context }) => {
     const { userId } = context;

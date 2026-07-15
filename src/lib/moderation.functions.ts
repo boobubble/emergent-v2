@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -62,7 +63,7 @@ async function logAction(actor_id: string, action: ModActionName, extra: Record<
 
 // ---------- Reports ----------
 export const submitReport = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({
       target_type: z.enum(["message", "post", "user", "room"]),
@@ -84,7 +85,7 @@ export const submitReport = createServerFn({ method: "POST" })
   });
 
 export const listReports = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({
       status: z.enum(["open", "reviewing", "resolved", "dismissed", "all"]).default("open"),
@@ -102,7 +103,7 @@ export const listReports = createServerFn({ method: "GET" })
   });
 
 export const resolveReport = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({
       id: z.string().uuid(),
@@ -128,7 +129,7 @@ export const resolveReport = createServerFn({ method: "POST" })
 
 // ---------- Bans / Mutes ----------
 export const banUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({
       user_id: z.string().uuid().optional(),
@@ -160,7 +161,7 @@ export const banUser = createServerFn({ method: "POST" })
   });
 
 export const unbanUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) => z.object({ ban_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
@@ -172,7 +173,7 @@ export const unbanUser = createServerFn({ method: "POST" })
   });
 
 export const listBans = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
     const { data, error } = await supabaseAdmin
@@ -185,7 +186,7 @@ export const listBans = createServerFn({ method: "GET" })
   });
 
 export const muteUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({
       user_id: z.string().uuid(),
@@ -214,7 +215,7 @@ export const muteUser = createServerFn({ method: "POST" })
   });
 
 export const unmuteUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) => z.object({ mute_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
@@ -226,7 +227,7 @@ export const unmuteUser = createServerFn({ method: "POST" })
   });
 
 export const listMutes = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
     const { data, error } = await supabaseAdmin
@@ -240,7 +241,7 @@ export const listMutes = createServerFn({ method: "GET" })
 
 // ---------- Mod Notes ----------
 export const addModNote = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({ user_id: z.string().uuid(), note: z.string().min(1).max(1000) }).parse(input),
   )
@@ -255,7 +256,7 @@ export const addModNote = createServerFn({ method: "POST" })
   });
 
 export const listModNotes = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) => z.object({ user_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
@@ -267,7 +268,7 @@ export const listModNotes = createServerFn({ method: "GET" })
 
 // ---------- Word Filters ----------
 export const listWordFilters = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
     const { data, error } = await (await getSupabaseAdmin()).from("word_filters").select("*").order("created_at", { ascending: false });
@@ -276,7 +277,7 @@ export const listWordFilters = createServerFn({ method: "GET" })
   });
 
 export const addWordFilter = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({
       pattern: z.string().min(1).max(200),
@@ -297,7 +298,7 @@ export const addWordFilter = createServerFn({ method: "POST" })
   });
 
 export const toggleWordFilter = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) => z.object({ id: z.string().uuid(), active: z.boolean() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
@@ -307,7 +308,7 @@ export const toggleWordFilter = createServerFn({ method: "POST" })
   });
 
 export const removeWordFilter = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
@@ -319,7 +320,7 @@ export const removeWordFilter = createServerFn({ method: "POST" })
 
 // ---------- URL Rules ----------
 export const listUrlRules = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
     const { data, error } = await (await getSupabaseAdmin()).from("url_rules").select("*").order("created_at", { ascending: false });
@@ -329,7 +330,7 @@ export const listUrlRules = createServerFn({ method: "GET" })
 
 // ---------- Safety Moderation ----------
 export const listSafetyEvents = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({
       status: z.enum(["pending", "approved", "kept_blocked", "false_positive", "escalated", "all"]).default("pending"),
@@ -349,7 +350,7 @@ export const listSafetyEvents = createServerFn({ method: "GET" })
   });
 
 export const getSafetyOverview = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
     const admin = await getSupabaseAdmin();
@@ -368,7 +369,7 @@ export const getSafetyOverview = createServerFn({ method: "GET" })
   });
 
 export const resolveSafetyEvent = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({
       id: z.string().uuid(),
@@ -394,7 +395,7 @@ export const resolveSafetyEvent = createServerFn({ method: "POST" })
   });
 
 export const listSafetyKeywords = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
     const admin = await getSupabaseAdmin();
@@ -404,7 +405,7 @@ export const listSafetyKeywords = createServerFn({ method: "GET" })
   });
 
 export const addSafetyKeyword = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({
       pattern: z.string().min(2).max(200),
@@ -425,7 +426,7 @@ export const addSafetyKeyword = createServerFn({ method: "POST" })
   });
 
 export const toggleSafetyKeyword = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) => z.object({ id: z.string().uuid(), active: z.boolean() }).parse(input))
   .handler(async ({ data, context }) => {
     const admin = await getSupabaseAdmin();
@@ -438,7 +439,7 @@ export const toggleSafetyKeyword = createServerFn({ method: "POST" })
   });
 
 export const removeSafetyKeyword = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const admin = await getSupabaseAdmin();
@@ -452,7 +453,7 @@ export const removeSafetyKeyword = createServerFn({ method: "POST" })
 
 
 export const addUrlRule = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({
       domain: z.string().min(1).max(253).regex(/^[a-z0-9.-]+$/i, "Invalid domain"),
@@ -472,7 +473,7 @@ export const addUrlRule = createServerFn({ method: "POST" })
   });
 
 export const removeUrlRule = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
@@ -484,7 +485,7 @@ export const removeUrlRule = createServerFn({ method: "POST" })
 
 // ---------- Logs ----------
 export const listModLogs = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({ limit: z.number().min(1).max(200).default(100), offset: z.number().min(0).default(0) }).parse(input ?? {}),
   )
@@ -500,7 +501,7 @@ export const listModLogs = createServerFn({ method: "GET" })
 
 // ---------- Message moderation actions ----------
 export const deleteMessageMod = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) => z.object({ message_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
@@ -511,7 +512,7 @@ export const deleteMessageMod = createServerFn({ method: "POST" })
   });
 
 export const clearChannelMessages = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({ channel_id: z.string().min(1).max(120) }).parse(input),
   )
@@ -533,7 +534,7 @@ export const clearChannelMessages = createServerFn({ method: "POST" })
 
 // ---------- Room moderators ----------
 export const listRoomMods = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
     const { data, error } = await supabaseAdmin
@@ -550,7 +551,7 @@ export const listRoomMods = createServerFn({ method: "GET" })
   });
 
 export const addRoomMod = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) =>
     z.object({
       channel_id: z.string().min(1).max(120),
@@ -571,7 +572,7 @@ export const addRoomMod = createServerFn({ method: "POST" })
   });
 
 export const removeRoomMod = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
@@ -582,7 +583,7 @@ export const removeRoomMod = createServerFn({ method: "POST" })
 
 // ---------- Overview ----------
 export const getModerationOverview = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("report.submit")])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
     const [openReports, activeBans, activeMutes, filters, urls, logs24] = await Promise.all([

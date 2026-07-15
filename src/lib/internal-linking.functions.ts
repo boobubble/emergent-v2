@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -37,7 +38,7 @@ const targetSchema = z.object({
 
 // ---------- LIST ----------
 export const listLinkTargets = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -54,7 +55,7 @@ export const listLinkTargets = createServerFn({ method: "GET" })
 
 // ---------- UPSERT ----------
 export const upsertLinkTarget = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((input) => targetSchema.parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -76,7 +77,7 @@ export const upsertLinkTarget = createServerFn({ method: "POST" })
 
 // ---------- DELETE ----------
 export const deleteLinkTarget = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -91,7 +92,7 @@ export const deleteLinkTarget = createServerFn({ method: "POST" })
 
 // ---------- AUTO-SYNC TARGETS from existing content ----------
 export const syncLinkTargets = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -173,7 +174,7 @@ export const syncLinkTargets = createServerFn({ method: "POST" })
 
 // ---------- LIST LINKABLE PAGES (for bulk picker) ----------
 export const listLinkablePages = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -253,7 +254,7 @@ const inRanges = (idx: number, ranges: [number, number][]) =>
   ranges.some(([a, b]) => idx >= a && idx < b);
 
 export const suggestLinks = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((input) =>
     z.object({
       content: z.string().min(1).max(200_000),
@@ -355,7 +356,7 @@ const applyItemSchema = z.object({
 });
 
 export const applyLinksToPage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((input) =>
     z.object({
       pageId: z.string().uuid(),
@@ -403,7 +404,7 @@ export const applyLinksToPage = createServerFn({ method: "POST" })
 
 // ---------- ORPHANS ----------
 export const getOrphanReport = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -445,7 +446,7 @@ export const getOrphanReport = createServerFn({ method: "GET" })
 
 // ---------- ANALYTICS ----------
 export const getLinkAnalytics = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -475,7 +476,7 @@ export const getLinkAnalytics = createServerFn({ method: "GET" })
 
 // ---------- PUBLIC click tracking ----------
 export const trackLinkClick = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .middleware([withRateLimit("api")]).inputValidator((input) =>
     z.object({
       target_url: z.string().min(1).max(500),
       source_url: z.string().max(500).optional(),

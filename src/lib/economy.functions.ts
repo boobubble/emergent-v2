@@ -11,6 +11,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { EARN, SPEND, roomLoyaltyFor } from "./economy-config";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -173,7 +174,7 @@ async function bumpRoomLoyalty(userId: string, channelId: string) {
 
 /** Called from chat input on every successful message send. */
 export const earnChatMessage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((i) =>
     z
       .object({
@@ -227,7 +228,7 @@ async function fetchPostOwner(postId: string): Promise<string | null> {
 
 /** Called when a user reacts to a post. Rewards both actor and post owner. */
 export const earnFeedReaction = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((i) =>
     z.object({ postId: z.string().uuid() }).parse(i),
   )
@@ -257,7 +258,7 @@ export const earnFeedReaction = createServerFn({ method: "POST" })
 
 /** Called when a user comments on a post. Rewards actor + owner. */
 export const earnFeedComment = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((i) =>
     z.object({ postId: z.string().uuid() }).parse(i),
   )
@@ -285,7 +286,7 @@ export const earnFeedComment = createServerFn({ method: "POST" })
 
 /** Called when a user shares a post. Rewards owner. */
 export const earnFeedShare = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((i) =>
     z.object({ postId: z.string().uuid() }).parse(i),
   )
@@ -304,7 +305,7 @@ export const earnFeedShare = createServerFn({ method: "POST" })
 
 /** Called once when a user creates a post. */
 export const earnFeedPost = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .handler(async ({ context }) => {
     const { userId } = context;
     await bumpMissionProgress(userId, "post_1");
@@ -317,7 +318,7 @@ export const earnFeedPost = createServerFn({ method: "POST" })
 
 /** Buy a 1-hour highlight on any chat message. */
 export const highlightMessage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((i) =>
     z.object({ messageId: z.string().uuid(), channelId: z.string().min(1).max(120) }).parse(i),
   )
@@ -350,7 +351,7 @@ export const highlightMessage = createServerFn({ method: "POST" })
 
 /** Boost a post — adds to its trending_score. */
 export const boostPost = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((i) => z.object({ postId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -395,7 +396,7 @@ export const boostPost = createServerFn({ method: "POST" })
 
 /** Get my room loyalty stats for a single channel. */
 export const getMyRoomLoyalty = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((i) => z.object({ channelId: z.string().min(1).max(120) }).parse(i))
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -410,7 +411,7 @@ export const getMyRoomLoyalty = createServerFn({ method: "GET" })
 
 /** Top loyal members of a room (by weekly_messages). */
 export const getRoomTopLoyalty = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("wallet.write")])
   .inputValidator((i) => z.object({ channelId: z.string().min(1).max(120) }).parse(i))
   .handler(async ({ data }) => {
     const { data: rows } = await supabaseAdmin

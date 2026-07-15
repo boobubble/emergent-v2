@@ -5,6 +5,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { COMPETITION_CATEGORY_KEYS } from "@/lib/feedbot-format";
+import { withRateLimit } from "./rate-limit-middleware";
 
 const BOT_USERNAME = "CompetitionsBot";
 const BOT_BIO =
@@ -24,7 +25,7 @@ export interface CompetitionsFeedSettings {
 }
 
 export const getCompetitionsFeedSettings = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -51,7 +52,7 @@ const SaveInput = z.object({
 });
 
 export const saveCompetitionsFeedSettings = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((raw: unknown) => SaveInput.parse(raw))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -85,7 +86,7 @@ export const saveCompetitionsFeedSettings = createServerFn({ method: "POST" })
   });
 
 export const provisionCompetitionsBot = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -142,7 +143,7 @@ const AnnounceInput = z.object({
 });
 
 export const announceCompetitionEvent = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((raw: unknown) => AnnounceInput.parse(raw))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);

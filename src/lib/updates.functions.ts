@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 /**
  * Version Management & One-Click Update System
@@ -83,7 +84,7 @@ export const getSystemVersion = createServerFn({ method: "GET" }).handler(async 
 
 // ---------- List available packages ----------
 export const listUpdates = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { data, error } = await context.supabase
@@ -96,7 +97,7 @@ export const listUpdates = createServerFn({ method: "GET" })
 
 // ---------- Upload / register a new update package ----------
 export const uploadUpdatePackage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((raw: unknown) => PackageSchema.parse(raw))
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
@@ -138,7 +139,7 @@ export const uploadUpdatePackage = createServerFn({ method: "POST" })
 
 // ---------- Delete a package ----------
 export const deleteUpdatePackage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
@@ -150,7 +151,7 @@ export const deleteUpdatePackage = createServerFn({ method: "POST" })
 
 // ---------- Pre-update checks ----------
 export const preUpdateChecks = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((raw: unknown) => z.object({ version: z.string() }).parse(raw))
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
@@ -216,7 +217,7 @@ export const preUpdateChecks = createServerFn({ method: "POST" })
 
 // ---------- Run the update ----------
 export const runUpdate = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((raw: unknown) =>
     z.object({ version: z.string(), skipBackup: z.boolean().default(false) }).parse(raw),
   )
@@ -381,7 +382,7 @@ export const runUpdate = createServerFn({ method: "POST" })
 
 // ---------- Rollback ----------
 export const rollbackUpdate = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((raw: unknown) => z.object({ historyId: z.string().uuid() }).parse(raw))
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
@@ -418,7 +419,7 @@ export const rollbackUpdate = createServerFn({ method: "POST" })
 
 // ---------- History ----------
 export const listUpdateHistory = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { data, error } = await context.supabase
@@ -543,7 +544,7 @@ function inferImpacts(sql: SqlAnalysis, declared?: Record<string, "safe" | "atte
 }
 
 export const validatePackage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((raw: unknown) => z.object({ pkg: z.any() }).parse(raw))
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
@@ -586,7 +587,7 @@ export const validatePackage = createServerFn({ method: "POST" })
   });
 
 export const previewUpdate = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((raw: unknown) => z.object({ version: z.string() }).parse(raw))
   .handler(async ({ data, context }) => {
     await requireAdmin(context);

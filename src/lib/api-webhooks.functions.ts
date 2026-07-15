@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 // Crypto helpers live in api-webhooks.server.ts and are imported dynamically
 // inside handlers so the Node `crypto` module never reaches the client bundle.
 
@@ -11,7 +12,7 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
 
 // ===== API KEYS =====
 export const listApiKeys = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { data, error } = await context.supabase
@@ -23,7 +24,7 @@ export const listApiKeys = createServerFn({ method: "GET" })
   });
 
 export const createApiKey = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((d: { name: string; scopes?: string[] }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -44,7 +45,7 @@ export const createApiKey = createServerFn({ method: "POST" })
   });
 
 export const revokeApiKey = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -55,7 +56,7 @@ export const revokeApiKey = createServerFn({ method: "POST" })
   });
 
 export const deleteApiKey = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -75,7 +76,7 @@ export const WEBHOOK_EVENTS = [
 ] as const;
 
 export const listWebhooks = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { data, error } = await context.supabase
@@ -87,7 +88,7 @@ export const listWebhooks = createServerFn({ method: "GET" })
   });
 
 export const createWebhook = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((d: { name: string; url: string; events: string[] }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -108,7 +109,7 @@ export const createWebhook = createServerFn({ method: "POST" })
   });
 
 export const updateWebhook = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((d: { id: string; name?: string; url?: string; events?: string[]; active?: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -126,7 +127,7 @@ export const updateWebhook = createServerFn({ method: "POST" })
   });
 
 export const deleteWebhook = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -139,7 +140,7 @@ export const deleteWebhook = createServerFn({ method: "POST" })
 // rest and only ever returned to the admin once at creation or rotation time.
 
 export const rotateWebhookSecret = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -153,7 +154,7 @@ export const rotateWebhookSecret = createServerFn({ method: "POST" })
   });
 
 export const testWebhook = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -204,7 +205,7 @@ export const testWebhook = createServerFn({ method: "POST" })
 
 
 export const listDeliveries = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .inputValidator((d: { endpoint_id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);

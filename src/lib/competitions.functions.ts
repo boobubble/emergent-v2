@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function publicClient() {
   const { createClient } = await import("@supabase/supabase-js");
@@ -35,7 +36,7 @@ export const listCompetitions = createServerFn({ method: "GET" }).handler(async 
 });
 
 export const adminListAllCompetitions = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase
@@ -110,7 +111,7 @@ export const listRelatedCompetitions = createServerFn({ method: "GET" })
   });
 
 export const incrementCompetitionViews = createServerFn({ method: "POST" })
-  .inputValidator((data: { competitionId: string }) => data)
+  .middleware([withRateLimit("competition.write")]).inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data }) => {
     const sb = await publicClient();
     await sb.rpc("increment_competition_views", { _competition: data.competitionId });
@@ -133,7 +134,7 @@ export const listCompetitors = createServerFn({ method: "GET" })
   });
 
 export const adminSaveCompetitor = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: {
     id?: string;
     competition_id: string;
@@ -218,7 +219,7 @@ export const adminSaveCompetitor = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteCompetitor = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -228,7 +229,7 @@ export const adminDeleteCompetitor = createServerFn({ method: "POST" })
   });
 
 export const adminReorderCompetitors = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { orders: Array<{ id: string; sort_order: number }> }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -240,7 +241,7 @@ export const adminReorderCompetitors = createServerFn({ method: "POST" })
 
 // Search existing BooBubble members for the nominee picker (admin-only).
 export const adminSearchProfiles = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { query: string; limit?: number }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -275,7 +276,7 @@ async function emitGam(sb: any, userId: string, event: string, metadata: Record<
 }
 
 export const followCompetition = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data, context }) => {
     const { error } = await (context.supabase as any)
@@ -287,7 +288,7 @@ export const followCompetition = createServerFn({ method: "POST" })
   });
 
 export const unfollowCompetition = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data, context }) => {
     const { error } = await (context.supabase as any)
@@ -300,7 +301,7 @@ export const unfollowCompetition = createServerFn({ method: "POST" })
   });
 
 export const getMyCompetitionFollow = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data, context }) => {
     const { data: row } = await (context.supabase as any)
@@ -323,7 +324,7 @@ export const getCompetitionFollowerCount = createServerFn({ method: "GET" })
   });
 
 export const voteForCompetitor = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string; competitorId: string }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -343,7 +344,7 @@ export const voteForCompetitor = createServerFn({ method: "POST" })
   });
 
 export const shareCompetition = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string; channel?: string }) => data)
   .handler(async ({ data, context }) => {
     await emitGam(context.supabase, context.userId, "competition_share", {
@@ -355,7 +356,7 @@ export const shareCompetition = createServerFn({ method: "POST" })
 
 
 export const getMyCompetitorVote = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data, context }) => {
     const { data: r } = await context.supabase
@@ -456,7 +457,7 @@ export const getLeaderboard = createServerFn({ method: "GET" })
 // ---------- User actions ----------
 
 export const joinCompetition = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -476,7 +477,7 @@ export const joinCompetition = createServerFn({ method: "POST" })
   });
 
 export const leaveCompetition = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -490,7 +491,7 @@ export const leaveCompetition = createServerFn({ method: "POST" })
   });
 
 export const castVote = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string; participantId: string }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -504,7 +505,7 @@ export const castVote = createServerFn({ method: "POST" })
   });
 
 export const getMyVote = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
@@ -523,7 +524,7 @@ async function assertAdmin(supabase: any, userId: string) {
 }
 
 export const adminSaveCategory = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: {
     id?: string; slug: string; name: string; description?: string;
     icon_url?: string; banner_url?: string; color?: string;
@@ -544,7 +545,7 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteCategory = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -554,7 +555,7 @@ export const adminDeleteCategory = createServerFn({ method: "POST" })
   });
 
 export const adminSaveCompetition = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: {
     id?: string;
     category_id?: string | null;
@@ -701,7 +702,7 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
 
 
 export const adminDeleteCompetition = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -711,7 +712,7 @@ export const adminDeleteCompetition = createServerFn({ method: "POST" })
   });
 
 export const adminSetParticipantStatus = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { participantId: string; status: "pending" | "approved" | "removed" | "disqualified" }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -724,7 +725,7 @@ export const adminSetParticipantStatus = createServerFn({ method: "POST" })
   });
 
 export const adminFinalizeWinners = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -804,7 +805,7 @@ export const adminFinalizeWinners = createServerFn({ method: "POST" })
 // ---------- Competitor moderation ----------
 
 export const adminSetCompetitorFlags = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { id: string; is_hidden?: boolean; is_disqualified?: boolean }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -817,7 +818,7 @@ export const adminSetCompetitorFlags = createServerFn({ method: "POST" })
 // ---------- Vote management ----------
 
 export const adminListCompetitorVotes = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -847,7 +848,7 @@ export const adminListCompetitorVotes = createServerFn({ method: "GET" })
   });
 
 export const adminDeleteCompetitorVote = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { voteId: string }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -857,7 +858,7 @@ export const adminDeleteCompetitorVote = createServerFn({ method: "POST" })
   });
 
 export const adminResetCompetitionVotes = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitionId: string }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -867,7 +868,7 @@ export const adminResetCompetitionVotes = createServerFn({ method: "POST" })
   });
 
 export const adminResetCompetitorVotes = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { competitorId: string }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -891,7 +892,7 @@ export const getCompetitionAnalytics = createServerFn({ method: "GET" })
 // ---------- Manual winners ----------
 
 export const adminSetManualWinners = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: {
     competitionId: string;
     winners: Array<{ user_id: string; place: number; badge_label?: string | null; participant_id?: string | null }>;
@@ -1015,7 +1016,7 @@ export const listCompetitionsEnriched = createServerFn({ method: "GET" })
   });
 
 export const listMyFollowedCompetitions = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .handler(async ({ context }) => {
     const { data: follows } = await context.supabase
       .from("competition_follows")

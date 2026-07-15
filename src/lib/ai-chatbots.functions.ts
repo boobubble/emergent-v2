@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -43,7 +44,7 @@ async function readAIChatConfig(): Promise<AIChatConfig> {
 // ---- Admin: list, create, update, delete ----
 
 export const listAIChatbots = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("chat.message")])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
     const supabaseAdmin = await getAdmin();
@@ -65,7 +66,7 @@ export const listAIChatbots = createServerFn({ method: "GET" })
   });
 
 export const createAIChatbot = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("chat.message")])
   .inputValidator((input) =>
     z.object({
       username: z.string().min(1).max(64),
@@ -100,7 +101,7 @@ export const createAIChatbot = createServerFn({ method: "POST" })
   });
 
 export const updateAIChatbot = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("chat.message")])
   .inputValidator((input) =>
     z.object({
       id: z.string().uuid(),
@@ -123,7 +124,7 @@ export const updateAIChatbot = createServerFn({ method: "POST" })
   });
 
 export const deleteAIChatbot = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("chat.message")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertMod(context.userId);
@@ -136,7 +137,7 @@ export const deleteAIChatbot = createServerFn({ method: "POST" })
 // ---- Runtime: generate a bot reply for an incoming message ----
 
 export const aiChatbotReply = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("chat.message")])
   .inputValidator((input) =>
     z.object({
       channel_id: z.string().min(1).max(120),
@@ -228,14 +229,14 @@ export const aiChatbotReply = createServerFn({ method: "POST" })
 // ---- Settings ----
 
 export const getAIChatSettings = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("chat.message")])
   .handler(async ({ context }) => {
     await assertMod(context.userId);
     return readAIChatConfig();
   });
 
 export const saveAIChatSettings = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("chat.message")])
   .inputValidator((input) =>
     z.object({
       enabled: z.boolean(),

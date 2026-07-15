@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -32,7 +33,7 @@ async function assertSuperAdmin(userId: string) {
 
 // -------- Current user roles --------
 export const getMyRoles = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     const { data, error } = await supabaseAdmin
       .from("user_roles")
@@ -70,7 +71,7 @@ export const getAllSettings = createServerFn({ method: "GET" }).handler(async ()
 
 // -------- Settings (admin-only; returns everything including secrets) --------
 export const getAllSettingsAdmin = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { data, error } = await (await getSupabaseAdmin()).from("app_settings").select("*");
@@ -81,7 +82,7 @@ export const getAllSettingsAdmin = createServerFn({ method: "GET" })
   });
 
 export const updateSetting = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) =>
     z.object({ key: z.string().min(1).max(64), value: z.any() }).parse(input),
   )
@@ -113,7 +114,7 @@ const seoSchema = z.object({
 });
 
 export const upsertSeo = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => seoSchema.parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -126,7 +127,7 @@ export const upsertSeo = createServerFn({ method: "POST" })
 
 // -------- Analytics --------
 export const getAnalytics = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const since24 = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
@@ -192,7 +193,7 @@ export const getAnalytics = createServerFn({ method: "GET" })
 
 // -------- Lightweight realtime overview (cheap, frequent polling) --------
 export const getRealtimeOverview = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const since5m = new Date(Date.now() - 5 * 60 * 1000).toISOString();
@@ -220,7 +221,7 @@ export const getRealtimeOverview = createServerFn({ method: "GET" })
 
 // -------- Top users (engagement) --------
 export const getTopUsers = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { data, error } = await supabaseAdmin
@@ -234,7 +235,7 @@ export const getTopUsers = createServerFn({ method: "GET" })
 
 // -------- Dynamic SEO targets (rooms/profiles/posts/games) --------
 export const getSeoTargetsSummary = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const [rooms, profiles, posts, games] = await Promise.all([
@@ -259,7 +260,7 @@ export const getSeoTargetsSummary = createServerFn({ method: "GET" })
 
 // -------- Ban / Unban --------
 export const banUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) =>
     z.object({
       user_id: z.string().uuid(),
@@ -327,7 +328,7 @@ export const banUser = createServerFn({ method: "POST" })
 
 
 export const unbanUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({ user_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -358,7 +359,7 @@ export const unbanUser = createServerFn({ method: "POST" })
 
 // -------- Delete user (super admin only) --------
 export const deleteUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({ user_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context.userId);
@@ -374,7 +375,7 @@ export const deleteUser = createServerFn({ method: "POST" })
 
 // -------- Reset a user's password (super admin only) --------
 export const adminResetUserPassword = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) =>
     z.object({
       user_id: z.string().uuid(),
@@ -398,7 +399,7 @@ export const adminResetUserPassword = createServerFn({ method: "POST" })
 
 // -------- Grant coins to a user (admin) --------
 export const adminGrantCoins = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) =>
     z.object({
       user_id: z.string().uuid(),
@@ -440,7 +441,7 @@ export const adminGrantCoins = createServerFn({ method: "POST" })
 
 // -------- Users + role mgmt --------
 export const listUsersWithRoles = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) =>
     z.object({
       q: z.string().max(64).optional(),
@@ -493,7 +494,7 @@ export const listUsersWithRoles = createServerFn({ method: "GET" })
   });
 
 export const setUserRole = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) =>
     z.object({
       user_id: z.string().uuid(),
@@ -521,7 +522,7 @@ export const setUserRole = createServerFn({ method: "POST" })
 
 // -------- Admin: change a user's username --------
 export const updateUserUsername = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) =>
     z.object({
       user_id: z.string().uuid(),
@@ -561,7 +562,7 @@ async function assertAnnouncementsEditor(userId: string) {
 }
 
 export const canEditAnnouncements = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     try {
       const r = await assertAnnouncementsEditor(context.userId);
@@ -585,7 +586,7 @@ const announcementsConfigSchema = z.object({
 });
 
 export const updateAnnouncementsConfig = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => announcementsConfigSchema.parse(input))
   .handler(async ({ data, context }) => {
     await assertAnnouncementsEditor(context.userId);

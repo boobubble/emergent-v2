@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { isReservedSlug } from "@/lib/reserved-routes";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -59,7 +60,7 @@ const pageSchema = z.object({
 
 // ===== Admin =====
 export const listPages = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({ q: z.string().max(100).optional() }).parse(input ?? {}))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -72,7 +73,7 @@ export const listPages = createServerFn({ method: "GET" })
   });
 
 export const getPage = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -82,7 +83,7 @@ export const getPage = createServerFn({ method: "GET" })
   });
 
 export const savePage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => pageSchema.parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -137,7 +138,7 @@ export const savePage = createServerFn({ method: "POST" })
   });
 
 export const deletePage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -148,7 +149,7 @@ export const deletePage = createServerFn({ method: "POST" })
 
 // ===== Import / Export =====
 export const exportPages = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({ ids: z.array(z.string().uuid()).optional() }).parse(input ?? {}))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -161,7 +162,7 @@ export const exportPages = createServerFn({ method: "GET" })
   });
 
 export const importPages = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) =>
     z.object({
       pages: z.array(pageSchema.omit({ id: true, overwrite: true })).min(1).max(200),
@@ -237,7 +238,7 @@ export const listPublishedPages = createServerFn({ method: "GET" })
 
 // ===== Redirects =====
 export const listRedirects = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { data, error } = await (await getSupabaseAdmin()).from("page_redirects").select("*").order("created_at", { ascending: false });
@@ -246,7 +247,7 @@ export const listRedirects = createServerFn({ method: "GET" })
   });
 
 export const saveRedirect = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({
     from_slug: z.string().min(1).max(120),
     to_slug: z.string().min(1).max(120),
@@ -269,7 +270,7 @@ export const saveRedirect = createServerFn({ method: "POST" })
   });
 
 export const deleteRedirect = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);

@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function requireAdmin(context: any) {
   const { data: ok } = await context.supabase.rpc("is_admin", { _user_id: context.userId });
@@ -124,7 +125,7 @@ export function splitSqlStatementsWithLines(sql: string): { text: string; startL
 }
 
 export const restoreDatabaseSql = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((d: unknown) =>
     z.object({
       sql: z.string().min(1).max(50_000_000),
@@ -151,7 +152,7 @@ export const restoreDatabaseSql = createServerFn({ method: "POST" })
   });
 
 export const getStorageBucketNames = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -160,7 +161,7 @@ export const getStorageBucketNames = createServerFn({ method: "GET" })
   });
 
 export const purgeExpiredBackups = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { data, error } = await (context.supabase as any).rpc("backup_history_purge_expired");

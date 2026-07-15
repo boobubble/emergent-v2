@@ -7,6 +7,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { SCORE_WEIGHTS, creatorRankFor, VIRAL_JACKPOT } from "./economy-config";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -34,7 +35,7 @@ function scorePost(p: PostRow): number {
 
 /** Get my rolling 7-day creator score + rank. */
 export const getMyCreatorRank = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .handler(async ({ context }) => {
     const { userId } = context;
     const { data } = await supabaseAdmin
@@ -51,7 +52,7 @@ export const getMyCreatorRank = createServerFn({ method: "GET" })
 
 /** Top creators of the last 7 days. */
 export const getCreatorLeaderboard = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .handler(async () => {
     const { data } = await supabaseAdmin
       .from("posts")
@@ -83,7 +84,7 @@ export const getCreatorLeaderboard = createServerFn({ method: "GET" })
 
 /** Today's top trending post — the daily viral jackpot candidate. */
 export const getViralJackpot = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
   .handler(async () => {
     const dayStart = new Date();
     dayStart.setUTCHours(0, 0, 0, 0);

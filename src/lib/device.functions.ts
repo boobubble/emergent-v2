@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRateLimit } from "./rate-limit-middleware";
 
 const FpSchema = z.object({
   fingerprint: z.string().regex(/^[a-f0-9]{64}$/, "Invalid fingerprint"),
@@ -12,7 +13,7 @@ const FpSchema = z.object({
  * Called before signup so we can refuse to create the account at all.
  */
 export const checkDeviceBan = createServerFn({ method: "POST" })
-  .inputValidator((input) => FpSchema.parse(input))
+  .middleware([withRateLimit("auth.write")]).inputValidator((input) => FpSchema.parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -38,7 +39,7 @@ export const checkDeviceBan = createServerFn({ method: "POST" })
  * Called after successful sign-in / sign-up.
  */
 export const recordDevice = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("auth.write")])
   .inputValidator((input) =>
     FpSchema.extend({ user_agent: z.string().max(500).optional() }).parse(input),
   )

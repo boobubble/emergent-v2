@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 async function requireAdmin(context: any) {
   const { data: ok } = await context.supabase.rpc("is_admin", { _user_id: context.userId });
@@ -32,7 +33,7 @@ const recordSchema = z.object({
 });
 
 export const recordBackupHistory = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((d: unknown) => recordSchema.parse(d))
   .handler(async ({ context, data }) => {
     await requireAdmin(context);
@@ -58,7 +59,7 @@ export const recordBackupHistory = createServerFn({ method: "POST" })
   });
 
 export const listBackupHistory = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { data, error } = await context.supabase
@@ -69,7 +70,7 @@ export const listBackupHistory = createServerFn({ method: "GET" })
   });
 
 export const deleteBackupHistory = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await requireAdmin(context);
@@ -79,7 +80,7 @@ export const deleteBackupHistory = createServerFn({ method: "POST" })
   });
 
 export const markBackupVerified = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((d: unknown) =>
     z.object({ id: z.string().uuid(), verified: z.boolean() }).parse(d),
   )
@@ -92,7 +93,7 @@ export const markBackupVerified = createServerFn({ method: "POST" })
   });
 
 export const markRestoreTested = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await requireAdmin(context);
@@ -103,7 +104,7 @@ export const markRestoreTested = createServerFn({ method: "POST" })
   });
 
 export const getBackupRetention = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { data } = await context.supabase
@@ -113,7 +114,7 @@ export const getBackupRetention = createServerFn({ method: "GET" })
   });
 
 export const setBackupRetention = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((d: unknown) =>
     z.object({ value: z.enum(["7d", "30d", "90d", "forever"]) }).parse(d),
   )
@@ -127,7 +128,7 @@ export const setBackupRetention = createServerFn({ method: "POST" })
   });
 
 export const getBackupHealth = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const [{ data: latest }, tables, dbSize] = await Promise.all([

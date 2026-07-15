@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { withRateLimit } from "./rate-limit-middleware";
 
 /**
  * Central Gamification event emitter.
@@ -11,7 +12,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * This layer stores NO duplicate currency.
  */
 export const emitGamificationEvent = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
   .inputValidator((input: { event: string; amount?: number; metadata?: Record<string, unknown> }) => {
     if (!input?.event || typeof input.event !== "string") throw new Error("event required");
     return {
@@ -34,7 +35,7 @@ export const emitGamificationEvent = createServerFn({ method: "POST" })
   });
 
 export const getMyGamification = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
   .handler(async ({ context }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = context.supabase as any;
@@ -71,7 +72,7 @@ export const getMyGamification = createServerFn({ method: "GET" })
   });
 
 export const claimSeasonTier = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
   .inputValidator((i: { seasonId: string; tier: number }) => i)
   .handler(async ({ data, context }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -83,7 +84,7 @@ export const claimSeasonTier = createServerFn({ method: "POST" })
 
 /** Admin: analytics overview */
 export const getGamificationAnalytics = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
   .handler(async ({ context }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = context.supabase as any;
@@ -105,7 +106,7 @@ export const getGamificationAnalytics = createServerFn({ method: "GET" })
 
 /** Admin CRUD wrappers for gamification catalogs. */
 export const listGamCatalog = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
   .handler(async ({ context }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = context.supabase as any;
@@ -123,7 +124,7 @@ export const listGamCatalog = createServerFn({ method: "GET" })
   });
 
 export const upsertGamRow = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
   .inputValidator((i: { table: "gam_achievements" | "gam_quests" | "gam_milestones" | "gam_seasons" | "gam_season_tiers"; row: Record<string, unknown> }) => i)
   .handler(async ({ data, context }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -136,7 +137,7 @@ export const upsertGamRow = createServerFn({ method: "POST" })
   });
 
 export const deleteGamRow = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
   .inputValidator((i: { table: string; id: string }) => i)
   .handler(async ({ data, context }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
