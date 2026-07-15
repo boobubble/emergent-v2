@@ -89,7 +89,7 @@ export const getCommunityBySlug = createServerFn({ method: "GET" })
       .from("communities")
       .select("id,owner_id,slug,name,description,welcome_text,logo_url,banner_url,background_url,accent_color,rules,announcement,social_links,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,is_partner,is_trusted,verification_status,language,country,status,member_count,online_count,meta,created_at,updated_at")
       .eq("slug", data.slug)
-      .eq("status", "active")
+      .in("status", ["active", "archived"])
       .maybeSingle();
     if (!row) return null;
     return row as any;
