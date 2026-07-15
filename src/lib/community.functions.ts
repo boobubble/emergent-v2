@@ -1232,7 +1232,7 @@ export const reviewPremiumSlugRequest = createServerFn({ method: "POST" })
           review_note: data.note ?? null,
           reviewed_by: userId,
           reviewed_at: new Date().toISOString(),
-        })
+        } as never)
         .eq("id", data.requestId);
       if (error) throw new Error(error.message);
       return { ok: true, applied: false };
