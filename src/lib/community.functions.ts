@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // ---------- Types ----------
 export type CommunityPrivacy = "public" | "private" | "invite_only" | "password" | "invite_password";
+export type CommunityVisibility = "public" | "hidden" | "unlisted" | "featured_only";
 export type CommunityMemberRole = "owner" | "moderator" | "member";
 export type CommunityMemberStatus = "active" | "pending" | "banned" | "muted";
 
@@ -22,6 +23,14 @@ export interface Community {
   announcement: string | null;
   social_links: Record<string, string>;
   privacy_mode: CommunityPrivacy;
+  visibility: CommunityVisibility;
+  category: string | null;
+  tags: string[];
+  is_featured: boolean;
+  is_verified: boolean;
+  is_official: boolean;
+  language: string | null;
+  country: string | null;
   status: string;
   member_count: number;
   online_count: number;
@@ -29,6 +38,7 @@ export interface Community {
   created_at: string;
   updated_at: string;
 }
+
 
 // ---------- Public server client (for anon-safe reads) ----------
 async function serverPublicClient() {
