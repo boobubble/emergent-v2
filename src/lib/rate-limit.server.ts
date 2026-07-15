@@ -119,10 +119,11 @@ export async function enforceRateLimit(opts: EnforceOpts): Promise<void> {
       _key: key,
       _limit: limit,
       _window_seconds: window,
-      _user_id: userId,
-      _ip: ip,
+      _user_id: userId ?? undefined,
+      _ip: ip ?? undefined,
       _force: opts.force ?? false,
     });
+
     if (error) {
       // Fail-open on infra errors so real traffic isn't blocked by our meter.
       console.error("[rate-limit] rpc error", error.message);
