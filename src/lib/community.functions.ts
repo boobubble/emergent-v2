@@ -1290,7 +1290,7 @@ export const reviewPremiumSlugRequest = createServerFn({ method: "POST" })
 // ARCHIVE MODE + ANALYTICS (Phase 4)
 // =========================================================================
 
-async function assertOwner(supabase: any, communityId: string, userId: string) {
+async function assertCommunityOwner(supabase: any, communityId: string, userId: string) {
   const { data } = await supabase
     .from("communities")
     .select("owner_id")
