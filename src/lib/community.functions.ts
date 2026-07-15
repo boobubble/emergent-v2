@@ -118,7 +118,7 @@ export const listPublicCommunities = createServerFn({ method: "GET" })
     const sb = await serverPublicClient();
     let q = sb
       .from("communities")
-      .select("id,slug,name,description,logo_url,banner_url,accent_color,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,member_count,online_count,created_at")
+      .select("id,slug,name,description,logo_url,banner_url,accent_color,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,is_partner,is_trusted,verification_status,member_count,online_count,created_at")
       .eq("status", "active")
       // discovery-visible = public OR (featured_only AND is_featured)
       .or("visibility.eq.public,and(visibility.eq.featured_only,is_featured.eq.true)");
@@ -159,7 +159,7 @@ export const searchCommunities = createServerFn({ method: "GET" })
     const like = `%${term}%`;
     let q = sb
       .from("communities")
-      .select("id,slug,name,description,logo_url,banner_url,accent_color,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,member_count,online_count")
+      .select("id,slug,name,description,logo_url,banner_url,accent_color,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,is_partner,is_trusted,verification_status,member_count,online_count")
       .eq("status", "active")
       .or("visibility.eq.public,and(visibility.eq.featured_only,is_featured.eq.true)")
       .or(`name.ilike.${like},slug.ilike.${like},description.ilike.${like}`);
