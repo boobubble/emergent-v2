@@ -118,6 +118,8 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/reports",            label: "Reports",           icon: Flag,    keywords: ["queue", "abuse"] },
       { to: "/admin/filters",            label: "Word Filters",      icon: Filter,  keywords: ["blocklist", "words"] },
       { to: "/admin/safety",             label: "Safety Review",     icon: ShieldAlert, keywords: ["safety", "moderation", "auto", "detection", "harmful", "illegal", "extremist", "violence", "threats", "keywords", "flagged"] },
+      { to: "/admin/abuse-protection",   label: "Abuse Protection",  icon: ShieldAlert, keywords: ["rate limit", "abuse", "spam", "throttle", "flood", "429", "bans", "temporary", "restrictions", "offenders"] },
+
     ],
   },
 
