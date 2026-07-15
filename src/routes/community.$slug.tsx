@@ -44,7 +44,14 @@ import {
 export const Route = createFileRoute("/community/$slug")({
   loader: async ({ params }) => {
     const community = await getCommunityBySlug({ data: { slug: params.slug } });
-    if (!community) throw notFound();
+    if (!community) {
+      // Fall back to slug history — old slugs redirect to the current slug.
+      const resolved = await resolveCommunitySlug({ data: { slug: params.slug } });
+      if (resolved.slug && resolved.redirected) {
+        throw redirect({ to: "/community/$slug", params: { slug: resolved.slug }, replace: true });
+      }
+      throw notFound();
+    }
     return { community: community as Community };
   },
   head: ({ loaderData, params }) => {
