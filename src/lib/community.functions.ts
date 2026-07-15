@@ -273,7 +273,7 @@ export const joinCommunity = createServerFn({ method: "POST" })
     let inviteId: string | null = null;
     if (needsInvite) {
       if (!data.inviteCode) throw new Error("Invite code required");
-      const { data: inv } = await supabase
+      const { data: inv } = await _sbAdminForJoin
         .from("community_invites")
         .select("id,community_id,max_uses,uses,expires_at")
         .eq("code", data.inviteCode)
