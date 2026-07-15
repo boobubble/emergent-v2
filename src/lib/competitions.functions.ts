@@ -588,7 +588,19 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
   }) => data)
 
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    // Platform admins can save any competition. Community owners can save
+    // competitions scoped to their own community (community_id matches).
+    let allowed = false;
+    try { await assertAdmin(context.supabase, context.userId); allowed = true; } catch { /* fall through */ }
+    if (!allowed && data.community_id) {
+      const { data: comm } = await context.supabase
+        .from("communities")
+        .select("owner_id")
+        .eq("id", data.community_id)
+        .maybeSingle();
+      if (comm?.owner_id === context.userId) allowed = true;
+    }
+    if (!allowed) throw new Error("Forbidden");
     const sb = context.supabase as any;
     // Strip any joined/computed fields that aren't real columns
     const {
