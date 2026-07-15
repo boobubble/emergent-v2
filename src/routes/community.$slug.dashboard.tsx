@@ -30,9 +30,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  LayoutDashboard, Users, Palette, Shield, UserPlus, Rss, MessageSquare, Trophy, Radio,
-  BarChart3, DollarSign, Settings as SettingsIcon, ArrowLeft, Copy, Trash2,
+  LayoutDashboard, Users, Palette, Shield, Eye, UserPlus, Rss, MessageSquare, Trophy, Radio,
+  BarChart3, DollarSign, Settings as SettingsIcon, ArrowLeft, Copy, Trash2, AlertTriangle,
 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 
 export const Route = createFileRoute("/community/$slug/dashboard")({
   loader: async ({ params }) => {
