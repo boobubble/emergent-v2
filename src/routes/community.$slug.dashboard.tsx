@@ -567,16 +567,88 @@ function InvitesSection({ community }: { community: Community }) {
 }
 
 function SettingsSection({ community }: { community: Community }) {
+  const archiveFn = useServerFn(archiveCommunity);
+  const restoreFn = useServerFn(restoreCommunity);
+  const nav = useNavigate();
+  const qc = useQueryClient();
+  const [confirming, setConfirming] = useState<"archive" | "restore" | null>(null);
+  const isArchived = (community as any).status === "archived";
+
+  const archive = useMutation({
+    mutationFn: () => archiveFn({ data: { communityId: community.id } }),
+    onSuccess: () => {
+      toast.success("Community archived. It's now hidden from discovery and read-only.");
+      setConfirming(null);
+      qc.invalidateQueries({ queryKey: ["community", community.slug] });
+      nav({ to: "/community/$slug", params: { slug: community.slug } });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Failed to archive"),
+  });
+
+  const restore = useMutation({
+    mutationFn: () => restoreFn({ data: { communityId: community.id } }),
+    onSuccess: () => {
+      toast.success("Community restored.");
+      setConfirming(null);
+      qc.invalidateQueries({ queryKey: ["community", community.slug] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Failed to restore"),
+  });
+
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <h3 className="text-sm font-semibold">Danger zone</h3>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Archiving / transferring / deleting the community will be available in a future release.
-      </p>
-      <p className="mt-3 text-xs">Community ID: <code className="rounded bg-muted px-1">{community.id}</code></p>
+    <div className="space-y-4">
+      <div className={`rounded-lg border p-4 ${isArchived ? "border-amber-500/40 bg-amber-500/5" : "bg-card"}`}>
+        <h3 className="text-sm font-semibold">Archive mode</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {isArchived
+            ? "This community is archived. It is hidden from discovery and read-only. Restore it to make it fully active again."
+            : "Archiving hides the community from discovery, freezes new activity, and marks it as inactive. Existing content stays accessible. You can restore it any time."}
+        </p>
+        <div className="mt-3">
+          {isArchived ? (
+            <Button onClick={() => setConfirming("restore")} disabled={restore.isPending}>
+              Restore community
+            </Button>
+          ) : (
+            <Button variant="destructive" onClick={() => setConfirming("archive")} disabled={archive.isPending}>
+              Archive community
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-card p-4">
+        <h3 className="text-sm font-semibold">Danger zone</h3>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Transferring / deleting the community will be available in a future release.
+        </p>
+        <p className="mt-3 text-xs">Community ID: <code className="rounded bg-muted px-1">{community.id}</code></p>
+      </div>
+
+      <AlertDialog open={!!confirming} onOpenChange={(o) => !o && setConfirming(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirming === "archive" ? "Archive this community?" : "Restore this community?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirming === "archive"
+                ? "It will be hidden from discovery, marked read-only, and members won't be able to post new content. You can restore it later."
+                : "This will re-enable posting, discovery, and full activity for the community."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => (confirming === "archive" ? archive.mutate() : restore.mutate())}>
+              {confirming === "archive" ? "Archive" : "Restore"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
 
 function TrustSection({ community }: { community: Community }) {
   const getFn = useServerFn(getMyVerificationRequest);
