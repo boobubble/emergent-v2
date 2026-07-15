@@ -1286,5 +1286,143 @@ export const reviewPremiumSlugRequest = createServerFn({ method: "POST" })
     return { ok: true, applied: true, newSlug: requested };
   });
 
+// =========================================================================
+// ARCHIVE MODE + ANALYTICS (Phase 4)
+// =========================================================================
 
+async function assertOwner(supabase: any, communityId: string, userId: string) {
+  const { data } = await supabase
+    .from("communities")
+    .select("owner_id")
+    .eq("id", communityId)
+    .maybeSingle();
+  if (!data) throw new Error("Community not found");
+  if ((data as any).owner_id !== userId) throw new Error("Only the owner can perform this action");
+}
+
+/** Owner: archive a community. Hides it from discovery and freezes the surface (read-only). */
+export const archiveCommunity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, data.communityId, context.userId);
+    const { error } = await context.supabase
+      .from("communities")
+      .update({ status: "archived" } as never)
+      .eq("id", data.communityId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Owner: restore an archived community. */
+export const restoreCommunity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, data.communityId, context.userId);
+    const { error } = await context.supabase
+      .from("communities")
+      .update({ status: "active" } as never)
+      .eq("id", data.communityId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export interface CommunityAnalytics {
+  memberCount: number;
+  onlineCount: number;
+  membersLast7d: number;
+  membersLast30d: number;
+  postCount: number;
+  postsLast7d: number;
+  chatroomCount: number;
+  competitionCount: number;
+  growthByDay: { day: string; count: number }[];
+}
+
+/** Owner: community analytics overview. */
+export const getCommunityAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { communityId: string }) => z.object({ communityId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, data.communityId, context.userId);
+    const cid = data.communityId;
+    const now = new Date();
+    const d7 = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
+    const d30 = new Date(now.getTime() - 30 * 24 * 3600 * 1000).toISOString();
+
+    const sb = context.supabase;
+
+    const [{ data: comm }, m7, m30, posts, posts7, rooms, comps, growth] = await Promise.all([
+      sb.from("communities").select("member_count,online_count").eq("id", cid).maybeSingle(),
+      sb.from("community_members").select("id", { count: "exact", head: true }).eq("community_id", cid).gte("joined_at", d7),
+      sb.from("community_members").select("id", { count: "exact", head: true }).eq("community_id", cid).gte("joined_at", d30),
+      sb.from("posts").select("id", { count: "exact", head: true }).eq("community_id", cid),
+      sb.from("posts").select("id", { count: "exact", head: true }).eq("community_id", cid).gte("created_at", d7),
+      sb.from("chatrooms").select("id", { count: "exact", head: true }).eq("community_id", cid),
+      sb.from("competitions").select("id", { count: "exact", head: true }).eq("community_id", cid),
+      sb.from("community_members").select("joined_at").eq("community_id", cid).gte("joined_at", d30),
+    ]);
+
+    // Bucket growth by day
+    const buckets = new Map<string, number>();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 24 * 3600 * 1000);
+      buckets.set(d.toISOString().slice(0, 10), 0);
+    }
+    for (const row of ((growth.data ?? []) as any[])) {
+      const day = String(row.joined_at ?? "").slice(0, 10);
+      if (buckets.has(day)) buckets.set(day, (buckets.get(day) ?? 0) + 1);
+    }
+    const growthByDay = Array.from(buckets.entries()).map(([day, count]) => ({ day, count }));
+
+    return {
+      memberCount: (comm as any)?.member_count ?? 0,
+      onlineCount: (comm as any)?.online_count ?? 0,
+      membersLast7d: m7.count ?? 0,
+      membersLast30d: m30.count ?? 0,
+      postCount: posts.count ?? 0,
+      postsLast7d: posts7.count ?? 0,
+      chatroomCount: rooms.count ?? 0,
+      competitionCount: comps.count ?? 0,
+      growthByDay,
+    } satisfies CommunityAnalytics;
+  });
+
+/** Admin: platform-wide community reporting overview. */
+export const adminCommunityReport = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertPlatformAdmin(context.supabase, context.userId);
+    const sb = context.supabase;
+    const d7 = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+
+    const [all, active, archived, verified, official, featured, recent, top] = await Promise.all([
+      sb.from("communities").select("id", { count: "exact", head: true }),
+      sb.from("communities").select("id", { count: "exact", head: true }).eq("status", "active"),
+      sb.from("communities").select("id", { count: "exact", head: true }).eq("status", "archived"),
+      sb.from("communities").select("id", { count: "exact", head: true }).eq("is_verified", true),
+      sb.from("communities").select("id", { count: "exact", head: true }).eq("is_official", true),
+      sb.from("communities").select("id", { count: "exact", head: true }).eq("is_featured", true),
+      sb.from("communities").select("id", { count: "exact", head: true }).gte("created_at", d7),
+      sb.from("communities")
+        .select("id,slug,name,logo_url,banner_url,accent_color,member_count,online_count,is_verified,is_official,is_partner,is_trusted,status")
+        .eq("status", "active")
+        .order("member_count", { ascending: false })
+        .limit(10),
+    ]);
+
+    return {
+      totals: {
+        all: all.count ?? 0,
+        active: active.count ?? 0,
+        archived: archived.count ?? 0,
+        verified: verified.count ?? 0,
+        official: official.count ?? 0,
+        featured: featured.count ?? 0,
+        newLast7d: recent.count ?? 0,
+      },
+      topByMembers: (top.data ?? []) as any[],
+    };
+  });
 
