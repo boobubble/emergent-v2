@@ -138,6 +138,7 @@ import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
 import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
+import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
@@ -803,6 +804,11 @@ const CommunitySlugIndexRoute = CommunitySlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CommunitySlugRoute,
 } as any)
+const CommunitySlugFeedRoute = CommunitySlugFeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
 const CommunitySlugDashboardRoute = CommunitySlugDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -1028,6 +1034,7 @@ export interface FileRoutesByFullPath {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
+  '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1171,6 +1178,7 @@ export interface FileRoutesByTo {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
+  '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1319,6 +1327,7 @@ export interface FileRoutesById {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
+  '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1468,6 +1477,7 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
     | '/community/$slug/dashboard'
+    | '/community/$slug/feed'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -1611,6 +1621,7 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
     | '/community/$slug/dashboard'
+    | '/community/$slug/feed'
     | '/community/$slug'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -1758,6 +1769,7 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
     | '/community/$slug/dashboard'
+    | '/community/$slug/feed'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -2730,6 +2742,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunitySlugIndexRouteImport
       parentRoute: typeof CommunitySlugRoute
     }
+    '/community/$slug/feed': {
+      id: '/community/$slug/feed'
+      path: '/feed'
+      fullPath: '/community/$slug/feed'
+      preLoaderRoute: typeof CommunitySlugFeedRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
     '/community/$slug/dashboard': {
       id: '/community/$slug/dashboard'
       path: '/dashboard'
@@ -3045,11 +3064,13 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
 
 interface CommunitySlugRouteChildren {
   CommunitySlugDashboardRoute: typeof CommunitySlugDashboardRoute
+  CommunitySlugFeedRoute: typeof CommunitySlugFeedRoute
   CommunitySlugIndexRoute: typeof CommunitySlugIndexRoute
 }
 
 const CommunitySlugRouteChildren: CommunitySlugRouteChildren = {
   CommunitySlugDashboardRoute: CommunitySlugDashboardRoute,
+  CommunitySlugFeedRoute: CommunitySlugFeedRoute,
   CommunitySlugIndexRoute: CommunitySlugIndexRoute,
 }
 
