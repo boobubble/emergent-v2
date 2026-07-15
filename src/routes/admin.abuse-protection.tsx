@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { ShieldAlert, Trash2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminSetting } from "@/lib/use-admin-setting";
-import { DEFAULT_LIMITS } from "@/lib/rate-limit.server";
+import { DEFAULT_LIMITS } from "@/lib/rate-limit-config";
 
 export const Route = createFileRoute("/admin/abuse-protection")({ component: AbuseProtectionPage });
 
