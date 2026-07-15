@@ -1290,15 +1290,7 @@ export const reviewPremiumSlugRequest = createServerFn({ method: "POST" })
 // ARCHIVE MODE + ANALYTICS (Phase 4)
 // =========================================================================
 
-async function assertCommunityOwner(supabase: any, communityId: string, userId: string) {
-  const { data } = await supabase
-    .from("communities")
-    .select("owner_id")
-    .eq("id", communityId)
-    .maybeSingle();
-  if (!data) throw new Error("Community not found");
-  if ((data as any).owner_id !== userId) throw new Error("Only the owner can perform this action");
-}
+// (uses existing assertOwner defined above)
 
 /** Owner: archive a community. Hides it from discovery and freezes the surface (read-only). */
 export const archiveCommunity = createServerFn({ method: "POST" })
