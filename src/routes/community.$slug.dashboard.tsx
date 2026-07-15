@@ -741,3 +741,131 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
     </div>
   );
 }
+
+// -----------------------------------------------------------------------------
+// Premium URL Claim — owner-facing UI
+// -----------------------------------------------------------------------------
+function PremiumUrlSection({ community }: { community: Community }) {
+  const listFn = useServerFn(listPremiumSlugRequests);
+  const requestFn = useServerFn(requestPremiumSlug);
+  const cancelFn = useServerFn(cancelPremiumSlugRequest);
+  const qc = useQueryClient();
+
+  const { data: rows = [] } = useQuery({
+    queryKey: ["premium-slug-requests", community.id],
+    queryFn: () => listFn({ data: { communityId: community.id } }),
+  });
+
+  const [slug, setSlug] = useState("");
+  const [reason, setReason] = useState("");
+
+  const requested = useMutation({
+    mutationFn: () => requestFn({ data: { communityId: community.id, requestedSlug: slug.toLowerCase().trim(), reason: reason || undefined } }),
+    onSuccess: () => {
+      toast.success("Request submitted — admins will review it shortly.");
+      setSlug(""); setReason("");
+      qc.invalidateQueries({ queryKey: ["premium-slug-requests", community.id] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Failed to submit"),
+  });
+
+  const cancelled = useMutation({
+    mutationFn: (requestId: string) => cancelFn({ data: { requestId } }),
+    onSuccess: () => {
+      toast.success("Request cancelled");
+      qc.invalidateQueries({ queryKey: ["premium-slug-requests", community.id] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Failed to cancel"),
+  });
+
+  const pending = (rows as PremiumSlugRequest[]).find((r) => r.status === "pending");
+
+  // Lazy classification via same rules used server-side.
+  const [classification, setClassification] = useState<"reserved" | "premium" | "standard" | "invalid" | null>(null);
+  useEffect(() => {
+    if (!slug) return setClassification(null);
+    import("@/lib/premium-slugs").then((m) => setClassification(m.classifySlug(slug)));
+  }, [slug]);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold">Premium URL</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Your current URL is <code className="rounded bg-muted px-1.5 py-0.5 text-xs">/community/{community.slug}</code>.
+          Request a shorter, more memorable slug — short, generic, and geographic names require admin approval.
+        </p>
+      </div>
+
+      {pending ? (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <Badge>Pending review</Badge>
+            <span className="text-xs text-muted-foreground">Submitted {new Date(pending.created_at).toLocaleString()}</span>
+          </div>
+          <div className="text-sm">
+            Requesting <code className="text-xs">/community/{pending.current_slug}</code> → <code className="text-xs font-semibold">/community/{pending.requested_slug}</code>
+          </div>
+          {pending.reason && <p className="mt-1 text-xs text-muted-foreground">{pending.reason}</p>}
+          <Button size="sm" variant="outline" className="mt-3" onClick={() => cancelled.mutate(pending.id)}>
+            Cancel request
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3 rounded-lg border p-4">
+          <Field label="Requested slug" hint="Lowercase, letters/digits/hyphens only, 2–40 characters.">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">/community/</span>
+              <Input
+                value={slug}
+                onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                placeholder="india"
+                maxLength={40}
+              />
+            </div>
+            {classification && slug && (
+              <div className="mt-1 text-[11px]">
+                {classification === "invalid" && <span className="text-destructive">Invalid slug format.</span>}
+                {classification === "reserved" && <span className="text-destructive">Reserved by the platform — can't be claimed.</span>}
+                {classification === "premium" && <span className="text-amber-500">Premium slug — admin approval required.</span>}
+                {classification === "standard" && <span className="text-emerald-500">Standard slug — admin approval still required to prevent squatting.</span>}
+              </div>
+            )}
+          </Field>
+          <Field label="Why do you want this URL?" hint="Explain how your community relates to this slug. Helps admins approve faster.">
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder="We're the largest India-based gaming community…" maxLength={500} />
+          </Field>
+          <Button
+            onClick={() => requested.mutate()}
+            disabled={requested.isPending || !slug || classification === "invalid" || classification === "reserved"}
+          >
+            {requested.isPending ? "Submitting…" : "Submit request"}
+          </Button>
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <div>
+          <h4 className="mb-2 text-sm font-semibold">History</h4>
+          <div className="space-y-2">
+            {(rows as PremiumSlugRequest[]).map((r) => (
+              <div key={r.id} className="flex items-center justify-between rounded border p-2 text-xs">
+                <div className="min-w-0 flex-1">
+                  <code>{r.current_slug}</code> → <code className="font-semibold">{r.requested_slug}</code>
+                  <span className="ml-2 text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                  {r.review_note && <div className="mt-0.5 italic text-muted-foreground">{r.review_note}</div>}
+                </div>
+                <Badge
+                  className="capitalize"
+                  variant={r.status === "approved" ? "secondary" : r.status === "pending" ? "default" : r.status === "rejected" ? "destructive" : "outline"}
+                >
+                  {r.status}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
