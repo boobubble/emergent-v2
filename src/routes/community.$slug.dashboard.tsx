@@ -136,6 +136,8 @@ function DashboardPage() {
             <TabsContent value="overview" className="mt-0"><OverviewSection community={community} /></TabsContent>
             <TabsContent value="branding" className="mt-0"><BrandingSection community={community} /></TabsContent>
             <TabsContent value="privacy" className="mt-0"><PrivacySection community={community} /></TabsContent>
+            <TabsContent value="visibility" className="mt-0"><VisibilitySection community={community} /></TabsContent>
+
             <TabsContent value="members" className="mt-0"><MembersSection community={community} /></TabsContent>
             <TabsContent value="requests" className="mt-0"><RequestsSection community={community} /></TabsContent>
             <TabsContent value="invites" className="mt-0"><InvitesSection community={community} /></TabsContent>
