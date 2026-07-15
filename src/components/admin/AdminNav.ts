@@ -96,6 +96,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/competition-analytics", label: "Competition Analytics", icon: Trophy, keywords: ["competition", "analytics", "stats", "metrics", "trends", "leaderboard", "top"] },
       { to: "/admin/community-verification", label: "Community Verification", icon: ShieldAlert, keywords: ["community", "verification", "verified", "official", "partner", "trusted", "badges", "trust"] },
       { to: "/admin/premium-slugs", label: "Premium URLs", icon: Link2, keywords: ["premium", "slug", "url", "vanity", "custom", "community", "claim", "reserved"] },
+      { to: "/admin/community-reports", label: "Community Reports", icon: BarChart3, keywords: ["community", "reports", "analytics", "stats", "totals", "archived", "verified", "top", "featured"] },
       { to: "/admin/feedback",    label: "Feedback",     icon: Bug,           keywords: ["bug", "bugs", "feedback", "feature request", "ui issue", "performance", "security", "reports"] },
 
     ],
