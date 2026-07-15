@@ -17,10 +17,14 @@ import {
   revokeInvite,
   submitVerificationRequest,
   getMyVerificationRequest,
+  requestPremiumSlug,
+  listPremiumSlugRequests,
+  cancelPremiumSlugRequest,
   type Community,
   type CommunityPrivacy,
   type CommunityVisibility,
   type CommunityVerificationRequest,
+  type PremiumSlugRequest,
 
 } from "@/lib/community.functions";
 import { useAuth } from "@/lib/auth-store";
