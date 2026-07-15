@@ -15,9 +15,12 @@ import {
   listInvites,
   createInvite,
   revokeInvite,
+  submitVerificationRequest,
+  getMyVerificationRequest,
   type Community,
   type CommunityPrivacy,
   type CommunityVisibility,
+  type CommunityVerificationRequest,
 
 } from "@/lib/community.functions";
 import { useAuth } from "@/lib/auth-store";
@@ -32,8 +35,11 @@ import { toast } from "sonner";
 import {
   LayoutDashboard, Users, Palette, Shield, Eye, UserPlus, Rss, MessageSquare, Trophy, Radio,
   BarChart3, DollarSign, Settings as SettingsIcon, ArrowLeft, Copy, Trash2, AlertTriangle,
+  BadgeCheck,
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { CommunityBadges } from "@/components/community/CommunityBadges";
+
 
 
 export const Route = createFileRoute("/community/$slug/dashboard")({
