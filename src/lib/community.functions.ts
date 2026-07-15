@@ -1261,7 +1261,7 @@ export const reviewPremiumSlugRequest = createServerFn({ method: "POST" })
     if (currentSlug && currentSlug !== requested) {
       await supabaseAdmin
         .from("community_slug_history" as never)
-        .upsert({ community_id: communityId, old_slug: currentSlug }, { onConflict: "old_slug" });
+        .upsert({ community_id: communityId, old_slug: currentSlug } as never, { onConflict: "old_slug" });
     }
 
     // Rename community
