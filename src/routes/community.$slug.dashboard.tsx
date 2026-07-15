@@ -944,3 +944,63 @@ function PremiumUrlSection({ community }: { community: Community }) {
     </div>
   );
 }
+
+// -----------------------------------------------------------------------------
+// Analytics — owner-facing overview
+// -----------------------------------------------------------------------------
+function AnalyticsSection({ community }: { community: Community }) {
+  const fetchFn = useServerFn(getCommunityAnalytics);
+  const { data, isLoading } = useQuery({
+    queryKey: ["community-analytics", community.id],
+    queryFn: () => fetchFn({ data: { communityId: community.id } }),
+    staleTime: 30_000,
+  });
+
+  if (isLoading) return <p className="text-sm text-muted-foreground">Loading analytics…</p>;
+  if (!data) return <p className="text-sm text-muted-foreground">No data yet.</p>;
+
+  const growth = data.growthByDay;
+  const max = Math.max(1, ...growth.map((g) => g.count));
+  const w = 640, h = 100, pad = 8;
+  const step = (w - pad * 2) / Math.max(1, growth.length - 1);
+  const points = growth.map((g, i) => `${pad + i * step},${h - pad - (g.count / max) * (h - pad * 2)}`).join(" ");
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <MiniStat label="Members" value={data.memberCount} />
+        <MiniStat label="Online now" value={data.onlineCount} />
+        <MiniStat label="Joined (7d)" value={data.membersLast7d} />
+        <MiniStat label="Joined (30d)" value={data.membersLast30d} />
+        <MiniStat label="Posts" value={data.postCount} />
+        <MiniStat label="Posts (7d)" value={data.postsLast7d} />
+        <MiniStat label="Chatrooms" value={data.chatroomCount} />
+        <MiniStat label="Competitions" value={data.competitionCount} />
+      </div>
+
+      <div className="rounded-lg border bg-card p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <h4 className="text-sm font-semibold">Member growth (30d)</h4>
+          <span className="text-xs text-muted-foreground">Total new: {data.membersLast30d}</span>
+        </div>
+        <svg viewBox={`0 0 ${w} ${h}`} className="h-24 w-full" preserveAspectRatio="none">
+          <polyline fill="none" stroke="hsl(var(--primary))" strokeWidth="2" points={points} />
+        </svg>
+        <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+          <span>{growth[0]?.day.slice(5)}</span>
+          <span>{growth[growth.length - 1]?.day.slice(5)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border bg-card p-3">
+      <div className="text-[11px] text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-xl font-semibold tabular-nums">{value.toLocaleString()}</div>
+    </div>
+  );
+}
+
