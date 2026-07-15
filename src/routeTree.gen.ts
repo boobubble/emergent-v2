@@ -140,6 +140,7 @@ import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-l
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
 import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
+import { Route as CommunitySlugCompetitionsRouteImport } from './routes/community.$slug.competitions'
 import { Route as CommunitySlugChatroomsRouteImport } from './routes/community.$slug.chatrooms'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
@@ -815,6 +816,12 @@ const CommunitySlugDashboardRoute = CommunitySlugDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => CommunitySlugRoute,
 } as any)
+const CommunitySlugCompetitionsRoute =
+  CommunitySlugCompetitionsRouteImport.update({
+    id: '/competitions',
+    path: '/competitions',
+    getParentRoute: () => CommunitySlugRoute,
+  } as any)
 const CommunitySlugChatroomsRoute = CommunitySlugChatroomsRouteImport.update({
   id: '/chatrooms',
   path: '/chatrooms',
@@ -1040,6 +1047,7 @@ export interface FileRoutesByFullPath {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
+  '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
@@ -1185,6 +1193,7 @@ export interface FileRoutesByTo {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
+  '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug': typeof CommunitySlugIndexRoute
@@ -1335,6 +1344,7 @@ export interface FileRoutesById {
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
   '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
+  '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
@@ -1486,6 +1496,7 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
     | '/community/$slug/chatrooms'
+    | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/'
@@ -1631,6 +1642,7 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
     | '/community/$slug/chatrooms'
+    | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug'
@@ -1780,6 +1792,7 @@ export interface FileRouteTypes {
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
     | '/community/$slug/chatrooms'
+    | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/'
@@ -2768,6 +2781,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunitySlugDashboardRouteImport
       parentRoute: typeof CommunitySlugRoute
     }
+    '/community/$slug/competitions': {
+      id: '/community/$slug/competitions'
+      path: '/competitions'
+      fullPath: '/community/$slug/competitions'
+      preLoaderRoute: typeof CommunitySlugCompetitionsRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
     '/community/$slug/chatrooms': {
       id: '/community/$slug/chatrooms'
       path: '/chatrooms'
@@ -3083,6 +3103,7 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
 
 interface CommunitySlugRouteChildren {
   CommunitySlugChatroomsRoute: typeof CommunitySlugChatroomsRoute
+  CommunitySlugCompetitionsRoute: typeof CommunitySlugCompetitionsRoute
   CommunitySlugDashboardRoute: typeof CommunitySlugDashboardRoute
   CommunitySlugFeedRoute: typeof CommunitySlugFeedRoute
   CommunitySlugIndexRoute: typeof CommunitySlugIndexRoute
@@ -3090,6 +3111,7 @@ interface CommunitySlugRouteChildren {
 
 const CommunitySlugRouteChildren: CommunitySlugRouteChildren = {
   CommunitySlugChatroomsRoute: CommunitySlugChatroomsRoute,
+  CommunitySlugCompetitionsRoute: CommunitySlugCompetitionsRoute,
   CommunitySlugDashboardRoute: CommunitySlugDashboardRoute,
   CommunitySlugFeedRoute: CommunitySlugFeedRoute,
   CommunitySlugIndexRoute: CommunitySlugIndexRoute,
