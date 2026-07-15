@@ -264,23 +264,10 @@ function CommunityCard({ community, isFeatured }: { community: any; isFeatured?:
         style={community.banner_url ? { backgroundImage: `url(${community.banner_url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
-        <div className="absolute right-2 top-2 flex gap-1">
-          {isFeatured && (
-            <Badge className="gap-1 bg-amber-500/90 text-white shadow">
-              <Star className="h-3 w-3 fill-current" /> Featured
-            </Badge>
-          )}
-          {community.is_official && (
-            <Badge className="gap-1 bg-blue-600/90 text-white shadow">
-              <Shield className="h-3 w-3" /> Official
-            </Badge>
-          )}
-          {community.is_verified && !community.is_official && (
-            <Badge className="gap-1 bg-sky-500/90 text-white shadow">
-              <BadgeCheck className="h-3 w-3" /> Verified
-            </Badge>
-          )}
+        <div className="absolute right-2 top-2">
+          <CommunityBadges c={community as never} showFeatured />
         </div>
+
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
