@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { CommunityBadges } from "@/components/community/CommunityBadges";
-import { ShieldCheck, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/admin/community-verification")({
   head: () => ({ meta: [{ title: "Community Verification — Admin" }, { name: "robots", content: "noindex" }] }),
