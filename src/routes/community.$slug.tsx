@@ -1,5 +1,5 @@
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, Outlet, notFound, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -9,27 +9,33 @@ import {
   leaveCommunity,
   type Community,
 } from "@/lib/community.functions";
+import { CommunityProvider, useCommunity } from "@/lib/community-context";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   Users,
   MessageSquare,
   Trophy,
-  Radio,
   Info,
   Settings as SettingsIcon,
   Lock,
-  Shield,
   UserPlus,
   LogOut,
   Rss,
+  DoorOpen,
 } from "lucide-react";
 
 export const Route = createFileRoute("/community/$slug")({
@@ -73,16 +79,14 @@ export const Route = createFileRoute("/community/$slug")({
       </div>
     </div>
   ),
-  component: CommunityHomePage,
+  component: CommunityLayout,
 });
 
-function CommunityHomePage() {
+function CommunityLayout() {
   const { community } = Route.useLoaderData();
   const { user } = useAuth();
-  const { requireAuth } = useAuthGate();
-  const navigate = useNavigate();
   const qc = useQueryClient();
-  const [joinOpen, setJoinOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const getMem = useServerFn(getMyMembership);
   const { data: membership } = useQuery({
@@ -94,43 +98,97 @@ function CommunityHomePage() {
 
   const isOwner = user?.id === community.owner_id;
   const isMember = membership?.status === "active";
-  const isPending = membership?.status === "pending";
+
+  // If we're on the dashboard sub-route, skip the branded shell entirely
+  // so the dashboard chrome takes over the viewport.
+  const onDashboard = pathname.startsWith(`/community/${community.slug}/dashboard`);
+
+  useEffect(() => {
+    // Persist accent as a CSS var while in community context, cleared on unmount.
+    const accent = community.accent_color || "#7c3aed";
+    document.documentElement.style.setProperty("--community-accent", accent);
+    return () => {
+      document.documentElement.style.removeProperty("--community-accent");
+    };
+  }, [community.accent_color]);
+
+  if (onDashboard) {
+    // Provide context so nested dashboard code can still read useCommunity(),
+    // but do not render hero/tabs.
+    return (
+      <CommunityProvider community={community} isOwner={isOwner} isMember={isMember}>
+        <Outlet />
+      </CommunityProvider>
+    );
+  }
+
+  return (
+    <CommunityProvider community={community} isOwner={isOwner} isMember={isMember}>
+      <div className="min-h-screen bg-background text-foreground">
+        <CommunityHeader
+          community={community}
+          isOwner={isOwner}
+          isMember={isMember}
+          isPending={membership?.status === "pending"}
+          onLeftCommunity={() => qc.invalidateQueries({ queryKey: ["my-community-membership", community.id] })}
+        />
+
+        <div className="mx-auto max-w-5xl px-4">
+          <CommunityTabs slug={community.slug} accent={community.accent_color || "#7c3aed"} />
+          <div className="mt-4 pb-16">
+            <Outlet />
+          </div>
+        </div>
+
+        <LeaveCommunityGuard />
+      </div>
+    </CommunityProvider>
+  );
+}
+
+function CommunityHeader({
+  community,
+  isOwner,
+  isMember,
+  isPending,
+  onLeftCommunity,
+}: {
+  community: Community;
+  isOwner: boolean;
+  isMember: boolean;
+  isPending: boolean;
+  onLeftCommunity: () => void;
+}) {
+  const { requireAuth } = useAuthGate();
+  const navigate = useNavigate();
+  const [joinOpen, setJoinOpen] = useState(false);
 
   const leaveFn = useServerFn(leaveCommunity);
   const leaveMut = useMutation({
     mutationFn: () => leaveFn({ data: { communityId: community.id } }),
     onSuccess: () => {
       toast.success("Left community");
-      qc.invalidateQueries({ queryKey: ["my-community-membership", community.id] });
+      onLeftCommunity();
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const accent = community.accent_color || "#7c3aed";
   const bannerStyle = community.banner_url
-    ? { backgroundImage: `url(${community.banner_url})`, backgroundSize: "cover", backgroundPosition: "center" }
+    ? { backgroundImage: `url(${community.banner_url})`, backgroundSize: "cover" as const, backgroundPosition: "center" as const }
     : { background: `linear-gradient(135deg, ${accent} 0%, hsl(var(--background)) 100%)` };
 
-  const handleJoin = () => {
-    if (community.privacy_mode === "public") {
-      requireAuth(() => setJoinOpen(true));
-    } else {
-      requireAuth(() => setJoinOpen(true));
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Hero */}
-      <div className="relative h-56 w-full sm:h-72" style={bannerStyle}>
+    <>
+      <div className="relative h-40 w-full sm:h-56" style={bannerStyle}>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80" />
       </div>
 
-      <div className="mx-auto -mt-16 max-w-5xl px-4">
+      <div className="mx-auto -mt-12 max-w-5xl px-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-end gap-4">
             <div
-              className="grid h-24 w-24 flex-shrink-0 place-items-center overflow-hidden rounded-2xl border-4 border-background bg-card text-3xl font-bold shadow-lg"
+              className="grid h-20 w-20 flex-shrink-0 place-items-center overflow-hidden rounded-2xl border-4 border-background bg-card text-2xl font-bold shadow-lg"
               style={{ backgroundColor: community.logo_url ? undefined : accent, color: "#fff" }}
             >
               {community.logo_url ? (
@@ -140,7 +198,7 @@ function CommunityHomePage() {
               )}
             </div>
             <div className="pb-1">
-              <h1 className="text-2xl font-bold sm:text-3xl">{community.name}</h1>
+              <h1 className="text-xl font-bold sm:text-2xl">{community.name}</h1>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" />{community.member_count} members</span>
                 <PrivacyBadge mode={community.privacy_mode} />
@@ -149,28 +207,32 @@ function CommunityHomePage() {
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {isOwner && (
               <Button
                 onClick={() => navigate({ to: "/community/$slug/dashboard", params: { slug: community.slug } })}
+                size="sm"
                 variant="default"
               >
                 <SettingsIcon className="mr-1 h-4 w-4" />Dashboard
               </Button>
             )}
             {!isOwner && !isMember && !isPending && (
-              <Button onClick={handleJoin} style={{ backgroundColor: accent }}>
-                <UserPlus className="mr-1 h-4 w-4" />Join community
+              <Button size="sm" onClick={() => requireAuth(() => setJoinOpen(true))} style={{ backgroundColor: accent }}>
+                <UserPlus className="mr-1 h-4 w-4" />Join
               </Button>
             )}
             {!isOwner && isPending && (
-              <Button variant="outline" disabled>Request pending</Button>
+              <Button size="sm" variant="outline" disabled>Request pending</Button>
             )}
             {!isOwner && isMember && (
-              <Button variant="outline" onClick={() => leaveMut.mutate()} disabled={leaveMut.isPending}>
+              <Button size="sm" variant="outline" onClick={() => leaveMut.mutate()} disabled={leaveMut.isPending}>
                 <LogOut className="mr-1 h-4 w-4" />Leave
               </Button>
             )}
+            <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/" })} title="Exit community">
+              <DoorOpen className="mr-1 h-4 w-4" />Exit
+            </Button>
           </div>
         </div>
 
@@ -179,92 +241,6 @@ function CommunityHomePage() {
             📣 {community.announcement}
           </div>
         )}
-
-        {/* Tabs */}
-        <Tabs defaultValue="about" className="mt-6">
-          <TabsList className="w-full justify-start overflow-x-auto">
-            <TabsTrigger value="about"><Info className="mr-1 h-4 w-4" />About</TabsTrigger>
-            <TabsTrigger value="feed"><Rss className="mr-1 h-4 w-4" />Feed</TabsTrigger>
-            <TabsTrigger value="chatrooms"><MessageSquare className="mr-1 h-4 w-4" />Chatrooms</TabsTrigger>
-            <TabsTrigger value="competitions"><Trophy className="mr-1 h-4 w-4" />Competitions</TabsTrigger>
-            <TabsTrigger value="radio"><Radio className="mr-1 h-4 w-4" />Radio</TabsTrigger>
-            <TabsTrigger value="members"><Users className="mr-1 h-4 w-4" />Members</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="about" className="mt-4 space-y-4 pb-16">
-            {community.welcome_text && (
-              <section className="rounded-lg border bg-card p-4">
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Welcome</h2>
-                <p className="whitespace-pre-wrap text-sm">{community.welcome_text}</p>
-              </section>
-            )}
-            {community.description && (
-              <section className="rounded-lg border bg-card p-4">
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">About</h2>
-                <p className="whitespace-pre-wrap text-sm">{community.description}</p>
-              </section>
-            )}
-            {community.rules && (
-              <section className="rounded-lg border bg-card p-4">
-                <h2 className="mb-2 flex items-center gap-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  <Shield className="h-3 w-3" />Community rules
-                </h2>
-                <p className="whitespace-pre-wrap text-sm">{community.rules}</p>
-              </section>
-            )}
-            {community.social_links && Object.keys(community.social_links).length > 0 && (
-              <section className="rounded-lg border bg-card p-4">
-                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Links</h2>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(community.social_links).map(([k, v]) => (
-                    <a key={k} href={String(v)} target="_blank" rel="noopener noreferrer"
-                       className="rounded-full border px-3 py-1 text-xs hover:bg-muted">
-                      {k}
-                    </a>
-                  ))}
-                </div>
-              </section>
-            )}
-          </TabsContent>
-
-          <TabsContent value="feed" className="mt-4 pb-16">
-            <IsolatedModuleStub
-              title="Community Feed"
-              description="Posts scoped to this community appear here."
-              cta="View in Feed"
-              onClick={() => navigate({ to: "/feed", search: { community: community.slug } as never })}
-            />
-          </TabsContent>
-          <TabsContent value="chatrooms" className="mt-4 pb-16">
-            <IsolatedModuleStub
-              title="Community Chatrooms"
-              description="Chatrooms owned by this community."
-              cta="Open chatrooms"
-              onClick={() => navigate({ to: "/chatroom" })}
-            />
-          </TabsContent>
-          <TabsContent value="competitions" className="mt-4 pb-16">
-            <IsolatedModuleStub
-              title="Community Competitions"
-              description="Competitions hosted by this community."
-              cta="Open competitions"
-              onClick={() => navigate({ to: "/competitions" })}
-            />
-          </TabsContent>
-          <TabsContent value="radio" className="mt-4 pb-16">
-            <IsolatedModuleStub
-              title="Community Radio"
-              description="This community's radio schedule and live shows."
-              cta="Open radio"
-              onClick={() => navigate({ to: "/radio" })}
-            />
-          </TabsContent>
-          <TabsContent value="members" className="mt-4 pb-16">
-            <div className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
-              {community.member_count} members. Member directory coming next.
-            </div>
-          </TabsContent>
-        </Tabs>
       </div>
 
       <JoinDialog
@@ -273,10 +249,57 @@ function CommunityHomePage() {
         community={community}
         onJoined={() => {
           setJoinOpen(false);
-          qc.invalidateQueries({ queryKey: ["my-community-membership", community.id] });
+          onLeftCommunity();
         }}
       />
-    </div>
+    </>
+  );
+}
+
+function CommunityTabs({ slug, accent }: { slug: string; accent: string }) {
+  const items = [
+    { to: "/community/$slug", label: "About", icon: Info, exact: true },
+    { to: "/community/$slug/feed", label: "Feed", icon: Rss },
+    { to: "/community/$slug/chatrooms", label: "Chatrooms", icon: MessageSquare },
+    { to: "/community/$slug/competitions", label: "Competitions", icon: Trophy },
+    { to: "/community/$slug/members", label: "Members", icon: Users },
+  ];
+  return (
+    <nav className="mt-6 flex w-full gap-1 overflow-x-auto border-b border-border">
+      {items.map((it) => (
+        <Link
+          key={it.label}
+          to={it.to as never}
+          params={{ slug }}
+          activeOptions={{ exact: !!it.exact }}
+          className="group flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground data-[status=active]:border-current data-[status=active]:text-foreground"
+          style={{ ["--community-accent-hover" as never]: accent } as never}
+        >
+          <it.icon className="h-4 w-4" />
+          {it.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+function LeaveCommunityGuard() {
+  const { pendingExit, cancelExit, confirmExit, community } = useCommunity();
+  return (
+    <Dialog open={!!pendingExit} onOpenChange={(o) => (!o ? cancelExit() : null)}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Leave {community.name}?</DialogTitle>
+          <DialogDescription>
+            You'll leave this community and go to the global platform. You can come back anytime.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={cancelExit}>Stay</Button>
+          <Button onClick={confirmExit}>Leave</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -293,16 +316,6 @@ function PrivacyBadge({ mode }: { mode: Community["privacy_mode"] }) {
     <Badge variant="secondary" className="text-[10px]">
       <span className="mr-1 inline-flex">{m.icon}</span>{m.label}
     </Badge>
-  );
-}
-
-function IsolatedModuleStub({ title, description, cta, onClick }: { title: string; description: string; cta: string; onClick: () => void }) {
-  return (
-    <div className="rounded-lg border bg-card p-8 text-center">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{description}</p>
-      <Button className="mt-4" onClick={onClick} variant="outline">{cta}</Button>
-    </div>
   );
 }
 
