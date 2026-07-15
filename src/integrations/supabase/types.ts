@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      abuse_events: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          ip: string | null
+          key: string
+          meta: Json
+          reason: string
+          severity: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          ip?: string | null
+          key: string
+          meta?: Json
+          reason: string
+          severity?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          ip?: string | null
+          key?: string
+          meta?: Json
+          reason?: string
+          severity?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_chatbots: {
         Row: {
           allowed_rooms: string[]
@@ -4258,6 +4294,66 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_bans: {
+        Row: {
+          action: string | null
+          banned_until: string
+          created_at: string
+          id: number
+          key: string
+          offense_count: number
+          reason: string
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          banned_until: string
+          created_at?: string
+          id?: number
+          key: string
+          offense_count?: number
+          reason?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          banned_until?: string
+          created_at?: string
+          id?: number
+          key?: string
+          offense_count?: number
+          reason?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      rate_limit_buckets: {
+        Row: {
+          action: string
+          hits: number
+          id: number
+          key: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          action: string
+          hits?: number
+          id?: number
+          key: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          action?: string
+          hits?: number
+          id?: number
+          key?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       reactions: {
         Row: {
           created_at: string
@@ -5895,6 +5991,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_clear_rate_limit_ban: {
+        Args: { _action?: string; _key: string }
+        Returns: number
+      }
       admin_db_size: { Args: never; Returns: number }
       admin_exec_sql: { Args: { _sql: string }; Returns: undefined }
       admin_export_extras: { Args: never; Returns: Json }
@@ -6001,6 +6101,18 @@ export type Database = {
         Args: { _competition: string; _participant: string }
         Returns: undefined
       }
+      check_and_consume_rate_limit: {
+        Args: {
+          _action: string
+          _force?: boolean
+          _ip?: string
+          _key: string
+          _limit: number
+          _user_id?: string
+          _window_seconds: number
+        }
+        Returns: Json
+      }
       claim_daily_reward: { Args: never; Returns: Json }
       cleanup_ended_competitions: { Args: never; Returns: undefined }
       close_inactive_trio_rooms: { Args: never; Returns: undefined }
@@ -6064,6 +6176,16 @@ export type Database = {
         }
       }
       delete_user_cascade: { Args: { _user: string }; Returns: undefined }
+      detect_repeated_content: {
+        Args: {
+          _action: string
+          _content_hash: string
+          _threshold?: number
+          _user_id: string
+          _window_seconds?: number
+        }
+        Returns: boolean
+      }
       feedbot_dispatch_run: { Args: never; Returns: undefined }
       feedbot_enqueue: {
         Args: {
