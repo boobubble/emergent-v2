@@ -567,7 +567,155 @@ function SettingsSection({ community }: { community: Community }) {
   );
 }
 
+function TrustSection({ community }: { community: Community }) {
+  const getFn = useServerFn(getMyVerificationRequest);
+  const { data: req, refetch } = useQuery({
+    queryKey: ["community-verification", community.id],
+    queryFn: () => getFn({ data: { communityId: community.id } }),
+  });
+
+  const [form, setForm] = useState({
+    community_name: community.name,
+    website: "",
+    instagram: "",
+    twitter: "",
+    youtube: "",
+    tiktok: "",
+    discord: "",
+    telegram: "",
+    business_email: "",
+    reason: "",
+    doc_urls: "",
+  });
+
+  // Rehydrate form from an in-flight request so owners can edit and resubmit.
+  useEffect(() => {
+    if (!req) return;
+    const s = (req.socials ?? {}) as Record<string, string>;
+    setForm((f) => ({
+      ...f,
+      community_name: req.community_name ?? f.community_name,
+      website: req.website ?? "",
+      business_email: req.business_email ?? "",
+      reason: req.reason ?? "",
+      doc_urls: (req.doc_urls ?? []).join("\n"),
+      instagram: s.instagram ?? "",
+      twitter: s.twitter ?? "",
+      youtube: s.youtube ?? "",
+      tiktok: s.tiktok ?? "",
+      discord: s.discord ?? "",
+      telegram: s.telegram ?? "",
+    }));
+  }, [req?.id]);
+
+  const submitFn = useServerFn(submitVerificationRequest);
+  const mut = useMutation({
+    mutationFn: () => {
+      const socials: Record<string, string> = {};
+      (["instagram", "twitter", "youtube", "tiktok", "discord", "telegram"] as const).forEach((k) => {
+        const v = (form as any)[k]?.trim();
+        if (v) socials[k] = v;
+      });
+      const docs = form.doc_urls.split(/\s+/).map((s) => s.trim()).filter(Boolean);
+      return submitFn({
+        data: {
+          communityId: community.id,
+          community_name: form.community_name.trim(),
+          website: form.website.trim() || null,
+          socials,
+          business_email: form.business_email.trim() || null,
+          reason: form.reason.trim() || null,
+          doc_urls: docs,
+        },
+      });
+    },
+    onSuccess: () => { toast.success("Verification request submitted"); refetch(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const status: CommunityVerificationRequest["status"] | "not_verified" =
+    (req?.status as any) ?? ((community as any).verification_status ?? "not_verified");
+  const editable = !req || status === "needs_changes" || status === "rejected" || status === "not_verified";
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border bg-card p-4">
+        <div className="mb-2 flex items-center gap-2">
+          <h3 className="text-sm font-semibold">Verification status</h3>
+          <StatusBadge status={status} />
+        </div>
+        <div className="mt-2">
+          <CommunityBadges c={community as never} size="md" />
+        </div>
+        {req?.admin_notes && (
+          <div className="mt-3 rounded border-l-4 border-amber-500 bg-amber-500/10 p-3 text-sm">
+            <div className="font-medium">Reviewer notes</div>
+            <p className="mt-1 whitespace-pre-wrap text-xs">{req.admin_notes}</p>
+          </div>
+        )}
+        {req?.history && req.history.length > 0 && (
+          <details className="mt-3">
+            <summary className="cursor-pointer text-xs text-muted-foreground">Timeline</summary>
+            <ul className="mt-2 space-y-1 text-xs">
+              {req.history.map((h, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="text-muted-foreground">{new Date(h.at).toLocaleString()}</span>
+                  <span className="font-medium">{h.action}</span>
+                  {h.note && <span className="text-muted-foreground">— {h.note}</span>}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </div>
+
+      <div className="space-y-3 rounded-lg border bg-card p-4">
+        <h3 className="text-sm font-semibold">Request verification</h3>
+        <p className="text-xs text-muted-foreground">Provide identity signals so the platform team can review this community.</p>
+        <Field label="Community name"><Input value={form.community_name} onChange={(e) => setForm({ ...form, community_name: e.target.value })} disabled={!editable} /></Field>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label="Official website"><Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://…" disabled={!editable} /></Field>
+          <Field label="Business email"><Input value={form.business_email} onChange={(e) => setForm({ ...form, business_email: e.target.value })} placeholder="contact@brand.com" disabled={!editable} /></Field>
+          <Field label="Instagram"><Input value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} placeholder="https://instagram.com/…" disabled={!editable} /></Field>
+          <Field label="Twitter / X"><Input value={form.twitter} onChange={(e) => setForm({ ...form, twitter: e.target.value })} placeholder="https://x.com/…" disabled={!editable} /></Field>
+          <Field label="YouTube"><Input value={form.youtube} onChange={(e) => setForm({ ...form, youtube: e.target.value })} placeholder="https://youtube.com/@…" disabled={!editable} /></Field>
+          <Field label="TikTok"><Input value={form.tiktok} onChange={(e) => setForm({ ...form, tiktok: e.target.value })} placeholder="https://tiktok.com/@…" disabled={!editable} /></Field>
+          <Field label="Discord"><Input value={form.discord} onChange={(e) => setForm({ ...form, discord: e.target.value })} placeholder="https://discord.gg/…" disabled={!editable} /></Field>
+          <Field label="Telegram"><Input value={form.telegram} onChange={(e) => setForm({ ...form, telegram: e.target.value })} placeholder="https://t.me/…" disabled={!editable} /></Field>
+        </div>
+        <Field label="Why should this community be verified?"><Textarea rows={4} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} disabled={!editable} /></Field>
+        <Field label="Supporting documents (URLs, one per line — optional)">
+          <Textarea rows={3} value={form.doc_urls} onChange={(e) => setForm({ ...form, doc_urls: e.target.value })} disabled={!editable} placeholder="https://…" />
+        </Field>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => mut.mutate()} disabled={!editable || mut.isPending}>
+            {req && (status === "needs_changes" || status === "rejected") ? "Resubmit" : "Submit for review"}
+          </Button>
+          {!editable && (
+            <span className="text-xs text-muted-foreground">
+              Your request is being reviewed. You'll be notified when there's an update.
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    not_verified: { label: "Not verified", cls: "bg-muted text-muted-foreground" },
+    pending: { label: "Pending review", cls: "bg-amber-500/90 text-white" },
+    needs_changes: { label: "Needs changes", cls: "bg-orange-500/90 text-white" },
+    rejected: { label: "Rejected", cls: "bg-red-600/90 text-white" },
+    approved: { label: "Verified", cls: "bg-emerald-600/90 text-white" },
+  };
+  const m = map[status] ?? map.not_verified;
+  return <Badge className={`${m.cls} text-[11px]`}>{m.label}</Badge>;
+}
+
 function ModulePlaceholder({ title, hint }: { title: string; hint: string }) {
+
   return (
     <div className="rounded-lg border bg-card p-6 text-center">
       <h3 className="text-lg font-semibold">{title}</h3>
