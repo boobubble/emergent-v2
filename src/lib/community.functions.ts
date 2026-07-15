@@ -1144,7 +1144,7 @@ export const requestPremiumSlug = createServerFn({ method: "POST" })
         current_slug: (comm as any).slug,
         requested_slug: requested,
         reason: data.reason ?? null,
-      })
+      } as never)
       .select("*")
       .single();
     if (error) throw new Error(error.message);
