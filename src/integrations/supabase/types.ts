@@ -801,10 +801,16 @@ export type Database = {
           announcement: string | null
           background_url: string | null
           banner_url: string | null
+          category: string | null
+          country: string | null
           created_at: string
           description: string | null
           id: string
+          is_featured: boolean
+          is_official: boolean
+          is_verified: boolean
           join_password_hash: string | null
+          language: string | null
           logo_url: string | null
           member_count: number
           meta: Json
@@ -816,7 +822,9 @@ export type Database = {
           slug: string
           social_links: Json
           status: string
+          tags: string[]
           updated_at: string
+          visibility: Database["public"]["Enums"]["community_visibility"]
           welcome_text: string | null
         }
         Insert: {
@@ -824,10 +832,16 @@ export type Database = {
           announcement?: string | null
           background_url?: string | null
           banner_url?: string | null
+          category?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_featured?: boolean
+          is_official?: boolean
+          is_verified?: boolean
           join_password_hash?: string | null
+          language?: string | null
           logo_url?: string | null
           member_count?: number
           meta?: Json
@@ -839,7 +853,9 @@ export type Database = {
           slug: string
           social_links?: Json
           status?: string
+          tags?: string[]
           updated_at?: string
+          visibility?: Database["public"]["Enums"]["community_visibility"]
           welcome_text?: string | null
         }
         Update: {
@@ -847,10 +863,16 @@ export type Database = {
           announcement?: string | null
           background_url?: string | null
           banner_url?: string | null
+          category?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_featured?: boolean
+          is_official?: boolean
+          is_verified?: boolean
           join_password_hash?: string | null
+          language?: string | null
           logo_url?: string | null
           member_count?: number
           meta?: Json
@@ -862,7 +884,9 @@ export type Database = {
           slug?: string
           social_links?: Json
           status?: string
+          tags?: string[]
           updated_at?: string
+          visibility?: Database["public"]["Enums"]["community_visibility"]
           welcome_text?: string | null
         }
         Relationships: []
@@ -6231,6 +6255,7 @@ export type Database = {
         | "invite_only"
         | "password"
         | "invite_password"
+      community_visibility: "public" | "hidden" | "unlisted" | "featured_only"
       confession_display_mode:
         | "fully_anonymous"
         | "random_id"
@@ -6460,6 +6485,7 @@ export const Constants = {
         "password",
         "invite_password",
       ],
+      community_visibility: ["public", "hidden", "unlisted", "featured_only"],
       confession_display_mode: [
         "fully_anonymous",
         "random_id",

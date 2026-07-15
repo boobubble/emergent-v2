@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // ---------- Types ----------
 export type CommunityPrivacy = "public" | "private" | "invite_only" | "password" | "invite_password";
+export type CommunityVisibility = "public" | "hidden" | "unlisted" | "featured_only";
 export type CommunityMemberRole = "owner" | "moderator" | "member";
 export type CommunityMemberStatus = "active" | "pending" | "banned" | "muted";
 
@@ -22,6 +23,14 @@ export interface Community {
   announcement: string | null;
   social_links: Record<string, string>;
   privacy_mode: CommunityPrivacy;
+  visibility: CommunityVisibility;
+  category: string | null;
+  tags: string[];
+  is_featured: boolean;
+  is_verified: boolean;
+  is_official: boolean;
+  language: string | null;
+  country: string | null;
   status: string;
   member_count: number;
   online_count: number;
@@ -29,6 +38,7 @@ export interface Community {
   created_at: string;
   updated_at: string;
 }
+
 
 // ---------- Public server client (for anon-safe reads) ----------
 async function serverPublicClient() {
@@ -77,7 +87,7 @@ export const getCommunityBySlug = createServerFn({ method: "GET" })
     const sb = await serverPublicClient();
     const { data: row } = await sb
       .from("communities")
-      .select("id,owner_id,slug,name,description,welcome_text,logo_url,banner_url,background_url,accent_color,rules,announcement,social_links,privacy_mode,status,member_count,online_count,meta,created_at,updated_at")
+      .select("id,owner_id,slug,name,description,welcome_text,logo_url,banner_url,background_url,accent_color,rules,announcement,social_links,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,language,country,status,member_count,online_count,meta,created_at,updated_at")
       .eq("slug", data.slug)
       .eq("status", "active")
       .maybeSingle();
@@ -85,17 +95,100 @@ export const getCommunityBySlug = createServerFn({ method: "GET" })
     return row as any;
   });
 
-/** List active public communities (for a directory page). */
+/**
+ * List active communities for the public directory.
+ * Filters out hidden/unlisted communities. featured_only visibility is included
+ * only when the community is also marked is_featured=true.
+ */
 export const listPublicCommunities = createServerFn({ method: "GET" })
+  .inputValidator((d: {
+    category?: string;
+    sort?: "trending" | "newest" | "members" | "active";
+    featuredOnly?: boolean;
+    limit?: number;
+  } | undefined) =>
+    z.object({
+      category: z.string().max(60).optional(),
+      sort: z.enum(["trending", "newest", "members", "active"]).optional(),
+      featuredOnly: z.boolean().optional(),
+      limit: z.number().int().min(1).max(120).optional(),
+    }).partial().parse(d ?? {}),
+  )
+  .handler(async ({ data }) => {
+    const sb = await serverPublicClient();
+    let q = sb
+      .from("communities")
+      .select("id,slug,name,description,logo_url,banner_url,accent_color,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,member_count,online_count,created_at")
+      .eq("status", "active")
+      // discovery-visible = public OR (featured_only AND is_featured)
+      .or("visibility.eq.public,and(visibility.eq.featured_only,is_featured.eq.true)");
+    if (data.category) q = q.eq("category", data.category);
+    if (data.featuredOnly) q = q.eq("is_featured", true);
+    switch (data.sort) {
+      case "newest": q = q.order("created_at", { ascending: false }); break;
+      case "active": q = q.order("online_count", { ascending: false }); break;
+      case "trending":
+        q = q.order("is_featured", { ascending: false })
+             .order("online_count", { ascending: false })
+             .order("member_count", { ascending: false });
+        break;
+      case "members":
+      default:
+        q = q.order("member_count", { ascending: false });
+    }
+    const { data: rows } = await q.limit(data.limit ?? 60);
+    return rows ?? [];
+  });
+
+/**
+ * Search discovery-visible communities by name / description / slug / tags.
+ * Same visibility rules as listPublicCommunities.
+ */
+export const searchCommunities = createServerFn({ method: "GET" })
+  .inputValidator((d: { q: string; category?: string; limit?: number }) =>
+    z.object({
+      q: z.string().min(1).max(80),
+      category: z.string().max(60).optional(),
+      limit: z.number().int().min(1).max(60).optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const sb = await serverPublicClient();
+    const term = data.q.replace(/[%_,]/g, " ").trim();
+    if (!term) return [];
+    const like = `%${term}%`;
+    let q = sb
+      .from("communities")
+      .select("id,slug,name,description,logo_url,banner_url,accent_color,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,member_count,online_count")
+      .eq("status", "active")
+      .or("visibility.eq.public,and(visibility.eq.featured_only,is_featured.eq.true)")
+      .or(`name.ilike.${like},slug.ilike.${like},description.ilike.${like}`);
+    if (data.category) q = q.eq("category", data.category);
+    const { data: rows } = await q
+      .order("is_featured", { ascending: false })
+      .order("member_count", { ascending: false })
+      .limit(data.limit ?? 30);
+    return rows ?? [];
+  });
+
+/** Aggregate stats for the discovery hero. */
+export const getDiscoveryStats = createServerFn({ method: "GET" })
   .handler(async () => {
     const sb = await serverPublicClient();
-    const { data } = await sb
+    const { count: total } = await sb
       .from("communities")
-      .select("id,slug,name,description,logo_url,banner_url,accent_color,privacy_mode,member_count")
+      .select("id", { count: "exact", head: true })
       .eq("status", "active")
-      .order("member_count", { ascending: false })
-      .limit(60);
-    return data ?? [];
+      .or("visibility.eq.public,and(visibility.eq.featured_only,is_featured.eq.true)");
+    const { data: agg } = await sb
+      .from("communities")
+      .select("member_count,online_count")
+      .eq("status", "active")
+      .or("visibility.eq.public,and(visibility.eq.featured_only,is_featured.eq.true)")
+      .limit(1000);
+    const members = (agg ?? []).reduce((s, r: any) => s + (r.member_count ?? 0), 0);
+    const online = (agg ?? []).reduce((s, r: any) => s + (r.online_count ?? 0), 0);
+    return { total: total ?? 0, members, online };
   });
 
 // =========================================================================
@@ -115,6 +208,8 @@ export const getMyMembership = createServerFn({ method: "GET" })
       .maybeSingle();
     return row;
   });
+
+
 
 /** All communities I belong to. */
 export const listMyCommunities = createServerFn({ method: "GET" })
@@ -605,5 +700,72 @@ export const listCommunityMembersAuthed = createServerFn({ method: "GET" })
       .limit(500);
     if (error) throw new Error(error.message);
     return rows ?? [];
+  });
+
+// =========================================================================
+// VISIBILITY & DISCOVERY (owner-only, separate from privacy)
+// =========================================================================
+
+/**
+ * Update discovery visibility. Separate from privacy_mode:
+ *   - privacy_mode controls who can ENTER
+ *   - visibility controls who can DISCOVER
+ * Also lets the owner set category / tags / language / country used by
+ * the discovery directory. is_featured/is_verified/is_official are
+ * platform-admin flags and NOT settable here.
+ */
+export const updateCommunityVisibility = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    communityId: string;
+    visibility: CommunityVisibility;
+    category?: string | null;
+    tags?: string[];
+    language?: string | null;
+    country?: string | null;
+    confirmLargeChange?: boolean;
+  }) => z.object({
+    communityId: z.string().uuid(),
+    visibility: z.enum(["public", "hidden", "unlisted", "featured_only"]),
+    category: z.string().max(60).nullable().optional(),
+    tags: z.array(z.string().min(1).max(30)).max(15).optional(),
+    language: z.string().max(10).nullable().optional(),
+    country: z.string().max(10).nullable().optional(),
+    confirmLargeChange: z.boolean().optional(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    // Only the owner can change visibility (not moderators, not platform admins
+    // — admins can still see hidden communities, but they should not silently
+    // hide someone else's community).
+    const { data: comm } = await context.supabase
+      .from("communities")
+      .select("owner_id,visibility,member_count")
+      .eq("id", data.communityId)
+      .maybeSingle();
+    if (!comm) throw new Error("Community not found");
+    if (comm.owner_id !== context.userId) throw new Error("Only the community owner can change visibility");
+
+    // Safety confirmation for large communities going Public → Hidden.
+    if (
+      comm.visibility === "public" &&
+      data.visibility === "hidden" &&
+      (comm.member_count ?? 0) > 10_000 &&
+      !data.confirmLargeChange
+    ) {
+      throw new Error("CONFIRM_LARGE_HIDE");
+    }
+
+    const payload: Record<string, unknown> = { visibility: data.visibility };
+    if (data.category !== undefined) payload.category = data.category;
+    if (data.tags !== undefined) payload.tags = data.tags;
+    if (data.language !== undefined) payload.language = data.language;
+    if (data.country !== undefined) payload.country = data.country;
+
+    const { error } = await context.supabase
+      .from("communities")
+      .update(payload as never)
+      .eq("id", data.communityId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
