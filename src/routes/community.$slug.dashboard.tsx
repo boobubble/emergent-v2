@@ -20,6 +20,9 @@ import {
   requestPremiumSlug,
   listPremiumSlugRequests,
   cancelPremiumSlugRequest,
+  archiveCommunity,
+  restoreCommunity,
+  getCommunityAnalytics,
   type Community,
   type CommunityPrivacy,
   type CommunityVisibility,
@@ -158,7 +161,7 @@ function DashboardPage() {
             <TabsContent value="chatrooms" className="mt-0"><ModulePlaceholder title="Chatrooms" hint="Rooms with community_id set to this community. Create rooms from the main Chatrooms module." /></TabsContent>
             <TabsContent value="competitions" className="mt-0"><ModulePlaceholder title="Competitions" hint="Competitions scoped to this community." /></TabsContent>
             <TabsContent value="radio" className="mt-0"><ModulePlaceholder title="Radio" hint="Owner-controlled schedule, playlist and live status." /></TabsContent>
-            <TabsContent value="analytics" className="mt-0"><ModulePlaceholder title="Analytics" hint="Members, active today, messages, feed posts, reactions, votes, growth, retention." /></TabsContent>
+            <TabsContent value="analytics" className="mt-0"><AnalyticsSection community={community} /></TabsContent>
             <TabsContent value="monetization" className="mt-0"><ModulePlaceholder title="Monetization" hint="Paid memberships, tips, and creator earnings — coming soon." /></TabsContent>
             <TabsContent value="trust" className="mt-0"><TrustSection community={community} /></TabsContent>
             <TabsContent value="premium-url" className="mt-0"><PremiumUrlSection community={community} /></TabsContent>
@@ -564,16 +567,88 @@ function InvitesSection({ community }: { community: Community }) {
 }
 
 function SettingsSection({ community }: { community: Community }) {
+  const archiveFn = useServerFn(archiveCommunity);
+  const restoreFn = useServerFn(restoreCommunity);
+  const nav = useNavigate();
+  const qc = useQueryClient();
+  const [confirming, setConfirming] = useState<"archive" | "restore" | null>(null);
+  const isArchived = (community as any).status === "archived";
+
+  const archive = useMutation({
+    mutationFn: () => archiveFn({ data: { communityId: community.id } }),
+    onSuccess: () => {
+      toast.success("Community archived. It's now hidden from discovery and read-only.");
+      setConfirming(null);
+      qc.invalidateQueries({ queryKey: ["community", community.slug] });
+      nav({ to: "/community/$slug", params: { slug: community.slug } });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Failed to archive"),
+  });
+
+  const restore = useMutation({
+    mutationFn: () => restoreFn({ data: { communityId: community.id } }),
+    onSuccess: () => {
+      toast.success("Community restored.");
+      setConfirming(null);
+      qc.invalidateQueries({ queryKey: ["community", community.slug] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Failed to restore"),
+  });
+
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <h3 className="text-sm font-semibold">Danger zone</h3>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Archiving / transferring / deleting the community will be available in a future release.
-      </p>
-      <p className="mt-3 text-xs">Community ID: <code className="rounded bg-muted px-1">{community.id}</code></p>
+    <div className="space-y-4">
+      <div className={`rounded-lg border p-4 ${isArchived ? "border-amber-500/40 bg-amber-500/5" : "bg-card"}`}>
+        <h3 className="text-sm font-semibold">Archive mode</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {isArchived
+            ? "This community is archived. It is hidden from discovery and read-only. Restore it to make it fully active again."
+            : "Archiving hides the community from discovery, freezes new activity, and marks it as inactive. Existing content stays accessible. You can restore it any time."}
+        </p>
+        <div className="mt-3">
+          {isArchived ? (
+            <Button onClick={() => setConfirming("restore")} disabled={restore.isPending}>
+              Restore community
+            </Button>
+          ) : (
+            <Button variant="destructive" onClick={() => setConfirming("archive")} disabled={archive.isPending}>
+              Archive community
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-card p-4">
+        <h3 className="text-sm font-semibold">Danger zone</h3>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Transferring / deleting the community will be available in a future release.
+        </p>
+        <p className="mt-3 text-xs">Community ID: <code className="rounded bg-muted px-1">{community.id}</code></p>
+      </div>
+
+      <AlertDialog open={!!confirming} onOpenChange={(o) => !o && setConfirming(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirming === "archive" ? "Archive this community?" : "Restore this community?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirming === "archive"
+                ? "It will be hidden from discovery, marked read-only, and members won't be able to post new content. You can restore it later."
+                : "This will re-enable posting, discovery, and full activity for the community."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => (confirming === "archive" ? archive.mutate() : restore.mutate())}>
+              {confirming === "archive" ? "Archive" : "Restore"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
 
 function TrustSection({ community }: { community: Community }) {
   const getFn = useServerFn(getMyVerificationRequest);
@@ -869,3 +944,63 @@ function PremiumUrlSection({ community }: { community: Community }) {
     </div>
   );
 }
+
+// -----------------------------------------------------------------------------
+// Analytics — owner-facing overview
+// -----------------------------------------------------------------------------
+function AnalyticsSection({ community }: { community: Community }) {
+  const fetchFn = useServerFn(getCommunityAnalytics);
+  const { data, isLoading } = useQuery({
+    queryKey: ["community-analytics", community.id],
+    queryFn: () => fetchFn({ data: { communityId: community.id } }),
+    staleTime: 30_000,
+  });
+
+  if (isLoading) return <p className="text-sm text-muted-foreground">Loading analytics…</p>;
+  if (!data) return <p className="text-sm text-muted-foreground">No data yet.</p>;
+
+  const growth = data.growthByDay;
+  const max = Math.max(1, ...growth.map((g) => g.count));
+  const w = 640, h = 100, pad = 8;
+  const step = (w - pad * 2) / Math.max(1, growth.length - 1);
+  const points = growth.map((g, i) => `${pad + i * step},${h - pad - (g.count / max) * (h - pad * 2)}`).join(" ");
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <MiniStat label="Members" value={data.memberCount} />
+        <MiniStat label="Online now" value={data.onlineCount} />
+        <MiniStat label="Joined (7d)" value={data.membersLast7d} />
+        <MiniStat label="Joined (30d)" value={data.membersLast30d} />
+        <MiniStat label="Posts" value={data.postCount} />
+        <MiniStat label="Posts (7d)" value={data.postsLast7d} />
+        <MiniStat label="Chatrooms" value={data.chatroomCount} />
+        <MiniStat label="Competitions" value={data.competitionCount} />
+      </div>
+
+      <div className="rounded-lg border bg-card p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <h4 className="text-sm font-semibold">Member growth (30d)</h4>
+          <span className="text-xs text-muted-foreground">Total new: {data.membersLast30d}</span>
+        </div>
+        <svg viewBox={`0 0 ${w} ${h}`} className="h-24 w-full" preserveAspectRatio="none">
+          <polyline fill="none" stroke="hsl(var(--primary))" strokeWidth="2" points={points} />
+        </svg>
+        <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+          <span>{growth[0]?.day.slice(5)}</span>
+          <span>{growth[growth.length - 1]?.day.slice(5)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border bg-card p-3">
+      <div className="text-[11px] text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-xl font-semibold tabular-nums">{value.toLocaleString()}</div>
+    </div>
+  );
+}
+
