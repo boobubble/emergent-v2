@@ -244,7 +244,9 @@ export const joinCommunity = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const { data: comm, error: cErr } = await supabase
+    // join_password_hash is restricted from client roles; read via admin client server-side.
+    const { supabaseAdmin: _sbAdminForJoin } = await import("@/integrations/supabase/client.server");
+    const { data: comm, error: cErr } = await _sbAdminForJoin
       .from("communities")
       .select("id,privacy_mode,join_password_hash,status")
       .eq("id", data.communityId)
@@ -271,7 +273,7 @@ export const joinCommunity = createServerFn({ method: "POST" })
     let inviteId: string | null = null;
     if (needsInvite) {
       if (!data.inviteCode) throw new Error("Invite code required");
-      const { data: inv } = await supabase
+      const { data: inv } = await _sbAdminForJoin
         .from("community_invites")
         .select("id,community_id,max_uses,uses,expires_at")
         .eq("code", data.inviteCode)
@@ -993,8 +995,10 @@ export const adminDecideVerificationRequest = createServerFn({ method: "POST" })
 export const getInviteLanding = createServerFn({ method: "GET" })
   .inputValidator((d: { code: string }) => z.object({ code: z.string().min(3).max(80) }).parse(d))
   .handler(async ({ data }) => {
-    const sb = await serverPublicClient();
-    const { data: inv } = await sb
+    // Invite codes are no longer publicly readable; use admin client for the
+    // scoped lookup by code so anonymous users cannot enumerate all invites.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: inv } = await supabaseAdmin
       .from("community_invites")
       .select("id,community_id,code,max_uses,uses,expires_at,created_at")
       .eq("code", data.code)
@@ -1004,6 +1008,7 @@ export const getInviteLanding = createServerFn({ method: "GET" })
     const expired = inv.expires_at && new Date(inv.expires_at as string).getTime() < Date.now();
     const exhausted = inv.max_uses != null && (inv.uses ?? 0) >= (inv.max_uses as number);
 
+    const sb = await serverPublicClient();
     const { data: comm } = await sb
       .from("communities")
       .select("id,slug,name,description,welcome_text,logo_url,banner_url,accent_color,rules,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,is_partner,is_trusted,verification_status,language,country,status,member_count,online_count,owner_id")
