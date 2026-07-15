@@ -8,37 +8,10 @@
 
 import { getRequest } from "@tanstack/react-start/server";
 
-export interface RateLimitDef { limit: number; window: number }
+import { DEFAULT_LIMITS, type RateLimitDef } from "./rate-limit-config";
+export { DEFAULT_LIMITS };
+export type { RateLimitDef };
 
-export const DEFAULT_LIMITS: Record<string, RateLimitDef> = {
-  // Auth
-  "auth.login":            { limit: 8,   window: 60 },
-  "auth.signup":           { limit: 5,   window: 300 },
-  "auth.password_reset":   { limit: 3,   window: 900 },
-  // Feed
-  "feed.post":             { limit: 6,   window: 60 },
-  "feed.comment":          { limit: 20,  window: 60 },
-  "feed.reaction":         { limit: 60,  window: 60 },
-  // Chat
-  "chat.message":          { limit: 30,  window: 60 },
-  "chat.reaction":         { limit: 60,  window: 60 },
-  // Competitions & votes
-  "competition.vote":      { limit: 30,  window: 60 },
-  "competition.create":    { limit: 3,   window: 3600 },
-  // Communities
-  "community.join":        { limit: 10,  window: 300 },
-  "community.create":      { limit: 3,   window: 3600 },
-  "community.invite":      { limit: 10,  window: 300 },
-  "community.redeem":      { limit: 10,  window: 300 },
-  // Misc
-  "report.submit":         { limit: 10,  window: 300 },
-  "search":                { limit: 60,  window: 60 },
-  "profile.edit":          { limit: 20,  window: 300 },
-  "upload.avatar":         { limit: 10,  window: 300 },
-  "upload.banner":         { limit: 10,  window: 300 },
-  "follow":                { limit: 30,  window: 60 },
-  "api":                   { limit: 120, window: 60 },
-};
 
 let cachedConfig: { at: number; value: Record<string, RateLimitDef> } | null = null;
 
