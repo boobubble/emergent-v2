@@ -6,6 +6,7 @@ import {
   getCommunityBySlug,
   updateCommunityBranding,
   updateCommunityPrivacy,
+  updateCommunityVisibility,
   listCommunityMembers,
   setMemberState,
   removeMember,
@@ -16,6 +17,8 @@ import {
   revokeInvite,
   type Community,
   type CommunityPrivacy,
+  type CommunityVisibility,
+
 } from "@/lib/community.functions";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
