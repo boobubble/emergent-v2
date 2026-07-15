@@ -142,13 +142,13 @@ import { Route as CommunitySlugMembersRouteImport } from './routes/community.$sl
 import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
 import { Route as CommunitySlugCompetitionsRouteImport } from './routes/community.$slug.competitions'
-import { Route as CommunitySlugChatroomsRouteImport } from './routes/community.$slug.chatrooms'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as ApiPublicBackupRetentionRouteImport } from './routes/api/public/backup-retention'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
+import { Route as CommunitySlugChatroomsIndexRouteImport } from './routes/community.$slug.chatrooms.index'
 import { Route as ApiPublicLicenseVerifyRouteImport } from './routes/api/public/license/verify'
 import { Route as ApiPublicLicenseResetRouteImport } from './routes/api/public/license/reset'
 import { Route as ApiPublicLicenseDeactivateRouteImport } from './routes/api/public/license/deactivate'
@@ -828,11 +828,6 @@ const CommunitySlugCompetitionsRoute =
     path: '/competitions',
     getParentRoute: () => CommunitySlugRoute,
   } as any)
-const CommunitySlugChatroomsRoute = CommunitySlugChatroomsRouteImport.update({
-  id: '/chatrooms',
-  path: '/chatrooms',
-  getParentRoute: () => CommunitySlugRoute,
-} as any)
 const ApiPublicLandingRoute = ApiPublicLandingRouteImport.update({
   id: '/api/public/landing',
   path: '/api/public/landing',
@@ -865,6 +860,12 @@ const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   path: '/$key',
   getParentRoute: () => AdminUpcomingRoute,
 } as any)
+const CommunitySlugChatroomsIndexRoute =
+  CommunitySlugChatroomsIndexRouteImport.update({
+    id: '/chatrooms/',
+    path: '/chatrooms/',
+    getParentRoute: () => CommunitySlugRoute,
+  } as any)
 const ApiPublicLicenseVerifyRoute = ApiPublicLicenseVerifyRouteImport.update({
   id: '/api/public/license/verify',
   path: '/api/public/license/verify',
@@ -1052,7 +1053,6 @@ export interface FileRoutesByFullPath {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
@@ -1066,6 +1066,7 @@ export interface FileRoutesByFullPath {
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
+  '/community/$slug/chatrooms/': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
 export interface FileRoutesByTo {
@@ -1199,7 +1200,6 @@ export interface FileRoutesByTo {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
@@ -1213,6 +1213,7 @@ export interface FileRoutesByTo {
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
+  '/community/$slug/chatrooms': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
 export interface FileRoutesById {
@@ -1351,7 +1352,6 @@ export interface FileRoutesById {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/community/$slug/chatrooms': typeof CommunitySlugChatroomsRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
@@ -1365,6 +1365,7 @@ export interface FileRoutesById {
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
+  '/community/$slug/chatrooms/': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
 export interface FileRouteTypes {
@@ -1504,7 +1505,6 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
-    | '/community/$slug/chatrooms'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
@@ -1518,6 +1518,7 @@ export interface FileRouteTypes {
     | '/api/public/license/deactivate'
     | '/api/public/license/reset'
     | '/api/public/license/verify'
+    | '/community/$slug/chatrooms/'
     | '/api/public/og/competition/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1651,7 +1652,6 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
-    | '/community/$slug/chatrooms'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
@@ -1665,6 +1665,7 @@ export interface FileRouteTypes {
     | '/api/public/license/deactivate'
     | '/api/public/license/reset'
     | '/api/public/license/verify'
+    | '/community/$slug/chatrooms'
     | '/api/public/og/competition/$slug'
   id:
     | '__root__'
@@ -1802,7 +1803,6 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
-    | '/community/$slug/chatrooms'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
@@ -1816,6 +1816,7 @@ export interface FileRouteTypes {
     | '/api/public/license/deactivate'
     | '/api/public/license/reset'
     | '/api/public/license/verify'
+    | '/community/$slug/chatrooms/'
     | '/api/public/og/competition/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -2807,13 +2808,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunitySlugCompetitionsRouteImport
       parentRoute: typeof CommunitySlugRoute
     }
-    '/community/$slug/chatrooms': {
-      id: '/community/$slug/chatrooms'
-      path: '/chatrooms'
-      fullPath: '/community/$slug/chatrooms'
-      preLoaderRoute: typeof CommunitySlugChatroomsRouteImport
-      parentRoute: typeof CommunitySlugRoute
-    }
     '/api/public/landing': {
       id: '/api/public/landing'
       path: '/api/public/landing'
@@ -2855,6 +2849,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/upcoming/$key'
       preLoaderRoute: typeof AdminUpcomingKeyRouteImport
       parentRoute: typeof AdminUpcomingRoute
+    }
+    '/community/$slug/chatrooms/': {
+      id: '/community/$slug/chatrooms/'
+      path: '/chatrooms'
+      fullPath: '/community/$slug/chatrooms/'
+      preLoaderRoute: typeof CommunitySlugChatroomsIndexRouteImport
+      parentRoute: typeof CommunitySlugRoute
     }
     '/api/public/license/verify': {
       id: '/api/public/license/verify'
@@ -3121,21 +3122,21 @@ const BroadcasterRouteWithChildren = BroadcasterRoute._addFileChildren(
 )
 
 interface CommunitySlugRouteChildren {
-  CommunitySlugChatroomsRoute: typeof CommunitySlugChatroomsRoute
   CommunitySlugCompetitionsRoute: typeof CommunitySlugCompetitionsRoute
   CommunitySlugDashboardRoute: typeof CommunitySlugDashboardRoute
   CommunitySlugFeedRoute: typeof CommunitySlugFeedRoute
   CommunitySlugMembersRoute: typeof CommunitySlugMembersRoute
   CommunitySlugIndexRoute: typeof CommunitySlugIndexRoute
+  CommunitySlugChatroomsIndexRoute: typeof CommunitySlugChatroomsIndexRoute
 }
 
 const CommunitySlugRouteChildren: CommunitySlugRouteChildren = {
-  CommunitySlugChatroomsRoute: CommunitySlugChatroomsRoute,
   CommunitySlugCompetitionsRoute: CommunitySlugCompetitionsRoute,
   CommunitySlugDashboardRoute: CommunitySlugDashboardRoute,
   CommunitySlugFeedRoute: CommunitySlugFeedRoute,
   CommunitySlugMembersRoute: CommunitySlugMembersRoute,
   CommunitySlugIndexRoute: CommunitySlugIndexRoute,
+  CommunitySlugChatroomsIndexRoute: CommunitySlugChatroomsIndexRoute,
 }
 
 const CommunitySlugRouteWithChildren = CommunitySlugRoute._addFileChildren(

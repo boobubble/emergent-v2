@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-store";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Users, Lock } from "lucide-react";
 
-export const Route = createFileRoute("/community/$slug/chatrooms")({
+export const Route = createFileRoute("/community/$slug/chatrooms/")({
   component: CommunityChatrooms,
 });
 
