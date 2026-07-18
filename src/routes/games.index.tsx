@@ -282,7 +282,7 @@ function HubInner({ userId }: { userId: string }) {
                     <Target className="h-5 w-5" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm font-bold">{c.title}</div>
+                    <div className="text-sm font-bold">{c.name}</div>
                     {c.description && <div className="text-xs text-muted-foreground">{c.description}</div>}
                   </div>
                   <div className="text-right text-xs font-bold text-primary">
