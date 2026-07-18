@@ -44,6 +44,7 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GamesIndexRouteImport } from './routes/games.index'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
 import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -339,6 +340,11 @@ const SlugRoute = SlugRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesIndexRoute = GamesIndexRouteImport.update({
+  id: '/games/',
+  path: '/games/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
@@ -1097,6 +1103,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
+  '/games/': typeof GamesIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
@@ -1251,6 +1258,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
+  '/games': typeof GamesIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
@@ -1410,6 +1418,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
+  '/games/': typeof GamesIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
@@ -1570,6 +1579,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/broadcaster/'
     | '/competitions/'
+    | '/games/'
     | '/admin/upcoming/$key'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
@@ -1724,6 +1734,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/broadcaster'
     | '/competitions'
+    | '/games'
     | '/admin/upcoming/$key'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
@@ -1882,6 +1893,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/broadcaster/'
     | '/competitions/'
+    | '/games/'
     | '/admin/upcoming/$key'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
@@ -1947,6 +1959,7 @@ export interface RootRouteChildren {
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  GamesIndexRoute: typeof GamesIndexRoute
   ApiPublicBackupRetentionRoute: typeof ApiPublicBackupRetentionRoute
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
@@ -2208,6 +2221,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games/': {
+      id: '/games/'
+      path: '/games'
+      fullPath: '/games/'
+      preLoaderRoute: typeof GamesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/competitions/': {
@@ -3371,6 +3391,7 @@ const rootRouteChildren: RootRouteChildren = {
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
+  GamesIndexRoute: GamesIndexRoute,
   ApiPublicBackupRetentionRoute: ApiPublicBackupRetentionRoute,
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
