@@ -154,6 +154,7 @@ import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/publ
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as ApiPublicBackupRetentionRouteImport } from './routes/api/public/backup-retention'
+import { Route as ApiGamesXpRouteImport } from './routes/api/games.xp'
 import { Route as ApiGamesStartRouteImport } from './routes/api/games.start'
 import { Route as ApiGamesScoreRouteImport } from './routes/api/games.score'
 import { Route as ApiGamesFinishRouteImport } from './routes/api/games.finish'
@@ -902,6 +903,11 @@ const ApiPublicBackupRetentionRoute =
     path: '/api/public/backup-retention',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiGamesXpRoute = ApiGamesXpRouteImport.update({
+  id: '/api/games/xp',
+  path: '/api/games/xp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGamesStartRoute = ApiGamesStartRouteImport.update({
   id: '/api/games/start',
   path: '/api/games/start',
@@ -1126,6 +1132,7 @@ export interface FileRoutesByFullPath {
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/score': typeof ApiGamesScoreRoute
   '/api/games/start': typeof ApiGamesStartRoute
+  '/api/games/xp': typeof ApiGamesXpRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
@@ -1284,6 +1291,7 @@ export interface FileRoutesByTo {
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/score': typeof ApiGamesScoreRoute
   '/api/games/start': typeof ApiGamesStartRoute
+  '/api/games/xp': typeof ApiGamesXpRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
@@ -1447,6 +1455,7 @@ export interface FileRoutesById {
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/score': typeof ApiGamesScoreRoute
   '/api/games/start': typeof ApiGamesStartRoute
+  '/api/games/xp': typeof ApiGamesXpRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
@@ -1611,6 +1620,7 @@ export interface FileRouteTypes {
     | '/api/games/finish'
     | '/api/games/score'
     | '/api/games/start'
+    | '/api/games/xp'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
@@ -1769,6 +1779,7 @@ export interface FileRouteTypes {
     | '/api/games/finish'
     | '/api/games/score'
     | '/api/games/start'
+    | '/api/games/xp'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
@@ -1931,6 +1942,7 @@ export interface FileRouteTypes {
     | '/api/games/finish'
     | '/api/games/score'
     | '/api/games/start'
+    | '/api/games/xp'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
@@ -1998,6 +2010,7 @@ export interface RootRouteChildren {
   ApiGamesFinishRoute: typeof ApiGamesFinishRoute
   ApiGamesScoreRoute: typeof ApiGamesScoreRoute
   ApiGamesStartRoute: typeof ApiGamesStartRoute
+  ApiGamesXpRoute: typeof ApiGamesXpRoute
   ApiPublicBackupRetentionRoute: typeof ApiPublicBackupRetentionRoute
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
@@ -3031,6 +3044,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBackupRetentionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/games/xp': {
+      id: '/api/games/xp'
+      path: '/api/games/xp'
+      fullPath: '/api/games/xp'
+      preLoaderRoute: typeof ApiGamesXpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/games/start': {
       id: '/api/games/start'
       path: '/api/games/start'
@@ -3463,6 +3483,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGamesFinishRoute: ApiGamesFinishRoute,
   ApiGamesScoreRoute: ApiGamesScoreRoute,
   ApiGamesStartRoute: ApiGamesStartRoute,
+  ApiGamesXpRoute: ApiGamesXpRoute,
   ApiPublicBackupRetentionRoute: ApiPublicBackupRetentionRoute,
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
