@@ -157,6 +157,7 @@ import { Route as ApiPublicBackupRetentionRouteImport } from './routes/api/publi
 import { Route as ApiGamesXpRouteImport } from './routes/api/games.xp'
 import { Route as ApiGamesStartRouteImport } from './routes/api/games.start'
 import { Route as ApiGamesScoreRouteImport } from './routes/api/games.score'
+import { Route as ApiGamesSaveRouteImport } from './routes/api/games.save'
 import { Route as ApiGamesFinishRouteImport } from './routes/api/games.finish'
 import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
@@ -919,6 +920,11 @@ const ApiGamesScoreRoute = ApiGamesScoreRouteImport.update({
   path: '/api/games/score',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGamesSaveRoute = ApiGamesSaveRouteImport.update({
+  id: '/api/games/save',
+  path: '/api/games/save',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGamesFinishRoute = ApiGamesFinishRouteImport.update({
   id: '/api/games/finish',
   path: '/api/games/finish',
@@ -1137,6 +1143,7 @@ export interface FileRoutesByFullPath {
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
+  '/api/games/save': typeof ApiGamesSaveRoute
   '/api/games/score': typeof ApiGamesScoreRoute
   '/api/games/start': typeof ApiGamesStartRoute
   '/api/games/xp': typeof ApiGamesXpRoute
@@ -1297,6 +1304,7 @@ export interface FileRoutesByTo {
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
+  '/api/games/save': typeof ApiGamesSaveRoute
   '/api/games/score': typeof ApiGamesScoreRoute
   '/api/games/start': typeof ApiGamesStartRoute
   '/api/games/xp': typeof ApiGamesXpRoute
@@ -1462,6 +1470,7 @@ export interface FileRoutesById {
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
+  '/api/games/save': typeof ApiGamesSaveRoute
   '/api/games/score': typeof ApiGamesScoreRoute
   '/api/games/start': typeof ApiGamesStartRoute
   '/api/games/xp': typeof ApiGamesXpRoute
@@ -1628,6 +1637,7 @@ export interface FileRouteTypes {
     | '/admin/upcoming/$key'
     | '/api/games/coins'
     | '/api/games/finish'
+    | '/api/games/save'
     | '/api/games/score'
     | '/api/games/start'
     | '/api/games/xp'
@@ -1788,6 +1798,7 @@ export interface FileRouteTypes {
     | '/admin/upcoming/$key'
     | '/api/games/coins'
     | '/api/games/finish'
+    | '/api/games/save'
     | '/api/games/score'
     | '/api/games/start'
     | '/api/games/xp'
@@ -1952,6 +1963,7 @@ export interface FileRouteTypes {
     | '/admin/upcoming/$key'
     | '/api/games/coins'
     | '/api/games/finish'
+    | '/api/games/save'
     | '/api/games/score'
     | '/api/games/start'
     | '/api/games/xp'
@@ -2021,6 +2033,7 @@ export interface RootRouteChildren {
   UUsernameRoute: typeof UUsernameRoute
   ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
   ApiGamesFinishRoute: typeof ApiGamesFinishRoute
+  ApiGamesSaveRoute: typeof ApiGamesSaveRoute
   ApiGamesScoreRoute: typeof ApiGamesScoreRoute
   ApiGamesStartRoute: typeof ApiGamesStartRoute
   ApiGamesXpRoute: typeof ApiGamesXpRoute
@@ -3078,6 +3091,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGamesScoreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/games/save': {
+      id: '/api/games/save'
+      path: '/api/games/save'
+      fullPath: '/api/games/save'
+      preLoaderRoute: typeof ApiGamesSaveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/games/finish': {
       id: '/api/games/finish'
       path: '/api/games/finish'
@@ -3502,6 +3522,7 @@ const rootRouteChildren: RootRouteChildren = {
   UUsernameRoute: UUsernameRoute,
   ApiGamesCoinsRoute: ApiGamesCoinsRoute,
   ApiGamesFinishRoute: ApiGamesFinishRoute,
+  ApiGamesSaveRoute: ApiGamesSaveRoute,
   ApiGamesScoreRoute: ApiGamesScoreRoute,
   ApiGamesStartRoute: ApiGamesStartRoute,
   ApiGamesXpRoute: ApiGamesXpRoute,
