@@ -192,6 +192,78 @@ export class GamesSDK {
   emit<K extends SDKEventName>(event: K, payload: SDKEventPayloadMap[K]): void {
     this.adapters.events?.emit(event, payload);
   }
+
+  // ---- high-level lifecycle events --------------------------------------
+  // Each helper funnels through the existing XP / Wallet / Achievements /
+  // Analytics adapters — no new engines, no duplicated logic. Rewards are
+  // optional and always routed via `addXP` / `addCoins`.
+  private async _grant(reward?: { xp?: number; coins?: number }, reason?: string) {
+    const result: { xpAwarded?: number; coinsAwarded?: number } = {};
+    if (reward?.xp && reward.xp > 0) {
+      const r = await this.addXP(reward.xp, reason);
+      if (r.ok) result.xpAwarded = reward.xp;
+    }
+    if (reward?.coins && reward.coins > 0) {
+      const r = await this.addCoins(reward.coins, reason);
+      if (r.ok) result.coinsAwarded = reward.coins;
+    }
+    return result;
+  }
+
+  async gameStarted(input: { sessionId?: string; mode?: string; metadata?: Record<string, unknown> } = {}): Promise<SDKResult<void>> {
+    const payload = { gameId: this.context.gameId, ...input };
+    await this.trackEvent({ name: "game.started", properties: payload });
+    this.emit("game.started", payload);
+    return { ok: true, data: undefined };
+  }
+
+  async gameFinished(input: { sessionId?: string; score?: number; durationMs?: number; won?: boolean; metadata?: Record<string, unknown>; reward?: { xp?: number; coins?: number } } = {}): Promise<SDKResult<{ xpAwarded?: number; coinsAwarded?: number }>> {
+    const granted = await this._grant(input.reward, `game.finished:${this.context.gameId}`);
+    if (typeof input.score === "number") {
+      await this.submitScore({ gameId: this.context.gameId, score: input.score, metadata: input.metadata });
+    }
+    const payload = { gameId: this.context.gameId, sessionId: input.sessionId, score: input.score, durationMs: input.durationMs, won: input.won, metadata: input.metadata, ...granted };
+    await this.trackEvent({ name: "game.finished", properties: payload });
+    this.emit("game.finished", payload);
+    return { ok: true, data: granted };
+  }
+
+  async reportHighestTile(input: { tile: number; previousBest?: number; reward?: { xp?: number; coins?: number } }): Promise<SDKResult<{ xpAwarded?: number; coinsAwarded?: number }>> {
+    const isNewRecord = input.previousBest === undefined ? true : input.tile > input.previousBest;
+    const granted = isNewRecord ? await this._grant(input.reward, `highest_tile:${input.tile}`) : {};
+    const payload = { gameId: this.context.gameId, tile: input.tile, previousBest: input.previousBest, isNewRecord, ...granted };
+    await this.trackEvent({ name: "game.highest_tile", properties: payload });
+    this.emit("game.highest_tile", payload);
+    return { ok: true, data: granted };
+  }
+
+  async dailyChallengeComplete(input: { challengeId: string; date?: string; reward?: { xp?: number; coins?: number } }): Promise<SDKResult<{ xpAwarded?: number; coinsAwarded?: number }>> {
+    const granted = await this._grant(input.reward, `daily_challenge:${input.challengeId}`);
+    const payload = { gameId: this.context.gameId, challengeId: input.challengeId, date: input.date, ...granted };
+    await this.trackEvent({ name: "daily_challenge.complete", properties: payload });
+    this.emit("daily_challenge.complete", payload);
+    return { ok: true, data: granted };
+  }
+
+  async missionComplete(input: { missionId: string; reward?: { xp?: number; coins?: number } }): Promise<SDKResult<{ xpAwarded?: number; coinsAwarded?: number }>> {
+    const granted = await this._grant(input.reward, `mission:${input.missionId}`);
+    const payload = { gameId: this.context.gameId, missionId: input.missionId, ...granted };
+    await this.trackEvent({ name: "mission.complete", properties: payload });
+    this.emit("mission.complete", payload);
+    return { ok: true, data: granted };
+  }
+
+  // Achievement unlock helper: reuses unlockAchievement + emits + tracks.
+  // Rewards (if any) are handled by the existing gam_award backend, not here,
+  // to avoid duplicating award rules.
+  async reportAchievementUnlock(achievementId: string): Promise<SDKResult<AchievementProgress>> {
+    const r = await this.unlockAchievement(achievementId);
+    if (r.ok) {
+      await this.trackEvent({ name: "achievement.unlocked", properties: { gameId: this.context.gameId, achievementId } });
+      this.emit("achievement.unlocked", { achievementId });
+    }
+    return r;
+  }
 }
 
 /**
