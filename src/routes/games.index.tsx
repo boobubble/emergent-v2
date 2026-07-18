@@ -86,9 +86,10 @@ function HubInner({ userId }: { userId: string }) {
       const [achRes, savesRes, xpRes, sessionRes, missionsRes, boardRes] = await Promise.all([
         supabase
           .from("gam_user_achievements")
-          .select("achievement_id, unlocked_at, gam_achievements(title, icon, rarity)")
+          .select("achievement_id, completed_at, gam_achievements(name, icon, category)")
           .eq("user_id", userId)
-          .order("unlocked_at", { ascending: false })
+          .not("completed_at", "is", null)
+          .order("completed_at", { ascending: false })
           .limit(12),
         supabase.from("game_saves").select("id", { count: "exact", head: true }).eq("user_id", userId),
         supabase
@@ -102,9 +103,13 @@ function HubInner({ userId }: { userId: string }) {
           .eq("user_id", userId)
           .in("event_type", ["game.started", "game.finished"]),
         supabase
-          .from("daily_missions")
-          .select("id, title, description, reward_xp, reward_coins")
+          .from("gam_quests")
+          .select("id, name, description, reward_xp, reward_coins")
+          .eq("cadence", "daily")
+          .eq("active", true)
+          .order("sort_order", { ascending: true })
           .limit(4),
+
         supabase
           .from("gam_event_log")
           .select("user_id, amount")
