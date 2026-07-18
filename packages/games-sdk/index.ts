@@ -149,6 +149,12 @@ export class GamesSDK {
   async loadGame<T = unknown>(slot: string): Promise<SDKResult<CloudSaveSlot<T> | null>> {
     return this.adapters.cloudsave?.loadGame<T>(slot) ?? notImplemented("loadGame");
   }
+  async deleteSave(slot: string): Promise<SDKResult<void>> {
+    return this.adapters.cloudsave?.deleteSave(slot) ?? notImplemented("deleteSave");
+  }
+  async listSaves(): Promise<SDKResult<CloudSaveSlot[]>> {
+    return this.adapters.cloudsave?.listSaves() ?? notImplemented("listSaves");
+  }
 
   // ---- analytics ---------------------------------------------------------
   async trackEvent(event: AnalyticsEvent): Promise<SDKResult<void>> {
