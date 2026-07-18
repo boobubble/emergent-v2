@@ -245,11 +245,11 @@ export const joinCommunity = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    // join_password_hash is restricted from client roles; read via admin client server-side.
+    // Password hash lives in a separate secrets table only reachable via the admin client.
     const { supabaseAdmin: _sbAdminForJoin } = await import("@/integrations/supabase/client.server");
     const { data: comm, error: cErr } = await _sbAdminForJoin
       .from("communities")
-      .select("id,privacy_mode,join_password_hash,status")
+      .select("id,privacy_mode,status")
       .eq("id", data.communityId)
       .maybeSingle();
     if (cErr || !comm) throw new Error("Community not found");
