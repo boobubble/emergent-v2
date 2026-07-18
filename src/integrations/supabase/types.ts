@@ -3574,6 +3574,291 @@ export type Database = {
           },
         ]
       }
+      mehfil_bookmarks: {
+        Row: {
+          created_at: string
+          poem_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          poem_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          poem_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mehfil_bookmarks_poem_id_fkey"
+            columns: ["poem_id"]
+            isOneToOne: false
+            referencedRelation: "mehfil_poems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mehfil_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mehfil_hall_of_fame: {
+        Row: {
+          awarded_at: string
+          category_id: string | null
+          created_at: string
+          id: string
+          period: string
+          period_end: string | null
+          period_start: string | null
+          poem_id: string | null
+          rank: number
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          period: string
+          period_end?: string | null
+          period_start?: string | null
+          poem_id?: string | null
+          rank?: number
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          period?: string
+          period_end?: string | null
+          period_start?: string | null
+          poem_id?: string | null
+          rank?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mehfil_hall_of_fame_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "mehfil_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mehfil_hall_of_fame_poem_id_fkey"
+            columns: ["poem_id"]
+            isOneToOne: false
+            referencedRelation: "mehfil_poems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mehfil_poem_reads: {
+        Row: {
+          id: string
+          poem_id: string
+          read_at: string
+          read_day: string | null
+          session_key: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          poem_id: string
+          read_at?: string
+          read_day?: string | null
+          session_key?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          poem_id?: string
+          read_at?: string
+          read_day?: string | null
+          session_key?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mehfil_poem_reads_poem_id_fkey"
+            columns: ["poem_id"]
+            isOneToOne: false
+            referencedRelation: "mehfil_poems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mehfil_poems: {
+        Row: {
+          author_id: string
+          body: string
+          bookmark_count: number
+          category_id: string | null
+          comment_count: number
+          competition_id: string | null
+          cover_url: string | null
+          created_at: string
+          id: string
+          is_editors_pick: boolean
+          is_featured: boolean
+          language: string
+          published_at: string | null
+          read_count: number
+          seo_description: string | null
+          seo_title: string | null
+          share_count: number
+          slug: string
+          status: string
+          tags: string[]
+          theme: string | null
+          title: string
+          updated_at: string
+          upvote_count: number
+          view_count: number
+        }
+        Insert: {
+          author_id: string
+          body: string
+          bookmark_count?: number
+          category_id?: string | null
+          comment_count?: number
+          competition_id?: string | null
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          is_editors_pick?: boolean
+          is_featured?: boolean
+          language?: string
+          published_at?: string | null
+          read_count?: number
+          seo_description?: string | null
+          seo_title?: string | null
+          share_count?: number
+          slug: string
+          status?: string
+          tags?: string[]
+          theme?: string | null
+          title: string
+          updated_at?: string
+          upvote_count?: number
+          view_count?: number
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          bookmark_count?: number
+          category_id?: string | null
+          comment_count?: number
+          competition_id?: string | null
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          is_editors_pick?: boolean
+          is_featured?: boolean
+          language?: string
+          published_at?: string | null
+          read_count?: number
+          seo_description?: string | null
+          seo_title?: string | null
+          share_count?: number
+          slug?: string
+          status?: string
+          tags?: string[]
+          theme?: string | null
+          title?: string
+          updated_at?: string
+          upvote_count?: number
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mehfil_poems_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "mehfil_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mehfil_writer_stats: {
+        Row: {
+          battle_wins: number
+          featured_count: number
+          hof_count: number
+          poems_published: number
+          total_comments: number
+          total_reads: number
+          total_upvotes: number
+          updated_at: string
+          user_id: string
+          writer_rank: string
+        }
+        Insert: {
+          battle_wins?: number
+          featured_count?: number
+          hof_count?: number
+          poems_published?: number
+          total_comments?: number
+          total_reads?: number
+          total_upvotes?: number
+          updated_at?: string
+          user_id: string
+          writer_rank?: string
+        }
+        Update: {
+          battle_wins?: number
+          featured_count?: number
+          hof_count?: number
+          poems_published?: number
+          total_comments?: number
+          total_reads?: number
+          total_upvotes?: number
+          updated_at?: string
+          user_id?: string
+          writer_rank?: string
+        }
+        Relationships: []
+      }
       message_highlights: {
         Row: {
           buyer_id: string
@@ -6398,6 +6683,25 @@ export type Database = {
           voted_at: string
           voter_id: string
         }[]
+      }
+      mehfil_compute_writer_rank: {
+        Args: {
+          featured: number
+          hof: number
+          poems: number
+          upvotes: number
+          wins: number
+        }
+        Returns: string
+      }
+      mehfil_increment_view: { Args: { p_poem_id: string }; Returns: undefined }
+      mehfil_record_read: {
+        Args: { p_poem_id: string; p_session?: string }
+        Returns: undefined
+      }
+      mehfil_refresh_writer_stats: {
+        Args: { target_user: string }
+        Returns: undefined
       }
       my_active_plan: {
         Args: never

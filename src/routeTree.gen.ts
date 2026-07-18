@@ -45,12 +45,15 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MehfilIndexRouteImport } from './routes/mehfil.index'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
 import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as MehfilComposeRouteImport } from './routes/mehfil.compose'
+import { Route as MehfilSlugRouteImport } from './routes/mehfil.$slug'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as GamesLudoRouteImport } from './routes/games.ludo'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
@@ -145,6 +148,7 @@ import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placeme
 import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
 import { Route as AdminAbuseProtectionRouteImport } from './routes/admin.abuse-protection'
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
+import { Route as MehfilCategorySlugRouteImport } from './routes/mehfil.category.$slug'
 import { Route as CommunitySlugMembersRouteImport } from './routes/community.$slug.members'
 import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
@@ -355,6 +359,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MehfilIndexRoute = MehfilIndexRouteImport.update({
+  id: '/mehfil/',
+  path: '/mehfil/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -383,6 +392,16 @@ const PagesEditorIdRoute = PagesEditorIdRouteImport.update({
 const PSlugRoute = PSlugRouteImport.update({
   id: '/p/$slug',
   path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilComposeRoute = MehfilComposeRouteImport.update({
+  id: '/mehfil/compose',
+  path: '/mehfil/compose',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilSlugRoute = MehfilSlugRouteImport.update({
+  id: '/mehfil/$slug',
+  path: '/mehfil/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InviteCodeRoute = InviteCodeRouteImport.update({
@@ -859,6 +878,11 @@ const CommunitySlugIndexRoute = CommunitySlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CommunitySlugRoute,
 } as any)
+const MehfilCategorySlugRoute = MehfilCategorySlugRouteImport.update({
+  id: '/mehfil/category/$slug',
+  path: '/mehfil/category/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CommunitySlugMembersRoute = CommunitySlugMembersRouteImport.update({
   id: '/members',
   path: '/members',
@@ -1146,12 +1170,15 @@ export interface FileRoutesByFullPath {
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/mehfil/$slug': typeof MehfilSlugRoute
+  '/mehfil/compose': typeof MehfilComposeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
+  '/mehfil/': typeof MehfilIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1170,6 +1197,7 @@ export interface FileRoutesByFullPath {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1309,12 +1337,15 @@ export interface FileRoutesByTo {
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/mehfil/$slug': typeof MehfilSlugRoute
+  '/mehfil/compose': typeof MehfilComposeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
+  '/mehfil': typeof MehfilIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1333,6 +1364,7 @@ export interface FileRoutesByTo {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/community/$slug': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1477,12 +1509,15 @@ export interface FileRoutesById {
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/mehfil/$slug': typeof MehfilSlugRoute
+  '/mehfil/compose': typeof MehfilComposeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
+  '/mehfil/': typeof MehfilIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1501,6 +1536,7 @@ export interface FileRoutesById {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1646,12 +1682,15 @@ export interface FileRouteTypes {
     | '/feed/$slug'
     | '/games/ludo'
     | '/invite/$code'
+    | '/mehfil/$slug'
+    | '/mehfil/compose'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
     | '/admin/'
     | '/broadcaster/'
     | '/competitions/'
+    | '/mehfil/'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -1670,6 +1709,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
+    | '/mehfil/category/$slug'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -1809,12 +1849,15 @@ export interface FileRouteTypes {
     | '/feed/$slug'
     | '/games/ludo'
     | '/invite/$code'
+    | '/mehfil/$slug'
+    | '/mehfil/compose'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
     | '/admin'
     | '/broadcaster'
     | '/competitions'
+    | '/mehfil'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -1833,6 +1876,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
+    | '/mehfil/category/$slug'
     | '/community/$slug'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -1976,12 +2020,15 @@ export interface FileRouteTypes {
     | '/feed/$slug'
     | '/games/ludo'
     | '/invite/$code'
+    | '/mehfil/$slug'
+    | '/mehfil/compose'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
     | '/admin/'
     | '/broadcaster/'
     | '/competitions/'
+    | '/mehfil/'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -2000,6 +2047,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
+    | '/mehfil/category/$slug'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -2052,9 +2100,12 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  MehfilSlugRoute: typeof MehfilSlugRoute
+  MehfilComposeRoute: typeof MehfilComposeRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  MehfilIndexRoute: typeof MehfilIndexRoute
   ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
   ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
   ApiGamesEventRoute: typeof ApiGamesEventRoute
@@ -2068,6 +2119,7 @@ export interface RootRouteChildren {
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
   ApiPublicLandingRoute: typeof ApiPublicLandingRoute
+  MehfilCategorySlugRoute: typeof MehfilCategorySlugRoute
   ApiPublicHooksFeedbotDispatchRoute: typeof ApiPublicHooksFeedbotDispatchRoute
   ApiPublicHooksFeedbotSummaryRoute: typeof ApiPublicHooksFeedbotSummaryRoute
   ApiPublicHooksLicenseRevalidateRoute: typeof ApiPublicHooksLicenseRevalidateRoute
@@ -2333,6 +2385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mehfil/': {
+      id: '/mehfil/'
+      path: '/mehfil'
+      fullPath: '/mehfil/'
+      preLoaderRoute: typeof MehfilIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/competitions/': {
       id: '/competitions/'
       path: '/'
@@ -2373,6 +2432,20 @@ declare module '@tanstack/react-router' {
       path: '/p/$slug'
       fullPath: '/p/$slug'
       preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mehfil/compose': {
+      id: '/mehfil/compose'
+      path: '/mehfil/compose'
+      fullPath: '/mehfil/compose'
+      preLoaderRoute: typeof MehfilComposeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mehfil/$slug': {
+      id: '/mehfil/$slug'
+      path: '/mehfil/$slug'
+      fullPath: '/mehfil/$slug'
+      preLoaderRoute: typeof MehfilSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invite/$code': {
@@ -3033,6 +3106,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunitySlugIndexRouteImport
       parentRoute: typeof CommunitySlugRoute
     }
+    '/mehfil/category/$slug': {
+      id: '/mehfil/category/$slug'
+      path: '/mehfil/category/$slug'
+      fullPath: '/mehfil/category/$slug'
+      preLoaderRoute: typeof MehfilCategorySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/community/$slug/members': {
       id: '/community/$slug/members'
       path: '/members'
@@ -3557,9 +3637,12 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
   InviteCodeRoute: InviteCodeRoute,
+  MehfilSlugRoute: MehfilSlugRoute,
+  MehfilComposeRoute: MehfilComposeRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
+  MehfilIndexRoute: MehfilIndexRoute,
   ApiGamesAchievementRoute: ApiGamesAchievementRoute,
   ApiGamesCoinsRoute: ApiGamesCoinsRoute,
   ApiGamesEventRoute: ApiGamesEventRoute,
@@ -3573,6 +3656,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
   ApiPublicLandingRoute: ApiPublicLandingRoute,
+  MehfilCategorySlugRoute: MehfilCategorySlugRoute,
   ApiPublicHooksFeedbotDispatchRoute: ApiPublicHooksFeedbotDispatchRoute,
   ApiPublicHooksFeedbotSummaryRoute: ApiPublicHooksFeedbotSummaryRoute,
   ApiPublicHooksLicenseRevalidateRoute: ApiPublicHooksLicenseRevalidateRoute,
@@ -3586,13 +3670,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
