@@ -47,6 +47,10 @@ import {
   sdkTrackEvent,
   sdkSendNotification,
   sdkGetProfile,
+  sdkSaveGame,
+  sdkLoadGame,
+  sdkDeleteSave,
+  sdkListSaves,
 } from "./games-sdk.functions";
 
 const ok = <T>(data: T): SDKResult<T> => ({ ok: true, data });
