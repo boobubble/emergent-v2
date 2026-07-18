@@ -443,15 +443,24 @@ export const updateCommunityPrivacy = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId, data.communityId);
-    const payload: Record<string, unknown> = { privacy_mode: data.privacy_mode };
     const needsPassword = data.privacy_mode === "password" || data.privacy_mode === "invite_password";
-    if (needsPassword && data.password) {
-      payload.join_password_hash = await hashPassword(data.password);
-    } else if (!needsPassword) {
-      payload.join_password_hash = null;
-    }
-    const { error } = await context.supabase.from("communities").update(payload as never).eq("id", data.communityId);
+    const { error } = await context.supabase
+      .from("communities")
+      .update({ privacy_mode: data.privacy_mode } as never)
+      .eq("id", data.communityId);
     if (error) throw new Error(error.message);
+
+    // Password hash lives in a separate secrets table; only touch it via the admin client.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (needsPassword && data.password) {
+      const hash = await hashPassword(data.password);
+      const { error: sErr } = await supabaseAdmin
+        .from("community_password_secrets")
+        .upsert({ community_id: data.communityId, password_hash: hash, updated_at: new Date().toISOString() });
+      if (sErr) throw new Error(sErr.message);
+    } else if (!needsPassword) {
+      await supabaseAdmin.from("community_password_secrets").delete().eq("community_id", data.communityId);
+    }
     return { ok: true };
   });
 
