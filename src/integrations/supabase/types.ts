@@ -847,7 +847,6 @@ export type Database = {
           is_partner: boolean
           is_trusted: boolean
           is_verified: boolean
-          join_password_hash: string | null
           language: string | null
           logo_url: string | null
           member_count: number
@@ -882,7 +881,6 @@ export type Database = {
           is_partner?: boolean
           is_trusted?: boolean
           is_verified?: boolean
-          join_password_hash?: string | null
           language?: string | null
           logo_url?: string | null
           member_count?: number
@@ -917,7 +915,6 @@ export type Database = {
           is_partner?: boolean
           is_trusted?: boolean
           is_verified?: boolean
-          join_password_hash?: string | null
           language?: string | null
           logo_url?: string | null
           member_count?: number
@@ -1054,6 +1051,32 @@ export type Database = {
             foreignKeyName: "community_members_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_password_secrets: {
+        Row: {
+          community_id: string
+          password_hash: string
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          password_hash: string
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          password_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_password_secrets_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: true
             referencedRelation: "communities"
             referencedColumns: ["id"]
           },
