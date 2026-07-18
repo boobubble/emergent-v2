@@ -205,15 +205,18 @@ function HubInner({ userId }: { userId: string }) {
                 const g = getGame(e.gameId);
                 if (!g) return null;
                 return (
-                  <Link
+                  <a
                     key={g.id}
-                    to={g.entryPoint}
+                    href={g.launchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="group flex min-w-[180px] flex-col rounded-xl border border-border bg-card p-3 hover:border-primary"
                   >
                     <MiniBanner game={g} />
                     <div className="mt-2 text-sm font-bold">{g.name}</div>
                     <div className="text-xs text-muted-foreground">{new Date(e.lastPlayedAt).toLocaleDateString()}</div>
-                  </Link>
+                  </a>
+
                 );
               })}
             </div>
