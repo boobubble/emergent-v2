@@ -90,7 +90,7 @@ function PoemDetailPage() {
   const author = poem.author;
   const displayName = author?.display_name || author?.username || "Anonymous";
 
-  const requireAuth = (fn: () => void) => (user ? fn() : gate.open());
+  const requireAuth = (fn: () => void) => (user ? fn() : gate.openSignIn());
 
   const react = (rt: string) => {
     // Reuses the existing platform reactions pipeline via gamify event.
@@ -195,7 +195,7 @@ function PoemDetailPage() {
 
         {poem.tags?.length > 0 && (
           <div className="mt-6 flex flex-wrap gap-2">
-            {poem.tags.map((t) => (
+            {poem.tags.map((t: string) => (
               <span key={t} className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">#{t}</span>
             ))}
           </div>
