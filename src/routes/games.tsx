@@ -16,6 +16,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { listGames, listFeatured, getGame, type HubGame } from "@/lib/games-hub-registry";
 import { getRecent, getContinuePlaying, type RecentEntry } from "@/lib/games-hub-tracking";
+import { GameLaunchService } from "@/lib/game-launch-service";
+
+async function handleGameLaunch(e: React.MouseEvent<HTMLAnchorElement>, game: HubGame) {
+  e.preventDefault();
+  try {
+    await GameLaunchService.launch({ id: game.id, launchUrl: game.launchUrl });
+  } catch (err) {
+    console.error("game launch failed", err);
+    const msg = err instanceof Error ? err.message : "Could not start game";
+    if (typeof window !== "undefined") window.alert(msg);
+  }
+}
+
 
 export const Route = createFileRoute("/games")({
   head: () => ({
@@ -208,8 +221,10 @@ function HubInner({ userId }: { userId: string }) {
                   <a
                     key={g.id}
                     href={g.launchUrl}
+                    onClick={(ev) => handleGameLaunch(ev, g)}
                     target="_blank"
                     rel="noopener noreferrer"
+
                     className="group flex min-w-[180px] flex-col rounded-xl border border-border bg-card p-3 hover:border-primary"
                   >
                     <MiniBanner game={g} />
@@ -355,8 +370,10 @@ function FeaturedCard({ game, large, subtitle }: { game: HubGame; large?: boolea
   return (
     <a
       href={game.launchUrl}
+      onClick={(ev) => handleGameLaunch(ev, game)}
       target="_blank"
       rel="noopener noreferrer"
+
       className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-lg"
     >
       <div className={`relative ${large ? "h-32" : "h-24"} w-full overflow-hidden`}>
