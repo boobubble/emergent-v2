@@ -154,6 +154,7 @@ import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/publ
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as ApiPublicBackupRetentionRouteImport } from './routes/api/public/backup-retention'
+import { Route as ApiGamesStartRouteImport } from './routes/api/games.start'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 import { Route as CommunitySlugChatroomsIndexRouteImport } from './routes/community.$slug.chatrooms.index'
 import { Route as CommunitySlugChatroomsRoomSlugRouteImport } from './routes/community.$slug.chatrooms.$roomSlug'
@@ -899,6 +900,11 @@ const ApiPublicBackupRetentionRoute =
     path: '/api/public/backup-retention',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiGamesStartRoute = ApiGamesStartRouteImport.update({
+  id: '/api/games/start',
+  path: '/api/games/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   id: '/$key',
   path: '/$key',
@@ -1105,6 +1111,7 @@ export interface FileRoutesByFullPath {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/start': typeof ApiGamesStartRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
@@ -1260,6 +1267,7 @@ export interface FileRoutesByTo {
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/start': typeof ApiGamesStartRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
@@ -1420,6 +1428,7 @@ export interface FileRoutesById {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/start': typeof ApiGamesStartRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
@@ -1581,6 +1590,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/admin/upcoming/$key'
+    | '/api/games/start'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
@@ -1736,6 +1746,7 @@ export interface FileRouteTypes {
     | '/broadcaster'
     | '/competitions'
     | '/admin/upcoming/$key'
+    | '/api/games/start'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
@@ -1895,6 +1906,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/admin/upcoming/$key'
+    | '/api/games/start'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
@@ -1959,6 +1971,7 @@ export interface RootRouteChildren {
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiGamesStartRoute: typeof ApiGamesStartRoute
   ApiPublicBackupRetentionRoute: typeof ApiPublicBackupRetentionRoute
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
@@ -2992,6 +3005,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBackupRetentionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/games/start': {
+      id: '/api/games/start'
+      path: '/api/games/start'
+      fullPath: '/api/games/start'
+      preLoaderRoute: typeof ApiGamesStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/upcoming/$key': {
       id: '/admin/upcoming/$key'
       path: '/$key'
@@ -3400,6 +3420,7 @@ const rootRouteChildren: RootRouteChildren = {
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiGamesStartRoute: ApiGamesStartRoute,
   ApiPublicBackupRetentionRoute: ApiPublicBackupRetentionRoute,
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
