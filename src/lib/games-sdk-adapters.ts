@@ -33,6 +33,8 @@ import {
   type ProfileAdapter,
   type GameProfile,
   type Paginated,
+  type CloudSaveAdapter,
+  type CloudSaveSlot,
 } from "../../packages/games-sdk";
 import { supabase } from "@/integrations/supabase/client";
 import {
