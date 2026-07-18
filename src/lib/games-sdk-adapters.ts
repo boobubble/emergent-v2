@@ -407,6 +407,7 @@ export function createBooBubbleGamesSDK(context: GameContext): GamesSDK {
     feed: makeFeedAdapter(context),
     analytics: makeAnalyticsAdapter(context),
     notifications: makeNotificationsAdapter(context),
+    events: makeEventsAdapter(),
   };
   return createGamesSDK({ context, adapters });
 }
