@@ -55,6 +55,7 @@ import {
   sdkLoadGame,
   sdkDeleteSave,
   sdkListSaves,
+  sdkNotifyFriends,
 } from "./games-sdk.functions";
 
 const ok = <T>(data: T): SDKResult<T> => ({ ok: true, data });
@@ -202,6 +203,18 @@ function makeNotificationsAdapter(ctx: GameContext): NotificationsAdapter {
         }});
         return ok({ id: r.id });
       } catch (e) { return fail(e, "sendNotification"); }
+    },
+    async notifyFriends(input) {
+      try {
+        const r = await sdkNotifyFriends({ data: {
+          title: input.title,
+          body: input.body,
+          kind: input.kind,
+          gameId: ctx.gameId,
+          data: input.data,
+        }});
+        return ok({ delivered: r.delivered });
+      } catch (e) { return fail(e, "notifyFriends"); }
     },
   };
 }
