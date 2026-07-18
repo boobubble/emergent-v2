@@ -352,9 +352,9 @@ function makeCloudSaveAdapter(ctx: GameContext): CloudSaveAdapter {
     async listSaves(): Promise<SDKResult<CloudSaveSlot[]>> {
       try {
         const rows = await sdkListSaves({ data: { gameId } });
-        const items = rows.map((r) => ({ slot: r.slot, data: r.data, version: r.version, updatedAt: r.updatedAt }));
+        const items: CloudSaveSlot[] = rows.map((r: { slot: string; data: unknown; version: number; updatedAt: string }) => ({ slot: r.slot, data: r.data, version: r.version, updatedAt: r.updatedAt }));
         // Merge in local-only slots (offline saves not yet synced).
-        const cloudSlots = new Set(items.map((i) => i.slot));
+        const cloudSlots = new Set(items.map((i: CloudSaveSlot) => i.slot));
         for (const l of listLocal()) if (!cloudSlots.has(l.slot)) items.push(l);
         return ok(items);
       } catch (e) {
