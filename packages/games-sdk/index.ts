@@ -170,6 +170,9 @@ export class GamesSDK {
   async sendNotification(input: NotificationInput): Promise<SDKResult<{ id: string }>> {
     return this.adapters.notifications?.sendNotification(input) ?? notImplemented("sendNotification");
   }
+  async notifyFriends(input: FriendFanoutInput): Promise<SDKResult<{ delivered: number }>> {
+    return this.adapters.notifications?.notifyFriends?.(input) ?? notImplemented("notifyFriends");
+  }
 
   // ---- competitions ------------------------------------------------------
   async listCompetitions(): Promise<SDKResult<Paginated<CompetitionSummary>>> {
