@@ -267,6 +267,89 @@ export class GamesSDK {
     }
     return r;
   }
+
+  // ---- social composites -------------------------------------------------
+  // Each helper is a thin composition over existing verbs:
+  //   submitScore / unlockAchievement / publishFeed / notifyFriends / trackEvent.
+  // No new pipelines — just orchestration.
+  async onNewBestScore(input: { score: number; previousBest?: number; metadata?: Record<string, unknown> }): Promise<SDKResult<{ best: number; posted: boolean; friendsNotified: number }>> {
+    const gameId = this.context.gameId;
+    const scoreRes = await this.submitScore({ gameId, score: input.score, metadata: input.metadata });
+    const best = scoreRes.ok ? scoreRes.data.best : input.score;
+    const isNewBest = input.previousBest === undefined ? true : input.score > input.previousBest;
+    let posted = false;
+    let friendsNotified = 0;
+    if (isNewBest) {
+      const feed = await this.publishFeed({
+        text: `New best score in ${gameId}: ${input.score.toLocaleString()}!`,
+        metadata: { kind: "new_best_score", gameId, score: input.score, previousBest: input.previousBest ?? null, ...input.metadata },
+      });
+      posted = feed.ok;
+      const fan = await this.notifyFriends({
+        title: "New best score!",
+        body: `Beat their record in ${gameId} with ${input.score.toLocaleString()}.`,
+        kind: "sdk_new_best_score",
+        data: { gameId, score: input.score },
+      });
+      if (fan.ok) friendsNotified = fan.data.delivered;
+    }
+    await this.trackEvent({ name: "social.new_best_score", properties: { gameId, score: input.score, isNewBest, posted, friendsNotified } });
+    return { ok: true, data: { best, posted, friendsNotified } };
+  }
+
+  async onMilestoneTile(input: { tile: number; metadata?: Record<string, unknown> }): Promise<SDKResult<{ posted: boolean; friendsNotified: number }>> {
+    const gameId = this.context.gameId;
+    const feed = await this.publishFeed({
+      text: `Reached the ${input.tile} tile in ${gameId}!`,
+      metadata: { kind: "milestone_tile", gameId, tile: input.tile, ...input.metadata },
+    });
+    const fan = await this.notifyFriends({
+      title: `Reached ${input.tile}!`,
+      body: `Just hit the ${input.tile} tile in ${gameId}.`,
+      kind: "sdk_milestone_tile",
+      data: { gameId, tile: input.tile },
+    });
+    await this.trackEvent({ name: "social.milestone_tile", properties: { gameId, tile: input.tile } });
+    this.emit("game.highest_tile", { gameId, tile: input.tile, isNewRecord: true });
+    return { ok: true, data: { posted: feed.ok, friendsNotified: fan.ok ? fan.data.delivered : 0 } };
+  }
+
+  async onRareAchievement(input: { achievementId: string; title?: string; rarity?: "rare" | "epic" | "legendary" }): Promise<SDKResult<{ unlocked: boolean; posted: boolean; friendsNotified: number }>> {
+    const gameId = this.context.gameId;
+    const unlock = await this.unlockAchievement(input.achievementId);
+    const label = input.title ?? input.achievementId;
+    const feed = await this.publishFeed({
+      text: `Unlocked ${input.rarity ?? "rare"} achievement: ${label}`,
+      metadata: { kind: "rare_achievement", gameId, achievementId: input.achievementId, rarity: input.rarity ?? "rare" },
+    });
+    const fan = await this.notifyFriends({
+      title: `Rare achievement unlocked!`,
+      body: `${label} in ${gameId}.`,
+      kind: "sdk_rare_achievement",
+      data: { gameId, achievementId: input.achievementId, rarity: input.rarity ?? "rare" },
+    });
+    await this.trackEvent({ name: "social.rare_achievement", properties: { gameId, achievementId: input.achievementId, rarity: input.rarity ?? "rare" } });
+    this.emit("achievement.unlocked", { achievementId: input.achievementId });
+    return { ok: true, data: { unlocked: unlock.ok, posted: feed.ok, friendsNotified: fan.ok ? fan.data.delivered : 0 } };
+  }
+
+  async onDailyChallengeComplete(input: { challengeId: string; date?: string; score?: number; reward?: { xp?: number; coins?: number } }): Promise<SDKResult<{ posted: boolean; friendsNotified: number; xpAwarded?: number; coinsAwarded?: number }>> {
+    const gameId = this.context.gameId;
+    const granted = await this._grant(input.reward, `daily_challenge:${input.challengeId}`);
+    const feed = await this.publishFeed({
+      text: `Completed today's daily challenge in ${gameId}!`,
+      metadata: { kind: "daily_challenge_complete", gameId, challengeId: input.challengeId, date: input.date, score: input.score },
+    });
+    const fan = await this.notifyFriends({
+      title: "Daily challenge complete!",
+      body: `Cleared today's ${gameId} challenge.`,
+      kind: "sdk_daily_challenge",
+      data: { gameId, challengeId: input.challengeId },
+    });
+    await this.trackEvent({ name: "social.daily_challenge_complete", properties: { gameId, challengeId: input.challengeId } });
+    this.emit("daily_challenge.complete", { gameId, challengeId: input.challengeId, date: input.date, ...granted });
+    return { ok: true, data: { posted: feed.ok, friendsNotified: fan.ok ? fan.data.delivered : 0, ...granted } };
+  }
 }
 
 /**
