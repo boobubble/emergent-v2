@@ -221,8 +221,10 @@ function HubInner({ userId }: { userId: string }) {
                   <a
                     key={g.id}
                     href={g.launchUrl}
+                    onClick={(ev) => handleGameLaunch(ev, g)}
                     target="_blank"
                     rel="noopener noreferrer"
+
                     className="group flex min-w-[180px] flex-col rounded-xl border border-border bg-card p-3 hover:border-primary"
                   >
                     <MiniBanner game={g} />
