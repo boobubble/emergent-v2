@@ -144,7 +144,11 @@ function Premium2048Page() {
 }
 
 function Board({ userId, title, onBack }: { userId: string; title: string; onBack: () => void }) {
-  const [{ grid, score }, setState] = useState(() => newGame());
+  const [{ grid, score }, setState] = useState<{ grid: Grid; score: number }>(() => {
+    const n = newGame();
+    return { grid: n.grid, score: n.score };
+  });
+
   const [best, setBest] = useState(0);
   const [busy, setBusy] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
