@@ -154,6 +154,14 @@ import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/publ
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
 import { Route as ApiPublicBackupRetentionRouteImport } from './routes/api/public/backup-retention'
+import { Route as ApiGamesXpRouteImport } from './routes/api/games.xp'
+import { Route as ApiGamesStartRouteImport } from './routes/api/games.start'
+import { Route as ApiGamesScoreRouteImport } from './routes/api/games.score'
+import { Route as ApiGamesSaveRouteImport } from './routes/api/games.save'
+import { Route as ApiGamesFinishRouteImport } from './routes/api/games.finish'
+import { Route as ApiGamesEventRouteImport } from './routes/api/games.event'
+import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
+import { Route as ApiGamesAchievementRouteImport } from './routes/api/games.achievement'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 import { Route as CommunitySlugChatroomsIndexRouteImport } from './routes/community.$slug.chatrooms.index'
 import { Route as CommunitySlugChatroomsRoomSlugRouteImport } from './routes/community.$slug.chatrooms.$roomSlug'
@@ -899,6 +907,46 @@ const ApiPublicBackupRetentionRoute =
     path: '/api/public/backup-retention',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiGamesXpRoute = ApiGamesXpRouteImport.update({
+  id: '/api/games/xp',
+  path: '/api/games/xp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesStartRoute = ApiGamesStartRouteImport.update({
+  id: '/api/games/start',
+  path: '/api/games/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesScoreRoute = ApiGamesScoreRouteImport.update({
+  id: '/api/games/score',
+  path: '/api/games/score',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesSaveRoute = ApiGamesSaveRouteImport.update({
+  id: '/api/games/save',
+  path: '/api/games/save',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesFinishRoute = ApiGamesFinishRouteImport.update({
+  id: '/api/games/finish',
+  path: '/api/games/finish',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesEventRoute = ApiGamesEventRouteImport.update({
+  id: '/api/games/event',
+  path: '/api/games/event',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesCoinsRoute = ApiGamesCoinsRouteImport.update({
+  id: '/api/games/coins',
+  path: '/api/games/coins',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesAchievementRoute = ApiGamesAchievementRouteImport.update({
+  id: '/api/games/achievement',
+  path: '/api/games/achievement',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   id: '/$key',
   path: '/$key',
@@ -1105,6 +1153,14 @@ export interface FileRoutesByFullPath {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/achievement': typeof ApiGamesAchievementRoute
+  '/api/games/coins': typeof ApiGamesCoinsRoute
+  '/api/games/event': typeof ApiGamesEventRoute
+  '/api/games/finish': typeof ApiGamesFinishRoute
+  '/api/games/save': typeof ApiGamesSaveRoute
+  '/api/games/score': typeof ApiGamesScoreRoute
+  '/api/games/start': typeof ApiGamesStartRoute
+  '/api/games/xp': typeof ApiGamesXpRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
@@ -1260,6 +1316,14 @@ export interface FileRoutesByTo {
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/achievement': typeof ApiGamesAchievementRoute
+  '/api/games/coins': typeof ApiGamesCoinsRoute
+  '/api/games/event': typeof ApiGamesEventRoute
+  '/api/games/finish': typeof ApiGamesFinishRoute
+  '/api/games/save': typeof ApiGamesSaveRoute
+  '/api/games/score': typeof ApiGamesScoreRoute
+  '/api/games/start': typeof ApiGamesStartRoute
+  '/api/games/xp': typeof ApiGamesXpRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
@@ -1420,6 +1484,14 @@ export interface FileRoutesById {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/achievement': typeof ApiGamesAchievementRoute
+  '/api/games/coins': typeof ApiGamesCoinsRoute
+  '/api/games/event': typeof ApiGamesEventRoute
+  '/api/games/finish': typeof ApiGamesFinishRoute
+  '/api/games/save': typeof ApiGamesSaveRoute
+  '/api/games/score': typeof ApiGamesScoreRoute
+  '/api/games/start': typeof ApiGamesStartRoute
+  '/api/games/xp': typeof ApiGamesXpRoute
   '/api/public/backup-retention': typeof ApiPublicBackupRetentionRoute
   '/api/public/community-bg': typeof ApiPublicCommunityBgRoute
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
@@ -1581,6 +1653,14 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/admin/upcoming/$key'
+    | '/api/games/achievement'
+    | '/api/games/coins'
+    | '/api/games/event'
+    | '/api/games/finish'
+    | '/api/games/save'
+    | '/api/games/score'
+    | '/api/games/start'
+    | '/api/games/xp'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
@@ -1736,6 +1816,14 @@ export interface FileRouteTypes {
     | '/broadcaster'
     | '/competitions'
     | '/admin/upcoming/$key'
+    | '/api/games/achievement'
+    | '/api/games/coins'
+    | '/api/games/event'
+    | '/api/games/finish'
+    | '/api/games/save'
+    | '/api/games/score'
+    | '/api/games/start'
+    | '/api/games/xp'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
@@ -1895,6 +1983,14 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/admin/upcoming/$key'
+    | '/api/games/achievement'
+    | '/api/games/coins'
+    | '/api/games/event'
+    | '/api/games/finish'
+    | '/api/games/save'
+    | '/api/games/score'
+    | '/api/games/start'
+    | '/api/games/xp'
     | '/api/public/backup-retention'
     | '/api/public/community-bg'
     | '/api/public/demo-cleanup'
@@ -1959,6 +2055,14 @@ export interface RootRouteChildren {
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
+  ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
+  ApiGamesEventRoute: typeof ApiGamesEventRoute
+  ApiGamesFinishRoute: typeof ApiGamesFinishRoute
+  ApiGamesSaveRoute: typeof ApiGamesSaveRoute
+  ApiGamesScoreRoute: typeof ApiGamesScoreRoute
+  ApiGamesStartRoute: typeof ApiGamesStartRoute
+  ApiGamesXpRoute: typeof ApiGamesXpRoute
   ApiPublicBackupRetentionRoute: typeof ApiPublicBackupRetentionRoute
   ApiPublicCommunityBgRoute: typeof ApiPublicCommunityBgRoute
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
@@ -2992,6 +3096,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBackupRetentionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/games/xp': {
+      id: '/api/games/xp'
+      path: '/api/games/xp'
+      fullPath: '/api/games/xp'
+      preLoaderRoute: typeof ApiGamesXpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/games/start': {
+      id: '/api/games/start'
+      path: '/api/games/start'
+      fullPath: '/api/games/start'
+      preLoaderRoute: typeof ApiGamesStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/games/score': {
+      id: '/api/games/score'
+      path: '/api/games/score'
+      fullPath: '/api/games/score'
+      preLoaderRoute: typeof ApiGamesScoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/games/save': {
+      id: '/api/games/save'
+      path: '/api/games/save'
+      fullPath: '/api/games/save'
+      preLoaderRoute: typeof ApiGamesSaveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/games/finish': {
+      id: '/api/games/finish'
+      path: '/api/games/finish'
+      fullPath: '/api/games/finish'
+      preLoaderRoute: typeof ApiGamesFinishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/games/event': {
+      id: '/api/games/event'
+      path: '/api/games/event'
+      fullPath: '/api/games/event'
+      preLoaderRoute: typeof ApiGamesEventRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/games/coins': {
+      id: '/api/games/coins'
+      path: '/api/games/coins'
+      fullPath: '/api/games/coins'
+      preLoaderRoute: typeof ApiGamesCoinsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/games/achievement': {
+      id: '/api/games/achievement'
+      path: '/api/games/achievement'
+      fullPath: '/api/games/achievement'
+      preLoaderRoute: typeof ApiGamesAchievementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/upcoming/$key': {
       id: '/admin/upcoming/$key'
       path: '/$key'
@@ -3400,6 +3560,14 @@ const rootRouteChildren: RootRouteChildren = {
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiGamesAchievementRoute: ApiGamesAchievementRoute,
+  ApiGamesCoinsRoute: ApiGamesCoinsRoute,
+  ApiGamesEventRoute: ApiGamesEventRoute,
+  ApiGamesFinishRoute: ApiGamesFinishRoute,
+  ApiGamesSaveRoute: ApiGamesSaveRoute,
+  ApiGamesScoreRoute: ApiGamesScoreRoute,
+  ApiGamesStartRoute: ApiGamesStartRoute,
+  ApiGamesXpRoute: ApiGamesXpRoute,
   ApiPublicBackupRetentionRoute: ApiPublicBackupRetentionRoute,
   ApiPublicCommunityBgRoute: ApiPublicCommunityBgRoute,
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
