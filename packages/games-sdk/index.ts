@@ -23,7 +23,7 @@ import type { CompetitionsAdapter, CompetitionSummary } from "./competitions";
 import type { EventsAdapter, SDKEventListener, SDKEventName, SDKEventPayloadMap } from "./events";
 import type { FeedAdapter, FeedPostInput, FeedPostResult } from "./feed";
 import type { LeaderboardAdapter, LeaderboardEntry, LeaderboardQuery, SubmitScoreInput } from "./leaderboard";
-import type { NotificationsAdapter, NotificationInput } from "./notifications";
+import type { NotificationsAdapter, NotificationInput, FriendFanoutInput } from "./notifications";
 import type { ProfileAdapter, GameProfile } from "./profile";
 import type { WalletAdapter, WalletBalance } from "./wallet";
 import type { XPAdapter, XPState } from "./xp";
