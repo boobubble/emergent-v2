@@ -35,6 +35,10 @@ import {
   type Paginated,
   type CloudSaveAdapter,
   type CloudSaveSlot,
+  type EventsAdapter,
+  type SDKEventName,
+  type SDKEventListener,
+  type SDKEventPayloadMap,
 } from "../../packages/games-sdk";
 import { supabase } from "@/integrations/supabase/client";
 import {
