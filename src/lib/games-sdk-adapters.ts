@@ -327,7 +327,7 @@ function makeCloudSaveAdapter(ctx: GameContext): CloudSaveAdapter {
           const entry: CloudSaveSlot<T> = { slot: r.slot, data: r.data as T, version: r.version, updatedAt: r.updatedAt };
           const local = readLocal<T>(slot);
           // Prefer whichever is newer by version; keep local mirror in sync.
-          if (!local || (local.version ?? 0) <= entry.version) writeLocal(slot, entry);
+          if (!local || (local.version ?? 0) <= (entry.version ?? 0)) writeLocal(slot, entry);
           return ok(entry);
         }
         // Nothing in the cloud — fall back to local mirror if present.
