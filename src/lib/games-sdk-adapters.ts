@@ -370,6 +370,25 @@ function makeCloudSaveAdapter(ctx: GameContext): CloudSaveAdapter {
   };
 }
 
+/* ---------------------------------------------------------- Events */
+function makeEventsAdapter(): EventsAdapter {
+  const listeners = new Map<SDKEventName, Set<(p: unknown) => void>>();
+  return {
+    on<K extends SDKEventName>(event: K, listener: SDKEventListener<K>) {
+      let set = listeners.get(event);
+      if (!set) { set = new Set(); listeners.set(event, set); }
+      set.add(listener as (p: unknown) => void);
+      return () => { set!.delete(listener as (p: unknown) => void); };
+    },
+    off<K extends SDKEventName>(event: K, listener: SDKEventListener<K>) {
+      listeners.get(event)?.delete(listener as (p: unknown) => void);
+    },
+    emit<K extends SDKEventName>(event: K, payload: SDKEventPayloadMap[K]) {
+      listeners.get(event)?.forEach((l) => { try { l(payload); } catch { /* isolate */ } });
+    },
+  };
+}
+
 /* =============================================================== */
 /**
  * Build a fully-wired GamesSDK instance for the current signed-in user.
