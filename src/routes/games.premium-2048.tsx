@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-store";
 import { getGame } from "@/lib/games-hub-registry";
 import { markGamePlayed, clearGameProgress } from "@/lib/games-hub-tracking";
 import { createBooBubbleGamesSDK } from "@/lib/games-sdk-adapters";
-import type { GamesSDK } from "@packages/games-sdk";
+import type { GamesSDK } from "../../packages/games-sdk";
 
 export const Route = createFileRoute("/games/premium-2048")({
   head: () => ({
@@ -153,7 +153,7 @@ function Board({ userId, title, onBack }: { userId: string; title: string; onBac
 
   // SDK boot
   useEffect(() => {
-    sdkRef.current = createBooBubbleGamesSDK({ id: GAME_ID, version: "1.0.0" });
+    sdkRef.current = createBooBubbleGamesSDK({ gameId: GAME_ID, version: "1.0.0" });
   }, []);
 
   const persist = useCallback((next: { grid: Grid; score: number }, silent = true) => {
@@ -170,7 +170,7 @@ function Board({ userId, title, onBack }: { userId: string; title: string; onBac
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const sdk = sdkRef.current ?? createBooBubbleGamesSDK({ id: GAME_ID, version: "1.0.0" });
+      const sdk = sdkRef.current ?? createBooBubbleGamesSDK({ gameId: GAME_ID, version: "1.0.0" });
       sdkRef.current = sdk;
       const res = await sdk.loadGame({ gameId: GAME_ID, userId, slot: "auto" });
       if (cancelled) return;
