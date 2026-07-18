@@ -245,11 +245,11 @@ export const joinCommunity = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    // join_password_hash is restricted from client roles; read via admin client server-side.
+    // Password hash lives in a separate secrets table only reachable via the admin client.
     const { supabaseAdmin: _sbAdminForJoin } = await import("@/integrations/supabase/client.server");
     const { data: comm, error: cErr } = await _sbAdminForJoin
       .from("communities")
-      .select("id,privacy_mode,join_password_hash,status")
+      .select("id,privacy_mode,status")
       .eq("id", data.communityId)
       .maybeSingle();
     if (cErr || !comm) throw new Error("Community not found");
@@ -289,8 +289,13 @@ export const joinCommunity = createServerFn({ method: "POST" })
     // Validate password
     if (needsPassword) {
       if (!data.password) throw new Error("Password required");
-      if (!comm.join_password_hash) throw new Error("Community password not configured");
-      const ok = await verifyPassword(data.password, comm.join_password_hash);
+      const { data: secret } = await _sbAdminForJoin
+        .from("community_password_secrets")
+        .select("password_hash")
+        .eq("community_id", data.communityId)
+        .maybeSingle();
+      if (!secret?.password_hash) throw new Error("Community password not configured");
+      const ok = await verifyPassword(data.password, secret.password_hash);
       if (!ok) throw new Error("Incorrect password");
     }
 
@@ -438,15 +443,24 @@ export const updateCommunityPrivacy = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId, data.communityId);
-    const payload: Record<string, unknown> = { privacy_mode: data.privacy_mode };
     const needsPassword = data.privacy_mode === "password" || data.privacy_mode === "invite_password";
-    if (needsPassword && data.password) {
-      payload.join_password_hash = await hashPassword(data.password);
-    } else if (!needsPassword) {
-      payload.join_password_hash = null;
-    }
-    const { error } = await context.supabase.from("communities").update(payload as never).eq("id", data.communityId);
+    const { error } = await context.supabase
+      .from("communities")
+      .update({ privacy_mode: data.privacy_mode } as never)
+      .eq("id", data.communityId);
     if (error) throw new Error(error.message);
+
+    // Password hash lives in a separate secrets table; only touch it via the admin client.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (needsPassword && data.password) {
+      const hash = await hashPassword(data.password);
+      const { error: sErr } = await supabaseAdmin
+        .from("community_password_secrets")
+        .upsert({ community_id: data.communityId, password_hash: hash, updated_at: new Date().toISOString() });
+      if (sErr) throw new Error(sErr.message);
+    } else if (!needsPassword) {
+      await supabaseAdmin.from("community_password_secrets").delete().eq("community_id", data.communityId);
+    }
     return { ok: true };
   });
 
