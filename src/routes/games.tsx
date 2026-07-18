@@ -370,8 +370,10 @@ function FeaturedCard({ game, large, subtitle }: { game: HubGame; large?: boolea
   return (
     <a
       href={game.launchUrl}
+      onClick={(ev) => handleGameLaunch(ev, game)}
       target="_blank"
       rel="noopener noreferrer"
+
       className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-lg"
     >
       <div className={`relative ${large ? "h-32" : "h-24"} w-full overflow-hidden`}>
