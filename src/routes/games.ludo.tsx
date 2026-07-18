@@ -43,7 +43,7 @@ interface PlayerRow {
 }
 interface ProfileRow { id: string; username: string; avatar_color: string; avatar_url: string | null; }
 
-export const Route = createFileRoute("/games")({
+export const Route = createFileRoute("/games/ludo")({
   head: () => ({
     meta: [
       { title: "Games — Realtime Ludo & more" },

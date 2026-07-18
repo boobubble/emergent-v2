@@ -26,7 +26,6 @@ import { Route as InstallerRouteImport } from './routes/installer'
 import { Route as HeropageRouteImport } from './routes/heropage'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as GamificationRouteImport } from './routes/gamification'
-import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FeedRouteImport } from './routes/feed'
@@ -52,6 +51,7 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
+import { Route as GamesLudoRouteImport } from './routes/games.ludo'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as CompetitionsLeaderboardRouteImport } from './routes/competitions.leaderboard'
 import { Route as CompetitionsHallOfFameRouteImport } from './routes/competitions.hall-of-fame'
@@ -251,11 +251,6 @@ const GamificationRoute = GamificationRouteImport.update({
   path: '/gamification',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GamesRoute = GamesRouteImport.update({
-  id: '/games',
-  path: '/games',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const FindFriendsRoute = FindFriendsRouteImport.update({
   id: '/find-friends',
   path: '/find-friends',
@@ -379,6 +374,11 @@ const PSlugRoute = PSlugRouteImport.update({
 const InviteCodeRoute = InviteCodeRouteImport.update({
   id: '/invite/$code',
   path: '/invite/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesLudoRoute = GamesLudoRouteImport.update({
+  id: '/games/ludo',
+  path: '/games/ludo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedSlugRoute = FeedSlugRouteImport.update({
@@ -981,7 +981,6 @@ export interface FileRoutesByFullPath {
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
-  '/games': typeof GamesRoute
   '/gamification': typeof GamificationRoute
   '/groups': typeof GroupsRoute
   '/heropage': typeof HeropageRoute
@@ -1090,6 +1089,7 @@ export interface FileRoutesByFullPath {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -1136,7 +1136,6 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
-  '/games': typeof GamesRoute
   '/gamification': typeof GamificationRoute
   '/groups': typeof GroupsRoute
   '/heropage': typeof HeropageRoute
@@ -1244,6 +1243,7 @@ export interface FileRoutesByTo {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -1294,7 +1294,6 @@ export interface FileRoutesById {
   '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
-  '/games': typeof GamesRoute
   '/gamification': typeof GamificationRoute
   '/groups': typeof GroupsRoute
   '/heropage': typeof HeropageRoute
@@ -1403,6 +1402,7 @@ export interface FileRoutesById {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -1454,7 +1454,6 @@ export interface FileRouteTypes {
     | '/feed'
     | '/feedback'
     | '/find-friends'
-    | '/games'
     | '/gamification'
     | '/groups'
     | '/heropage'
@@ -1563,6 +1562,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/games/ludo'
     | '/invite/$code'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1609,7 +1609,6 @@ export interface FileRouteTypes {
     | '/feed'
     | '/feedback'
     | '/find-friends'
-    | '/games'
     | '/gamification'
     | '/groups'
     | '/heropage'
@@ -1717,6 +1716,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/games/ludo'
     | '/invite/$code'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1766,7 +1766,6 @@ export interface FileRouteTypes {
     | '/feed'
     | '/feedback'
     | '/find-friends'
-    | '/games'
     | '/gamification'
     | '/groups'
     | '/heropage'
@@ -1875,6 +1874,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/games/ludo'
     | '/invite/$code'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1925,7 +1925,6 @@ export interface RootRouteChildren {
   FeedRoute: typeof FeedRouteWithChildren
   FeedbackRoute: typeof FeedbackRoute
   FindFriendsRoute: typeof FindFriendsRoute
-  GamesRoute: typeof GamesRoute
   GamificationRoute: typeof GamificationRoute
   GroupsRoute: typeof GroupsRoute
   HeropageRoute: typeof HeropageRoute
@@ -1943,6 +1942,7 @@ export interface RootRouteChildren {
   TrustRoute: typeof TrustRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
+  GamesLudoRoute: typeof GamesLudoRoute
   InviteCodeRoute: typeof InviteCodeRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
@@ -2082,13 +2082,6 @@ declare module '@tanstack/react-router' {
       path: '/gamification'
       fullPath: '/gamification'
       preLoaderRoute: typeof GamificationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/games': {
-      id: '/games'
-      path: '/games'
-      fullPath: '/games'
-      preLoaderRoute: typeof GamesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/find-friends': {
@@ -2264,6 +2257,13 @@ declare module '@tanstack/react-router' {
       path: '/invite/$code'
       fullPath: '/invite/$code'
       preLoaderRoute: typeof InviteCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games/ludo': {
+      id: '/games/ludo'
+      path: '/games/ludo'
+      fullPath: '/games/ludo'
+      preLoaderRoute: typeof GamesLudoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed/$slug': {
@@ -3349,7 +3349,6 @@ const rootRouteChildren: RootRouteChildren = {
   FeedRoute: FeedRouteWithChildren,
   FeedbackRoute: FeedbackRoute,
   FindFriendsRoute: FindFriendsRoute,
-  GamesRoute: GamesRoute,
   GamificationRoute: GamificationRoute,
   GroupsRoute: GroupsRoute,
   HeropageRoute: HeropageRoute,
@@ -3367,6 +3366,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrustRoute: TrustRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
+  GamesLudoRoute: GamesLudoRoute,
   InviteCodeRoute: InviteCodeRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
