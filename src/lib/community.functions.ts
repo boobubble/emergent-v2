@@ -289,8 +289,13 @@ export const joinCommunity = createServerFn({ method: "POST" })
     // Validate password
     if (needsPassword) {
       if (!data.password) throw new Error("Password required");
-      if (!comm.join_password_hash) throw new Error("Community password not configured");
-      const ok = await verifyPassword(data.password, comm.join_password_hash);
+      const { data: secret } = await _sbAdminForJoin
+        .from("community_password_secrets")
+        .select("password_hash")
+        .eq("community_id", data.communityId)
+        .maybeSingle();
+      if (!secret?.password_hash) throw new Error("Community password not configured");
+      const ok = await verifyPassword(data.password, secret.password_hash);
       if (!ok) throw new Error("Incorrect password");
     }
 
