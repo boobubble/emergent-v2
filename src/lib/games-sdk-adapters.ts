@@ -250,6 +250,122 @@ function makeAuthAdapter() {
   };
 }
 
+/* ------------------------------------------------------- CloudSave */
+/**
+ * Cloud saves persist per (user, game, slot) in `game_saves`.
+ * A local mirror in localStorage acts as a fallback when the network
+ * or auth are unavailable — reads prefer the cloud copy when it exists
+ * and is newer (higher version), and writes fall back to local only.
+ * Local keys are namespaced by gameId so different games can't collide.
+ */
+function makeCloudSaveAdapter(ctx: GameContext): CloudSaveAdapter {
+  const gameId = ctx.gameId;
+  const lsKey = (slot: string) => `bb.gamesdk.save.${gameId}.${slot}`;
+  const lsIndexKey = `bb.gamesdk.save.${gameId}.__index`;
+
+  const canLS = () => typeof window !== "undefined" && !!window.localStorage;
+
+  function readLocal<T>(slot: string): CloudSaveSlot<T> | null {
+    if (!canLS()) return null;
+    try {
+      const raw = window.localStorage.getItem(lsKey(slot));
+      return raw ? (JSON.parse(raw) as CloudSaveSlot<T>) : null;
+    } catch { return null; }
+  }
+  function writeLocal<T>(slot: string, entry: CloudSaveSlot<T>) {
+    if (!canLS()) return;
+    try {
+      window.localStorage.setItem(lsKey(slot), JSON.stringify(entry));
+      const idx = new Set<string>(JSON.parse(window.localStorage.getItem(lsIndexKey) || "[]"));
+      idx.add(slot);
+      window.localStorage.setItem(lsIndexKey, JSON.stringify([...idx]));
+    } catch { /* quota / private mode — ignore */ }
+  }
+  function removeLocal(slot: string) {
+    if (!canLS()) return;
+    try {
+      window.localStorage.removeItem(lsKey(slot));
+      const idx = new Set<string>(JSON.parse(window.localStorage.getItem(lsIndexKey) || "[]"));
+      idx.delete(slot);
+      window.localStorage.setItem(lsIndexKey, JSON.stringify([...idx]));
+    } catch { /* ignore */ }
+  }
+  function listLocal(): CloudSaveSlot[] {
+    if (!canLS()) return [];
+    try {
+      const idx: string[] = JSON.parse(window.localStorage.getItem(lsIndexKey) || "[]");
+      return idx.map((s) => readLocal(s)).filter(Boolean) as CloudSaveSlot[];
+    } catch { return []; }
+  }
+
+  return {
+    async saveGame<T = unknown>(slot: string, data: T): Promise<SDKResult<CloudSaveSlot<T>>> {
+      try {
+        const r = await sdkSaveGame({ data: { gameId, slot, data } });
+        const entry: CloudSaveSlot<T> = { slot: r.slot, data: r.data as T, version: r.version, updatedAt: r.updatedAt };
+        writeLocal(slot, entry);
+        return ok(entry);
+      } catch (e) {
+        // Cloud failed (offline / unauthenticated) — persist locally so gameplay
+        // isn't lost. Version bumps off the last known local version.
+        const prev = readLocal<T>(slot);
+        const entry: CloudSaveSlot<T> = {
+          slot,
+          data,
+          version: (prev?.version ?? 0) + 1,
+          updatedAt: new Date().toISOString(),
+        };
+        writeLocal(slot, entry);
+        // Report the cloud failure but keep the local copy visible to callers.
+        return { ok: false, error: { code: "CLOUD_UNAVAILABLE_LOCAL_SAVED", message: e instanceof Error ? e.message : "Saved locally; cloud unavailable." } };
+      }
+    },
+    async loadGame<T = unknown>(slot: string): Promise<SDKResult<CloudSaveSlot<T> | null>> {
+      try {
+        const r = await sdkLoadGame({ data: { gameId, slot } });
+        if (r) {
+          const entry: CloudSaveSlot<T> = { slot: r.slot, data: r.data as T, version: r.version, updatedAt: r.updatedAt };
+          const local = readLocal<T>(slot);
+          // Prefer whichever is newer by version; keep local mirror in sync.
+          if (!local || (local.version ?? 0) <= entry.version) writeLocal(slot, entry);
+          return ok(entry);
+        }
+        // Nothing in the cloud — fall back to local mirror if present.
+        return ok(readLocal<T>(slot));
+      } catch (e) {
+        const local = readLocal<T>(slot);
+        if (local) return ok(local);
+        return fail(e, "loadGame");
+      }
+    },
+    async deleteSave(slot: string): Promise<SDKResult<void>> {
+      try {
+        await sdkDeleteSave({ data: { gameId, slot } });
+        removeLocal(slot);
+        return ok(undefined as void);
+      } catch (e) {
+        // Still clear local so the user's intent is honored.
+        removeLocal(slot);
+        return fail(e, "deleteSave");
+      }
+    },
+    async listSaves(): Promise<SDKResult<CloudSaveSlot[]>> {
+      try {
+        const rows = await sdkListSaves({ data: { gameId } });
+        const items = rows.map((r) => ({ slot: r.slot, data: r.data, version: r.version, updatedAt: r.updatedAt }));
+        // Merge in local-only slots (offline saves not yet synced).
+        const cloudSlots = new Set(items.map((i) => i.slot));
+        for (const l of listLocal()) if (!cloudSlots.has(l.slot)) items.push(l);
+        return ok(items);
+      } catch (e) {
+        const local = listLocal();
+        if (local.length) return ok(local);
+        return fail(e, "listSaves");
+      }
+    },
+  };
+}
+
 /* =============================================================== */
 /**
  * Build a fully-wired GamesSDK instance for the current signed-in user.
@@ -264,6 +380,7 @@ export function createBooBubbleGamesSDK(context: GameContext): GamesSDK {
     wallet: makeWalletAdapter(context),
     achievements: makeAchievementsAdapter(),
     leaderboard: makeLeaderboardAdapter(),
+    cloudsave: makeCloudSaveAdapter(context),
     feed: makeFeedAdapter(context),
     analytics: makeAnalyticsAdapter(context),
     notifications: makeNotificationsAdapter(context),
