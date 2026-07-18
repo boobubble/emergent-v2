@@ -160,15 +160,13 @@ function Board({ userId, title, onBack }: { userId: string; title: string; onBac
     sdkRef.current = createBooBubbleGamesSDK({ gameId: GAME_ID, version: "1.0.0" });
   }, []);
 
-  const persist = useCallback((next: { grid: Grid; score: number }, silent = true) => {
+  const persist = useCallback((next: { grid: Grid; score: number; best: number }) => {
     const sdk = sdkRef.current;
     if (!sdk) return;
     // Fire-and-forget cloudsave; local fallback is inside the adapter.
-    sdk.saveGame({ gameId: GAME_ID, userId, slot: "auto", data: next }).catch(() => {
-      if (!silent) toast.error("Save failed");
-    });
+    sdk.saveGame("auto", next).catch(() => {});
     markGamePlayed(GAME_ID, true);
-  }, [userId]);
+  }, []);
 
   // Load saved game
   useEffect(() => {
@@ -176,18 +174,16 @@ function Board({ userId, title, onBack }: { userId: string; title: string; onBac
     async function load() {
       const sdk = sdkRef.current ?? createBooBubbleGamesSDK({ gameId: GAME_ID, version: "1.0.0" });
       sdkRef.current = sdk;
-      const res = await sdk.loadGame({ gameId: GAME_ID, userId, slot: "auto" });
+      const res = await sdk.loadGame<{ grid?: Grid; score?: number; best?: number }>("auto");
       if (cancelled) return;
-      if (res.ok && res.value?.data) {
-        const saved = res.value.data as { grid?: Grid; score?: number; best?: number };
+      if (res.ok && res.data?.data) {
+        const saved = res.data.data;
         if (saved.grid) {
           setState({ grid: saved.grid, score: saved.score ?? 0 });
           setBest(saved.best ?? saved.score ?? 0);
           setMilestoneReached(maxTile(saved.grid));
-          return;
         }
       }
-      // No save → fresh game (already initialized in useState)
     }
     load();
     return () => { cancelled = true; };
@@ -197,7 +193,7 @@ function Board({ userId, title, onBack }: { userId: string; title: string; onBac
   useEffect(() => {
     const sdk = sdkRef.current;
     if (!sdk || sessionActive) return;
-    sdk.gameStarted?.({ gameId: GAME_ID, userId }).catch(() => {});
+    sdk.gameStarted?.({}).catch(() => {});
     setSessionActive(true);
   }, [sessionActive]);
 
@@ -212,17 +208,17 @@ function Board({ userId, title, onBack }: { userId: string; title: string; onBac
       const highest = maxTile(g3);
 
       setBest(nextBest);
-      persist({ grid: g3, score: newScore });
+      persist({ grid: g3, score: newScore, best: nextBest });
 
       // Milestone / achievements via SDK
       const sdk = sdkRef.current;
       if (sdk && highest > milestoneReached) {
         setMilestoneReached(highest);
         if ([128, 256, 512, 1024, 2048].includes(highest)) {
-          sdk.reportHighestTile?.({ gameId: GAME_ID, userId, tile: highest }).catch(() => {});
+          sdk.reportHighestTile?.({ tile: highest }).catch(() => {});
         }
         if (highest === 2048) {
-          sdk.onMilestoneTile?.({ gameId: GAME_ID, userId, milestone: 2048, score: newScore }).catch(() => {});
+          sdk.onMilestoneTile?.({ tile: 2048 }).catch(() => {});
           toast.success("🎉 You reached 2048!");
         }
       }
@@ -231,9 +227,9 @@ function Board({ userId, title, onBack }: { userId: string; title: string; onBac
       if (!hasMoves(g3)) {
         setTimeout(() => {
           if (sdk) {
-            sdk.gameFinished?.({ gameId: GAME_ID, userId, score: newScore }).catch(() => {});
-            sdk.submitScore?.({ gameId: GAME_ID, userId, score: newScore }).catch(() => {});
-            if (newScore > best) sdk.onNewBestScore?.({ gameId: GAME_ID, userId, score: newScore }).catch(() => {});
+            sdk.gameFinished?.({ score: newScore }).catch(() => {});
+            sdk.submitScore?.({ score: newScore }).catch(() => {});
+            if (newScore > best) sdk.onNewBestScore?.({ score: newScore }).catch(() => {});
           }
           toast("Game over", { description: `Score ${newScore.toLocaleString()}` });
         }, 250);
@@ -242,6 +238,8 @@ function Board({ userId, title, onBack }: { userId: string; title: string; onBac
       return { grid: g3, score: newScore };
     });
   }, [busy, best, milestoneReached, persist]);
+
+
 
   // Keyboard controls
   useEffect(() => {
