@@ -160,6 +160,7 @@ import { Route as ApiGamesScoreRouteImport } from './routes/api/games.score'
 import { Route as ApiGamesSaveRouteImport } from './routes/api/games.save'
 import { Route as ApiGamesFinishRouteImport } from './routes/api/games.finish'
 import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
+import { Route as ApiGamesAchievementRouteImport } from './routes/api/games.achievement'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 import { Route as CommunitySlugChatroomsIndexRouteImport } from './routes/community.$slug.chatrooms.index'
 import { Route as CommunitySlugChatroomsRoomSlugRouteImport } from './routes/community.$slug.chatrooms.$roomSlug'
@@ -935,6 +936,11 @@ const ApiGamesCoinsRoute = ApiGamesCoinsRouteImport.update({
   path: '/api/games/coins',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGamesAchievementRoute = ApiGamesAchievementRouteImport.update({
+  id: '/api/games/achievement',
+  path: '/api/games/achievement',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   id: '/$key',
   path: '/$key',
@@ -1141,6 +1147,7 @@ export interface FileRoutesByFullPath {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/save': typeof ApiGamesSaveRoute
@@ -1302,6 +1309,7 @@ export interface FileRoutesByTo {
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/save': typeof ApiGamesSaveRoute
@@ -1468,6 +1476,7 @@ export interface FileRoutesById {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/save': typeof ApiGamesSaveRoute
@@ -1635,6 +1644,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/admin/upcoming/$key'
+    | '/api/games/achievement'
     | '/api/games/coins'
     | '/api/games/finish'
     | '/api/games/save'
@@ -1796,6 +1806,7 @@ export interface FileRouteTypes {
     | '/broadcaster'
     | '/competitions'
     | '/admin/upcoming/$key'
+    | '/api/games/achievement'
     | '/api/games/coins'
     | '/api/games/finish'
     | '/api/games/save'
@@ -1961,6 +1972,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/admin/upcoming/$key'
+    | '/api/games/achievement'
     | '/api/games/coins'
     | '/api/games/finish'
     | '/api/games/save'
@@ -2031,6 +2043,7 @@ export interface RootRouteChildren {
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
   ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
   ApiGamesFinishRoute: typeof ApiGamesFinishRoute
   ApiGamesSaveRoute: typeof ApiGamesSaveRoute
@@ -3112,6 +3125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGamesCoinsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/games/achievement': {
+      id: '/api/games/achievement'
+      path: '/api/games/achievement'
+      fullPath: '/api/games/achievement'
+      preLoaderRoute: typeof ApiGamesAchievementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/upcoming/$key': {
       id: '/admin/upcoming/$key'
       path: '/$key'
@@ -3520,6 +3540,7 @@ const rootRouteChildren: RootRouteChildren = {
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiGamesAchievementRoute: ApiGamesAchievementRoute,
   ApiGamesCoinsRoute: ApiGamesCoinsRoute,
   ApiGamesFinishRoute: ApiGamesFinishRoute,
   ApiGamesSaveRoute: ApiGamesSaveRoute,
