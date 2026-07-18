@@ -212,7 +212,7 @@ export const recordPoemRead = createServerFn({ method: "POST" })
     const sb = publicClient();
     const { error } = await sb.rpc("mehfil_record_read", {
       p_poem_id: data.poemId,
-      p_session: data.sessionKey ?? null,
+      p_session: data.sessionKey ?? undefined,
     });
     if (error) throw error;
     return { ok: true };
