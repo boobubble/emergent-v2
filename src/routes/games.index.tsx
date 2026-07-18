@@ -31,11 +31,12 @@ export const Route = createFileRoute("/games/")({
 
 interface AchievementRow {
   achievement_id: string;
-  unlocked_at: string;
-  gam_achievements: { title: string | null; icon: string | null; rarity: string | null } | null;
+  completed_at: string | null;
+  gam_achievements: { name: string | null; icon: string | null; category: string | null } | null;
 }
-interface DailyMission { id: string; title: string; description: string | null; reward_xp: number | null; reward_coins: number | null; }
+interface QuestRow { id: string; name: string; description: string | null; reward_xp: number; reward_coins: number; }
 interface LeaderRow { user_id: string; total: number; profile: { username: string | null; avatar_url: string | null; avatar_color: string | null } | null; }
+
 
 function GamesHub() {
   const { user } = useAuth();
