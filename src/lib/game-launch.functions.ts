@@ -70,6 +70,7 @@ export const mintGameSession = createServerFn({ method: "POST" })
         (profile as { display_name?: string | null } | null)?.display_name ??
         profile?.username ??
         null,
+
       avatar: profile?.avatar_url ?? null,
       iat: now,
       exp: now + TTL_SECONDS,
