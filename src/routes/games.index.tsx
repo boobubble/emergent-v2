@@ -68,7 +68,7 @@ function HubInner({ userId }: { userId: string }) {
   const [continueList, setContinueList] = useState<RecentEntry[]>([]);
   const [achievements, setAchievements] = useState<AchievementRow[]>([]);
   const [stats, setStats] = useState<{ sessions: number; saves: number; achievements: number; totalXp: number } | null>(null);
-  const [challenges, setChallenges] = useState<DailyMission[]>([]);
+  const [challenges, setChallenges] = useState<QuestRow[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderRow[]>([]);
   const [loading, setLoading] = useState(true);
 
