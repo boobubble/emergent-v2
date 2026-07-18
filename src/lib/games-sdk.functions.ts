@@ -291,3 +291,114 @@ export const sdkGetProfile = createServerFn({ method: "GET" })
       country: p.country ?? null,
     };
   });
+
+/* ---------------------------------------------------------- CloudSave */
+/**
+ * game_saves persistence. All operations are scoped to the signed-in user
+ * via RLS (auth.uid() = user_id). Versioning is monotonic per (user, game, slot):
+ * every saveGame() bumps `version` by 1 so games can detect stale local copies.
+ */
+export const sdkSaveGame = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("cloudsave.write")])
+  .inputValidator((i: { gameId: string; slot: string; data: unknown; expectedVersion?: number }) => ({
+    gameId: (i.gameId ?? "").toString().slice(0, 80),
+    slot: (i.slot ?? "default").toString().slice(0, 80),
+    data: i.data ?? {},
+    expectedVersion: typeof i.expectedVersion === "number" ? Math.max(0, Math.floor(i.expectedVersion)) : undefined,
+  }))
+  .handler(async ({ data, context }) => {
+    if (!data.gameId) throw new Error("gameId required");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = context.supabase as any;
+    const { data: existing } = await sb
+      .from("game_saves")
+      .select("id, version")
+      .eq("user_id", context.userId)
+      .eq("game_id", data.gameId)
+      .eq("slot", data.slot)
+      .maybeSingle();
+
+    if (existing && typeof data.expectedVersion === "number" && existing.version !== data.expectedVersion) {
+      throw new Error(`VERSION_CONFLICT: server=${existing.version} expected=${data.expectedVersion}`);
+    }
+
+    const nextVersion = (existing?.version ?? 0) + 1;
+    const { data: row, error } = await sb
+      .from("game_saves")
+      .upsert(
+        {
+          user_id: context.userId,
+          game_id: data.gameId,
+          slot: data.slot,
+          data: data.data,
+          version: nextVersion,
+        },
+        { onConflict: "user_id,game_id,slot" }
+      )
+      .select("slot, data, version, updated_at")
+      .single();
+    if (error) throw new Error(error.message);
+    return { slot: row.slot, data: row.data, version: row.version, updatedAt: row.updated_at };
+  });
+
+export const sdkLoadGame = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("cloudsave.read")])
+  .inputValidator((i: { gameId: string; slot: string }) => ({
+    gameId: (i.gameId ?? "").toString().slice(0, 80),
+    slot: (i.slot ?? "default").toString().slice(0, 80),
+  }))
+  .handler(async ({ data, context }) => {
+    if (!data.gameId) throw new Error("gameId required");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = context.supabase as any;
+    const { data: row } = await sb
+      .from("game_saves")
+      .select("slot, data, version, updated_at")
+      .eq("user_id", context.userId)
+      .eq("game_id", data.gameId)
+      .eq("slot", data.slot)
+      .maybeSingle();
+    if (!row) return null;
+    return { slot: row.slot, data: row.data, version: row.version, updatedAt: row.updated_at };
+  });
+
+export const sdkDeleteSave = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("cloudsave.write")])
+  .inputValidator((i: { gameId: string; slot: string }) => ({
+    gameId: (i.gameId ?? "").toString().slice(0, 80),
+    slot: (i.slot ?? "default").toString().slice(0, 80),
+  }))
+  .handler(async ({ data, context }) => {
+    if (!data.gameId) throw new Error("gameId required");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = context.supabase as any;
+    const { error } = await sb
+      .from("game_saves")
+      .delete()
+      .eq("user_id", context.userId)
+      .eq("game_id", data.gameId)
+      .eq("slot", data.slot);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const sdkListSaves = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("cloudsave.read")])
+  .inputValidator((i: { gameId: string }) => ({
+    gameId: (i.gameId ?? "").toString().slice(0, 80),
+  }))
+  .handler(async ({ data, context }) => {
+    if (!data.gameId) throw new Error("gameId required");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = context.supabase as any;
+    const { data: rows, error } = await sb
+      .from("game_saves")
+      .select("slot, data, version, updated_at")
+      .eq("user_id", context.userId)
+      .eq("game_id", data.gameId)
+      .order("updated_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r: { slot: string; data: unknown; version: number; updated_at: string }) => ({
+      slot: r.slot, data: r.data, version: r.version, updatedAt: r.updated_at,
+    }));
+  });
