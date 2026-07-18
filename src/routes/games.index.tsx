@@ -92,7 +92,7 @@ function HubInner({ userId }: { userId: string }) {
         supabase.from("game_saves").select("id", { count: "exact", head: true }).eq("user_id", userId),
         supabase
           .from("gam_event_log")
-          .select("payload")
+          .select("amount")
           .eq("user_id", userId)
           .eq("event_type", "game.xp"),
         supabase
@@ -106,7 +106,7 @@ function HubInner({ userId }: { userId: string }) {
           .limit(4),
         supabase
           .from("gam_event_log")
-          .select("user_id, payload")
+          .select("user_id, amount")
           .eq("event_type", "game.score")
           .gte("created_at", since)
           .limit(500),
@@ -116,10 +116,10 @@ function HubInner({ userId }: { userId: string }) {
 
       setAchievements((achRes.data ?? []) as never);
 
-      const totalXp = (xpRes.data ?? []).reduce((sum: number, row: { payload: unknown }) => {
-        const p = row.payload as { amount?: number } | null;
-        return sum + (typeof p?.amount === "number" ? p.amount : 0);
-      }, 0);
+      const totalXp = (xpRes.data ?? []).reduce(
+        (sum: number, row: { amount: number | null }) => sum + (row.amount ?? 0),
+        0,
+      );
 
       setStats({
         sessions: sessionRes.count ?? 0,
@@ -130,13 +130,14 @@ function HubInner({ userId }: { userId: string }) {
 
       setChallenges((missionsRes.data ?? []) as never);
 
-      // Aggregate scores per user for the leaderboard
+      // Aggregate scores per user for the leaderboard (best score in 7d)
       const byUser = new Map<string, number>();
-      for (const row of (boardRes.data ?? []) as { user_id: string; payload: unknown }[]) {
-        const p = row.payload as { score?: number } | null;
-        const score = typeof p?.score === "number" ? p.score : 0;
+      for (const row of (boardRes.data ?? []) as { user_id: string | null; amount: number | null }[]) {
+        if (!row.user_id) continue;
+        const score = row.amount ?? 0;
         byUser.set(row.user_id, Math.max(byUser.get(row.user_id) ?? 0, score));
       }
+
       const topIds = Array.from(byUser.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
       let profiles: Record<string, LeaderRow["profile"]> = {};
       if (topIds.length) {
