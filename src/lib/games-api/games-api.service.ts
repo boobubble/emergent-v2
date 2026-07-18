@@ -243,7 +243,7 @@ export async function apiUnlockAchievement(
 
 export async function apiSaveWrite(
   ctx: SessionCtx,
-  input: { slot: string; data: unknown; expectedVersion?: number },
+  input: { slot: string; data?: unknown; expectedVersion?: number },
 ) {
   const admin = await getAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
