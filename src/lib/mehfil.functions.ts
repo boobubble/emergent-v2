@@ -116,28 +116,24 @@ export const listMehfilCategories = createServerFn({ method: "GET" }).handler(as
   return (data ?? []) as MehfilCategory[];
 });
 
-async function fetchPoemBucket(
-  sb: ReturnType<typeof publicClient>,
-  filter: (q: ReturnType<typeof sb.from> extends never ? never : ReturnType<ReturnType<typeof publicClient>["from"]>) => any,
-  limit = 8,
-): Promise<MehfilPoemEnriched[]> {
-  const base = sb.from("mehfil_poems").select("*").eq("status", "published").limit(limit);
-  const { data, error } = await filter(base);
-  if (error) throw error;
-  return attachAuthorsAndCats(sb, (data ?? []) as MehfilPoem[]);
-}
-
 export const getMehfilDiscovery = createServerFn({ method: "GET" }).handler(async () => {
   const sb = publicClient();
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const baseSelect = () => sb.from("mehfil_poems").select("*").eq("status", "published");
+
+  const run = async (q: any): Promise<MehfilPoemEnriched[]> => {
+    const { data, error } = await q;
+    if (error) throw error;
+    return attachAuthorsAndCats(sb, (data ?? []) as MehfilPoem[]);
+  };
 
   const [trending, pick, fresh, loved, read, winners] = await Promise.all([
-    fetchPoemBucket(sb, (q) => q.gte("published_at", weekAgo).order("upvote_count", { ascending: false }).order("read_count", { ascending: false }), 8),
-    fetchPoemBucket(sb, (q) => q.eq("is_editors_pick", true).order("published_at", { ascending: false }), 8),
-    fetchPoemBucket(sb, (q) => q.order("published_at", { ascending: false }), 8),
-    fetchPoemBucket(sb, (q) => q.order("upvote_count", { ascending: false }), 8),
-    fetchPoemBucket(sb, (q) => q.order("read_count", { ascending: false }), 8),
-    fetchPoemBucket(sb, (q) => q.not("competition_id", "is", null).order("upvote_count", { ascending: false }), 8),
+    run(baseSelect().gte("published_at", weekAgo).order("upvote_count", { ascending: false }).order("read_count", { ascending: false }).limit(8)),
+    run(baseSelect().eq("is_editors_pick", true).order("published_at", { ascending: false }).limit(8)),
+    run(baseSelect().order("published_at", { ascending: false }).limit(8)),
+    run(baseSelect().order("upvote_count", { ascending: false }).limit(8)),
+    run(baseSelect().order("read_count", { ascending: false }).limit(8)),
+    run(baseSelect().not("competition_id", "is", null).order("upvote_count", { ascending: false }).limit(8)),
   ]);
 
   const { data: risingStats } = await sb
