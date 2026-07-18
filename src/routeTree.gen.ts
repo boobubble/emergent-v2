@@ -159,6 +159,7 @@ import { Route as ApiGamesStartRouteImport } from './routes/api/games.start'
 import { Route as ApiGamesScoreRouteImport } from './routes/api/games.score'
 import { Route as ApiGamesSaveRouteImport } from './routes/api/games.save'
 import { Route as ApiGamesFinishRouteImport } from './routes/api/games.finish'
+import { Route as ApiGamesEventRouteImport } from './routes/api/games.event'
 import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
 import { Route as ApiGamesAchievementRouteImport } from './routes/api/games.achievement'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
@@ -931,6 +932,11 @@ const ApiGamesFinishRoute = ApiGamesFinishRouteImport.update({
   path: '/api/games/finish',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGamesEventRoute = ApiGamesEventRouteImport.update({
+  id: '/api/games/event',
+  path: '/api/games/event',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGamesCoinsRoute = ApiGamesCoinsRouteImport.update({
   id: '/api/games/coins',
   path: '/api/games/coins',
@@ -1149,6 +1155,7 @@ export interface FileRoutesByFullPath {
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
+  '/api/games/event': typeof ApiGamesEventRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/save': typeof ApiGamesSaveRoute
   '/api/games/score': typeof ApiGamesScoreRoute
@@ -1311,6 +1318,7 @@ export interface FileRoutesByTo {
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
+  '/api/games/event': typeof ApiGamesEventRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/save': typeof ApiGamesSaveRoute
   '/api/games/score': typeof ApiGamesScoreRoute
@@ -1478,6 +1486,7 @@ export interface FileRoutesById {
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
+  '/api/games/event': typeof ApiGamesEventRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/save': typeof ApiGamesSaveRoute
   '/api/games/score': typeof ApiGamesScoreRoute
@@ -1646,6 +1655,7 @@ export interface FileRouteTypes {
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
+    | '/api/games/event'
     | '/api/games/finish'
     | '/api/games/save'
     | '/api/games/score'
@@ -1808,6 +1818,7 @@ export interface FileRouteTypes {
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
+    | '/api/games/event'
     | '/api/games/finish'
     | '/api/games/save'
     | '/api/games/score'
@@ -1974,6 +1985,7 @@ export interface FileRouteTypes {
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
+    | '/api/games/event'
     | '/api/games/finish'
     | '/api/games/save'
     | '/api/games/score'
@@ -2045,6 +2057,7 @@ export interface RootRouteChildren {
   UUsernameRoute: typeof UUsernameRoute
   ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
   ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
+  ApiGamesEventRoute: typeof ApiGamesEventRoute
   ApiGamesFinishRoute: typeof ApiGamesFinishRoute
   ApiGamesSaveRoute: typeof ApiGamesSaveRoute
   ApiGamesScoreRoute: typeof ApiGamesScoreRoute
@@ -3118,6 +3131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGamesFinishRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/games/event': {
+      id: '/api/games/event'
+      path: '/api/games/event'
+      fullPath: '/api/games/event'
+      preLoaderRoute: typeof ApiGamesEventRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/games/coins': {
       id: '/api/games/coins'
       path: '/api/games/coins'
@@ -3542,6 +3562,7 @@ const rootRouteChildren: RootRouteChildren = {
   UUsernameRoute: UUsernameRoute,
   ApiGamesAchievementRoute: ApiGamesAchievementRoute,
   ApiGamesCoinsRoute: ApiGamesCoinsRoute,
+  ApiGamesEventRoute: ApiGamesEventRoute,
   ApiGamesFinishRoute: ApiGamesFinishRoute,
   ApiGamesSaveRoute: ApiGamesSaveRoute,
   ApiGamesScoreRoute: ApiGamesScoreRoute,
