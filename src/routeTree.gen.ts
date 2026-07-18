@@ -158,6 +158,7 @@ import { Route as ApiGamesXpRouteImport } from './routes/api/games.xp'
 import { Route as ApiGamesStartRouteImport } from './routes/api/games.start'
 import { Route as ApiGamesScoreRouteImport } from './routes/api/games.score'
 import { Route as ApiGamesFinishRouteImport } from './routes/api/games.finish'
+import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 import { Route as CommunitySlugChatroomsIndexRouteImport } from './routes/community.$slug.chatrooms.index'
 import { Route as CommunitySlugChatroomsRoomSlugRouteImport } from './routes/community.$slug.chatrooms.$roomSlug'
@@ -923,6 +924,11 @@ const ApiGamesFinishRoute = ApiGamesFinishRouteImport.update({
   path: '/api/games/finish',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGamesCoinsRoute = ApiGamesCoinsRouteImport.update({
+  id: '/api/games/coins',
+  path: '/api/games/coins',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   id: '/$key',
   path: '/$key',
@@ -1129,6 +1135,7 @@ export interface FileRoutesByFullPath {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/score': typeof ApiGamesScoreRoute
   '/api/games/start': typeof ApiGamesStartRoute
@@ -1288,6 +1295,7 @@ export interface FileRoutesByTo {
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/score': typeof ApiGamesScoreRoute
   '/api/games/start': typeof ApiGamesStartRoute
@@ -1452,6 +1460,7 @@ export interface FileRoutesById {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/finish': typeof ApiGamesFinishRoute
   '/api/games/score': typeof ApiGamesScoreRoute
   '/api/games/start': typeof ApiGamesStartRoute
@@ -1617,6 +1626,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/admin/upcoming/$key'
+    | '/api/games/coins'
     | '/api/games/finish'
     | '/api/games/score'
     | '/api/games/start'
@@ -1776,6 +1786,7 @@ export interface FileRouteTypes {
     | '/broadcaster'
     | '/competitions'
     | '/admin/upcoming/$key'
+    | '/api/games/coins'
     | '/api/games/finish'
     | '/api/games/score'
     | '/api/games/start'
@@ -1939,6 +1950,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/admin/upcoming/$key'
+    | '/api/games/coins'
     | '/api/games/finish'
     | '/api/games/score'
     | '/api/games/start'
@@ -2007,6 +2019,7 @@ export interface RootRouteChildren {
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
   ApiGamesFinishRoute: typeof ApiGamesFinishRoute
   ApiGamesScoreRoute: typeof ApiGamesScoreRoute
   ApiGamesStartRoute: typeof ApiGamesStartRoute
@@ -3072,6 +3085,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGamesFinishRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/games/coins': {
+      id: '/api/games/coins'
+      path: '/api/games/coins'
+      fullPath: '/api/games/coins'
+      preLoaderRoute: typeof ApiGamesCoinsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/upcoming/$key': {
       id: '/admin/upcoming/$key'
       path: '/$key'
@@ -3480,6 +3500,7 @@ const rootRouteChildren: RootRouteChildren = {
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiGamesCoinsRoute: ApiGamesCoinsRoute,
   ApiGamesFinishRoute: ApiGamesFinishRoute,
   ApiGamesScoreRoute: ApiGamesScoreRoute,
   ApiGamesStartRoute: ApiGamesStartRoute,
