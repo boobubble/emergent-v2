@@ -17,7 +17,7 @@ import { useAuth } from "@/lib/auth-store";
 import { listGames, listFeatured, getGame, type HubGame } from "@/lib/games-hub-registry";
 import { getRecent, getContinuePlaying, type RecentEntry } from "@/lib/games-hub-tracking";
 
-export const Route = createFileRoute("/games/")({
+export const Route = createFileRoute("/games")({
   head: () => ({
     meta: [
       { title: "Games Hub — Play, earn XP, unlock achievements" },
