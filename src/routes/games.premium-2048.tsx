@@ -228,7 +228,7 @@ function Board({ userId, title, onBack }: { userId: string; title: string; onBac
         setTimeout(() => {
           if (sdk) {
             sdk.gameFinished?.({ score: newScore }).catch(() => {});
-            sdk.submitScore?.({ score: newScore }).catch(() => {});
+            sdk.submitScore?.({ gameId: GAME_ID, score: newScore }).catch(() => {});
             if (newScore > best) sdk.onNewBestScore?.({ score: newScore }).catch(() => {});
           }
           toast("Game over", { description: `Score ${newScore.toLocaleString()}` });
@@ -284,7 +284,7 @@ function Board({ userId, title, onBack }: { userId: string; title: string; onBac
       setSessionActive(false);
       clearGameProgress(GAME_ID);
       const sdk = sdkRef.current;
-      if (sdk) await sdk.deleteSave({ gameId: GAME_ID, userId, slot: "auto" }).catch(() => {});
+      if (sdk) await sdk.deleteSave("auto").catch(() => {});
     } finally { setBusy(false); }
   }
 
