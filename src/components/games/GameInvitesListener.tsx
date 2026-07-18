@@ -25,7 +25,7 @@ export function GameInvitesListener() {
           onClick: async () => {
             try {
               const res = await respond({ data: { inviteId, accept: true } });
-              if (res.gameId) navigate({ to: "/games", search: { id: res.gameId } as never });
+              if (res.gameId) navigate({ to: "/games/ludo", search: { id: res.gameId } as never });
             } catch (e) {
               toast.error((e as Error).message);
             }

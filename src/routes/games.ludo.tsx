@@ -74,9 +74,9 @@ function GamesPage() {
     );
   }
 
-  if (gameIdFromUrl) return <ActiveGameView gameId={gameIdFromUrl} onLeave={() => navigate({ to: "/games", search: {} })} />;
+  if (gameIdFromUrl) return <ActiveGameView gameId={gameIdFromUrl} onLeave={() => navigate({ to: "/games/ludo", search: {} })} />;
 
-  return <GamesLobby userId={user.id} onOpenGame={(id) => navigate({ to: "/games", search: { id } as never })} />;
+  return <GamesLobby userId={user.id} onOpenGame={(id) => navigate({ to: "/games/ludo", search: { id } as never })} />;
 }
 
 // ---------------- Lobby ----------------
@@ -422,7 +422,7 @@ function ActiveGameView({ gameId, onLeave }: { gameId: string; onLeave: () => vo
           <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-6 text-center">
             <Trophy className="mx-auto h-8 w-8 text-amber-500" />
             <p className="mt-2 text-base font-bold">{winner?.username || "Someone"} wins!</p>
-            <Link to="/games" search={{}} className="mt-4 inline-block rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Back to lobby</Link>
+            <Link to="/games/ludo" search={{}} className="mt-4 inline-block rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Back to lobby</Link>
           </div>
         )}
       </div>
