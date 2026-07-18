@@ -253,10 +253,11 @@ function HubInner({ userId }: { userId: string }) {
                       <Trophy className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <div className="text-sm font-semibold">{a.gam_achievements?.title ?? a.achievement_id}</div>
+                      <div className="text-sm font-semibold">{a.gam_achievements?.name ?? a.achievement_id}</div>
                       <div className="text-xs text-muted-foreground">
-                        {a.gam_achievements?.rarity ?? "common"} · {new Date(a.unlocked_at).toLocaleDateString()}
+                        {a.gam_achievements?.category ?? "achievement"}{a.completed_at ? ` · ${new Date(a.completed_at).toLocaleDateString()}` : ""}
                       </div>
+
                     </div>
                   </div>
                 ))}
