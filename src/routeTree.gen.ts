@@ -52,7 +52,6 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
-import { Route as GamesPremium2048RouteImport } from './routes/games.premium-2048'
 import { Route as GamesLudoRouteImport } from './routes/games.ludo'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as CompetitionsLeaderboardRouteImport } from './routes/competitions.leaderboard'
@@ -382,11 +381,6 @@ const InviteCodeRoute = InviteCodeRouteImport.update({
   id: '/invite/$code',
   path: '/invite/$code',
   getParentRoute: () => rootRouteImport,
-} as any)
-const GamesPremium2048Route = GamesPremium2048RouteImport.update({
-  id: '/premium-2048',
-  path: '/premium-2048',
-  getParentRoute: () => GamesRoute,
 } as any)
 const GamesLudoRoute = GamesLudoRouteImport.update({
   id: '/ludo',
@@ -1103,7 +1097,6 @@ export interface FileRoutesByFullPath {
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
-  '/games/premium-2048': typeof GamesPremium2048Route
   '/invite/$code': typeof InviteCodeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -1259,7 +1252,6 @@ export interface FileRoutesByTo {
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
-  '/games/premium-2048': typeof GamesPremium2048Route
   '/invite/$code': typeof InviteCodeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -1420,7 +1412,6 @@ export interface FileRoutesById {
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
-  '/games/premium-2048': typeof GamesPremium2048Route
   '/invite/$code': typeof InviteCodeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -1582,7 +1573,6 @@ export interface FileRouteTypes {
     | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/games/ludo'
-    | '/games/premium-2048'
     | '/invite/$code'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1738,7 +1728,6 @@ export interface FileRouteTypes {
     | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/games/ludo'
-    | '/games/premium-2048'
     | '/invite/$code'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1898,7 +1887,6 @@ export interface FileRouteTypes {
     | '/competitions/leaderboard'
     | '/feed/$slug'
     | '/games/ludo'
-    | '/games/premium-2048'
     | '/invite/$code'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -2289,13 +2277,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/invite/$code'
       preLoaderRoute: typeof InviteCodeRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/games/premium-2048': {
-      id: '/games/premium-2048'
-      path: '/premium-2048'
-      fullPath: '/games/premium-2048'
-      preLoaderRoute: typeof GamesPremium2048RouteImport
-      parentRoute: typeof GamesRoute
     }
     '/games/ludo': {
       id: '/games/ludo'
@@ -3370,12 +3351,10 @@ const FeedRouteWithChildren = FeedRoute._addFileChildren(FeedRouteChildren)
 
 interface GamesRouteChildren {
   GamesLudoRoute: typeof GamesLudoRoute
-  GamesPremium2048Route: typeof GamesPremium2048Route
 }
 
 const GamesRouteChildren: GamesRouteChildren = {
   GamesLudoRoute: GamesLudoRoute,
-  GamesPremium2048Route: GamesPremium2048Route,
 }
 
 const GamesRouteWithChildren = GamesRoute._addFileChildren(GamesRouteChildren)

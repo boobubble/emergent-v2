@@ -1,11 +1,14 @@
 /**
  * Games Hub Registry
  * ------------------
- * Central registry for games rendered by /games. Adding a new game
- * requires only calling `registerGame({...})` at module load — the
- * hub UI reads from this registry and renders cards automatically.
+ * Central registry for external games surfaced by /games. The Hub is a
+ * LAUNCHER — it does not host gameplay. Registered games are metadata
+ * only; clicking Play navigates the user to `launchUrl` (an external
+ * application) which communicates back through the Games SDK.
  *
- * Nothing is hardcoded in the hub UI for any specific game.
+ * Adding a new game requires only calling `registerGame({...})` at
+ * module load — the hub UI reads from this registry and renders cards
+ * automatically. Nothing is hardcoded in the hub UI for any specific game.
  */
 
 import type { ComponentType } from "react";
@@ -33,8 +36,11 @@ export interface HubGame {
   description: string;
   /** Category for filters / grouping. */
   category: GameCategory;
-  /** Route path the hub navigates to when the card is clicked. */
-  entryPoint: string;
+  /**
+   * External URL the launcher opens when the user clicks Play. The game
+   * itself lives outside BooBubble and communicates via the Games SDK.
+   */
+  launchUrl: string;
   /** Whether this game persists progress via GamesSDK cloudsave. */
   supportsCloudSave: boolean;
   /** Whether the game grants achievements via GamesSDK. */
@@ -80,7 +86,7 @@ registerGame({
   description:
     "Slide tiles, combine matching numbers, and reach 2048. Auto-saves your progress.",
   category: "puzzle",
-  entryPoint: "/games/premium-2048",
+  launchUrl: "https://premium-2048.boobubble.app",
   supportsCloudSave: true,
   supportsAchievements: true,
   supportsLeaderboards: true,
