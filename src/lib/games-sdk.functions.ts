@@ -267,6 +267,50 @@ export const sdkSendNotification = createServerFn({ method: "POST" })
     return { id: String(row?.id ?? "") };
   });
 
+/* ------------------------------------------------- Notify Friends (fanout) */
+/**
+ * Fans a single notification out to every accepted friend of the caller.
+ * Reuses the existing `friendships` (status='accepted') + `notifications`
+ * tables. No new backend system — just a batched insert.
+ */
+export const sdkNotifyFriends = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("notification.write")])
+  .inputValidator((i: { title: string; body?: string; kind?: string; gameId?: string; data?: Meta }) => ({
+    title: String(i.title ?? "").slice(0, 200),
+    body: (i.body ?? "").toString().slice(0, 600),
+    kind: (i.kind ?? "sdk_friend_activity").toString().slice(0, 80),
+    gameId: (i.gameId ?? "").toString().slice(0, 80),
+    payload: i.data ?? {},
+  }))
+  .handler(async ({ data, context }) => {
+    if (!data.title) throw new Error("title required");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const admin = supabaseAdmin as any;
+    const { data: fr } = await admin
+      .from("friendships")
+      .select("sender_id, receiver_id")
+      .eq("status", "accepted")
+      .or(`sender_id.eq.${context.userId},receiver_id.eq.${context.userId}`);
+    const friendIds = new Set<string>();
+    for (const f of (fr ?? []) as Array<{ sender_id: string; receiver_id: string }>) {
+      const other = f.sender_id === context.userId ? f.receiver_id : f.sender_id;
+      if (other && other !== context.userId) friendIds.add(other);
+    }
+    if (friendIds.size === 0) return { delivered: 0 };
+    const rows = [...friendIds].map((uid) => ({
+      user_id: uid,
+      actor_id: context.userId,
+      kind: data.kind,
+      target_type: "game",
+      target_id: data.gameId || null,
+      payload: { title: data.title, body: data.body, gameId: data.gameId, ...data.payload, sdk: true },
+    }));
+    const { error } = await admin.from("notifications").insert(rows);
+    if (error) throw new Error(error.message);
+    return { delivered: rows.length };
+  });
+
 /* ---------------------------------------------------------- Profile / Me */
 export const sdkGetProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
