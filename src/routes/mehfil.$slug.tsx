@@ -11,6 +11,7 @@ import { MEHFIL_REACTIONS, poemPreview } from "@/lib/mehfil-types";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { gamify, GAM_EVENTS } from "@/lib/gamification-emit";
+import { useMehfilPoemRealtime } from "@/lib/mehfil-realtime";
 
 export const Route = createFileRoute("/mehfil/$slug")({
   loader: async ({ params }) => {
