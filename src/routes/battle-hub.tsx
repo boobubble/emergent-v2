@@ -56,6 +56,7 @@ function trendingScore(c: EnrichedCompetition): number {
 
 function BattleHubPage() {
   const { user } = useAuth();
+  const mehfilLabel = useMehfilLabel();
   const qc = useQueryClient();
   const list = useServerFn(listCompetitionsEnriched);
   const cats = useServerFn(listCategories);
