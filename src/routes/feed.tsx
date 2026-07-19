@@ -703,6 +703,7 @@ function FeedPage() {
 
               <div className="feed-section-label">Explore</div>
               <SideLink to="/chatroom" iconSrc={chatroomIcon} label="Chatrooms" />
+              <SideNavLink to="/mehfil" icon={PenLine} label={mehfilLabel} color="text-fuchsia-400" />
               <SideNavLink to="/reels" icon={Film} label="Reels" badge="Soon" color="text-pink-400" />
               <SideNavLink to="/pages" icon={FileText} label="Pages" badge="Soon" color="text-cyan-400" />
               <SideNavLink to="/groups" icon={Users2} label="Groups" badge="Soon" color="text-indigo-400" />
