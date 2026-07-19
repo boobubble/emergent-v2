@@ -91,6 +91,7 @@ function BattleHubPage() {
   }, [qc]);
 
   const [filter, setFilter] = useState<Filter>("all");
+  const [battleCat, setBattleCat] = useState<"all" | "competitions" | "mehfil">("all");
   const [category, setCategory] = useState<string>("all");
   const [q, setQ] = useState("");
   const [density, setDensity] = useState<Density>("compact");
