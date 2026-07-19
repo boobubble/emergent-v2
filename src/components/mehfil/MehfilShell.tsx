@@ -18,7 +18,7 @@ export function MehfilShell({ children, showBack = false }: { children: ReactNod
             <Link to="/mehfil" className="flex items-center gap-2">
               <span className="text-2xl">📜</span>
               <span className="font-serif text-xl font-bold tracking-tight">
-                Mehfil
+                {label}
               </span>
               <span className="hidden text-[11px] font-medium uppercase tracking-widest text-muted-foreground sm:inline">
                 Poetry Community
