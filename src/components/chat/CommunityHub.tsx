@@ -3,8 +3,9 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Bot, Target, Trophy, Gift, Swords, Gamepad2, Radio, Flame,
-  ArrowRight, Sparkles, Loader2, Clock, Coins, Star, X,
+  ArrowRight, Sparkles, Loader2, Clock, Coins, Star, X, PenLine,
 } from "lucide-react";
+import { useMehfilLabel } from "@/lib/use-mehfil-label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
