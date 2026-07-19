@@ -45,6 +45,25 @@ function ComposePage() {
   const [theme, setTheme] = useState<string | null>(null);
   const [tags, setTags] = useState("");
   const [language, setLanguage] = useState("en");
+  const [optInBattle, setOptInBattle] = useState(false);
+  const [aiBusy, setAiBusy] = useState<PoemAiAction | null>(null);
+
+  const aiFn = useServerFn(assistPoemAI);
+  const runAI = async (action: PoemAiAction) => {
+    if (!body.trim() && action !== "continue") return toast.error("Write something first");
+    setAiBusy(action);
+    try {
+      const res = await aiFn({ data: { action, body, title, language } });
+      if (res?.text) {
+        setBody(action === "continue" ? `${body}\n\n${res.text}` : res.text);
+        toast.success("AI applied");
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "AI failed");
+    } finally {
+      setAiBusy(null);
+    }
+  };
 
   const publishMut = useMutation({
     mutationFn: (status: "draft" | "published") =>
@@ -57,12 +76,13 @@ function ComposePage() {
           tags: tags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean),
           theme: theme ?? undefined,
           status,
+          optInBattle,
         },
       }),
     onSuccess: (poem) => {
       if (poem.status === "published") {
         gamify("poetry_publish", 1, { poem_id: poem.id, category: categorySlug });
-        toast.success("Poem published to Mehfil");
+        toast.success(optInBattle ? "Published & entered active battle" : "Poem published to Mehfil");
         nav({ to: "/mehfil/$slug", params: { slug: poem.slug } });
       } else {
         toast.success("Saved as draft");
