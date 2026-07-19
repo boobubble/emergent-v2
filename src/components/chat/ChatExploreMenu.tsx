@@ -31,6 +31,7 @@ function useShortcuts() {
 export function ChatExploreMenu() {
   const [open, setOpen] = useState(false);
   const SHORTCUTS = useShortcuts();
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
