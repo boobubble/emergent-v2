@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Trash2, Star, Sparkles, Plus, Save, Eye, EyeOff } from "lucide-react";
+import { Trash2, Star, Plus, Save, Eye, EyeOff } from "lucide-react";
 import {
   adminListMehfilCategories,
   adminSaveMehfilCategory,
