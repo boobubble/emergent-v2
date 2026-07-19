@@ -3675,6 +3675,7 @@ export type Database = {
         Row: {
           awarded_at: string
           category_id: string | null
+          competition_id: string | null
           created_at: string
           id: string
           period: string
@@ -3687,6 +3688,7 @@ export type Database = {
         Insert: {
           awarded_at?: string
           category_id?: string | null
+          competition_id?: string | null
           created_at?: string
           id?: string
           period: string
@@ -3699,6 +3701,7 @@ export type Database = {
         Update: {
           awarded_at?: string
           category_id?: string | null
+          competition_id?: string | null
           created_at?: string
           id?: string
           period?: string
@@ -3714,6 +3717,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "mehfil_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mehfil_hall_of_fame_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
             referencedColumns: ["id"]
           },
           {
