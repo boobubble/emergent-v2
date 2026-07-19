@@ -53,7 +53,7 @@ function ComposePage() {
     if (!body.trim() && action !== "continue") return toast.error("Write something first");
     setAiBusy(action);
     try {
-      const res = await aiFn({ data: { action, body, title, language } });
+      const res = await aiFn({ data: { action, text: body || title, title, targetLang: language } });
       if (res?.text) {
         setBody(action === "continue" ? `${body}\n\n${res.text}` : res.text);
         toast.success("AI applied");
