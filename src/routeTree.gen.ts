@@ -101,6 +101,7 @@ import { Route as AdminPerformanceRouteImport } from './routes/admin.performance
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminModulesRouteImport } from './routes/admin.modules'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
+import { Route as AdminMehfilRouteImport } from './routes/admin.mehfil'
 import { Route as AdminMediaApisRouteImport } from './routes/admin.media-apis'
 import { Route as AdminMaintenanceRouteImport } from './routes/admin.maintenance'
 import { Route as AdminLicensesRouteImport } from './routes/admin.licenses'
@@ -643,6 +644,11 @@ const AdminModerationRoute = AdminModerationRouteImport.update({
   path: '/moderation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMehfilRoute = AdminMehfilRouteImport.update({
+  id: '/mehfil',
+  path: '/mehfil',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMediaApisRoute = AdminMediaApisRouteImport.update({
   id: '/media-apis',
   path: '/media-apis',
@@ -1144,6 +1150,7 @@ export interface FileRoutesByFullPath {
   '/admin/licenses': typeof AdminLicensesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
+  '/admin/mehfil': typeof AdminMehfilRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
@@ -1315,6 +1322,7 @@ export interface FileRoutesByTo {
   '/admin/licenses': typeof AdminLicensesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
+  '/admin/mehfil': typeof AdminMehfilRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
@@ -1489,6 +1497,7 @@ export interface FileRoutesById {
   '/admin/licenses': typeof AdminLicensesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
+  '/admin/mehfil': typeof AdminMehfilRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
@@ -1665,6 +1674,7 @@ export interface FileRouteTypes {
     | '/admin/licenses'
     | '/admin/maintenance'
     | '/admin/media-apis'
+    | '/admin/mehfil'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
@@ -1836,6 +1846,7 @@ export interface FileRouteTypes {
     | '/admin/licenses'
     | '/admin/maintenance'
     | '/admin/media-apis'
+    | '/admin/mehfil'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
@@ -2009,6 +2020,7 @@ export interface FileRouteTypes {
     | '/admin/licenses'
     | '/admin/maintenance'
     | '/admin/media-apis'
+    | '/admin/mehfil'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
@@ -2816,6 +2828,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminModerationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/mehfil': {
+      id: '/admin/mehfil'
+      path: '/mehfil'
+      fullPath: '/admin/mehfil'
+      preLoaderRoute: typeof AdminMehfilRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/media-apis': {
       id: '/admin/media-apis'
       path: '/media-apis'
@@ -3441,6 +3460,7 @@ interface AdminRouteChildren {
   AdminLicensesRoute: typeof AdminLicensesRoute
   AdminMaintenanceRoute: typeof AdminMaintenanceRoute
   AdminMediaApisRoute: typeof AdminMediaApisRoute
+  AdminMehfilRoute: typeof AdminMehfilRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminModulesRoute: typeof AdminModulesRoute
   AdminPagesRoute: typeof AdminPagesRoute
@@ -3525,6 +3545,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLicensesRoute: AdminLicensesRoute,
   AdminMaintenanceRoute: AdminMaintenanceRoute,
   AdminMediaApisRoute: AdminMediaApisRoute,
+  AdminMehfilRoute: AdminMehfilRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminModulesRoute: AdminModulesRoute,
   AdminPagesRoute: AdminPagesRoute,

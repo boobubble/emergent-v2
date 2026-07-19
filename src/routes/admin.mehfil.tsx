@@ -32,7 +32,6 @@ function MehfilAdmin() {
       <AdminPageHeader
         title="Mehfil"
         description="Poetry community — moderate poems, manage categories, configure Mehfil settings."
-        icon={Sparkles}
       />
       <div className="mt-4 mb-6 flex gap-1 rounded-xl border border-border/60 bg-card p-1 w-fit">
         {TABS.map((t) => (
