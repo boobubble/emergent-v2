@@ -134,6 +134,10 @@ function FeedPage() {
   const [searchHighlight, setSearchHighlight] = useState(0);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
+  const mehfilSettings = useMehfilSettings();
+  const mehfilLabel = mehfilSettings.module_name || "Mehfil";
+  const mehfilWidgetEnabled = mehfilSettings.enabled !== false;
+  const mehfilWidgetFreq = Math.max(2, Number(mehfilSettings.trending_widget_frequency) || 5);
 
   const focusComposer = () => {
     setView("feed");
