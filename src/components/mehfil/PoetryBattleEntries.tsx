@@ -73,12 +73,14 @@ export function PoetryBattleEntries({ slug }: { slug: string }) {
                   <div className="flex items-center gap-1 truncate text-xs font-semibold text-white">
                     <span className="truncate">@{author?.username ?? "anon"}</span>
                     {author?.is_verified && <BadgeCheck className="h-3 w-3 shrink-0 text-sky-400" />}
-                    {author?.country_code && <span className="shrink-0 text-[11px]">{countryFlagEmoji(author.country_code)}</span>}
+                    {author?.country_code && <span className="shrink-0 text-[11px]">{flagFromCode(author.country_code)}</span>}
                   </div>
                   <div className="flex items-center gap-1.5 text-[10px] text-white/50">
-                    <span className="rounded px-1 py-0.5" style={{ background: `${WRITER_RANK_COLOR[p.writer_rank]}22`, color: WRITER_RANK_COLOR[p.writer_rank] }}>
-                      {WRITER_RANK_LABEL[p.writer_rank]}
-                    </span>
+                    {p.writer_rank && (
+                      <span className="rounded px-1 py-0.5" style={{ background: `${WRITER_RANK_COLOR[p.writer_rank]}22`, color: WRITER_RANK_COLOR[p.writer_rank] }}>
+                        {WRITER_RANK_LABEL[p.writer_rank]}
+                      </span>
+                    )}
                     {p.category && <span>· {p.category.name}</span>}
                   </div>
                 </div>
