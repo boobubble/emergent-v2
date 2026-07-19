@@ -145,6 +145,8 @@ export interface MehfilSettings {
   trending_widget_frequency: number;
   battle_auto_enroll: boolean;
   default_language: string;
+  /** Admin-configurable display label for the Mehfil module across nav, headings, breadcrumbs, hero, empty states, notifications, and feed widgets. Route identifiers stay `/mehfil`. */
+  module_name: string;
 }
 
 export const MEHFIL_SETTINGS_DEFAULTS: MehfilSettings = {
@@ -159,6 +161,7 @@ export const MEHFIL_SETTINGS_DEFAULTS: MehfilSettings = {
   trending_widget_frequency: 5,
   battle_auto_enroll: false,
   default_language: "en",
+  module_name: "Mehfil",
 };
 
 export function slugifyTitle(title: string): string {
