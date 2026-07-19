@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { Bookmark, Heart, Eye, MessageCircle, Share2, Swords } from "lucide-react";
@@ -11,6 +11,7 @@ import { MEHFIL_REACTIONS, poemPreview } from "@/lib/mehfil-types";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { gamify, GAM_EVENTS } from "@/lib/gamification-emit";
+import { useMehfilPoemRealtime } from "@/lib/mehfil-realtime";
 
 export const Route = createFileRoute("/mehfil/$slug")({
   loader: async ({ params }) => {
@@ -70,6 +71,14 @@ function PoemDetailPage() {
     refetchOnWindowFocus: false,
   });
   const poem = q.data ?? initial;
+
+  // Live counter updates for this poem (upvotes, reads, views)
+  const qc = useQueryClient();
+  useMehfilPoemRealtime(poem?.id, (row) => {
+    qc.setQueryData(["mehfil", "poem", slug], (prev: typeof poem | undefined) =>
+      prev ? { ...prev, ...row } : prev,
+    );
+  });
 
   // Record a "read" once the page loads
   useEffect(() => {

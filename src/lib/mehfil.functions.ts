@@ -227,6 +227,35 @@ export const getWriterStats = createServerFn({ method: "GET" })
     return (stats ?? null) as MehfilWriterStats | null;
   });
 
+export const getMehfilProfileSection = createServerFn({ method: "GET" })
+  .inputValidator((input: { username: string; limit?: number }) => input)
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const { data: profile } = await sb
+      .from("profiles")
+      .select("id, username, display_name, avatar_url, country_code")
+      .ilike("username", data.username)
+      .maybeSingle();
+    if (!profile) return { profile: null, stats: null, poems: [] as MehfilPoemEnriched[] };
+
+    const [{ data: stats }, { data: poems }] = await Promise.all([
+      sb.from("mehfil_writer_stats").select("*").eq("user_id", profile.id).maybeSingle(),
+      sb.from("mehfil_poems")
+        .select("*")
+        .eq("author_id", profile.id)
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(Math.min(data.limit ?? 6, 20)),
+    ]);
+
+    const enriched = await attachAuthorsAndCats(sb, (poems ?? []) as MehfilPoem[]);
+    return {
+      profile: profile as ProfileRow,
+      stats: (stats ?? null) as MehfilWriterStats | null,
+      poems: enriched,
+    };
+  });
+
 // ---------------------------------------------------------------------------
 // Authenticated writes
 // ---------------------------------------------------------------------------

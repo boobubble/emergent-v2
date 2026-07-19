@@ -6,6 +6,7 @@ import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/Cosm
 import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
 import { useRecordProfileView } from "@/lib/use-profile-views";
 import { UserCompetitionShowcase } from "@/components/competitions/UserCompetitionShowcase";
+import { ProfileMehfilSection } from "@/components/mehfil/ProfileMehfilSection";
 
 export function ProfilePanel({ username, onBack }: { username: string; onBack: () => void }) {
   const navigate = useNavigate();
@@ -96,6 +97,8 @@ export function ProfilePanel({ username, onBack }: { username: string; onBack: (
       </section>
 
       {!user.isBot && <UserCompetitionShowcase username={user.name} />}
+
+      {!user.isBot && <ProfileMehfilSection username={user.name} />}
 
 
       <section>

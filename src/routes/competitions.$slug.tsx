@@ -36,6 +36,7 @@ import { TopSupporters } from "@/components/competitions/TopSupporters";
 import { PremiumNomineeCards } from "@/components/competitions/PremiumNomineeCards";
 import { StickyMobileVoteBar } from "@/components/competitions/StickyMobileVoteBar";
 import { PremiumEmptyState } from "@/components/competitions/PremiumEmptyState";
+import { PoetryBattleEntries } from "@/components/mehfil/PoetryBattleEntries";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -470,6 +471,8 @@ function CompetitionDetail() {
       <div className="mx-auto max-w-5xl px-4">
         {/* Podium / Nominees pushed above the fold so viewers see the competitors immediately */}
         {nomineesSection}
+
+        {c.type === "poetry_battle" && <PoetryBattleEntries slug={c.slug} />}
 
         {c.description && (
           <p className="mt-2 text-sm text-white/70">{c.description}</p>
