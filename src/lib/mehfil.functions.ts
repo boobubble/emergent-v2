@@ -238,21 +238,91 @@ export const getMehfilProfileSection = createServerFn({ method: "GET" })
       .maybeSingle();
     if (!profile) return { profile: null, stats: null, poems: [] as MehfilPoemEnriched[] };
 
-    const [{ data: stats }, { data: poems }] = await Promise.all([
+    const [
+      { data: stats },
+      { data: poems },
+      { data: featured },
+      { data: hof },
+      { data: allCatRows },
+      { data: parts },
+    ] = await Promise.all([
       sb.from("mehfil_writer_stats").select("*").eq("user_id", profile.id).maybeSingle(),
-      sb.from("mehfil_poems")
-        .select("*")
-        .eq("author_id", profile.id)
-        .eq("status", "published")
-        .order("published_at", { ascending: false })
-        .limit(Math.min(data.limit ?? 6, 20)),
+      sb.from("mehfil_poems").select("*").eq("author_id", profile.id).eq("status", "published")
+        .order("published_at", { ascending: false }).limit(Math.min(data.limit ?? 6, 20)),
+      sb.from("mehfil_poems").select("*").eq("author_id", profile.id).eq("status", "published")
+        .or("is_featured.eq.true,is_editors_pick.eq.true")
+        .order("published_at", { ascending: false }).limit(6),
+      sb.from("mehfil_hall_of_fame")
+        .select("id, poem_id, period, rank, awarded_at, competition_id")
+        .eq("user_id", profile.id).order("awarded_at", { ascending: false }).limit(12),
+      sb.from("mehfil_poems").select("category_id, upvote_count")
+        .eq("author_id", profile.id).eq("status", "published"),
+      sb.from("competition_participants")
+        .select("id, competition_id, mehfil_poem_id, rank, vote_count")
+        .eq("user_id", profile.id).eq("status", "approved"),
     ]);
 
     const enriched = await attachAuthorsAndCats(sb, (poems ?? []) as MehfilPoem[]);
+    const featuredEnriched = await attachAuthorsAndCats(sb, (featured ?? []) as MehfilPoem[]);
+
+    const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: trending } = await sb.from("mehfil_poems").select("*")
+      .eq("author_id", profile.id).eq("status", "published")
+      .gte("published_at", monthAgo).order("upvote_count", { ascending: false }).limit(4);
+    const trendingEnriched = await attachAuthorsAndCats(sb, (trending ?? []) as MehfilPoem[]);
+
+    const catCounts = new Map<string, { count: number; upvotes: number }>();
+    ((allCatRows ?? []) as Array<{ category_id: string | null; upvote_count: number | null }>).forEach((r) => {
+      if (!r.category_id) return;
+      const cur = catCounts.get(r.category_id) ?? { count: 0, upvotes: 0 };
+      cur.count += 1; cur.upvotes += r.upvote_count ?? 0;
+      catCounts.set(r.category_id, cur);
+    });
+    const catIds = Array.from(catCounts.keys());
+    const { data: catRows } = catIds.length
+      ? await sb.from("mehfil_categories").select("id, slug, name, color, icon").in("id", catIds)
+      : { data: [] as Array<{ id: string; slug: string; name: string; color: string | null; icon: string | null }> };
+    const categoriesWritten = (catRows ?? []).map((c) => ({
+      ...c,
+      poem_count: catCounts.get(c.id)?.count ?? 0,
+      total_upvotes: catCounts.get(c.id)?.upvotes ?? 0,
+    })).sort((a, b) => b.poem_count - a.poem_count);
+    const favoriteCategory = categoriesWritten[0] ?? null;
+
+    const partRows = (parts ?? []) as Array<{ competition_id: string; mehfil_poem_id: string | null; rank: number | null; vote_count: number | null }>;
+    const compIds = Array.from(new Set(partRows.map((p) => p.competition_id)));
+    const activeBattles: any[] = [];
+    const battleHistory: any[] = [];
+    if (compIds.length) {
+      const { data: comps } = await sb.from("competitions")
+        .select("id, slug, name, status, type, end_at, start_at")
+        .in("id", compIds).eq("type", "poetry_battle");
+      const cmap = new Map((comps ?? []).map((c: any) => [c.id, c]));
+      partRows.forEach((p) => {
+        const comp = cmap.get(p.competition_id) as any;
+        if (!comp) return;
+        const item = {
+          competition_id: p.competition_id, competition_slug: comp.slug, competition_name: comp.name,
+          status: comp.status, end_at: comp.end_at, rank: p.rank, vote_count: p.vote_count ?? 0,
+          poem_id: p.mehfil_poem_id,
+        };
+        if (comp.status === "live" || comp.status === "upcoming") activeBattles.push(item);
+        else battleHistory.push(item);
+      });
+      battleHistory.sort((a, b) => (b.end_at ?? "").localeCompare(a.end_at ?? ""));
+    }
+
     return {
       profile: profile as ProfileRow,
       stats: (stats ?? null) as MehfilWriterStats | null,
       poems: enriched,
+      featured: featuredEnriched,
+      trending: trendingEnriched,
+      hof: hof ?? [],
+      active_battles: activeBattles,
+      battle_history: battleHistory.slice(0, 6),
+      categories_written: categoriesWritten,
+      favorite_category: favoriteCategory,
     };
   });
 
