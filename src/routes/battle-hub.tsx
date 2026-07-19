@@ -114,6 +114,8 @@ function BattleHubPage() {
 
   const filtered = useMemo(() => {
     let list = arr.slice();
+    if (battleCat === "mehfil") list = list.filter((c) => c.type === "poetry_battle");
+    else if (battleCat === "competitions") list = list.filter((c) => c.type !== "poetry_battle");
     if (category !== "all") list = list.filter((c) => c.category?.slug === category);
     if (q.trim()) {
       const s = q.trim().toLowerCase();
