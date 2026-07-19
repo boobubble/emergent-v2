@@ -208,6 +208,32 @@ function BattleHubPage() {
           </div>
         </div>
 
+        {/* Category tabs */}
+        <div className="border-t border-white/5 bg-slate-950/50">
+          <div className="mx-auto flex max-w-[1600px] items-center gap-1 px-4 py-1.5">
+            {([
+              { k: "all", label: "All Battles", icon: <Sparkles className="h-3 w-3" /> },
+              { k: "competitions", label: "Competitions", icon: <Trophy className="h-3 w-3" /> },
+              { k: "mehfil", label: mehfilLabel, icon: <span className="text-[10px]">📜</span> },
+            ] as const).map((t) => {
+              const active = battleCat === t.k;
+              return (
+                <button
+                  key={t.k}
+                  onClick={() => setBattleCat(t.k)}
+                  className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wide transition-all ${
+                    active
+                      ? "border-amber-400/50 bg-gradient-to-r from-amber-500/20 to-fuchsia-500/15 text-white shadow-[0_0_16px_rgba(245,158,11,0.25)]"
+                      : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/20"
+                  }`}
+                >
+                  {t.icon}{t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Filter bar */}
         <div className="border-t border-white/5 bg-slate-950/40">
           <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-1.5 px-4 py-1.5">
