@@ -145,7 +145,7 @@ function BattleHubPage() {
           return rank(a.status) - rank(b.status);
         });
     }
-  }, [arr, filter, category, q, followedIds]);
+  }, [arr, filter, category, q, followedIds, battleCat]);
 
   const liveCount = arr.filter((c) => c.status === "live").length;
   const totalWatching = arr.reduce((s, c) => s + (c.views_count ?? 0), 0);
