@@ -9,18 +9,24 @@ import {
   Award,
   Swords,
   Users,
+  PenLine,
   ChevronRight,
 } from "lucide-react";
+import { useMehfilLabel } from "@/lib/use-mehfil-label";
 
-const SHORTCUTS = [
-  { to: "/feed", label: "Feed", icon: Newspaper, gradient: "from-blue-500 to-indigo-500" },
-  { to: "/reels", label: "Reels", icon: Film, gradient: "from-pink-500 to-rose-500" },
-  { to: "/find-friends", label: "Find Friends", icon: UserPlus, gradient: "from-orange-500 to-amber-500" },
-  { to: "/leaderboard", label: "Leaderboard", icon: Trophy, gradient: "from-purple-500 to-fuchsia-500" },
-  { to: "/achievements", label: "Achievements", icon: Award, gradient: "from-emerald-500 to-teal-500" },
-  { to: "/battle-hub", label: "Battle Hub", icon: Swords, gradient: "from-cyan-500 to-sky-500" },
-  { to: "/groups", label: "Groups", icon: Users, gradient: "from-violet-500 to-purple-500" },
-] as const;
+function useShortcuts() {
+  const mehfilLabel = useMehfilLabel();
+  return [
+    { to: "/feed", label: "Feed", icon: Newspaper, gradient: "from-blue-500 to-indigo-500" },
+    { to: "/mehfil", label: mehfilLabel, icon: PenLine, gradient: "from-fuchsia-500 to-purple-500" },
+    { to: "/reels", label: "Reels", icon: Film, gradient: "from-pink-500 to-rose-500" },
+    { to: "/find-friends", label: "Find Friends", icon: UserPlus, gradient: "from-orange-500 to-amber-500" },
+    { to: "/leaderboard", label: "Leaderboard", icon: Trophy, gradient: "from-purple-500 to-fuchsia-500" },
+    { to: "/achievements", label: "Achievements", icon: Award, gradient: "from-emerald-500 to-teal-500" },
+    { to: "/battle-hub", label: "Battle Hub", icon: Swords, gradient: "from-cyan-500 to-sky-500" },
+    { to: "/groups", label: "Groups", icon: Users, gradient: "from-violet-500 to-purple-500" },
+  ] as const;
+}
 
 export function ChatExploreMenu() {
   const [open, setOpen] = useState(false);
