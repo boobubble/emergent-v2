@@ -61,7 +61,7 @@ function BattleHubPage() {
   const followedFn = useServerFn(listMyFollowedCompetitions);
 
   const { data: comps = [], dataUpdatedAt } = useQuery({
-    queryKey: ["competitions-enriched", "live-arena"],
+    queryKey: ["competitions-enriched", "battle-hub"],
     queryFn: () => list({}),
     refetchInterval: 30_000,
   });
@@ -82,7 +82,7 @@ function BattleHubPage() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "competition_votes" }, () => {
         if (t) return;
         t = setTimeout(() => {
-          qc.invalidateQueries({ queryKey: ["competitions-enriched", "live-arena"] });
+          qc.invalidateQueries({ queryKey: ["competitions-enriched", "battle-hub"] });
           t = null;
         }, 1500);
       })
