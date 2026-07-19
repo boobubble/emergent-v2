@@ -245,6 +245,12 @@ export function CommunityHub({ open, onOpenChange, isMobile }: Props) {
             <HubButton to="/radio">Listen Now</HubButton>
           </HubCard>
 
+          {/* Mehfil */}
+          <HubCard icon={<PenLine className="h-4 w-4" />} title={mehfilLabel} tone="from-fuchsia-500/25 via-purple-500/10">
+            <p className="text-xs text-muted-foreground">Poetry, battles &amp; writer ranks — join the community.</p>
+            <HubButton to="/mehfil">Enter {mehfilLabel}</HubButton>
+          </HubCard>
+
           {/* Trending Feed */}
           <HubCard icon={<Flame className="h-4 w-4" />} title="Trending Feed" tone="from-orange-500/25 via-red-500/10">
             {data.trending ? (
