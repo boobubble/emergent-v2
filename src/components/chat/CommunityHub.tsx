@@ -85,6 +85,7 @@ const GAMES = [
 
 export function CommunityHub({ open, onOpenChange, isMobile }: Props) {
   const data = useHubData(open);
+  const mehfilLabel = useMehfilLabel();
   const claimable = useMemo(
     () => data.missions.filter((m) => m.completed && !m.claimed).length,
     [data.missions],
