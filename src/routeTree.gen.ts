@@ -52,7 +52,10 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as MehfilLeaderboardRouteImport } from './routes/mehfil.leaderboard'
+import { Route as MehfilHallOfFameRouteImport } from './routes/mehfil.hall-of-fame'
 import { Route as MehfilComposeRouteImport } from './routes/mehfil.compose'
+import { Route as MehfilChallengesRouteImport } from './routes/mehfil.challenges'
 import { Route as MehfilSlugRouteImport } from './routes/mehfil.$slug'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as GamesLudoRouteImport } from './routes/games.ludo'
@@ -98,6 +101,7 @@ import { Route as AdminPerformanceRouteImport } from './routes/admin.performance
 import { Route as AdminPagesRouteImport } from './routes/admin.pages'
 import { Route as AdminModulesRouteImport } from './routes/admin.modules'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
+import { Route as AdminMehfilRouteImport } from './routes/admin.mehfil'
 import { Route as AdminMediaApisRouteImport } from './routes/admin.media-apis'
 import { Route as AdminMaintenanceRouteImport } from './routes/admin.maintenance'
 import { Route as AdminLicensesRouteImport } from './routes/admin.licenses'
@@ -394,9 +398,24 @@ const PSlugRoute = PSlugRouteImport.update({
   path: '/p/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MehfilLeaderboardRoute = MehfilLeaderboardRouteImport.update({
+  id: '/mehfil/leaderboard',
+  path: '/mehfil/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilHallOfFameRoute = MehfilHallOfFameRouteImport.update({
+  id: '/mehfil/hall-of-fame',
+  path: '/mehfil/hall-of-fame',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MehfilComposeRoute = MehfilComposeRouteImport.update({
   id: '/mehfil/compose',
   path: '/mehfil/compose',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilChallengesRoute = MehfilChallengesRouteImport.update({
+  id: '/mehfil/challenges',
+  path: '/mehfil/challenges',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MehfilSlugRoute = MehfilSlugRouteImport.update({
@@ -623,6 +642,11 @@ const AdminModulesRoute = AdminModulesRouteImport.update({
 const AdminModerationRoute = AdminModerationRouteImport.update({
   id: '/moderation',
   path: '/moderation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMehfilRoute = AdminMehfilRouteImport.update({
+  id: '/mehfil',
+  path: '/mehfil',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminMediaApisRoute = AdminMediaApisRouteImport.update({
@@ -1126,6 +1150,7 @@ export interface FileRoutesByFullPath {
   '/admin/licenses': typeof AdminLicensesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
+  '/admin/mehfil': typeof AdminMehfilRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
@@ -1171,7 +1196,10 @@ export interface FileRoutesByFullPath {
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
+  '/mehfil/challenges': typeof MehfilChallengesRoute
   '/mehfil/compose': typeof MehfilComposeRoute
+  '/mehfil/hall-of-fame': typeof MehfilHallOfFameRoute
+  '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -1294,6 +1322,7 @@ export interface FileRoutesByTo {
   '/admin/licenses': typeof AdminLicensesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
+  '/admin/mehfil': typeof AdminMehfilRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
@@ -1338,7 +1367,10 @@ export interface FileRoutesByTo {
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
+  '/mehfil/challenges': typeof MehfilChallengesRoute
   '/mehfil/compose': typeof MehfilComposeRoute
+  '/mehfil/hall-of-fame': typeof MehfilHallOfFameRoute
+  '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -1465,6 +1497,7 @@ export interface FileRoutesById {
   '/admin/licenses': typeof AdminLicensesRoute
   '/admin/maintenance': typeof AdminMaintenanceRoute
   '/admin/media-apis': typeof AdminMediaApisRoute
+  '/admin/mehfil': typeof AdminMehfilRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
   '/admin/pages': typeof AdminPagesRoute
@@ -1510,7 +1543,10 @@ export interface FileRoutesById {
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
+  '/mehfil/challenges': typeof MehfilChallengesRoute
   '/mehfil/compose': typeof MehfilComposeRoute
+  '/mehfil/hall-of-fame': typeof MehfilHallOfFameRoute
+  '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -1638,6 +1674,7 @@ export interface FileRouteTypes {
     | '/admin/licenses'
     | '/admin/maintenance'
     | '/admin/media-apis'
+    | '/admin/mehfil'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
@@ -1683,7 +1720,10 @@ export interface FileRouteTypes {
     | '/games/ludo'
     | '/invite/$code'
     | '/mehfil/$slug'
+    | '/mehfil/challenges'
     | '/mehfil/compose'
+    | '/mehfil/hall-of-fame'
+    | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
@@ -1806,6 +1846,7 @@ export interface FileRouteTypes {
     | '/admin/licenses'
     | '/admin/maintenance'
     | '/admin/media-apis'
+    | '/admin/mehfil'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
@@ -1850,7 +1891,10 @@ export interface FileRouteTypes {
     | '/games/ludo'
     | '/invite/$code'
     | '/mehfil/$slug'
+    | '/mehfil/challenges'
     | '/mehfil/compose'
+    | '/mehfil/hall-of-fame'
+    | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
@@ -1976,6 +2020,7 @@ export interface FileRouteTypes {
     | '/admin/licenses'
     | '/admin/maintenance'
     | '/admin/media-apis'
+    | '/admin/mehfil'
     | '/admin/moderation'
     | '/admin/modules'
     | '/admin/pages'
@@ -2021,7 +2066,10 @@ export interface FileRouteTypes {
     | '/games/ludo'
     | '/invite/$code'
     | '/mehfil/$slug'
+    | '/mehfil/challenges'
     | '/mehfil/compose'
+    | '/mehfil/hall-of-fame'
+    | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/u/$username'
@@ -2101,7 +2149,10 @@ export interface RootRouteChildren {
   WelcomeRoute: typeof WelcomeRoute
   InviteCodeRoute: typeof InviteCodeRoute
   MehfilSlugRoute: typeof MehfilSlugRoute
+  MehfilChallengesRoute: typeof MehfilChallengesRoute
   MehfilComposeRoute: typeof MehfilComposeRoute
+  MehfilHallOfFameRoute: typeof MehfilHallOfFameRoute
+  MehfilLeaderboardRoute: typeof MehfilLeaderboardRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -2434,11 +2485,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mehfil/leaderboard': {
+      id: '/mehfil/leaderboard'
+      path: '/mehfil/leaderboard'
+      fullPath: '/mehfil/leaderboard'
+      preLoaderRoute: typeof MehfilLeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mehfil/hall-of-fame': {
+      id: '/mehfil/hall-of-fame'
+      path: '/mehfil/hall-of-fame'
+      fullPath: '/mehfil/hall-of-fame'
+      preLoaderRoute: typeof MehfilHallOfFameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mehfil/compose': {
       id: '/mehfil/compose'
       path: '/mehfil/compose'
       fullPath: '/mehfil/compose'
       preLoaderRoute: typeof MehfilComposeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mehfil/challenges': {
+      id: '/mehfil/challenges'
+      path: '/mehfil/challenges'
+      fullPath: '/mehfil/challenges'
+      preLoaderRoute: typeof MehfilChallengesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mehfil/$slug': {
@@ -2754,6 +2826,13 @@ declare module '@tanstack/react-router' {
       path: '/moderation'
       fullPath: '/admin/moderation'
       preLoaderRoute: typeof AdminModerationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/mehfil': {
+      id: '/admin/mehfil'
+      path: '/mehfil'
+      fullPath: '/admin/mehfil'
+      preLoaderRoute: typeof AdminMehfilRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/media-apis': {
@@ -3381,6 +3460,7 @@ interface AdminRouteChildren {
   AdminLicensesRoute: typeof AdminLicensesRoute
   AdminMaintenanceRoute: typeof AdminMaintenanceRoute
   AdminMediaApisRoute: typeof AdminMediaApisRoute
+  AdminMehfilRoute: typeof AdminMehfilRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminModulesRoute: typeof AdminModulesRoute
   AdminPagesRoute: typeof AdminPagesRoute
@@ -3465,6 +3545,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLicensesRoute: AdminLicensesRoute,
   AdminMaintenanceRoute: AdminMaintenanceRoute,
   AdminMediaApisRoute: AdminMediaApisRoute,
+  AdminMehfilRoute: AdminMehfilRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminModulesRoute: AdminModulesRoute,
   AdminPagesRoute: AdminPagesRoute,
@@ -3638,7 +3719,10 @@ const rootRouteChildren: RootRouteChildren = {
   WelcomeRoute: WelcomeRoute,
   InviteCodeRoute: InviteCodeRoute,
   MehfilSlugRoute: MehfilSlugRoute,
+  MehfilChallengesRoute: MehfilChallengesRoute,
   MehfilComposeRoute: MehfilComposeRoute,
+  MehfilHallOfFameRoute: MehfilHallOfFameRoute,
+  MehfilLeaderboardRoute: MehfilLeaderboardRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
@@ -3670,13 +3754,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

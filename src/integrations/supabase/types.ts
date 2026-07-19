@@ -1477,6 +1477,7 @@ export type Database = {
           competition_id: string
           id: string
           joined_at: string
+          mehfil_poem_id: string | null
           rank: number | null
           status: string
           user_id: string
@@ -1486,6 +1487,7 @@ export type Database = {
           competition_id: string
           id?: string
           joined_at?: string
+          mehfil_poem_id?: string | null
           rank?: number | null
           status?: string
           user_id: string
@@ -1495,6 +1497,7 @@ export type Database = {
           competition_id?: string
           id?: string
           joined_at?: string
+          mehfil_poem_id?: string | null
           rank?: number | null
           status?: string
           user_id?: string
@@ -1506,6 +1509,13 @@ export type Database = {
             columns: ["competition_id"]
             isOneToOne: false
             referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_participants_mehfil_poem_id_fkey"
+            columns: ["mehfil_poem_id"]
+            isOneToOne: false
+            referencedRelation: "mehfil_poems"
             referencedColumns: ["id"]
           },
         ]
@@ -1557,6 +1567,7 @@ export type Database = {
           allow_vote_change: boolean
           announce_channels: string[]
           auto_close_voting: boolean
+          auto_enroll_rules: Json
           banner_url: string | null
           category_id: string | null
           community_id: string | null
@@ -1575,8 +1586,11 @@ export type Database = {
           is_pinned: boolean
           is_published: boolean
           layout_style: string
+          max_entries: number | null
           max_participants: number | null
           max_votes_per_user: number
+          mehfil_category_id: string | null
+          mehfil_theme: string | null
           name: string
           report_count: number
           require_approval: boolean
@@ -1588,6 +1602,7 @@ export type Database = {
           status: string
           total_participants: number
           total_votes: number
+          type: string
           updated_at: string
           views_count: number
           winner_count: number
@@ -1599,6 +1614,7 @@ export type Database = {
           allow_vote_change?: boolean
           announce_channels?: string[]
           auto_close_voting?: boolean
+          auto_enroll_rules?: Json
           banner_url?: string | null
           category_id?: string | null
           community_id?: string | null
@@ -1617,8 +1633,11 @@ export type Database = {
           is_pinned?: boolean
           is_published?: boolean
           layout_style?: string
+          max_entries?: number | null
           max_participants?: number | null
           max_votes_per_user?: number
+          mehfil_category_id?: string | null
+          mehfil_theme?: string | null
           name: string
           report_count?: number
           require_approval?: boolean
@@ -1630,6 +1649,7 @@ export type Database = {
           status?: string
           total_participants?: number
           total_votes?: number
+          type?: string
           updated_at?: string
           views_count?: number
           winner_count?: number
@@ -1641,6 +1661,7 @@ export type Database = {
           allow_vote_change?: boolean
           announce_channels?: string[]
           auto_close_voting?: boolean
+          auto_enroll_rules?: Json
           banner_url?: string | null
           category_id?: string | null
           community_id?: string | null
@@ -1659,8 +1680,11 @@ export type Database = {
           is_pinned?: boolean
           is_published?: boolean
           layout_style?: string
+          max_entries?: number | null
           max_participants?: number | null
           max_votes_per_user?: number
+          mehfil_category_id?: string | null
+          mehfil_theme?: string | null
           name?: string
           report_count?: number
           require_approval?: boolean
@@ -1672,6 +1696,7 @@ export type Database = {
           status?: string
           total_participants?: number
           total_votes?: number
+          type?: string
           updated_at?: string
           views_count?: number
           winner_count?: number
@@ -1689,6 +1714,13 @@ export type Database = {
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitions_mehfil_category_id_fkey"
+            columns: ["mehfil_category_id"]
+            isOneToOne: false
+            referencedRelation: "mehfil_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -3643,6 +3675,7 @@ export type Database = {
         Row: {
           awarded_at: string
           category_id: string | null
+          competition_id: string | null
           created_at: string
           id: string
           period: string
@@ -3655,6 +3688,7 @@ export type Database = {
         Insert: {
           awarded_at?: string
           category_id?: string | null
+          competition_id?: string | null
           created_at?: string
           id?: string
           period: string
@@ -3667,6 +3701,7 @@ export type Database = {
         Update: {
           awarded_at?: string
           category_id?: string | null
+          competition_id?: string | null
           created_at?: string
           id?: string
           period?: string
@@ -3682,6 +3717,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "mehfil_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mehfil_hall_of_fame_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
             referencedColumns: ["id"]
           },
           {
@@ -3742,6 +3784,7 @@ export type Database = {
           is_editors_pick: boolean
           is_featured: boolean
           language: string
+          opt_in_battle: boolean
           published_at: string | null
           read_count: number
           seo_description: string | null
@@ -3769,6 +3812,7 @@ export type Database = {
           is_editors_pick?: boolean
           is_featured?: boolean
           language?: string
+          opt_in_battle?: boolean
           published_at?: string | null
           read_count?: number
           seo_description?: string | null
@@ -3796,6 +3840,7 @@ export type Database = {
           is_editors_pick?: boolean
           is_featured?: boolean
           language?: string
+          opt_in_battle?: boolean
           published_at?: string | null
           read_count?: number
           seo_description?: string | null

@@ -242,6 +242,7 @@ export interface PublishPoemInput {
   status?: PoemStatus;
   seoTitle?: string;
   seoDescription?: string;
+  optInBattle?: boolean;
 }
 
 export const publishPoem = createServerFn({ method: "POST" })
@@ -256,7 +257,6 @@ export const publishPoem = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    // Resolve category id from slug
     let categoryId: string | null = null;
     if (data.categorySlug) {
       const { data: cat } = await supabase
@@ -264,7 +264,6 @@ export const publishPoem = createServerFn({ method: "POST" })
       categoryId = (cat as { id: string } | null)?.id ?? null;
     }
 
-    // Unique slug: title-{shortid}
     const base = slugifyTitle(data.title);
     const short = Math.random().toString(36).slice(2, 8);
     const slug = `${base}-${short}`;
@@ -284,6 +283,7 @@ export const publishPoem = createServerFn({ method: "POST" })
         language: data.language ?? "en",
         tags: data.tags ?? [],
         status,
+        opt_in_battle: !!data.optInBattle,
         seo_title: data.seoTitle ?? null,
         seo_description: data.seoDescription ?? null,
       })

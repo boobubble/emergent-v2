@@ -28,6 +28,7 @@ import { PullToRefresh } from "@/components/feed/PullToRefresh";
 import { ConfessionsFeedWidget, ActivePollsWidget } from "@/components/feed/ConfessionsFeedWidget";
 import { BoobubbleAssistantWidget } from "@/components/feed/BoobubbleAssistantWidget";
 import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
+import { MehfilTrendingWidget } from "@/components/feed/MehfilTrendingWidget";
 import { BirthdaysWidget } from "@/components/feed/BirthdaysWidget";
 import { MissionsPanel } from "@/components/feed/MissionsPanel";
 import { FeedNotifications } from "@/components/feed/FeedNotifications";
@@ -867,6 +868,7 @@ function FeedPage() {
                     {idx === 2 && (
                       <div className="lg:hidden"><PromotedPostsWidget profiles={profiles} /></div>
                     )}
+                    {idx === 3 && <MehfilTrendingWidget />}
                     {idx === 4 && (
                       <div className="lg:hidden"><SuggestedGroupsWidget /></div>
                     )}
