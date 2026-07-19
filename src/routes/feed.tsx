@@ -868,6 +868,7 @@ function FeedPage() {
                     {idx === 2 && (
                       <div className="lg:hidden"><PromotedPostsWidget profiles={profiles} /></div>
                     )}
+                    {idx === 3 && <MehfilTrendingWidget />}
                     {idx === 4 && (
                       <div className="lg:hidden"><SuggestedGroupsWidget /></div>
                     )}
