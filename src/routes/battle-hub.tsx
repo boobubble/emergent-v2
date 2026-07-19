@@ -25,6 +25,7 @@ import { Countdown } from "@/components/competitions/Countdown";
 import { useAuth } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useMehfilLabel } from "@/lib/use-mehfil-label";
 
 export const Route = createFileRoute("/battle-hub")({
   head: () => ({
