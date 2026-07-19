@@ -198,10 +198,46 @@ function ComposePage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-dashed border-border/60 bg-card/50 p-4 text-center text-xs text-muted-foreground">
-              <Sparkles className="mx-auto mb-1 h-4 w-4 text-primary" />
-              AI Assist (Improve · Continue · Beautify · Translate · Urdu / Hindi styles) arrives in Phase 2.
+            <div className="rounded-2xl border border-border/60 bg-card p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">AI Assist</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {([
+                  ["improve", "Improve"],
+                  ["continue", "Continue"],
+                  ["beautify", "Beautify"],
+                  ["translate", "Translate"],
+                  ["urdu_style", "Urdu Style"],
+                  ["hindi_style", "Hindi Style"],
+                  ["english_style", "English"],
+                ] as [PoemAiAction, string][]).map(([act, label]) => (
+                  <button
+                    key={act}
+                    onClick={() => runAI(act)}
+                    disabled={aiBusy !== null}
+                    className="inline-flex items-center justify-center gap-1 rounded-lg border border-border bg-background px-2 py-1.5 text-[11px] font-semibold hover:bg-muted disabled:opacity-50"
+                  >
+                    {aiBusy === act ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            <label className="flex items-start gap-3 rounded-2xl border border-border/60 bg-card p-4 cursor-pointer hover:border-primary/50">
+              <input type="checkbox" checked={optInBattle} onChange={(e) => setOptInBattle(e.target.checked)} className="mt-0.5" />
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 text-sm font-semibold">
+                  <Swords className="h-4 w-4 text-primary" /> Enter Poetry Battle
+                </div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">
+                  Auto-enroll this poem in the active battle for its category.
+                </div>
+              </div>
+            </label>
+
 
             <div className="space-y-2">
               <button
