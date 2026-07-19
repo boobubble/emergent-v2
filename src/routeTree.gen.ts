@@ -20,7 +20,6 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PagesRouteImport } from './routes/pages'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as LiveArenaRouteImport } from './routes/live-arena'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as InstallerRouteImport } from './routes/installer'
 import { Route as HeropageRouteImport } from './routes/heropage'
@@ -39,6 +38,7 @@ import { Route as ChatroomsRouteImport } from './routes/chatrooms'
 import { Route as ChatroomRouteImport } from './routes/chatroom'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BroadcasterRouteImport } from './routes/broadcaster'
+import { Route as BattleHubRouteImport } from './routes/battle-hub'
 import { Route as BannedRouteImport } from './routes/banned'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AchievementsRouteImport } from './routes/achievements'
@@ -238,11 +238,6 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LiveArenaRoute = LiveArenaRouteImport.update({
-  id: '/live-arena',
-  path: '/live-arena',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
@@ -331,6 +326,11 @@ const ChatRoute = ChatRouteImport.update({
 const BroadcasterRoute = BroadcasterRouteImport.update({
   id: '/broadcaster',
   path: '/broadcaster',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BattleHubRoute = BattleHubRouteImport.update({
+  id: '/battle-hub',
+  path: '/battle-hub',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BannedRoute = BannedRouteImport.update({
@@ -1071,6 +1071,7 @@ export interface FileRoutesByFullPath {
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
   '/banned': typeof BannedRoute
+  '/battle-hub': typeof BattleHubRoute
   '/broadcaster': typeof BroadcasterRouteWithChildren
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
@@ -1089,7 +1090,6 @@ export interface FileRoutesByFullPath {
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
-  '/live-arena': typeof LiveArenaRoute
   '/login': typeof LoginRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/pages': typeof PagesRoute
@@ -1245,6 +1245,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
   '/banned': typeof BannedRoute
+  '/battle-hub': typeof BattleHubRoute
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
   '/chatrooms': typeof ChatroomsRoute
@@ -1261,7 +1262,6 @@ export interface FileRoutesByTo {
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
-  '/live-arena': typeof LiveArenaRoute
   '/login': typeof LoginRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/pages': typeof PagesRoute
@@ -1418,6 +1418,7 @@ export interface FileRoutesById {
   '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRouteWithChildren
   '/banned': typeof BannedRoute
+  '/battle-hub': typeof BattleHubRoute
   '/broadcaster': typeof BroadcasterRouteWithChildren
   '/chat': typeof ChatRoute
   '/chatroom': typeof ChatroomRoute
@@ -1436,7 +1437,6 @@ export interface FileRoutesById {
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
-  '/live-arena': typeof LiveArenaRoute
   '/login': typeof LoginRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/pages': typeof PagesRoute
@@ -1595,6 +1595,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/admin'
     | '/banned'
+    | '/battle-hub'
     | '/broadcaster'
     | '/chat'
     | '/chatroom'
@@ -1613,7 +1614,6 @@ export interface FileRouteTypes {
     | '/heropage'
     | '/installer'
     | '/leaderboard'
-    | '/live-arena'
     | '/login'
     | '/manifest.webmanifest'
     | '/pages'
@@ -1769,6 +1769,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/achievements'
     | '/banned'
+    | '/battle-hub'
     | '/chat'
     | '/chatroom'
     | '/chatrooms'
@@ -1785,7 +1786,6 @@ export interface FileRouteTypes {
     | '/heropage'
     | '/installer'
     | '/leaderboard'
-    | '/live-arena'
     | '/login'
     | '/manifest.webmanifest'
     | '/pages'
@@ -1941,6 +1941,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/admin'
     | '/banned'
+    | '/battle-hub'
     | '/broadcaster'
     | '/chat'
     | '/chatroom'
@@ -1959,7 +1960,6 @@ export interface FileRouteTypes {
     | '/heropage'
     | '/installer'
     | '/leaderboard'
-    | '/live-arena'
     | '/login'
     | '/manifest.webmanifest'
     | '/pages'
@@ -2117,6 +2117,7 @@ export interface RootRouteChildren {
   AchievementsRoute: typeof AchievementsRoute
   AdminRoute: typeof AdminRouteWithChildren
   BannedRoute: typeof BannedRoute
+  BattleHubRoute: typeof BattleHubRoute
   BroadcasterRoute: typeof BroadcasterRouteWithChildren
   ChatRoute: typeof ChatRoute
   ChatroomRoute: typeof ChatroomRoute
@@ -2135,7 +2136,6 @@ export interface RootRouteChildren {
   HeropageRoute: typeof HeropageRoute
   InstallerRoute: typeof InstallerRoute
   LeaderboardRoute: typeof LeaderboardRoute
-  LiveArenaRoute: typeof LiveArenaRoute
   LoginRoute: typeof LoginRoute
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   PagesRoute: typeof PagesRoute
@@ -2259,13 +2259,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/live-arena': {
-      id: '/live-arena'
-      path: '/live-arena'
-      fullPath: '/live-arena'
-      preLoaderRoute: typeof LiveArenaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leaderboard': {
@@ -2392,6 +2385,13 @@ declare module '@tanstack/react-router' {
       path: '/broadcaster'
       fullPath: '/broadcaster'
       preLoaderRoute: typeof BroadcasterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/battle-hub': {
+      id: '/battle-hub'
+      path: '/battle-hub'
+      fullPath: '/battle-hub'
+      preLoaderRoute: typeof BattleHubRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/banned': {
@@ -3687,6 +3687,7 @@ const rootRouteChildren: RootRouteChildren = {
   AchievementsRoute: AchievementsRoute,
   AdminRoute: AdminRouteWithChildren,
   BannedRoute: BannedRoute,
+  BattleHubRoute: BattleHubRoute,
   BroadcasterRoute: BroadcasterRouteWithChildren,
   ChatRoute: ChatRoute,
   ChatroomRoute: ChatroomRoute,
@@ -3705,7 +3706,6 @@ const rootRouteChildren: RootRouteChildren = {
   HeropageRoute: HeropageRoute,
   InstallerRoute: InstallerRoute,
   LeaderboardRoute: LeaderboardRoute,
-  LiveArenaRoute: LiveArenaRoute,
   LoginRoute: LoginRoute,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   PagesRoute: PagesRoute,

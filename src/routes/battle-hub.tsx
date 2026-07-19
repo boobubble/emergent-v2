@@ -26,17 +26,17 @@ import { useAuth } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/live-arena")({
+export const Route = createFileRoute("/battle-hub")({
   head: () => ({
     meta: [
-      { title: "Live Arena — Watch Every Live Competition in Real Time" },
+      { title: "Battle Hub — Watch Every Live Competition in Real Time" },
       { name: "description", content: "A realtime dashboard of every live competition — votes, leaders, and battles as they happen." },
-      { property: "og:title", content: "Live Arena" },
+      { property: "og:title", content: "Battle Hub" },
       { property: "og:description", content: "Every live competition, all in one premium realtime arena." },
       { property: "og:type", content: "website" },
     ],
   }),
-  component: LiveArenaPage,
+  component: BattleHubPage,
 });
 
 type Filter = "all" | "live" | "upcoming" | "ending" | "featured" | "trending" | "prize" | "following" | "finished";
@@ -53,7 +53,7 @@ function trendingScore(c: EnrichedCompetition): number {
   return ((c.total_votes + c.follower_count * 2) / ageDays) * recencyBoost;
 }
 
-function LiveArenaPage() {
+function BattleHubPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const list = useServerFn(listCompetitionsEnriched);
@@ -61,7 +61,7 @@ function LiveArenaPage() {
   const followedFn = useServerFn(listMyFollowedCompetitions);
 
   const { data: comps = [], dataUpdatedAt } = useQuery({
-    queryKey: ["competitions-enriched", "live-arena"],
+    queryKey: ["competitions-enriched", "battle-hub"],
     queryFn: () => list({}),
     refetchInterval: 30_000,
   });
@@ -78,11 +78,11 @@ function LiveArenaPage() {
   useEffect(() => {
     let t: any = null;
     const ch = supabase
-      .channel("live-arena-votes")
+      .channel("battle-hub-votes")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "competition_votes" }, () => {
         if (t) return;
         t = setTimeout(() => {
-          qc.invalidateQueries({ queryKey: ["competitions-enriched", "live-arena"] });
+          qc.invalidateQueries({ queryKey: ["competitions-enriched", "battle-hub"] });
           t = null;
         }, 1500);
       })
@@ -182,7 +182,7 @@ function LiveArenaPage() {
             <div className="min-w-0">
               <h1 className="flex items-center gap-2 text-base font-black tracking-tight sm:text-lg">
                 <Zap className="h-4 w-4 text-amber-400" />
-                <span className="bg-gradient-to-r from-violet-300 via-fuchsia-200 to-amber-300 bg-clip-text text-transparent">LIVE ARENA</span>
+                <span className="bg-gradient-to-r from-violet-300 via-fuchsia-200 to-amber-300 bg-clip-text text-transparent">BATTLE HUB</span>
                 <span className="inline-flex items-center gap-1 rounded-full border border-rose-400/30 bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-bold text-rose-300">
                   <span className="h-1 w-1 animate-pulse rounded-full bg-rose-400" /> REALTIME
                 </span>

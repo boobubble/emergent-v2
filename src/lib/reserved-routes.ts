@@ -7,7 +7,7 @@ export const RESERVED_SLUGS = new Set<string>([
   "leaderboard", "reset-password", "welcome", "banned", "confessions", "feedback", "u", "p", "assets", "static",
   "public", "favicon.ico", "robots.txt", "sitemap.xml", "manifest.json",
   "_root", "__root", "index", "reels", "pages", "groups", "installer", "setup-wizard",
-  "community", "communities", "pricing", "wallet", "radio", "trust", "heropage", "live-arena",
+  "community", "communities", "pricing", "wallet", "radio", "trust", "heropage", "battle-hub",
   "broadcaster", "gamification", "deploy", "invite",
 
 

@@ -827,7 +827,7 @@ function HeroHomepage() {
             <a href="/" onClick={goOrPopup("/")} className="hover:opacity-100">Chatrooms</a>
             <a href="/feed" onClick={goOrPopup("/feed")} className="hover:opacity-100">Feed</a>
             <a href="/confessions" onClick={goOrPopup("/confessions")} className="hover:opacity-100">Confessions</a>
-            <a href="/live-arena" onClick={goOrPopup("/live-arena")} className="hover:opacity-100">Live Arena</a>
+            <a href="/battle-hub" onClick={goOrPopup("/battle-hub")} className="hover:opacity-100">Battle Hub</a>
             <a href="/games" onClick={goOrPopup("/games")} className="hover:opacity-100">Games</a>
             <a href="/leaderboard" onClick={goOrPopup("/leaderboard")} className="hover:opacity-100">Leaderboard</a>
           </nav>
