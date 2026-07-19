@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Sparkles, Save, Send, X, Swords, Loader2 } from "lucide-react";
 import { listMehfilCategories, publishPoem } from "@/lib/mehfil.functions";
-import { assistPoemAI, type PoemAssistAction } from "@/lib/mehfil-ai.functions";
+import { assistPoemAI, type PoemAiAction } from "@/lib/mehfil-ai.functions";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { useAuth } from "@/lib/auth-store";
 import { AuthScreen } from "@/components/auth/AuthScreen";
