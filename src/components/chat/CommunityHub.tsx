@@ -3,8 +3,9 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Bot, Target, Trophy, Gift, Swords, Gamepad2, Radio, Flame,
-  ArrowRight, Sparkles, Loader2, Clock, Coins, Star, X,
+  ArrowRight, Sparkles, Loader2, Clock, Coins, Star, X, PenLine,
 } from "lucide-react";
+import { useMehfilLabel } from "@/lib/use-mehfil-label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -84,6 +85,7 @@ const GAMES = [
 
 export function CommunityHub({ open, onOpenChange, isMobile }: Props) {
   const data = useHubData(open);
+  const mehfilLabel = useMehfilLabel();
   const claimable = useMemo(
     () => data.missions.filter((m) => m.completed && !m.claimed).length,
     [data.missions],
@@ -241,6 +243,12 @@ export function CommunityHub({ open, onOpenChange, isMobile }: Props) {
               )}
             </div>
             <HubButton to="/radio">Listen Now</HubButton>
+          </HubCard>
+
+          {/* Mehfil */}
+          <HubCard icon={<PenLine className="h-4 w-4" />} title={mehfilLabel} tone="from-fuchsia-500/25 via-purple-500/10">
+            <p className="text-xs text-muted-foreground">Poetry, battles &amp; writer ranks — join the community.</p>
+            <HubButton to="/mehfil">Enter {mehfilLabel}</HubButton>
           </HubCard>
 
           {/* Trending Feed */}

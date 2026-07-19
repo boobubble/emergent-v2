@@ -175,6 +175,10 @@ function SettingsTab() {
         <span className="text-sm">Trending widget frequency (every N posts)</span>
         <input type="number" min={2} max={30} value={current.trending_widget_frequency} onChange={(e) => setForm({ ...current, trending_widget_frequency: Number(e.target.value) })} className="w-20 rounded border border-border bg-background px-2 py-1 text-sm" />
       </label>
+      <label className="flex items-center justify-between gap-3 p-3 border-b border-border/40">
+        <span className="text-sm">Module display name<br /><span className="text-[11px] text-muted-foreground">Renames "Mehfil" everywhere in the UI. Routes stay /mehfil.</span></span>
+        <input type="text" maxLength={40} value={current.module_name ?? "Mehfil"} onChange={(e) => setForm({ ...current, module_name: e.target.value })} className="w-40 rounded border border-border bg-background px-2 py-1 text-sm" />
+      </label>
       <div className="p-3">
         <button onClick={() => m.mutate(current)} disabled={m.isPending} className="w-full inline-flex items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"><Save className="h-4 w-4" /> Save Settings</button>
       </div>

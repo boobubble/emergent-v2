@@ -941,6 +941,7 @@ export const adminSetManualWinners = createServerFn({ method: "POST" })
 
 export type EnrichedCompetition = {
   id: string;
+  type?: string | null;
   name: string;
   slug: string;
   description: string | null;

@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { PenLine, Trophy, Swords, Home, ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
+import { useMehfilLabel } from "@/lib/use-mehfil-label";
 
 export function MehfilShell({ children, showBack = false }: { children: ReactNode; showBack?: boolean }) {
+  const label = useMehfilLabel();
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur">
@@ -16,7 +18,7 @@ export function MehfilShell({ children, showBack = false }: { children: ReactNod
             <Link to="/mehfil" className="flex items-center gap-2">
               <span className="text-2xl">📜</span>
               <span className="font-serif text-xl font-bold tracking-tight">
-                Mehfil
+                {label}
               </span>
               <span className="hidden text-[11px] font-medium uppercase tracking-widest text-muted-foreground sm:inline">
                 Poetry Community

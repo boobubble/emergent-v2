@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon, Shield, LogOut, Radio } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon, Shield, LogOut, Radio, PenLine } from "lucide-react";
+import { useMehfilSettings } from "@/lib/use-mehfil-label";
 import { useThemeMode } from "@/lib/use-theme-mode";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -133,6 +134,10 @@ function FeedPage() {
   const [searchHighlight, setSearchHighlight] = useState(0);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
+  const mehfilSettings = useMehfilSettings();
+  const mehfilLabel = mehfilSettings.module_name || "Mehfil";
+  const mehfilWidgetEnabled = mehfilSettings.enabled !== false;
+  const mehfilWidgetFreq = Math.max(2, Number(mehfilSettings.trending_widget_frequency) || 5);
 
   const focusComposer = () => {
     setView("feed");
@@ -698,6 +703,7 @@ function FeedPage() {
 
               <div className="feed-section-label">Explore</div>
               <SideLink to="/chatroom" iconSrc={chatroomIcon} label="Chatrooms" />
+              <SideNavLink to="/mehfil" icon={PenLine} label={mehfilLabel} color="text-fuchsia-400" />
               <SideNavLink to="/reels" icon={Film} label="Reels" badge="Soon" color="text-pink-400" />
               <SideNavLink to="/pages" icon={FileText} label="Pages" badge="Soon" color="text-cyan-400" />
               <SideNavLink to="/groups" icon={Users2} label="Groups" badge="Soon" color="text-indigo-400" />
@@ -868,7 +874,7 @@ function FeedPage() {
                     {idx === 2 && (
                       <div className="lg:hidden"><PromotedPostsWidget profiles={profiles} /></div>
                     )}
-                    {idx === 3 && <MehfilTrendingWidget />}
+                    {mehfilWidgetEnabled && idx > 0 && (idx + 1) % mehfilWidgetFreq === 0 && <MehfilTrendingWidget />}
                     {idx === 4 && (
                       <div className="lg:hidden"><SuggestedGroupsWidget /></div>
                     )}
@@ -978,6 +984,7 @@ function FeedPage() {
           { label: "Leaderboard", icon: Trophy, color: "from-amber-500 to-orange-500", onClick: () => setView("leaderboard") },
           { label: "Competitions", icon: Trophy, color: "from-amber-400 to-yellow-500", onClick: () => navigate({ to: "/competitions" }) },
           { label: "Battle Hub", icon: Radio, color: "from-rose-500 to-red-500", onClick: () => navigate({ to: "/battle-hub" }) },
+          { label: mehfilLabel, icon: PenLine, color: "from-fuchsia-500 to-purple-500", onClick: () => navigate({ to: "/mehfil" }) },
           { label: "Daily Chest", icon: Gift, color: "from-rose-500 to-fuchsia-500", onClick: () => setView("dailyChest") },
           { label: "Daily Spin", icon: Sparkles, color: "from-violet-500 to-purple-500", onClick: () => setView("spin") },
           { label: "Shop", icon: Coins, color: "from-emerald-500 to-green-500", onClick: () => setView("shop") },

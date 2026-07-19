@@ -25,6 +25,7 @@ import { Countdown } from "@/components/competitions/Countdown";
 import { useAuth } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useMehfilLabel } from "@/lib/use-mehfil-label";
 
 export const Route = createFileRoute("/battle-hub")({
   head: () => ({
@@ -55,6 +56,7 @@ function trendingScore(c: EnrichedCompetition): number {
 
 function BattleHubPage() {
   const { user } = useAuth();
+  const mehfilLabel = useMehfilLabel();
   const qc = useQueryClient();
   const list = useServerFn(listCompetitionsEnriched);
   const cats = useServerFn(listCategories);
@@ -91,6 +93,7 @@ function BattleHubPage() {
   }, [qc]);
 
   const [filter, setFilter] = useState<Filter>("all");
+  const [battleCat, setBattleCat] = useState<"all" | "competitions" | "mehfil">("all");
   const [category, setCategory] = useState<string>("all");
   const [q, setQ] = useState("");
   const [density, setDensity] = useState<Density>("compact");
@@ -113,6 +116,8 @@ function BattleHubPage() {
 
   const filtered = useMemo(() => {
     let list = arr.slice();
+    if (battleCat === "mehfil") list = list.filter((c) => c.type === "poetry_battle");
+    else if (battleCat === "competitions") list = list.filter((c) => c.type !== "poetry_battle");
     if (category !== "all") list = list.filter((c) => c.category?.slug === category);
     if (q.trim()) {
       const s = q.trim().toLowerCase();
@@ -142,7 +147,7 @@ function BattleHubPage() {
           return rank(a.status) - rank(b.status);
         });
     }
-  }, [arr, filter, category, q, followedIds]);
+  }, [arr, filter, category, q, followedIds, battleCat]);
 
   const liveCount = arr.filter((c) => c.status === "live").length;
   const totalWatching = arr.reduce((s, c) => s + (c.views_count ?? 0), 0);
@@ -200,6 +205,32 @@ function BattleHubPage() {
             <RefreshCw className="h-3 w-3" />
             <span>Updated {lastUpdated}</span>
             <span className="ml-1 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+          </div>
+        </div>
+
+        {/* Category tabs */}
+        <div className="border-t border-white/5 bg-slate-950/50">
+          <div className="mx-auto flex max-w-[1600px] items-center gap-1 px-4 py-1.5">
+            {([
+              { k: "all", label: "All Battles", icon: <Sparkles className="h-3 w-3" /> },
+              { k: "competitions", label: "Competitions", icon: <Trophy className="h-3 w-3" /> },
+              { k: "mehfil", label: mehfilLabel, icon: <span className="text-[10px]">📜</span> },
+            ] as const).map((t) => {
+              const active = battleCat === t.k;
+              return (
+                <button
+                  key={t.k}
+                  onClick={() => setBattleCat(t.k)}
+                  className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wide transition-all ${
+                    active
+                      ? "border-amber-400/50 bg-gradient-to-r from-amber-500/20 to-fuchsia-500/15 text-white shadow-[0_0_16px_rgba(245,158,11,0.25)]"
+                      : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/20"
+                  }`}
+                >
+                  {t.icon}{t.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
