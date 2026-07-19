@@ -15,6 +15,11 @@ export function PoetryBattleEntries({ slug }: { slug: string }) {
     refetchInterval: 30_000,
   });
 
+  const qc = useQueryClient();
+  useBattleRankingRealtime(data?.battle?.id ?? null, () => {
+    void qc.invalidateQueries({ queryKey: ["poetry-battle", slug] });
+  });
+
   const poems = data?.poems ?? [];
   if (poems.length === 0) return null;
 
