@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Feather, Heart, Eye, Crown, MessageCircle, Share2, BadgeCheck } from "lucide-react";
 import { getPoetryBattle } from "@/lib/mehfil-battles.functions";
 import { poemPreview, WRITER_RANK_LABEL, WRITER_RANK_COLOR } from "@/lib/mehfil-types";
-import { countryFlagEmoji } from "@/lib/country-flag";
+import { flagFromCode } from "@/lib/country-flag";
 
 /**
  * Poetry Cards for a Poetry Battle competition.
