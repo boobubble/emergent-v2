@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { PenLine, Trophy, Swords, Home, ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
+import { useMehfilLabel } from "@/lib/use-mehfil-label";
 
 export function MehfilShell({ children, showBack = false }: { children: ReactNode; showBack?: boolean }) {
+  const label = useMehfilLabel();
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur">
