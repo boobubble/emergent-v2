@@ -185,7 +185,7 @@ function LandingPage() {
     { label: "Chatrooms",   to: "/"            },
     { label: "Games",       to: "/games"       },
     { label: "Confessions", to: "/confessions" },
-    { label: "Live Arena",  to: "/live-arena"  },
+    { label: "Battle Hub",  to: "/battle-hub"  },
     { label: "Leaderboard", to: "/leaderboard" },
   ], []);
 
