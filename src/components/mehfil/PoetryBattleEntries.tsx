@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useBattleRankingRealtime } from "@/lib/mehfil-realtime";
 import { useServerFn } from "@tanstack/react-start";
 import { Feather, Heart, Eye, Crown } from "lucide-react";
 import { getPoetryBattle } from "@/lib/mehfil-battles.functions";
