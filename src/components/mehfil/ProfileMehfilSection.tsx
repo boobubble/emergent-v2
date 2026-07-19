@@ -35,8 +35,8 @@ export function ProfileMehfilSection({ username }: { username: string }) {
           <MiniStat icon={<BookOpen className="h-3.5 w-3.5" />} label="Poems" value={stats.poems_published ?? 0} />
           <MiniStat icon={<Heart className="h-3.5 w-3.5 text-rose-400" />} label="Upvotes" value={stats.total_upvotes ?? 0} />
           <MiniStat icon={<Eye className="h-3.5 w-3.5" />} label="Reads" value={stats.total_reads ?? 0} />
-          {(stats.battles_won ?? 0) > 0 && (
-            <MiniStat icon={<Trophy className="h-3.5 w-3.5 text-warning" />} label="Battles Won" value={stats.battles_won ?? 0} />
+          {(stats.battle_wins ?? 0) > 0 && (
+            <MiniStat icon={<Trophy className="h-3.5 w-3.5 text-warning" />} label="Battles Won" value={stats.battle_wins ?? 0} />
           )}
         </div>
       )}
