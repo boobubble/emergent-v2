@@ -36,6 +36,7 @@ import { TopSupporters } from "@/components/competitions/TopSupporters";
 import { PremiumNomineeCards } from "@/components/competitions/PremiumNomineeCards";
 import { StickyMobileVoteBar } from "@/components/competitions/StickyMobileVoteBar";
 import { PremiumEmptyState } from "@/components/competitions/PremiumEmptyState";
+import { PoetryBattleEntries } from "@/components/mehfil/PoetryBattleEntries";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
