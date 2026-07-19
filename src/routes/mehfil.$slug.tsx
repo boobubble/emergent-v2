@@ -72,6 +72,14 @@ function PoemDetailPage() {
   });
   const poem = q.data ?? initial;
 
+  // Live counter updates for this poem (upvotes, reads, views)
+  const qc = useQueryClient();
+  useMehfilPoemRealtime(poem?.id, (row) => {
+    qc.setQueryData(["mehfil", "poem", slug], (prev: typeof poem | undefined) =>
+      prev ? { ...prev, ...row } : prev,
+    );
+  });
+
   // Record a "read" once the page loads
   useEffect(() => {
     if (!poem) return;
