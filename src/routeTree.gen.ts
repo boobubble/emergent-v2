@@ -87,6 +87,7 @@ import { Route as AdminSignupAccessRouteImport } from './routes/admin.signup-acc
 import { Route as AdminSetupWizardRouteImport } from './routes/admin.setup-wizard'
 import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminSecurityRouteImport } from './routes/admin.security'
+import { Route as AdminSearchRouteImport } from './routes/admin.search'
 import { Route as AdminSafetyRouteImport } from './routes/admin.safety'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminRetentionRouteImport } from './routes/admin.retention'
@@ -572,6 +573,11 @@ const AdminSeoRoute = AdminSeoRouteImport.update({
 const AdminSecurityRoute = AdminSecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSearchRoute = AdminSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSafetyRoute = AdminSafetyRouteImport.update({
@@ -1165,6 +1171,7 @@ export interface FileRoutesByFullPath {
   '/admin/retention': typeof AdminRetentionRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/safety': typeof AdminSafetyRoute
+  '/admin/search': typeof AdminSearchRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
@@ -1337,6 +1344,7 @@ export interface FileRoutesByTo {
   '/admin/retention': typeof AdminRetentionRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/safety': typeof AdminSafetyRoute
+  '/admin/search': typeof AdminSearchRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
@@ -1512,6 +1520,7 @@ export interface FileRoutesById {
   '/admin/retention': typeof AdminRetentionRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/safety': typeof AdminSafetyRoute
+  '/admin/search': typeof AdminSearchRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
@@ -1689,6 +1698,7 @@ export interface FileRouteTypes {
     | '/admin/retention'
     | '/admin/roles'
     | '/admin/safety'
+    | '/admin/search'
     | '/admin/security'
     | '/admin/seo'
     | '/admin/setup-wizard'
@@ -1861,6 +1871,7 @@ export interface FileRouteTypes {
     | '/admin/retention'
     | '/admin/roles'
     | '/admin/safety'
+    | '/admin/search'
     | '/admin/security'
     | '/admin/seo'
     | '/admin/setup-wizard'
@@ -2035,6 +2046,7 @@ export interface FileRouteTypes {
     | '/admin/retention'
     | '/admin/roles'
     | '/admin/safety'
+    | '/admin/search'
     | '/admin/security'
     | '/admin/seo'
     | '/admin/setup-wizard'
@@ -2728,6 +2740,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/admin/security'
       preLoaderRoute: typeof AdminSecurityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/search': {
+      id: '/admin/search'
+      path: '/search'
+      fullPath: '/admin/search'
+      preLoaderRoute: typeof AdminSearchRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/safety': {
@@ -3475,6 +3494,7 @@ interface AdminRouteChildren {
   AdminRetentionRoute: typeof AdminRetentionRoute
   AdminRolesRoute: typeof AdminRolesRoute
   AdminSafetyRoute: typeof AdminSafetyRoute
+  AdminSearchRoute: typeof AdminSearchRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminSeoRoute: typeof AdminSeoRoute
   AdminSetupWizardRoute: typeof AdminSetupWizardRoute
@@ -3560,6 +3580,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRetentionRoute: AdminRetentionRoute,
   AdminRolesRoute: AdminRolesRoute,
   AdminSafetyRoute: AdminSafetyRoute,
+  AdminSearchRoute: AdminSearchRoute,
   AdminSecurityRoute: AdminSecurityRoute,
   AdminSeoRoute: AdminSeoRoute,
   AdminSetupWizardRoute: AdminSetupWizardRoute,
