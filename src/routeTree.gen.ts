@@ -58,6 +58,7 @@ import { Route as PoetryChallengesRouteImport } from './routes/poetry.challenges
 import { Route as PoetrySlugRouteImport } from './routes/poetry.$slug'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as MehfilLeaderboardRouteImport } from './routes/mehfil.leaderboard'
 import { Route as MehfilComposeRouteImport } from './routes/mehfil.compose'
 import { Route as MehfilChallengesRouteImport } from './routes/mehfil.challenges'
 import { Route as MehfilSlugRouteImport } from './routes/mehfil.$slug'
@@ -432,6 +433,11 @@ const PagesEditorIdRoute = PagesEditorIdRouteImport.update({
 const PSlugRoute = PSlugRouteImport.update({
   id: '/p/$slug',
   path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilLeaderboardRoute = MehfilLeaderboardRouteImport.update({
+  id: '/mehfil/leaderboard',
+  path: '/mehfil/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MehfilComposeRoute = MehfilComposeRouteImport.update({
@@ -1234,6 +1240,7 @@ export interface FileRoutesByFullPath {
   '/mehfil/$slug': typeof MehfilSlugRoute
   '/mehfil/challenges': typeof MehfilChallengesRoute
   '/mehfil/compose': typeof MehfilComposeRoute
+  '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/poetry/$slug': typeof PoetrySlugRoute
@@ -1411,6 +1418,7 @@ export interface FileRoutesByTo {
   '/mehfil/$slug': typeof MehfilSlugRoute
   '/mehfil/challenges': typeof MehfilChallengesRoute
   '/mehfil/compose': typeof MehfilComposeRoute
+  '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/poetry/$slug': typeof PoetrySlugRoute
@@ -1593,6 +1601,7 @@ export interface FileRoutesById {
   '/mehfil/$slug': typeof MehfilSlugRoute
   '/mehfil/challenges': typeof MehfilChallengesRoute
   '/mehfil/compose': typeof MehfilComposeRoute
+  '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/poetry/$slug': typeof PoetrySlugRoute
@@ -1776,6 +1785,7 @@ export interface FileRouteTypes {
     | '/mehfil/$slug'
     | '/mehfil/challenges'
     | '/mehfil/compose'
+    | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/poetry/$slug'
@@ -1953,6 +1963,7 @@ export interface FileRouteTypes {
     | '/mehfil/$slug'
     | '/mehfil/challenges'
     | '/mehfil/compose'
+    | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/poetry/$slug'
@@ -2134,6 +2145,7 @@ export interface FileRouteTypes {
     | '/mehfil/$slug'
     | '/mehfil/challenges'
     | '/mehfil/compose'
+    | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/poetry/$slug'
@@ -2223,6 +2235,7 @@ export interface RootRouteChildren {
   MehfilSlugRoute: typeof MehfilSlugRoute
   MehfilChallengesRoute: typeof MehfilChallengesRoute
   MehfilComposeRoute: typeof MehfilComposeRoute
+  MehfilLeaderboardRoute: typeof MehfilLeaderboardRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   PoetrySlugRoute: typeof PoetrySlugRoute
@@ -2603,6 +2616,13 @@ declare module '@tanstack/react-router' {
       path: '/p/$slug'
       fullPath: '/p/$slug'
       preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mehfil/leaderboard': {
+      id: '/mehfil/leaderboard'
+      path: '/mehfil/leaderboard'
+      fullPath: '/mehfil/leaderboard'
+      preLoaderRoute: typeof MehfilLeaderboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mehfil/compose': {
@@ -3833,6 +3853,7 @@ const rootRouteChildren: RootRouteChildren = {
   MehfilSlugRoute: MehfilSlugRoute,
   MehfilChallengesRoute: MehfilChallengesRoute,
   MehfilComposeRoute: MehfilComposeRoute,
+  MehfilLeaderboardRoute: MehfilLeaderboardRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   PoetrySlugRoute: PoetrySlugRoute,
