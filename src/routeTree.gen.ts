@@ -58,6 +58,7 @@ import { Route as PoetryChallengesRouteImport } from './routes/poetry.challenges
 import { Route as PoetrySlugRouteImport } from './routes/poetry.$slug'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as MehfilSlugRouteImport } from './routes/mehfil.$slug'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as GamesLudoRouteImport } from './routes/games.ludo'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
@@ -428,6 +429,11 @@ const PagesEditorIdRoute = PagesEditorIdRouteImport.update({
 const PSlugRoute = PSlugRouteImport.update({
   id: '/p/$slug',
   path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilSlugRoute = MehfilSlugRouteImport.update({
+  id: '/mehfil/$slug',
+  path: '/mehfil/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InviteCodeRoute = InviteCodeRouteImport.update({
@@ -1207,6 +1213,7 @@ export interface FileRoutesByFullPath {
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/mehfil/$slug': typeof MehfilSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/poetry/$slug': typeof PoetrySlugRoute
@@ -1380,6 +1387,7 @@ export interface FileRoutesByTo {
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/mehfil/$slug': typeof MehfilSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/poetry/$slug': typeof PoetrySlugRoute
@@ -1558,6 +1566,7 @@ export interface FileRoutesById {
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/mehfil/$slug': typeof MehfilSlugRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/poetry/$slug': typeof PoetrySlugRoute
@@ -1737,6 +1746,7 @@ export interface FileRouteTypes {
     | '/feed/$slug'
     | '/games/ludo'
     | '/invite/$code'
+    | '/mehfil/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/poetry/$slug'
@@ -1910,6 +1920,7 @@ export interface FileRouteTypes {
     | '/feed/$slug'
     | '/games/ludo'
     | '/invite/$code'
+    | '/mehfil/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/poetry/$slug'
@@ -2087,6 +2098,7 @@ export interface FileRouteTypes {
     | '/feed/$slug'
     | '/games/ludo'
     | '/invite/$code'
+    | '/mehfil/$slug'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/poetry/$slug'
@@ -2172,6 +2184,7 @@ export interface RootRouteChildren {
   WelcomeRoute: typeof WelcomeRoute
   FeedSlugRoute: typeof FeedSlugRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  MehfilSlugRoute: typeof MehfilSlugRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   PoetrySlugRoute: typeof PoetrySlugRoute
@@ -2551,6 +2564,13 @@ declare module '@tanstack/react-router' {
       path: '/p/$slug'
       fullPath: '/p/$slug'
       preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mehfil/$slug': {
+      id: '/mehfil/$slug'
+      path: '/mehfil/$slug'
+      fullPath: '/mehfil/$slug'
+      preLoaderRoute: typeof MehfilSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invite/$code': {
@@ -3750,6 +3770,7 @@ const rootRouteChildren: RootRouteChildren = {
   WelcomeRoute: WelcomeRoute,
   FeedSlugRoute: FeedSlugRoute,
   InviteCodeRoute: InviteCodeRoute,
+  MehfilSlugRoute: MehfilSlugRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   PoetrySlugRoute: PoetrySlugRoute,
