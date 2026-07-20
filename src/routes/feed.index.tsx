@@ -68,7 +68,7 @@ const PanelFallback = () => (
   <div className="p-6 text-center text-sm text-muted-foreground">Loading…</div>
 );
 
-export const Route = createFileRoute("/feed")({
+export const Route = createFileRoute("/feed/")({
   head: () => ({
     meta: [
       { title: "Feed" },
