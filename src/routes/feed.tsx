@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon, Shield, LogOut, Radio, PenLine } from "lucide-react";
 import { useMehfilSettings } from "@/lib/use-mehfil-label";
@@ -44,6 +44,9 @@ import { useActiveFeedTheme, activateFeedTheme, type FeedThemeKey } from "@/lib/
 import { feedVariantFor } from "@/lib/theme-variants";
 import { OrkutFeedLayout } from "@/components/feed/OrkutFeedLayout";
 import { useAuthGate } from "@/lib/auth-gate";
+import { useServerFn } from "@tanstack/react-start";
+import { universalSearch, type UniversalSearchResults } from "@/lib/universal-search.functions";
+import { Heart, Eye, Swords, TrendingUp } from "lucide-react";
 
 import { Palette } from "lucide-react";
 
@@ -138,6 +141,27 @@ function FeedPage() {
   const mehfilLabel = mehfilSettings.module_name || "Mehfil";
   const mehfilWidgetEnabled = mehfilSettings.enabled !== false;
   const mehfilWidgetFreq = Math.max(2, Number(mehfilSettings.trending_widget_frequency) || 5);
+
+  // Universal Platform Search — extends the header search with debounced
+  // server results for Poems, Poetry Battles, Categories, and Hall of Fame.
+  // The existing local user/hashtag suggestions remain untouched.
+  const runUniversalSearch = useServerFn(universalSearch);
+  const [remoteResults, setRemoteResults] = useState<UniversalSearchResults | null>(null);
+  const [remoteLoading, setRemoteLoading] = useState(false);
+  useEffect(() => {
+    const raw = query.trim().replace(/^[#@]/, "");
+    if (raw.length < 2) { setRemoteResults(null); return; }
+    let cancelled = false;
+    setRemoteLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await runUniversalSearch({ data: { q: raw, limit: 5 } });
+        if (!cancelled) setRemoteResults(res);
+      } catch { if (!cancelled) setRemoteResults(null); }
+      finally { if (!cancelled) setRemoteLoading(false); }
+    }, 220);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [query, runUniversalSearch]);
 
   const focusComposer = () => {
     setView("feed");
@@ -590,33 +614,180 @@ function FeedPage() {
                 </button>
               )}
             </div>
-            {searchOpen && searchSuggestions.length > 0 && (
-              <ul
-                id="feed-search-suggestions"
-                role="listbox"
-                className="absolute left-0 right-0 top-full z-40 mt-2 max-h-80 overflow-auto rounded-2xl border border-border bg-popover p-1 text-sm shadow-[var(--shadow-soft-3,0_10px_30px_-10px_rgba(0,0,0,0.25))]"
-              >
-                {searchSuggestions.map((s, i) => (
-                  <li
-                    key={`${s.kind}-${s.value}`}
-                    id={`feed-search-opt-${i}`}
-                    role="option"
-                    aria-selected={i === searchHighlight}
-                    onMouseDown={(e) => { e.preventDefault(); applySuggestion(s); }}
-                    onMouseEnter={() => setSearchHighlight(i)}
-                    className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2 transition ${i === searchHighlight ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"}`}
-                  >
-                    <span className="flex items-center gap-2 truncate">
-                      <span className={`grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold ${s.kind === "hashtag" ? "bg-primary/15 text-primary" : "bg-secondary text-secondary-foreground"}`}>
-                        {s.kind === "hashtag" ? "#" : "@"}
-                      </span>
-                      <span className="truncate font-medium">{s.label}</span>
-                    </span>
-                    {s.sub && <span className="shrink-0 text-xs text-muted-foreground">{s.sub}</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
+            {(() => {
+              const sources = remoteResults?.sources ?? { users: true, mehfil: true, battles: true, categories: true };
+              const usersOn = sources.users !== false;
+              const localSuggestions = usersOn ? searchSuggestions : [];
+              const poems = remoteResults?.poems ?? [];
+              const battles = remoteResults?.battles ?? [];
+              const cats = remoteResults?.categories ?? [];
+              const hof = remoteResults?.hof ?? [];
+              const totalRemote = poems.length + battles.length + cats.length + hof.length;
+              const show = searchOpen && (localSuggestions.length > 0 || totalRemote > 0 || remoteLoading);
+              if (!show) return null;
+              const fmtRemaining = (iso: string | null) => {
+                if (!iso) return null;
+                const diff = new Date(iso).getTime() - Date.now();
+                if (diff <= 0) return "ended";
+                const h = Math.floor(diff / 3_600_000);
+                if (h < 1) return `${Math.max(1, Math.floor(diff / 60_000))}m left`;
+                if (h < 48) return `${h}h left`;
+                return `${Math.floor(h / 24)}d left`;
+              };
+              const Section = ({ title, children }: { title: string; children: ReactNode }) => (
+                <div className="px-2 pt-2 first:pt-1">
+                  <div className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</div>
+                  {children}
+                </div>
+              );
+              return (
+                <div
+                  id="feed-search-suggestions"
+                  role="listbox"
+                  className="absolute left-0 right-0 top-full z-40 mt-2 max-h-[28rem] overflow-auto rounded-2xl border border-border bg-popover p-1 text-sm shadow-[var(--shadow-soft-3,0_10px_30px_-10px_rgba(0,0,0,0.25))]"
+                >
+                  {localSuggestions.length > 0 && (
+                    <Section title="Users">
+                      <ul>
+                        {localSuggestions.map((s, i) => (
+                          <li
+                            key={`${s.kind}-${s.value}`}
+                            id={`feed-search-opt-${i}`}
+                            role="option"
+                            aria-selected={i === searchHighlight}
+                            onMouseDown={(e) => { e.preventDefault(); applySuggestion(s); }}
+                            onMouseEnter={() => setSearchHighlight(i)}
+                            className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2 transition ${i === searchHighlight ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"}`}
+                          >
+                            <span className="flex items-center gap-2 truncate">
+                              <span className={`grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold ${s.kind === "hashtag" ? "bg-primary/15 text-primary" : "bg-secondary text-secondary-foreground"}`}>
+                                {s.kind === "hashtag" ? "#" : "@"}
+                              </span>
+                              <span className="truncate font-medium">{s.label}</span>
+                            </span>
+                            {s.sub && <span className="shrink-0 text-xs text-muted-foreground">{s.sub}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    </Section>
+                  )}
+
+                  {poems.length > 0 && (
+                    <Section title="Poems">
+                      <ul>
+                        {poems.map((p) => (
+                          <li
+                            key={`poem-${p.id}`}
+                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/mehfil/$slug", params: { slug: p.slug } }); }}
+                            className="flex cursor-pointer items-start gap-3 rounded-xl px-3 py-2 hover:bg-accent/50"
+                          >
+                            {p.author?.avatar_url ? (
+                              <img src={p.author.avatar_url} alt="" className="mt-0.5 h-8 w-8 shrink-0 rounded-full object-cover" />
+                            ) : (
+                              <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                                {(p.author?.name ?? "P").slice(0, 1).toUpperCase()}
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                                <span className="truncate font-medium text-foreground">{p.author?.name ?? "Poet"}</span>
+                                {p.author?.writer_rank && <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">{p.author.writer_rank.replace(/_/g, " ")}</span>}
+                                {p.category && <span className="truncate">· {p.category.name}</span>}
+                              </div>
+                              <div className="flex items-center gap-1.5 truncate font-semibold">
+                                <span className="truncate">🌹 {p.title}</span>
+                                {p.is_battle && <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/15 px-1.5 py-0.5 text-[9px] font-bold text-orange-600"><Swords className="h-2.5 w-2.5" /> Battle</span>}
+                                {p.is_trending && <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-bold text-rose-600"><TrendingUp className="h-2.5 w-2.5" /> Trending</span>}
+                              </div>
+                              <div className="truncate text-xs text-muted-foreground">{p.preview}</div>
+                              <div className="mt-0.5 flex items-center gap-3 text-[11px] text-muted-foreground">
+                                <span className="inline-flex items-center gap-0.5"><Heart className="h-3 w-3" /> {p.upvotes}</span>
+                                <span className="inline-flex items-center gap-0.5"><Eye className="h-3 w-3" /> {p.reads}</span>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </Section>
+                  )}
+
+                  {battles.length > 0 && (
+                    <Section title="Battles">
+                      <ul>
+                        {battles.map((b) => {
+                          const remaining = fmtRemaining(b.end_at);
+                          return (
+                            <li
+                              key={`battle-${b.id}`}
+                              onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/competitions/$slug", params: { slug: b.slug } }); }}
+                              className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-accent/50"
+                            >
+                              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-orange-500/15 text-orange-600"><Swords className="h-4 w-4" /></div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 truncate font-semibold">⚔ <span className="truncate">{b.name}</span></div>
+                                <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[9px] font-bold uppercase">{b.status}</span>
+                                  {remaining && <span>{remaining}</span>}
+                                  <span>· {b.participants} entries</span>
+                                  {b.prize && <span>· 🏅 {b.prize}</span>}
+                                </div>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </Section>
+                  )}
+
+                  {cats.length > 0 && (
+                    <Section title="Categories">
+                      <ul>
+                        {cats.map((c) => (
+                          <li
+                            key={`cat-${c.id}`}
+                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/mehfil/category/$slug", params: { slug: c.slug } }); }}
+                            className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-accent/50"
+                          >
+                            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary text-sm">📚</div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 truncate font-semibold">
+                                <span className="truncate">{c.name}</span>
+                                {c.is_trending && <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-bold text-rose-600"><TrendingUp className="h-2.5 w-2.5" /> Trending</span>}
+                              </div>
+                              <div className="text-[11px] text-muted-foreground">{c.poem_count} poem{c.poem_count === 1 ? "" : "s"}</div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </Section>
+                  )}
+
+                  {hof.length > 0 && (
+                    <Section title="Hall of Fame">
+                      <ul>
+                        {hof.map((h) => (
+                          <li
+                            key={`hof-${h.id}`}
+                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/mehfil/$slug", params: { slug: h.poem_slug } }); }}
+                            className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-accent/50"
+                          >
+                            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-500/15 text-amber-600 text-sm">🏆</div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-semibold">{h.title}</div>
+                              <div className="text-[11px] text-muted-foreground">Rank #{h.rank} · {h.period}</div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </Section>
+                  )}
+
+                  {remoteLoading && totalRemote === 0 && localSuggestions.length === 0 && (
+                    <div className="px-3 py-4 text-center text-xs text-muted-foreground">Searching…</div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="ml-auto flex items-center gap-1.5">
