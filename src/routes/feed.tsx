@@ -142,6 +142,27 @@ function FeedPage() {
   const mehfilWidgetEnabled = mehfilSettings.enabled !== false;
   const mehfilWidgetFreq = Math.max(2, Number(mehfilSettings.trending_widget_frequency) || 5);
 
+  // Universal Platform Search — extends the header search with debounced
+  // server results for Poems, Poetry Battles, Categories, and Hall of Fame.
+  // The existing local user/hashtag suggestions remain untouched.
+  const runUniversalSearch = useServerFn(universalSearch);
+  const [remoteResults, setRemoteResults] = useState<UniversalSearchResults | null>(null);
+  const [remoteLoading, setRemoteLoading] = useState(false);
+  useEffect(() => {
+    const raw = query.trim().replace(/^[#@]/, "");
+    if (raw.length < 2) { setRemoteResults(null); return; }
+    let cancelled = false;
+    setRemoteLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await runUniversalSearch({ data: { q: raw, limit: 5 } });
+        if (!cancelled) setRemoteResults(res);
+      } catch { if (!cancelled) setRemoteResults(null); }
+      finally { if (!cancelled) setRemoteLoading(false); }
+    }, 220);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [query, runUniversalSearch]);
+
   const focusComposer = () => {
     setView("feed");
     setTimeout(() => {
