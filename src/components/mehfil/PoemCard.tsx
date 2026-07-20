@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+const totalReactions = (p: { upvote_count: number; reaction_count?: number }) =>
+  (p.upvote_count ?? 0) + (p.reaction_count ?? 0);
 import { Heart, Eye, MessageCircle, Sparkles, Swords } from "lucide-react";
 import { poemPreview, type MehfilPoemEnriched } from "@/lib/mehfil-types";
 import { WriterRankBadge } from "./WriterRankBadge";
