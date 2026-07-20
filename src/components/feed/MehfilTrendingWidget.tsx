@@ -21,7 +21,7 @@ export function MehfilTrendingWidget() {
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-amber-500/10">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
-          <span className="font-serif text-sm font-bold">🔥 Trending on Mehfil</span>
+          <span className="font-serif text-sm font-bold">🔥 Trending on Poetry Hub</span>
         </div>
         <Link to="/poetry" className="text-xs font-semibold text-primary inline-flex items-center gap-0.5">
           Explore <ChevronRight className="h-3 w-3" />

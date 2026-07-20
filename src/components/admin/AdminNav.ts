@@ -95,7 +95,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/competition-categories", label: "Competition Categories", icon: Trophy, keywords: ["competition", "category", "categories"] },
       { to: "/admin/competitions-feed", label: "Competitions Feed", icon: Trophy, keywords: ["competition", "feed", "bot", "auto post", "announcements", "competitionsbot"] },
       { to: "/admin/competition-analytics", label: "Competition Analytics", icon: Trophy, keywords: ["competition", "analytics", "stats", "metrics", "trends", "leaderboard", "top"] },
-      { to: "/admin/mehfil", label: "Mehfil (Poetry)", icon: ScrollText, keywords: ["mehfil", "poetry", "poem", "verse", "writer", "battle", "hall of fame"] },
+      { to: "/admin/mehfil", label: "Poetry Hub (Poetry)", icon: ScrollText, keywords: ["mehfil", "poetry", "poem", "verse", "writer", "battle", "hall of fame"] },
       { to: "/admin/community-verification", label: "Community Verification", icon: ShieldAlert, keywords: ["community", "verification", "verified", "official", "partner", "trusted", "badges", "trust"] },
       { to: "/admin/premium-slugs", label: "Premium URLs", icon: Link2, keywords: ["premium", "slug", "url", "vanity", "custom", "community", "claim", "reserved"] },
       { to: "/admin/community-reports", label: "Community Reports", icon: BarChart3, keywords: ["community", "reports", "analytics", "stats", "totals", "archived", "verified", "top", "featured"] },

@@ -4,7 +4,7 @@ import { getMehfilSettings } from "@/lib/mehfil-admin.functions";
 import { MEHFIL_SETTINGS_DEFAULTS, type MehfilSettings } from "@/lib/mehfil-types";
 
 /**
- * Shared reader for the admin-branded Mehfil label + full Mehfil settings.
+ * Shared reader for the admin-branded Poetry Hub label + full Poetry Hub settings.
  * The URL segment stays `/mehfil` — only presentational strings change.
  */
 export function useMehfilSettings(): MehfilSettings {

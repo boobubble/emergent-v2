@@ -29,8 +29,8 @@ export const getMehfilLeaderboard = createServerFn({ method: "GET" }).handler(as
 export const Route = createFileRoute("/poetry/leaderboard")({
   head: () => ({
     meta: [
-      { title: "Mehfil Leaderboard · Top Poets" },
-      { name: "description", content: "See the top writers on Mehfil ranked by upvotes, reads, and battle wins." },
+      { title: "Poetry Hub Leaderboard · Top Poets" },
+      { name: "description", content: "See the top writers on Poetry Hub ranked by upvotes, reads, and battle wins." },
     ],
   }),
   component: LeaderboardPage,
@@ -44,7 +44,7 @@ function LeaderboardPage() {
   return (
     <MehfilShell showBack>
       <div className="mb-6">
-        <h1 className="font-serif text-3xl font-bold">🏆 Mehfil Leaderboard</h1>
+        <h1 className="font-serif text-3xl font-bold">🏆 Poetry Hub Leaderboard</h1>
         <p className="text-sm text-muted-foreground">Top poets ranked by upvotes, reads, and battle wins.</p>
       </div>
 

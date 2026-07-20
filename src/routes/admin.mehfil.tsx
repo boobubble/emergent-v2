@@ -18,7 +18,7 @@ import type { MehfilCategory, MehfilPoem, MehfilSettings } from "@/lib/mehfil-ty
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export const Route = createFileRoute("/admin/mehfil")({
-  head: () => ({ meta: [{ title: "Mehfil Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Poetry Hub Admin" }, { name: "robots", content: "noindex" }] }),
   component: MehfilAdmin,
 });
 
@@ -30,8 +30,8 @@ function MehfilAdmin() {
   return (
     <div className="mx-auto max-w-6xl p-4">
       <AdminPageHeader
-        title="Mehfil"
-        description="Poetry community — moderate poems, manage categories, configure Mehfil settings."
+        title="Poetry Hub"
+        description="Poetry community — moderate poems, manage categories, configure Poetry Hub settings."
       />
       <div className="mt-4 mb-6 flex gap-1 rounded-xl border border-border/60 bg-card p-1 w-fit">
         {TABS.map((t) => (
@@ -163,7 +163,7 @@ function SettingsTab() {
 
   return (
     <div className="max-w-xl rounded-xl border border-border/60 bg-card overflow-hidden">
-      <T k="enabled" label="Enable Mehfil" />
+      <T k="enabled" label="Enable Poetry Hub" />
       <T k="battles_enabled" label="Enable Poetry Battles" />
       <T k="upvotes_enabled" label="Enable Upvotes" />
       <T k="comments_enabled" label="Enable Comments" />
@@ -176,8 +176,8 @@ function SettingsTab() {
         <input type="number" min={2} max={30} value={current.trending_widget_frequency} onChange={(e) => setForm({ ...current, trending_widget_frequency: Number(e.target.value) })} className="w-20 rounded border border-border bg-background px-2 py-1 text-sm" />
       </label>
       <label className="flex items-center justify-between gap-3 p-3 border-b border-border/40">
-        <span className="text-sm">Module display name<br /><span className="text-[11px] text-muted-foreground">Renames "Mehfil" everywhere in the UI. Routes stay /mehfil.</span></span>
-        <input type="text" maxLength={40} value={current.module_name ?? "Mehfil"} onChange={(e) => setForm({ ...current, module_name: e.target.value })} className="w-40 rounded border border-border bg-background px-2 py-1 text-sm" />
+        <span className="text-sm">Module display name<br /><span className="text-[11px] text-muted-foreground">Renames "Poetry Hub" everywhere in the UI. Routes stay /mehfil.</span></span>
+        <input type="text" maxLength={40} value={current.module_name ?? "Poetry Hub"} onChange={(e) => setForm({ ...current, module_name: e.target.value })} className="w-40 rounded border border-border bg-background px-2 py-1 text-sm" />
       </label>
       <div className="p-3">
         <button onClick={() => m.mutate(current)} disabled={m.isPending} className="w-full inline-flex items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"><Save className="h-4 w-4" /> Save Settings</button>

@@ -9,10 +9,10 @@ import { PoemCard } from "@/components/mehfil/PoemCard";
 export const Route = createFileRoute("/poetry/category/$slug")({
   head: ({ params }) => ({
     meta: [
-      { title: `${cap(params.slug)} Poetry · Mehfil` },
-      { name: "description", content: `Read the best ${params.slug.replace(/-/g, " ")} poems from the Mehfil community.` },
-      { property: "og:title", content: `${cap(params.slug)} Poetry · Mehfil` },
-      { property: "og:description", content: `Read the best ${params.slug.replace(/-/g, " ")} poems from the Mehfil community.` },
+      { title: `${cap(params.slug)} Poetry · Poetry Hub` },
+      { name: "description", content: `Read the best ${params.slug.replace(/-/g, " ")} poems from the Poetry Hub community.` },
+      { property: "og:title", content: `${cap(params.slug)} Poetry · Poetry Hub` },
+      { property: "og:description", content: `Read the best ${params.slug.replace(/-/g, " ")} poems from the Poetry Hub community.` },
     ],
   }),
   component: CategoryPage,
@@ -42,7 +42,7 @@ function CategoryPage() {
     <MehfilShell showBack>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Mehfil Category</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Poetry Hub Category</div>
           <h1 className="font-serif text-3xl font-bold" style={{ color: q.data?.category?.color ?? undefined }}>
             {q.data?.category?.name ?? cap(slug)}
           </h1>

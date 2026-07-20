@@ -14,8 +14,8 @@ import { gamify } from "@/lib/gamification-emit";
 export const Route = createFileRoute("/poetry/compose")({
   head: () => ({
     meta: [
-      { title: "Write a Poem · Mehfil" },
-      { name: "description", content: "Publish your poetry to Mehfil." },
+      { title: "Write a Poem · Poetry Hub" },
+      { name: "description", content: "Publish your poetry to Poetry Hub." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -82,7 +82,7 @@ function ComposePage() {
     onSuccess: (poem) => {
       if (poem.status === "published") {
         gamify("poetry_publish", 1, { poem_id: poem.id, category: categorySlug });
-        toast.success(optInBattle ? "Published & entered active battle" : "Poem published to Mehfil");
+        toast.success(optInBattle ? "Published & entered active battle" : "Poem published to Poetry Hub");
         nav({ to: "/poetry/$slug", params: { slug: poem.slug } });
       } else {
         toast.success("Saved as draft");
@@ -98,7 +98,7 @@ function ComposePage() {
         <div className="mx-auto max-w-md rounded-2xl border border-border/60 bg-card p-8 text-center">
           <h1 className="font-serif text-2xl font-bold">Sign in to write</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Join Mehfil to publish your poetry, earn writer ranks, and enter poetry battles.
+            Join Poetry Hub to publish your poetry, earn writer ranks, and enter poetry battles.
           </p>
           <div className="mt-6">
             <AuthScreen />
@@ -117,7 +117,7 @@ function ComposePage() {
         <div className="mb-5 flex items-center justify-between">
           <div>
             <h1 className="font-serif text-3xl font-bold">Write a Poem</h1>
-            <p className="text-xs text-muted-foreground">Draft, publish and share with the Mehfil community.</p>
+            <p className="text-xs text-muted-foreground">Draft, publish and share with the Poetry Hub community.</p>
           </div>
           <Link to="/poetry" className="rounded-md p-2 hover:bg-muted" aria-label="Close"><X className="h-4 w-4" /></Link>
         </div>

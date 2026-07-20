@@ -9,7 +9,7 @@ import { MehfilShell } from "@/components/mehfil/MehfilShell";
 export const Route = createFileRoute("/poetry/challenges")({
   head: () => ({
     meta: [
-      { title: "Poetry Battles · Mehfil" },
+      { title: "Poetry Battles · Poetry Hub" },
       { name: "description", content: "Live and upcoming poetry battles. Submit your verse and compete for the top spot." },
     ],
   }),

@@ -1,6 +1,6 @@
 /**
  * Universal Platform Search — extends the existing feed header search by
- * adding server-side results for Mehfil poems, poetry battles, categories,
+ * adding server-side results for Poetry Hub poems, poetry battles, categories,
  * and Hall of Fame entries.
  *
  * The existing user/hashtag suggestions (derived locally from loaded feed

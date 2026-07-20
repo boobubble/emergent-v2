@@ -13,9 +13,9 @@ import type { WriterRank } from "@/lib/mehfil-types";
 export const Route = createFileRoute("/poetry/")({
   head: () => ({
     meta: [
-      { title: "Mehfil — A Community of Poets" },
+      { title: "Poetry Hub — A Community of Poets" },
       { name: "description", content: "Read, write and share original poetry. Trending verses, poetry battles, and a home for every kind of poet." },
-      { property: "og:title", content: "Mehfil — A Community of Poets" },
+      { property: "og:title", content: "Poetry Hub — A Community of Poets" },
       { property: "og:description", content: "Read, write and share original poetry. Trending verses, poetry battles, and a home for every kind of poet." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -39,7 +39,7 @@ function MehfilDiscoveryPage() {
       <section className="relative mb-10 overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-amber-500/10 p-8 md:p-12">
         <div className="grid gap-6 md:grid-cols-[1.2fr_1fr] md:items-center">
           <div>
-            <span className="inline-block rounded-full bg-primary/15 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">Mehfil</span>
+            <span className="inline-block rounded-full bg-primary/15 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">Poetry Hub</span>
             <h1 className="mt-3 font-serif text-4xl font-bold leading-tight md:text-5xl">
               Where every verse<br /> finds its audience
             </h1>
@@ -89,7 +89,7 @@ function MehfilDiscoveryPage() {
       </section>
 
       {/* DISCOVERY SECTIONS */}
-      {disc.isLoading && <div className="py-20 text-center text-sm text-muted-foreground">Loading Mehfil…</div>}
+      {disc.isLoading && <div className="py-20 text-center text-sm text-muted-foreground">Loading Poetry Hub…</div>}
       {disc.data?.sections.map((sec) => (
         sec.poems.length > 0 && (
           <section key={sec.key} className="mb-10">
@@ -131,7 +131,7 @@ function MehfilDiscoveryPage() {
       )}
 
       <div className="py-8 text-center text-xs text-muted-foreground">
-        Mehfil · Phase 1 · Battles, leaderboard and Hall of Fame ship next.
+        Poetry Hub · Phase 1 · Battles, leaderboard and Hall of Fame ship next.
       </div>
     </MehfilShell>
   );

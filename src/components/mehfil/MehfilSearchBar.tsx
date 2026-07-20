@@ -150,7 +150,7 @@ export function MehfilSearchBar() {
               }}
               placeholder="🔍 Search poems, keywords, writers or hashtags..."
               className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
-              aria-label="Search Mehfil"
+              aria-label="Search Poetry Hub"
             />
             {q && (
               <button type="button" onClick={() => { setQ(""); inputRef.current?.focus(); }} className="rounded-full p-1 hover:bg-muted" aria-label="Clear">

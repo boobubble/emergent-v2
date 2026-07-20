@@ -29,13 +29,13 @@ export const Route = createFileRoute("/poetry/$slug")({
     const url = `${SITE_URL}/mehfil/${params.slug}`;
     if (!loaderData) {
       return {
-        meta: [{ title: "Poem not found · Mehfil" }, { name: "robots", content: "noindex" }],
+        meta: [{ title: "Poem not found · Poetry Hub" }, { name: "robots", content: "noindex" }],
         links: [{ rel: "canonical", href: url }],
       };
     }
     const p = loaderData.poem;
     const desc = p.seo_description || poemPreview(p.body, 155);
-    const title = p.seo_title || `${p.title} · Mehfil`;
+    const title = p.seo_title || `${p.title} · Poetry Hub`;
     const authorName = p.author?.display_name || p.author?.username || "Anonymous";
     return {
       meta: [
@@ -88,7 +88,7 @@ export const Route = createFileRoute("/poetry/$slug")({
     <MehfilShell showBack>
       <div className="py-20 text-center">
         <div className="text-lg font-semibold">Poem not found</div>
-        <Link to="/poetry" className="mt-3 inline-block text-sm text-primary underline">Back to Mehfil</Link>
+        <Link to="/poetry" className="mt-3 inline-block text-sm text-primary underline">Back to Poetry Hub</Link>
       </div>
     </MehfilShell>
   ),
@@ -387,7 +387,7 @@ function PoemDetailPage() {
         {relatedQ.data?.trending && relatedQ.data.trending.length > 0 && (
           <section className="mt-10">
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Trending on Mehfil
+              Trending on Poetry Hub
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {relatedQ.data.trending.slice(0, 4).map((p) => (

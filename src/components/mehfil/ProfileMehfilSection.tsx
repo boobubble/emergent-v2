@@ -28,9 +28,9 @@ export function ProfileMehfilSection({ username }: { username: string }) {
     <section>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          <Feather className="h-3.5 w-3.5 text-primary" /> Mehfil · Poetry
+          <Feather className="h-3.5 w-3.5 text-primary" /> Poetry Hub · Poetry
         </h2>
-        <Link to="/poetry" className="text-[11px] font-semibold text-primary hover:underline">Explore Mehfil →</Link>
+        <Link to="/poetry" className="text-[11px] font-semibold text-primary hover:underline">Explore Poetry Hub →</Link>
       </div>
 
       {/* Stats strip */}

@@ -138,7 +138,7 @@ function FeedPage() {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
   const mehfilSettings = useMehfilSettings();
-  const mehfilLabel = mehfilSettings.module_name || "Mehfil";
+  const mehfilLabel = mehfilSettings.module_name || "Poetry Hub";
   const mehfilWidgetEnabled = mehfilSettings.enabled !== false;
   const mehfilWidgetFreq = Math.max(2, Number(mehfilSettings.trending_widget_frequency) || 5);
 

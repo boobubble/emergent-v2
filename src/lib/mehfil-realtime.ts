@@ -1,5 +1,5 @@
 /**
- * Mehfil realtime hooks — thin wrappers over Supabase Realtime for
+ * Poetry Hub realtime hooks — thin wrappers over Supabase Realtime for
  * mehfil_poems row changes (upvote/read/view counters) and battle
  * participant vote counts.
  */

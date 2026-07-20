@@ -1,5 +1,5 @@
 /**
- * Mehfil AI Assist — Improve, Continue, Beautify, Translate, and style presets.
+ * Poetry Hub AI Assist — Improve, Continue, Beautify, Translate, and style presets.
  * Calls Lovable AI Gateway directly (same pattern used elsewhere in the app).
  */
 import { createServerFn } from "@tanstack/react-start";

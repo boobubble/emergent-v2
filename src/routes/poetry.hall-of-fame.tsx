@@ -25,8 +25,8 @@ export const getMehfilHallOfFame = createServerFn({ method: "GET" }).handler(asy
 export const Route = createFileRoute("/poetry/hall-of-fame")({
   head: () => ({
     meta: [
-      { title: "Hall of Fame · Mehfil" },
-      { name: "description", content: "Permanent archive of Mehfil poetry battle winners." },
+      { title: "Hall of Fame · Poetry Hub" },
+      { name: "description", content: "Permanent archive of Poetry Hub poetry battle winners." },
     ],
   }),
   component: HallOfFamePage,

@@ -1,5 +1,5 @@
 /**
- * Mehfil admin server functions — categories CRUD, poem moderation, settings.
+ * Poetry Hub admin server functions — categories CRUD, poem moderation, settings.
  * All operations require an admin role. Reuses existing `app_settings` store.
  */
 import { createServerFn } from "@tanstack/react-start";

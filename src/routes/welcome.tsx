@@ -819,7 +819,7 @@ function LandingPage() {
         </Card>
       </section>
 
-      {/* ───────── Trending on Mehfil ───────── */}
+      {/* ───────── Trending on Poetry Hub ───────── */}
       <MehfilLandingSection />
 
 
@@ -1134,7 +1134,7 @@ function SectionTitle({ icon, title, suffix, href }: { icon: string; title: stri
   );
 }
 
-// Trending Mehfil (poetry) section — reuses the existing widget + settings.
+// Trending Poetry Hub (poetry) section — reuses the existing widget + settings.
 import { MehfilTrendingWidget } from "@/components/feed/MehfilTrendingWidget";
 import { useMehfilSettings } from "@/lib/use-mehfil-label";
 function MehfilLandingSection() {
