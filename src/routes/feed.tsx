@@ -634,7 +634,7 @@ function FeedPage() {
                 if (h < 48) return `${h}h left`;
                 return `${Math.floor(h / 24)}d left`;
               };
-              const Section = ({ title, children }: { title: string; children: import("react").ReactNode }) => (
+              const Section = ({ title, children }: { title: string; children: ReactNode }) => (
                 <div className="px-2 pt-2 first:pt-1">
                   <div className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</div>
                   {children}
