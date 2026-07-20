@@ -44,6 +44,9 @@ import { useActiveFeedTheme, activateFeedTheme, type FeedThemeKey } from "@/lib/
 import { feedVariantFor } from "@/lib/theme-variants";
 import { OrkutFeedLayout } from "@/components/feed/OrkutFeedLayout";
 import { useAuthGate } from "@/lib/auth-gate";
+import { useServerFn } from "@tanstack/react-start";
+import { universalSearch, type UniversalSearchResults } from "@/lib/universal-search.functions";
+import { Heart, Eye, Swords, TrendingUp } from "lucide-react";
 
 import { Palette } from "lucide-react";
 
