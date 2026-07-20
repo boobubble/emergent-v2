@@ -206,6 +206,37 @@ export const getPoemBySlug = createServerFn({ method: "GET" })
     return enriched;
   });
 
+export const getMehfilRelated = createServerFn({ method: "GET" })
+  .inputValidator((input: { poemId: string; authorId: string; categoryId?: string | null; limit?: number }) => input)
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const limit = Math.min(data.limit ?? 6, 12);
+
+    const [moreFromAuthorRes, relatedRes, trendingRes] = await Promise.all([
+      sb.from("mehfil_poems").select("*")
+        .eq("status", "published").eq("author_id", data.authorId)
+        .neq("id", data.poemId)
+        .order("published_at", { ascending: false }).limit(limit),
+      data.categoryId
+        ? sb.from("mehfil_poems").select("*")
+            .eq("status", "published").eq("category_id", data.categoryId)
+            .neq("id", data.poemId).neq("author_id", data.authorId)
+            .order("upvote_count", { ascending: false }).limit(limit)
+        : Promise.resolve({ data: [] as MehfilPoem[] }),
+      sb.from("mehfil_poems").select("*")
+        .eq("status", "published").neq("id", data.poemId)
+        .order("upvote_count", { ascending: false }).limit(limit),
+    ]);
+
+    const [moreFromAuthor, related, trending] = await Promise.all([
+      attachAuthorsAndCats(sb, (moreFromAuthorRes.data ?? []) as MehfilPoem[]),
+      attachAuthorsAndCats(sb, (relatedRes.data ?? []) as MehfilPoem[]),
+      attachAuthorsAndCats(sb, (trendingRes.data ?? []) as MehfilPoem[]),
+    ]);
+    return { moreFromAuthor, related, trending };
+  });
+
+
 export const recordPoemRead = createServerFn({ method: "POST" })
   .inputValidator((input: { poemId: string; sessionKey?: string }) => input)
   .handler(async ({ data }) => {

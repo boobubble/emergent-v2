@@ -4,15 +4,19 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Bookmark, Heart, Eye, MessageCircle, Share2, Swords } from "lucide-react";
-import { getPoemBySlug, recordPoemRead, togglePoemBookmark } from "@/lib/mehfil.functions";
+import { getPoemBySlug, recordPoemRead, togglePoemBookmark, getMehfilRelated } from "@/lib/mehfil.functions";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
+import { PoemCard } from "@/components/mehfil/PoemCard";
 import { MEHFIL_REACTIONS, poemPreview } from "@/lib/mehfil-types";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { gamify, GAM_EVENTS } from "@/lib/gamification-emit";
 import { useMehfilPoemRealtime } from "@/lib/mehfil-realtime";
 import { supabase } from "@/integrations/supabase/client";
+
+const SITE_URL = "https://holo-chat-quest.lovable.app";
+
 
 
 export const Route = createFileRoute("/mehfil/$slug")({
@@ -21,13 +25,18 @@ export const Route = createFileRoute("/mehfil/$slug")({
     if (!poem) throw notFound();
     return { poem };
   },
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
+    const url = `${SITE_URL}/mehfil/${params.slug}`;
     if (!loaderData) {
-      return { meta: [{ title: "Poem not found · Mehfil" }, { name: "robots", content: "noindex" }] };
+      return {
+        meta: [{ title: "Poem not found · Mehfil" }, { name: "robots", content: "noindex" }],
+        links: [{ rel: "canonical", href: url }],
+      };
     }
     const p = loaderData.poem;
     const desc = p.seo_description || poemPreview(p.body, 155);
     const title = p.seo_title || `${p.title} · Mehfil`;
+    const authorName = p.author?.display_name || p.author?.username || "Anonymous";
     return {
       meta: [
         { title },
@@ -35,11 +44,45 @@ export const Route = createFileRoute("/mehfil/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: desc },
         { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
         ...(p.cover_url ? [{ property: "og:image", content: p.cover_url }] : []),
         { name: "twitter:card", content: p.cover_url ? "summary_large_image" : "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: desc },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            headline: p.title,
+            name: p.title,
+            description: desc,
+            url,
+            datePublished: p.published_at,
+            image: p.cover_url ? [p.cover_url] : undefined,
+            author: { "@type": "Person", name: authorName },
+            genre: p.category?.name,
+            interactionStatistic: [
+              {
+                "@type": "InteractionCounter",
+                interactionType: "https://schema.org/LikeAction",
+                userInteractionCount: p.upvote_count ?? 0,
+              },
+              {
+                "@type": "InteractionCounter",
+                interactionType: "https://schema.org/ReadAction",
+                userInteractionCount: p.read_count ?? 0,
+              },
+            ],
+          }),
+        },
       ],
     };
   },
+
   component: PoemDetailPage,
   notFoundComponent: () => (
     <MehfilShell showBack>
@@ -81,6 +124,23 @@ function PoemDetailPage() {
       prev ? { ...prev, ...row } : prev,
     );
   });
+
+  // Lazy-load related poems after main render.
+  const fetchRelated = useServerFn(getMehfilRelated);
+  const relatedQ = useQuery({
+    queryKey: ["mehfil", "related", poem?.id],
+    queryFn: () =>
+      fetchRelated({
+        data: {
+          poemId: poem!.id,
+          authorId: poem!.author_id,
+          categoryId: poem!.category_id ?? null,
+        },
+      }),
+    enabled: !!poem?.id,
+    staleTime: 60_000,
+  });
+
 
   // Record a "read" once the page loads
   useEffect(() => {
@@ -294,9 +354,49 @@ function PoemDetailPage() {
           </div>
         )}
 
-        <div className="mt-10 rounded-2xl border border-dashed border-border/60 p-6 text-center text-xs text-muted-foreground">
-          Comments reuse the shared platform comments module and land here in Phase 2.
+        <div id="comments" className="mt-10 rounded-2xl border border-dashed border-border/60 p-6 text-center text-xs text-muted-foreground">
+          Comments coming soon — the shared platform comments module lands here in Phase 2.
         </div>
+
+        {relatedQ.data?.moreFromAuthor && relatedQ.data.moreFromAuthor.length > 0 && (
+          <section className="mt-10">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              More from {displayName}
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {relatedQ.data.moreFromAuthor.slice(0, 4).map((p) => (
+                <PoemCard key={p.id} poem={p} variant="compact" />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {relatedQ.data?.related && relatedQ.data.related.length > 0 && (
+          <section className="mt-10">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Related poems{poem.category ? ` in ${poem.category.name}` : ""}
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {relatedQ.data.related.slice(0, 4).map((p) => (
+                <PoemCard key={p.id} poem={p} variant="compact" />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {relatedQ.data?.trending && relatedQ.data.trending.length > 0 && (
+          <section className="mt-10">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Trending on Mehfil
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {relatedQ.data.trending.slice(0, 4).map((p) => (
+                <PoemCard key={p.id} poem={p} variant="compact" />
+              ))}
+            </div>
+          </section>
+        )}
+
       </article>
     </MehfilShell>
   );
