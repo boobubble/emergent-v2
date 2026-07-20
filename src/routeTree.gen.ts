@@ -28,7 +28,6 @@ import { Route as GamificationRouteImport } from './routes/gamification'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
 import { Route as FeedbackRouteImport } from './routes/feedback'
-import { Route as FeedRouteImport } from './routes/feed'
 import { Route as DeployRouteImport } from './routes/deploy'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as CompetitionsRouteImport } from './routes/competitions'
@@ -46,6 +45,7 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MehfilIndexRouteImport } from './routes/mehfil.index'
+import { Route as FeedIndexRouteImport } from './routes/feed.index'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
 import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -279,11 +279,6 @@ const FeedbackRoute = FeedbackRouteImport.update({
   path: '/feedback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FeedRoute = FeedRouteImport.update({
-  id: '/feed',
-  path: '/feed',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DeployRoute = DeployRouteImport.update({
   id: '/deploy',
   path: '/deploy',
@@ -369,6 +364,11 @@ const MehfilIndexRoute = MehfilIndexRouteImport.update({
   path: '/mehfil/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FeedIndexRoute = FeedIndexRouteImport.update({
+  id: '/feed/',
+  path: '/feed/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -435,9 +435,9 @@ const GamesLudoRoute = GamesLudoRouteImport.update({
   getParentRoute: () => GamesRoute,
 } as any)
 const FeedSlugRoute = FeedSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => FeedRoute,
+  id: '/feed/$slug',
+  path: '/feed/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CompetitionsLeaderboardRoute = CompetitionsLeaderboardRouteImport.update({
   id: '/leaderboard',
@@ -1087,7 +1087,6 @@ export interface FileRoutesByFullPath {
   '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
-  '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRouteWithChildren
@@ -1213,6 +1212,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
+  '/feed/': typeof FeedIndexRoute
   '/mehfil/': typeof MehfilIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
@@ -1260,7 +1260,6 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
-  '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRouteWithChildren
@@ -1385,6 +1384,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
+  '/feed': typeof FeedIndexRoute
   '/mehfil': typeof MehfilIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
@@ -1436,7 +1436,6 @@ export interface FileRoutesById {
   '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
-  '/feed': typeof FeedRouteWithChildren
   '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRouteWithChildren
@@ -1562,6 +1561,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
+  '/feed/': typeof FeedIndexRoute
   '/mehfil/': typeof MehfilIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
@@ -1614,7 +1614,6 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/confessions'
     | '/deploy'
-    | '/feed'
     | '/feedback'
     | '/find-friends'
     | '/games'
@@ -1740,6 +1739,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/broadcaster/'
     | '/competitions/'
+    | '/feed/'
     | '/mehfil/'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
@@ -1787,7 +1787,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/confessions'
     | '/deploy'
-    | '/feed'
     | '/feedback'
     | '/find-friends'
     | '/games'
@@ -1912,6 +1911,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/broadcaster'
     | '/competitions'
+    | '/feed'
     | '/mehfil'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
@@ -1962,7 +1962,6 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/confessions'
     | '/deploy'
-    | '/feed'
     | '/feedback'
     | '/find-friends'
     | '/games'
@@ -2088,6 +2087,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/broadcaster/'
     | '/competitions/'
+    | '/feed/'
     | '/mehfil/'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
@@ -2139,7 +2139,6 @@ export interface RootRouteChildren {
   CompetitionsRoute: typeof CompetitionsRouteWithChildren
   ConfessionsRoute: typeof ConfessionsRoute
   DeployRoute: typeof DeployRoute
-  FeedRoute: typeof FeedRouteWithChildren
   FeedbackRoute: typeof FeedbackRoute
   FindFriendsRoute: typeof FindFriendsRoute
   GamesRoute: typeof GamesRouteWithChildren
@@ -2159,6 +2158,7 @@ export interface RootRouteChildren {
   TrustRoute: typeof TrustRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
+  FeedSlugRoute: typeof FeedSlugRoute
   InviteCodeRoute: typeof InviteCodeRoute
   MehfilSlugRoute: typeof MehfilSlugRoute
   MehfilChallengesRoute: typeof MehfilChallengesRoute
@@ -2168,6 +2168,7 @@ export interface RootRouteChildren {
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  FeedIndexRoute: typeof FeedIndexRoute
   MehfilIndexRoute: typeof MehfilIndexRoute
   ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
   ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
@@ -2329,13 +2330,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/feed': {
-      id: '/feed'
-      path: '/feed'
-      fullPath: '/feed'
-      preLoaderRoute: typeof FeedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/deploy': {
       id: '/deploy'
       path: '/deploy'
@@ -2455,6 +2449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MehfilIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/feed/': {
+      id: '/feed/'
+      path: '/feed'
+      fullPath: '/feed/'
+      preLoaderRoute: typeof FeedIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/competitions/': {
       id: '/competitions/'
       path: '/'
@@ -2548,10 +2549,10 @@ declare module '@tanstack/react-router' {
     }
     '/feed/$slug': {
       id: '/feed/$slug'
-      path: '/$slug'
+      path: '/feed/$slug'
       fullPath: '/feed/$slug'
       preLoaderRoute: typeof FeedSlugRouteImport
-      parentRoute: typeof FeedRoute
+      parentRoute: typeof rootRouteImport
     }
     '/competitions/leaderboard': {
       id: '/competitions/leaderboard'
@@ -3681,16 +3682,6 @@ const CompetitionsRouteWithChildren = CompetitionsRoute._addFileChildren(
   CompetitionsRouteChildren,
 )
 
-interface FeedRouteChildren {
-  FeedSlugRoute: typeof FeedSlugRoute
-}
-
-const FeedRouteChildren: FeedRouteChildren = {
-  FeedSlugRoute: FeedSlugRoute,
-}
-
-const FeedRouteWithChildren = FeedRoute._addFileChildren(FeedRouteChildren)
-
 interface GamesRouteChildren {
   GamesLudoRoute: typeof GamesLudoRoute
 }
@@ -3718,7 +3709,6 @@ const rootRouteChildren: RootRouteChildren = {
   CompetitionsRoute: CompetitionsRouteWithChildren,
   ConfessionsRoute: ConfessionsRoute,
   DeployRoute: DeployRoute,
-  FeedRoute: FeedRouteWithChildren,
   FeedbackRoute: FeedbackRoute,
   FindFriendsRoute: FindFriendsRoute,
   GamesRoute: GamesRouteWithChildren,
@@ -3738,6 +3728,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrustRoute: TrustRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
+  FeedSlugRoute: FeedSlugRoute,
   InviteCodeRoute: InviteCodeRoute,
   MehfilSlugRoute: MehfilSlugRoute,
   MehfilChallengesRoute: MehfilChallengesRoute,
@@ -3747,6 +3738,7 @@ const rootRouteChildren: RootRouteChildren = {
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   UUsernameRoute: UUsernameRoute,
+  FeedIndexRoute: FeedIndexRoute,
   MehfilIndexRoute: MehfilIndexRoute,
   ApiGamesAchievementRoute: ApiGamesAchievementRoute,
   ApiGamesCoinsRoute: ApiGamesCoinsRoute,
