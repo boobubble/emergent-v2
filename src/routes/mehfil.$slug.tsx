@@ -4,15 +4,19 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Bookmark, Heart, Eye, MessageCircle, Share2, Swords } from "lucide-react";
-import { getPoemBySlug, recordPoemRead, togglePoemBookmark } from "@/lib/mehfil.functions";
+import { getPoemBySlug, recordPoemRead, togglePoemBookmark, getMehfilRelated } from "@/lib/mehfil.functions";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
+import { PoemCard } from "@/components/mehfil/PoemCard";
 import { MEHFIL_REACTIONS, poemPreview } from "@/lib/mehfil-types";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { gamify, GAM_EVENTS } from "@/lib/gamification-emit";
 import { useMehfilPoemRealtime } from "@/lib/mehfil-realtime";
 import { supabase } from "@/integrations/supabase/client";
+
+const SITE_URL = "https://holo-chat-quest.lovable.app";
+
 
 
 export const Route = createFileRoute("/mehfil/$slug")({
