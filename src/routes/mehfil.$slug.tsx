@@ -25,13 +25,18 @@ export const Route = createFileRoute("/mehfil/$slug")({
     if (!poem) throw notFound();
     return { poem };
   },
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
+    const url = `${SITE_URL}/mehfil/${params.slug}`;
     if (!loaderData) {
-      return { meta: [{ title: "Poem not found · Mehfil" }, { name: "robots", content: "noindex" }] };
+      return {
+        meta: [{ title: "Poem not found · Mehfil" }, { name: "robots", content: "noindex" }],
+        links: [{ rel: "canonical", href: url }],
+      };
     }
     const p = loaderData.poem;
     const desc = p.seo_description || poemPreview(p.body, 155);
     const title = p.seo_title || `${p.title} · Mehfil`;
+    const authorName = p.author?.display_name || p.author?.username || "Anonymous";
     return {
       meta: [
         { title },
@@ -39,11 +44,45 @@ export const Route = createFileRoute("/mehfil/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: desc },
         { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
         ...(p.cover_url ? [{ property: "og:image", content: p.cover_url }] : []),
         { name: "twitter:card", content: p.cover_url ? "summary_large_image" : "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description(desc) },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            headline: p.title,
+            name: p.title,
+            description: desc,
+            url,
+            datePublished: p.published_at,
+            image: p.cover_url ? [p.cover_url] : undefined,
+            author: { "@type": "Person", name: authorName },
+            genre: p.category?.name,
+            interactionStatistic: [
+              {
+                "@type": "InteractionCounter",
+                interactionType: "https://schema.org/LikeAction",
+                userInteractionCount: p.upvote_count ?? 0,
+              },
+              {
+                "@type": "InteractionCounter",
+                interactionType: "https://schema.org/ReadAction",
+                userInteractionCount: p.read_count ?? 0,
+              },
+            ],
+          }),
+        },
       ],
     };
   },
+
   component: PoemDetailPage,
   notFoundComponent: () => (
     <MehfilShell showBack>
