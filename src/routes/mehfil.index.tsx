@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { PenLine, Sparkles } from "lucide-react";
 import { getMehfilDiscovery, listMehfilCategories } from "@/lib/mehfil.functions";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
+import { MehfilSearchBar } from "@/components/mehfil/MehfilSearchBar";
 import { PoemCard } from "@/components/mehfil/PoemCard";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
 import type { WriterRank } from "@/lib/mehfil-types";
