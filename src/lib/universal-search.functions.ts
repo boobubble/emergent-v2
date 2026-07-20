@@ -119,7 +119,7 @@ export const universalSearch = createServerFn({ method: "GET" })
         : Promise.resolve({ data: [] as any[] }),
       sources.battles
         ? sb.from("competitions")
-            .select("id, slug, name, status, end_at, total_participants, prize_summary, type")
+            .select("id, slug, name, status, end_at, total_participants, winner_count, rewards, type")
             .eq("type", "poetry_battle")
             .ilike("name", like)
             .order("start_at", { ascending: false })
