@@ -148,6 +148,14 @@ export interface MehfilSettings {
   default_language: string;
   /** Admin-configurable display label for the Poetry Hub module across nav, headings, breadcrumbs, hero, empty states, notifications, and feed widgets. Route identifiers stay `/mehfil`. */
   module_name: string;
+  // Phase 3B toggles — features silently hide when off, no UI regression.
+  following_enabled: boolean;
+  drafts_enabled: boolean;
+  scheduled_publishing_enabled: boolean;
+  collections_enabled: boolean;
+  daily_prompt_enabled: boolean;
+  writer_stats_enabled: boolean;
+  reading_progress_enabled: boolean;
 }
 
 export const MEHFIL_SETTINGS_DEFAULTS: MehfilSettings = {
@@ -163,6 +171,13 @@ export const MEHFIL_SETTINGS_DEFAULTS: MehfilSettings = {
   battle_auto_enroll: false,
   default_language: "en",
   module_name: "Poetry Hub",
+  following_enabled: true,
+  drafts_enabled: true,
+  scheduled_publishing_enabled: true,
+  collections_enabled: true,
+  daily_prompt_enabled: true,
+  writer_stats_enabled: true,
+  reading_progress_enabled: true,
 };
 
 export function slugifyTitle(title: string): string {

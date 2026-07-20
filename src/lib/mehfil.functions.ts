@@ -382,6 +382,12 @@ export interface PublishPoemInput {
   seoTitle?: string;
   seoDescription?: string;
   optInBattle?: boolean;
+  /** ISO date-time; when set, poem saves as draft with scheduled_at. */
+  scheduledAt?: string | null;
+  /** When true, save as draft and ignore scheduledAt. */
+  saveAsDraft?: boolean;
+  /** Update an existing draft instead of inserting a new poem. */
+  poemId?: string;
 }
 
 export const publishPoem = createServerFn({ method: "POST" })
@@ -407,7 +413,36 @@ export const publishPoem = createServerFn({ method: "POST" })
     const short = Math.random().toString(36).slice(2, 8);
     const slug = `${base}-${short}`;
 
-    const status = data.status ?? "published";
+    const scheduledAt = data.scheduledAt ?? null;
+    const wantsSchedule = !!scheduledAt && new Date(scheduledAt).getTime() > Date.now();
+    const status: PoemStatus = data.saveAsDraft || wantsSchedule ? "draft" : (data.status ?? "published");
+
+    // Update path — editing an existing draft (never someone else's row: RLS + author_id check).
+    if (data.poemId) {
+      const { data: updated, error: upErr } = await supabase
+        .from("mehfil_poems")
+        .update({
+          title: data.title.trim(),
+          body: data.body.trim(),
+          category_id: categoryId,
+          cover_url: data.coverUrl ?? null,
+          theme: data.theme ?? null,
+          language: data.language ?? "en",
+          tags: data.tags ?? [],
+          status,
+          opt_in_battle: !!data.optInBattle,
+          seo_title: data.seoTitle ?? null,
+          seo_description: data.seoDescription ?? null,
+          scheduled_at: wantsSchedule ? scheduledAt : null,
+          published_at: status === "published" ? new Date().toISOString() : null,
+        } as never)
+        .eq("id", data.poemId)
+        .eq("author_id", userId)
+        .select("*")
+        .single();
+      if (upErr) throw upErr;
+      return updated as MehfilPoem;
+    }
 
     const { data: inserted, error } = await supabase
       .from("mehfil_poems")
@@ -425,11 +460,63 @@ export const publishPoem = createServerFn({ method: "POST" })
         opt_in_battle: !!data.optInBattle,
         seo_title: data.seoTitle ?? null,
         seo_description: data.seoDescription ?? null,
-      })
+        scheduled_at: wantsSchedule ? scheduledAt : null,
+        published_at: status === "published" ? new Date().toISOString() : null,
+      } as never)
       .select("*")
       .single();
     if (error) throw error;
     return inserted as MehfilPoem;
+  });
+
+/** List the caller's drafts and scheduled poems. */
+export const listMyDrafts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data, error } = await supabase
+      .from("mehfil_poems")
+      .select("*")
+      .eq("author_id", userId)
+      .eq("status", "draft")
+      .order("updated_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return (data ?? []) as MehfilPoem[];
+  });
+
+/** Schedule an existing draft. */
+export const schedulePoem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { poemId: string; scheduledAt: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (new Date(data.scheduledAt).getTime() <= Date.now()) {
+      throw new Error("Schedule must be in the future");
+    }
+    const { error } = await supabase
+      .from("mehfil_poems")
+      .update({ scheduled_at: data.scheduledAt, status: "draft" } as never)
+      .eq("id", data.poemId)
+      .eq("author_id", userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+/** Delete a draft owned by the caller. */
+export const deleteDraft = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { poemId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("mehfil_poems")
+      .delete()
+      .eq("id", data.poemId)
+      .eq("author_id", userId)
+      .eq("status", "draft");
+    if (error) throw error;
+    return { ok: true };
   });
 
 export const togglePoemBookmark = createServerFn({ method: "POST" })

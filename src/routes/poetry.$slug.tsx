@@ -13,6 +13,7 @@ import {
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
 import { PoemCard } from "@/components/mehfil/PoemCard";
+import { FollowWriterButton } from "@/components/mehfil/FollowWriterButton";
 import { ReportButton } from "@/components/moderation/ReportButton";
 import { MEHFIL_REACTIONS, poemPreview } from "@/lib/mehfil-types";
 import { useAuth } from "@/lib/auth-store";
@@ -269,26 +270,7 @@ function PoemDetailPage() {
     }
   };
 
-  // Follow writer (reuses friendships → pending request as the follow signal)
-  const [following, setFollowing] = useState<null | "pending" | "accepted">(null);
-  useEffect(() => {
-    if (!user || !author?.id || user.id === author.id) return;
-    let cancelled = false;
-    supabase.from("friendships").select("status")
-      .or(`and(sender_id.eq.${user.id},receiver_id.eq.${author.id}),and(sender_id.eq.${author.id},receiver_id.eq.${user.id})`)
-      .maybeSingle()
-      .then(({ data }) => { if (!cancelled) setFollowing((data?.status as any) ?? null); });
-    return () => { cancelled = true; };
-  }, [user?.id, author?.id]);
-
-  const followWriter = async () => {
-    if (!user || !author?.id) return;
-    if (following) { toast.info(following === "pending" ? "Follow request already sent" : "You already follow this writer"); return; }
-    const { error } = await supabase.from("friendships")
-      .insert({ sender_id: user.id, receiver_id: author.id, status: "pending" });
-    if (error) toast.error(error.message);
-    else { setFollowing("pending"); toast.success("Now following " + displayName); }
-  };
+  // Follow writer — dedicated one-way graph (see FollowWriterButton).
 
   // Copy poem
   const [copied, setCopied] = useState(false);
@@ -396,15 +378,9 @@ function PoemDetailPage() {
             </Link>
 
             {!isOwnPoem && author?.id && (
-              <button
-                onClick={() => requireAuth(followWriter)}
-                className={`ml-auto inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                  following ? "border border-border bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:opacity-90"
-                }`}
-              >
-                <UserPlus className="h-3.5 w-3.5" />
-                {following === "accepted" ? "Following" : following === "pending" ? "Requested" : "Follow"}
-              </button>
+              <div className="ml-auto">
+                <FollowWriterButton writerId={author.id} writerName={displayName} />
+              </div>
             )}
           </div>
         </header>

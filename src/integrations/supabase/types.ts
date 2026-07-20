@@ -3787,6 +3787,7 @@ export type Database = {
           opt_in_battle: boolean
           published_at: string | null
           read_count: number
+          scheduled_at: string | null
           seo_description: string | null
           seo_title: string | null
           share_count: number
@@ -3815,6 +3816,7 @@ export type Database = {
           opt_in_battle?: boolean
           published_at?: string | null
           read_count?: number
+          scheduled_at?: string | null
           seo_description?: string | null
           seo_title?: string | null
           share_count?: number
@@ -3843,6 +3845,7 @@ export type Database = {
           opt_in_battle?: boolean
           published_at?: string | null
           read_count?: number
+          scheduled_at?: string | null
           seo_description?: string | null
           seo_title?: string | null
           share_count?: number
@@ -3869,8 +3872,12 @@ export type Database = {
         Row: {
           battle_wins: number
           featured_count: number
+          followers_count: number
+          following_count: number
           hof_count: number
+          member_since: string | null
           poems_published: number
+          streak_days: number
           total_comments: number
           total_reads: number
           total_upvotes: number
@@ -3881,8 +3888,12 @@ export type Database = {
         Insert: {
           battle_wins?: number
           featured_count?: number
+          followers_count?: number
+          following_count?: number
           hof_count?: number
+          member_since?: string | null
           poems_published?: number
+          streak_days?: number
           total_comments?: number
           total_reads?: number
           total_upvotes?: number
@@ -3893,8 +3904,12 @@ export type Database = {
         Update: {
           battle_wins?: number
           featured_count?: number
+          followers_count?: number
+          following_count?: number
           hof_count?: number
+          member_since?: string | null
           poems_published?: number
+          streak_days?: number
           total_comments?: number
           total_reads?: number
           total_upvotes?: number
@@ -4099,6 +4114,149 @@ export type Database = {
           enabled?: boolean
           key?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      poetry_collection_items: {
+        Row: {
+          added_at: string
+          collection_id: string
+          poem_id: string
+        }
+        Insert: {
+          added_at?: string
+          collection_id: string
+          poem_id: string
+        }
+        Update: {
+          added_at?: string
+          collection_id?: string
+          poem_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poetry_collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "poetry_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poetry_collection_items_poem_id_fkey"
+            columns: ["poem_id"]
+            isOneToOne: false
+            referencedRelation: "mehfil_poems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poetry_collections: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          name: string
+          poem_count: number
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          poem_count?: number
+          slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          poem_count?: number
+          slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      poetry_prompts: {
+        Row: {
+          active_from: string | null
+          active_until: string | null
+          body: string | null
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          scheduled_for: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active_from?: string | null
+          active_until?: string | null
+          body?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          scheduled_for?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active_from?: string | null
+          active_until?: string | null
+          body?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          scheduled_for?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poetry_prompts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "mehfil_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poetry_writer_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          id: string
+          writer_id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          id?: string
+          writer_id: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          id?: string
+          writer_id?: string
         }
         Relationships: []
       }
@@ -6764,6 +6922,11 @@ export type Database = {
       }
       my_coin_balance: { Args: never; Returns: number }
       my_competition_vote: { Args: { _competition: string }; Returns: string }
+      poetry_publish_scheduled: { Args: never; Returns: number }
+      poetry_refresh_writer_stats: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       provision_community_for_user: { Args: { _user: string }; Returns: string }
       purchase_dm_wallpaper: {
         Args: {
