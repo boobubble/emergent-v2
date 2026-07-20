@@ -189,16 +189,22 @@ export const universalSearch = createServerFn({ method: "GET" })
       };
     });
 
-    const battles: USBattleResult[] = battleRows.map((b) => ({
-      kind: "battle",
-      id: b.id,
-      slug: b.slug,
-      name: b.name,
-      status: b.status,
-      end_at: b.end_at ?? null,
-      participants: b.total_participants ?? 0,
-      prize: b.prize_summary ?? null,
-    }));
+    const battles: USBattleResult[] = battleRows.map((b) => {
+      const rewards = b.rewards as Array<{ label?: string; title?: string; coins?: number }> | null | undefined;
+      const first = Array.isArray(rewards) ? rewards[0] : null;
+      const prize = first ? (first.label || first.title || (first.coins ? `${first.coins} coins` : null)) : null;
+      return {
+        kind: "battle",
+        id: b.id,
+        slug: b.slug,
+        name: b.name,
+        status: b.status,
+        end_at: b.end_at ?? null,
+        participants: b.total_participants ?? 0,
+        prize,
+        winner_count: b.winner_count ?? 1,
+      };
+    });
 
     // Poem counts per matching category
     let counts: Record<string, number> = {};
