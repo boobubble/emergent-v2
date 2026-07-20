@@ -118,6 +118,7 @@ export interface MehfilPoemEnriched extends MehfilPoem {
   category: Pick<MehfilCategory, "id" | "slug" | "name" | "color" | "icon"> | null;
   author: MehfilAuthor | null;
   writer_rank: WriterRank | null;
+  reaction_count: number;
 }
 
 export interface MehfilDiscoverySection {
