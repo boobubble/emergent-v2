@@ -7028,7 +7028,7 @@ export type Database = {
       post_kind: "text" | "image" | "gif" | "poll"
       post_privacy: "public" | "friends" | "private"
       radio_schedule_status: "scheduled" | "live" | "completed" | "cancelled"
-      reaction_type: "like" | "love" | "haha" | "angry" | "fire"
+      reaction_type: "like" | "love" | "haha" | "angry" | "fire" | "wow"
       report_status: "open" | "reviewing" | "resolved" | "dismissed"
       report_target: "message" | "post" | "user" | "room"
       url_rule_kind: "whitelist" | "block"
@@ -7266,7 +7266,7 @@ export const Constants = {
       post_kind: ["text", "image", "gif", "poll"],
       post_privacy: ["public", "friends", "private"],
       radio_schedule_status: ["scheduled", "live", "completed", "cancelled"],
-      reaction_type: ["like", "love", "haha", "angry", "fire"],
+      reaction_type: ["like", "love", "haha", "angry", "fire", "wow"],
       report_status: ["open", "reviewing", "resolved", "dismissed"],
       report_target: ["message", "post", "user", "room"],
       url_rule_kind: ["whitelist", "block"],
