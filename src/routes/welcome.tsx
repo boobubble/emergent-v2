@@ -1143,7 +1143,7 @@ function MehfilLandingSection() {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
       <Card className="p-5 sm:p-6">
-        <SectionTitle icon="📜" title={`Trending on ${settings.module_name}`} suffix="(Poetry & battles)" href="/mehfil" />
+        <SectionTitle icon="📜" title={`Trending on ${settings.module_name}`} suffix="(Poetry & battles)" href="/poetry" />
         <div className="mt-4">
           <MehfilTrendingWidget />
         </div>

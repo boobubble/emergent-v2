@@ -26,7 +26,7 @@ export const getMehfilLeaderboard = createServerFn({ method: "GET" }).handler(as
   return (stats ?? []).map((s: any) => ({ ...s, profile: pmap.get(s.user_id) ?? null }));
 });
 
-export const Route = createFileRoute("/mehfil/leaderboard")({
+export const Route = createFileRoute("/poetry/leaderboard")({
   head: () => ({
     meta: [
       { title: "Mehfil Leaderboard · Top Poets" },

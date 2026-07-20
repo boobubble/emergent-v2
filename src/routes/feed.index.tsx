@@ -678,7 +678,7 @@ function FeedPage() {
                         {poems.map((p) => (
                           <li
                             key={`poem-${p.id}`}
-                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/mehfil/$slug", params: { slug: p.slug } }); }}
+                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/poetry/$slug", params: { slug: p.slug } }); }}
                             className="flex cursor-pointer items-start gap-3 rounded-xl px-3 py-2 hover:bg-accent/50"
                           >
                             {p.author?.avatar_url ? (
@@ -745,7 +745,7 @@ function FeedPage() {
                         {cats.map((c) => (
                           <li
                             key={`cat-${c.id}`}
-                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/mehfil/category/$slug", params: { slug: c.slug } }); }}
+                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/poetry/category/$slug", params: { slug: c.slug } }); }}
                             className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-accent/50"
                           >
                             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary text-sm">📚</div>
@@ -768,7 +768,7 @@ function FeedPage() {
                         {hof.map((h) => (
                           <li
                             key={`hof-${h.id}`}
-                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/mehfil/$slug", params: { slug: h.poem_slug } }); }}
+                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/poetry/$slug", params: { slug: h.poem_slug } }); }}
                             className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-accent/50"
                           >
                             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-500/15 text-amber-600 text-sm">🏆</div>
@@ -874,7 +874,7 @@ function FeedPage() {
 
               <div className="feed-section-label">Explore</div>
               <SideLink to="/chatroom" iconSrc={chatroomIcon} label="Chatrooms" />
-              <SideNavLink to="/mehfil" icon={PenLine} label={mehfilLabel} color="text-fuchsia-400" />
+              <SideNavLink to="/poetry" icon={PenLine} label={mehfilLabel} color="text-fuchsia-400" />
               <SideNavLink to="/reels" icon={Film} label="Reels" badge="Soon" color="text-pink-400" />
               <SideNavLink to="/pages" icon={FileText} label="Pages" badge="Soon" color="text-cyan-400" />
               <SideNavLink to="/groups" icon={Users2} label="Groups" badge="Soon" color="text-indigo-400" />
@@ -1155,7 +1155,7 @@ function FeedPage() {
           { label: "Leaderboard", icon: Trophy, color: "from-amber-500 to-orange-500", onClick: () => setView("leaderboard") },
           { label: "Competitions", icon: Trophy, color: "from-amber-400 to-yellow-500", onClick: () => navigate({ to: "/competitions" }) },
           { label: "Battle Hub", icon: Radio, color: "from-rose-500 to-red-500", onClick: () => navigate({ to: "/battle-hub" }) },
-          { label: mehfilLabel, icon: PenLine, color: "from-fuchsia-500 to-purple-500", onClick: () => navigate({ to: "/mehfil" }) },
+          { label: mehfilLabel, icon: PenLine, color: "from-fuchsia-500 to-purple-500", onClick: () => navigate({ to: "/poetry" }) },
           { label: "Daily Chest", icon: Gift, color: "from-rose-500 to-fuchsia-500", onClick: () => setView("dailyChest") },
           { label: "Daily Spin", icon: Sparkles, color: "from-violet-500 to-purple-500", onClick: () => setView("spin") },
           { label: "Shop", icon: Coins, color: "from-emerald-500 to-green-500", onClick: () => setView("shop") },

@@ -6,7 +6,7 @@ import { Swords, Users, Clock, Trophy } from "lucide-react";
 import { listPoetryBattles, type PoetryBattle } from "@/lib/mehfil-battles.functions";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 
-export const Route = createFileRoute("/mehfil/challenges")({
+export const Route = createFileRoute("/poetry/challenges")({
   head: () => ({
     meta: [
       { title: "Poetry Battles · Mehfil" },

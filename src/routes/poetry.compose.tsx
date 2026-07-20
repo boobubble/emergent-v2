@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/auth-store";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { gamify } from "@/lib/gamification-emit";
 
-export const Route = createFileRoute("/mehfil/compose")({
+export const Route = createFileRoute("/poetry/compose")({
   head: () => ({
     meta: [
       { title: "Write a Poem · Mehfil" },
@@ -83,10 +83,10 @@ function ComposePage() {
       if (poem.status === "published") {
         gamify("poetry_publish", 1, { poem_id: poem.id, category: categorySlug });
         toast.success(optInBattle ? "Published & entered active battle" : "Poem published to Mehfil");
-        nav({ to: "/mehfil/$slug", params: { slug: poem.slug } });
+        nav({ to: "/poetry/$slug", params: { slug: poem.slug } });
       } else {
         toast.success("Saved as draft");
-        nav({ to: "/mehfil" });
+        nav({ to: "/poetry" });
       }
     },
     onError: (e: any) => toast.error(e?.message ?? "Failed to publish"),
@@ -119,7 +119,7 @@ function ComposePage() {
             <h1 className="font-serif text-3xl font-bold">Write a Poem</h1>
             <p className="text-xs text-muted-foreground">Draft, publish and share with the Mehfil community.</p>
           </div>
-          <Link to="/mehfil" className="rounded-md p-2 hover:bg-muted" aria-label="Close"><X className="h-4 w-4" /></Link>
+          <Link to="/poetry" className="rounded-md p-2 hover:bg-muted" aria-label="Close"><X className="h-4 w-4" /></Link>
         </div>
 
         <div className="grid gap-4 md:grid-cols-[1fr_260px]">

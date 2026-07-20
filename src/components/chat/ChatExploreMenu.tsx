@@ -18,7 +18,7 @@ function useShortcuts() {
   const mehfilLabel = useMehfilLabel();
   return [
     { to: "/feed", label: "Feed", icon: Newspaper, gradient: "from-blue-500 to-indigo-500" },
-    { to: "/mehfil", label: mehfilLabel, icon: PenLine, gradient: "from-fuchsia-500 to-purple-500" },
+    { to: "/poetry", label: mehfilLabel, icon: PenLine, gradient: "from-fuchsia-500 to-purple-500" },
     { to: "/reels", label: "Reels", icon: Film, gradient: "from-pink-500 to-rose-500" },
     { to: "/find-friends", label: "Find Friends", icon: UserPlus, gradient: "from-orange-500 to-amber-500" },
     { to: "/leaderboard", label: "Leaderboard", icon: Trophy, gradient: "from-purple-500 to-fuchsia-500" },

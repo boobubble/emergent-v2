@@ -19,7 +19,7 @@ const SITE_URL = "https://holo-chat-quest.lovable.app";
 
 
 
-export const Route = createFileRoute("/mehfil/$slug")({
+export const Route = createFileRoute("/poetry/$slug")({
   loader: async ({ params }) => {
     const poem = await getPoemBySlug({ data: { slug: params.slug } });
     if (!poem) throw notFound();
@@ -88,7 +88,7 @@ export const Route = createFileRoute("/mehfil/$slug")({
     <MehfilShell showBack>
       <div className="py-20 text-center">
         <div className="text-lg font-semibold">Poem not found</div>
-        <Link to="/mehfil" className="mt-3 inline-block text-sm text-primary underline">Back to Mehfil</Link>
+        <Link to="/poetry" className="mt-3 inline-block text-sm text-primary underline">Back to Mehfil</Link>
       </div>
     </MehfilShell>
   ),
@@ -240,7 +240,7 @@ function PoemDetailPage() {
         <header className="mb-6">
           {poem.category && (
             <Link
-              to="/mehfil/category/$slug"
+              to="/poetry/category/$slug"
               params={{ slug: poem.category.slug }}
               className="inline-block rounded-full px-3 py-1 text-xs font-semibold"
               style={{ backgroundColor: `${poem.category.color ?? "#6366f1"}22`, color: poem.category.color ?? "#6366f1" }}

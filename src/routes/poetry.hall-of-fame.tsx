@@ -22,7 +22,7 @@ export const getMehfilHallOfFame = createServerFn({ method: "GET" }).handler(asy
   return (rows ?? []).map((r: any) => ({ ...r, profile: pmap.get(r.user_id) ?? null, poem: poemMap.get(r.poem_id) ?? null }));
 });
 
-export const Route = createFileRoute("/mehfil/hall-of-fame")({
+export const Route = createFileRoute("/poetry/hall-of-fame")({
   head: () => ({
     meta: [
       { title: "Hall of Fame · Mehfil" },
@@ -72,7 +72,7 @@ function HallOfFamePage() {
                   </div>
                 </div>
                 {r.poem && (
-                  <Link to="/mehfil/$slug" params={{ slug: r.poem.slug }} className="mt-3 block text-sm font-serif italic hover:text-primary">
+                  <Link to="/poetry/$slug" params={{ slug: r.poem.slug }} className="mt-3 block text-sm font-serif italic hover:text-primary">
                     "{r.poem.title}"
                   </Link>
                 )}

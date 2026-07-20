@@ -10,7 +10,7 @@ import { PoemCard } from "@/components/mehfil/PoemCard";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
 import type { WriterRank } from "@/lib/mehfil-types";
 
-export const Route = createFileRoute("/mehfil/")({
+export const Route = createFileRoute("/poetry/")({
   head: () => ({
     meta: [
       { title: "Mehfil — A Community of Poets" },
@@ -48,10 +48,10 @@ function MehfilDiscoveryPage() {
               and rise from Fresh Writer to Hall of Fame.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Link to="/mehfil/compose" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow hover:bg-primary/90">
+              <Link to="/poetry/compose" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow hover:bg-primary/90">
                 <PenLine className="h-4 w-4" /> Start Writing
               </Link>
-              <Link to="/mehfil/challenges" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-5 py-2.5 text-sm font-semibold hover:bg-muted">
+              <Link to="/poetry/challenges" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-5 py-2.5 text-sm font-semibold hover:bg-muted">
                 <Sparkles className="h-4 w-4" /> Poetry Battles
               </Link>
             </div>
@@ -76,7 +76,7 @@ function MehfilDiscoveryPage() {
           {(cats.data ?? []).map((c) => (
             <Link
               key={c.id}
-              to="/mehfil/category/$slug"
+              to="/poetry/category/$slug"
               params={{ slug: c.slug }}
               className="group rounded-xl border border-border/60 bg-card p-3 text-center transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
               style={{ borderTopColor: c.color ?? undefined, borderTopWidth: 3 }}

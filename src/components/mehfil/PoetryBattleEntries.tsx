@@ -87,7 +87,7 @@ export function PoetryBattleEntries({ slug }: { slug: string }) {
               </div>
 
               {/* Poetry preview */}
-              <Link to="/mehfil/$slug" params={{ slug: p.slug }} className="block">
+              <Link to="/poetry/$slug" params={{ slug: p.slug }} className="block">
                 <div className="line-clamp-1 text-sm font-semibold text-white group-hover:text-primary">{p.title}</div>
                 <div className="mt-1 line-clamp-3 whitespace-pre-line text-xs text-white/70">{poemPreview(p.body, 180)}</div>
               </Link>
@@ -111,7 +111,7 @@ export function PoetryBattleEntries({ slug }: { slug: string }) {
                   <span className="inline-flex items-center gap-1"><MessageCircle className="h-3 w-3" /> {p.comment_count ?? 0}</span>
                   <span className="inline-flex items-center gap-1"><Share2 className="h-3 w-3" /> {p.share_count ?? 0}</span>
                 </div>
-                <Link to="/mehfil/$slug" params={{ slug: p.slug }}
+                <Link to="/poetry/$slug" params={{ slug: p.slug }}
                   className="rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 px-2.5 py-1 text-[10px] font-bold text-white hover:from-fuchsia-400 hover:to-rose-400">
                   Open Poetry
                 </Link>

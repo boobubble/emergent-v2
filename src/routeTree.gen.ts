@@ -44,19 +44,19 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as MehfilIndexRouteImport } from './routes/mehfil.index'
+import { Route as PoetryIndexRouteImport } from './routes/poetry.index'
 import { Route as FeedIndexRouteImport } from './routes/feed.index'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
 import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as PoetryLeaderboardRouteImport } from './routes/poetry.leaderboard'
+import { Route as PoetryHallOfFameRouteImport } from './routes/poetry.hall-of-fame'
+import { Route as PoetryComposeRouteImport } from './routes/poetry.compose'
+import { Route as PoetryChallengesRouteImport } from './routes/poetry.challenges'
+import { Route as PoetrySlugRouteImport } from './routes/poetry.$slug'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
-import { Route as MehfilLeaderboardRouteImport } from './routes/mehfil.leaderboard'
-import { Route as MehfilHallOfFameRouteImport } from './routes/mehfil.hall-of-fame'
-import { Route as MehfilComposeRouteImport } from './routes/mehfil.compose'
-import { Route as MehfilChallengesRouteImport } from './routes/mehfil.challenges'
-import { Route as MehfilSlugRouteImport } from './routes/mehfil.$slug'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as GamesLudoRouteImport } from './routes/games.ludo'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
@@ -153,7 +153,7 @@ import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placeme
 import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
 import { Route as AdminAbuseProtectionRouteImport } from './routes/admin.abuse-protection'
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
-import { Route as MehfilCategorySlugRouteImport } from './routes/mehfil.category.$slug'
+import { Route as PoetryCategorySlugRouteImport } from './routes/poetry.category.$slug'
 import { Route as CommunitySlugMembersRouteImport } from './routes/community.$slug.members'
 import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
@@ -359,9 +359,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MehfilIndexRoute = MehfilIndexRouteImport.update({
-  id: '/mehfil/',
-  path: '/mehfil/',
+const PoetryIndexRoute = PoetryIndexRouteImport.update({
+  id: '/poetry/',
+  path: '/poetry/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedIndexRoute = FeedIndexRouteImport.update({
@@ -389,6 +389,31 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PoetryLeaderboardRoute = PoetryLeaderboardRouteImport.update({
+  id: '/poetry/leaderboard',
+  path: '/poetry/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoetryHallOfFameRoute = PoetryHallOfFameRouteImport.update({
+  id: '/poetry/hall-of-fame',
+  path: '/poetry/hall-of-fame',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoetryComposeRoute = PoetryComposeRouteImport.update({
+  id: '/poetry/compose',
+  path: '/poetry/compose',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoetryChallengesRoute = PoetryChallengesRouteImport.update({
+  id: '/poetry/challenges',
+  path: '/poetry/challenges',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoetrySlugRoute = PoetrySlugRouteImport.update({
+  id: '/poetry/$slug',
+  path: '/poetry/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PagesEditorIdRoute = PagesEditorIdRouteImport.update({
   id: '/pages-editor/$id',
   path: '/pages-editor/$id',
@@ -397,31 +422,6 @@ const PagesEditorIdRoute = PagesEditorIdRouteImport.update({
 const PSlugRoute = PSlugRouteImport.update({
   id: '/p/$slug',
   path: '/p/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MehfilLeaderboardRoute = MehfilLeaderboardRouteImport.update({
-  id: '/mehfil/leaderboard',
-  path: '/mehfil/leaderboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MehfilHallOfFameRoute = MehfilHallOfFameRouteImport.update({
-  id: '/mehfil/hall-of-fame',
-  path: '/mehfil/hall-of-fame',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MehfilComposeRoute = MehfilComposeRouteImport.update({
-  id: '/mehfil/compose',
-  path: '/mehfil/compose',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MehfilChallengesRoute = MehfilChallengesRouteImport.update({
-  id: '/mehfil/challenges',
-  path: '/mehfil/challenges',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MehfilSlugRoute = MehfilSlugRouteImport.update({
-  id: '/mehfil/$slug',
-  path: '/mehfil/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InviteCodeRoute = InviteCodeRouteImport.update({
@@ -908,9 +908,9 @@ const CommunitySlugIndexRoute = CommunitySlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CommunitySlugRoute,
 } as any)
-const MehfilCategorySlugRoute = MehfilCategorySlugRouteImport.update({
-  id: '/mehfil/category/$slug',
-  path: '/mehfil/category/$slug',
+const PoetryCategorySlugRoute = PoetryCategorySlugRouteImport.update({
+  id: '/poetry/category/$slug',
+  path: '/poetry/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunitySlugMembersRoute = CommunitySlugMembersRouteImport.update({
@@ -1201,19 +1201,19 @@ export interface FileRoutesByFullPath {
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
-  '/mehfil/$slug': typeof MehfilSlugRoute
-  '/mehfil/challenges': typeof MehfilChallengesRoute
-  '/mehfil/compose': typeof MehfilComposeRoute
-  '/mehfil/hall-of-fame': typeof MehfilHallOfFameRoute
-  '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
+  '/poetry/$slug': typeof PoetrySlugRoute
+  '/poetry/challenges': typeof PoetryChallengesRoute
+  '/poetry/compose': typeof PoetryComposeRoute
+  '/poetry/hall-of-fame': typeof PoetryHallOfFameRoute
+  '/poetry/leaderboard': typeof PoetryLeaderboardRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/feed/': typeof FeedIndexRoute
-  '/mehfil/': typeof MehfilIndexRoute
+  '/poetry/': typeof PoetryIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1232,7 +1232,7 @@ export interface FileRoutesByFullPath {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
-  '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
+  '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1373,19 +1373,19 @@ export interface FileRoutesByTo {
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
-  '/mehfil/$slug': typeof MehfilSlugRoute
-  '/mehfil/challenges': typeof MehfilChallengesRoute
-  '/mehfil/compose': typeof MehfilComposeRoute
-  '/mehfil/hall-of-fame': typeof MehfilHallOfFameRoute
-  '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
+  '/poetry/$slug': typeof PoetrySlugRoute
+  '/poetry/challenges': typeof PoetryChallengesRoute
+  '/poetry/compose': typeof PoetryComposeRoute
+  '/poetry/hall-of-fame': typeof PoetryHallOfFameRoute
+  '/poetry/leaderboard': typeof PoetryLeaderboardRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/feed': typeof FeedIndexRoute
-  '/mehfil': typeof MehfilIndexRoute
+  '/poetry': typeof PoetryIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1404,7 +1404,7 @@ export interface FileRoutesByTo {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
-  '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
+  '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1550,19 +1550,19 @@ export interface FileRoutesById {
   '/feed/$slug': typeof FeedSlugRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
-  '/mehfil/$slug': typeof MehfilSlugRoute
-  '/mehfil/challenges': typeof MehfilChallengesRoute
-  '/mehfil/compose': typeof MehfilComposeRoute
-  '/mehfil/hall-of-fame': typeof MehfilHallOfFameRoute
-  '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
+  '/poetry/$slug': typeof PoetrySlugRoute
+  '/poetry/challenges': typeof PoetryChallengesRoute
+  '/poetry/compose': typeof PoetryComposeRoute
+  '/poetry/hall-of-fame': typeof PoetryHallOfFameRoute
+  '/poetry/leaderboard': typeof PoetryLeaderboardRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/feed/': typeof FeedIndexRoute
-  '/mehfil/': typeof MehfilIndexRoute
+  '/poetry/': typeof PoetryIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1581,7 +1581,7 @@ export interface FileRoutesById {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
-  '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
+  '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1728,19 +1728,19 @@ export interface FileRouteTypes {
     | '/feed/$slug'
     | '/games/ludo'
     | '/invite/$code'
-    | '/mehfil/$slug'
-    | '/mehfil/challenges'
-    | '/mehfil/compose'
-    | '/mehfil/hall-of-fame'
-    | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
+    | '/poetry/$slug'
+    | '/poetry/challenges'
+    | '/poetry/compose'
+    | '/poetry/hall-of-fame'
+    | '/poetry/leaderboard'
     | '/u/$username'
     | '/admin/'
     | '/broadcaster/'
     | '/competitions/'
     | '/feed/'
-    | '/mehfil/'
+    | '/poetry/'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -1759,7 +1759,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
-    | '/mehfil/category/$slug'
+    | '/poetry/category/$slug'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -1900,19 +1900,19 @@ export interface FileRouteTypes {
     | '/feed/$slug'
     | '/games/ludo'
     | '/invite/$code'
-    | '/mehfil/$slug'
-    | '/mehfil/challenges'
-    | '/mehfil/compose'
-    | '/mehfil/hall-of-fame'
-    | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
+    | '/poetry/$slug'
+    | '/poetry/challenges'
+    | '/poetry/compose'
+    | '/poetry/hall-of-fame'
+    | '/poetry/leaderboard'
     | '/u/$username'
     | '/admin'
     | '/broadcaster'
     | '/competitions'
     | '/feed'
-    | '/mehfil'
+    | '/poetry'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -1931,7 +1931,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
-    | '/mehfil/category/$slug'
+    | '/poetry/category/$slug'
     | '/community/$slug'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -2076,19 +2076,19 @@ export interface FileRouteTypes {
     | '/feed/$slug'
     | '/games/ludo'
     | '/invite/$code'
-    | '/mehfil/$slug'
-    | '/mehfil/challenges'
-    | '/mehfil/compose'
-    | '/mehfil/hall-of-fame'
-    | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
+    | '/poetry/$slug'
+    | '/poetry/challenges'
+    | '/poetry/compose'
+    | '/poetry/hall-of-fame'
+    | '/poetry/leaderboard'
     | '/u/$username'
     | '/admin/'
     | '/broadcaster/'
     | '/competitions/'
     | '/feed/'
-    | '/mehfil/'
+    | '/poetry/'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -2107,7 +2107,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
-    | '/mehfil/category/$slug'
+    | '/poetry/category/$slug'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -2160,16 +2160,16 @@ export interface RootRouteChildren {
   WelcomeRoute: typeof WelcomeRoute
   FeedSlugRoute: typeof FeedSlugRoute
   InviteCodeRoute: typeof InviteCodeRoute
-  MehfilSlugRoute: typeof MehfilSlugRoute
-  MehfilChallengesRoute: typeof MehfilChallengesRoute
-  MehfilComposeRoute: typeof MehfilComposeRoute
-  MehfilHallOfFameRoute: typeof MehfilHallOfFameRoute
-  MehfilLeaderboardRoute: typeof MehfilLeaderboardRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
+  PoetrySlugRoute: typeof PoetrySlugRoute
+  PoetryChallengesRoute: typeof PoetryChallengesRoute
+  PoetryComposeRoute: typeof PoetryComposeRoute
+  PoetryHallOfFameRoute: typeof PoetryHallOfFameRoute
+  PoetryLeaderboardRoute: typeof PoetryLeaderboardRoute
   UUsernameRoute: typeof UUsernameRoute
   FeedIndexRoute: typeof FeedIndexRoute
-  MehfilIndexRoute: typeof MehfilIndexRoute
+  PoetryIndexRoute: typeof PoetryIndexRoute
   ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
   ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
   ApiGamesEventRoute: typeof ApiGamesEventRoute
@@ -2183,7 +2183,7 @@ export interface RootRouteChildren {
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
   ApiPublicLandingRoute: typeof ApiPublicLandingRoute
-  MehfilCategorySlugRoute: typeof MehfilCategorySlugRoute
+  PoetryCategorySlugRoute: typeof PoetryCategorySlugRoute
   ApiPublicHooksFeedbotDispatchRoute: typeof ApiPublicHooksFeedbotDispatchRoute
   ApiPublicHooksFeedbotSummaryRoute: typeof ApiPublicHooksFeedbotSummaryRoute
   ApiPublicHooksLicenseRevalidateRoute: typeof ApiPublicHooksLicenseRevalidateRoute
@@ -2442,11 +2442,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mehfil/': {
-      id: '/mehfil/'
-      path: '/mehfil'
-      fullPath: '/mehfil/'
-      preLoaderRoute: typeof MehfilIndexRouteImport
+    '/poetry/': {
+      id: '/poetry/'
+      path: '/poetry'
+      fullPath: '/poetry/'
+      preLoaderRoute: typeof PoetryIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed/': {
@@ -2484,6 +2484,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/poetry/leaderboard': {
+      id: '/poetry/leaderboard'
+      path: '/poetry/leaderboard'
+      fullPath: '/poetry/leaderboard'
+      preLoaderRoute: typeof PoetryLeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poetry/hall-of-fame': {
+      id: '/poetry/hall-of-fame'
+      path: '/poetry/hall-of-fame'
+      fullPath: '/poetry/hall-of-fame'
+      preLoaderRoute: typeof PoetryHallOfFameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poetry/compose': {
+      id: '/poetry/compose'
+      path: '/poetry/compose'
+      fullPath: '/poetry/compose'
+      preLoaderRoute: typeof PoetryComposeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poetry/challenges': {
+      id: '/poetry/challenges'
+      path: '/poetry/challenges'
+      fullPath: '/poetry/challenges'
+      preLoaderRoute: typeof PoetryChallengesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poetry/$slug': {
+      id: '/poetry/$slug'
+      path: '/poetry/$slug'
+      fullPath: '/poetry/$slug'
+      preLoaderRoute: typeof PoetrySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pages-editor/$id': {
       id: '/pages-editor/$id'
       path: '/pages-editor/$id'
@@ -2496,41 +2531,6 @@ declare module '@tanstack/react-router' {
       path: '/p/$slug'
       fullPath: '/p/$slug'
       preLoaderRoute: typeof PSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mehfil/leaderboard': {
-      id: '/mehfil/leaderboard'
-      path: '/mehfil/leaderboard'
-      fullPath: '/mehfil/leaderboard'
-      preLoaderRoute: typeof MehfilLeaderboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mehfil/hall-of-fame': {
-      id: '/mehfil/hall-of-fame'
-      path: '/mehfil/hall-of-fame'
-      fullPath: '/mehfil/hall-of-fame'
-      preLoaderRoute: typeof MehfilHallOfFameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mehfil/compose': {
-      id: '/mehfil/compose'
-      path: '/mehfil/compose'
-      fullPath: '/mehfil/compose'
-      preLoaderRoute: typeof MehfilComposeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mehfil/challenges': {
-      id: '/mehfil/challenges'
-      path: '/mehfil/challenges'
-      fullPath: '/mehfil/challenges'
-      preLoaderRoute: typeof MehfilChallengesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mehfil/$slug': {
-      id: '/mehfil/$slug'
-      path: '/mehfil/$slug'
-      fullPath: '/mehfil/$slug'
-      preLoaderRoute: typeof MehfilSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invite/$code': {
@@ -3205,11 +3205,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunitySlugIndexRouteImport
       parentRoute: typeof CommunitySlugRoute
     }
-    '/mehfil/category/$slug': {
-      id: '/mehfil/category/$slug'
-      path: '/mehfil/category/$slug'
-      fullPath: '/mehfil/category/$slug'
-      preLoaderRoute: typeof MehfilCategorySlugRouteImport
+    '/poetry/category/$slug': {
+      id: '/poetry/category/$slug'
+      path: '/poetry/category/$slug'
+      fullPath: '/poetry/category/$slug'
+      preLoaderRoute: typeof PoetryCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community/$slug/members': {
@@ -3730,16 +3730,16 @@ const rootRouteChildren: RootRouteChildren = {
   WelcomeRoute: WelcomeRoute,
   FeedSlugRoute: FeedSlugRoute,
   InviteCodeRoute: InviteCodeRoute,
-  MehfilSlugRoute: MehfilSlugRoute,
-  MehfilChallengesRoute: MehfilChallengesRoute,
-  MehfilComposeRoute: MehfilComposeRoute,
-  MehfilHallOfFameRoute: MehfilHallOfFameRoute,
-  MehfilLeaderboardRoute: MehfilLeaderboardRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
+  PoetrySlugRoute: PoetrySlugRoute,
+  PoetryChallengesRoute: PoetryChallengesRoute,
+  PoetryComposeRoute: PoetryComposeRoute,
+  PoetryHallOfFameRoute: PoetryHallOfFameRoute,
+  PoetryLeaderboardRoute: PoetryLeaderboardRoute,
   UUsernameRoute: UUsernameRoute,
   FeedIndexRoute: FeedIndexRoute,
-  MehfilIndexRoute: MehfilIndexRoute,
+  PoetryIndexRoute: PoetryIndexRoute,
   ApiGamesAchievementRoute: ApiGamesAchievementRoute,
   ApiGamesCoinsRoute: ApiGamesCoinsRoute,
   ApiGamesEventRoute: ApiGamesEventRoute,
@@ -3753,7 +3753,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
   ApiPublicLandingRoute: ApiPublicLandingRoute,
-  MehfilCategorySlugRoute: MehfilCategorySlugRoute,
+  PoetryCategorySlugRoute: PoetryCategorySlugRoute,
   ApiPublicHooksFeedbotDispatchRoute: ApiPublicHooksFeedbotDispatchRoute,
   ApiPublicHooksFeedbotSummaryRoute: ApiPublicHooksFeedbotSummaryRoute,
   ApiPublicHooksLicenseRevalidateRoute: ApiPublicHooksLicenseRevalidateRoute,
@@ -3767,13 +3767,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

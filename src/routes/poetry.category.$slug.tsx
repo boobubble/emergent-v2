@@ -6,7 +6,7 @@ import { listPoemsByCategory } from "@/lib/mehfil.functions";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { PoemCard } from "@/components/mehfil/PoemCard";
 
-export const Route = createFileRoute("/mehfil/category/$slug")({
+export const Route = createFileRoute("/poetry/category/$slug")({
   head: ({ params }) => ({
     meta: [
       { title: `${cap(params.slug)} Poetry · Mehfil` },
@@ -65,7 +65,7 @@ function CategoryPage() {
         <div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>
       ) : (q.data?.poems.length ?? 0) === 0 ? (
         <div className="rounded-2xl border border-dashed border-border/60 py-16 text-center text-sm text-muted-foreground">
-          No poems here yet. <Link to="/mehfil/compose" className="font-semibold text-primary underline">Be the first to write</Link>.
+          No poems here yet. <Link to="/poetry/compose" className="font-semibold text-primary underline">Be the first to write</Link>.
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
