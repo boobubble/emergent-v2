@@ -65,7 +65,8 @@ async function attachAuthorsAndCats(
     new Set(poems.map((p) => p.category_id).filter((v): v is string => !!v)),
   );
 
-  const [{ data: profiles }, { data: cats }, { data: stats }] = await Promise.all([
+  const poemIds = poems.map((p) => p.id);
+  const [{ data: profiles }, { data: cats }, { data: stats }, { data: rxRows }] = await Promise.all([
     sb.from("profiles")
       .select("id, username, display_name, avatar_url, country_code")
       .in("id", authorIds),
@@ -73,6 +74,9 @@ async function attachAuthorsAndCats(
       ? sb.from("mehfil_categories").select("id, slug, name, color, icon").in("id", catIds)
       : Promise.resolve({ data: [] as Array<{ id: string; slug: string; name: string; color: string | null; icon: string | null }> }),
     sb.from("mehfil_writer_stats").select("user_id, writer_rank").in("user_id", authorIds),
+    poemIds.length
+      ? sb.from("reactions").select("target_id").eq("target_type", "mehfil_poem").in("target_id", poemIds)
+      : Promise.resolve({ data: [] as Array<{ target_id: string }> }),
   ]);
 
   const pmap = new Map<string, ProfileRow>();
@@ -81,6 +85,10 @@ async function attachAuthorsAndCats(
   (cats ?? []).forEach((c) => cmap.set(c.id, c));
   const smap = new Map<string, WriterRank>();
   ((stats ?? []) as Array<{ user_id: string; writer_rank: WriterRank }>).forEach((s) => smap.set(s.user_id, s.writer_rank));
+  const rxmap = new Map<string, number>();
+  ((rxRows ?? []) as Array<{ target_id: string }>).forEach((r) => {
+    rxmap.set(r.target_id, (rxmap.get(r.target_id) ?? 0) + 1);
+  });
 
   return poems.map((p): MehfilPoemEnriched => {
     const prof = pmap.get(p.author_id);
@@ -97,6 +105,7 @@ async function attachAuthorsAndCats(
           }
         : null,
       writer_rank: smap.get(p.author_id) ?? "fresh_writer",
+      reaction_count: rxmap.get(p.id) ?? 0,
     };
   });
 }
