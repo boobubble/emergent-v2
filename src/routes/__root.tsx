@@ -173,7 +173,7 @@ function RootComponent() {
 // Paths an unauthenticated visitor can reach directly (no AuthScreen takeover).
 const PUBLIC_PATH_PREFIXES = ["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/p/", "/api/", "/installer"];
 const PUBLIC_EXACT = new Set(["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/installer"]);
-const READ_ONLY_PUBLIC_APP_PREFIXES = ["/feed", "/chatroom", "/chatrooms", "/confessions", "/battle-hub", "/leaderboard"];
+const READ_ONLY_PUBLIC_APP_PREFIXES = ["/feed", "/chatroom", "/chatrooms", "/confessions", "/battle-hub", "/leaderboard", "/poetry", "/mehfil"];
 
 
 function isReadOnlyPublicAppPath(pathname: string) {
