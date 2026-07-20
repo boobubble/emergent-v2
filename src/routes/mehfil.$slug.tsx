@@ -48,7 +48,7 @@ export const Route = createFileRoute("/mehfil/$slug")({
         ...(p.cover_url ? [{ property: "og:image", content: p.cover_url }] : []),
         { name: "twitter:card", content: p.cover_url ? "summary_large_image" : "summary" },
         { name: "twitter:title", content: title },
-        { name: "twitter:description", content: description(desc) },
+        { name: "twitter:description", content: desc },
       ],
       links: [{ rel: "canonical", href: url }],
       scripts: [
