@@ -466,3 +466,32 @@ export const listMyPoems = createServerFn({ method: "GET" })
     if (error) throw error;
     return (data ?? []) as MehfilPoem[];
   });
+
+/**
+ * Neighbor poems (previous / next) for the reader page.
+ * Same category first (ordered by published_at), fallback to global.
+ */
+export const getPoemNeighbors = createServerFn({ method: "GET" })
+  .inputValidator((input: { poemId: string; publishedAt: string; categoryId?: string | null }) => input)
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const base = () => sb.from("mehfil_poems").select("id,slug,title,published_at,category_id").eq("status", "published");
+
+    async function findOne(dir: "prev" | "next", scoped: boolean) {
+      let q = base();
+      if (scoped && data.categoryId) q = q.eq("category_id", data.categoryId);
+      if (dir === "prev") {
+        q = q.lt("published_at", data.publishedAt).order("published_at", { ascending: false });
+      } else {
+        q = q.gt("published_at", data.publishedAt).order("published_at", { ascending: true });
+      }
+      const { data: rows } = await q.limit(1);
+      return rows?.[0] ?? null;
+    }
+
+    const [prev, next] = await Promise.all([
+      findOne("prev", true).then((r) => r ?? findOne("prev", false)),
+      findOne("next", true).then((r) => r ?? findOne("next", false)),
+    ]);
+    return { prev, next };
+  });
