@@ -171,6 +171,13 @@ export const MEHFIL_SETTINGS_DEFAULTS: MehfilSettings = {
   battle_auto_enroll: false,
   default_language: "en",
   module_name: "Poetry Hub",
+  following_enabled: true,
+  drafts_enabled: true,
+  scheduled_publishing_enabled: true,
+  collections_enabled: true,
+  daily_prompt_enabled: true,
+  writer_stats_enabled: true,
+  reading_progress_enabled: true,
 };
 
 export function slugifyTitle(title: string): string {
