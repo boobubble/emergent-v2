@@ -59,6 +59,7 @@ import { Route as PoetrySlugRouteImport } from './routes/poetry.$slug'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as MehfilLeaderboardRouteImport } from './routes/mehfil.leaderboard'
+import { Route as MehfilHallOfFameRouteImport } from './routes/mehfil.hall-of-fame'
 import { Route as MehfilComposeRouteImport } from './routes/mehfil.compose'
 import { Route as MehfilChallengesRouteImport } from './routes/mehfil.challenges'
 import { Route as MehfilSlugRouteImport } from './routes/mehfil.$slug'
@@ -438,6 +439,11 @@ const PSlugRoute = PSlugRouteImport.update({
 const MehfilLeaderboardRoute = MehfilLeaderboardRouteImport.update({
   id: '/mehfil/leaderboard',
   path: '/mehfil/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilHallOfFameRoute = MehfilHallOfFameRouteImport.update({
+  id: '/mehfil/hall-of-fame',
+  path: '/mehfil/hall-of-fame',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MehfilComposeRoute = MehfilComposeRouteImport.update({
@@ -1240,6 +1246,7 @@ export interface FileRoutesByFullPath {
   '/mehfil/$slug': typeof MehfilSlugRoute
   '/mehfil/challenges': typeof MehfilChallengesRoute
   '/mehfil/compose': typeof MehfilComposeRoute
+  '/mehfil/hall-of-fame': typeof MehfilHallOfFameRoute
   '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -1418,6 +1425,7 @@ export interface FileRoutesByTo {
   '/mehfil/$slug': typeof MehfilSlugRoute
   '/mehfil/challenges': typeof MehfilChallengesRoute
   '/mehfil/compose': typeof MehfilComposeRoute
+  '/mehfil/hall-of-fame': typeof MehfilHallOfFameRoute
   '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -1601,6 +1609,7 @@ export interface FileRoutesById {
   '/mehfil/$slug': typeof MehfilSlugRoute
   '/mehfil/challenges': typeof MehfilChallengesRoute
   '/mehfil/compose': typeof MehfilComposeRoute
+  '/mehfil/hall-of-fame': typeof MehfilHallOfFameRoute
   '/mehfil/leaderboard': typeof MehfilLeaderboardRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
@@ -1785,6 +1794,7 @@ export interface FileRouteTypes {
     | '/mehfil/$slug'
     | '/mehfil/challenges'
     | '/mehfil/compose'
+    | '/mehfil/hall-of-fame'
     | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -1963,6 +1973,7 @@ export interface FileRouteTypes {
     | '/mehfil/$slug'
     | '/mehfil/challenges'
     | '/mehfil/compose'
+    | '/mehfil/hall-of-fame'
     | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -2145,6 +2156,7 @@ export interface FileRouteTypes {
     | '/mehfil/$slug'
     | '/mehfil/challenges'
     | '/mehfil/compose'
+    | '/mehfil/hall-of-fame'
     | '/mehfil/leaderboard'
     | '/p/$slug'
     | '/pages-editor/$id'
@@ -2235,6 +2247,7 @@ export interface RootRouteChildren {
   MehfilSlugRoute: typeof MehfilSlugRoute
   MehfilChallengesRoute: typeof MehfilChallengesRoute
   MehfilComposeRoute: typeof MehfilComposeRoute
+  MehfilHallOfFameRoute: typeof MehfilHallOfFameRoute
   MehfilLeaderboardRoute: typeof MehfilLeaderboardRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
@@ -2623,6 +2636,13 @@ declare module '@tanstack/react-router' {
       path: '/mehfil/leaderboard'
       fullPath: '/mehfil/leaderboard'
       preLoaderRoute: typeof MehfilLeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mehfil/hall-of-fame': {
+      id: '/mehfil/hall-of-fame'
+      path: '/mehfil/hall-of-fame'
+      fullPath: '/mehfil/hall-of-fame'
+      preLoaderRoute: typeof MehfilHallOfFameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mehfil/compose': {
@@ -3853,6 +3873,7 @@ const rootRouteChildren: RootRouteChildren = {
   MehfilSlugRoute: MehfilSlugRoute,
   MehfilChallengesRoute: MehfilChallengesRoute,
   MehfilComposeRoute: MehfilComposeRoute,
+  MehfilHallOfFameRoute: MehfilHallOfFameRoute,
   MehfilLeaderboardRoute: MehfilLeaderboardRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
