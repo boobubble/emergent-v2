@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Bookmark, Heart, Eye, MessageCircle, Share2, Swords } from "lucide-react";
 import { getPoemBySlug, recordPoemRead, togglePoemBookmark } from "@/lib/mehfil.functions";
@@ -12,6 +12,8 @@ import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { gamify, GAM_EVENTS } from "@/lib/gamification-emit";
 import { useMehfilPoemRealtime } from "@/lib/mehfil-realtime";
+import { supabase } from "@/integrations/supabase/client";
+
 
 export const Route = createFileRoute("/mehfil/$slug")({
   loader: async ({ params }) => {
