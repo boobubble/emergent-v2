@@ -173,7 +173,28 @@ function RootComponent() {
 // Paths an unauthenticated visitor can reach directly (no AuthScreen takeover).
 const PUBLIC_PATH_PREFIXES = ["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/p/", "/api/", "/installer"];
 const PUBLIC_EXACT = new Set(["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/installer"]);
-const READ_ONLY_PUBLIC_APP_PREFIXES = ["/feed", "/chatroom", "/chatrooms", "/confessions", "/battle-hub", "/leaderboard", "/poetry", "/mehfil"];
+// Publicly readable app routes — guests may view content, but individual
+// write actions (like, comment, vote, follow, join, publish, edit, delete)
+// must gate themselves via `useAuthGate().requireAuth(...)`. Never redirect
+// guests away from these paths.
+const READ_ONLY_PUBLIC_APP_PREFIXES = [
+  "/feed",
+  "/chatroom",
+  "/chatrooms",
+  "/confessions",
+  "/battle-hub",
+  "/leaderboard",
+  "/poetry",
+  "/mehfil",
+  "/competitions",
+  "/u",
+  "/pages",
+  "/communities",
+  "/community",
+  "/invite",
+  "/trust",
+  "/pricing",
+];
 
 
 function isReadOnlyPublicAppPath(pathname: string) {
