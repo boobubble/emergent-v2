@@ -96,6 +96,7 @@ export const getPoetryBattle = createServerFn({ method: "GET" })
         category: p.category_id ? (cmap.get(p.category_id) as any) ?? null : null,
         author: (pmap.get(p.author_id) as any) ?? null,
         writer_rank: "poet" as const,
+        reaction_count: 0,
       }));
     }
     return { battle, entries: parts ?? [], poems };

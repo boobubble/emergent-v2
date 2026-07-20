@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+const totalReactions = (p: { upvote_count: number; reaction_count?: number }) =>
+  (p.upvote_count ?? 0) + (p.reaction_count ?? 0);
 import { Heart, Eye, MessageCircle, Sparkles, Swords } from "lucide-react";
 import { poemPreview, type MehfilPoemEnriched } from "@/lib/mehfil-types";
 import { WriterRankBadge } from "./WriterRankBadge";
@@ -38,7 +40,7 @@ export function PoemCard({ poem, variant = "default" }: Props) {
         <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
           <span className="truncate">by {displayName}</span>
           <span className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-0.5"><Heart className="h-3 w-3" /> {poem.upvote_count}</span>
+            <span className="inline-flex items-center gap-0.5"><Heart className="h-3 w-3" /> {totalReactions(poem)}</span>
             <span className="inline-flex items-center gap-0.5"><Eye className="h-3 w-3" /> {poem.read_count}</span>
           </span>
         </div>
@@ -88,7 +90,7 @@ export function PoemCard({ poem, variant = "default" }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1"><Heart className="h-3.5 w-3.5" /> {poem.upvote_count}</span>
+          <span className="inline-flex items-center gap-1"><Heart className="h-3.5 w-3.5" /> {totalReactions(poem)}</span>
           <span className="inline-flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> {poem.read_count}</span>
           <span className="inline-flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" /> {poem.comment_count}</span>
         </div>
