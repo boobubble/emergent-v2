@@ -819,6 +819,11 @@ function LandingPage() {
         </Card>
       </section>
 
+      {/* ───────── Trending on Mehfil ───────── */}
+      <MehfilLandingSection />
+
+
+
       {/* ───────── Latest Public Discussions ───────── */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <Card className="p-5 sm:p-6">
