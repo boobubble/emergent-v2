@@ -377,15 +377,9 @@ function PoemDetailPage() {
             </Link>
 
             {!isOwnPoem && author?.id && (
-              <button
-                onClick={() => requireAuth(followWriter)}
-                className={`ml-auto inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                  following ? "border border-border bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:opacity-90"
-                }`}
-              >
-                <UserPlus className="h-3.5 w-3.5" />
-                {following === "accepted" ? "Following" : following === "pending" ? "Requested" : "Follow"}
-              </button>
+              <div className="ml-auto">
+                <FollowWriterButton writerId={author.id} writerName={displayName} />
+              </div>
             )}
           </div>
         </header>
