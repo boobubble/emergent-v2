@@ -40,7 +40,7 @@ function useDebounced<T>(value: T, delay = 250): T {
   return v;
 }
 
-function highlight(text: string, q: string): (string | JSX.Element)[] {
+function highlight(text: string, q: string): ReactNode[] {
   if (!q) return [text];
   const clean = q.replace(/^[#@]/, "").trim();
   if (!clean) return [text];
