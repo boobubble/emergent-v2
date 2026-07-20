@@ -156,6 +156,7 @@ import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-l
 import { Route as AdminAbuseProtectionRouteImport } from './routes/admin.abuse-protection'
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
 import { Route as PoetryCategorySlugRouteImport } from './routes/poetry.category.$slug'
+import { Route as MehfilCategorySlugRouteImport } from './routes/mehfil.category.$slug'
 import { Route as CommunitySlugMembersRouteImport } from './routes/community.$slug.members'
 import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
@@ -925,6 +926,11 @@ const PoetryCategorySlugRoute = PoetryCategorySlugRouteImport.update({
   path: '/poetry/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MehfilCategorySlugRoute = MehfilCategorySlugRouteImport.update({
+  id: '/mehfil/category/$slug',
+  path: '/mehfil/category/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CommunitySlugMembersRoute = CommunitySlugMembersRouteImport.update({
   id: '/members',
   path: '/members',
@@ -1246,6 +1252,7 @@ export interface FileRoutesByFullPath {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
@@ -1420,6 +1427,7 @@ export interface FileRoutesByTo {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
@@ -1599,6 +1607,7 @@ export interface FileRoutesById {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
@@ -1779,6 +1788,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
+    | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
@@ -1953,6 +1963,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
+    | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug'
     | '/api/public/hooks/feedbot-dispatch'
@@ -2131,6 +2142,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
+    | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
@@ -2209,6 +2221,7 @@ export interface RootRouteChildren {
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
   ApiPublicLandingRoute: typeof ApiPublicLandingRoute
+  MehfilCategorySlugRoute: typeof MehfilCategorySlugRoute
   PoetryCategorySlugRoute: typeof PoetryCategorySlugRoute
   ApiPublicHooksFeedbotDispatchRoute: typeof ApiPublicHooksFeedbotDispatchRoute
   ApiPublicHooksFeedbotSummaryRoute: typeof ApiPublicHooksFeedbotSummaryRoute
@@ -3252,6 +3265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PoetryCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mehfil/category/$slug': {
+      id: '/mehfil/category/$slug'
+      path: '/mehfil/category/$slug'
+      fullPath: '/mehfil/category/$slug'
+      preLoaderRoute: typeof MehfilCategorySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/community/$slug/members': {
       id: '/community/$slug/members'
       path: '/members'
@@ -3795,6 +3815,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
   ApiPublicLandingRoute: ApiPublicLandingRoute,
+  MehfilCategorySlugRoute: MehfilCategorySlugRoute,
   PoetryCategorySlugRoute: PoetryCategorySlugRoute,
   ApiPublicHooksFeedbotDispatchRoute: ApiPublicHooksFeedbotDispatchRoute,
   ApiPublicHooksFeedbotSummaryRoute: ApiPublicHooksFeedbotSummaryRoute,
