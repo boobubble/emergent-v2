@@ -64,6 +64,11 @@ function MehfilDiscoveryPage() {
         </div>
       </section>
 
+      {/* MEHFIL SEARCH */}
+      <MehfilSearchBar />
+
+
+
       {/* CATEGORIES */}
       <section className="mb-10">
         <h2 className="mb-3 text-lg font-bold">📚 Categories</h2>
