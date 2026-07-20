@@ -382,6 +382,12 @@ export interface PublishPoemInput {
   seoTitle?: string;
   seoDescription?: string;
   optInBattle?: boolean;
+  /** ISO date-time; when set, poem saves as draft with scheduled_at. */
+  scheduledAt?: string | null;
+  /** When true, save as draft and ignore scheduledAt. */
+  saveAsDraft?: boolean;
+  /** Update an existing draft instead of inserting a new poem. */
+  poemId?: string;
 }
 
 export const publishPoem = createServerFn({ method: "POST" })
