@@ -199,10 +199,10 @@ export const mehfilSearch = createServerFn({ method: "GET" })
       };
     });
 
-    const writers: MSWriterResult[] = writerRows.map((w) => {
+    const writers: MSWriterResult[] = writerRows.map((w): MSWriterResult => {
       const stat = smap.get(w.id);
       return {
-        kind: "writer",
+        kind: "writer" as const,
         id: w.id,
         username: w.username ?? null,
         name: w.display_name || w.username || "Poet",
@@ -212,7 +212,7 @@ export const mehfilSearch = createServerFn({ method: "GET" })
         poems_published: stat?.poems_published ?? 0,
         total_upvotes: stat?.total_upvotes ?? 0,
       };
-    }).filter((w) => w.poems_published > 0 || w.total_upvotes > 0 || true).slice(0, 6);
+    }).slice(0, 6);
 
     // Category poem counts
     const catRows = (catsRes.data ?? []) as any[];
