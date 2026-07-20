@@ -103,14 +103,75 @@ function PoemDetailPage() {
 
   const requireAuth = (fn: () => void) => (user ? fn() : gate.openSignIn());
 
-  const react = (rt: string) => {
-    // Reuses the existing platform reactions pipeline via gamify event.
-    // Full reaction persistence lives in the shared reactions module; here we
-    // only emit the gamification event and toast optimistically to keep this
-    // phase focused. The write is completed by the shared reaction UI in
-    // Phase 2 (Feed integration + battle wiring).
-    gamify(GAM_EVENTS.feedReactionAdded, 1, { target: "mehfil_poem", poem_id: poem.id, reaction: rt });
-    toast.success("Reaction sent");
+  // Reactions on this poem — persisted in shared `reactions` table with target_type='mehfil_poem'
+  type ReactionRow = { id: string; user_id: string; type: string };
+  const [reactions, setReactions] = useState<ReactionRow[]>([]);
+  const [reactionBusy, setReactionBusy] = useState(false);
+
+  useEffect(() => {
+    if (!poem?.id) return;
+    let cancelled = false;
+    supabase
+      .from("reactions")
+      .select("id,user_id,type")
+      .eq("target_type", "mehfil_poem")
+      .eq("target_id", poem.id)
+      .then(({ data }) => { if (!cancelled) setReactions((data ?? []) as ReactionRow[]); });
+    const ch = supabase
+      .channel(`mehfil-reactions-${poem.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "reactions", filter: `target_id=eq.${poem.id}` },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const row = payload.new as ReactionRow & { target_type: string };
+            if (row.target_type === "mehfil_poem") {
+              setReactions((prev) => (prev.some((r) => r.id === row.id) ? prev : [...prev, row]));
+            }
+          } else if (payload.eventType === "DELETE") {
+            const row = payload.old as ReactionRow;
+            setReactions((prev) => prev.filter((r) => r.id !== row.id));
+          } else if (payload.eventType === "UPDATE") {
+            const row = payload.new as ReactionRow;
+            setReactions((prev) => prev.map((r) => (r.id === row.id ? row : r)));
+          }
+        },
+      )
+      .subscribe();
+    return () => { cancelled = true; void supabase.removeChannel(ch); };
+  }, [poem?.id]);
+
+  const myReaction = user ? reactions.find((r) => r.user_id === user.id) ?? null : null;
+  const counts: Record<string, number> = {};
+  for (const r of reactions) counts[r.type] = (counts[r.type] ?? 0) + 1;
+
+  const react = async (rt: string) => {
+    if (!user || reactionBusy) return;
+    setReactionBusy(true);
+    try {
+      if (myReaction?.type === rt) {
+        // Toggle off
+        setReactions((prev) => prev.filter((r) => r.id !== myReaction.id));
+        await supabase.from("reactions").delete().eq("id", myReaction.id);
+        return;
+      }
+      if (myReaction) {
+        setReactions((prev) => prev.filter((r) => r.id !== myReaction.id));
+        await supabase.from("reactions").delete().eq("id", myReaction.id);
+      }
+      const { data, error } = await supabase
+        .from("reactions")
+        .insert({ user_id: user.id, target_type: "mehfil_poem", target_id: poem.id, type: rt as never })
+        .select("id,user_id,type")
+        .single();
+      if (error) throw error;
+      if (data) setReactions((prev) => [...prev.filter((r) => r.user_id !== user.id), data as ReactionRow]);
+      gamify(GAM_EVENTS.feedReactionAdded, 1, { target: "mehfil_poem", poem_id: poem.id, reaction: rt });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Couldn't react");
+    } finally {
+      setReactionBusy(false);
+    }
   };
 
   return (
@@ -163,17 +224,38 @@ function PoemDetailPage() {
 
         {/* Reactions */}
         <div className="mt-6 flex flex-wrap items-center gap-2">
-          {MEHFIL_REACTIONS.map((r) => (
-            <button
-              key={r.type}
-              onClick={() => requireAuth(() => react(r.type))}
-              className="group inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow"
-            >
-              <span className="text-base">{r.emoji}</span>
-              <span>{r.label}</span>
-            </button>
-          ))}
+          {MEHFIL_REACTIONS.map((r) => {
+            const active = myReaction?.type === r.type;
+            const c = counts[r.type] ?? 0;
+            return (
+              <button
+                key={r.type}
+                onClick={() => requireAuth(() => react(r.type))}
+                disabled={reactionBusy}
+                aria-pressed={active}
+                className={`group inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition hover:-translate-y-0.5 hover:shadow disabled:opacity-60 ${
+                  active
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-card hover:border-primary/50"
+                }`}
+              >
+                <span className="text-base">{r.emoji}</span>
+                <span>{r.label}</span>
+                {c > 0 && (
+                  <span className={`ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${active ? "bg-primary/20" : "bg-muted"}`}>
+                    {c}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+          {reactions.length > 0 && (
+            <span className="ml-1 text-[11px] text-muted-foreground">
+              {reactions.length} {reactions.length === 1 ? "reaction" : "reactions"}
+            </span>
+          )}
         </div>
+
 
         {/* Stats bar */}
         <div className="mt-6 flex items-center justify-between rounded-2xl border border-border/60 bg-card p-4">
