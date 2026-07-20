@@ -354,9 +354,49 @@ function PoemDetailPage() {
           </div>
         )}
 
-        <div className="mt-10 rounded-2xl border border-dashed border-border/60 p-6 text-center text-xs text-muted-foreground">
-          Comments reuse the shared platform comments module and land here in Phase 2.
+        <div id="comments" className="mt-10 rounded-2xl border border-dashed border-border/60 p-6 text-center text-xs text-muted-foreground">
+          Comments coming soon — the shared platform comments module lands here in Phase 2.
         </div>
+
+        {relatedQ.data?.moreFromAuthor && relatedQ.data.moreFromAuthor.length > 0 && (
+          <section className="mt-10">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              More from {displayName}
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {relatedQ.data.moreFromAuthor.slice(0, 4).map((p) => (
+                <PoemCard key={p.id} poem={p} variant="compact" />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {relatedQ.data?.related && relatedQ.data.related.length > 0 && (
+          <section className="mt-10">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Related poems{poem.category ? ` in ${poem.category.name}` : ""}
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {relatedQ.data.related.slice(0, 4).map((p) => (
+                <PoemCard key={p.id} poem={p} variant="compact" />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {relatedQ.data?.trending && relatedQ.data.trending.length > 0 && (
+          <section className="mt-10">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Trending on Mehfil
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {relatedQ.data.trending.slice(0, 4).map((p) => (
+                <PoemCard key={p.id} poem={p} variant="compact" />
+              ))}
+            </div>
+          </section>
+        )}
+
       </article>
     </MehfilShell>
   );
