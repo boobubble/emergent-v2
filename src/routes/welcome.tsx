@@ -819,6 +819,11 @@ function LandingPage() {
         </Card>
       </section>
 
+      {/* ───────── Trending on Mehfil ───────── */}
+      <MehfilLandingSection />
+
+
+
       {/* ───────── Latest Public Discussions ───────── */}
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <Card className="p-5 sm:p-6">
@@ -1129,5 +1134,24 @@ function SectionTitle({ icon, title, suffix, href }: { icon: string; title: stri
   );
 }
 
+// Trending Mehfil (poetry) section — reuses the existing widget + settings.
+import { MehfilTrendingWidget } from "@/components/feed/MehfilTrendingWidget";
+import { useMehfilSettings } from "@/lib/use-mehfil-label";
+function MehfilLandingSection() {
+  const settings = useMehfilSettings();
+  if (!settings.enabled) return null;
+  return (
+    <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+      <Card className="p-5 sm:p-6">
+        <SectionTitle icon="📜" title={`Trending on ${settings.module_name}`} suffix="(Poetry & battles)" href="/mehfil" />
+        <div className="mt-4">
+          <MehfilTrendingWidget />
+        </div>
+      </Card>
+    </section>
+  );
+}
+
 // Silence unused imports kept for future cards
 void Crown; void Star; void Flame; void Trophy; void Send;
+
