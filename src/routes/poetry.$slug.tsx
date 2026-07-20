@@ -26,7 +26,7 @@ export const Route = createFileRoute("/poetry/$slug")({
     return { poem };
   },
   head: ({ params, loaderData }) => {
-    const url = `${SITE_URL}/mehfil/${params.slug}`;
+    const url = `${SITE_URL}/poetry/${params.slug}`;
     if (!loaderData) {
       return {
         meta: [{ title: "Poem not found · Poetry Hub" }, { name: "robots", content: "noindex" }],
