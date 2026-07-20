@@ -125,6 +125,23 @@ function PoemDetailPage() {
     );
   });
 
+  // Lazy-load related poems after main render.
+  const fetchRelated = useServerFn(getMehfilRelated);
+  const relatedQ = useQuery({
+    queryKey: ["mehfil", "related", poem?.id],
+    queryFn: () =>
+      fetchRelated({
+        data: {
+          poemId: poem!.id,
+          authorId: poem!.author_id,
+          categoryId: poem!.category_id ?? null,
+        },
+      }),
+    enabled: !!poem?.id,
+    staleTime: 60_000,
+  });
+
+
   // Record a "read" once the page loads
   useEffect(() => {
     if (!poem) return;
