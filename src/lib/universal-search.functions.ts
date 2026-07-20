@@ -53,6 +53,7 @@ export interface USBattleResult {
   end_at: string | null;
   participants: number;
   prize: string | null;
+  winner_count: number;
 }
 
 export interface USCategoryResult {
