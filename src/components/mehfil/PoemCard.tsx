@@ -90,7 +90,7 @@ export function PoemCard({ poem, variant = "default" }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1"><Heart className="h-3.5 w-3.5" /> {poem.upvote_count}</span>
+          <span className="inline-flex items-center gap-1"><Heart className="h-3.5 w-3.5" /> {totalReactions(poem)}</span>
           <span className="inline-flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> {poem.read_count}</span>
           <span className="inline-flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" /> {poem.comment_count}</span>
         </div>
