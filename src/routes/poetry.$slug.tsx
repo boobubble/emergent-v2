@@ -13,6 +13,7 @@ import {
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
 import { PoemCard } from "@/components/mehfil/PoemCard";
+import { FollowWriterButton } from "@/components/mehfil/FollowWriterButton";
 import { ReportButton } from "@/components/moderation/ReportButton";
 import { MEHFIL_REACTIONS, poemPreview } from "@/lib/mehfil-types";
 import { useAuth } from "@/lib/auth-store";
