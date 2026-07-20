@@ -161,7 +161,7 @@ export const MEHFIL_SETTINGS_DEFAULTS: MehfilSettings = {
   trending_widget_frequency: 5,
   battle_auto_enroll: false,
   default_language: "en",
-  module_name: "Mehfil",
+  module_name: "Poetry Hub",
 };
 
 export function slugifyTitle(title: string): string {
