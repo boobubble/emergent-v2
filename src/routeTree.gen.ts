@@ -45,6 +45,7 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PoetryIndexRouteImport } from './routes/poetry.index'
+import { Route as MehfilIndexRouteImport } from './routes/mehfil.index'
 import { Route as FeedIndexRouteImport } from './routes/feed.index'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
 import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
@@ -362,6 +363,11 @@ const IndexRoute = IndexRouteImport.update({
 const PoetryIndexRoute = PoetryIndexRouteImport.update({
   id: '/poetry/',
   path: '/poetry/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilIndexRoute = MehfilIndexRouteImport.update({
+  id: '/mehfil/',
+  path: '/mehfil/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedIndexRoute = FeedIndexRouteImport.update({
@@ -1213,6 +1219,7 @@ export interface FileRoutesByFullPath {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/feed/': typeof FeedIndexRoute
+  '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
@@ -1385,6 +1392,7 @@ export interface FileRoutesByTo {
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/feed': typeof FeedIndexRoute
+  '/mehfil': typeof MehfilIndexRoute
   '/poetry': typeof PoetryIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
@@ -1562,6 +1570,7 @@ export interface FileRoutesById {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/feed/': typeof FeedIndexRoute
+  '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
@@ -1740,6 +1749,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/feed/'
+    | '/mehfil/'
     | '/poetry/'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
@@ -1912,6 +1922,7 @@ export interface FileRouteTypes {
     | '/broadcaster'
     | '/competitions'
     | '/feed'
+    | '/mehfil'
     | '/poetry'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
@@ -2088,6 +2099,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/feed/'
+    | '/mehfil/'
     | '/poetry/'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
@@ -2169,6 +2181,7 @@ export interface RootRouteChildren {
   PoetryLeaderboardRoute: typeof PoetryLeaderboardRoute
   UUsernameRoute: typeof UUsernameRoute
   FeedIndexRoute: typeof FeedIndexRoute
+  MehfilIndexRoute: typeof MehfilIndexRoute
   PoetryIndexRoute: typeof PoetryIndexRoute
   ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
   ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
@@ -2447,6 +2460,13 @@ declare module '@tanstack/react-router' {
       path: '/poetry'
       fullPath: '/poetry/'
       preLoaderRoute: typeof PoetryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mehfil/': {
+      id: '/mehfil/'
+      path: '/mehfil'
+      fullPath: '/mehfil/'
+      preLoaderRoute: typeof MehfilIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed/': {
@@ -3739,6 +3759,7 @@ const rootRouteChildren: RootRouteChildren = {
   PoetryLeaderboardRoute: PoetryLeaderboardRoute,
   UUsernameRoute: UUsernameRoute,
   FeedIndexRoute: FeedIndexRoute,
+  MehfilIndexRoute: MehfilIndexRoute,
   PoetryIndexRoute: PoetryIndexRoute,
   ApiGamesAchievementRoute: ApiGamesAchievementRoute,
   ApiGamesCoinsRoute: ApiGamesCoinsRoute,
