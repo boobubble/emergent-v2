@@ -58,6 +58,7 @@ import { Route as PoetryChallengesRouteImport } from './routes/poetry.challenges
 import { Route as PoetrySlugRouteImport } from './routes/poetry.$slug'
 import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as MehfilComposeRouteImport } from './routes/mehfil.compose'
 import { Route as MehfilChallengesRouteImport } from './routes/mehfil.challenges'
 import { Route as MehfilSlugRouteImport } from './routes/mehfil.$slug'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
@@ -431,6 +432,11 @@ const PagesEditorIdRoute = PagesEditorIdRouteImport.update({
 const PSlugRoute = PSlugRouteImport.update({
   id: '/p/$slug',
   path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilComposeRoute = MehfilComposeRouteImport.update({
+  id: '/mehfil/compose',
+  path: '/mehfil/compose',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MehfilChallengesRoute = MehfilChallengesRouteImport.update({
@@ -1227,6 +1233,7 @@ export interface FileRoutesByFullPath {
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
   '/mehfil/challenges': typeof MehfilChallengesRoute
+  '/mehfil/compose': typeof MehfilComposeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/poetry/$slug': typeof PoetrySlugRoute
@@ -1403,6 +1410,7 @@ export interface FileRoutesByTo {
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
   '/mehfil/challenges': typeof MehfilChallengesRoute
+  '/mehfil/compose': typeof MehfilComposeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/poetry/$slug': typeof PoetrySlugRoute
@@ -1584,6 +1592,7 @@ export interface FileRoutesById {
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
   '/mehfil/challenges': typeof MehfilChallengesRoute
+  '/mehfil/compose': typeof MehfilComposeRoute
   '/p/$slug': typeof PSlugRoute
   '/pages-editor/$id': typeof PagesEditorIdRoute
   '/poetry/$slug': typeof PoetrySlugRoute
@@ -1766,6 +1775,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/mehfil/$slug'
     | '/mehfil/challenges'
+    | '/mehfil/compose'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/poetry/$slug'
@@ -1942,6 +1952,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/mehfil/$slug'
     | '/mehfil/challenges'
+    | '/mehfil/compose'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/poetry/$slug'
@@ -2122,6 +2133,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/mehfil/$slug'
     | '/mehfil/challenges'
+    | '/mehfil/compose'
     | '/p/$slug'
     | '/pages-editor/$id'
     | '/poetry/$slug'
@@ -2210,6 +2222,7 @@ export interface RootRouteChildren {
   InviteCodeRoute: typeof InviteCodeRoute
   MehfilSlugRoute: typeof MehfilSlugRoute
   MehfilChallengesRoute: typeof MehfilChallengesRoute
+  MehfilComposeRoute: typeof MehfilComposeRoute
   PSlugRoute: typeof PSlugRoute
   PagesEditorIdRoute: typeof PagesEditorIdRoute
   PoetrySlugRoute: typeof PoetrySlugRoute
@@ -2590,6 +2603,13 @@ declare module '@tanstack/react-router' {
       path: '/p/$slug'
       fullPath: '/p/$slug'
       preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mehfil/compose': {
+      id: '/mehfil/compose'
+      path: '/mehfil/compose'
+      fullPath: '/mehfil/compose'
+      preLoaderRoute: typeof MehfilComposeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mehfil/challenges': {
@@ -3812,6 +3832,7 @@ const rootRouteChildren: RootRouteChildren = {
   InviteCodeRoute: InviteCodeRoute,
   MehfilSlugRoute: MehfilSlugRoute,
   MehfilChallengesRoute: MehfilChallengesRoute,
+  MehfilComposeRoute: MehfilComposeRoute,
   PSlugRoute: PSlugRoute,
   PagesEditorIdRoute: PagesEditorIdRoute,
   PoetrySlugRoute: PoetrySlugRoute,
