@@ -21,9 +21,9 @@ const DEFAULTS: SearchSources = { users: true, mehfil: true, battles: true, cate
 
 const ITEMS: { key: keyof SearchSources; label: string; description: string; icon: any }[] = [
   { key: "users",      label: "Users",             description: "People / handles from the feed profiles.", icon: Users2 },
-  { key: "mehfil",     label: "Mehfil (Poems)",    description: "Poems and Hall of Fame entries.",           icon: ScrollText },
+  { key: "mehfil",     label: "Poetry Hub (Poems)",    description: "Poems and Hall of Fame entries.",           icon: ScrollText },
   { key: "battles",    label: "Poetry Battles",    description: "Active, upcoming, and past poetry battles.", icon: Swords },
-  { key: "categories", label: "Poetry Categories", description: "Categories in the Mehfil directory.",        icon: LayoutGrid },
+  { key: "categories", label: "Poetry Categories", description: "Categories in the Poetry Hub directory.",        icon: LayoutGrid },
 ];
 
 function SearchAdminPage() {

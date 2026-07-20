@@ -1,7 +1,7 @@
 /**
- * Mehfil (Poetry Community) — shared types + constants.
+ * Poetry Hub (Poetry Community) — shared types + constants.
  * Reuses existing platform primitives (auth, reactions, comments, XP, wallet,
- * competitions). This file defines only Mehfil-specific shapes.
+ * competitions). This file defines only Poetry Hub-specific shapes.
  */
 
 export type PoemStatus = "draft" | "pending" | "published" | "archived" | "rejected";
@@ -42,7 +42,7 @@ export const WRITER_RANK_ICON: Record<WriterRank, string> = {
 };
 
 /**
- * Mehfil reactions map onto the existing platform `reactions` table by
+ * Poetry Hub reactions map onto the existing platform `reactions` table by
  * reusing the same reaction types (like/love/haha/fire/etc) but display
  * them with poetry-friendly labels. Storage layer stays untouched.
  */
@@ -145,7 +145,7 @@ export interface MehfilSettings {
   trending_widget_frequency: number;
   battle_auto_enroll: boolean;
   default_language: string;
-  /** Admin-configurable display label for the Mehfil module across nav, headings, breadcrumbs, hero, empty states, notifications, and feed widgets. Route identifiers stay `/mehfil`. */
+  /** Admin-configurable display label for the Poetry Hub module across nav, headings, breadcrumbs, hero, empty states, notifications, and feed widgets. Route identifiers stay `/mehfil`. */
   module_name: string;
 }
 
@@ -161,7 +161,7 @@ export const MEHFIL_SETTINGS_DEFAULTS: MehfilSettings = {
   trending_widget_frequency: 5,
   battle_auto_enroll: false,
   default_language: "en",
-  module_name: "Mehfil",
+  module_name: "Poetry Hub",
 };
 
 export function slugifyTitle(title: string): string {

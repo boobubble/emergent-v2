@@ -1,5 +1,5 @@
 /**
- * Mehfil Poetry Battles — thin wrappers over the existing Competition Engine.
+ * Poetry Hub Poetry Battles — thin wrappers over the existing Competition Engine.
  * No new competition tables; a Poetry Battle is a `competitions` row with
  * `type='poetry_battle'`.
  */

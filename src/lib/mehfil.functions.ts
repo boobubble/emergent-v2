@@ -1,5 +1,5 @@
 /**
- * Mehfil server functions.
+ * Poetry Hub server functions.
  *
  * READS are public-friendly (published poems visible to anon) via a
  * publishable server client, so /mehfil works for guests just like /feed.

@@ -245,10 +245,10 @@ export function CommunityHub({ open, onOpenChange, isMobile }: Props) {
             <HubButton to="/radio">Listen Now</HubButton>
           </HubCard>
 
-          {/* Mehfil */}
+          {/* Poetry Hub */}
           <HubCard icon={<PenLine className="h-4 w-4" />} title={mehfilLabel} tone="from-fuchsia-500/25 via-purple-500/10">
             <p className="text-xs text-muted-foreground">Poetry, battles &amp; writer ranks — join the community.</p>
-            <HubButton to="/mehfil">Enter {mehfilLabel}</HubButton>
+            <HubButton to="/poetry">Enter {mehfilLabel}</HubButton>
           </HubCard>
 
           {/* Trending Feed */}

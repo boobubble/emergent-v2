@@ -150,7 +150,7 @@ export function MehfilSearchBar() {
               }}
               placeholder="🔍 Search poems, keywords, writers or hashtags..."
               className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
-              aria-label="Search Mehfil"
+              aria-label="Search Poetry Hub"
             />
             {q && (
               <button type="button" onClick={() => { setQ(""); inputRef.current?.focus(); }} className="rounded-full p-1 hover:bg-muted" aria-label="Clear">
@@ -411,7 +411,7 @@ function PoemSearchCard({ poem, q }: { poem: MSPoemResult; q: string }) {
           {poem.published_at && <span>· {timeAgo(poem.published_at)}</span>}
         </div>
         <Link
-          to="/mehfil/$slug"
+          to="/poetry/$slug"
           params={{ slug: poem.slug }}
           className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
         >
@@ -449,7 +449,7 @@ function WriterMiniCard({ writer, q }: { writer: MSWriterResult; q: string }) {
 function CategoryChip({ cat }: { cat: MSCategoryResult }) {
   return (
     <Link
-      to="/mehfil/category/$slug"
+      to="/poetry/category/$slug"
       params={{ slug: cat.slug }}
       className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:border-primary"
       style={{ borderLeftColor: cat.color ?? undefined, borderLeftWidth: 3 }}
@@ -467,7 +467,7 @@ function EmptyState({ onPickTrending }: { onPickTrending: () => void }) {
       <p className="mt-2 text-sm font-semibold">No poems found.</p>
       <p className="mt-1 text-xs text-muted-foreground">Try another keyword, or explore what's popular.</p>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-        <Link to="/mehfil" className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-muted">
+        <Link to="/poetry" className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-muted">
           Explore Categories
         </Link>
         <button type="button" onClick={onPickTrending} className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90">

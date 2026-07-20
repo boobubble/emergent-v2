@@ -18,7 +18,7 @@ export function PoemCard({ poem, variant = "default" }: Props) {
   if (variant === "compact") {
     return (
       <Link
-        to="/mehfil/$slug"
+        to="/poetry/$slug"
         params={{ slug: poem.slug }}
         className="group block rounded-xl border border-border/60 bg-card p-4 transition hover:border-primary/40 hover:shadow-md"
       >
@@ -48,7 +48,7 @@ export function PoemCard({ poem, variant = "default" }: Props) {
 
   return (
     <Link
-      to="/mehfil/$slug"
+      to="/poetry/$slug"
       params={{ slug: poem.slug }}
       className="group block overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-xl"
     >

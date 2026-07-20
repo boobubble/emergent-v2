@@ -1,5 +1,5 @@
 /**
- * Mehfil-scoped search. Independent from feed search and universal search —
+ * Poetry Hub-scoped search. Independent from feed search and universal search —
  * this one is optimized for reading experiences: poems, writers, categories,
  * hashtags. Reuses `mehfil_poems`, `profiles`, `mehfil_writer_stats`, and
  * `mehfil_categories` tables directly with public read policies.

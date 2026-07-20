@@ -21,9 +21,9 @@ export function MehfilTrendingWidget() {
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-amber-500/10">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
-          <span className="font-serif text-sm font-bold">🔥 Trending on Mehfil</span>
+          <span className="font-serif text-sm font-bold">🔥 Trending on Poetry Hub</span>
         </div>
-        <Link to="/mehfil" className="text-xs font-semibold text-primary inline-flex items-center gap-0.5">
+        <Link to="/poetry" className="text-xs font-semibold text-primary inline-flex items-center gap-0.5">
           Explore <ChevronRight className="h-3 w-3" />
         </Link>
       </div>
@@ -31,7 +31,7 @@ export function MehfilTrendingWidget() {
         {poems.map((p) => (
           <Link
             key={p.id}
-            to="/mehfil/$slug"
+            to="/poetry/$slug"
             params={{ slug: p.slug }}
             className="group shrink-0 w-64 rounded-xl border border-border/60 bg-card p-3 hover:border-primary/50 hover:shadow-md transition"
             style={p.theme ? { background: p.theme } : undefined}
@@ -48,7 +48,7 @@ export function MehfilTrendingWidget() {
             </div>
           </Link>
         ))}
-        <Link to="/mehfil/challenges" className="shrink-0 w-56 rounded-xl border border-dashed border-primary/50 bg-primary/5 p-3 flex flex-col justify-center items-center text-center hover:bg-primary/10 transition">
+        <Link to="/poetry/challenges" className="shrink-0 w-56 rounded-xl border border-dashed border-primary/50 bg-primary/5 p-3 flex flex-col justify-center items-center text-center hover:bg-primary/10 transition">
           <Swords className="h-5 w-5 text-primary mb-1" />
           <div className="text-sm font-semibold">Poetry Battles</div>
           <div className="text-[11px] text-muted-foreground">Join weekly challenges</div>

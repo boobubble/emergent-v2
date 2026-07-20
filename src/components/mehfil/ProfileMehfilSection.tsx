@@ -28,9 +28,9 @@ export function ProfileMehfilSection({ username }: { username: string }) {
     <section>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          <Feather className="h-3.5 w-3.5 text-primary" /> Mehfil · Poetry
+          <Feather className="h-3.5 w-3.5 text-primary" /> Poetry Hub · Poetry
         </h2>
-        <Link to="/mehfil" className="text-[11px] font-semibold text-primary hover:underline">Explore Mehfil →</Link>
+        <Link to="/poetry" className="text-[11px] font-semibold text-primary hover:underline">Explore Poetry Hub →</Link>
       </div>
 
       {/* Stats strip */}
@@ -155,7 +155,7 @@ export function ProfileMehfilSection({ username }: { username: string }) {
           <h3 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Categories Written</h3>
           <div className="flex flex-wrap gap-1.5">
             {categories_written.map((c: any) => (
-              <Link key={c.id} to="/mehfil/category/$slug" params={{ slug: c.slug }}
+              <Link key={c.id} to="/poetry/category/$slug" params={{ slug: c.slug }}
                 className="rounded-full px-2 py-0.5 text-[10px] font-bold"
                 style={{ background: `${c.color ?? "#7c3aed"}22`, color: c.color ?? "#7c3aed" }}>
                 {c.name} · {c.poem_count}
@@ -170,7 +170,7 @@ export function ProfileMehfilSection({ username }: { username: string }) {
 
 function PoemChip({ p }: { p: any }) {
   return (
-    <Link to="/mehfil/$slug" params={{ slug: p.slug }}
+    <Link to="/poetry/$slug" params={{ slug: p.slug }}
       className="group rounded-2xl border border-border bg-card p-4 transition hover:border-primary/40">
       <div className="mb-1 flex items-center gap-2">
         {p.category && (
