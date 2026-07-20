@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -9,11 +9,10 @@ import {
   type MSPoemResult,
   type MSWriterResult,
   type MSCategoryResult,
-  type MSHashtagResult,
 } from "@/lib/mehfil-search.functions";
 import { WriterRankBadge } from "./WriterRankBadge";
 import type { WriterRank } from "@/lib/mehfil-types";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth-store";
 
 const FILTER_CHIPS: { key: string; label: string }[] = [
   { key: "all", label: "All" },
