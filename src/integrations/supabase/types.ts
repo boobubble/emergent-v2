@@ -6659,6 +6659,7 @@ export type Database = {
       }
       claim_daily_reward: { Args: never; Returns: Json }
       cleanup_ended_competitions: { Args: never; Returns: undefined }
+      cleanup_expired_trio_invites: { Args: never; Returns: number }
       close_inactive_trio_rooms: { Args: never; Returns: undefined }
       competition_analytics: {
         Args: { _competition: string }
