@@ -1288,6 +1288,7 @@ export type Database = {
           banner_url: string | null
           color: string | null
           created_at: string
+          default_qualification_config: Json
           description: string | null
           enabled: boolean
           icon_url: string | null
@@ -1302,6 +1303,7 @@ export type Database = {
           banner_url?: string | null
           color?: string | null
           created_at?: string
+          default_qualification_config?: Json
           description?: string | null
           enabled?: boolean
           icon_url?: string | null
@@ -1316,6 +1318,7 @@ export type Database = {
           banner_url?: string | null
           color?: string | null
           created_at?: string
+          default_qualification_config?: Json
           description?: string | null
           enabled?: boolean
           icon_url?: string | null

@@ -7,12 +7,14 @@ import { toast } from "sonner";
 import {
   listCompetitions, listCategories, adminSaveCompetition, adminDeleteCompetition,
   adminFinalizeWinners, adminListAllCompetitions, adminBulkSetEntryMode,
+  adminDeleteCategory,
 } from "@/lib/competitions.functions";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CompetitionEditorDialog, emptyCompetition } from "@/components/competitions/CompetitionEditorDialog";
+import { CategoryEditorDialog, emptyCategory } from "@/components/competitions/CategoryEditorDialog";
 import { AdminCompetitionManageDialog } from "@/components/competitions/AdminCompetitionManageDialog";
 
 export const Route = createFileRoute("/admin/competitions")({
@@ -27,6 +29,7 @@ function AdminCompetitions() {
   const del = useServerFn(adminDeleteCompetition);
   const finalize = useServerFn(adminFinalizeWinners);
   const bulkMode = useServerFn(adminBulkSetEntryMode);
+  const delCat = useServerFn(adminDeleteCategory);
   const qc = useQueryClient();
 
   const { data = [] } = useQuery({
@@ -38,9 +41,16 @@ function AdminCompetitions() {
   const { data: categoryList = [] } = useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
 
   const [editing, setEditing] = useState<any | null>(null);
+  const [editingCat, setEditingCat] = useState<any | null>(null);
   const [managing, setManaging] = useState<string | null>(null);
   const [bulkCategory, setBulkCategory] = useState<string>("all");
   const [bulkOnlyManual, setBulkOnlyManual] = useState<boolean>(true);
+
+  const delCatM = useMutation({
+    mutationFn: (id: string) => delCat({ data: { id } }),
+    onSuccess: () => { toast.success("Category deleted"); qc.invalidateQueries({ queryKey: ["competition-categories"] }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
 
   const bulkM = useMutation({
     mutationFn: () => bulkMode({ data: {
@@ -137,6 +147,55 @@ function AdminCompetitions() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardContent className="space-y-3 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold">Categories</div>
+              <div className="text-xs text-muted-foreground">
+                Set the minimum engagement thresholds (likes, comments, views, etc.) that competitions in this category use by default for Smart / Hybrid qualification. Per-competition settings still override.
+              </div>
+            </div>
+            <Button size="sm" onClick={() => setEditingCat(emptyCategory())}>
+              <Plus className="h-4 w-4" /> New Category
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {(categoryList as any[]).map((cat) => {
+              const thr = cat.default_qualification_config?.thresholds ?? {};
+              const set = Object.entries(thr).filter(([, v]) => (v as number) > 0);
+              return (
+                <div key={cat.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block h-3 w-3 rounded-full" style={{ background: cat.color ?? "#8b5cf6" }} />
+                    <span className="font-medium">{cat.name}</span>
+                    <span className="text-xs text-muted-foreground">/{cat.slug}</span>
+                    {cat.enabled === false && <Badge variant="destructive" className="text-xs">Disabled</Badge>}
+                  </div>
+                  <div className="flex-1 text-xs text-muted-foreground">
+                    {set.length === 0
+                      ? "No default thresholds"
+                      : set.map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                  </div>
+                  <Button size="icon" variant="ghost" onClick={() => setEditingCat({
+                    ...cat,
+                    default_qualification_config: cat.default_qualification_config ?? { thresholds: {}, gates: {} },
+                  })}><Edit className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => confirm(`Delete category "${cat.name}"?`) && delCatM.mutate(cat.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              );
+            })}
+            {(categoryList as any[]).length === 0 && (
+              <div className="text-xs text-muted-foreground">No categories yet.</div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+
+
 
       <div className="space-y-2">
         {(data as any[]).map((c) => (
@@ -198,6 +257,8 @@ function AdminCompetitions() {
         competitionId={managing}
         onClose={() => setManaging(null)}
       />
+
+      <CategoryEditorDialog value={editingCat} onChange={setEditingCat} />
     </div>
   );
 }

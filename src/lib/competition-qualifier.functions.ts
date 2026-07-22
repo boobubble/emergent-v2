@@ -140,8 +140,26 @@ function reasonSnapshot(row: any, type: "post" | "poem", s: number, method?: str
   };
 }
 
+function mergeCategoryDefaults(compCfg: QualConfig, catCfg: QualConfig | null | undefined): QualConfig {
+  if (!catCfg || typeof catCfg !== "object") return compCfg;
+  return {
+    ...catCfg,
+    ...compCfg,
+    source: { ...(catCfg.source ?? {}), ...(compCfg.source ?? {}) },
+    thresholds: { ...(catCfg.thresholds ?? {}), ...(compCfg.thresholds ?? {}) },
+    gates: { ...(catCfg.gates ?? {}), ...(compCfg.gates ?? {}) },
+    weights: { ...(catCfg.weights ?? {}), ...(compCfg.weights ?? {}) },
+  };
+}
+
 async function qualifyCompetition(admin: any, comp: any) {
-  const cfg = (comp.qualification_config ?? {}) as QualConfig;
+  let catCfg: QualConfig | null = null;
+  if (comp.category_id) {
+    const { data: cat } = await admin.from("competition_categories")
+      .select("default_qualification_config").eq("id", comp.category_id).maybeSingle();
+    catCfg = (cat?.default_qualification_config ?? null) as QualConfig | null;
+  }
+  const cfg = mergeCategoryDefaults((comp.qualification_config ?? {}) as QualConfig, catCfg);
   const method = cfg.method ?? (comp.qualification_method as any);
   if (!method) return 0;
   const { type, rows } = await fetchCandidates(admin, comp, cfg);
