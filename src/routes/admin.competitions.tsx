@@ -16,10 +16,89 @@ import { Badge } from "@/components/ui/badge";
 import { CompetitionEditorDialog, emptyCompetition } from "@/components/competitions/CompetitionEditorDialog";
 import { CategoryEditorDialog, emptyCategory } from "@/components/competitions/CategoryEditorDialog";
 import { AdminCompetitionManageDialog } from "@/components/competitions/AdminCompetitionManageDialog";
+import { CompetitionAnalyticsPanel } from "./admin.competition-analytics";
+import { CompetitionsFeedPanel } from "./admin.competitions-feed";
 
 export const Route = createFileRoute("/admin/competitions")({
-  component: AdminCompetitions,
+  component: AdminCompetitionsPage,
 });
+
+const TABS = ["Competitions", "Categories", "Feed", "Analytics"] as const;
+type Tab = typeof TABS[number];
+
+function AdminCompetitionsPage() {
+  const [tab, setTab] = useState<Tab>("Competitions");
+  return (
+    <div className="p-6">
+      <div className="mb-4 flex gap-1 rounded-xl border border-border/60 bg-card p-1 w-fit">
+        {TABS.map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-1.5 rounded-lg text-sm font-semibold ${tab === t ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+      {tab === "Competitions" && <AdminCompetitions />}
+      {tab === "Categories" && <CategoriesPanel />}
+      {tab === "Feed" && <CompetitionsFeedPanel />}
+      {tab === "Analytics" && <CompetitionAnalyticsPanel />}
+    </div>
+  );
+}
+
+function CategoriesPanel() {
+  const cats = useServerFn(listCategories);
+  const delCat = useServerFn(adminDeleteCategory);
+  const qc = useQueryClient();
+  const { data: categoryList = [] } = useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
+  const [editingCat, setEditingCat] = useState<any | null>(null);
+  const delCatM = useMutation({
+    mutationFn: (id: string) => delCat({ data: { id } }),
+    onSuccess: () => { toast.success("Category deleted"); qc.invalidateQueries({ queryKey: ["competition-categories"] }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+  return (
+    <div className="space-y-4">
+      <AdminPageHeader
+        title="Competition Categories"
+        description="Set default minimum engagement thresholds for Smart / Hybrid qualification per category."
+        actions={<Button size="sm" onClick={() => setEditingCat(emptyCategory())}><Plus className="h-4 w-4" /> New Category</Button>}
+      />
+      <div className="space-y-2">
+        {(categoryList as any[]).map((cat) => {
+          const thr = cat.default_qualification_config?.thresholds ?? {};
+          const set = Object.entries(thr).filter(([, v]) => (v as number) > 0);
+          return (
+            <Card key={cat.id}>
+              <CardContent className="flex flex-wrap items-center gap-3 p-3">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block h-3 w-3 rounded-full" style={{ background: cat.color ?? "#8b5cf6" }} />
+                  <span className="font-medium">{cat.name}</span>
+                  <span className="text-xs text-muted-foreground">/{cat.slug}</span>
+                  {cat.enabled === false && <Badge variant="destructive" className="text-xs">Disabled</Badge>}
+                </div>
+                <div className="flex-1 text-xs text-muted-foreground">
+                  {set.length === 0 ? "No default thresholds" : set.map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                </div>
+                <Button size="icon" variant="ghost" onClick={() => setEditingCat({ ...cat, default_qualification_config: cat.default_qualification_config ?? { thresholds: {}, gates: {} } })}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => confirm(`Delete category "${cat.name}"?`) && delCatM.mutate(cat.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
+        {(categoryList as any[]).length === 0 && <div className="text-xs text-muted-foreground">No categories yet.</div>}
+      </div>
+      <CategoryEditorDialog value={editingCat} onChange={setEditingCat} />
+    </div>
+  );
+}
 
 function AdminCompetitions() {
   const listAdmin = useServerFn(adminListAllCompetitions);
