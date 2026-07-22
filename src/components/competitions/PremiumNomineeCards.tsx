@@ -4,8 +4,9 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
   Crown, Trophy, BadgeCheck, Pin, Sparkles, Users, MessageCircle,
-  Globe, Twitter, Instagram, Youtube, Facebook, Linkedin, ExternalLink,
+  Globe, Twitter, Instagram, Youtube, Facebook, Linkedin, ExternalLink, Laugh,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { voteForCompetitor } from "@/lib/competitions.functions";
