@@ -23,6 +23,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as InstallerRouteImport } from './routes/installer'
 import { Route as HeropageRouteImport } from './routes/heropage'
+import { Route as HallOfFameRouteImport } from './routes/hall-of-fame'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as GamificationRouteImport } from './routes/gamification'
 import { Route as GamesRouteImport } from './routes/games'
@@ -262,6 +263,11 @@ const InstallerRoute = InstallerRouteImport.update({
 const HeropageRoute = HeropageRouteImport.update({
   id: '/heropage',
   path: '/heropage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HallOfFameRoute = HallOfFameRouteImport.update({
+  id: '/hall-of-fame',
+  path: '/hall-of-fame',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GroupsRoute = GroupsRouteImport.update({
@@ -1152,6 +1158,7 @@ export interface FileRoutesByFullPath {
   '/games': typeof GamesRouteWithChildren
   '/gamification': typeof GamificationRoute
   '/groups': typeof GroupsRoute
+  '/hall-of-fame': typeof HallOfFameRoute
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -1335,6 +1342,7 @@ export interface FileRoutesByTo {
   '/games': typeof GamesRouteWithChildren
   '/gamification': typeof GamificationRoute
   '/groups': typeof GroupsRoute
+  '/hall-of-fame': typeof HallOfFameRoute
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -1521,6 +1529,7 @@ export interface FileRoutesById {
   '/games': typeof GamesRouteWithChildren
   '/gamification': typeof GamificationRoute
   '/groups': typeof GroupsRoute
+  '/hall-of-fame': typeof HallOfFameRoute
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -1709,6 +1718,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/gamification'
     | '/groups'
+    | '/hall-of-fame'
     | '/heropage'
     | '/installer'
     | '/leaderboard'
@@ -1892,6 +1902,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/gamification'
     | '/groups'
+    | '/hall-of-fame'
     | '/heropage'
     | '/installer'
     | '/leaderboard'
@@ -2077,6 +2088,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/gamification'
     | '/groups'
+    | '/hall-of-fame'
     | '/heropage'
     | '/installer'
     | '/leaderboard'
@@ -2264,6 +2276,7 @@ export interface RootRouteChildren {
   GamesRoute: typeof GamesRouteWithChildren
   GamificationRoute: typeof GamificationRoute
   GroupsRoute: typeof GroupsRoute
+  HallOfFameRoute: typeof HallOfFameRoute
   HeropageRoute: typeof HeropageRoute
   InstallerRoute: typeof InstallerRoute
   LeaderboardRoute: typeof LeaderboardRoute
@@ -2420,6 +2433,13 @@ declare module '@tanstack/react-router' {
       path: '/heropage'
       fullPath: '/heropage'
       preLoaderRoute: typeof HeropageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hall-of-fame': {
+      id: '/hall-of-fame'
+      path: '/hall-of-fame'
+      fullPath: '/hall-of-fame'
+      preLoaderRoute: typeof HallOfFameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/groups': {
@@ -3926,6 +3946,7 @@ const rootRouteChildren: RootRouteChildren = {
   GamesRoute: GamesRouteWithChildren,
   GamificationRoute: GamificationRoute,
   GroupsRoute: GroupsRoute,
+  HallOfFameRoute: HallOfFameRoute,
   HeropageRoute: HeropageRoute,
   InstallerRoute: InstallerRoute,
   LeaderboardRoute: LeaderboardRoute,
