@@ -382,6 +382,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
         </div>
       )}
 
+      {mode === "poll" && (
         <div className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 p-3">
           <input
             value={pollQuestion}
