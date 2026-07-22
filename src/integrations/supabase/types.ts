@@ -1381,9 +1381,14 @@ export type Database = {
           is_pinned: boolean
           linked_user_id: string | null
           name: string
+          origin: string
           photo_url: string | null
+          poem_id: string | null
+          post_id: string | null
+          qualification_reason: Json | null
           social_links: Json
           sort_order: number
+          status: string
           updated_at: string
           vote_count: number
           website: string | null
@@ -1401,9 +1406,14 @@ export type Database = {
           is_pinned?: boolean
           linked_user_id?: string | null
           name: string
+          origin?: string
           photo_url?: string | null
+          poem_id?: string | null
+          post_id?: string | null
+          qualification_reason?: Json | null
           social_links?: Json
           sort_order?: number
+          status?: string
           updated_at?: string
           vote_count?: number
           website?: string | null
@@ -1421,9 +1431,14 @@ export type Database = {
           is_pinned?: boolean
           linked_user_id?: string | null
           name?: string
+          origin?: string
           photo_url?: string | null
+          poem_id?: string | null
+          post_id?: string | null
+          qualification_reason?: Json | null
           social_links?: Json
           sort_order?: number
+          status?: string
           updated_at?: string
           vote_count?: number
           website?: string | null
@@ -1448,6 +1463,27 @@ export type Database = {
             columns: ["linked_user_id"]
             isOneToOne: false
             referencedRelation: "profiles_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_competitors_poem_id_fkey"
+            columns: ["poem_id"]
+            isOneToOne: false
+            referencedRelation: "mehfil_poems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_competitors_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_competitors_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1526,6 +1562,88 @@ export type Database = {
           },
         ]
       }
+      competition_qualification_events: {
+        Row: {
+          content_id: string
+          content_type: string
+          enqueued_at: string
+          id: number
+          processed_at: string | null
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          enqueued_at?: string
+          id?: number
+          processed_at?: string | null
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          enqueued_at?: string
+          id?: number
+          processed_at?: string | null
+        }
+        Relationships: []
+      }
+      competition_qualification_log: {
+        Row: {
+          competition_id: string
+          content_id: string
+          content_type: string
+          id: string
+          method: string | null
+          qualified_at: string
+          score: number
+          snapshot: Json
+          user_id: string | null
+        }
+        Insert: {
+          competition_id: string
+          content_id: string
+          content_type: string
+          id?: string
+          method?: string | null
+          qualified_at?: string
+          score?: number
+          snapshot?: Json
+          user_id?: string | null
+        }
+        Update: {
+          competition_id?: string
+          content_id?: string
+          content_type?: string
+          id?: string
+          method?: string | null
+          qualified_at?: string
+          score?: number
+          snapshot?: Json
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_qualification_log_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_qualification_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_qualification_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competition_votes: {
         Row: {
           competition_id: string
@@ -1572,6 +1690,7 @@ export type Database = {
           allow_multiple_votes: boolean
           allow_vote_change: boolean
           announce_channels: string[]
+          auto_approve: boolean
           auto_close_voting: boolean
           auto_enroll_rules: Json
           banner_url: string | null
@@ -1586,6 +1705,7 @@ export type Database = {
           enable_sharing: boolean
           enable_voting: boolean
           end_at: string
+          entry_mode: string
           hide_results_until_end: boolean
           id: string
           is_featured: boolean
@@ -1598,6 +1718,8 @@ export type Database = {
           mehfil_category_id: string | null
           mehfil_theme: string | null
           name: string
+          qualification_config: Json
+          qualification_method: string | null
           report_count: number
           require_approval: boolean
           rewards: Json
@@ -1619,6 +1741,7 @@ export type Database = {
           allow_multiple_votes?: boolean
           allow_vote_change?: boolean
           announce_channels?: string[]
+          auto_approve?: boolean
           auto_close_voting?: boolean
           auto_enroll_rules?: Json
           banner_url?: string | null
@@ -1633,6 +1756,7 @@ export type Database = {
           enable_sharing?: boolean
           enable_voting?: boolean
           end_at: string
+          entry_mode?: string
           hide_results_until_end?: boolean
           id?: string
           is_featured?: boolean
@@ -1645,6 +1769,8 @@ export type Database = {
           mehfil_category_id?: string | null
           mehfil_theme?: string | null
           name: string
+          qualification_config?: Json
+          qualification_method?: string | null
           report_count?: number
           require_approval?: boolean
           rewards?: Json
@@ -1666,6 +1792,7 @@ export type Database = {
           allow_multiple_votes?: boolean
           allow_vote_change?: boolean
           announce_channels?: string[]
+          auto_approve?: boolean
           auto_close_voting?: boolean
           auto_enroll_rules?: Json
           banner_url?: string | null
@@ -1680,6 +1807,7 @@ export type Database = {
           enable_sharing?: boolean
           enable_voting?: boolean
           end_at?: string
+          entry_mode?: string
           hide_results_until_end?: boolean
           id?: string
           is_featured?: boolean
@@ -1692,6 +1820,8 @@ export type Database = {
           mehfil_category_id?: string | null
           mehfil_theme?: string | null
           name?: string
+          qualification_config?: Json
+          qualification_method?: string | null
           report_count?: number
           require_approval?: boolean
           rewards?: Json
@@ -3786,6 +3916,7 @@ export type Database = {
           competition_id: string | null
           cover_url: string | null
           created_at: string
+          eligible_for_competitions: boolean
           id: string
           is_editors_pick: boolean
           is_featured: boolean
@@ -3815,6 +3946,7 @@ export type Database = {
           competition_id?: string | null
           cover_url?: string | null
           created_at?: string
+          eligible_for_competitions?: boolean
           id?: string
           is_editors_pick?: boolean
           is_featured?: boolean
@@ -3844,6 +3976,7 @@ export type Database = {
           competition_id?: string | null
           cover_url?: string | null
           created_at?: string
+          eligible_for_competitions?: boolean
           id?: string
           is_editors_pick?: boolean
           is_featured?: boolean
@@ -4316,6 +4449,7 @@ export type Database = {
           community_id: string | null
           competition_id: string | null
           created_at: string
+          eligible_for_competitions: boolean
           hashtags: string[]
           id: string
           is_anonymous: boolean
@@ -4338,6 +4472,7 @@ export type Database = {
           community_id?: string | null
           competition_id?: string | null
           created_at?: string
+          eligible_for_competitions?: boolean
           hashtags?: string[]
           id?: string
           is_anonymous?: boolean
@@ -4360,6 +4495,7 @@ export type Database = {
           community_id?: string | null
           competition_id?: string | null
           created_at?: string
+          eligible_for_competitions?: boolean
           hashtags?: string[]
           id?: string
           is_anonymous?: boolean
@@ -6782,6 +6918,14 @@ export type Database = {
           _window_seconds?: number
         }
         Returns: boolean
+      }
+      engagement_score: {
+        Args: { _id: string; _type: string; _weights: Json }
+        Returns: number
+      }
+      enqueue_qualification_event: {
+        Args: { _id: string; _type: string }
+        Returns: undefined
       }
       feedbot_dispatch_run: { Args: never; Returns: undefined }
       feedbot_enqueue: {
