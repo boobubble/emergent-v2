@@ -654,4 +654,10 @@ function CompetitionDetail() {
   );
 }
 
+function TrendingMemesSlot({ competitionId, competitionSlug }: { competitionId: string; competitionSlug: string }) {
+  const { modules } = useAppSettings();
+  if (!modules.competitionMemes || !modules.trendingMemeSection) return null;
+  return <CompetitionMemesCarousel competitionId={competitionId} competitionSlug={competitionSlug} />;
+}
+
 
