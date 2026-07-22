@@ -16,6 +16,9 @@ export interface ModulesFlags {
   streaks: boolean;
   referrals: boolean;
   notifications: boolean;
+  competitionMemes: boolean;
+  nomineeMemeTagging: boolean;
+  trendingMemeSection: boolean;
 }
 
 interface AppSettings {
