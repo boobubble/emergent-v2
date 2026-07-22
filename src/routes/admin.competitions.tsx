@@ -6,7 +6,7 @@ import { Plus, Trash2, Edit, Trophy, Users, Vote, Award, Pin, Star } from "lucid
 import { toast } from "sonner";
 import {
   listCompetitions, listCategories, adminSaveCompetition, adminDeleteCompetition,
-  adminFinalizeWinners, adminListAllCompetitions,
+  adminFinalizeWinners, adminListAllCompetitions, adminBulkSetEntryMode,
 } from "@/lib/competitions.functions";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
