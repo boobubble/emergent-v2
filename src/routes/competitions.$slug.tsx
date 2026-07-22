@@ -37,6 +37,8 @@ import { PremiumNomineeCards } from "@/components/competitions/PremiumNomineeCar
 import { StickyMobileVoteBar } from "@/components/competitions/StickyMobileVoteBar";
 import { PremiumEmptyState } from "@/components/competitions/PremiumEmptyState";
 import { PoetryBattleEntries } from "@/components/mehfil/PoetryBattleEntries";
+import { CompetitionMemesCarousel } from "@/components/competitions/CompetitionMemesCarousel";
+import { useAppSettings } from "@/lib/app-settings";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
