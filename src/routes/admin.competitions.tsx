@@ -257,6 +257,8 @@ function AdminCompetitions() {
         competitionId={managing}
         onClose={() => setManaging(null)}
       />
+
+      <CategoryEditorDialog value={editingCat} onChange={setEditingCat} />
     </div>
   );
 }
