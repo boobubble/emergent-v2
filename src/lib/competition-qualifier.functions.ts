@@ -158,6 +158,10 @@ async function qualifyCompetition(admin: any, comp: any) {
     const { data: cat } = await admin.from("competition_categories")
       .select("default_qualification_config").eq("id", comp.category_id).maybeSingle();
     catCfg = (cat?.default_qualification_config ?? null) as QualConfig | null;
+  } else if (comp.mehfil_category_id) {
+    const { data: cat } = await admin.from("mehfil_categories")
+      .select("default_qualification_config").eq("id", comp.mehfil_category_id).maybeSingle();
+    catCfg = (cat?.default_qualification_config ?? null) as QualConfig | null;
   }
   const cfg = mergeCategoryDefaults((comp.qualification_config ?? {}) as QualConfig, catCfg);
   const method = cfg.method ?? (comp.qualification_method as any);
