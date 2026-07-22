@@ -59,18 +59,22 @@ function countryFlag(code?: string | null) {
 
 export function PremiumNomineeCards({
   competitionId,
+  competitionSlug,
   competitors,
   myVote,
   canVote,
   hideCounts,
   invalidateKey,
+  memeCounts,
 }: {
   competitionId: string;
+  competitionSlug?: string;
   competitors: Competitor[];
   myVote: string | null;
   canVote: boolean;
   hideCounts?: boolean;
   invalidateKey: (string | number)[];
+  memeCounts?: Record<string, number>;
 }) {
   const vote = useServerFn(voteForCompetitor);
   const qc = useQueryClient();
