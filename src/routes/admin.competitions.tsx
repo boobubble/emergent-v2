@@ -35,10 +35,23 @@ function AdminCompetitions() {
       try { return await listAdmin({}); } catch { return await listPublic({}); }
     },
   });
-  useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
+  const { data: categoryList = [] } = useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
 
   const [editing, setEditing] = useState<any | null>(null);
   const [managing, setManaging] = useState<string | null>(null);
+  const [bulkCategory, setBulkCategory] = useState<string>("all");
+  const [bulkOnlyManual, setBulkOnlyManual] = useState<boolean>(true);
+
+  const bulkM = useMutation({
+    mutationFn: () => bulkMode({ data: {
+      entry_mode: "hybrid",
+      qualification_method: "top_n_week",
+      category_id: bulkCategory === "all" ? null : bulkCategory,
+      only_manual: bulkOnlyManual,
+    } }),
+    onSuccess: (r: any) => { toast.success(`Set ${r?.updated ?? 0} competition(s) to Hybrid`); qc.invalidateQueries({ queryKey: ["competitions"] }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
 
   const stats = useMemo(() => {
     const arr = data as any[];
