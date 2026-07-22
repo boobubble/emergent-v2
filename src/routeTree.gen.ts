@@ -161,6 +161,7 @@ import { Route as AdminAbuseProtectionRouteImport } from './routes/admin.abuse-p
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
 import { Route as PoetryCategorySlugRouteImport } from './routes/poetry.category.$slug'
 import { Route as MehfilCategorySlugRouteImport } from './routes/mehfil.category.$slug'
+import { Route as CompetitionsSlugRecapRouteImport } from './routes/competitions.$slug.recap'
 import { Route as CompetitionsSlugMemesRouteImport } from './routes/competitions.$slug.memes'
 import { Route as CommunitySlugMembersRouteImport } from './routes/community.$slug.members'
 import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
@@ -957,6 +958,11 @@ const MehfilCategorySlugRoute = MehfilCategorySlugRouteImport.update({
   path: '/mehfil/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompetitionsSlugRecapRoute = CompetitionsSlugRecapRouteImport.update({
+  id: '/recap',
+  path: '/recap',
+  getParentRoute: () => CompetitionsSlugRoute,
+} as any)
 const CompetitionsSlugMemesRoute = CompetitionsSlugMemesRouteImport.update({
   id: '/memes',
   path: '/memes',
@@ -1293,6 +1299,7 @@ export interface FileRoutesByFullPath {
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
   '/competitions/$slug/memes': typeof CompetitionsSlugMemesRoute
+  '/competitions/$slug/recap': typeof CompetitionsSlugRecapRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
@@ -1474,6 +1481,7 @@ export interface FileRoutesByTo {
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
   '/competitions/$slug/memes': typeof CompetitionsSlugMemesRoute
+  '/competitions/$slug/recap': typeof CompetitionsSlugRecapRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug': typeof CommunitySlugIndexRoute
@@ -1660,6 +1668,7 @@ export interface FileRoutesById {
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
   '/competitions/$slug/memes': typeof CompetitionsSlugMemesRoute
+  '/competitions/$slug/recap': typeof CompetitionsSlugRecapRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
@@ -1847,6 +1856,7 @@ export interface FileRouteTypes {
     | '/community/$slug/feed'
     | '/community/$slug/members'
     | '/competitions/$slug/memes'
+    | '/competitions/$slug/recap'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug/'
@@ -2028,6 +2038,7 @@ export interface FileRouteTypes {
     | '/community/$slug/feed'
     | '/community/$slug/members'
     | '/competitions/$slug/memes'
+    | '/competitions/$slug/recap'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug'
@@ -2213,6 +2224,7 @@ export interface FileRouteTypes {
     | '/community/$slug/feed'
     | '/community/$slug/members'
     | '/competitions/$slug/memes'
+    | '/competitions/$slug/recap'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug/'
@@ -3376,6 +3388,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MehfilCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/competitions/$slug/recap': {
+      id: '/competitions/$slug/recap'
+      path: '/recap'
+      fullPath: '/competitions/$slug/recap'
+      preLoaderRoute: typeof CompetitionsSlugRecapRouteImport
+      parentRoute: typeof CompetitionsSlugRoute
+    }
     '/competitions/$slug/memes': {
       id: '/competitions/$slug/memes'
       path: '/memes'
@@ -3844,11 +3863,13 @@ const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
 
 interface CompetitionsSlugRouteChildren {
   CompetitionsSlugMemesRoute: typeof CompetitionsSlugMemesRoute
+  CompetitionsSlugRecapRoute: typeof CompetitionsSlugRecapRoute
   CompetitionsSlugFunTypeRoute: typeof CompetitionsSlugFunTypeRoute
 }
 
 const CompetitionsSlugRouteChildren: CompetitionsSlugRouteChildren = {
   CompetitionsSlugMemesRoute: CompetitionsSlugMemesRoute,
+  CompetitionsSlugRecapRoute: CompetitionsSlugRecapRoute,
   CompetitionsSlugFunTypeRoute: CompetitionsSlugFunTypeRoute,
 }
 
