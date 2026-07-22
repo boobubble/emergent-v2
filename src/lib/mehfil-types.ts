@@ -64,6 +64,7 @@ export interface MehfilCategory {
   color: string | null;
   sort_order: number;
   is_active: boolean;
+  default_qualification_config?: Record<string, any> | null;
 }
 
 export interface MehfilPoem {

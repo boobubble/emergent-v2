@@ -133,6 +133,43 @@ function CategoriesTab() {
           <input type="number" value={draft.sort_order ?? 0} onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })} placeholder="Order" className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm" />
         </div>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.is_active ?? true} onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })} /> Active</label>
+
+        <div className="pt-3 mt-3 border-t border-border/40 space-y-2">
+          <div>
+            <div className="text-sm font-semibold">Default Minimum Engagement</div>
+            <div className="text-[11px] text-muted-foreground">Applied to all Hybrid/Smart Poetry Battles in this category. Battle-level settings override these.</div>
+          </div>
+          {(() => {
+            const cfg: any = draft.default_qualification_config ?? {};
+            const th: any = cfg.thresholds ?? {};
+            const setTh = (k: string, v: number) => {
+              const nextTh = { ...th };
+              if (v > 0) nextTh[k] = v; else delete nextTh[k];
+              setDraft({ ...draft, default_qualification_config: { ...cfg, thresholds: nextTh } });
+            };
+            const fields: [string, string][] = [
+              ["min_upvotes", "Min upvotes"],
+              ["min_comments", "Min comments"],
+              ["min_shares", "Min shares"],
+              ["min_views", "Min views"],
+              ["min_reads", "Min reads"],
+              ["min_bookmarks", "Min bookmarks"],
+            ];
+            return (
+              <div className="grid grid-cols-2 gap-2">
+                {fields.map(([k, label]) => (
+                  <label key={k} className="text-[11px] text-muted-foreground">
+                    {label}
+                    <input type="number" min={0} value={th[k] ?? 0}
+                      onChange={(e) => setTh(k, Number(e.target.value))}
+                      className="mt-1 w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground" />
+                  </label>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+
         <button
           onClick={() => { if (!draft.name || !draft.slug) return toast.error("Name + slug required"); s.mutate(draft); setDraft({ name: "", slug: "", color: "#8b5cf6", is_active: true, sort_order: 0 }); }}
           disabled={s.isPending}
