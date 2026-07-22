@@ -147,7 +147,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
     } else if (mode === "confession") {
       if (!text.trim()) { setError("Write your confession first."); return; }
     } else if (mode === "meme") {
-      if (!text.trim() && !files.length) { setError("Add a caption or an image for your meme."); return; }
+      if (!text.trim() && !files.length) { setError(`Add a caption or an image for your ${FUN_META[funCategory].label.toLowerCase()}.`); return; }
     } else {
       if (!text.trim() && !files.length) return;
     }
