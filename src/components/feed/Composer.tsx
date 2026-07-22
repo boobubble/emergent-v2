@@ -301,7 +301,87 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
         )}
       </div>
 
-      {mode === "poll" && (
+      {mode === "meme" && (
+        <div className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-amber-500">
+            <Trophy className="h-3 w-3" /> Related competition <span className="font-normal normal-case text-muted-foreground">(optional)</span>
+          </div>
+          {memeCompetition ? (
+            <div className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-background/60 px-3 py-2 text-sm">
+              <div className="min-w-0">
+                <div className="truncate font-semibold">{memeCompetition.name}</div>
+                <div className="text-[11px] uppercase text-muted-foreground">{memeCompetition.status}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setMemeCompetition(null); setMemeNomineeId(null); }}
+                className="rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                aria-label="Clear competition"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 py-2">
+                <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                <input
+                  value={memeCompQuery}
+                  onChange={(e) => setMemeCompQuery(e.target.value)}
+                  placeholder="Search active competitions…"
+                  className="flex-1 bg-transparent text-sm focus:outline-none"
+                />
+              </div>
+              {memeCompResults.length > 0 && (
+                <div className="max-h-40 overflow-y-auto rounded-xl border border-border bg-background/60">
+                  {memeCompResults.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => { setMemeCompetition(c); setMemeCompQuery(""); setMemeCompResults([]); }}
+                      className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
+                    >
+                      <span className="truncate font-medium">{c.name}</span>
+                      <span className="text-[10px] uppercase text-muted-foreground">{c.status}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground">
+                Leave empty to post as a normal Feed meme.
+              </p>
+            </div>
+          )}
+
+          {memeCompetition && modules.nomineeMemeTagging && memeNominees.length > 0 && (
+            <div>
+              <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-500">
+                Supported nominee <span className="font-normal normal-case text-muted-foreground">(optional)</span>
+              </div>
+              <div className="flex max-h-32 flex-wrap gap-1.5 overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={() => setMemeNomineeId(null)}
+                  className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${!memeNomineeId ? "border-amber-500 bg-amber-500/15 text-amber-500" : "border-border text-muted-foreground hover:text-foreground"}`}
+                >
+                  None
+                </button>
+                {memeNominees.map((n) => (
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={() => setMemeNomineeId(n.id)}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${memeNomineeId === n.id ? "border-amber-500 bg-amber-500/15 text-amber-500" : "border-border text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {n.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
         <div className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 p-3">
           <input
             value={pollQuestion}
