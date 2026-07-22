@@ -181,6 +181,7 @@ import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
 import { Route as ApiGamesAchievementRouteImport } from './routes/api/games.achievement'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 import { Route as CommunitySlugChatroomsIndexRouteImport } from './routes/community.$slug.chatrooms.index'
+import { Route as CompetitionsSlugFunTypeRouteImport } from './routes/competitions.$slug.fun.$type'
 import { Route as CommunitySlugChatroomsRoomSlugRouteImport } from './routes/community.$slug.chatrooms.$roomSlug'
 import { Route as ApiPublicLicenseVerifyRouteImport } from './routes/api/public/license/verify'
 import { Route as ApiPublicLicenseResetRouteImport } from './routes/api/public/license/reset'
@@ -1060,6 +1061,11 @@ const CommunitySlugChatroomsIndexRoute =
     path: '/chatrooms/',
     getParentRoute: () => CommunitySlugRoute,
   } as any)
+const CompetitionsSlugFunTypeRoute = CompetitionsSlugFunTypeRouteImport.update({
+  id: '/fun/$type',
+  path: '/fun/$type',
+  getParentRoute: () => CompetitionsSlugRoute,
+} as any)
 const CommunitySlugChatroomsRoomSlugRoute =
   CommunitySlugChatroomsRoomSlugRouteImport.update({
     id: '/chatrooms/$roomSlug',
@@ -1299,6 +1305,7 @@ export interface FileRoutesByFullPath {
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
   '/community/$slug/chatrooms/$roomSlug': typeof CommunitySlugChatroomsRoomSlugRoute
+  '/competitions/$slug/fun/$type': typeof CompetitionsSlugFunTypeRoute
   '/community/$slug/chatrooms/': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
@@ -1479,6 +1486,7 @@ export interface FileRoutesByTo {
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
   '/community/$slug/chatrooms/$roomSlug': typeof CommunitySlugChatroomsRoomSlugRoute
+  '/competitions/$slug/fun/$type': typeof CompetitionsSlugFunTypeRoute
   '/community/$slug/chatrooms': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
@@ -1664,6 +1672,7 @@ export interface FileRoutesById {
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
   '/community/$slug/chatrooms/$roomSlug': typeof CommunitySlugChatroomsRoomSlugRoute
+  '/competitions/$slug/fun/$type': typeof CompetitionsSlugFunTypeRoute
   '/community/$slug/chatrooms/': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
@@ -1850,6 +1859,7 @@ export interface FileRouteTypes {
     | '/api/public/license/reset'
     | '/api/public/license/verify'
     | '/community/$slug/chatrooms/$roomSlug'
+    | '/competitions/$slug/fun/$type'
     | '/community/$slug/chatrooms/'
     | '/api/public/og/competition/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -2030,6 +2040,7 @@ export interface FileRouteTypes {
     | '/api/public/license/reset'
     | '/api/public/license/verify'
     | '/community/$slug/chatrooms/$roomSlug'
+    | '/competitions/$slug/fun/$type'
     | '/community/$slug/chatrooms'
     | '/api/public/og/competition/$slug'
   id:
@@ -2214,6 +2225,7 @@ export interface FileRouteTypes {
     | '/api/public/license/reset'
     | '/api/public/license/verify'
     | '/community/$slug/chatrooms/$roomSlug'
+    | '/competitions/$slug/fun/$type'
     | '/community/$slug/chatrooms/'
     | '/api/public/og/competition/$slug'
   fileRoutesById: FileRoutesById
@@ -3504,6 +3516,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunitySlugChatroomsIndexRouteImport
       parentRoute: typeof CommunitySlugRoute
     }
+    '/competitions/$slug/fun/$type': {
+      id: '/competitions/$slug/fun/$type'
+      path: '/fun/$type'
+      fullPath: '/competitions/$slug/fun/$type'
+      preLoaderRoute: typeof CompetitionsSlugFunTypeRouteImport
+      parentRoute: typeof CompetitionsSlugRoute
+    }
     '/community/$slug/chatrooms/$roomSlug': {
       id: '/community/$slug/chatrooms/$roomSlug'
       path: '/chatrooms/$roomSlug'
@@ -3825,10 +3844,12 @@ const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
 
 interface CompetitionsSlugRouteChildren {
   CompetitionsSlugMemesRoute: typeof CompetitionsSlugMemesRoute
+  CompetitionsSlugFunTypeRoute: typeof CompetitionsSlugFunTypeRoute
 }
 
 const CompetitionsSlugRouteChildren: CompetitionsSlugRouteChildren = {
   CompetitionsSlugMemesRoute: CompetitionsSlugMemesRoute,
+  CompetitionsSlugFunTypeRoute: CompetitionsSlugFunTypeRoute,
 }
 
 const CompetitionsSlugRouteWithChildren =
