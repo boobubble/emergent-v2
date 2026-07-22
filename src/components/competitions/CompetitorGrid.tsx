@@ -30,6 +30,9 @@ export interface Competitor {
   website?: string | null;
   social_links?: Record<string, string | null | undefined> | null;
   linked_profile?: { username?: string | null; avatar_url?: string | null; avatar_color?: string | null } | null;
+  origin?: "manual" | "auto" | null;
+  status?: "active" | "pending_approval" | "rejected" | null;
+  qualification_reason?: Record<string, any> | null;
 }
 
 
