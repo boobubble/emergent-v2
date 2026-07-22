@@ -503,6 +503,7 @@ function CompetitionDetail() {
         )}
 
         <TrendingMemesSlot competitionId={c.id} competitionSlug={c.slug} />
+        <FunZone competitionId={c.id} competitionSlug={c.slug} />
 
 
 
