@@ -37,4 +37,7 @@ export const MODULE_REGISTRY: ModuleDef[] = [
   { key: "funZoneFanEdits",     label: "Fun Zone · Fan Edits",  description: "Show the 🎥 Fan Edits card inside the Fun Zone.",                 icon: Film,    group: "engagement" },
   { key: "battleRecap",         label: "Battle Recap",          description: "Enable the premium recap page for completed competitions.",       icon: ScrollText, group: "engagement" },
   { key: "autoAwards",          label: "Auto Fun Zone Awards",  description: "Auto-select Meme / Fan Art / Poster winner on competition finish.", icon: Sparkle, group: "engagement" },
+  { key: "smartQualification",         label: "Smart Auto Qualification",  description: "Master switch for competition Smart / Hybrid auto-qualification.",           icon: Zap,         group: "engagement" },
+  { key: "smartQualificationApproval", label: "Qualification Approval",    description: "Route auto-qualified competitors through admin approval before appearing.",  icon: ShieldCheck, group: "engagement" },
+  { key: "smartQualificationLive",     label: "Live Qualification Updates",description: "Update competitor list in realtime when engagement changes.",                icon: Radio,       group: "engagement" },
 ];
