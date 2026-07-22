@@ -3,6 +3,7 @@ import {
   MessageSquare, Gamepad2, Wallet, ImageIcon, Sparkles, Award,
   Smile, Mic, Bell, Flame, UserPlus, Heart, Laugh, Trophy, Tag,
   Palette, Camera, Film, PartyPopper, Sparkle, ScrollText,
+  Zap, ShieldCheck, Radio,
 } from "lucide-react";
 
 export interface ModuleDef {
