@@ -715,6 +715,31 @@ export const adminDeleteCompetition = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminBulkSetEntryMode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
+  .inputValidator((data: {
+    entry_mode: "manual" | "smart" | "hybrid";
+    qualification_method?: "fixed" | "top_n_week" | "top_n_month" | "top_percent" | "approval" | null;
+    category_id?: string | null;
+    only_manual?: boolean;
+  }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const patch: Record<string, unknown> = { entry_mode: data.entry_mode };
+    if (data.entry_mode === "manual") {
+      patch.qualification_method = null;
+    } else if (data.qualification_method !== undefined) {
+      patch.qualification_method = data.qualification_method ?? "top_n_week";
+    }
+    let q = context.supabase.from("competitions").update(patch);
+    if (data.category_id) q = q.eq("category_id", data.category_id);
+    if (data.only_manual) q = q.eq("entry_mode", "manual");
+    const { error, count } = await q.select("id", { count: "exact", head: true });
+    if (error) throw new Error(error.message);
+    return { ok: true, updated: count ?? 0 };
+  });
+
+
 export const adminSetParticipantStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, withRateLimit("competition.write")])
   .inputValidator((data: { participantId: string; status: "pending" | "approved" | "removed" | "disqualified" }) => data)
