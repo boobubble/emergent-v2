@@ -218,6 +218,18 @@ export function PremiumNomineeCards({
                 </div>
               )}
 
+              {competitionSlug && memeCounts && (memeCounts[c.id] ?? 0) > 0 && (
+                <Link
+                  to="/competitions/$slug/memes"
+                  params={{ slug: competitionSlug }}
+                  search={{ nominee: c.id } as any}
+                  className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-300 hover:bg-amber-500/25"
+                >
+                  <Laugh className="h-3 w-3" /> 😂 Memes ({memeCounts[c.id]})
+                </Link>
+              )}
+
+
               {/* Social + profile */}
               {(socialEntries.length > 0 || profileUrl || c.website) && (
                 <div className="flex flex-wrap items-center gap-1.5">
