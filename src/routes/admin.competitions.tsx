@@ -26,6 +26,7 @@ function AdminCompetitions() {
   const save = useServerFn(adminSaveCompetition);
   const del = useServerFn(adminDeleteCompetition);
   const finalize = useServerFn(adminFinalizeWinners);
+  const bulkMode = useServerFn(adminBulkSetEntryMode);
   const qc = useQueryClient();
 
   const { data = [] } = useQuery({
