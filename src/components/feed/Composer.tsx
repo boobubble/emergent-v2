@@ -89,6 +89,26 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
     };
   }, [focused]);
 
+  // Competition typeahead (Meme mode).
+  useEffect(() => {
+    if (mode !== "meme") return;
+    let alive = true;
+    const t = setTimeout(async () => {
+      const rows = await searchActiveCompetitions(memeCompQuery);
+      if (alive) setMemeCompResults(rows);
+    }, 200);
+    return () => { alive = false; clearTimeout(t); };
+  }, [mode, memeCompQuery]);
+
+  // Load nominees when a competition is picked (and tagging is enabled).
+  useEffect(() => {
+    if (!memeCompetition || !modules.nomineeMemeTagging) { setMemeNominees([]); setMemeNomineeId(null); return; }
+    let alive = true;
+    listCompetitionNominees(memeCompetition.id).then((n) => { if (alive) setMemeNominees(n); });
+    return () => { alive = false; };
+  }, [memeCompetition, modules.nomineeMemeTagging]);
+
+
   function openFocus() {
     if (!focusConfig.enabled) return;
     setFocused(true);
