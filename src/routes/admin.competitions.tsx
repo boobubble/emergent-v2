@@ -16,8 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { CompetitionEditorDialog, emptyCompetition } from "@/components/competitions/CompetitionEditorDialog";
 import { CategoryEditorDialog, emptyCategory } from "@/components/competitions/CategoryEditorDialog";
 import { AdminCompetitionManageDialog } from "@/components/competitions/AdminCompetitionManageDialog";
-import { CompetitionAnalyticsPanel } from "./admin.competition-analytics";
-import { CompetitionsFeedPanel } from "./admin.competitions-feed";
+import { CompetitionAnalyticsPanel } from "@/components/admin/CompetitionAnalyticsPanel";
+import { CompetitionsFeedPanel } from "@/components/admin/CompetitionsFeedPanel";
 
 export const Route = createFileRoute("/admin/competitions")({
   component: AdminCompetitionsPage,
