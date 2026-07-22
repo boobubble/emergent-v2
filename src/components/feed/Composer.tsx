@@ -280,7 +280,9 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
               ? "Share something honest — posted anonymously to the confessions board…"
               : mode === "poll"
                 ? "Optional context for your poll…"
-                : "What's on your mind? Use #hashtags and @mentions…"
+                : mode === "meme"
+                  ? "Add a caption for your meme… 😂"
+                  : "What's on your mind? Use #hashtags and @mentions…"
           }
           className="w-full resize-none rounded-2xl border border-transparent bg-transparent px-1 py-2 text-[15px] leading-relaxed placeholder:text-muted-foreground focus:outline-none"
         />
