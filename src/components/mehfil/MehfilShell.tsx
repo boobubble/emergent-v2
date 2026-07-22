@@ -33,7 +33,7 @@ export function MehfilShell({ children, showBack = false }: { children: ReactNod
             <Link to="/poetry/leaderboard" activeProps={{ className: "bg-primary/10 text-primary" }} className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 hover:bg-muted">
               <Trophy className="h-3.5 w-3.5" /> Leaderboard
             </Link>
-            <Link to="/poetry/hall-of-fame" activeProps={{ className: "bg-primary/10 text-primary" }} className="rounded-md px-3 py-1.5 hover:bg-muted">Hall of Fame</Link>
+            <Link to="/hall-of-fame" search={{ tab: "poetry" }} activeProps={{ className: "bg-primary/10 text-primary" }} className="rounded-md px-3 py-1.5 hover:bg-muted">Hall of Fame</Link>
           </nav>
           <Link
             to="/poetry/compose"

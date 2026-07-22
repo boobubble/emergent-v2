@@ -173,7 +173,7 @@ function CompetitionsIndex() {
             </h1>
             <p className="text-xs text-muted-foreground">Discover, vote, and win across every category.</p>
           </div>
-          <Link to="/competitions/hall-of-fame">
+          <Link to="/hall-of-fame" search={{ tab: "competitions" }}>
             <Button variant="outline" size="sm" className="gap-1">
               <Star className="h-3.5 w-3.5" /> Hall of Fame
             </Button>
