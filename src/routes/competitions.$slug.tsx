@@ -272,6 +272,25 @@ function CompetitionDetail() {
   const c = data.competition as any;
   const participants = data.participants as any[];
   const competitors = (data.competitors ?? []) as Competitor[];
+  const { modules: appModules } = useAppSettings();
+  const [nomineeMemeCounts, setNomineeMemeCounts] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!appModules.competitionMemes || !appModules.nomineeMemeTagging) { setNomineeMemeCounts({}); return; }
+    let alive = true;
+    async function load() {
+      const { countMemesByNominee } = await import("@/lib/competition-memes");
+      const counts = await countMemesByNominee(c.id);
+      if (alive) setNomineeMemeCounts(counts);
+    }
+    load();
+    const ch = supabase
+      .channel(`comp-meme-counts-${c.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "posts", filter: `competition_id=eq.${c.id}` }, () => load())
+      .subscribe();
+    return () => { alive = false; supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c.id, appModules.competitionMemes, appModules.nomineeMemeTagging]);
+
   const awards = (data.awards ?? []) as any[];
   const category = c.category as { name?: string; color?: string | null } | null;
   const iJoined = !!userId && participants.some((p) => p.user_id === userId);
