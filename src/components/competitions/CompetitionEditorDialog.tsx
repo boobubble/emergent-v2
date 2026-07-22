@@ -249,20 +249,29 @@ export function CompetitionEditorDialog({ value, onChange, onSaved, invalidateKe
                       </Select>
                     </div>
                   </div>
-                  {(editing.qualification_method === "fixed" || editing.qualification_method === "approval") && (
+                  <div className="rounded-lg border border-white/5 p-3">
+                    <div className="mb-1 text-xs font-semibold text-muted-foreground">
+                      Minimum engagement to qualify
+                      {editing.qualification_method === "fixed" || editing.qualification_method === "approval"
+                        ? " (required)"
+                        : " (optional — applied as gates on Top N / Top %)"}
+                    </div>
+                    <div className="mb-2 text-[11px] text-muted-foreground/80">
+                      Leave blank to skip. A post must meet ALL set thresholds to qualify.
+                    </div>
                     <div className="grid grid-cols-3 gap-3">
                       {(["likes", "comments", "shares", "views", "reads", "bookmarks"] as const).map((k) => (
                         <div key={k}>
                           <Label className="capitalize text-xs">Min {k}</Label>
                           <Input
-                            type="number" min={0}
+                            type="number" min={0} placeholder="0"
                             value={editing.qualification_config?.thresholds?.[k] ?? ""}
                             onChange={(e) => set({ qualification_config: { ...editing.qualification_config, thresholds: { ...(editing.qualification_config?.thresholds ?? {}), [k]: e.target.value ? Number(e.target.value) : undefined } } })}
                           />
                         </div>
                       ))}
                     </div>
-                  )}
+                  </div>
                   {(editing.qualification_method === "top_n_week" || editing.qualification_method === "top_n_month") && (
                     <div className="max-w-[200px]">
                       <Label>Top N</Label>

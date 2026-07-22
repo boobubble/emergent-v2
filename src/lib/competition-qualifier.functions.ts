@@ -161,7 +161,7 @@ async function qualifyCompetition(admin: any, comp: any) {
       const uid = type === "post" ? r.owner_id : r.author_id;
       const prof = profileMap.get(uid);
       if (!passesGates(r, type, cfg, prof)) return null;
-      if ((method === "fixed" || method === "approval") && !passesThresholds(r, type, cfg)) return null;
+      if (cfg.thresholds && Object.values(cfg.thresholds).some((v) => (v ?? 0) > 0) && !passesThresholds(r, type, cfg)) return null;
       return { row: r, uid, s: score(r, type, cfg.weights) };
     })
     .filter(Boolean) as { row: any; uid: string; s: number }[];
