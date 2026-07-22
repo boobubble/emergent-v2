@@ -1,7 +1,7 @@
 import type { ModulesFlags } from "@/lib/app-settings";
 import {
   MessageSquare, Gamepad2, Wallet, ImageIcon, Sparkles, Award,
-  Smile, Mic, Bell, Flame, UserPlus, Heart,
+  Smile, Mic, Bell, Flame, UserPlus, Heart, Laugh, Trophy, Tag,
 } from "lucide-react";
 
 export interface ModuleDef {
