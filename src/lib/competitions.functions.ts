@@ -731,12 +731,13 @@ export const adminBulkSetEntryMode = createServerFn({ method: "POST" })
     } else if (data.qualification_method !== undefined) {
       patch.qualification_method = data.qualification_method ?? "top_n_week";
     }
-    let q = context.supabase.from("competitions").update(patch);
+    const sb = context.supabase as any;
+    let q = sb.from("competitions").update(patch);
     if (data.category_id) q = q.eq("category_id", data.category_id);
     if (data.only_manual) q = q.eq("entry_mode", "manual");
-    const { error, count } = await q.select("id", { count: "exact", head: true });
+    const { data: rows, error } = await q.select("id");
     if (error) throw new Error(error.message);
-    return { ok: true, updated: count ?? 0 };
+    return { ok: true, updated: Array.isArray(rows) ? rows.length : 0 };
   });
 
 
