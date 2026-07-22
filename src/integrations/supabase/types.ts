@@ -3775,6 +3775,7 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string
+          default_qualification_config: Json
           description: string | null
           icon: string | null
           id: string
@@ -3787,6 +3788,7 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string
+          default_qualification_config?: Json
           description?: string | null
           icon?: string | null
           id?: string
@@ -3799,6 +3801,7 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string
+          default_qualification_config?: Json
           description?: string | null
           icon?: string | null
           id?: string

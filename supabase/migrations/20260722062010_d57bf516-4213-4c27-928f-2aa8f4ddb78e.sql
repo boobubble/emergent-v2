@@ -1,0 +1,1 @@
+ALTER TABLE public.mehfil_categories ADD COLUMN IF NOT EXISTS default_qualification_config jsonb NOT NULL DEFAULT '{}'::jsonb;
