@@ -5,4 +5,4 @@ export const Route = createFileRoute("/admin/competitions-feed")({
   component: CompetitionsFeedPanel,
 });
 
-export { CompetitionsFeedPanel };
+
