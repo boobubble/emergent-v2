@@ -25,4 +25,7 @@ export const MODULE_REGISTRY: ModuleDef[] = [
   { key: "reactions",    label: "Reactions",     description: "Quick reactions on posts & messages.",  icon: Heart,         group: "engagement" },
   { key: "streaks",      label: "Streaks",       description: "Daily login streaks.",                  icon: Flame,         group: "engagement" },
   { key: "referrals",    label: "Referrals",     description: "Invite & reward system.",               icon: UserPlus,      group: "engagement" },
+  { key: "competitionMemes",    label: "Competition Memes",     description: "Let users tag Feed memes with a competition.",           icon: Laugh,   group: "engagement" },
+  { key: "nomineeMemeTagging",  label: "Nominee Meme Tagging",  description: "Show meme counts on nominee cards and allow supporting a nominee.", icon: Tag,     group: "engagement" },
+  { key: "trendingMemeSection", label: "Trending Meme Section", description: "Show the 😂 Trending Battle Memes carousel on competition pages.",  icon: Trophy,  group: "engagement" },
 ];
