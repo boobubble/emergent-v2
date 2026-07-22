@@ -194,6 +194,7 @@ const READ_ONLY_PUBLIC_APP_PREFIXES = [
   "/invite",
   "/trust",
   "/pricing",
+  "/hall-of-fame",
 ];
 
 

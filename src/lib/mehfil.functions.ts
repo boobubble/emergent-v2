@@ -125,6 +125,32 @@ export const listMehfilCategories = createServerFn({ method: "GET" }).handler(as
   return (data ?? []) as MehfilCategory[];
 });
 
+export const getMehfilHallOfFame = createServerFn({ method: "GET" }).handler(async () => {
+  const sb = publicClient();
+  const { data: rows } = await sb
+    .from("mehfil_hall_of_fame")
+    .select("*")
+    .order("awarded_at", { ascending: false })
+    .limit(100);
+  const ids = Array.from(new Set((rows ?? []).map((r: any) => r.user_id)));
+  const poemIds = Array.from(new Set((rows ?? []).map((r: any) => r.poem_id).filter(Boolean)));
+  const [{ data: profiles }, { data: poems }] = await Promise.all([
+    ids.length
+      ? sb.from("profiles").select("id, username, display_name, avatar_url").in("id", ids)
+      : Promise.resolve({ data: [] as any[] }),
+    poemIds.length
+      ? sb.from("mehfil_poems").select("id, slug, title").in("id", poemIds)
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+  const pmap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+  const poemMap = new Map((poems ?? []).map((p: any) => [p.id, p]));
+  return (rows ?? []).map((r: any) => ({
+    ...r,
+    profile: pmap.get(r.user_id) ?? null,
+    poem: poemMap.get(r.poem_id) ?? null,
+  }));
+});
+
 export const getMehfilDiscovery = createServerFn({ method: "GET" }).handler(async () => {
   const sb = publicClient();
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
