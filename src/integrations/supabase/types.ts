@@ -4305,14 +4305,17 @@ export type Database = {
       posts: {
         Row: {
           author_id: string | null
+          category: string | null
           comment_count: number
           community_id: string | null
+          competition_id: string | null
           created_at: string
           hashtags: string[]
           id: string
           is_anonymous: boolean
           kind: Database["public"]["Enums"]["post_kind"]
           media_urls: string[]
+          nominee_id: string | null
           owner_id: string
           poll: Json | null
           privacy: Database["public"]["Enums"]["post_privacy"]
@@ -4324,14 +4327,17 @@ export type Database = {
         }
         Insert: {
           author_id?: string | null
+          category?: string | null
           comment_count?: number
           community_id?: string | null
+          competition_id?: string | null
           created_at?: string
           hashtags?: string[]
           id?: string
           is_anonymous?: boolean
           kind?: Database["public"]["Enums"]["post_kind"]
           media_urls?: string[]
+          nominee_id?: string | null
           owner_id: string
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"]
@@ -4343,14 +4349,17 @@ export type Database = {
         }
         Update: {
           author_id?: string | null
+          category?: string | null
           comment_count?: number
           community_id?: string | null
+          competition_id?: string | null
           created_at?: string
           hashtags?: string[]
           id?: string
           is_anonymous?: boolean
           kind?: Database["public"]["Enums"]["post_kind"]
           media_urls?: string[]
+          nominee_id?: string | null
           owner_id?: string
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"]
@@ -4380,6 +4389,20 @@ export type Database = {
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_nominee_id_fkey"
+            columns: ["nominee_id"]
+            isOneToOne: false
+            referencedRelation: "competition_competitors"
             referencedColumns: ["id"]
           },
           {
@@ -6263,14 +6286,17 @@ export type Database = {
       posts_safe: {
         Row: {
           author_id: string | null
+          category: string | null
           comment_count: number | null
           community_id: string | null
+          competition_id: string | null
           created_at: string | null
           hashtags: string[] | null
           id: string | null
           is_anonymous: boolean | null
           kind: Database["public"]["Enums"]["post_kind"] | null
           media_urls: string[] | null
+          nominee_id: string | null
           owner_id: string | null
           poll: Json | null
           privacy: Database["public"]["Enums"]["post_privacy"] | null
@@ -6282,14 +6308,17 @@ export type Database = {
         }
         Insert: {
           author_id?: string | null
+          category?: string | null
           comment_count?: number | null
           community_id?: string | null
+          competition_id?: string | null
           created_at?: string | null
           hashtags?: string[] | null
           id?: string | null
           is_anonymous?: boolean | null
           kind?: Database["public"]["Enums"]["post_kind"] | null
           media_urls?: string[] | null
+          nominee_id?: string | null
           owner_id?: string | null
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"] | null
@@ -6301,14 +6330,17 @@ export type Database = {
         }
         Update: {
           author_id?: string | null
+          category?: string | null
           comment_count?: number | null
           community_id?: string | null
+          competition_id?: string | null
           created_at?: string | null
           hashtags?: string[] | null
           id?: string | null
           is_anonymous?: boolean | null
           kind?: Database["public"]["Enums"]["post_kind"] | null
           media_urls?: string[] | null
+          nominee_id?: string | null
           owner_id?: string | null
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"] | null
@@ -6338,6 +6370,20 @@ export type Database = {
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_nominee_id_fkey"
+            columns: ["nominee_id"]
+            isOneToOne: false
+            referencedRelation: "competition_competitors"
             referencedColumns: ["id"]
           },
           {

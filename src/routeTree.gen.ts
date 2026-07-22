@@ -161,6 +161,7 @@ import { Route as AdminAbuseProtectionRouteImport } from './routes/admin.abuse-p
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
 import { Route as PoetryCategorySlugRouteImport } from './routes/poetry.category.$slug'
 import { Route as MehfilCategorySlugRouteImport } from './routes/mehfil.category.$slug'
+import { Route as CompetitionsSlugMemesRouteImport } from './routes/competitions.$slug.memes'
 import { Route as CommunitySlugMembersRouteImport } from './routes/community.$slug.members'
 import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
@@ -955,6 +956,11 @@ const MehfilCategorySlugRoute = MehfilCategorySlugRouteImport.update({
   path: '/mehfil/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompetitionsSlugMemesRoute = CompetitionsSlugMemesRouteImport.update({
+  id: '/memes',
+  path: '/memes',
+  getParentRoute: () => CompetitionsSlugRoute,
+} as any)
 const CommunitySlugMembersRoute = CommunitySlugMembersRouteImport.update({
   id: '/members',
   path: '/members',
@@ -1237,7 +1243,7 @@ export interface FileRoutesByFullPath {
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
   '/community/$slug': typeof CommunitySlugRouteWithChildren
-  '/competitions/$slug': typeof CompetitionsSlugRoute
+  '/competitions/$slug': typeof CompetitionsSlugRouteWithChildren
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
@@ -1280,6 +1286,7 @@ export interface FileRoutesByFullPath {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/competitions/$slug/memes': typeof CompetitionsSlugMemesRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
@@ -1416,7 +1423,7 @@ export interface FileRoutesByTo {
   '/broadcaster/queue': typeof BroadcasterQueueRoute
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
-  '/competitions/$slug': typeof CompetitionsSlugRoute
+  '/competitions/$slug': typeof CompetitionsSlugRouteWithChildren
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
@@ -1459,6 +1466,7 @@ export interface FileRoutesByTo {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/competitions/$slug/memes': typeof CompetitionsSlugMemesRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug': typeof CommunitySlugIndexRoute
@@ -1600,7 +1608,7 @@ export interface FileRoutesById {
   '/broadcaster/schedule': typeof BroadcasterScheduleRoute
   '/broadcaster/widgets': typeof BroadcasterWidgetsRoute
   '/community/$slug': typeof CommunitySlugRouteWithChildren
-  '/competitions/$slug': typeof CompetitionsSlugRoute
+  '/competitions/$slug': typeof CompetitionsSlugRouteWithChildren
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
@@ -1643,6 +1651,7 @@ export interface FileRoutesById {
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
+  '/competitions/$slug/memes': typeof CompetitionsSlugMemesRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
@@ -1828,6 +1837,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
+    | '/competitions/$slug/memes'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug/'
@@ -2007,6 +2017,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
+    | '/competitions/$slug/memes'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug'
@@ -2190,6 +2201,7 @@ export interface FileRouteTypes {
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
     | '/community/$slug/members'
+    | '/competitions/$slug/memes'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug/'
@@ -3352,6 +3364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MehfilCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/competitions/$slug/memes': {
+      id: '/competitions/$slug/memes'
+      path: '/memes'
+      fullPath: '/competitions/$slug/memes'
+      preLoaderRoute: typeof CompetitionsSlugMemesRouteImport
+      parentRoute: typeof CompetitionsSlugRoute
+    }
     '/community/$slug/members': {
       id: '/community/$slug/members'
       path: '/members'
@@ -3804,15 +3823,26 @@ const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
   CommunityRouteChildren,
 )
 
+interface CompetitionsSlugRouteChildren {
+  CompetitionsSlugMemesRoute: typeof CompetitionsSlugMemesRoute
+}
+
+const CompetitionsSlugRouteChildren: CompetitionsSlugRouteChildren = {
+  CompetitionsSlugMemesRoute: CompetitionsSlugMemesRoute,
+}
+
+const CompetitionsSlugRouteWithChildren =
+  CompetitionsSlugRoute._addFileChildren(CompetitionsSlugRouteChildren)
+
 interface CompetitionsRouteChildren {
-  CompetitionsSlugRoute: typeof CompetitionsSlugRoute
+  CompetitionsSlugRoute: typeof CompetitionsSlugRouteWithChildren
   CompetitionsHallOfFameRoute: typeof CompetitionsHallOfFameRoute
   CompetitionsLeaderboardRoute: typeof CompetitionsLeaderboardRoute
   CompetitionsIndexRoute: typeof CompetitionsIndexRoute
 }
 
 const CompetitionsRouteChildren: CompetitionsRouteChildren = {
-  CompetitionsSlugRoute: CompetitionsSlugRoute,
+  CompetitionsSlugRoute: CompetitionsSlugRouteWithChildren,
   CompetitionsHallOfFameRoute: CompetitionsHallOfFameRoute,
   CompetitionsLeaderboardRoute: CompetitionsLeaderboardRoute,
   CompetitionsIndexRoute: CompetitionsIndexRoute,
@@ -3914,13 +3944,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

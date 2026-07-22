@@ -4,8 +4,9 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
   Crown, Trophy, BadgeCheck, Pin, Sparkles, Users, MessageCircle,
-  Globe, Twitter, Instagram, Youtube, Facebook, Linkedin, ExternalLink,
+  Globe, Twitter, Instagram, Youtube, Facebook, Linkedin, ExternalLink, Laugh,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { voteForCompetitor } from "@/lib/competitions.functions";
@@ -58,18 +59,22 @@ function countryFlag(code?: string | null) {
 
 export function PremiumNomineeCards({
   competitionId,
+  competitionSlug,
   competitors,
   myVote,
   canVote,
   hideCounts,
   invalidateKey,
+  memeCounts,
 }: {
   competitionId: string;
+  competitionSlug?: string;
   competitors: Competitor[];
   myVote: string | null;
   canVote: boolean;
   hideCounts?: boolean;
   invalidateKey: (string | number)[];
+  memeCounts?: Record<string, number>;
 }) {
   const vote = useServerFn(voteForCompetitor);
   const qc = useQueryClient();
@@ -212,6 +217,18 @@ export function PremiumNomineeCards({
                   </div>
                 </div>
               )}
+
+              {competitionSlug && memeCounts && (memeCounts[c.id] ?? 0) > 0 && (
+                <Link
+                  to="/competitions/$slug/memes"
+                  params={{ slug: competitionSlug }}
+                  search={{ nominee: c.id } as any}
+                  className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-300 hover:bg-amber-500/25"
+                >
+                  <Laugh className="h-3 w-3" /> 😂 Memes ({memeCounts[c.id]})
+                </Link>
+              )}
+
 
               {/* Social + profile */}
               {(socialEntries.length > 0 || profileUrl || c.website) && (

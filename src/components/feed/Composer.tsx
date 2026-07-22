@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff, Sparkles, BarChart3, VenetianMask, Plus } from "lucide-react";
+import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff, Sparkles, BarChart3, VenetianMask, Plus, Laugh, Trophy, Search } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -15,6 +15,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useFocusComposerConfig } from "@/lib/focus-composer-config";
 import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
 import type { PostPrivacy } from "@/lib/feed-types";
+import { useAppSettings } from "@/lib/app-settings";
+import { searchActiveCompetitions, listCompetitionNominees, type ActiveCompetitionLite, type NomineeLite } from "@/lib/competition-memes";
 
 
 
@@ -47,7 +49,7 @@ function validateAndFilter(incoming: File[]): { ok: File[]; rejected: string[] }
   return { ok, rejected };
 }
 
-type ComposerMode = "post" | "poll" | "confession";
+type ComposerMode = "post" | "poll" | "confession" | "meme";
 
 export function Composer({ authorId, onPosted, communityId }: { authorId: string; onPosted?: () => void; communityId?: string | null }) {
   const [text, setText] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(DRAFT_KEY) || "" : ""));
@@ -60,6 +62,12 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
   const [mode, setMode] = useState<ComposerMode>("post");
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const { modules } = useAppSettings();
+  const [memeCompetition, setMemeCompetition] = useState<ActiveCompetitionLite | null>(null);
+  const [memeCompQuery, setMemeCompQuery] = useState("");
+  const [memeCompResults, setMemeCompResults] = useState<ActiveCompetitionLite[]>([]);
+  const [memeNominees, setMemeNominees] = useState<NomineeLite[]>([]);
+  const [memeNomineeId, setMemeNomineeId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const earnPost = useServerFn(earnFeedPost);
@@ -80,6 +88,26 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
       document.body.style.overflow = prev;
     };
   }, [focused]);
+
+  // Competition typeahead (Meme mode).
+  useEffect(() => {
+    if (mode !== "meme") return;
+    let alive = true;
+    const t = setTimeout(async () => {
+      const rows = await searchActiveCompetitions(memeCompQuery);
+      if (alive) setMemeCompResults(rows);
+    }, 200);
+    return () => { alive = false; clearTimeout(t); };
+  }, [mode, memeCompQuery]);
+
+  // Load nominees when a competition is picked (and tagging is enabled).
+  useEffect(() => {
+    if (!memeCompetition || !modules.nomineeMemeTagging) { setMemeNominees([]); setMemeNomineeId(null); return; }
+    let alive = true;
+    listCompetitionNominees(memeCompetition.id).then((n) => { if (alive) setMemeNominees(n); });
+    return () => { alive = false; };
+  }, [memeCompetition, modules.nomineeMemeTagging]);
+
 
   function openFocus() {
     if (!focusConfig.enabled) return;
@@ -117,6 +145,8 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
       if (cleanOpts.length < 2) { setError("Add at least two poll options."); return; }
     } else if (mode === "confession") {
       if (!text.trim()) { setError("Write your confession first."); return; }
+    } else if (mode === "meme") {
+      if (!text.trim() && !files.length) { setError("Add a caption or an image for your meme."); return; }
     } else {
       if (!text.trim() && !files.length) return;
     }
@@ -173,17 +203,21 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
         const media_urls = await uploadFiles();
         const hasMedia = files.length > 0;
         const kind = hasMedia ? "image" : "text";
+        const isMeme = mode === "meme";
         const { error } = await supabase.from("posts").insert({
           author_id: authorId,
           owner_id: authorId,
           kind,
           text: text.trim(),
-          slug: slugify(text.trim() || kind),
+          slug: slugify(text.trim() || (isMeme ? "meme" : kind)),
           media_urls,
           privacy,
           is_anonymous: anonymous,
           hashtags,
           ...(communityId ? { community_id: communityId } : {}),
+          ...(isMeme ? { category: "meme" } : {}),
+          ...(isMeme && memeCompetition ? { competition_id: memeCompetition.id } : {}),
+          ...(isMeme && memeCompetition && memeNomineeId ? { nominee_id: memeNomineeId } : {}),
         });
         if (error) throw new Error(error.message);
       }
@@ -192,6 +226,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
       earnPost().catch(() => {});
       setText(""); setFiles([]); setAnonymous(false); setFocused(false);
       setPollQuestion(""); setPollOptions(["", ""]); setMode("post");
+      setMemeCompetition(null); setMemeCompQuery(""); setMemeCompResults([]); setMemeNomineeId(null);
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       onPosted?.();
     } catch (e) {
@@ -245,7 +280,9 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
               ? "Share something honest — posted anonymously to the confessions board…"
               : mode === "poll"
                 ? "Optional context for your poll…"
-                : "What's on your mind? Use #hashtags and @mentions…"
+                : mode === "meme"
+                  ? "Add a caption for your meme… 😂"
+                  : "What's on your mind? Use #hashtags and @mentions…"
           }
           className="w-full resize-none rounded-2xl border border-transparent bg-transparent px-1 py-2 text-[15px] leading-relaxed placeholder:text-muted-foreground focus:outline-none"
         />
@@ -256,12 +293,96 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
         <ModeChip active={mode === "post"} onClick={() => setMode("post")} label="Post" />
         <ModeChip active={mode === "poll"} onClick={() => setMode("poll")} icon={BarChart3} label="Poll" tone="primary" />
         <ModeChip active={mode === "confession"} onClick={() => setMode("confession")} icon={VenetianMask} label="Confess" tone="fuchsia" />
+        {modules.competitionMemes && (
+          <ModeChip active={mode === "meme"} onClick={() => setMode("meme")} icon={Laugh} label="😂 Meme" tone="amber" />
+        )}
         {mode === "confession" && (
           <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-fuchsia-500/10 px-2.5 py-1 text-[11px] font-semibold text-fuchsia-500">
             <EyeOff className="h-3 w-3" /> Posted anonymously to /confessions
           </span>
         )}
       </div>
+
+      {mode === "meme" && (
+        <div className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-amber-500">
+            <Trophy className="h-3 w-3" /> Related competition <span className="font-normal normal-case text-muted-foreground">(optional)</span>
+          </div>
+          {memeCompetition ? (
+            <div className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-background/60 px-3 py-2 text-sm">
+              <div className="min-w-0">
+                <div className="truncate font-semibold">{memeCompetition.name}</div>
+                <div className="text-[11px] uppercase text-muted-foreground">{memeCompetition.status}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setMemeCompetition(null); setMemeNomineeId(null); }}
+                className="rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                aria-label="Clear competition"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 py-2">
+                <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                <input
+                  value={memeCompQuery}
+                  onChange={(e) => setMemeCompQuery(e.target.value)}
+                  placeholder="Search active competitions…"
+                  className="flex-1 bg-transparent text-sm focus:outline-none"
+                />
+              </div>
+              {memeCompResults.length > 0 && (
+                <div className="max-h-40 overflow-y-auto rounded-xl border border-border bg-background/60">
+                  {memeCompResults.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => { setMemeCompetition(c); setMemeCompQuery(""); setMemeCompResults([]); }}
+                      className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
+                    >
+                      <span className="truncate font-medium">{c.name}</span>
+                      <span className="text-[10px] uppercase text-muted-foreground">{c.status}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground">
+                Leave empty to post as a normal Feed meme.
+              </p>
+            </div>
+          )}
+
+          {memeCompetition && modules.nomineeMemeTagging && memeNominees.length > 0 && (
+            <div>
+              <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-500">
+                Supported nominee <span className="font-normal normal-case text-muted-foreground">(optional)</span>
+              </div>
+              <div className="flex max-h-32 flex-wrap gap-1.5 overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={() => setMemeNomineeId(null)}
+                  className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${!memeNomineeId ? "border-amber-500 bg-amber-500/15 text-amber-500" : "border-border text-muted-foreground hover:text-foreground"}`}
+                >
+                  None
+                </button>
+                {memeNominees.map((n) => (
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={() => setMemeNomineeId(n.id)}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${memeNomineeId === n.id ? "border-amber-500 bg-amber-500/15 text-amber-500" : "border-border text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {n.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {mode === "poll" && (
         <div className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 p-3">
@@ -377,12 +498,13 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
               posting ||
               (mode === "post" && !text.trim() && !files.length) ||
               (mode === "confession" && !text.trim()) ||
+              (mode === "meme" && !text.trim() && !files.length) ||
               (mode === "poll" && (!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2))
             }
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-primary/80 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_8px_24px_-8px_var(--primary-glow)] hover:scale-[1.03] active:scale-[0.97] transition disabled:opacity-50 disabled:hover:scale-100"
           >
             {posting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            {mode === "confession" ? "Confess" : mode === "poll" ? "Publish poll" : "Post"}
+            {mode === "confession" ? "Confess" : mode === "poll" ? "Publish poll" : mode === "meme" ? "Post meme" : "Post"}
           </button>
         </div>
       </div>
@@ -435,12 +557,14 @@ function ModeChip({
   onClick: () => void;
   icon?: typeof BarChart3;
   label: string;
-  tone?: "primary" | "fuchsia";
+  tone?: "primary" | "fuchsia" | "amber";
 }) {
   const accent =
     tone === "fuchsia"
       ? "border-fuchsia-500 bg-fuchsia-500/15 text-fuchsia-500"
-      : "border-primary bg-primary/15 text-primary";
+      : tone === "amber"
+        ? "border-amber-500 bg-amber-500/15 text-amber-500"
+        : "border-primary bg-primary/15 text-primary";
   return (
     <button
       onClick={onClick}
