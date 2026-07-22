@@ -25,10 +25,10 @@ export const adminListMehfilCategories = createServerFn({ method: "GET" })
 
 export const adminSaveMehfilCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: Partial<MehfilCategory> & { name: string; slug: string }) => input)
+  .inputValidator((input: Partial<MehfilCategory> & { name: string; slug: string; default_qualification_config?: Record<string, any> }) => input)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const row = {
+    const row: any = {
       id: data.id,
       slug: data.slug,
       name: data.name,
@@ -38,6 +38,9 @@ export const adminSaveMehfilCategory = createServerFn({ method: "POST" })
       sort_order: data.sort_order ?? 0,
       is_active: data.is_active ?? true,
     };
+    if (data.default_qualification_config !== undefined) {
+      row.default_qualification_config = data.default_qualification_config ?? {};
+    }
     if (data.id) {
       const { error } = await context.supabase.from("mehfil_categories").update(row).eq("id", data.id);
       if (error) throw error;
