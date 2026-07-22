@@ -15,6 +15,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useFocusComposerConfig } from "@/lib/focus-composer-config";
 import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
 import type { PostPrivacy } from "@/lib/feed-types";
+import { useAppSettings } from "@/lib/app-settings";
+import { searchActiveCompetitions, listCompetitionNominees, type ActiveCompetitionLite, type NomineeLite } from "@/lib/competition-memes";
 
 
 
