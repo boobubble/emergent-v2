@@ -145,6 +145,8 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
       if (cleanOpts.length < 2) { setError("Add at least two poll options."); return; }
     } else if (mode === "confession") {
       if (!text.trim()) { setError("Write your confession first."); return; }
+    } else if (mode === "meme") {
+      if (!text.trim() && !files.length) { setError("Add a caption or an image for your meme."); return; }
     } else {
       if (!text.trim() && !files.length) return;
     }
