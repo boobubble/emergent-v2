@@ -1,6 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
-import { z } from "zod";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Laugh } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,12 +9,10 @@ import type { FeedPost } from "@/lib/feed-types";
 import type { User } from "@/lib/chat-types";
 import { useAuth } from "@/lib/auth-store";
 
-const searchSchema = z.object({
-  nominee: fallback(z.string(), "").default(""),
-});
-
 export const Route = createFileRoute("/competitions/$slug/memes")({
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (s: Record<string, unknown>) => ({
+    nominee: typeof s.nominee === "string" ? s.nominee : "",
+  }),
   loader: async ({ params }) => {
     const data = await getCompetitionBySlug({ data: { slug: params.slug } });
     return data;
