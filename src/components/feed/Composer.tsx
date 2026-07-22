@@ -205,18 +205,19 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
         const hasMedia = files.length > 0;
         const kind = hasMedia ? "image" : "text";
         const isMeme = mode === "meme";
+        const activeCategory: FunCategory = isMeme ? funCategory : "meme";
         const { error } = await supabase.from("posts").insert({
           author_id: authorId,
           owner_id: authorId,
           kind,
           text: text.trim(),
-          slug: slugify(text.trim() || (isMeme ? "meme" : kind)),
+          slug: slugify(text.trim() || (isMeme ? activeCategory : kind)),
           media_urls,
           privacy,
           is_anonymous: anonymous,
           hashtags,
           ...(communityId ? { community_id: communityId } : {}),
-          ...(isMeme ? { category: "meme" } : {}),
+          ...(isMeme ? { category: activeCategory } : {}),
           ...(isMeme && memeCompetition ? { competition_id: memeCompetition.id } : {}),
           ...(isMeme && memeCompetition && memeNomineeId ? { nominee_id: memeNomineeId } : {}),
         });
