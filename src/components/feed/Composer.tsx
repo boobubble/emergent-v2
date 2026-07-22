@@ -56,6 +56,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
   const [files, setFiles] = useState<File[]>([]);
   const [privacy, setPrivacy] = useState<PostPrivacy>("public");
   const [anonymous, setAnonymous] = useState(false);
+  const [eligibleForCompetitions, setEligibleForCompetitions] = useState(true);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
