@@ -294,7 +294,9 @@ function CompetitionDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c.id, appModules.competitionMemes, appModules.nomineeMemeTagging]);
 
-  const awards = (data.awards ?? []) as any[];
+  const allAwards = (data.awards ?? []) as any[];
+  const awards = allAwards.filter((a: any) => !a.award_type && (a.place ?? 0) > 0);
+  const funAwards = allAwards.filter((a: any) => !!a.award_type);
   const category = c.category as { name?: string; color?: string | null } | null;
   const iJoined = !!userId && participants.some((p) => p.user_id === userId);
   const approvedParticipants = participants.filter((p) => p.status === "approved");
