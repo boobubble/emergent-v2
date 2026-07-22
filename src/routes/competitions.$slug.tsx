@@ -478,6 +478,9 @@ function CompetitionDetail() {
           nomineesSection
         )}
 
+        <TrendingMemesSlot competitionId={c.id} competitionSlug={c.slug} />
+
+
 
         {c.description && (
           <p className="mt-2 text-sm text-white/70">{c.description}</p>
