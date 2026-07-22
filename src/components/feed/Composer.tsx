@@ -228,7 +228,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
       earnPost().catch(() => {});
       setText(""); setFiles([]); setAnonymous(false); setFocused(false);
       setPollQuestion(""); setPollOptions(["", ""]); setMode("post");
-      setMemeCompetition(null); setMemeCompQuery(""); setMemeCompResults([]); setMemeNomineeId(null);
+      setMemeCompetition(null); setMemeCompQuery(""); setMemeCompResults([]); setMemeNomineeId(null); setFunCategory("meme");
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       onPosted?.();
     } catch (e) {
