@@ -496,6 +496,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
               posting ||
               (mode === "post" && !text.trim() && !files.length) ||
               (mode === "confession" && !text.trim()) ||
+              (mode === "meme" && !text.trim() && !files.length) ||
               (mode === "poll" && (!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2))
             }
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-primary/80 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_8px_24px_-8px_var(--primary-glow)] hover:scale-[1.03] active:scale-[0.97] transition disabled:opacity-50 disabled:hover:scale-100"
