@@ -502,7 +502,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-primary/80 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_8px_24px_-8px_var(--primary-glow)] hover:scale-[1.03] active:scale-[0.97] transition disabled:opacity-50 disabled:hover:scale-100"
           >
             {posting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            {mode === "confession" ? "Confess" : mode === "poll" ? "Publish poll" : "Post"}
+            {mode === "confession" ? "Confess" : mode === "poll" ? "Publish poll" : mode === "meme" ? "Post meme" : "Post"}
           </button>
         </div>
       </div>
