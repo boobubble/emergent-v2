@@ -185,7 +185,7 @@ export function CompetitionEditorDialog({ value, onChange, onSaved, invalidateKe
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Entry Mode</Label>
-                  <Select value={editing.entry_mode ?? "manual"} onValueChange={(v) => set({ entry_mode: v })}>
+                  <Select value={editing.entry_mode ?? "hybrid"} onValueChange={(v) => set({ entry_mode: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="manual">Manual</SelectItem>
