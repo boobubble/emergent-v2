@@ -1231,32 +1231,38 @@ export type Database = {
       }
       competition_awards: {
         Row: {
+          award_type: string | null
           awarded_at: string
           badge_label: string | null
           competition_id: string
           id: string
           participant_id: string | null
           place: number
+          post_id: string | null
           rewards: Json
           user_id: string
         }
         Insert: {
+          award_type?: string | null
           awarded_at?: string
           badge_label?: string | null
           competition_id: string
           id?: string
           participant_id?: string | null
           place: number
+          post_id?: string | null
           rewards?: Json
           user_id: string
         }
         Update: {
+          award_type?: string | null
           awarded_at?: string
           badge_label?: string | null
           competition_id?: string
           id?: string
           participant_id?: string | null
           place?: number
+          post_id?: string | null
           rewards?: Json
           user_id?: string
         }

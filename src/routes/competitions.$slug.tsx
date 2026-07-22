@@ -38,6 +38,9 @@ import { StickyMobileVoteBar } from "@/components/competitions/StickyMobileVoteB
 import { PremiumEmptyState } from "@/components/competitions/PremiumEmptyState";
 import { PoetryBattleEntries } from "@/components/mehfil/PoetryBattleEntries";
 import { CompetitionMemesCarousel } from "@/components/competitions/CompetitionMemesCarousel";
+import { FunZone } from "@/components/competitions/FunZone";
+import { Link as RouterLink } from "@tanstack/react-router";
+import { PartyPopper } from "lucide-react";
 import { useAppSettings } from "@/lib/app-settings";
 
 import { Button } from "@/components/ui/button";
@@ -291,7 +294,9 @@ function CompetitionDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c.id, appModules.competitionMemes, appModules.nomineeMemeTagging]);
 
-  const awards = (data.awards ?? []) as any[];
+  const allAwards = (data.awards ?? []) as any[];
+  const awards = allAwards.filter((a: any) => !a.award_type && (a.place ?? 0) > 0);
+  const funAwards = allAwards.filter((a: any) => !!a.award_type);
   const category = c.category as { name?: string; color?: string | null } | null;
   const iJoined = !!userId && participants.some((p) => p.user_id === userId);
   const approvedParticipants = participants.filter((p) => p.status === "approved");
@@ -500,6 +505,7 @@ function CompetitionDetail() {
         )}
 
         <TrendingMemesSlot competitionId={c.id} competitionSlug={c.slug} />
+        <FunZone competitionId={c.id} competitionSlug={c.slug} />
 
 
 
@@ -607,6 +613,18 @@ function CompetitionDetail() {
               })}
             </div>
           </section>
+        )}
+
+        {c.status === "completed" && (awards.length > 0 || funAwards.length > 0) && (
+          <div className="mt-4 flex justify-center">
+            <RouterLink
+              to="/competitions/$slug/recap"
+              params={{ slug: c.slug }}
+              className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-gradient-to-r from-amber-500/20 via-fuchsia-500/10 to-rose-500/20 px-5 py-2 text-sm font-bold text-amber-200 hover:from-amber-500/30 hover:to-rose-500/30"
+            >
+              <PartyPopper className="h-4 w-4" /> View Battle Recap
+            </RouterLink>
+          </div>
         )}
 
         {/* Voting-state banner */}

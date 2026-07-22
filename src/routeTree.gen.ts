@@ -161,6 +161,7 @@ import { Route as AdminAbuseProtectionRouteImport } from './routes/admin.abuse-p
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
 import { Route as PoetryCategorySlugRouteImport } from './routes/poetry.category.$slug'
 import { Route as MehfilCategorySlugRouteImport } from './routes/mehfil.category.$slug'
+import { Route as CompetitionsSlugRecapRouteImport } from './routes/competitions.$slug.recap'
 import { Route as CompetitionsSlugMemesRouteImport } from './routes/competitions.$slug.memes'
 import { Route as CommunitySlugMembersRouteImport } from './routes/community.$slug.members'
 import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
@@ -181,6 +182,7 @@ import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
 import { Route as ApiGamesAchievementRouteImport } from './routes/api/games.achievement'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 import { Route as CommunitySlugChatroomsIndexRouteImport } from './routes/community.$slug.chatrooms.index'
+import { Route as CompetitionsSlugFunTypeRouteImport } from './routes/competitions.$slug.fun.$type'
 import { Route as CommunitySlugChatroomsRoomSlugRouteImport } from './routes/community.$slug.chatrooms.$roomSlug'
 import { Route as ApiPublicLicenseVerifyRouteImport } from './routes/api/public/license/verify'
 import { Route as ApiPublicLicenseResetRouteImport } from './routes/api/public/license/reset'
@@ -956,6 +958,11 @@ const MehfilCategorySlugRoute = MehfilCategorySlugRouteImport.update({
   path: '/mehfil/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompetitionsSlugRecapRoute = CompetitionsSlugRecapRouteImport.update({
+  id: '/recap',
+  path: '/recap',
+  getParentRoute: () => CompetitionsSlugRoute,
+} as any)
 const CompetitionsSlugMemesRoute = CompetitionsSlugMemesRouteImport.update({
   id: '/memes',
   path: '/memes',
@@ -1060,6 +1067,11 @@ const CommunitySlugChatroomsIndexRoute =
     path: '/chatrooms/',
     getParentRoute: () => CommunitySlugRoute,
   } as any)
+const CompetitionsSlugFunTypeRoute = CompetitionsSlugFunTypeRouteImport.update({
+  id: '/fun/$type',
+  path: '/fun/$type',
+  getParentRoute: () => CompetitionsSlugRoute,
+} as any)
 const CommunitySlugChatroomsRoomSlugRoute =
   CommunitySlugChatroomsRoomSlugRouteImport.update({
     id: '/chatrooms/$roomSlug',
@@ -1287,6 +1299,7 @@ export interface FileRoutesByFullPath {
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
   '/competitions/$slug/memes': typeof CompetitionsSlugMemesRoute
+  '/competitions/$slug/recap': typeof CompetitionsSlugRecapRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
@@ -1299,6 +1312,7 @@ export interface FileRoutesByFullPath {
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
   '/community/$slug/chatrooms/$roomSlug': typeof CommunitySlugChatroomsRoomSlugRoute
+  '/competitions/$slug/fun/$type': typeof CompetitionsSlugFunTypeRoute
   '/community/$slug/chatrooms/': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
@@ -1467,6 +1481,7 @@ export interface FileRoutesByTo {
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
   '/competitions/$slug/memes': typeof CompetitionsSlugMemesRoute
+  '/competitions/$slug/recap': typeof CompetitionsSlugRecapRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug': typeof CommunitySlugIndexRoute
@@ -1479,6 +1494,7 @@ export interface FileRoutesByTo {
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
   '/community/$slug/chatrooms/$roomSlug': typeof CommunitySlugChatroomsRoomSlugRoute
+  '/competitions/$slug/fun/$type': typeof CompetitionsSlugFunTypeRoute
   '/community/$slug/chatrooms': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
@@ -1652,6 +1668,7 @@ export interface FileRoutesById {
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
   '/community/$slug/members': typeof CommunitySlugMembersRoute
   '/competitions/$slug/memes': typeof CompetitionsSlugMemesRoute
+  '/competitions/$slug/recap': typeof CompetitionsSlugRecapRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
@@ -1664,6 +1681,7 @@ export interface FileRoutesById {
   '/api/public/license/reset': typeof ApiPublicLicenseResetRoute
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
   '/community/$slug/chatrooms/$roomSlug': typeof CommunitySlugChatroomsRoomSlugRoute
+  '/competitions/$slug/fun/$type': typeof CompetitionsSlugFunTypeRoute
   '/community/$slug/chatrooms/': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
@@ -1838,6 +1856,7 @@ export interface FileRouteTypes {
     | '/community/$slug/feed'
     | '/community/$slug/members'
     | '/competitions/$slug/memes'
+    | '/competitions/$slug/recap'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug/'
@@ -1850,6 +1869,7 @@ export interface FileRouteTypes {
     | '/api/public/license/reset'
     | '/api/public/license/verify'
     | '/community/$slug/chatrooms/$roomSlug'
+    | '/competitions/$slug/fun/$type'
     | '/community/$slug/chatrooms/'
     | '/api/public/og/competition/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -2018,6 +2038,7 @@ export interface FileRouteTypes {
     | '/community/$slug/feed'
     | '/community/$slug/members'
     | '/competitions/$slug/memes'
+    | '/competitions/$slug/recap'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug'
@@ -2030,6 +2051,7 @@ export interface FileRouteTypes {
     | '/api/public/license/reset'
     | '/api/public/license/verify'
     | '/community/$slug/chatrooms/$roomSlug'
+    | '/competitions/$slug/fun/$type'
     | '/community/$slug/chatrooms'
     | '/api/public/og/competition/$slug'
   id:
@@ -2202,6 +2224,7 @@ export interface FileRouteTypes {
     | '/community/$slug/feed'
     | '/community/$slug/members'
     | '/competitions/$slug/memes'
+    | '/competitions/$slug/recap'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
     | '/community/$slug/'
@@ -2214,6 +2237,7 @@ export interface FileRouteTypes {
     | '/api/public/license/reset'
     | '/api/public/license/verify'
     | '/community/$slug/chatrooms/$roomSlug'
+    | '/competitions/$slug/fun/$type'
     | '/community/$slug/chatrooms/'
     | '/api/public/og/competition/$slug'
   fileRoutesById: FileRoutesById
@@ -3364,6 +3388,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MehfilCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/competitions/$slug/recap': {
+      id: '/competitions/$slug/recap'
+      path: '/recap'
+      fullPath: '/competitions/$slug/recap'
+      preLoaderRoute: typeof CompetitionsSlugRecapRouteImport
+      parentRoute: typeof CompetitionsSlugRoute
+    }
     '/competitions/$slug/memes': {
       id: '/competitions/$slug/memes'
       path: '/memes'
@@ -3503,6 +3534,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/community/$slug/chatrooms/'
       preLoaderRoute: typeof CommunitySlugChatroomsIndexRouteImport
       parentRoute: typeof CommunitySlugRoute
+    }
+    '/competitions/$slug/fun/$type': {
+      id: '/competitions/$slug/fun/$type'
+      path: '/fun/$type'
+      fullPath: '/competitions/$slug/fun/$type'
+      preLoaderRoute: typeof CompetitionsSlugFunTypeRouteImport
+      parentRoute: typeof CompetitionsSlugRoute
     }
     '/community/$slug/chatrooms/$roomSlug': {
       id: '/community/$slug/chatrooms/$roomSlug'
@@ -3825,10 +3863,14 @@ const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
 
 interface CompetitionsSlugRouteChildren {
   CompetitionsSlugMemesRoute: typeof CompetitionsSlugMemesRoute
+  CompetitionsSlugRecapRoute: typeof CompetitionsSlugRecapRoute
+  CompetitionsSlugFunTypeRoute: typeof CompetitionsSlugFunTypeRoute
 }
 
 const CompetitionsSlugRouteChildren: CompetitionsSlugRouteChildren = {
   CompetitionsSlugMemesRoute: CompetitionsSlugMemesRoute,
+  CompetitionsSlugRecapRoute: CompetitionsSlugRecapRoute,
+  CompetitionsSlugFunTypeRoute: CompetitionsSlugFunTypeRoute,
 }
 
 const CompetitionsSlugRouteWithChildren =
@@ -3944,13 +3986,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -799,6 +799,46 @@ export const adminFinalizeWinners = createServerFn({ method: "POST" })
       } catch { /* best-effort */ }
     }
 
+    // Fun Zone auto-awards — pick the highest-engagement post per category for
+    // this competition and record it under a dedicated award_type. Best-effort.
+    try {
+      const { data: funPosts } = await context.supabase
+        .from("posts_safe")
+        .select("id,author_id,category,reaction_count,comment_count,created_at")
+        .eq("competition_id", data.competitionId)
+        .in("category", ["meme", "fan_art", "poster", "fan_edit"]) as any;
+      const FUN_AWARD: Record<string, { type: string; label: string }> = {
+        meme:     { type: "meme_of_battle",       label: "Meme of the Battle" },
+        fan_art:  { type: "fan_art_winner",       label: "Fan Art Winner" },
+        poster:   { type: "best_campaign_poster", label: "Best Campaign Poster" },
+        fan_edit: { type: "best_fan_edit",        label: "Best Fan Edit" },
+      };
+      const bestPerCat: Record<string, any> = {};
+      for (const p of (funPosts ?? []) as any[]) {
+        const score = (p.reaction_count ?? 0) + (p.comment_count ?? 0);
+        const cur = bestPerCat[p.category];
+        const curScore = cur ? (cur.reaction_count ?? 0) + (cur.comment_count ?? 0) : -1;
+        if (!cur || score > curScore) bestPerCat[p.category] = p;
+      }
+      const funRows = Object.entries(bestPerCat)
+        .filter(([, post]: any) => post && post.author_id)
+        .map(([cat, post]: any) => ({
+          competition_id: data.competitionId,
+          participant_id: null,
+          user_id: post.author_id,
+          place: 0,
+          award_type: FUN_AWARD[cat].type,
+          post_id: post.id,
+          badge_label: `${comp.name} — ${FUN_AWARD[cat].label}`,
+          rewards: {},
+        }));
+      if (funRows.length) {
+        await (context.supabase as any).from("competition_awards").upsert(funRows, {
+          onConflict: "competition_id,award_type",
+        });
+      }
+    } catch { /* best-effort */ }
+
     return { ok: true, winners: rows.length };
   });
 

@@ -1,67 +1,135 @@
-## Competition Meme Integration — Automatic (Feed-owned)
+# Competition Page Premium Community Expansion
 
-Memes stay in the Feed. Competition pages read Feed posts through filters. No separate composer, no duplication.
+Reuses existing Feed / PostCard / reactions / realtime / competitions engine. No new post system, no duplicate storage. Extends the meme integration that already added `posts.category` + `posts.competition_id` + `posts.nominee_id`.
 
-### 1. Data (single migration)
+## 1. Data — one small migration
 
-Add three columns to `public.posts` — Feed keeps ownership of the row:
+Extend the existing `posts.category` values to include the four Fun Zone types (values only; column already exists):
 
-- `category text` (nullable, e.g. `'meme'`). Indexed.
-- `competition_id uuid` → `competitions(id)` on delete set null. Indexed.
-- `nominee_id uuid` → `competition_competitors(id)` on delete set null. Indexed.
+- `meme`
+- `fan_art`
+- `poster`
+- `fan_edit`
 
-Extend `posts_safe` view to expose these three columns (currently masks only `owner_id`). RLS already lets anyone read public posts — no policy changes needed.
+Extend `mehfil_hall_of_fame` … *(reuse `competition_awards` instead — it already exists).* Add three award kinds to `competition_awards.award_type`:
 
-Three admin toggles under `app_settings.modules` (extend the existing `ModulesFlags`):
+- `meme_of_battle`
+- `fan_art_winner`
+- `best_campaign_poster`
 
-- `competitionMemes` (default on) — master switch.
-- `nomineeMemeTagging` (default on) — nominee dropdown in composer + count on nominee card.
-- `trendingMemeSection` (default on) — carousel on competition page.
+Each row already stores `post_id`/`user_id`/`competition_id`/`stats jsonb` — no schema change required beyond allowing the new enum-like strings (it's `text`).
 
-### 2. Feed Composer (`src/components/feed/Composer.tsx`)
+Admin toggles under `app_settings.modules`:
 
-- Add a new `ModeChip` "😂 Meme" next to Post / Poll / Confess. Selecting it sets `category = 'meme'` (all other modes leave it null).
-- When mode is `meme`, render an inline optional panel:
-  - **Related Competition**: `<Popover>` typeahead calling `listActiveCompetitions({ query })`. Selected competition shown as removable chip.
-  - **Supported Nominee**: appears only after a competition is chosen (and `nomineeMemeTagging` is on). Loads that competition's competitors via existing supabase query. Optional.
-- Insert path unchanged — same `posts.insert` call, just spread `{ category: 'meme', competition_id, nominee_id }` when set. Media/text validation, XP, coins, hashtags all reused.
-- Skipping both selectors yields a normal Feed meme (category=meme, no competition).
+- `funZone` (master, default on)
+- `funZoneMemes`, `funZoneFanArts`, `funZonePosters`, `funZoneFanEdits` (default on)
+- `battleRecap` (default on)
+- `autoAwards` (default on — controls automatic Meme/Fan Art/Poster picks on finish)
 
-### 3. Competition page (`src/routes/competitions.$slug.tsx`)
+## 2. Feed Composer (`src/components/feed/Composer.tsx`)
 
-New section rendered above/beside participants when `settings.modules.trendingMemeSection` is on:
+Replace the single "😂 Meme" chip with a **Post Type** dropdown that appears alongside the existing Post/Poll/Confess modes:
 
-**😂 Trending Battle Memes** — horizontal carousel, max 10.
+```
+Type: [ Normal | 😂 Meme | 🎨 Fan Art | 📸 Poster | 🎥 Fan Edit ]
+```
 
-- New helper `listCompetitionMemes(competitionId, { limit, nomineeId? })` in `src/lib/competition-memes.functions.ts` reading from `posts_safe`, filtered by `category='meme'` + `competition_id`, ordered by `(reaction_count + comment_count) DESC, created_at DESC`.
-- Renders compact meme thumbnails (image/video) linking to the existing `/feed/$slug` permalink — so likes/comments/shares reuse `PostCard`.
-- "View all →" links to `/feed?competition=<id>&category=meme`.
+- Selecting anything other than Normal sets `posts.category` to the matching key.
+- The existing Related Competition + Supported Nominee selectors show for ALL four fun types (not just meme). Same insert path.
 
-Nominee cards (`PremiumNomineeCards`): show `😂 Memes (N)` pill using per-nominee counts fetched in the same batch. Click filters the carousel + navigates to `/feed?competition=<id>&nominee=<id>&category=meme`.
+## 3. Fun Zone section (`src/components/competitions/FunZone.tsx` — new)
 
-### 4. Filtered Feed view
+Compact block mounted on `src/routes/competitions.$slug.tsx` between the poll/nominees and the current Trending Memes carousel. Four cards in a horizontal snap row:
 
-`src/routes/feed.index.tsx` reads `?competition=`, `?nominee=`, `?category=meme` search params and applies them to its existing query. Header shows a chip "Showing memes for <Competition>" with a clear button. No new route.
+```text
+┌ 😂 Memes ┐ ┌ 🎨 Fan Arts ┐ ┌ 📸 Posters ┐ ┌ 🎥 Fan Edits ┐
+│ thumb    │ │ thumb       │ │ thumb      │ │ thumb        │
+│ 128 posts│ │ 24 posts    │ │ 12 posts   │ │ 7 posts      │
+│ 2m ago   │ │ 15m ago     │ │ 1h ago     │ │ 3h ago       │
+└View all →┘ └View all →   ┘ └View all → ┘ └View all →   ┘
+```
 
-### 5. Realtime
+- One query: `posts_safe` where `competition_id=<id>` grouped by `category` → count, latest `created_at`, latest thumbnail. Ranked by engagement inside each bucket for the thumbnail.
+- Each card links to `/competitions/$slug/fun/$type` (new route below) which reuses `PostCard`.
+- Realtime channel filtered by `competition_id` refreshes counts/thumbs — reuses the pattern from `CompetitionMemesCarousel`.
+- Individual cards hidden by their module flag; whole block hidden by `funZone`.
 
-Reuse existing `postgres_changes` subscription on `posts` inside `feed.index.tsx` and add a channel on the competition page filtered by `competition_id=eq.<id>` so the carousel refreshes when a new meme lands or reactions change. Rankings already update via existing reaction realtime.
+The existing Trending Memes carousel stays; Fun Zone sits above it as the entry-point summary.
 
-### 6. Admin (`src/routes/admin.modules.tsx` or the closest existing modules screen)
+## 4. Filtered listing route (`src/routes/competitions.$slug.fun.$type.tsx` — new)
 
-Add three `ToggleRow`s in the Competition section wired to `modules.competitionMemes`, `modules.nomineeMemeTagging`, `modules.trendingMemeSection`. Reuse `updateSetting` server function.
+- Accepts `type ∈ {memes,fan-arts,posters,fan-edits}`.
+- Renders header ("😂 Memes for Battle X"), reuses `PostCard` list from `posts_safe` filtered by competition + category.
+- Optional `?nominee=<id>` filter reused.
+- Existing `/competitions/$slug/memes` route stays as an alias → redirects to `/fun/memes`.
 
-### Files touched
+## 5. Auto awards on competition finish
 
-- `supabase/migration` — new columns, indexes, updated `posts_safe`.
-- `src/lib/app-settings.tsx` — extend `ModulesFlags` defaults.
-- `src/lib/feed-types.ts` — extend `FeedPost` with new fields.
-- `src/components/feed/Composer.tsx` — meme mode + selectors.
-- `src/lib/competition-memes.functions.ts` — new server fn.
-- `src/components/competitions/CompetitionMemesCarousel.tsx` — new.
-- `src/components/competitions/PremiumNomineeCards.tsx` — meme count pill.
-- `src/routes/competitions.$slug.tsx` — mount carousel.
-- `src/routes/feed.index.tsx` — filter chips + query param wiring.
-- `src/routes/admin.modules.tsx` — three toggles.
+Reuse the existing "competition finish" server flow (wherever `competitions.status → 'completed'` is transitioned + winners inserted into `competition_awards`). Extend that server fn to also compute:
+
+- Meme of the Battle
+- Fan Art Winner
+- Best Campaign Poster
+
+Ranking SQL against `posts_safe`:
+
+```sql
+score = reaction_count*2 + comment_count*3
+      + coalesce((extract(epoch from (now()-created_at))/-86400.0), 0)
+```
+
+For each of the three categories, pick the top row where `competition_id=<id> AND category=<key>` and insert into `competition_awards` with the new `award_type` string. Tie → newest wins.
+
+If `autoAwards` module flag is off, skip. If a category has zero posts, no award is created.
+
+## 6. Battle Recap page (`src/routes/competitions.$slug.recap.tsx` — new)
+
+Public, SEO-friendly. Read-only. Rendered automatically for competitions with `status='completed'`; the competition page shows a big "View Battle Recap" CTA once completed.
+
+Sections:
+
+- Podium (Winner / Runner-up / Third from `competition_awards`).
+- Stat grid: total votes (`competition_votes` count), participants (`competition_competitors` count), reactions/comments (aggregated from `posts_safe` filtered by competition), duration, prize.
+- 🏆 Fun Zone Winners cards: Meme / Fan Art / Poster (each reusing `PostCard`).
+- 🔥 Most Active Supporter — top user by combined votes cast + comments authored on this competition's posts.
+- ⭐ Most Shared Post — highest engagement post overall for the competition.
+- Voting timeline — small sparkline built from grouped `competition_votes.created_at` by day (Recharts, already in project).
+- Top 5 Moments — top 5 posts by engagement across all Fun Zone categories.
+
+Lazy-loaded — the route is a separate file, so it code-splits automatically.
+
+## 7. Hall of Fame update (`src/routes/competitions.hall-of-fame.tsx`)
+
+Each Hall of Fame card gains a small "Fun Zone winners" strip under the podium row, reading the three new `competition_awards` rows for that competition. Existing layout untouched otherwise. Link → the new Recap page.
+
+## 8. Realtime
+
+- Fun Zone block and per-type list already share the `postgres_changes` filter `competition_id=eq.<id>` used by `CompetitionMemesCarousel`. No new channels.
+- Recap page is read-once (competition already finished); no realtime needed.
+
+## 9. Admin
+
+Add toggle rows in `src/routes/admin.modules.tsx` for the new flags, next to the existing `competitionMemes` group.
+
+## Files touched
+
+- Migration — `posts.category` value docs (no DDL) + `competition_awards.award_type` values allowed.
+- `src/lib/app-settings.tsx` — new module flags.
+- `src/lib/admin-modules.ts` — register toggles.
+- `src/components/feed/Composer.tsx` — post-type dropdown (replaces meme-only chip).
+- `src/components/competitions/FunZone.tsx` — new summary block.
+- `src/components/competitions/BattleRecap*.tsx` — new recap widgets.
+- `src/routes/competitions.$slug.tsx` — mount FunZone + Recap CTA.
+- `src/routes/competitions.$slug.fun.$type.tsx` — new filtered listing route.
+- `src/routes/competitions.$slug.recap.tsx` — new recap route.
+- `src/routes/competitions.hall-of-fame.tsx` — Fun Zone winners strip.
+- Server fn that finalises competitions — extend to write three new awards.
+- `src/routes/admin.modules.tsx` — new toggles.
+
+## Backward compatibility
+
+- No column removals; `category` stays optional and existing meme posts keep working.
+- Existing `/competitions/:slug/memes` route redirects into new fun route.
+- `competition_awards` already used for podium — adding new `award_type` strings is additive.
 
 Ready to implement on approval.

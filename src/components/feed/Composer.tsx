@@ -16,7 +16,7 @@ import { useFocusComposerConfig } from "@/lib/focus-composer-config";
 import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
 import type { PostPrivacy } from "@/lib/feed-types";
 import { useAppSettings } from "@/lib/app-settings";
-import { searchActiveCompetitions, listCompetitionNominees, type ActiveCompetitionLite, type NomineeLite } from "@/lib/competition-memes";
+import { searchActiveCompetitions, listCompetitionNominees, FUN_CATEGORIES, FUN_META, type FunCategory, type ActiveCompetitionLite, type NomineeLite } from "@/lib/competition-memes";
 
 
 
@@ -68,6 +68,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
   const [memeCompResults, setMemeCompResults] = useState<ActiveCompetitionLite[]>([]);
   const [memeNominees, setMemeNominees] = useState<NomineeLite[]>([]);
   const [memeNomineeId, setMemeNomineeId] = useState<string | null>(null);
+  const [funCategory, setFunCategory] = useState<FunCategory>("meme");
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const earnPost = useServerFn(earnFeedPost);
@@ -146,7 +147,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
     } else if (mode === "confession") {
       if (!text.trim()) { setError("Write your confession first."); return; }
     } else if (mode === "meme") {
-      if (!text.trim() && !files.length) { setError("Add a caption or an image for your meme."); return; }
+      if (!text.trim() && !files.length) { setError(`Add a caption or an image for your ${FUN_META[funCategory].label.toLowerCase()}.`); return; }
     } else {
       if (!text.trim() && !files.length) return;
     }
@@ -204,18 +205,19 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
         const hasMedia = files.length > 0;
         const kind = hasMedia ? "image" : "text";
         const isMeme = mode === "meme";
+        const activeCategory: FunCategory = isMeme ? funCategory : "meme";
         const { error } = await supabase.from("posts").insert({
           author_id: authorId,
           owner_id: authorId,
           kind,
           text: text.trim(),
-          slug: slugify(text.trim() || (isMeme ? "meme" : kind)),
+          slug: slugify(text.trim() || (isMeme ? activeCategory : kind)),
           media_urls,
           privacy,
           is_anonymous: anonymous,
           hashtags,
           ...(communityId ? { community_id: communityId } : {}),
-          ...(isMeme ? { category: "meme" } : {}),
+          ...(isMeme ? { category: activeCategory } : {}),
           ...(isMeme && memeCompetition ? { competition_id: memeCompetition.id } : {}),
           ...(isMeme && memeCompetition && memeNomineeId ? { nominee_id: memeNomineeId } : {}),
         });
@@ -226,7 +228,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
       earnPost().catch(() => {});
       setText(""); setFiles([]); setAnonymous(false); setFocused(false);
       setPollQuestion(""); setPollOptions(["", ""]); setMode("post");
-      setMemeCompetition(null); setMemeCompQuery(""); setMemeCompResults([]); setMemeNomineeId(null);
+      setMemeCompetition(null); setMemeCompQuery(""); setMemeCompResults([]); setMemeNomineeId(null); setFunCategory("meme");
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       onPosted?.();
     } catch (e) {
@@ -281,7 +283,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
               : mode === "poll"
                 ? "Optional context for your poll…"
                 : mode === "meme"
-                  ? "Add a caption for your meme… 😂"
+                  ? `Add a caption for your ${FUN_META[funCategory].label.toLowerCase()}… ${FUN_META[funCategory].emoji}`
                   : "What's on your mind? Use #hashtags and @mentions…"
           }
           className="w-full resize-none rounded-2xl border border-transparent bg-transparent px-1 py-2 text-[15px] leading-relaxed placeholder:text-muted-foreground focus:outline-none"
@@ -294,7 +296,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
         <ModeChip active={mode === "poll"} onClick={() => setMode("poll")} icon={BarChart3} label="Poll" tone="primary" />
         <ModeChip active={mode === "confession"} onClick={() => setMode("confession")} icon={VenetianMask} label="Confess" tone="fuchsia" />
         {modules.competitionMemes && (
-          <ModeChip active={mode === "meme"} onClick={() => setMode("meme")} icon={Laugh} label="😂 Meme" tone="amber" />
+          <ModeChip active={mode === "meme"} onClick={() => setMode("meme")} icon={Laugh} label="🎉 Fun" tone="amber" />
         )}
         {mode === "confession" && (
           <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-fuchsia-500/10 px-2.5 py-1 text-[11px] font-semibold text-fuchsia-500">
@@ -304,7 +306,22 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
       </div>
 
       {mode === "meme" && (
-        <div className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+        <div className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-3">
+          <div>
+            <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-500">Post type</div>
+            <div className="flex flex-wrap gap-1.5">
+              {FUN_CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setFunCategory(cat)}
+                  className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${funCategory === cat ? "border-amber-500 bg-amber-500/15 text-amber-500" : "border-border text-muted-foreground hover:text-foreground"}`}
+                >
+                  {FUN_META[cat].emoji} {FUN_META[cat].label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-amber-500">
             <Trophy className="h-3 w-3" /> Related competition <span className="font-normal normal-case text-muted-foreground">(optional)</span>
           </div>
@@ -504,7 +521,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-primary/80 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_8px_24px_-8px_var(--primary-glow)] hover:scale-[1.03] active:scale-[0.97] transition disabled:opacity-50 disabled:hover:scale-100"
           >
             {posting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            {mode === "confession" ? "Confess" : mode === "poll" ? "Publish poll" : mode === "meme" ? "Post meme" : "Post"}
+            {mode === "confession" ? "Confess" : mode === "poll" ? "Publish poll" : mode === "meme" ? `Post ${FUN_META[funCategory].label.toLowerCase()}` : "Post"}
           </button>
         </div>
       </div>
