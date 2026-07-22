@@ -37,7 +37,7 @@ function RecapPage() {
 
   useEffect(() => {
     if (!c?.id) return;
-    loadFunZoneSummary(c.id).then(setFunSummary);
+    loadFunZoneSummary(c.id).then((s) => setFunSummary(s.perCategory));
   }, [c?.id]);
 
   if (!c) return null;
