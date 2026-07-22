@@ -7,12 +7,14 @@ import { toast } from "sonner";
 import {
   listCompetitions, listCategories, adminSaveCompetition, adminDeleteCompetition,
   adminFinalizeWinners, adminListAllCompetitions, adminBulkSetEntryMode,
+  adminDeleteCategory,
 } from "@/lib/competitions.functions";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CompetitionEditorDialog, emptyCompetition } from "@/components/competitions/CompetitionEditorDialog";
+import { CategoryEditorDialog, emptyCategory } from "@/components/competitions/CategoryEditorDialog";
 import { AdminCompetitionManageDialog } from "@/components/competitions/AdminCompetitionManageDialog";
 
 export const Route = createFileRoute("/admin/competitions")({
