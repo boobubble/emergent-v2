@@ -23,6 +23,8 @@ export const Route = createFileRoute("/admin/competitions-feed")({
   component: Page,
 });
 
+export function CompetitionsFeedPanel() { return <Page />; }
+
 function Page() {
   const qc = useQueryClient();
   const get = useServerFn(getCompetitionsFeedSettings);

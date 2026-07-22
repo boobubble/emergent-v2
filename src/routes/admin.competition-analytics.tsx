@@ -13,6 +13,8 @@ export const Route = createFileRoute("/admin/competition-analytics")({ component
 
 type Win = "day" | "week" | "month" | "all";
 
+export function CompetitionAnalyticsPanel() { return <Page />; }
+
 function Page() {
   const fetchA = useServerFn(getCompetitionAnalytics);
   const [win, setWin] = useState<Win>("month");

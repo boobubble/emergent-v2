@@ -19,6 +19,8 @@ export const Route = createFileRoute("/admin/competition-categories")({
   component: AdminCategories,
 });
 
+export function CompetitionCategoriesPanel() { return <AdminCategories />; }
+
 function AdminCategories() {
   const list = useServerFn(listCategories);
   const save = useServerFn(adminSaveCategory);
