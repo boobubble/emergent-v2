@@ -29,4 +29,11 @@ export const MODULE_REGISTRY: ModuleDef[] = [
   { key: "competitionMemes",    label: "Competition Memes",     description: "Let users tag Feed memes with a competition.",           icon: Laugh,   group: "engagement" },
   { key: "nomineeMemeTagging",  label: "Nominee Meme Tagging",  description: "Show meme counts on nominee cards and allow supporting a nominee.", icon: Tag,     group: "engagement" },
   { key: "trendingMemeSection", label: "Trending Meme Section", description: "Show the 😂 Trending Battle Memes carousel on competition pages.",  icon: Trophy,  group: "engagement" },
+  { key: "funZone",             label: "Fun Zone",              description: "Master switch for the 🎉 Fun Zone hub on competition pages.",     icon: PartyPopper, group: "engagement" },
+  { key: "funZoneMemes",        label: "Fun Zone · Memes",      description: "Show the 😂 Memes card inside the Fun Zone.",                     icon: Laugh,   group: "engagement" },
+  { key: "funZoneFanArts",      label: "Fun Zone · Fan Arts",   description: "Show the 🎨 Fan Arts card inside the Fun Zone.",                  icon: Palette, group: "engagement" },
+  { key: "funZonePosters",      label: "Fun Zone · Posters",    description: "Show the 📸 Campaign Posters card inside the Fun Zone.",          icon: Camera,  group: "engagement" },
+  { key: "funZoneFanEdits",     label: "Fun Zone · Fan Edits",  description: "Show the 🎥 Fan Edits card inside the Fun Zone.",                 icon: Film,    group: "engagement" },
+  { key: "battleRecap",         label: "Battle Recap",          description: "Enable the premium recap page for completed competitions.",       icon: ScrollText, group: "engagement" },
+  { key: "autoAwards",          label: "Auto Fun Zone Awards",  description: "Auto-select Meme / Fan Art / Poster winner on competition finish.", icon: Sparkle, group: "engagement" },
 ];
