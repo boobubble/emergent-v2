@@ -1,0 +1,2 @@
+ALTER TABLE public.competitions ALTER COLUMN entry_mode SET DEFAULT 'hybrid';
+UPDATE public.competitions SET entry_mode = 'hybrid', qualification_method = COALESCE(qualification_method, 'top_n_week') WHERE entry_mode = 'manual';

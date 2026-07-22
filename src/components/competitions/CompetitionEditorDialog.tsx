@@ -38,8 +38,8 @@ export const emptyCompetition = () => ({
   max_votes_per_user: 1,
   allow_guest_voting: false,
   allow_anonymous_voting: false,
-  entry_mode: "manual" as "manual" | "smart" | "hybrid",
-  qualification_method: null as null | "fixed" | "top_n_week" | "top_n_month" | "top_percent" | "approval",
+  entry_mode: "hybrid" as "manual" | "smart" | "hybrid",
+  qualification_method: "top_n_week" as null | "fixed" | "top_n_week" | "top_n_month" | "top_percent" | "approval",
   qualification_config: {} as Record<string, any>,
   auto_approve: true,
 });
@@ -185,7 +185,7 @@ export function CompetitionEditorDialog({ value, onChange, onSaved, invalidateKe
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Entry Mode</Label>
-                  <Select value={editing.entry_mode ?? "manual"} onValueChange={(v) => set({ entry_mode: v })}>
+                  <Select value={editing.entry_mode ?? "hybrid"} onValueChange={(v) => set({ entry_mode: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="manual">Manual</SelectItem>
