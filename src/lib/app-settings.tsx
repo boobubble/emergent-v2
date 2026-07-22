@@ -43,6 +43,8 @@ const DEFAULTS: { layoutPriority: LayoutPriority; modules: ModulesFlags } = {
     reactions: true, voice: false, ai: true, emojis: true, streaks: true,
     referrals: false, notifications: true,
     competitionMemes: true, nomineeMemeTagging: true, trendingMemeSection: true,
+    funZone: true, funZoneMemes: true, funZoneFanArts: true, funZonePosters: true, funZoneFanEdits: true,
+    battleRecap: true, autoAwards: true,
   },
 };
 
