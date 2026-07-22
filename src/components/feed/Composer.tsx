@@ -221,6 +221,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
           ...(isMeme ? { category: activeCategory } : {}),
           ...(isMeme && memeCompetition ? { competition_id: memeCompetition.id } : {}),
           ...(isMeme && memeCompetition && memeNomineeId ? { nominee_id: memeNomineeId } : {}),
+          eligible_for_competitions: eligibleForCompetitions,
         });
         if (error) throw new Error(error.message);
       }
