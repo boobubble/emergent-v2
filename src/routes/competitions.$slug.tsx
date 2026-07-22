@@ -615,6 +615,18 @@ function CompetitionDetail() {
           </section>
         )}
 
+        {c.status === "completed" && (awards.length > 0 || funAwards.length > 0) && (
+          <div className="mt-4 flex justify-center">
+            <RouterLink
+              to="/competitions/$slug/recap"
+              params={{ slug: c.slug }}
+              className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-gradient-to-r from-amber-500/20 via-fuchsia-500/10 to-rose-500/20 px-5 py-2 text-sm font-bold text-amber-200 hover:from-amber-500/30 hover:to-rose-500/30"
+            >
+              <PartyPopper className="h-4 w-4" /> View Battle Recap
+            </RouterLink>
+          </div>
+        )}
+
         {/* Voting-state banner */}
         {c.status === "upcoming" && (
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-400/30 bg-sky-500/10 p-4 backdrop-blur">
