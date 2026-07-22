@@ -203,17 +203,21 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
         const media_urls = await uploadFiles();
         const hasMedia = files.length > 0;
         const kind = hasMedia ? "image" : "text";
+        const isMeme = mode === "meme";
         const { error } = await supabase.from("posts").insert({
           author_id: authorId,
           owner_id: authorId,
           kind,
           text: text.trim(),
-          slug: slugify(text.trim() || kind),
+          slug: slugify(text.trim() || (isMeme ? "meme" : kind)),
           media_urls,
           privacy,
           is_anonymous: anonymous,
           hashtags,
           ...(communityId ? { community_id: communityId } : {}),
+          ...(isMeme ? { category: "meme" } : {}),
+          ...(isMeme && memeCompetition ? { competition_id: memeCompetition.id } : {}),
+          ...(isMeme && memeCompetition && memeNomineeId ? { nominee_id: memeNomineeId } : {}),
         });
         if (error) throw new Error(error.message);
       }
