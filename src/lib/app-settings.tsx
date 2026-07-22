@@ -35,6 +35,7 @@ const DEFAULTS: { layoutPriority: LayoutPriority; modules: ModulesFlags } = {
     wallet: true, gif: true, badges: true, games: true, feed: true,
     reactions: true, voice: false, ai: true, emojis: true, streaks: true,
     referrals: false, notifications: true,
+    competitionMemes: true, nomineeMemeTagging: true, trendingMemeSection: true,
   },
 };
 
