@@ -19,6 +19,9 @@ export interface FeedPost {
   comment_count: number;
   trending_score: number;
   created_at: string;
+  category?: string | null;
+  competition_id?: string | null;
+  nominee_id?: string | null;
 }
 
 
