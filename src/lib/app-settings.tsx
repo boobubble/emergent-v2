@@ -19,6 +19,13 @@ export interface ModulesFlags {
   competitionMemes: boolean;
   nomineeMemeTagging: boolean;
   trendingMemeSection: boolean;
+  funZone: boolean;
+  funZoneMemes: boolean;
+  funZoneFanArts: boolean;
+  funZonePosters: boolean;
+  funZoneFanEdits: boolean;
+  battleRecap: boolean;
+  autoAwards: boolean;
 }
 
 interface AppSettings {
