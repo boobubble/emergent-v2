@@ -6,7 +6,7 @@ import { Plus, Trash2, Edit, Trophy, Users, Vote, Award, Pin, Star } from "lucid
 import { toast } from "sonner";
 import {
   listCompetitions, listCategories, adminSaveCompetition, adminDeleteCompetition,
-  adminFinalizeWinners, adminListAllCompetitions,
+  adminFinalizeWinners, adminListAllCompetitions, adminBulkSetEntryMode,
 } from "@/lib/competitions.functions";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,6 +26,7 @@ function AdminCompetitions() {
   const save = useServerFn(adminSaveCompetition);
   const del = useServerFn(adminDeleteCompetition);
   const finalize = useServerFn(adminFinalizeWinners);
+  const bulkMode = useServerFn(adminBulkSetEntryMode);
   const qc = useQueryClient();
 
   const { data = [] } = useQuery({
@@ -34,10 +35,23 @@ function AdminCompetitions() {
       try { return await listAdmin({}); } catch { return await listPublic({}); }
     },
   });
-  useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
+  const { data: categoryList = [] } = useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
 
   const [editing, setEditing] = useState<any | null>(null);
   const [managing, setManaging] = useState<string | null>(null);
+  const [bulkCategory, setBulkCategory] = useState<string>("all");
+  const [bulkOnlyManual, setBulkOnlyManual] = useState<boolean>(true);
+
+  const bulkM = useMutation({
+    mutationFn: () => bulkMode({ data: {
+      entry_mode: "hybrid",
+      qualification_method: "top_n_week",
+      category_id: bulkCategory === "all" ? null : bulkCategory,
+      only_manual: bulkOnlyManual,
+    } }),
+    onSuccess: (r: any) => { toast.success(`Set ${r?.updated ?? 0} competition(s) to Hybrid`); qc.invalidateQueries({ queryKey: ["competitions"] }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
 
   const stats = useMemo(() => {
     const arr = data as any[];
@@ -88,6 +102,41 @@ function AdminCompetitions() {
           </CardContent></Card>
         ))}
       </div>
+
+      <Card>
+        <CardContent className="flex flex-wrap items-center gap-3 p-4">
+          <div className="flex-1 min-w-[220px]">
+            <div className="text-sm font-semibold">Bulk: Set to Hybrid (Top-N per week)</div>
+            <div className="text-xs text-muted-foreground">Applies Hybrid entry mode. Admins can still switch any competition back to Manual later.</div>
+          </div>
+          <select
+            className="rounded-md border bg-background px-2 py-1 text-sm"
+            value={bulkCategory}
+            onChange={(e) => setBulkCategory(e.target.value)}
+          >
+            <option value="all">All categories</option>
+            {(categoryList as any[]).map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <label className="flex items-center gap-1 text-xs text-muted-foreground">
+            <input type="checkbox" checked={bulkOnlyManual} onChange={(e) => setBulkOnlyManual(e.target.checked)} />
+            Only currently Manual
+          </label>
+          <Button
+            size="sm"
+            disabled={bulkM.isPending}
+            onClick={() => {
+              const scope = bulkCategory === "all" ? "ALL competitions" : "competitions in this category";
+              const filter = bulkOnlyManual ? " currently set to Manual" : "";
+              if (confirm(`Set ${scope}${filter} to Hybrid?`)) bulkM.mutate();
+            }}
+          >
+            {bulkM.isPending ? "Applying…" : "Apply Hybrid"}
+          </Button>
+        </CardContent>
+      </Card>
+
 
       <div className="space-y-2">
         {(data as any[]).map((c) => (
