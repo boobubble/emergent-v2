@@ -103,6 +103,41 @@ function AdminCompetitions() {
         ))}
       </div>
 
+      <Card>
+        <CardContent className="flex flex-wrap items-center gap-3 p-4">
+          <div className="flex-1 min-w-[220px]">
+            <div className="text-sm font-semibold">Bulk: Set to Hybrid (Top-N per week)</div>
+            <div className="text-xs text-muted-foreground">Applies Hybrid entry mode. Admins can still switch any competition back to Manual later.</div>
+          </div>
+          <select
+            className="rounded-md border bg-background px-2 py-1 text-sm"
+            value={bulkCategory}
+            onChange={(e) => setBulkCategory(e.target.value)}
+          >
+            <option value="all">All categories</option>
+            {(categoryList as any[]).map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <label className="flex items-center gap-1 text-xs text-muted-foreground">
+            <input type="checkbox" checked={bulkOnlyManual} onChange={(e) => setBulkOnlyManual(e.target.checked)} />
+            Only currently Manual
+          </label>
+          <Button
+            size="sm"
+            disabled={bulkM.isPending}
+            onClick={() => {
+              const scope = bulkCategory === "all" ? "ALL competitions" : "competitions in this category";
+              const filter = bulkOnlyManual ? " currently set to Manual" : "";
+              if (confirm(`Set ${scope}${filter} to Hybrid?`)) bulkM.mutate();
+            }}
+          >
+            {bulkM.isPending ? "Applying…" : "Apply Hybrid"}
+          </Button>
+        </CardContent>
+      </Card>
+
+
       <div className="space-y-2">
         {(data as any[]).map((c) => (
           <Card key={c.id}><CardContent className="flex flex-wrap items-center gap-3 p-4">
