@@ -356,11 +356,13 @@ function CompetitionDetail() {
         resolvedLayout === "leaderboard" && !isAdmin ? (
           <PremiumNomineeCards
             competitionId={c.id}
+            competitionSlug={c.slug}
             competitors={competitors}
             myVote={myCompetitorVote?.competitorId ?? null}
             canVote={!!userId && votingOpen}
             hideCounts={hideResults}
             invalidateKey={["competition-slug", slug]}
+            memeCounts={nomineeMemeCounts}
           />
         ) : (
           <DynamicCompetitionLayout
