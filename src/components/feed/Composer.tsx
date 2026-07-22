@@ -49,7 +49,7 @@ function validateAndFilter(incoming: File[]): { ok: File[]; rejected: string[] }
   return { ok, rejected };
 }
 
-type ComposerMode = "post" | "poll" | "confession";
+type ComposerMode = "post" | "poll" | "confession" | "meme";
 
 export function Composer({ authorId, onPosted, communityId }: { authorId: string; onPosted?: () => void; communityId?: string | null }) {
   const [text, setText] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(DRAFT_KEY) || "" : ""));
