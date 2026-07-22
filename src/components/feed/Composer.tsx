@@ -473,12 +473,14 @@ function ModeChip({
   onClick: () => void;
   icon?: typeof BarChart3;
   label: string;
-  tone?: "primary" | "fuchsia";
+  tone?: "primary" | "fuchsia" | "amber";
 }) {
   const accent =
     tone === "fuchsia"
       ? "border-fuchsia-500 bg-fuchsia-500/15 text-fuchsia-500"
-      : "border-primary bg-primary/15 text-primary";
+      : tone === "amber"
+        ? "border-amber-500 bg-amber-500/15 text-amber-500"
+        : "border-primary bg-primary/15 text-primary";
   return (
     <button
       onClick={onClick}
