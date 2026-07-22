@@ -306,7 +306,22 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
       </div>
 
       {mode === "meme" && (
-        <div className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+        <div className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-3">
+          <div>
+            <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-500">Post type</div>
+            <div className="flex flex-wrap gap-1.5">
+              {FUN_CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setFunCategory(cat)}
+                  className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${funCategory === cat ? "border-amber-500 bg-amber-500/15 text-amber-500" : "border-border text-muted-foreground hover:text-foreground"}`}
+                >
+                  {FUN_META[cat].emoji} {FUN_META[cat].label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-amber-500">
             <Trophy className="h-3 w-3" /> Related competition <span className="font-normal normal-case text-muted-foreground">(optional)</span>
           </div>
