@@ -26,6 +26,9 @@ export interface ModulesFlags {
   funZoneFanEdits: boolean;
   battleRecap: boolean;
   autoAwards: boolean;
+  smartQualification: boolean;
+  smartQualificationApproval: boolean;
+  smartQualificationLive: boolean;
 }
 
 interface AppSettings {
