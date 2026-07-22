@@ -29,6 +29,7 @@ function AdminCompetitions() {
   const del = useServerFn(adminDeleteCompetition);
   const finalize = useServerFn(adminFinalizeWinners);
   const bulkMode = useServerFn(adminBulkSetEntryMode);
+  const delCat = useServerFn(adminDeleteCategory);
   const qc = useQueryClient();
 
   const { data = [] } = useQuery({
@@ -40,9 +41,16 @@ function AdminCompetitions() {
   const { data: categoryList = [] } = useQuery({ queryKey: ["competition-categories"], queryFn: () => cats({}) });
 
   const [editing, setEditing] = useState<any | null>(null);
+  const [editingCat, setEditingCat] = useState<any | null>(null);
   const [managing, setManaging] = useState<string | null>(null);
   const [bulkCategory, setBulkCategory] = useState<string>("all");
   const [bulkOnlyManual, setBulkOnlyManual] = useState<boolean>(true);
+
+  const delCatM = useMutation({
+    mutationFn: (id: string) => delCat({ data: { id } }),
+    onSuccess: () => { toast.success("Category deleted"); qc.invalidateQueries({ queryKey: ["competition-categories"] }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
 
   const bulkM = useMutation({
     mutationFn: () => bulkMode({ data: {
