@@ -68,6 +68,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
   const [memeCompResults, setMemeCompResults] = useState<ActiveCompetitionLite[]>([]);
   const [memeNominees, setMemeNominees] = useState<NomineeLite[]>([]);
   const [memeNomineeId, setMemeNomineeId] = useState<string | null>(null);
+  const [funCategory, setFunCategory] = useState<FunCategory>("meme");
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const earnPost = useServerFn(earnFeedPost);
