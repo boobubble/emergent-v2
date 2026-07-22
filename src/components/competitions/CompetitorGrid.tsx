@@ -145,6 +145,19 @@ export function CompetitorGrid({
                 {c.description && (
                   <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{c.description}</p>
                 )}
+                <div className="mt-1 flex flex-wrap items-center gap-1">
+                  {c.origin === "auto" ? (
+                    <Badge variant="outline" className="border-amber-400/40 bg-amber-400/10 text-[10px] text-amber-300">⭐ Auto Qualified</Badge>
+                  ) : (
+                    <Badge variant="outline" className="border-sky-400/40 bg-sky-400/10 text-[10px] text-sky-300">👑 Official</Badge>
+                  )}
+                  {c.status === "pending_approval" && (
+                    <Badge variant="outline" className="border-yellow-500/40 bg-yellow-500/10 text-[10px] text-yellow-300">Pending</Badge>
+                  )}
+                  {c.qualification_reason?.likes != null && (
+                    <span className="text-[10px] text-muted-foreground">· {c.qualification_reason.likes} likes</span>
+                  )}
+                </div>
               </div>
             </div>
 
