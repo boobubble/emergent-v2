@@ -180,6 +180,131 @@ export function CompetitionEditorDialog({ value, onChange, onSaved, invalidateKe
                 />
               </div>
             </div>
+            <div className="rounded-xl border p-3 space-y-3">
+              <div className="text-sm font-semibold">Entry & Qualification</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Entry Mode</Label>
+                  <Select value={editing.entry_mode ?? "manual"} onValueChange={(v) => set({ entry_mode: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="smart">Smart Automatic</SelectItem>
+                      <SelectItem value="hybrid">Hybrid</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {editing.entry_mode !== "manual" && (
+                  <div>
+                    <Label>Qualification Method</Label>
+                    <Select value={editing.qualification_method ?? ""} onValueChange={(v) => set({ qualification_method: v || null })}>
+                      <SelectTrigger><SelectValue placeholder="Choose method" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">Fixed Threshold</SelectItem>
+                        <SelectItem value="top_n_week">Top N This Week</SelectItem>
+                        <SelectItem value="top_n_month">Top N This Month</SelectItem>
+                        <SelectItem value="top_percent">Top % by Engagement</SelectItem>
+                        <SelectItem value="approval">Admin Approval</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+              {editing.entry_mode !== "manual" && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Source Module</Label>
+                      <Select
+                        value={editing.qualification_config?.source?.module ?? "feed"}
+                        onValueChange={(v) => set({ qualification_config: { ...editing.qualification_config, source: { ...(editing.qualification_config?.source ?? {}), module: v } } })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="feed">Feed</SelectItem>
+                          <SelectItem value="poetry">Poetry</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Feed Category (optional)</Label>
+                      <Select
+                        value={editing.qualification_config?.source?.category ?? "any"}
+                        onValueChange={(v) => set({ qualification_config: { ...editing.qualification_config, source: { ...(editing.qualification_config?.source ?? {}), category: v === "any" ? undefined : v } } })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any">Any</SelectItem>
+                          <SelectItem value="meme">Meme</SelectItem>
+                          <SelectItem value="fan_art">Fan Art</SelectItem>
+                          <SelectItem value="poster">Poster</SelectItem>
+                          <SelectItem value="fan_edit">Fan Edit</SelectItem>
+                          <SelectItem value="voice">Voice</SelectItem>
+                          <SelectItem value="reel">Reel</SelectItem>
+                          <SelectItem value="video">Video</SelectItem>
+                          <SelectItem value="photo">Photo</SelectItem>
+                          <SelectItem value="status">Status</SelectItem>
+                          <SelectItem value="profile_picture">Profile Picture</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {(editing.qualification_method === "fixed" || editing.qualification_method === "approval") && (
+                    <div className="grid grid-cols-3 gap-3">
+                      {(["likes", "comments", "shares", "views", "reads", "bookmarks"] as const).map((k) => (
+                        <div key={k}>
+                          <Label className="capitalize text-xs">Min {k}</Label>
+                          <Input
+                            type="number" min={0}
+                            value={editing.qualification_config?.thresholds?.[k] ?? ""}
+                            onChange={(e) => set({ qualification_config: { ...editing.qualification_config, thresholds: { ...(editing.qualification_config?.thresholds ?? {}), [k]: e.target.value ? Number(e.target.value) : undefined } } })}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {(editing.qualification_method === "top_n_week" || editing.qualification_method === "top_n_month") && (
+                    <div className="max-w-[200px]">
+                      <Label>Top N</Label>
+                      <Input
+                        type="number" min={1}
+                        value={editing.qualification_config?.top_n ?? 10}
+                        onChange={(e) => set({ qualification_config: { ...editing.qualification_config, top_n: Math.max(1, Number(e.target.value) || 10) } })}
+                      />
+                    </div>
+                  )}
+                  {editing.qualification_method === "top_percent" && (
+                    <div className="max-w-[200px]">
+                      <Label>Top % (1-100)</Label>
+                      <Input
+                        type="number" min={1} max={100}
+                        value={editing.qualification_config?.top_percent ?? 5}
+                        onChange={(e) => set({ qualification_config: { ...editing.qualification_config, top_percent: Math.min(100, Math.max(1, Number(e.target.value) || 5)) } })}
+                      />
+                    </div>
+                  )}
+                  <div className="rounded-lg border border-white/5 p-3">
+                    <div className="mb-2 text-xs font-semibold text-muted-foreground">Additional gates (AND)</div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {(["min_likes", "min_account_age_days", "min_followers", "min_content_age_hours"] as const).map((k) => (
+                        <div key={k}>
+                          <Label className="text-xs">{k.replace(/_/g, " ")}</Label>
+                          <Input
+                            type="number" min={0}
+                            value={editing.qualification_config?.gates?.[k] ?? ""}
+                            onChange={(e) => set({ qualification_config: { ...editing.qualification_config, gates: { ...(editing.qualification_config?.gates ?? {}), [k]: e.target.value ? Number(e.target.value) : undefined } } })}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={editing.auto_approve ?? true} onCheckedChange={(v) => set({ auto_approve: v })} />
+                    <Label className="text-xs">Auto-approve qualified entries (off = require admin approval)</Label>
+                  </div>
+                </>
+              )}
+            </div>
             <div className="rounded-xl border p-3">
               <div className="mb-2 text-sm font-semibold">Rewards</div>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
