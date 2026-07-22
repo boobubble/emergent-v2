@@ -586,6 +586,10 @@ export const adminSaveCompetition = createServerFn({ method: "POST" })
     allow_guest_voting?: boolean;
     allow_anonymous_voting?: boolean;
     community_id?: string | null;
+    entry_mode?: "manual" | "smart" | "hybrid";
+    qualification_method?: string | null;
+    qualification_config?: Record<string, unknown> | null;
+    auto_approve?: boolean;
   }) => data)
 
   .handler(async ({ data, context }) => {

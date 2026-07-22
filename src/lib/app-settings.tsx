@@ -26,6 +26,9 @@ export interface ModulesFlags {
   funZoneFanEdits: boolean;
   battleRecap: boolean;
   autoAwards: boolean;
+  smartQualification: boolean;
+  smartQualificationApproval: boolean;
+  smartQualificationLive: boolean;
 }
 
 interface AppSettings {
@@ -45,6 +48,7 @@ const DEFAULTS: { layoutPriority: LayoutPriority; modules: ModulesFlags } = {
     competitionMemes: true, nomineeMemeTagging: true, trendingMemeSection: true,
     funZone: true, funZoneMemes: true, funZoneFanArts: true, funZonePosters: true, funZoneFanEdits: true,
     battleRecap: true, autoAwards: true,
+    smartQualification: true, smartQualificationApproval: false, smartQualificationLive: true,
   },
 };
 

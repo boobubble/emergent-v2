@@ -1,135 +1,133 @@
-# Competition Page Premium Community Expansion
+# Competition Engine 2.0 — Smart Auto Qualification
 
-Reuses existing Feed / PostCard / reactions / realtime / competitions engine. No new post system, no duplicate storage. Extends the meme integration that already added `posts.category` + `posts.competition_id` + `posts.nominee_id`.
+Extends the existing competition module (Manual flow untouched). Adds Smart Automatic + Hybrid entry modes, a generic qualification engine that plugs into Feed / Poetry / Reels / Voice / etc., and admin rules with multiple qualification methods (Fixed Threshold, Top N Week/Month, Top %, Admin Approval) combinable with AND-style eligibility gates.
 
-## 1. Data — one small migration
+Fully backward compatible: existing `competition_competitors`, `competition_awards`, Hall of Fame, and Battle Hub all keep working.
 
-Extend the existing `posts.category` values to include the four Fun Zone types (values only; column already exists):
+## 1. Data model (one migration)
 
-- `meme`
-- `fan_art`
-- `poster`
-- `fan_edit`
+Extend `competitions`:
+- `entry_mode text default 'manual'` — `manual` | `smart` | `hybrid`
+- `qualification_method text` — `fixed` | `top_n_week` | `top_n_month` | `top_percent` | `approval`
+- `qualification_config jsonb default '{}'` — method params + gates + score weights + source content type
+- `auto_approve boolean default true`
 
-Extend `mehfil_hall_of_fame` … *(reuse `competition_awards` instead — it already exists).* Add three award kinds to `competition_awards.award_type`:
+Extend `competition_competitors`:
+- `origin text default 'manual'` — `manual` | `auto`
+- `qualification_reason jsonb` — snapshot of metrics at qualification time (`{likes, views, comments, score, method}`)
+- `status text default 'active'` — adds `pending_approval` | `rejected`
+- `post_id uuid` nullable — link back to the source content (Feed post, poem, reel)
+- `poem_id uuid` nullable — Poetry Hub source
 
-- `meme_of_battle`
-- `fan_art_winner`
-- `best_campaign_poster`
+Extend `posts` and `mehfil_poems`:
+- `eligible_for_competitions boolean default true`
 
-Each row already stores `post_id`/`user_id`/`competition_id`/`stats jsonb` — no schema change required beyond allowing the new enum-like strings (it's `text`).
+New table `competition_qualification_log` (audit + de-dupe):
+- `competition_id`, `content_type` (`post`|`poem`), `content_id`, `user_id`, `qualified_at`, `score`, `method`, `snapshot jsonb`
+- Unique `(competition_id, content_type, content_id)` prevents double-entry.
 
-Admin toggles under `app_settings.modules`:
+New table `competition_qualification_events` (lightweight queue):
+- `content_type`, `content_id`, `enqueued_at`, `processed_at`. Written by triggers on engagement changes; drained by the qualifier server fn.
 
-- `funZone` (master, default on)
-- `funZoneMemes`, `funZoneFanArts`, `funZonePosters`, `funZoneFanEdits` (default on)
-- `battleRecap` (default on)
-- `autoAwards` (default on — controls automatic Meme/Fan Art/Poster picks on finish)
+Standard GRANTs + RLS: users read own log rows; admins read all; only service_role writes to log/events.
 
-## 2. Feed Composer (`src/components/feed/Composer.tsx`)
+## 2. Engagement score (shared)
 
-Replace the single "😂 Meme" chip with a **Post Type** dropdown that appears alongside the existing Post/Poll/Confess modes:
+Single SQL function `public.engagement_score(_type text, _id uuid, _weights jsonb)` returning numeric. Reads:
+- Feed post: `posts.reaction_count`, `comment_count`, `trending_score`, plus optional `shares`/`views` from existing counters.
+- Poem: `mehfil_poems.upvote_count`, `read_count`, comments (from `comments`), `bookmark_count`, plus `reactions` where `target_type='mehfil_poem'`.
 
-```
-Type: [ Normal | 😂 Meme | 🎨 Fan Art | 📸 Poster | 🎥 Fan Edit ]
-```
+Weights come from `qualification_config.weights` with sane defaults (`likes:1, comments:3, shares:2, views:0.01, reads:0.05, bookmarks:2`). One function, all modules — no per-module scoring.
 
-- Selecting anything other than Normal sets `posts.category` to the matching key.
-- The existing Related Competition + Supported Nominee selectors show for ALL four fun types (not just meme). Same insert path.
+## 3. Qualifier server fn (`src/lib/competition-qualifier.functions.ts`)
 
-## 3. Fun Zone section (`src/components/competitions/FunZone.tsx` — new)
+`runQualification({ competitionId })` — service_role, invoked by:
+- DB trigger enqueue → cron drain (every 1 min, via existing `pg_cron` pattern used in retention).
+- Live: Supabase Realtime subscription on `competition_qualification_events` in the competition page triggers re-fetch of competitors — creator also gets a notification.
 
-Compact block mounted on `src/routes/competitions.$slug.tsx` between the poll/nominees and the current Trending Memes carousel. Four cards in a horizontal snap row:
+Logic per method:
+- **fixed** — evaluate every content item published within window; qualify when all thresholds met AND gates pass (min account age, min followers, min content age, `eligible_for_competitions=true`).
+- **top_n_week / top_n_month** — rank window content by engagement score, take top N. Anything falling out of top-N is soft-removed (status `disqualified` — keeps history in log).
+- **top_percent** — same, but N = ceil(percent * pool_size).
+- **approval** — same match logic as fixed, but insert with `status='pending_approval'`; admin action in Admin panel flips to `active`/`rejected`.
 
-```text
-┌ 😂 Memes ┐ ┌ 🎨 Fan Arts ┐ ┌ 📸 Posters ┐ ┌ 🎥 Fan Edits ┐
-│ thumb    │ │ thumb       │ │ thumb      │ │ thumb        │
-│ 128 posts│ │ 24 posts    │ │ 12 posts   │ │ 7 posts      │
-│ 2m ago   │ │ 15m ago     │ │ 1h ago     │ │ 3h ago       │
-└View all →┘ └View all →   ┘ └View all → ┘ └View all →   ┘
-```
+Combinable AND gates read from `qualification_config.gates`: `min_likes`, `min_account_age_days`, `min_followers`, `min_content_age_hours`, `require_eligible_flag`. All applied on top of the primary method.
 
-- One query: `posts_safe` where `competition_id=<id>` grouped by `category` → count, latest `created_at`, latest thumbnail. Ranked by engagement inside each bucket for the thumbnail.
-- Each card links to `/competitions/$slug/fun/$type` (new route below) which reuses `PostCard`.
-- Realtime channel filtered by `competition_id` refreshes counts/thumbs — reuses the pattern from `CompetitionMemesCarousel`.
-- Individual cards hidden by their module flag; whole block hidden by `funZone`.
+Per-competition source filter: `qualification_config.source = { module: 'feed'|'poetry'|'reels'|..., category?: 'meme'|'fan_art'|... }` — reuses the existing `posts.category` values plus new `voice`/`reel`/`video`/`photo`/`status`/`profile_picture` (data-only additions, no schema change beyond documented values).
 
-The existing Trending Memes carousel stays; Fun Zone sits above it as the entry-point summary.
+## 4. Triggers → event queue
 
-## 4. Filtered listing route (`src/routes/competitions.$slug.fun.$type.tsx` — new)
+Postgres triggers on:
+- `reactions` insert/delete
+- `comments` insert/delete
+- `posts` update (counter columns)
+- `mehfil_poems` update (`upvote_count`, `read_count`, `bookmark_count`)
 
-- Accepts `type ∈ {memes,fan-arts,posters,fan-edits}`.
-- Renders header ("😂 Memes for Battle X"), reuses `PostCard` list from `posts_safe` filtered by competition + category.
-- Optional `?nominee=<id>` filter reused.
-- Existing `/competitions/$slug/memes` route stays as an alias → redirects to `/fun/memes`.
+Each trigger inserts a row into `competition_qualification_events` (deduped per minute). Cheap, no full scans. Drain fn recalculates only affected content against live/upcoming smart competitions.
 
-## 5. Auto awards on competition finish
+## 5. Composer changes (minimal)
 
-Reuse the existing "competition finish" server flow (wherever `competitions.status → 'completed'` is transitioned + winners inserted into `competition_awards`). Extend that server fn to also compute:
+Add one checkbox — **"Eligible for competitions"**, default checked — to:
+- `src/components/feed/Composer.tsx`
+- Poetry composer (`src/routes/poetry.compose.tsx`)
+- Voice/Reels composers if present (reuse same field name).
 
-- Meme of the Battle
-- Fan Art Winner
-- Best Campaign Poster
+Value writes to `eligible_for_competitions`. No new upload flows.
 
-Ranking SQL against `posts_safe`:
+## 6. Admin: Competition Editor
 
-```sql
-score = reaction_count*2 + comment_count*3
-      + coalesce((extract(epoch from (now()-created_at))/-86400.0), 0)
-```
+Extend `CompetitionEditorDialog` with an "Entry & Qualification" tab:
+- Entry Mode radio.
+- When Smart/Hybrid: Qualification Method dropdown → method-specific config panel.
+- Source module + optional category dropdown.
+- Engagement score weight editor (advanced/collapsible).
+- Gates editor (checkboxes with numeric inputs).
+- Auto-approve toggle (defaults on; controls whether qualified content enters directly or `pending_approval`).
 
-For each of the three categories, pick the top row where `competition_id=<id> AND category=<key>` and insert into `competition_awards` with the new `award_type` string. Tie → newest wins.
+New page `src/routes/admin.competition-qualifier.tsx` — shows the qualification event queue, pending-approval competitors, and manual Approve/Reject/Note actions. Reuses admin patterns from `admin.competitions.tsx`.
 
-If `autoAwards` module flag is off, skip. If a category has zero posts, no award is created.
+Module flags in `app-settings.tsx` + admin toggle registry:
+- `smartQualification` (master)
+- `smartQualificationApproval`
+- `smartQualificationLive`
 
-## 6. Battle Recap page (`src/routes/competitions.$slug.recap.tsx` — new)
+## 7. Competition page
 
-Public, SEO-friendly. Read-only. Rendered automatically for competitions with `status='completed'`; the competition page shows a big "View Battle Recap" CTA once completed.
+`src/routes/competitions.$slug.tsx`:
+- Competitors list already renders `competition_competitors`. Add badge chips based on `origin`: 👑 Official Nominee / ⭐ Auto Qualified.
+- Under each auto competitor: "Qualified by: 520 Likes · 7.4K Views · 120 Comments" from `qualification_reason`.
+- Realtime channel on `competition_competitors` filtered by `competition_id` — reuses the existing Fun Zone pattern; no new subscriptions.
+- Hybrid: two subtly-separated groups (Official / Auto) with sticky sort.
 
-Sections:
+Hall of Fame + Recap: read `origin` on the winners row, render the same badge. `competition_awards` gets no schema change; badge is derived by joining back to `competition_competitors`.
 
-- Podium (Winner / Runner-up / Third from `competition_awards`).
-- Stat grid: total votes (`competition_votes` count), participants (`competition_competitors` count), reactions/comments (aggregated from `posts_safe` filtered by competition), duration, prize.
-- 🏆 Fun Zone Winners cards: Meme / Fan Art / Poster (each reusing `PostCard`).
-- 🔥 Most Active Supporter — top user by combined votes cast + comments authored on this competition's posts.
-- ⭐ Most Shared Post — highest engagement post overall for the competition.
-- Voting timeline — small sparkline built from grouped `competition_votes.created_at` by day (Recharts, already in project).
-- Top 5 Moments — top 5 posts by engagement across all Fun Zone categories.
+## 8. Notifications
 
-Lazy-loaded — the route is a separate file, so it code-splits automatically.
+Reuse `notifications` table. New `kind`s:
+- `competition_auto_qualified`
+- `competition_lost_qualification`
+- `competition_pending_approval`
+- `competition_approved`
+- `competition_rejected`
 
-## 7. Hall of Fame update (`src/routes/competitions.hall-of-fame.tsx`)
+Emitted from the qualifier fn.
 
-Each Hall of Fame card gains a small "Fun Zone winners" strip under the podium row, reading the three new `competition_awards` rows for that competition. Existing layout untouched otherwise. Link → the new Recap page.
+## 9. Backward compatibility
 
-## 8. Realtime
+- All existing competitions default to `entry_mode='manual'`, `qualification_method=null` → qualifier is a no-op for them.
+- Existing `competition_competitors` rows get `origin='manual'` via default.
+- Manual add/remove flow in the admin manage dialog is untouched.
+- `posts.eligible_for_competitions` defaults `true`, so historical content remains eligible when a smart competition is created.
 
-- Fun Zone block and per-type list already share the `postgres_changes` filter `competition_id=eq.<id>` used by `CompetitionMemesCarousel`. No new channels.
-- Recap page is read-once (competition already finished); no realtime needed.
+## 10. Performance
 
-## 9. Admin
-
-Add toggle rows in `src/routes/admin.modules.tsx` for the new flags, next to the existing `competitionMemes` group.
+- Trigger-driven; no full-table scans.
+- Event queue de-dupes per minute per content id.
+- Qualifier recalculates only queued content against live/upcoming smart competitions where the source filter matches — small set.
+- Top-N/Top-% ranking uses a single windowed query per competition, cached for 60 s in an app-level LRU (in server fn module).
 
 ## Files touched
 
-- Migration — `posts.category` value docs (no DDL) + `competition_awards.award_type` values allowed.
-- `src/lib/app-settings.tsx` — new module flags.
-- `src/lib/admin-modules.ts` — register toggles.
-- `src/components/feed/Composer.tsx` — post-type dropdown (replaces meme-only chip).
-- `src/components/competitions/FunZone.tsx` — new summary block.
-- `src/components/competitions/BattleRecap*.tsx` — new recap widgets.
-- `src/routes/competitions.$slug.tsx` — mount FunZone + Recap CTA.
-- `src/routes/competitions.$slug.fun.$type.tsx` — new filtered listing route.
-- `src/routes/competitions.$slug.recap.tsx` — new recap route.
-- `src/routes/competitions.hall-of-fame.tsx` — Fun Zone winners strip.
-- Server fn that finalises competitions — extend to write three new awards.
-- `src/routes/admin.modules.tsx` — new toggles.
-
-## Backward compatibility
-
-- No column removals; `category` stays optional and existing meme posts keep working.
-- Existing `/competitions/:slug/memes` route redirects into new fun route.
-- `competition_awards` already used for podium — adding new `award_type` strings is additive.
+Migration; `src/lib/app-settings.tsx`; `src/lib/admin-modules.ts`; `src/lib/competition-qualifier.functions.ts` (new); `src/lib/competitions.functions.ts` (extend admin save + finalize + list to include origin); `src/components/competitions/CompetitionEditorDialog.tsx`; `src/components/competitions/AdminCompetitionManageDialog.tsx` (approval actions); `src/routes/admin.competition-qualifier.tsx` (new); `src/routes/admin.modules.tsx` (auto via registry); `src/routes/competitions.$slug.tsx` (badges + reason + realtime); `src/routes/competitions.$slug.recap.tsx` and `competitions.hall-of-fame.tsx` (origin badge); `src/components/feed/Composer.tsx` + poetry/voice/reels composers (eligibility checkbox); cron entry to drain the event queue every minute.
 
 Ready to implement on approval.

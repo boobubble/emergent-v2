@@ -56,6 +56,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
   const [files, setFiles] = useState<File[]>([]);
   const [privacy, setPrivacy] = useState<PostPrivacy>("public");
   const [anonymous, setAnonymous] = useState(false);
+  const [eligibleForCompetitions, setEligibleForCompetitions] = useState(true);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
@@ -220,6 +221,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
           ...(isMeme ? { category: activeCategory } : {}),
           ...(isMeme && memeCompetition ? { competition_id: memeCompetition.id } : {}),
           ...(isMeme && memeCompetition && memeNomineeId ? { nominee_id: memeNomineeId } : {}),
+          eligible_for_competitions: eligibleForCompetitions,
         });
         if (error) throw new Error(error.message);
       }
@@ -507,6 +509,13 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
           </select>
           <button onClick={() => setAnonymous(!anonymous)} className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition ${anonymous ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
             <EyeOff className="h-3 w-3" /> Anon
+          </button>
+          <button
+            onClick={() => setEligibleForCompetitions((v) => !v)}
+            title="Allow this post to auto-qualify for matching competitions"
+            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition ${eligibleForCompetitions ? "border-amber-400/60 bg-amber-400/10 text-amber-300" : "border-border text-muted-foreground hover:text-foreground"}`}
+          >
+            🏆 Eligible
           </button>
           <PrivacyIconEl className="h-3.5 w-3.5 text-muted-foreground" />
           <button
