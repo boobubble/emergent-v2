@@ -529,6 +529,7 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
     id?: string; slug: string; name: string; description?: string;
     icon_url?: string; banner_url?: string; color?: string;
     enabled?: boolean; sort_order?: number;
+    default_qualification_config?: Record<string, any>;
   }) => data)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
