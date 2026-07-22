@@ -296,7 +296,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
         <ModeChip active={mode === "poll"} onClick={() => setMode("poll")} icon={BarChart3} label="Poll" tone="primary" />
         <ModeChip active={mode === "confession"} onClick={() => setMode("confession")} icon={VenetianMask} label="Confess" tone="fuchsia" />
         {modules.competitionMemes && (
-          <ModeChip active={mode === "meme"} onClick={() => setMode("meme")} icon={Laugh} label="😂 Meme" tone="amber" />
+          <ModeChip active={mode === "meme"} onClick={() => setMode("meme")} icon={Laugh} label="🎉 Fun" tone="amber" />
         )}
         {mode === "confession" && (
           <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-fuchsia-500/10 px-2.5 py-1 text-[11px] font-semibold text-fuchsia-500">
