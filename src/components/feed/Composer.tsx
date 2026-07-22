@@ -16,7 +16,7 @@ import { useFocusComposerConfig } from "@/lib/focus-composer-config";
 import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
 import type { PostPrivacy } from "@/lib/feed-types";
 import { useAppSettings } from "@/lib/app-settings";
-import { searchActiveCompetitions, listCompetitionNominees, type ActiveCompetitionLite, type NomineeLite } from "@/lib/competition-memes";
+import { searchActiveCompetitions, listCompetitionNominees, FUN_CATEGORIES, FUN_META, type FunCategory, type ActiveCompetitionLite, type NomineeLite } from "@/lib/competition-memes";
 
 
 
