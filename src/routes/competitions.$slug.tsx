@@ -38,6 +38,9 @@ import { StickyMobileVoteBar } from "@/components/competitions/StickyMobileVoteB
 import { PremiumEmptyState } from "@/components/competitions/PremiumEmptyState";
 import { PoetryBattleEntries } from "@/components/mehfil/PoetryBattleEntries";
 import { CompetitionMemesCarousel } from "@/components/competitions/CompetitionMemesCarousel";
+import { FunZone } from "@/components/competitions/FunZone";
+import { Link as RouterLink } from "@tanstack/react-router";
+import { PartyPopper } from "lucide-react";
 import { useAppSettings } from "@/lib/app-settings";
 
 import { Button } from "@/components/ui/button";
