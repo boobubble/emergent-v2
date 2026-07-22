@@ -38,8 +38,8 @@ export const emptyCompetition = () => ({
   max_votes_per_user: 1,
   allow_guest_voting: false,
   allow_anonymous_voting: false,
-  entry_mode: "manual" as "manual" | "smart" | "hybrid",
-  qualification_method: null as null | "fixed" | "top_n_week" | "top_n_month" | "top_percent" | "approval",
+  entry_mode: "hybrid" as "manual" | "smart" | "hybrid",
+  qualification_method: "top_n_week" as null | "fixed" | "top_n_week" | "top_n_month" | "top_percent" | "approval",
   qualification_config: {} as Record<string, any>,
   auto_approve: true,
 });
