@@ -29,7 +29,6 @@ import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as GamificationRouteImport } from './routes/gamification'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
-import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as DeployRouteImport } from './routes/deploy'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as CompetitionsRouteImport } from './routes/competitions'
@@ -49,6 +48,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PoetryIndexRouteImport } from './routes/poetry.index'
 import { Route as MehfilIndexRouteImport } from './routes/mehfil.index'
+import { Route as FeedbackIndexRouteImport } from './routes/feedback.index'
 import { Route as FeedIndexRouteImport } from './routes/feed.index'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
 import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
@@ -68,6 +68,7 @@ import { Route as MehfilChallengesRouteImport } from './routes/mehfil.challenges
 import { Route as MehfilSlugRouteImport } from './routes/mehfil.$slug'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as GamesLudoRouteImport } from './routes/games.ludo'
+import { Route as FeedbackIdRouteImport } from './routes/feedback.$id'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as CompetitionsLeaderboardRouteImport } from './routes/competitions.leaderboard'
 import { Route as CompetitionsHallOfFameRouteImport } from './routes/competitions.hall-of-fame'
@@ -301,11 +302,6 @@ const FindFriendsRoute = FindFriendsRouteImport.update({
   path: '/find-friends',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FeedbackRoute = FeedbackRouteImport.update({
-  id: '/feedback',
-  path: '/feedback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DeployRoute = DeployRouteImport.update({
   id: '/deploy',
   path: '/deploy',
@@ -398,6 +394,11 @@ const PoetryIndexRoute = PoetryIndexRouteImport.update({
 const MehfilIndexRoute = MehfilIndexRouteImport.update({
   id: '/mehfil/',
   path: '/mehfil/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackIndexRoute = FeedbackIndexRouteImport.update({
+  id: '/feedback/',
+  path: '/feedback/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedIndexRoute = FeedIndexRouteImport.update({
@@ -494,6 +495,11 @@ const GamesLudoRoute = GamesLudoRouteImport.update({
   id: '/ludo',
   path: '/ludo',
   getParentRoute: () => GamesRoute,
+} as any)
+const FeedbackIdRoute = FeedbackIdRouteImport.update({
+  id: '/feedback/$id',
+  path: '/feedback/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const FeedSlugRoute = FeedSlugRouteImport.update({
   id: '/feed/$slug',
@@ -1189,7 +1195,6 @@ export interface FileRoutesByFullPath {
   '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
-  '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRouteWithChildren
   '/gamification': typeof GamificationRoute
@@ -1306,6 +1311,7 @@ export interface FileRoutesByFullPath {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/feedback/$id': typeof FeedbackIdRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
@@ -1325,6 +1331,7 @@ export interface FileRoutesByFullPath {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/feed/': typeof FeedIndexRoute
+  '/feedback/': typeof FeedbackIndexRoute
   '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -1378,7 +1385,6 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
-  '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRouteWithChildren
   '/gamification': typeof GamificationRoute
@@ -1494,6 +1500,7 @@ export interface FileRoutesByTo {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/feedback/$id': typeof FeedbackIdRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
@@ -1513,6 +1520,7 @@ export interface FileRoutesByTo {
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/feed': typeof FeedIndexRoute
+  '/feedback': typeof FeedbackIndexRoute
   '/mehfil': typeof MehfilIndexRoute
   '/poetry': typeof PoetryIndexRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -1571,7 +1579,6 @@ export interface FileRoutesById {
   '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
-  '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRouteWithChildren
   '/gamification': typeof GamificationRoute
@@ -1688,6 +1695,7 @@ export interface FileRoutesById {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/feedback/$id': typeof FeedbackIdRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
@@ -1707,6 +1715,7 @@ export interface FileRoutesById {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/feed/': typeof FeedIndexRoute
+  '/feedback/': typeof FeedbackIndexRoute
   '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
   '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -1765,7 +1774,6 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/confessions'
     | '/deploy'
-    | '/feedback'
     | '/find-friends'
     | '/games'
     | '/gamification'
@@ -1882,6 +1890,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/feedback/$id'
     | '/games/ludo'
     | '/invite/$code'
     | '/mehfil/$slug'
@@ -1901,6 +1910,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/feed/'
+    | '/feedback/'
     | '/mehfil/'
     | '/poetry/'
     | '/settings/privacy'
@@ -1954,7 +1964,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/confessions'
     | '/deploy'
-    | '/feedback'
     | '/find-friends'
     | '/games'
     | '/gamification'
@@ -2070,6 +2079,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/feedback/$id'
     | '/games/ludo'
     | '/invite/$code'
     | '/mehfil/$slug'
@@ -2089,6 +2099,7 @@ export interface FileRouteTypes {
     | '/broadcaster'
     | '/competitions'
     | '/feed'
+    | '/feedback'
     | '/mehfil'
     | '/poetry'
     | '/settings/privacy'
@@ -2146,7 +2157,6 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/confessions'
     | '/deploy'
-    | '/feedback'
     | '/find-friends'
     | '/games'
     | '/gamification'
@@ -2263,6 +2273,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/feedback/$id'
     | '/games/ludo'
     | '/invite/$code'
     | '/mehfil/$slug'
@@ -2282,6 +2293,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/feed/'
+    | '/feedback/'
     | '/mehfil/'
     | '/poetry/'
     | '/_authenticated/settings/privacy'
@@ -2340,7 +2352,6 @@ export interface RootRouteChildren {
   CompetitionsRoute: typeof CompetitionsRouteWithChildren
   ConfessionsRoute: typeof ConfessionsRoute
   DeployRoute: typeof DeployRoute
-  FeedbackRoute: typeof FeedbackRoute
   FindFriendsRoute: typeof FindFriendsRoute
   GamesRoute: typeof GamesRouteWithChildren
   GamificationRoute: typeof GamificationRoute
@@ -2362,6 +2373,7 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
   FeedSlugRoute: typeof FeedSlugRoute
+  FeedbackIdRoute: typeof FeedbackIdRoute
   InviteCodeRoute: typeof InviteCodeRoute
   MehfilSlugRoute: typeof MehfilSlugRoute
   MehfilChallengesRoute: typeof MehfilChallengesRoute
@@ -2377,6 +2389,7 @@ export interface RootRouteChildren {
   PoetryLeaderboardRoute: typeof PoetryLeaderboardRoute
   UUsernameRoute: typeof UUsernameRoute
   FeedIndexRoute: typeof FeedIndexRoute
+  FeedbackIndexRoute: typeof FeedbackIndexRoute
   MehfilIndexRoute: typeof MehfilIndexRoute
   PoetryIndexRoute: typeof PoetryIndexRoute
   ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
@@ -2547,13 +2560,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FindFriendsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/feedback': {
-      id: '/feedback'
-      path: '/feedback'
-      fullPath: '/feedback'
-      preLoaderRoute: typeof FeedbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/deploy': {
       id: '/deploy'
       path: '/deploy'
@@ -2685,6 +2691,13 @@ declare module '@tanstack/react-router' {
       path: '/mehfil'
       fullPath: '/mehfil/'
       preLoaderRoute: typeof MehfilIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback/': {
+      id: '/feedback/'
+      path: '/feedback'
+      fullPath: '/feedback/'
+      preLoaderRoute: typeof FeedbackIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed/': {
@@ -2819,6 +2832,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/games/ludo'
       preLoaderRoute: typeof GamesLudoRouteImport
       parentRoute: typeof GamesRoute
+    }
+    '/feedback/$id': {
+      id: '/feedback/$id'
+      path: '/feedback/$id'
+      fullPath: '/feedback/$id'
+      preLoaderRoute: typeof FeedbackIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/feed/$slug': {
       id: '/feed/$slug'
@@ -4071,7 +4091,6 @@ const rootRouteChildren: RootRouteChildren = {
   CompetitionsRoute: CompetitionsRouteWithChildren,
   ConfessionsRoute: ConfessionsRoute,
   DeployRoute: DeployRoute,
-  FeedbackRoute: FeedbackRoute,
   FindFriendsRoute: FindFriendsRoute,
   GamesRoute: GamesRouteWithChildren,
   GamificationRoute: GamificationRoute,
@@ -4093,6 +4112,7 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
   FeedSlugRoute: FeedSlugRoute,
+  FeedbackIdRoute: FeedbackIdRoute,
   InviteCodeRoute: InviteCodeRoute,
   MehfilSlugRoute: MehfilSlugRoute,
   MehfilChallengesRoute: MehfilChallengesRoute,
@@ -4108,6 +4128,7 @@ const rootRouteChildren: RootRouteChildren = {
   PoetryLeaderboardRoute: PoetryLeaderboardRoute,
   UUsernameRoute: UUsernameRoute,
   FeedIndexRoute: FeedIndexRoute,
+  FeedbackIndexRoute: FeedbackIndexRoute,
   MehfilIndexRoute: MehfilIndexRoute,
   PoetryIndexRoute: PoetryIndexRoute,
   ApiGamesAchievementRoute: ApiGamesAchievementRoute,
