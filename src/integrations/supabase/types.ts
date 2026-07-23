@@ -2400,6 +2400,36 @@ export type Database = {
           },
         ]
       }
+      dm_message_requests: {
+        Row: {
+          created_at: string
+          id: string
+          preview: string | null
+          receiver_id: string
+          responded_at: string | null
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          preview?: string | null
+          receiver_id: string
+          responded_at?: string | null
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          preview?: string | null
+          receiver_id?: string
+          responded_at?: string | null
+          sender_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       dm_reads: {
         Row: {
           channel_id: string
@@ -5812,6 +5842,45 @@ export type Database = {
         }
         Relationships: []
       }
+      trust_violations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata: Json
+          points: number
+          reason: string | null
+          ref_id: string | null
+          ref_type: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json
+          points?: number
+          reason?: string | null
+          ref_id?: string | null
+          ref_type?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json
+          points?: number
+          reason?: string | null
+          ref_id?: string | null
+          ref_type?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       url_rules: {
         Row: {
           active: boolean
@@ -5967,6 +6036,27 @@ export type Database = {
           last_seen?: string
           user_agent?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_dm_privacy: {
+        Row: {
+          allow_message_requests: boolean
+          updated_at: string
+          user_id: string
+          who_can_dm: string
+        }
+        Insert: {
+          allow_message_requests?: boolean
+          updated_at?: string
+          user_id: string
+          who_can_dm?: string
+        }
+        Update: {
+          allow_message_requests?: boolean
+          updated_at?: string
+          user_id?: string
+          who_can_dm?: string
         }
         Relationships: []
       }
@@ -6197,6 +6287,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_trust_scores: {
+        Row: {
+          lifetime_points: number
+          points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          lifetime_points?: number
+          points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          lifetime_points?: number
+          points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       wallet_bonus_events: {
         Row: {
@@ -6449,33 +6560,42 @@ export type Database = {
       word_filters: {
         Row: {
           action: Database["public"]["Enums"]["word_filter_action"]
+          actions: string[]
           active: boolean
+          category: string
           created_at: string
           created_by: string
           id: string
           match_mode: string
           pattern: string
           severity: number
+          violation_points: number
         }
         Insert: {
           action?: Database["public"]["Enums"]["word_filter_action"]
+          actions?: string[]
           active?: boolean
+          category?: string
           created_at?: string
           created_by: string
           id?: string
           match_mode?: string
           pattern: string
           severity?: number
+          violation_points?: number
         }
         Update: {
           action?: Database["public"]["Enums"]["word_filter_action"]
+          actions?: string[]
           active?: boolean
+          category?: string
           created_at?: string
           created_by?: string
           id?: string
           match_mode?: string
           pattern?: string
           severity?: number
+          violation_points?: number
         }
         Relationships: []
       }
@@ -7024,6 +7144,7 @@ export type Database = {
         Args: { _stmts: string[] }
         Returns: Json
       }
+      apply_trust_penalty: { Args: { _user_id: string }; Returns: undefined }
       backup_history_purge_expired: { Args: never; Returns: number }
       bootstrap_first_admin: { Args: never; Returns: undefined }
       bump_page_view: { Args: { _slug: string }; Returns: undefined }
@@ -7362,6 +7483,10 @@ export type Database = {
       reset_installation: { Args: never; Returns: undefined }
       slugify: { Args: { input: string }; Returns: string }
       trio_channel_room: { Args: { _channel: string }; Returns: string }
+      trust_feature_unlocked: {
+        Args: { _feature: string; _user_id: string }
+        Returns: boolean
+      }
       unlock_chat_theme: {
         Args: { _theme_key: string }
         Returns: {
