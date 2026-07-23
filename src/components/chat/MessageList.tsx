@@ -13,6 +13,7 @@ import { useIgnore } from "@/lib/ignore-store";
 import { linkify } from "@/lib/linkify";
 import { MediaEmbed } from "./MediaEmbed";
 import { VoiceNoteBubble } from "./VoiceNoteBubble";
+import { useDmUrlMask } from "@/lib/dm-url-mask";
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.mime?.startsWith("audio/")) {
