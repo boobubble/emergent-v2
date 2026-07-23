@@ -125,6 +125,7 @@ import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
 import { Route as AdminFeedbotRouteImport } from './routes/admin.feedbot'
 import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
 import { Route as AdminFeedThemesRouteImport } from './routes/admin.feed-themes'
+import { Route as AdminFeedModerationRouteImport } from './routes/admin.feed-moderation'
 import { Route as AdminExportRouteImport } from './routes/admin.export'
 import { Route as AdminEmailRouteImport } from './routes/admin.email'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
@@ -776,6 +777,11 @@ const AdminFeedThemesRoute = AdminFeedThemesRouteImport.update({
   path: '/feed-themes',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFeedModerationRoute = AdminFeedModerationRouteImport.update({
+  id: '/feed-moderation',
+  path: '/feed-moderation',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminExportRoute = AdminExportRouteImport.update({
   id: '/export',
   path: '/export',
@@ -1207,6 +1213,7 @@ export interface FileRoutesByFullPath {
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
   '/admin/export': typeof AdminExportRoute
+  '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/feedbot': typeof AdminFeedbotRoute
@@ -1391,6 +1398,7 @@ export interface FileRoutesByTo {
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
   '/admin/export': typeof AdminExportRoute
+  '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/feedbot': typeof AdminFeedbotRoute
@@ -1578,6 +1586,7 @@ export interface FileRoutesById {
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
   '/admin/export': typeof AdminExportRoute
+  '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/feedbot': typeof AdminFeedbotRoute
@@ -1767,6 +1776,7 @@ export interface FileRouteTypes {
     | '/admin/economy'
     | '/admin/email'
     | '/admin/export'
+    | '/admin/feed-moderation'
     | '/admin/feed-themes'
     | '/admin/feedback'
     | '/admin/feedbot'
@@ -1951,6 +1961,7 @@ export interface FileRouteTypes {
     | '/admin/economy'
     | '/admin/email'
     | '/admin/export'
+    | '/admin/feed-moderation'
     | '/admin/feed-themes'
     | '/admin/feedback'
     | '/admin/feedbot'
@@ -2137,6 +2148,7 @@ export interface FileRouteTypes {
     | '/admin/economy'
     | '/admin/email'
     | '/admin/export'
+    | '/admin/feed-moderation'
     | '/admin/feed-themes'
     | '/admin/feedback'
     | '/admin/feedbot'
@@ -3149,6 +3161,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFeedThemesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/feed-moderation': {
+      id: '/admin/feed-moderation'
+      path: '/feed-moderation'
+      fullPath: '/admin/feed-moderation'
+      preLoaderRoute: typeof AdminFeedModerationRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/export': {
       id: '/admin/export'
       path: '/export'
@@ -3682,6 +3701,7 @@ interface AdminRouteChildren {
   AdminEconomyRoute: typeof AdminEconomyRoute
   AdminEmailRoute: typeof AdminEmailRoute
   AdminExportRoute: typeof AdminExportRoute
+  AdminFeedModerationRoute: typeof AdminFeedModerationRoute
   AdminFeedThemesRoute: typeof AdminFeedThemesRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminFeedbotRoute: typeof AdminFeedbotRoute
@@ -3768,6 +3788,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEconomyRoute: AdminEconomyRoute,
   AdminEmailRoute: AdminEmailRoute,
   AdminExportRoute: AdminExportRoute,
+  AdminFeedModerationRoute: AdminFeedModerationRoute,
   AdminFeedThemesRoute: AdminFeedThemesRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
   AdminFeedbotRoute: AdminFeedbotRoute,

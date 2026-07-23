@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket, Bookmark } from "lucide-react";
+import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket, Bookmark, Flag } from "lucide-react";
+import { reportFeedContent } from "@/lib/feed-moderation.functions";
 import { useSavedPosts } from "@/lib/use-saved-posts";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -193,9 +194,26 @@ export const PostCard = memo(function PostCard({
             <span className="capitalize tracking-wide">{post.privacy}</span>
           </div>
         </div>
-        {post.owner_id === meId && (
+        {post.owner_id === meId ? (
           <button onClick={del} className="rounded-full p-2 text-muted-foreground/80 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200" aria-label="Delete">
             <Trash2 className="h-4 w-4" />
+          </button>
+        ) : (
+          <button
+            onClick={() => requireAuth(async () => {
+              const reason = window.prompt("Why are you reporting this post? (Spam, Abuse, NSFW, Harassment, Other)");
+              if (!reason) return;
+              try {
+                await reportFeedContent({ data: { target_type: "post", target_id: post.id, reason: reason.slice(0, 200) } });
+                toast.success("Reported. Our team will review it.");
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed to report");
+              }
+            })}
+            className="rounded-full p-2 text-muted-foreground/80 hover:bg-orange-500/10 hover:text-orange-500 transition-colors"
+            aria-label="Report post"
+          >
+            <Flag className="h-4 w-4" />
           </button>
         )}
       </header>
