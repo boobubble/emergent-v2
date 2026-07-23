@@ -13,24 +13,30 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AdminToggle } from "@/components/admin/AdminToggle";
 import { toast } from "sonner";
 import {
-  getFeedModerationSettings, updateFeedModerationSettings,
-  listFeedModerationQueue, setFeedContentStatus,
-  warnFeedUser, banFeedPosting, restoreFeedPosting,
-  listFeedPostingBans, listFeedModLogs, scanPostImages,
-} from "@/lib/feed-moderation.functions";
-import { Eye, EyeOff, Trash2, RotateCcw, Sparkles, ShieldAlert, ScrollText } from "lucide-react";
+  CONTENT_TYPES, type ContentType,
+  getModerationSettings,
+  listModerationQueue, setContentModerationStatus,
+  warnUser, banPosting, restorePosting,
+  listPostingBans, listModerationLogs,
+  scanContentImages, scanContentText,
+} from "@/lib/moderation-engine.functions";
+import { updateFeedModerationSettings } from "@/lib/feed-moderation.functions";
+import { Eye, EyeOff, Trash2, RotateCcw, Sparkles, ShieldAlert, ScrollText, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/admin/feed-moderation")({
-  component: FeedModerationPage,
-  head: () => ({ meta: [{ title: "Feed Moderation · Admin" }] }),
+  component: ModerationEnginePage,
+  head: () => ({ meta: [{ title: "Moderation Engine · Admin" }] }),
 });
 
-function FeedModerationPage() {
+const ALL_TYPES = ["all", ...CONTENT_TYPES] as const;
+type TypeFilter = (typeof ALL_TYPES)[number];
+
+function ModerationEnginePage() {
   return (
     <div>
       <AdminPageHeader
-        title="Feed Moderation"
-        description="Queue, warnings, posting bans, spam controls, and AI image moderation — scoped to Feed content only."
+        title="Moderation Engine"
+        description="One unified pipeline protecting Feed, Poetry, Memes, Images, Videos, Comments, and Competition submissions."
       />
       <Tabs defaultValue="queue" className="mt-4">
         <TabsList className="flex flex-wrap gap-1">
@@ -52,33 +58,33 @@ function FeedModerationPage() {
 function QueueTab() {
   const qc = useQueryClient();
   const [status, setStatus] = useState<"pending_review" | "hidden" | "removed" | "all">("pending_review");
-  const fetchQueue = useServerFn(listFeedModerationQueue);
-  const setStatusFn = useServerFn(setFeedContentStatus);
-  const warnFn = useServerFn(warnFeedUser);
-  const banFn = useServerFn(banFeedPosting);
-  const scanFn = useServerFn(scanPostImages);
+  const [type, setType] = useState<TypeFilter>("all");
+  const fetchQueue = useServerFn(listModerationQueue);
+  const setStatusFn = useServerFn(setContentModerationStatus);
+  const warnFn = useServerFn(warnUser);
+  const banFn = useServerFn(banPosting);
+  const scanImgFn = useServerFn(scanContentImages);
+  const scanTextFn = useServerFn(scanContentText);
 
   const q = useQuery({
-    queryKey: ["feed-mod-queue", status],
-    queryFn: () => fetchQueue({ data: { status, kind: "all", limit: 100 } }),
+    queryKey: ["mod-engine-queue", status, type],
+    queryFn: () => fetchQueue({ data: { status, content_type: type, limit: 100 } }),
     refetchInterval: 30_000,
   });
 
-  async function act(target_type: "post" | "comment", id: string, newStatus: "visible" | "hidden" | "removed") {
+  async function act(ct: ContentType, id: string, newStatus: "visible" | "hidden" | "removed") {
     try {
-      await setStatusFn({ data: { target_type, target_id: id, status: newStatus } });
+      await setStatusFn({ data: { content_type: ct, content_id: id, status: newStatus } });
       toast.success(`Marked ${newStatus}`);
-      qc.invalidateQueries({ queryKey: ["feed-mod-queue"] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed");
-    }
+      qc.invalidateQueries({ queryKey: ["mod-engine-queue"] });
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
   }
 
   async function warn(userId: string) {
     const reason = window.prompt("Warning reason:");
     if (!reason) return;
     try {
-      await warnFn({ data: { user_id: userId, reason, severity: "warning" } });
+      await warnFn({ data: { user_id: userId, reason, severity: "warning", scope: "all" } });
       toast.success("Warning sent");
     } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
   }
@@ -89,97 +95,92 @@ function QueueTab() {
     const duration_hours = hoursStr.trim() ? Number(hoursStr) : undefined;
     const reason = window.prompt("Ban reason:") ?? undefined;
     try {
-      await banFn({ data: { user_id: userId, reason, duration_hours } });
+      await banFn({ data: { user_id: userId, reason, duration_hours, scope: "all" } });
       toast.success("Posting ban applied");
     } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
   }
 
-  async function scan(id: string) {
+  async function scanImg(ct: ContentType, id: string) {
     try {
-      const r = await scanFn({ data: { post_id: id } });
-      toast.success(`AI scan complete${"worst" in r ? `: worst=${(r as { worst: number }).worst.toFixed(2)}` : ""}`);
-      qc.invalidateQueries({ queryKey: ["feed-mod-queue"] });
+      const r = await scanImgFn({ data: { content_type: ct, content_id: id } });
+      toast.success(`Image scan: ${"worst" in r ? (r as { worst: number }).worst.toFixed(2) : "skipped"}`);
+      qc.invalidateQueries({ queryKey: ["mod-engine-queue"] });
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+  }
+  async function scanTxt(ct: ContentType, id: string) {
+    try {
+      const r = await scanTextFn({ data: { content_type: ct, content_id: id } });
+      toast.success(`Text scan: ${"worst" in r ? (r as { worst: number }).worst.toFixed(2) : "skipped"}`);
+      qc.invalidateQueries({ queryKey: ["mod-engine-queue"] });
     } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
   }
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <CardTitle>Queue</CardTitle>
-        <div className="flex gap-1">
-          {(["pending_review", "hidden", "removed", "all"] as const).map((s) => (
-            <Button key={s} size="sm" variant={status === s ? "default" : "outline"} onClick={() => setStatus(s)}>
-              {s.replace("_", " ")}
-            </Button>
-          ))}
+      <CardHeader className="flex flex-col gap-2">
+        <CardTitle>Unified Queue</CardTitle>
+        <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1">
+            {(["pending_review", "hidden", "removed", "all"] as const).map((s) => (
+              <Button key={s} size="sm" variant={status === s ? "default" : "outline"} onClick={() => setStatus(s)}>
+                {s.replace("_", " ")}
+              </Button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {ALL_TYPES.map((t) => (
+              <Button key={t} size="sm" variant={type === t ? "default" : "outline"} onClick={() => setType(t)}>
+                {t}
+              </Button>
+            ))}
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-2">
         {q.isLoading && <Skeleton className="h-32 w-full" />}
-
-        <section>
-          <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Posts ({q.data?.posts.length ?? 0})</h3>
-          <div className="space-y-2">
-            {(q.data?.posts ?? []).map((p) => (
-              <div key={p.id} className="rounded-lg border bg-card p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
-                      <Badge variant="outline">{p.moderation_status}</Badge>
-                      <Badge variant="secondary">{p.report_count} reports</Badge>
-                      {p.moderation_reason && <span className="text-muted-foreground">· {p.moderation_reason}</span>}
-                    </div>
-                    <p className="whitespace-pre-wrap text-sm">{(p.text as string)?.slice(0, 400) || <em className="text-muted-foreground">no text</em>}</p>
-                    {Array.isArray(p.media_urls) && (p.media_urls as string[]).length > 0 && (
-                      <div className="mt-2 flex gap-2 overflow-x-auto">
-                        {(p.media_urls as string[]).slice(0, 4).map((u) => (
-                          <img key={u} src={u} alt="" className="h-20 w-20 rounded object-cover" loading="lazy" />
-                        ))}
-                      </div>
-                    )}
-                    <div className="mt-1 text-[10px] text-muted-foreground">post {String(p.id).slice(0, 8)} · author {String(p.author_id).slice(0, 8)} · {new Date(p.created_at as string).toLocaleString()}</div>
+        {(q.data ?? []).map((row) => {
+          const prev = row.preview as Record<string, unknown> | null;
+          const text = (prev?.text ?? prev?.body ?? "") as string;
+          const media = ((prev?.media_urls ?? []) as unknown[]).filter((u): u is string => typeof u === "string");
+          return (
+            <div key={row.id} className="rounded-lg border bg-card p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
+                    <Badge variant="outline">{row.content_type}</Badge>
+                    <Badge>{row.status}</Badge>
+                    <Badge variant="secondary">{row.report_count} reports</Badge>
+                    {row.reason && <span className="text-muted-foreground">· {row.reason}</span>}
                   </div>
-                  <div className="flex shrink-0 flex-col gap-1">
-                    <Button size="sm" variant="outline" onClick={() => act("post", p.id as string, "visible")}><Eye className="mr-1 h-3 w-3" />Restore</Button>
-                    <Button size="sm" variant="outline" onClick={() => act("post", p.id as string, "hidden")}><EyeOff className="mr-1 h-3 w-3" />Hide</Button>
-                    <Button size="sm" variant="destructive" onClick={() => act("post", p.id as string, "removed")}><Trash2 className="mr-1 h-3 w-3" />Remove</Button>
-                    <Button size="sm" variant="outline" onClick={() => scan(p.id as string)}><Sparkles className="mr-1 h-3 w-3" />AI Scan</Button>
-                    <Button size="sm" variant="outline" onClick={() => warn(p.author_id as string)}><ShieldAlert className="mr-1 h-3 w-3" />Warn</Button>
-                    <Button size="sm" variant="destructive" onClick={() => ban(p.author_id as string)}>Ban</Button>
+                  {text && <p className="whitespace-pre-wrap text-sm">{text.slice(0, 400)}</p>}
+                  {media.length > 0 && (
+                    <div className="mt-2 flex gap-2 overflow-x-auto">
+                      {media.slice(0, 4).map((u) => (
+                        <img key={u} src={u} alt="" className="h-20 w-20 rounded object-cover" loading="lazy" />
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-1 text-[10px] text-muted-foreground">
+                    id {String(row.content_id).slice(0, 8)} · owner {row.owner_id ? String(row.owner_id).slice(0, 8) : "?"}
+                    {" · updated "}{new Date(row.updated_at as string).toLocaleString()}
                   </div>
                 </div>
-              </div>
-            ))}
-            {q.data?.posts.length === 0 && <p className="text-sm text-muted-foreground">No posts in this state.</p>}
-          </div>
-        </section>
-
-        <section>
-          <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Comments ({q.data?.comments.length ?? 0})</h3>
-          <div className="space-y-2">
-            {(q.data?.comments ?? []).map((c) => (
-              <div key={c.id} className="rounded-lg border bg-card p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
-                      <Badge variant="outline">{c.moderation_status}</Badge>
-                      <Badge variant="secondary">{c.report_count} reports</Badge>
-                    </div>
-                    <p className="whitespace-pre-wrap text-sm">{c.text as string}</p>
-                    <div className="mt-1 text-[10px] text-muted-foreground">comment {String(c.id).slice(0, 8)} · author {String(c.author_id).slice(0, 8)}</div>
-                  </div>
-                  <div className="flex shrink-0 flex-col gap-1">
-                    <Button size="sm" variant="outline" onClick={() => act("comment", c.id as string, "visible")}>Restore</Button>
-                    <Button size="sm" variant="outline" onClick={() => act("comment", c.id as string, "hidden")}>Hide</Button>
-                    <Button size="sm" variant="destructive" onClick={() => act("comment", c.id as string, "removed")}>Remove</Button>
-                    <Button size="sm" variant="outline" onClick={() => warn(c.author_id as string)}>Warn</Button>
-                  </div>
+                <div className="flex shrink-0 flex-col gap-1">
+                  <Button size="sm" variant="outline" onClick={() => act(row.content_type as ContentType, row.content_id as string, "visible")}><Eye className="mr-1 h-3 w-3" />Restore</Button>
+                  <Button size="sm" variant="outline" onClick={() => act(row.content_type as ContentType, row.content_id as string, "hidden")}><EyeOff className="mr-1 h-3 w-3" />Hide</Button>
+                  <Button size="sm" variant="destructive" onClick={() => act(row.content_type as ContentType, row.content_id as string, "removed")}><Trash2 className="mr-1 h-3 w-3" />Remove</Button>
+                  <Button size="sm" variant="outline" onClick={() => scanImg(row.content_type as ContentType, row.content_id as string)}><Sparkles className="mr-1 h-3 w-3" />AI Image</Button>
+                  <Button size="sm" variant="outline" onClick={() => scanTxt(row.content_type as ContentType, row.content_id as string)}><FileText className="mr-1 h-3 w-3" />AI Text</Button>
+                  {row.owner_id && <>
+                    <Button size="sm" variant="outline" onClick={() => warn(row.owner_id as string)}><ShieldAlert className="mr-1 h-3 w-3" />Warn</Button>
+                    <Button size="sm" variant="destructive" onClick={() => ban(row.owner_id as string)}>Ban</Button>
+                  </>}
                 </div>
               </div>
-            ))}
-            {q.data?.comments.length === 0 && <p className="text-sm text-muted-foreground">No comments in this state.</p>}
-          </div>
-        </section>
+            </div>
+          );
+        })}
+        {q.data?.length === 0 && <p className="text-sm text-muted-foreground">Nothing in this state.</p>}
       </CardContent>
     </Card>
   );
@@ -188,13 +189,13 @@ function QueueTab() {
 // ---------------- Bans ----------------
 function BansTab() {
   const qc = useQueryClient();
-  const fetchBans = useServerFn(listFeedPostingBans);
-  const restoreFn = useServerFn(restoreFeedPosting);
-  const q = useQuery({ queryKey: ["feed-posting-bans"], queryFn: () => fetchBans({}) });
+  const fetchBans = useServerFn(listPostingBans);
+  const restoreFn = useServerFn(restorePosting);
+  const q = useQuery({ queryKey: ["mod-engine-bans"], queryFn: () => fetchBans({}) });
 
   return (
     <Card>
-      <CardHeader><CardTitle>Feed Posting Bans</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Posting Bans</CardTitle></CardHeader>
       <CardContent className="space-y-2">
         {q.isLoading && <Skeleton className="h-32 w-full" />}
         {(q.data ?? []).map((b) => (
@@ -202,14 +203,16 @@ function BansTab() {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={b.active ? "destructive" : "outline"}>{b.active ? "Active" : "Ended"}</Badge>
+                <Badge variant="secondary">{b.scope ?? "all"}</Badge>
                 <span className="font-mono text-xs">{String(b.user_id).slice(0, 8)}</span>
                 {b.expires_at && <span className="text-xs text-muted-foreground">until {new Date(b.expires_at).toLocaleString()}</span>}
+                {!b.expires_at && b.active && <span className="text-xs text-destructive">permanent</span>}
               </div>
               {b.reason && <p className="mt-1 text-xs text-muted-foreground">{b.reason}</p>}
             </div>
             {b.active && (
               <Button size="sm" variant="outline" onClick={async () => {
-                try { await restoreFn({ data: { user_id: b.user_id as string } }); toast.success("Restored"); qc.invalidateQueries({ queryKey: ["feed-posting-bans"] }); }
+                try { await restoreFn({ data: { user_id: b.user_id as string } }); toast.success("Restored"); qc.invalidateQueries({ queryKey: ["mod-engine-bans"] }); }
                 catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
               }}><RotateCcw className="mr-1 h-3 w-3" />Restore</Button>
             )}
@@ -223,19 +226,33 @@ function BansTab() {
 
 // ---------------- Logs ----------------
 function LogsTab() {
-  const fetchLogs = useServerFn(listFeedModLogs);
-  const q = useQuery({ queryKey: ["feed-mod-logs"], queryFn: () => fetchLogs({ data: { limit: 100 } }) });
+  const [type, setType] = useState<TypeFilter>("all");
+  const fetchLogs = useServerFn(listModerationLogs);
+  const q = useQuery({
+    queryKey: ["mod-engine-logs", type],
+    queryFn: () => fetchLogs({ data: { limit: 200, content_type: type } }),
+  });
   return (
     <Card>
-      <CardHeader><CardTitle className="flex items-center gap-2"><ScrollText className="h-4 w-4" />Moderator Logs</CardTitle></CardHeader>
+      <CardHeader className="flex flex-col gap-2">
+        <CardTitle className="flex items-center gap-2"><ScrollText className="h-4 w-4" />Moderation Logs</CardTitle>
+        <div className="flex flex-wrap gap-1">
+          {ALL_TYPES.map((t) => (
+            <Button key={t} size="sm" variant={type === t ? "default" : "outline"} onClick={() => setType(t)}>{t}</Button>
+          ))}
+        </div>
+      </CardHeader>
       <CardContent className="space-y-1 text-xs font-mono">
         {q.isLoading && <Skeleton className="h-32 w-full" />}
         {(q.data ?? []).map((l) => (
           <div key={l.id} className="flex flex-wrap gap-2 border-b py-1">
             <span className="text-muted-foreground">{new Date(l.created_at as string).toLocaleString()}</span>
-            <Badge variant="outline">{l.action}</Badge>
-            {l.target_id && <span>target={String(l.target_id).slice(0, 12)}</span>}
+            {l.content_type && <Badge variant="outline">{l.content_type}</Badge>}
+            <Badge>{l.action_taken}</Badge>
+            {l.content_id && <span>c={String(l.content_id).slice(0, 12)}</span>}
             {l.target_user_id && <span>user={String(l.target_user_id).slice(0, 12)}</span>}
+            {l.moderator_id && <span>mod={String(l.moderator_id).slice(0, 12)}</span>}
+            {l.reason && <span className="text-muted-foreground">"{l.reason}"</span>}
           </div>
         ))}
         {q.data?.length === 0 && <p className="text-sm text-muted-foreground">No logs yet.</p>}
@@ -247,9 +264,9 @@ function LogsTab() {
 // ---------------- Settings ----------------
 function SettingsTab() {
   const qc = useQueryClient();
-  const fetchSettings = useServerFn(getFeedModerationSettings);
+  const fetchSettings = useServerFn(getModerationSettings);
   const updateFn = useServerFn(updateFeedModerationSettings);
-  const q = useQuery({ queryKey: ["feed-mod-settings"], queryFn: () => fetchSettings({}) });
+  const q = useQuery({ queryKey: ["mod-engine-settings"], queryFn: () => fetchSettings({}) });
   const s = q.data;
   const [form, setForm] = useState<Record<string, unknown>>({});
 
@@ -262,29 +279,21 @@ function SettingsTab() {
       await updateFn({ data: form as any });
       toast.success("Settings saved");
       setForm({});
-      qc.invalidateQueries({ queryKey: ["feed-mod-settings"] });
+      qc.invalidateQueries({ queryKey: ["mod-engine-settings"] });
     } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
   };
 
   return (
     <Card>
-      <CardHeader><CardTitle>Feed Moderation Settings</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Engine Settings</CardTitle></CardHeader>
       <CardContent className="space-y-4">
-        <ToggleRow
-          label="Enable Feed Moderation"
-          description="Master switch. When off, spam/duplicate checks and AI moderation are skipped."
-          checked={!!cur.enabled}
-          onCheckedChange={(v) => setForm((f) => ({ ...f, enabled: v }))}
-        />
-        <ToggleRow
-          label="AI Image Moderation"
-          description="Scan uploaded images for nudity, violence, gore, child safety, drugs, weapons."
-          checked={!!cur.ai_image_moderation_enabled}
-          onCheckedChange={(v) => setForm((f) => ({ ...f, ai_image_moderation_enabled: v }))}
-        />
+        <p className="text-xs text-muted-foreground">These settings apply to every content type protected by the engine (Feed, Poetry, Memes, Images, Videos, Comments, Competition submissions).</p>
+        <ToggleRow label="Enable Moderation Engine" description="Master switch." checked={!!cur.enabled} onCheckedChange={(v) => setForm((f) => ({ ...f, enabled: v }))} />
+        <ToggleRow label="AI Image Moderation" description="Nudity, violence, gore, child safety, drugs, weapons." checked={!!cur.ai_image_moderation_enabled} onCheckedChange={(v) => setForm((f) => ({ ...f, ai_image_moderation_enabled: v }))} />
+        <ToggleRow label="AI Text Moderation" description="Hate speech, harassment, self-harm, unsafe text." checked={!!(cur as { ai_text_moderation_enabled?: boolean }).ai_text_moderation_enabled} onCheckedChange={(v) => setForm((f) => ({ ...f, ai_text_moderation_enabled: v }))} />
         <div className="grid gap-3 sm:grid-cols-2">
           <NumberField label="Auto-hide report threshold" value={cur.auto_hide_report_threshold as number} onChange={(v) => setForm((f) => ({ ...f, auto_hide_report_threshold: v }))} />
-          <NumberField label="AI auto-hide score threshold (0-1)" value={cur.auto_hide_ai_threshold as number} step={0.05} onChange={(v) => setForm((f) => ({ ...f, auto_hide_ai_threshold: v }))} />
+          <NumberField label="AI auto-hide score (0-1)" value={cur.auto_hide_ai_threshold as number} step={0.05} onChange={(v) => setForm((f) => ({ ...f, auto_hide_ai_threshold: v }))} />
           <NumberField label="Duplicate window (minutes)" value={cur.duplicate_window_minutes as number} onChange={(v) => setForm((f) => ({ ...f, duplicate_window_minutes: v }))} />
           <NumberField label="Max posts per hour" value={cur.max_posts_per_hour as number} onChange={(v) => setForm((f) => ({ ...f, max_posts_per_hour: v }))} />
           <NumberField label="Max comments per minute" value={cur.max_comments_per_minute as number} onChange={(v) => setForm((f) => ({ ...f, max_comments_per_minute: v }))} />
