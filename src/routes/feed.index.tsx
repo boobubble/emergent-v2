@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } 
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon, Shield, LogOut, Radio, PenLine } from "lucide-react";
 import { useMehfilSettings } from "@/lib/use-mehfil-label";
+import { useAppSettings } from "@/lib/app-settings";
 import { useThemeMode } from "@/lib/use-theme-mode";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
