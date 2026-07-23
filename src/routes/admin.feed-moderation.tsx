@@ -258,7 +258,8 @@ function SettingsTab() {
 
   const save = async () => {
     try {
-      await updateFn({ data: form as Parameters<typeof updateFeedModerationSettings>[0]["data"] });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await updateFn({ data: form as any });
       toast.success("Settings saved");
       setForm({});
       qc.invalidateQueries({ queryKey: ["feed-mod-settings"] });
