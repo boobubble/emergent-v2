@@ -1100,8 +1100,6 @@ function FeedPage() {
             <RailSection label="Quick Links" tone="primary" />
             <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/60 bg-card/70 p-2 shadow-sm backdrop-blur">
               {[
-                { label: "Hall of Fame", icon: Crown, color: "from-amber-500 to-yellow-500", onClick: () => navigate({ to: "/hall-of-fame" }) },
-                { label: "Communities", icon: Globe, color: "from-emerald-500 to-teal-500", onClick: () => navigate({ to: "/communities" }) },
                 { label: "Feedback", icon: MessageSquare, color: "from-blue-500 to-indigo-500", onClick: () => navigate({ to: "/feedback" }) },
                 { label: "Report a Bug", icon: Bug, color: "from-rose-500 to-red-600", onClick: () => navigate({ to: "/feedback", search: { type: "bug" } as never }) },
               ].map((a) => {
