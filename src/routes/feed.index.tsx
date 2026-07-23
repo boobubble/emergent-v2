@@ -143,6 +143,11 @@ function FeedPage() {
   const mehfilLabel = mehfilSettings.module_name || "Poetry Hub";
   const mehfilWidgetEnabled = mehfilSettings.enabled !== false;
   const mehfilWidgetFreq = Math.max(2, Number(mehfilSettings.trending_widget_frequency) || 5);
+  const appSettings = useAppSettings();
+  const discoveryCfg = useMemo(
+    () => mergeDiscoveryWidgetsConfig(appSettings.raw?.discovery_widgets),
+    [appSettings.raw],
+  );
 
   // Universal Platform Search — extends the header search with debounced
   // server results for Poems, Poetry Battles, Categories, and Hall of Fame.
