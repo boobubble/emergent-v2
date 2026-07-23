@@ -15,6 +15,8 @@ import {
   XP_PER_LEVEL,
 } from "@/lib/journey";
 import { BADGES, TIER_COLOR } from "@/lib/achievements";
+import { MissionsPanel } from "@/components/feed/MissionsPanel";
+import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
 
 export const Route = createFileRoute("/journey")({
   head: () => ({
@@ -125,8 +127,19 @@ function JourneyPage() {
         </section>
       )}
 
+      {/* Live daily missions + challenges (shared with Feed) */}
+      {me?.id && (
+        <Section title="Today's Missions & Challenges" hint="Reset every 24 hours · earn XP & coins.">
+          <div className="grid gap-3 lg:grid-cols-2">
+            <MissionsPanel />
+            <DailyChallengesWidget meId={me.id} />
+          </div>
+        </Section>
+      )}
+
       {/* Discovery missions */}
       <Section title="Discovery Missions" hint="Guided steps to explore the platform.">
+
         <div className="grid gap-2 sm:grid-cols-2">
           {missions.map((m) => (
             <div key={m.id} className={`flex items-center gap-3 rounded-2xl border p-3 ${m.done ? "border-emerald-500/40 bg-emerald-500/5" : "border-border bg-background/50"}`}>
