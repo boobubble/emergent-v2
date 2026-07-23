@@ -3,7 +3,19 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Award, Crown, Medal, Search, Star, Trophy, Feather } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Award,
+  Crown,
+  Feather,
+  Flame,
+  Medal,
+  Search,
+  Sparkles,
+  Star,
+  Trophy,
+} from "lucide-react";
 import { listHallOfFame } from "@/lib/competitions.functions";
 import { getMehfilHallOfFame } from "@/lib/mehfil.functions";
 import { Button } from "@/components/ui/button";
@@ -12,17 +24,26 @@ import { Input } from "@/components/ui/input";
 import { z } from "zod";
 
 const searchSchema = z.object({
+  // Kept for backward compatibility with legacy redirect links; unused visually.
   tab: z.enum(["all", "competitions", "poetry"]).optional().catch("all"),
+  filter: z.string().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/hall-of-fame")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Hall of Fame — Champions of Competitions & Poetry" },
-      { name: "description", content: "Every champion. Every craft. Browse winners across all competitions and poetry battles — one legendary archive." },
-      { property: "og:title", content: "Hall of Fame — Champions" },
-      { property: "og:description", content: "Every champion. Every craft. The permanent archive of winners." },
+      { title: "Hall of Fame — Museum of Champions" },
+      {
+        name: "description",
+        content:
+          "The greatest creators in platform history. Every competition champion and poetry laureate — one elegant gallery.",
+      },
+      { property: "og:title", content: "Hall of Fame — Museum of Champions" },
+      {
+        property: "og:description",
+        content: "The greatest creators in platform history.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -48,7 +69,11 @@ type UnifiedRow = {
   year: number;
   rank: number;
   awardedAt: string;
-  profile: { username?: string | null; display_name?: string | null; avatar_url?: string | null } | null;
+  profile: {
+    username?: string | null;
+    display_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
   title: string;
   linkTo: string;
   linkParams: Record<string, string>;
@@ -60,10 +85,28 @@ type UnifiedRow = {
   period?: string | null;
 };
 
-const rankStyle: Record<number, { icon: React.ReactNode; color: string; label: string }> = {
-  1: { icon: <Crown className="h-4 w-4" />, color: "from-amber-400 to-yellow-500", label: "Champion" },
-  2: { icon: <Medal className="h-4 w-4" />, color: "from-slate-300 to-slate-400", label: "Runner Up" },
-  3: { icon: <Award className="h-4 w-4" />, color: "from-orange-400 to-amber-600", label: "Third Place" },
+const rankStyle: Record<
+  number,
+  { icon: React.ReactNode; color: string; label: string; ring: string }
+> = {
+  1: {
+    icon: <Crown className="h-4 w-4" />,
+    color: "from-amber-300 via-yellow-400 to-amber-600",
+    label: "Champion",
+    ring: "ring-amber-400/50",
+  },
+  2: {
+    icon: <Medal className="h-4 w-4" />,
+    color: "from-slate-200 via-slate-300 to-slate-500",
+    label: "Runner Up",
+    ring: "ring-slate-300/40",
+  },
+  3: {
+    icon: <Award className="h-4 w-4" />,
+    color: "from-orange-400 via-amber-500 to-orange-700",
+    label: "Third Place",
+    ring: "ring-orange-400/40",
+  },
 };
 
 function formatNumber(n: number): string {
@@ -72,13 +115,28 @@ function formatNumber(n: number): string {
   return String(n);
 }
 
+function relativeTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  const diff = Date.now() - then;
+  const day = 86_400_000;
+  if (diff < day) return "Today";
+  if (diff < day * 2) return "Yesterday";
+  if (diff < day * 7) return `${Math.floor(diff / day)} days ago`;
+  if (diff < day * 30) return `${Math.floor(diff / (day * 7))} weeks ago`;
+  if (diff < day * 365) return `${Math.floor(diff / (day * 30))} months ago`;
+  return `${Math.floor(diff / (day * 365))} years ago`;
+}
+
 function HallOfFamePage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const activeTab = (search.tab ?? "all") as "all" | "competitions" | "poetry";
   const [q, setQ] = useState("");
-  const [rankFilter, setRankFilter] = useState<number | null>(null);
-  const [yearFilter, setYearFilter] = useState<number | null>(null);
+  const [chip, setChip] = useState<string>(() => {
+    // Honor legacy ?tab= param as an initial chip
+    if (search.tab === "competitions") return "kind:competition";
+    if (search.tab === "poetry") return "kind:poetry";
+    return search.filter ?? "all";
+  });
 
   const fetchComp = useServerFn(listHallOfFame);
   const fetchPoetry = useServerFn(getMehfilHallOfFame);
@@ -109,7 +167,9 @@ function HallOfFamePage() {
         category: r.competition?.category ?? null,
         votes: r.winning_votes,
         share: r.winning_share,
-        prize: r.rewards?.coins ? `${formatNumber(r.rewards.coins)} coins` : r.rewards?.custom ?? null,
+        prize: r.rewards?.coins
+          ? `${formatNumber(r.rewards.coins)} coins`
+          : r.rewards?.custom ?? null,
         banner: r.competition?.banner_url ?? null,
       });
     });
@@ -127,129 +187,266 @@ function HallOfFamePage() {
         period: r.period,
       });
     });
-    return rows.sort((a, b) => +new Date(b.awardedAt) - +new Date(a.awardedAt));
+    return rows.sort(
+      (a, b) => +new Date(b.awardedAt) - +new Date(a.awardedAt),
+    );
   }, [compQ.data, poetryQ.data]);
 
+  // Derived filter chip pool: years + categories (sorted by frequency)
   const years = useMemo(
     () => Array.from(new Set(unified.map((r) => r.year))).sort((a, b) => b - a),
     [unified],
   );
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
+    unified.forEach((r) => {
+      const name = r.category?.name;
+      if (name) counts.set(name, (counts.get(name) ?? 0) + 1);
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([name]) => name);
+  }, [unified]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return unified.filter((r) => {
-      if (activeTab === "competitions" && r.kind !== "competition") return false;
-      if (activeTab === "poetry" && r.kind !== "poetry") return false;
-      if (rankFilter && r.rank !== rankFilter) return false;
-      if (yearFilter && r.year !== yearFilter) return false;
+      if (chip === "kind:competition" && r.kind !== "competition") return false;
+      if (chip === "kind:poetry" && r.kind !== "poetry") return false;
+      if (chip.startsWith("year:") && String(r.year) !== chip.slice(5))
+        return false;
+      if (chip.startsWith("cat:") && r.category?.name !== chip.slice(4))
+        return false;
       if (needle) {
-        const hay = `${r.title} ${r.profile?.username ?? ""} ${r.profile?.display_name ?? ""} ${r.category?.name ?? ""}`.toLowerCase();
+        const hay = `${r.title} ${r.profile?.username ?? ""} ${r.profile?.display_name ?? ""} ${r.category?.name ?? ""} ${r.year}`.toLowerCase();
         if (!hay.includes(needle)) return false;
       }
       return true;
     });
-  }, [unified, activeTab, rankFilter, yearFilter, q]);
+  }, [unified, chip, q]);
 
-  const byYear = useMemo(() => {
-    const groups = new Map<number, UnifiedRow[]>();
+  // Group by relative bucket (Today/Yesterday/This Week/etc.) for latest-first feel.
+  const grouped = useMemo(() => {
+    const buckets = new Map<string, UnifiedRow[]>();
+    const bucketFor = (iso: string) => {
+      const diff = Date.now() - new Date(iso).getTime();
+      const day = 86_400_000;
+      if (diff < day) return "Today";
+      if (diff < day * 2) return "Yesterday";
+      if (diff < day * 7) return "This Week";
+      if (diff < day * 30) return "This Month";
+      if (diff < day * 365) return "This Year";
+      return String(new Date(iso).getFullYear());
+    };
     filtered.forEach((r) => {
-      if (!groups.has(r.year)) groups.set(r.year, []);
-      groups.get(r.year)!.push(r);
+      const key = bucketFor(r.awardedAt);
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key)!.push(r);
     });
-    return Array.from(groups.entries()).sort((a, b) => b[0] - a[0]);
+    return Array.from(buckets.entries());
   }, [filtered]);
 
+  // Stats
   const totalChampions = unified.length;
   const compCount = unified.filter((r) => r.kind === "competition").length;
   const poetryCount = unified.filter((r) => r.kind === "poetry").length;
-  const thisYear = new Date().getFullYear();
-  const thisYearCount = unified.filter((r) => r.year === thisYear).length;
+  const yearsActive = years.length;
 
-  const setTab = (t: "all" | "competitions" | "poetry") =>
-    navigate({ search: { tab: t === "all" ? undefined : t } as any, replace: true });
+  // Featured champions: top ranks, mixed, most recent
+  const featured = useMemo(() => {
+    const gold = unified.filter((r) => r.rank === 1);
+    // interleave competition + poetry
+    const comps = gold.filter((r) => r.kind === "competition");
+    const poems = gold.filter((r) => r.kind === "poetry");
+    const mix: UnifiedRow[] = [];
+    const max = Math.max(comps.length, poems.length);
+    for (let i = 0; i < max; i++) {
+      if (comps[i]) mix.push(comps[i]);
+      if (poems[i]) mix.push(poems[i]);
+    }
+    return mix.slice(0, 10);
+  }, [unified]);
+
+  // Achievement wall
+  const achievements = useMemo(() => {
+    const winsByUser = new Map<
+      string,
+      { profile: UnifiedRow["profile"]; count: number; poetry: number; comp: number; gold: number; engagement: number }
+    >();
+    unified.forEach((r) => {
+      const k = r.profile?.username ?? "unknown";
+      const cur =
+        winsByUser.get(k) ??
+        { profile: r.profile, count: 0, poetry: 0, comp: 0, gold: 0, engagement: 0 };
+      cur.count += 1;
+      if (r.kind === "poetry") cur.poetry += 1;
+      else cur.comp += 1;
+      if (r.rank === 1) cur.gold += 1;
+      cur.engagement += r.votes ?? 0;
+      winsByUser.set(k, cur);
+    });
+    const arr = Array.from(winsByUser.values()).filter((v) => v.profile);
+    const pick = (key: keyof (typeof arr)[number]) =>
+      arr.slice().sort((a, b) => (b[key] as number) - (a[key] as number))[0];
+    return {
+      mostChampionships: pick("gold"),
+      mostPoetry: pick("poetry"),
+      mostAwards: pick("count"),
+      highestEngagement: pick("engagement"),
+    };
+  }, [unified]);
 
   const isLoading = compQ.isLoading || poetryQ.isLoading;
 
+  const selectChip = (v: string) => {
+    setChip(v);
+    // clear legacy tab param quietly
+    navigate({ search: { filter: v === "all" ? undefined : v } as any, replace: true });
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-background/95 pb-24 text-foreground">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-          <Link to="/"><Button size="icon" variant="ghost"><ArrowLeft className="h-4 w-4" /></Button></Link>
+    <div className="relative min-h-screen overflow-hidden bg-[#08070d] pb-24 text-foreground">
+      {/* Ambient gold glow */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(ellipse_at_top,_rgba(251,191,36,0.18),_transparent_60%)]" />
+      <div className="pointer-events-none absolute -left-32 top-40 h-[320px] w-[320px] rounded-full bg-fuchsia-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-32 top-96 h-[320px] w-[320px] rounded-full bg-amber-500/10 blur-3xl" />
+
+      <header className="sticky top-0 z-30 border-b border-white/5 bg-black/40 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+          <Link to="/">
+            <Button size="icon" variant="ghost">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
           <div className="flex-1">
             <h1 className="flex items-center gap-2 text-lg font-bold">
               <Trophy className="h-5 w-5 text-amber-400" /> Hall of Fame
             </h1>
-            <p className="text-xs text-muted-foreground">Every champion. Every craft.</p>
+            <p className="text-xs text-muted-foreground">
+              The greatest creators in platform history.
+            </p>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-8">
-        {/* Hero */}
-        <div className="mb-8 overflow-hidden rounded-3xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-fuchsia-500/5 to-transparent p-8 text-center">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 shadow-[0_0_40px_-5px_rgba(251,191,36,0.6)]">
-            <Trophy className="h-8 w-8 text-black" />
-          </div>
-          <h2 className="text-2xl font-black tracking-tight">Winners' Legacy</h2>
-          <p className="mt-2 mx-auto max-w-xl text-sm text-muted-foreground">
-            Champions of competitions and poetry battles — permanently enshrined.
-          </p>
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Stat label="Champions" value={String(totalChampions)} />
-            <Stat label="Competitions" value={String(compCount)} />
-            <Stat label="Poetry" value={String(poetryCount)} />
-            <Stat label={`${thisYear}`} value={String(thisYearCount)} />
-          </div>
-        </div>
+      <main className="relative mx-auto max-w-6xl px-4 py-8">
+        {/* Compact premium hero */}
+        <section className="relative mb-10 overflow-hidden rounded-3xl border border-amber-400/20 bg-gradient-to-br from-amber-500/10 via-white/[0.02] to-fuchsia-500/10 p-6 shadow-[0_0_60px_-20px_rgba(251,191,36,0.35)] sm:p-8">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-fuchsia-500/10 blur-3xl" />
 
-        {/* Tabs */}
-        <div className="mb-4 flex items-center gap-1 rounded-xl border border-border/60 bg-card p-1 w-fit">
-          {(["all", "competitions", "poetry"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold capitalize ${activeTab === t ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground"}`}
-            >
-              {t === "all" ? "All" : t === "competitions" ? "Competitions" : "Poetry"}
-            </button>
-          ))}
-        </div>
+          <div className="relative flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-300">
+                <Sparkles className="h-3 w-3" /> Museum of Champions
+              </div>
+              <h2 className="bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-5xl">
+                Hall of Fame
+              </h2>
+              <p className="mt-2 max-w-lg text-sm text-muted-foreground">
+                The greatest creators in platform history. Competition champions
+                and poetry laureates — enshrined together.
+              </p>
+            </div>
+            <div className="relative h-24 w-24 shrink-0 sm:h-28 sm:w-28">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-700 shadow-[0_0_60px_-5px_rgba(251,191,36,0.7)]" />
+              <div className="absolute inset-[3px] flex items-center justify-center rounded-full bg-[#08070d]">
+                <Trophy className="h-10 w-10 text-amber-300 sm:h-12 sm:w-12" />
+              </div>
+            </div>
+          </div>
 
-        {/* Filters */}
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[220px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <HeroStat label="Total Champions" value={totalChampions} />
+            <HeroStat label="Total Awards" value={totalChampions} />
+            <HeroStat label="Competitions" value={compCount} icon={<Trophy className="h-3 w-3" />} />
+            <HeroStat label="Poetry" value={poetryCount} icon={<Feather className="h-3 w-3" />} />
+            <HeroStat label="Years Active" value={yearsActive || 1} />
+          </div>
+        </section>
+
+        {/* Featured Champions carousel */}
+        {featured.length > 0 && (
+          <section className="mb-10">
+            <div className="mb-3 flex items-end justify-between">
+              <div>
+                <h3 className="flex items-center gap-2 text-lg font-bold">
+                  <Sparkles className="h-4 w-4 text-amber-300" /> Featured Champions
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Legends across competitions and poetry.
+                </p>
+              </div>
+            </div>
+            <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex gap-3 pb-2">
+                {featured.map((r) => (
+                  <FeaturedCard key={r.id} row={r} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Search + filter chips */}
+        <div className="mb-6 space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search winner, title, category…"
-              className="pl-9"
+              placeholder="Search winners, poems, competitions, categories…"
+              className="border-white/10 bg-white/[0.03] pl-9 text-sm backdrop-blur-xl"
             />
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
-            {[1, 2, 3].map((r) => (
-              <button
-                key={r}
-                onClick={() => setRankFilter(rankFilter === r ? null : r)}
-                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${rankFilter === r ? "border-amber-400 bg-amber-500/10 text-amber-300" : "border-border/60 hover:border-border"}`}
-              >
-                {r === 1 ? <Crown className="h-3 w-3" /> : r === 2 ? <Medal className="h-3 w-3" /> : <Award className="h-3 w-3" />}
-                {r === 1 ? "1st" : r === 2 ? "2nd" : "3rd"}
-              </button>
-            ))}
-            {years.slice(0, 6).map((y) => (
-              <button
+            <Chip active={chip === "all"} onClick={() => selectChip("all")}>
+              All
+            </Chip>
+            <Chip
+              active={chip === "kind:competition"}
+              onClick={() => selectChip("kind:competition")}
+              icon={<Trophy className="h-3 w-3" />}
+              accent="amber"
+            >
+              Competition
+            </Chip>
+            <Chip
+              active={chip === "kind:poetry"}
+              onClick={() => selectChip("kind:poetry")}
+              icon={<Feather className="h-3 w-3" />}
+              accent="fuchsia"
+            >
+              Poetry
+            </Chip>
+            <span className="mx-1 h-4 w-px bg-white/10" />
+            {years.slice(0, 5).map((y) => (
+              <Chip
                 key={y}
-                onClick={() => setYearFilter(yearFilter === y ? null : y)}
-                className={`rounded-full border px-3 py-1 text-xs font-medium ${yearFilter === y ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:border-border"}`}
+                active={chip === `year:${y}`}
+                onClick={() => selectChip(`year:${y}`)}
               >
                 {y}
-              </button>
+              </Chip>
             ))}
-            {(rankFilter || yearFilter || q) && (
+            {categories.length > 0 && <span className="mx-1 h-4 w-px bg-white/10" />}
+            {categories.map((c) => (
+              <Chip
+                key={c}
+                active={chip === `cat:${c}`}
+                onClick={() => selectChip(`cat:${c}`)}
+              >
+                {c}
+              </Chip>
+            ))}
+            {(chip !== "all" || q) && (
               <button
-                onClick={() => { setRankFilter(null); setYearFilter(null); setQ(""); }}
-                className="rounded-full border border-dashed border-border/60 px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  selectChip("all");
+                  setQ("");
+                }}
+                className="ml-1 rounded-full border border-dashed border-white/15 px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
               >
                 Clear
               </button>
@@ -257,129 +454,448 @@ function HallOfFamePage() {
           </div>
         </div>
 
+        {/* Latest champions unified feed */}
         {isLoading ? (
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-10 text-center text-sm text-muted-foreground">
             Loading champions…
           </div>
-        ) : byYear.length === 0 ? (
+        ) : grouped.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-muted-foreground">
             <Star className="mx-auto mb-2 h-8 w-8 opacity-40" />
             No champions match your filters yet.
           </div>
         ) : (
-          <div className="space-y-12">
-            {byYear.map(([year, rows]) => (
-              <section key={year}>
-                <div className="mb-6 flex items-center gap-3">
-                  <div className="text-3xl font-black tracking-tight">{year}</div>
-                  <div className="h-px flex-1 bg-gradient-to-r from-amber-500/40 to-transparent" />
-                  <Badge variant="outline" className="border-amber-500/40 text-amber-300">
+          <div className="space-y-10">
+            {grouped.map(([bucket, rows]) => (
+              <section key={bucket}>
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-300/80">
+                    {bucket}
+                  </div>
+                  <div className="h-px flex-1 bg-gradient-to-r from-amber-400/30 via-white/5 to-transparent" />
+                  <Badge
+                    variant="outline"
+                    className="border-amber-400/30 text-[10px] text-amber-200"
+                  >
                     {rows.length} winner{rows.length === 1 ? "" : "s"}
                   </Badge>
                 </div>
-                <div className="relative pl-6">
-                  <div className="absolute bottom-0 left-2 top-0 w-px bg-gradient-to-b from-amber-500/40 via-white/10 to-transparent" />
-                  <div className="space-y-4">
-                    {rows.map((r) => <WinnerCard key={r.id} row={r} />)}
-                  </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {rows.map((r) => (
+                    <ChampionCard key={r.id} row={r} />
+                  ))}
                 </div>
               </section>
             ))}
           </div>
+        )}
+
+        {/* Achievement wall */}
+        {!isLoading && unified.length > 0 && (
+          <section className="mt-14">
+            <div className="mb-4">
+              <h3 className="flex items-center gap-2 text-lg font-bold">
+                <Crown className="h-4 w-4 text-amber-300" /> Achievement Wall
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                All-time records across the platform.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <AchievementTile
+                icon={<Crown className="h-4 w-4" />}
+                label="Most Championships"
+                accent="from-amber-400 to-yellow-600"
+                profile={achievements.mostChampionships?.profile}
+                value={achievements.mostChampionships?.gold ?? 0}
+                unit="gold"
+              />
+              <AchievementTile
+                icon={<Feather className="h-4 w-4" />}
+                label="Most Poetry Wins"
+                accent="from-fuchsia-400 to-purple-600"
+                profile={achievements.mostPoetry?.profile}
+                value={achievements.mostPoetry?.poetry ?? 0}
+                unit="wins"
+              />
+              <AchievementTile
+                icon={<Trophy className="h-4 w-4" />}
+                label="Most Awards"
+                accent="from-cyan-400 to-blue-600"
+                profile={achievements.mostAwards?.profile}
+                value={achievements.mostAwards?.count ?? 0}
+                unit="awards"
+              />
+              <AchievementTile
+                icon={<Flame className="h-4 w-4" />}
+                label="Highest Engagement"
+                accent="from-orange-400 to-rose-600"
+                profile={achievements.highestEngagement?.profile}
+                value={achievements.highestEngagement?.engagement ?? 0}
+                unit="votes"
+              />
+            </div>
+          </section>
         )}
       </main>
     </div>
   );
 }
 
-function WinnerCard({ row }: { row: UnifiedRow }) {
-  const style = rankStyle[row.rank] ?? { icon: <Star className="h-4 w-4" />, color: "from-white/20 to-white/10", label: `#${row.rank}` };
-  const kindBadge = row.kind === "poetry"
-    ? { icon: <Feather className="h-3 w-3" />, label: "Poetry", cls: "border-fuchsia-500/40 text-fuchsia-300" }
-    : { icon: <Trophy className="h-3 w-3" />, label: "Competition", cls: "border-amber-500/40 text-amber-300" };
+/* ---------- Presentational bits ---------- */
 
+function HeroStat({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: number;
+  icon?: React.ReactNode;
+}) {
   return (
-    <div className="relative">
-      <div className={`absolute -left-[22px] top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br ${style.color} shadow-lg`}>
-        {style.icon}
+    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center backdrop-blur-xl">
+      <div className="flex items-center justify-center gap-1 text-lg font-black text-amber-100">
+        {icon}
+        {value.toLocaleString()}
       </div>
-      <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-4 backdrop-blur-xl transition-all hover:border-white/20">
-        <div className="flex flex-wrap items-start gap-4">
-          {row.profile ? (
-            <Link to="/u/$username" params={{ username: row.profile.username ?? "" }} className="shrink-0">
-              {row.profile.avatar_url ? (
-                <img src={row.profile.avatar_url} alt={row.profile.username ?? ""} className="h-16 w-16 rounded-full border-2 border-white/20 object-cover" />
-              ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/20 bg-white/10 text-lg font-bold">
-                  {(row.profile.username ?? "?")[0]?.toUpperCase()}
-                </div>
-              )}
-            </Link>
-          ) : (
-            <div className="h-16 w-16 rounded-full border-2 border-white/20 bg-white/10" />
-          )}
-
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className={`gap-1 border-none bg-gradient-to-r ${style.color} text-black`}>
-                {style.icon} {style.label}
-              </Badge>
-              <Badge variant="outline" className={`gap-1 ${kindBadge.cls}`}>
-                {kindBadge.icon} {kindBadge.label}
-              </Badge>
-              {row.category && (
-                <Badge variant="outline" style={{ borderColor: row.category.color ?? undefined, color: row.category.color ?? undefined }}>
-                  {row.category.name}
-                </Badge>
-              )}
-              {row.period && (
-                <Badge variant="outline" className="capitalize">
-                  {row.period.replace("_", " ")}
-                </Badge>
-              )}
-            </div>
-            <Link
-              to={row.linkTo as any}
-              params={row.linkParams as any}
-              className="mt-1.5 block text-lg font-bold hover:text-amber-300"
-            >
-              {row.kind === "poetry" ? `"${row.title}"` : row.title}
-            </Link>
-            <div className="mt-0.5 text-sm text-muted-foreground">
-              Won by{" "}
-              {row.profile ? (
-                <Link to="/u/$username" params={{ username: row.profile.username ?? "" }} className="font-semibold text-foreground hover:text-amber-300">
-                  @{row.profile.username}
-                </Link>
-              ) : (
-                <span className="font-semibold text-foreground">Unknown</span>
-              )}
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {typeof row.votes === "number" && <Stat label="Votes" value={formatNumber(row.votes)} />}
-              {typeof row.share === "number" && <Stat label="Win share" value={`${(row.share * 100).toFixed(0)}%`} />}
-              {row.prize && <Stat label="Prize" value={row.prize} />}
-              <Stat label="Awarded" value={new Date(row.awardedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })} />
-            </div>
-          </div>
-
-          {row.banner && (
-            <div className="hidden shrink-0 overflow-hidden rounded-lg border border-white/10 sm:block">
-              <img src={row.banner} alt="" className="h-16 w-24 object-cover" />
-            </div>
-          )}
-        </div>
+      <div className="mt-0.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
       </div>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Chip({
+  active,
+  onClick,
+  children,
+  icon,
+  accent,
+}: {
+  active?: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+  icon?: React.ReactNode;
+  accent?: "amber" | "fuchsia";
+}) {
+  const accentActive =
+    accent === "amber"
+      ? "border-amber-400/60 bg-amber-500/15 text-amber-200"
+      : accent === "fuchsia"
+        ? "border-fuchsia-400/60 bg-fuchsia-500/15 text-fuchsia-200"
+        : "border-white/25 bg-white/10 text-white";
   return (
-    <div className="rounded-lg border border-white/10 bg-black/20 p-2 text-center">
-      <div className="text-sm font-bold">{value}</div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    <button
+      onClick={onClick}
+      className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+        active
+          ? accentActive
+          : "border-white/10 bg-white/[0.02] text-muted-foreground hover:border-white/20 hover:text-foreground"
+      }`}
+    >
+      {icon}
+      {children}
+    </button>
+  );
+}
+
+function legendBadges(row: UnifiedRow): { label: string; icon: React.ReactNode; cls: string }[] {
+  const b: { label: string; icon: React.ReactNode; cls: string }[] = [];
+  if (row.rank === 1)
+    b.push({
+      label: "Gold Champion",
+      icon: <Crown className="h-3 w-3" />,
+      cls: "border-amber-400/60 text-amber-200 bg-amber-500/10",
+    });
+  if ((row.votes ?? 0) >= 1000)
+    b.push({
+      label: "Community Favorite",
+      icon: <Star className="h-3 w-3" />,
+      cls: "border-fuchsia-400/60 text-fuchsia-200 bg-fuchsia-500/10",
+    });
+  if ((row.share ?? 0) >= 0.6)
+    b.push({
+      label: "Legend",
+      icon: <Sparkles className="h-3 w-3" />,
+      cls: "border-cyan-400/60 text-cyan-200 bg-cyan-500/10",
+    });
+  return b;
+}
+
+function ChampionCard({ row }: { row: UnifiedRow }) {
+  const style =
+    rankStyle[row.rank] ?? {
+      icon: <Star className="h-4 w-4" />,
+      color: "from-white/20 to-white/10",
+      label: `#${row.rank}`,
+      ring: "ring-white/10",
+    };
+  const kindMeta =
+    row.kind === "poetry"
+      ? {
+          icon: <Feather className="h-3 w-3" />,
+          label: "Poetry Champion",
+          cls: "border-fuchsia-400/40 text-fuchsia-200 bg-fuchsia-500/10",
+        }
+      : {
+          icon: <Trophy className="h-3 w-3" />,
+          label: "Competition Champion",
+          cls: "border-amber-400/40 text-amber-200 bg-amber-500/10",
+        };
+  const badges = legendBadges(row);
+
+  return (
+    <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.01] p-4 backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-amber-400/30 hover:shadow-[0_20px_50px_-20px_rgba(251,191,36,0.3)]">
+      {/* rank ribbon */}
+      <div
+        className={`absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br ${style.color} opacity-20 blur-2xl transition-opacity group-hover:opacity-40`}
+      />
+
+      <div className="flex items-start gap-3">
+        {row.profile ? (
+          <Link
+            to="/u/$username"
+            params={{ username: row.profile.username ?? "" }}
+            className="relative shrink-0"
+          >
+            <div
+              className={`absolute -inset-0.5 rounded-full bg-gradient-to-br ${style.color} opacity-70 blur-sm`}
+            />
+            {row.profile.avatar_url ? (
+              <img
+                src={row.profile.avatar_url}
+                alt={row.profile.username ?? ""}
+                className={`relative h-14 w-14 rounded-full border-2 border-white/20 object-cover ring-2 ${style.ring}`}
+              />
+            ) : (
+              <div
+                className={`relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/20 bg-white/10 text-base font-bold ring-2 ${style.ring}`}
+              >
+                {(row.profile.username ?? "?")[0]?.toUpperCase()}
+              </div>
+            )}
+            <div
+              className={`absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br ${style.color} shadow-lg`}
+            >
+              {style.icon}
+            </div>
+          </Link>
+        ) : (
+          <div className="h-14 w-14 rounded-full border-2 border-white/20 bg-white/10" />
+        )}
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="outline" className={`gap-1 ${kindMeta.cls}`}>
+              {kindMeta.icon} {kindMeta.label}
+            </Badge>
+            {row.category && (
+              <Badge
+                variant="outline"
+                style={{
+                  borderColor: row.category.color ?? undefined,
+                  color: row.category.color ?? undefined,
+                }}
+              >
+                {row.category.name}
+              </Badge>
+            )}
+          </div>
+          <Link
+            to={row.linkTo as any}
+            params={row.linkParams as any}
+            className="mt-1.5 block truncate text-base font-bold text-foreground transition-colors hover:text-amber-200"
+          >
+            {row.kind === "poetry" ? `"${row.title}"` : row.title}
+          </Link>
+          <div className="mt-0.5 truncate text-xs text-muted-foreground">
+            Won by{" "}
+            {row.profile ? (
+              <Link
+                to="/u/$username"
+                params={{ username: row.profile.username ?? "" }}
+                className="font-semibold text-foreground hover:text-amber-200"
+              >
+                @{row.profile.username}
+              </Link>
+            ) : (
+              <span className="font-semibold text-foreground">Unknown</span>
+            )}
+            <span className="mx-1.5 text-white/20">•</span>
+            {relativeTime(row.awardedAt)}
+          </div>
+
+          {badges.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {badges.map((b) => (
+                <span
+                  key={b.label}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-medium ${b.cls}`}
+                >
+                  {b.icon} {b.label}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/5 pt-3">
+        <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+          {typeof row.votes === "number" && (
+            <span>
+              <span className="font-semibold text-foreground">
+                {formatNumber(row.votes)}
+              </span>{" "}
+              votes
+            </span>
+          )}
+          {typeof row.share === "number" && (
+            <span>
+              <span className="font-semibold text-foreground">
+                {(row.share * 100).toFixed(0)}%
+              </span>{" "}
+              share
+            </span>
+          )}
+          {row.prize && (
+            <span>
+              <span className="font-semibold text-amber-200">{row.prize}</span>
+            </span>
+          )}
+        </div>
+        <Link
+          to={row.linkTo as any}
+          params={row.linkParams as any}
+          className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300 hover:text-amber-200"
+        >
+          View Legacy <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function FeaturedCard({ row }: { row: UnifiedRow }) {
+  const style = rankStyle[row.rank] ?? rankStyle[1];
+  const kind =
+    row.kind === "poetry"
+      ? { label: "Poetry", icon: <Feather className="h-3 w-3" /> }
+      : { label: "Competition", icon: <Trophy className="h-3 w-3" /> };
+  return (
+    <Link
+      to={row.linkTo as any}
+      params={row.linkParams as any}
+      className="group relative flex w-[260px] shrink-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.01] p-4 backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-amber-400/40"
+    >
+      <div
+        className={`absolute -right-10 -top-10 h-28 w-28 rounded-full bg-gradient-to-br ${style.color} opacity-30 blur-2xl transition-opacity group-hover:opacity-60`}
+      />
+      <div className="relative mb-3 flex items-center justify-between">
+        <Badge
+          variant="outline"
+          className="gap-1 border-amber-400/40 text-[10px] text-amber-200"
+        >
+          {kind.icon} {kind.label}
+        </Badge>
+        <div
+          className={`flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br ${style.color} shadow-lg`}
+        >
+          {style.icon}
+        </div>
+      </div>
+      <div className="relative flex items-center gap-2">
+        {row.profile?.avatar_url ? (
+          <img
+            src={row.profile.avatar_url}
+            alt=""
+            className="h-10 w-10 rounded-full border border-white/20 object-cover"
+          />
+        ) : (
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-sm font-bold">
+            {(row.profile?.username ?? "?")[0]?.toUpperCase()}
+          </div>
+        )}
+        <div className="min-w-0">
+          <div className="truncate text-sm font-bold">
+            @{row.profile?.username ?? "unknown"}
+          </div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            {style.label}
+          </div>
+        </div>
+      </div>
+      <div className="relative mt-3 truncate text-sm font-semibold text-foreground/90">
+        {row.kind === "poetry" ? `"${row.title}"` : row.title}
+      </div>
+      <div className="relative mt-1 text-[11px] text-muted-foreground">
+        {relativeTime(row.awardedAt)}
+      </div>
+    </Link>
+  );
+}
+
+function AchievementTile({
+  icon,
+  label,
+  profile,
+  value,
+  unit,
+  accent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  profile: UnifiedRow["profile"] | undefined;
+  value: number;
+  unit: string;
+  accent: string;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl">
+      <div
+        className={`absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br ${accent} opacity-20 blur-2xl`}
+      />
+      <div className="relative flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <span
+          className={`inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br ${accent} text-black`}
+        >
+          {icon}
+        </span>
+        {label}
+      </div>
+      <div className="relative mt-3 flex items-center gap-3">
+        {profile?.avatar_url ? (
+          <img
+            src={profile.avatar_url}
+            alt=""
+            className="h-10 w-10 rounded-full border border-white/20 object-cover"
+          />
+        ) : (
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-sm font-bold">
+            {(profile?.username ?? "?")[0]?.toUpperCase()}
+          </div>
+        )}
+        <div className="min-w-0">
+          {profile ? (
+            <Link
+              to="/u/$username"
+              params={{ username: profile.username ?? "" }}
+              className="block truncate text-sm font-bold hover:text-amber-200"
+            >
+              @{profile.username}
+            </Link>
+          ) : (
+            <div className="text-sm font-bold text-muted-foreground">—</div>
+          )}
+          <div className="text-[11px] text-muted-foreground">
+            <span className="font-semibold text-foreground">
+              {formatNumber(value)}
+            </span>{" "}
+            {unit}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
