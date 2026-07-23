@@ -256,7 +256,6 @@ function HallOfFamePage() {
   // Featured champions: top ranks, mixed, most recent
   const featured = useMemo(() => {
     const gold = unified.filter((r) => r.rank === 1);
-    // interleave competition + poetry
     const comps = gold.filter((r) => r.kind === "competition");
     const poems = gold.filter((r) => r.kind === "poetry");
     const mix: UnifiedRow[] = [];
@@ -266,6 +265,21 @@ function HallOfFamePage() {
       if (poems[i]) mix.push(poems[i]);
     }
     return mix.slice(0, 10);
+  }, [unified]);
+
+  // Champion of the Month: highest-ranked winner from the current month;
+  // falls back to the most recent gold champion overall.
+  const championOfMonth = useMemo<UnifiedRow | null>(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const thisMonth = unified.filter((r) => {
+      const d = new Date(r.awardedAt);
+      return d.getFullYear() === y && d.getMonth() === m;
+    });
+    const pool = thisMonth.length > 0 ? thisMonth : unified;
+    const gold = pool.filter((r) => r.rank === 1);
+    return (gold[0] ?? pool[0]) ?? null;
   }, [unified]);
 
   // Achievement wall
