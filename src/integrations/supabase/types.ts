@@ -786,25 +786,37 @@ export type Database = {
         Row: {
           author_id: string
           created_at: string
+          hidden_at: string | null
           id: string
+          moderation_reason: string | null
+          moderation_status: string
           parent_comment_id: string | null
           post_id: string
+          report_count: number
           text: string
         }
         Insert: {
           author_id: string
           created_at?: string
+          hidden_at?: string | null
           id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
           parent_comment_id?: string | null
           post_id: string
+          report_count?: number
           text?: string
         }
         Update: {
           author_id?: string
           created_at?: string
+          hidden_at?: string | null
           id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
           parent_comment_id?: string | null
           post_id?: string
+          report_count?: number
           text?: string
         }
         Relationships: [
@@ -2455,6 +2467,72 @@ export type Database = {
           sort_order?: number
           updated_at?: string
           wallpaper_key?: string
+        }
+        Relationships: []
+      }
+      feed_mod_warnings: {
+        Row: {
+          acknowledged_at: string | null
+          created_at: string
+          id: string
+          moderator_id: string | null
+          reason: string
+          severity: string
+          target_id: string | null
+          target_type: string | null
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          created_at?: string
+          id?: string
+          moderator_id?: string | null
+          reason: string
+          severity?: string
+          target_id?: string | null
+          target_type?: string | null
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          created_at?: string
+          id?: string
+          moderator_id?: string | null
+          reason?: string
+          severity?: string
+          target_id?: string | null
+          target_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      feed_posting_bans: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          reason?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -4449,6 +4527,7 @@ export type Database = {
       }
       posts: {
         Row: {
+          ai_flags: Json
           author_id: string | null
           category: string | null
           comment_count: number
@@ -4457,21 +4536,26 @@ export type Database = {
           created_at: string
           eligible_for_competitions: boolean
           hashtags: string[]
+          hidden_at: string | null
           id: string
           is_anonymous: boolean
           kind: Database["public"]["Enums"]["post_kind"]
           media_urls: string[]
+          moderation_reason: string | null
+          moderation_status: string
           nominee_id: string | null
           owner_id: string
           poll: Json | null
           privacy: Database["public"]["Enums"]["post_privacy"]
           reaction_count: number
+          report_count: number
           slug: string
           text: string
           trending_score: number
           updated_at: string
         }
         Insert: {
+          ai_flags?: Json
           author_id?: string | null
           category?: string | null
           comment_count?: number
@@ -4480,21 +4564,26 @@ export type Database = {
           created_at?: string
           eligible_for_competitions?: boolean
           hashtags?: string[]
+          hidden_at?: string | null
           id?: string
           is_anonymous?: boolean
           kind?: Database["public"]["Enums"]["post_kind"]
           media_urls?: string[]
+          moderation_reason?: string | null
+          moderation_status?: string
           nominee_id?: string | null
           owner_id: string
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"]
           reaction_count?: number
+          report_count?: number
           slug: string
           text?: string
           trending_score?: number
           updated_at?: string
         }
         Update: {
+          ai_flags?: Json
           author_id?: string | null
           category?: string | null
           comment_count?: number
@@ -4503,15 +4592,19 @@ export type Database = {
           created_at?: string
           eligible_for_competitions?: boolean
           hashtags?: string[]
+          hidden_at?: string | null
           id?: string
           is_anonymous?: boolean
           kind?: Database["public"]["Enums"]["post_kind"]
           media_urls?: string[]
+          moderation_reason?: string | null
+          moderation_status?: string
           nominee_id?: string | null
           owner_id?: string
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"]
           reaction_count?: number
+          report_count?: number
           slug?: string
           text?: string
           trending_score?: number
@@ -6444,11 +6537,13 @@ export type Database = {
           is_anonymous: boolean | null
           kind: Database["public"]["Enums"]["post_kind"] | null
           media_urls: string[] | null
+          moderation_status: string | null
           nominee_id: string | null
           owner_id: string | null
           poll: Json | null
           privacy: Database["public"]["Enums"]["post_privacy"] | null
           reaction_count: number | null
+          report_count: number | null
           slug: string | null
           text: string | null
           trending_score: number | null
@@ -6466,11 +6561,13 @@ export type Database = {
           is_anonymous?: boolean | null
           kind?: Database["public"]["Enums"]["post_kind"] | null
           media_urls?: string[] | null
+          moderation_status?: string | null
           nominee_id?: string | null
           owner_id?: string | null
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"] | null
           reaction_count?: number | null
+          report_count?: number | null
           slug?: string | null
           text?: string | null
           trending_score?: number | null
@@ -6488,11 +6585,13 @@ export type Database = {
           is_anonymous?: boolean | null
           kind?: Database["public"]["Enums"]["post_kind"] | null
           media_urls?: string[] | null
+          moderation_status?: string | null
           nominee_id?: string | null
           owner_id?: string | null
           poll?: Json | null
           privacy?: Database["public"]["Enums"]["post_privacy"] | null
           reaction_count?: number | null
+          report_count?: number | null
           slug?: string | null
           text?: string | null
           trending_score?: number | null
