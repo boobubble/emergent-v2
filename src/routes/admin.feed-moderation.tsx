@@ -258,7 +258,7 @@ function SettingsTab() {
 
   const save = async () => {
     try {
-      await updateFn({ data: form as Parameters<typeof updateFn>[0]["data"] });
+      await updateFn({ data: form as Parameters<typeof updateFeedModerationSettings>[0]["data"] });
       toast.success("Settings saved");
       setForm({});
       qc.invalidateQueries({ queryKey: ["feed-mod-settings"] });
