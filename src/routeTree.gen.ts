@@ -21,6 +21,7 @@ import { Route as PagesRouteImport } from './routes/pages'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as InstallerRouteImport } from './routes/installer'
 import { Route as HeropageRouteImport } from './routes/heropage'
 import { Route as HallOfFameRouteImport } from './routes/hall-of-fame'
@@ -258,6 +259,11 @@ const LoginRoute = LoginRouteImport.update({
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JourneyRoute = JourneyRouteImport.update({
+  id: '/journey',
+  path: '/journey',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstallerRoute = InstallerRouteImport.update({
@@ -1191,6 +1197,7 @@ export interface FileRoutesByFullPath {
   '/hall-of-fame': typeof HallOfFameRoute
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
+  '/journey': typeof JourneyRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
@@ -1379,6 +1386,7 @@ export interface FileRoutesByTo {
   '/hall-of-fame': typeof HallOfFameRoute
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
+  '/journey': typeof JourneyRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
@@ -1571,6 +1579,7 @@ export interface FileRoutesById {
   '/hall-of-fame': typeof HallOfFameRoute
   '/heropage': typeof HeropageRoute
   '/installer': typeof InstallerRoute
+  '/journey': typeof JourneyRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
@@ -1764,6 +1773,7 @@ export interface FileRouteTypes {
     | '/hall-of-fame'
     | '/heropage'
     | '/installer'
+    | '/journey'
     | '/leaderboard'
     | '/login'
     | '/manifest.webmanifest'
@@ -1952,6 +1962,7 @@ export interface FileRouteTypes {
     | '/hall-of-fame'
     | '/heropage'
     | '/installer'
+    | '/journey'
     | '/leaderboard'
     | '/login'
     | '/manifest.webmanifest'
@@ -2143,6 +2154,7 @@ export interface FileRouteTypes {
     | '/hall-of-fame'
     | '/heropage'
     | '/installer'
+    | '/journey'
     | '/leaderboard'
     | '/login'
     | '/manifest.webmanifest'
@@ -2336,6 +2348,7 @@ export interface RootRouteChildren {
   HallOfFameRoute: typeof HallOfFameRoute
   HeropageRoute: typeof HeropageRoute
   InstallerRoute: typeof InstallerRoute
+  JourneyRoute: typeof JourneyRoute
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
@@ -2476,6 +2489,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journey': {
+      id: '/journey'
+      path: '/journey'
+      fullPath: '/journey'
+      preLoaderRoute: typeof JourneyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/installer': {
@@ -4059,6 +4079,7 @@ const rootRouteChildren: RootRouteChildren = {
   HallOfFameRoute: HallOfFameRoute,
   HeropageRoute: HeropageRoute,
   InstallerRoute: InstallerRoute,
+  JourneyRoute: JourneyRoute,
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
