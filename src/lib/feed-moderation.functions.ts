@@ -181,7 +181,8 @@ export const setFeedContentStatus = createServerFn({ method: "POST" })
       moderation_reason: data.reason ?? null,
       hidden_at: data.status === "visible" ? null : new Date().toISOString(),
     };
-    const { error } = await sb.from(table).update(patch).eq("id", data.target_id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await sb.from(table).update(patch as any).eq("id", data.target_id);
     if (error) throw new Error(error.message);
 
     // Auto-resolve open reports for this target
