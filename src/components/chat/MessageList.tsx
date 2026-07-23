@@ -98,6 +98,10 @@ function ReplyPreview({ message, align = "left" }: { message: Message; align?: "
 export function MessageList({ channelId }: { channelId: string }) {
   const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt } = useChat();
   const { isIgnored } = useIgnore();
+  const maskDmUrls = useDmUrlMask();
+  const isDmChan = isDM(channelId);
+  const applyMask = (authorId: string, text: string) =>
+    isDmChan && authorId !== "me" ? maskDmUrls(text) : text;
   const allMsgs = channelMessages(channelId);
   const msgs = useMemo(
     () => allMsgs.filter(m => {
