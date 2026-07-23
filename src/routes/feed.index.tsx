@@ -30,6 +30,8 @@ import { ConfessionsFeedWidget, ActivePollsWidget } from "@/components/feed/Conf
 import { BoobubbleAssistantWidget } from "@/components/feed/BoobubbleAssistantWidget";
 import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
 import { MehfilTrendingWidget } from "@/components/feed/MehfilTrendingWidget";
+import { ModuleDiscoveryWidget } from "@/components/feed/ModuleDiscoveryWidget";
+import { mergeDiscoveryWidgetsConfig } from "@/lib/discovery-widgets-config";
 import { BirthdaysWidget } from "@/components/feed/BirthdaysWidget";
 import { MissionsPanel } from "@/components/feed/MissionsPanel";
 import { FeedNotifications } from "@/components/feed/FeedNotifications";

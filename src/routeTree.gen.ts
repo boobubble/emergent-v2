@@ -133,6 +133,7 @@ import { Route as AdminEmailRouteImport } from './routes/admin.email'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
 import { Route as AdminDmWallpapersRouteImport } from './routes/admin.dm-wallpapers'
 import { Route as AdminDjRouteImport } from './routes/admin.dj'
+import { Route as AdminDiscoveryWidgetsRouteImport } from './routes/admin.discovery-widgets'
 import { Route as AdminDemoRouteImport } from './routes/admin.demo'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
 import { Route as AdminCompetitionsFeedRouteImport } from './routes/admin.competitions-feed'
@@ -819,6 +820,11 @@ const AdminDjRoute = AdminDjRouteImport.update({
   path: '/dj',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDiscoveryWidgetsRoute = AdminDiscoveryWidgetsRouteImport.update({
+  id: '/discovery-widgets',
+  path: '/discovery-widgets',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDemoRoute = AdminDemoRouteImport.update({
   id: '/demo',
   path: '/demo',
@@ -1226,6 +1232,7 @@ export interface FileRoutesByFullPath {
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
+  '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -1413,6 +1420,7 @@ export interface FileRoutesByTo {
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
+  '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -1604,6 +1612,7 @@ export interface FileRoutesById {
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
+  '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -1796,6 +1805,7 @@ export interface FileRouteTypes {
     | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
+    | '/admin/discovery-widgets'
     | '/admin/dj'
     | '/admin/dm-wallpapers'
     | '/admin/economy'
@@ -1983,6 +1993,7 @@ export interface FileRouteTypes {
     | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
+    | '/admin/discovery-widgets'
     | '/admin/dj'
     | '/admin/dm-wallpapers'
     | '/admin/economy'
@@ -2173,6 +2184,7 @@ export interface FileRouteTypes {
     | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
+    | '/admin/discovery-widgets'
     | '/admin/dj'
     | '/admin/dm-wallpapers'
     | '/admin/economy'
@@ -3250,6 +3262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDjRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/discovery-widgets': {
+      id: '/admin/discovery-widgets'
+      path: '/discovery-widgets'
+      fullPath: '/admin/discovery-widgets'
+      preLoaderRoute: typeof AdminDiscoveryWidgetsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/demo': {
       id: '/admin/demo'
       path: '/demo'
@@ -3761,6 +3780,7 @@ interface AdminRouteChildren {
   AdminCompetitionsFeedRoute: typeof AdminCompetitionsFeedRoute
   AdminConfessionsRoute: typeof AdminConfessionsRoute
   AdminDemoRoute: typeof AdminDemoRoute
+  AdminDiscoveryWidgetsRoute: typeof AdminDiscoveryWidgetsRoute
   AdminDjRoute: typeof AdminDjRoute
   AdminDmWallpapersRoute: typeof AdminDmWallpapersRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
@@ -3849,6 +3869,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCompetitionsFeedRoute: AdminCompetitionsFeedRoute,
   AdminConfessionsRoute: AdminConfessionsRoute,
   AdminDemoRoute: AdminDemoRoute,
+  AdminDiscoveryWidgetsRoute: AdminDiscoveryWidgetsRoute,
   AdminDjRoute: AdminDjRoute,
   AdminDmWallpapersRoute: AdminDmWallpapersRoute,
   AdminEconomyRoute: AdminEconomyRoute,
