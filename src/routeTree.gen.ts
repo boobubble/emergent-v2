@@ -29,7 +29,6 @@ import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as GamificationRouteImport } from './routes/gamification'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FindFriendsRouteImport } from './routes/find-friends'
-import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as DeployRouteImport } from './routes/deploy'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as CompetitionsRouteImport } from './routes/competitions'
@@ -49,6 +48,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PoetryIndexRouteImport } from './routes/poetry.index'
 import { Route as MehfilIndexRouteImport } from './routes/mehfil.index'
+import { Route as FeedbackIndexRouteImport } from './routes/feedback.index'
 import { Route as FeedIndexRouteImport } from './routes/feed.index'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
 import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
@@ -301,11 +301,6 @@ const FindFriendsRoute = FindFriendsRouteImport.update({
   path: '/find-friends',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FeedbackRoute = FeedbackRouteImport.update({
-  id: '/feedback',
-  path: '/feedback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DeployRoute = DeployRouteImport.update({
   id: '/deploy',
   path: '/deploy',
@@ -398,6 +393,11 @@ const PoetryIndexRoute = PoetryIndexRouteImport.update({
 const MehfilIndexRoute = MehfilIndexRouteImport.update({
   id: '/mehfil/',
   path: '/mehfil/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackIndexRoute = FeedbackIndexRouteImport.update({
+  id: '/feedback/',
+  path: '/feedback/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedIndexRoute = FeedIndexRouteImport.update({
@@ -1189,7 +1189,6 @@ export interface FileRoutesByFullPath {
   '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
-  '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRouteWithChildren
   '/gamification': typeof GamificationRoute
@@ -1325,6 +1324,7 @@ export interface FileRoutesByFullPath {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/feed/': typeof FeedIndexRoute
+  '/feedback/': typeof FeedbackIndexRoute
   '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -1378,7 +1378,6 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
-  '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRouteWithChildren
   '/gamification': typeof GamificationRoute
@@ -1513,6 +1512,7 @@ export interface FileRoutesByTo {
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/feed': typeof FeedIndexRoute
+  '/feedback': typeof FeedbackIndexRoute
   '/mehfil': typeof MehfilIndexRoute
   '/poetry': typeof PoetryIndexRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -1571,7 +1571,6 @@ export interface FileRoutesById {
   '/competitions': typeof CompetitionsRouteWithChildren
   '/confessions': typeof ConfessionsRoute
   '/deploy': typeof DeployRoute
-  '/feedback': typeof FeedbackRoute
   '/find-friends': typeof FindFriendsRoute
   '/games': typeof GamesRouteWithChildren
   '/gamification': typeof GamificationRoute
@@ -1707,6 +1706,7 @@ export interface FileRoutesById {
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/feed/': typeof FeedIndexRoute
+  '/feedback/': typeof FeedbackIndexRoute
   '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
   '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -1765,7 +1765,6 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/confessions'
     | '/deploy'
-    | '/feedback'
     | '/find-friends'
     | '/games'
     | '/gamification'
@@ -1901,6 +1900,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/feed/'
+    | '/feedback/'
     | '/mehfil/'
     | '/poetry/'
     | '/settings/privacy'
@@ -1954,7 +1954,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/confessions'
     | '/deploy'
-    | '/feedback'
     | '/find-friends'
     | '/games'
     | '/gamification'
@@ -2089,6 +2088,7 @@ export interface FileRouteTypes {
     | '/broadcaster'
     | '/competitions'
     | '/feed'
+    | '/feedback'
     | '/mehfil'
     | '/poetry'
     | '/settings/privacy'
@@ -2146,7 +2146,6 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/confessions'
     | '/deploy'
-    | '/feedback'
     | '/find-friends'
     | '/games'
     | '/gamification'
@@ -2282,6 +2281,7 @@ export interface FileRouteTypes {
     | '/broadcaster/'
     | '/competitions/'
     | '/feed/'
+    | '/feedback/'
     | '/mehfil/'
     | '/poetry/'
     | '/_authenticated/settings/privacy'
@@ -2340,7 +2340,6 @@ export interface RootRouteChildren {
   CompetitionsRoute: typeof CompetitionsRouteWithChildren
   ConfessionsRoute: typeof ConfessionsRoute
   DeployRoute: typeof DeployRoute
-  FeedbackRoute: typeof FeedbackRoute
   FindFriendsRoute: typeof FindFriendsRoute
   GamesRoute: typeof GamesRouteWithChildren
   GamificationRoute: typeof GamificationRoute
@@ -2377,6 +2376,7 @@ export interface RootRouteChildren {
   PoetryLeaderboardRoute: typeof PoetryLeaderboardRoute
   UUsernameRoute: typeof UUsernameRoute
   FeedIndexRoute: typeof FeedIndexRoute
+  FeedbackIndexRoute: typeof FeedbackIndexRoute
   MehfilIndexRoute: typeof MehfilIndexRoute
   PoetryIndexRoute: typeof PoetryIndexRoute
   ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
@@ -2547,13 +2547,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FindFriendsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/feedback': {
-      id: '/feedback'
-      path: '/feedback'
-      fullPath: '/feedback'
-      preLoaderRoute: typeof FeedbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/deploy': {
       id: '/deploy'
       path: '/deploy'
@@ -2685,6 +2678,13 @@ declare module '@tanstack/react-router' {
       path: '/mehfil'
       fullPath: '/mehfil/'
       preLoaderRoute: typeof MehfilIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback/': {
+      id: '/feedback/'
+      path: '/feedback'
+      fullPath: '/feedback/'
+      preLoaderRoute: typeof FeedbackIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed/': {
@@ -4071,7 +4071,6 @@ const rootRouteChildren: RootRouteChildren = {
   CompetitionsRoute: CompetitionsRouteWithChildren,
   ConfessionsRoute: ConfessionsRoute,
   DeployRoute: DeployRoute,
-  FeedbackRoute: FeedbackRoute,
   FindFriendsRoute: FindFriendsRoute,
   GamesRoute: GamesRouteWithChildren,
   GamificationRoute: GamificationRoute,
@@ -4108,6 +4107,7 @@ const rootRouteChildren: RootRouteChildren = {
   PoetryLeaderboardRoute: PoetryLeaderboardRoute,
   UUsernameRoute: UUsernameRoute,
   FeedIndexRoute: FeedIndexRoute,
+  FeedbackIndexRoute: FeedbackIndexRoute,
   MehfilIndexRoute: MehfilIndexRoute,
   PoetryIndexRoute: PoetryIndexRoute,
   ApiGamesAchievementRoute: ApiGamesAchievementRoute,
@@ -4138,13 +4138,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

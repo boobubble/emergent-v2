@@ -1,10 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  ChevronLeft, Plus, ChevronUp, MessageCircle, Pin, Loader2, Send, Search, ImagePlus, X, EyeOff, AlertTriangle,
+  ChevronLeft, Plus, ChevronUp, MessageCircle, Pin, Loader2, Search, ImagePlus, X, EyeOff, AlertTriangle,
+  Flame, Clock, CheckCircle2, Lightbulb, Bug, Sparkles, MessagesSquare, TrendingUp,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -19,26 +20,26 @@ import {
 } from "@/components/ui/select";
 import { getAllSettings } from "@/lib/admin.functions";
 import {
-  listFeedback, createFeedback, toggleVote, getFeedback, postComment, findSimilarFeedback,
+  listFeedback, createFeedback, toggleVote, findSimilarFeedback,
 } from "@/lib/feedback.functions";
 import {
-  FEEDBACK_DEFAULTS, FEEDBACK_CATEGORIES, FEEDBACK_STATUSES,
+  FEEDBACK_DEFAULTS, FEEDBACK_CATEGORIES,
   CATEGORY_META, STATUS_META, PRIORITY_META,
   type FeedbackConfig, type FeedbackCategory, type FeedbackStatus, type FeedbackPriority,
 } from "@/lib/feedback-config";
 import { useAuth } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/feedback")({
+export const Route = createFileRoute("/feedback/")({
   head: () => ({
     meta: [
-      { title: "Feedback & Bug Reports" },
-      { name: "description", content: "Report bugs, request features, and help shape the community." },
-      { property: "og:title", content: "Feedback & Bug Reports" },
-      { property: "og:description", content: "Vote on ideas, file bug reports, and track fixes." },
+      { title: "Community Forum — Discussions, Bugs & Ideas" },
+      { name: "description", content: "Join the community forum — report bugs, request features, discuss ideas, and track fixes together." },
+      { property: "og:title", content: "Community Forum" },
+      { property: "og:description", content: "Discussions, bug reports, and feature requests from the community." },
     ],
   }),
-  component: FeedbackPage,
+  component: ForumHome,
 });
 
 function useConfig(): FeedbackConfig {
@@ -50,53 +51,80 @@ function useConfig(): FeedbackConfig {
   );
 }
 
-function FeedbackPage() {
+type Tab = "trending" | "latest" | "solved" | "features" | "bugs" | "ideas";
+const TABS: Array<{ id: Tab; label: string; icon: typeof Flame; tone: string }> = [
+  { id: "trending", label: "Trending",       icon: Flame,       tone: "text-orange-500" },
+  { id: "latest",   label: "Latest",         icon: Clock,       tone: "text-sky-500" },
+  { id: "solved",   label: "Solved",         icon: CheckCircle2,tone: "text-emerald-500" },
+  { id: "features", label: "Most Requested", icon: Lightbulb,   tone: "text-amber-500" },
+  { id: "bugs",     label: "Bug Reports",    icon: Bug,         tone: "text-rose-500" },
+  { id: "ideas",    label: "Popular Ideas",  icon: Sparkles,    tone: "text-violet-500" },
+];
+
+function tabToQuery(tab: Tab) {
+  switch (tab) {
+    case "latest":   return { sort: "recent" as const,   category: "all", status: "all" };
+    case "solved":   return { sort: "top" as const,      category: "all", status: "fixed" };
+    case "features": return { sort: "top" as const,      category: "feature", status: "all" };
+    case "bugs":     return { sort: "trending" as const, category: "bug", status: "all" };
+    case "ideas":    return { sort: "top" as const,      category: "improvement", status: "all" };
+    default:         return { sort: "trending" as const, category: "all", status: "all" };
+  }
+}
+
+function ForumHome() {
   const cfg = useConfig();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
-  const [sort, setSort] = useState<"trending" | "recent" | "top" | "oldest">("trending");
+  const [tab, setTab] = useState<Tab>("trending");
   const [category, setCategory] = useState<"all" | FeedbackCategory>("all");
-  const [status, setStatus] = useState<"all" | FeedbackStatus>("all");
   const [search, setSearch] = useState("");
   const [composerOpen, setComposerOpen] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
 
   const list = useServerFn(listFeedback);
+  const q = tabToQuery(tab);
+  const effectiveCategory = category !== "all" ? category : q.category;
+
   const { data: items, isLoading } = useQuery({
-    queryKey: ["feedback", sort, category, status, search],
-    queryFn: () => list({ data: { sort, category, status, search: search || undefined, limit: 100 } }),
+    queryKey: ["forum", tab, effectiveCategory, search],
+    queryFn: () => list({ data: {
+      sort: q.sort,
+      category: effectiveCategory,
+      status: q.status,
+      search: search || undefined,
+      limit: 60,
+    } }),
     enabled: cfg.enabled,
   });
 
   const vote = useServerFn(toggleVote);
   const voteMut = useMutation({
     mutationFn: (reportId: string) => vote({ data: { reportId } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["feedback"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["forum"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 
-  // Realtime: refresh list/detail when reports, votes or comments change
   useEffect(() => {
     if (!cfg.enabled) return;
     const ch = supabase
-      .channel("feedback-rt")
+      .channel("forum-rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "feedback_reports" },
-        () => qc.invalidateQueries({ queryKey: ["feedback"] }))
+        () => qc.invalidateQueries({ queryKey: ["forum"] }))
       .on("postgres_changes", { event: "*", schema: "public", table: "feedback_votes" },
-        () => qc.invalidateQueries({ queryKey: ["feedback"] }))
+        () => qc.invalidateQueries({ queryKey: ["forum"] }))
       .on("postgres_changes", { event: "*", schema: "public", table: "feedback_comments" },
-        () => qc.invalidateQueries({ queryKey: ["feedback"] }))
+        () => qc.invalidateQueries({ queryKey: ["forum"] }))
       .subscribe();
     return () => { void supabase.removeChannel(ch); };
   }, [cfg.enabled, qc]);
-
 
   if (!cfg.enabled) {
     return (
       <div className="mx-auto grid min-h-[60vh] max-w-md place-items-center p-6 text-center">
         <div>
-          <h1 className="text-2xl font-bold">Feedback is disabled</h1>
+          <h1 className="text-2xl font-bold">Forum is disabled</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             This module is currently turned off by the admin.
           </p>
@@ -110,37 +138,101 @@ function FeedbackPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
+      {/* Header */}
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
           <Link to="/" className="rounded-md p-1.5 hover:bg-muted" aria-label="Back">
             <ChevronLeft className="h-5 w-5" />
           </Link>
-          <div className="flex-1">
-            <h1 className="text-lg font-bold tracking-tight">Feedback & Bug Reports</h1>
-            <p className="text-xs text-muted-foreground">Vote on ideas, file bugs, track fixes.</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="truncate text-lg font-bold tracking-tight">Community Forum</h1>
+            <p className="truncate text-xs text-muted-foreground">Discussions, bugs, features & ideas</p>
           </div>
           {user && (
             <Dialog open={composerOpen} onOpenChange={setComposerOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1.5">
-                  <Plus className="h-4 w-4" /> New report
+                  <Plus className="h-4 w-4" /> New discussion
                 </Button>
               </DialogTrigger>
               <Composer cfg={cfg} onClose={() => setComposerOpen(false)} />
             </Dialog>
           )}
         </div>
-        <div className="mx-auto max-w-4xl px-4 pb-3">
-          <div className="flex flex-wrap gap-2">
-            <div className="relative flex-1 min-w-[180px]">
+      </header>
+
+      {/* Hero */}
+      <section className="border-b border-border/40 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
+        <div className="mx-auto max-w-5xl px-4 py-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+                <MessagesSquare className="h-3 w-3" /> Public forum
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Shape the platform together
+              </h2>
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                Report bugs, request features, and discuss ideas with the community. Vote on what matters most.
+              </p>
+            </div>
+            {!user && (
+              <Link
+                to="/auth"
+                className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow hover:opacity-90"
+              >
+                Sign in to join
+              </Link>
+            )}
+          </div>
+
+          {/* Category quick-cards */}
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              { id: "bug" as const,         icon: Bug,       label: "Bugs" },
+              { id: "feature" as const,     icon: Lightbulb, label: "Features" },
+              { id: "improvement" as const, icon: Sparkles,  label: "Ideas" },
+              { id: "other" as const,       icon: MessagesSquare, label: "General" },
+            ].map((c) => {
+              const Meta = CATEGORY_META[c.id];
+              const active = category === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setCategory(active ? "all" : c.id)}
+                  className={`group flex items-center gap-2 rounded-2xl border p-3 text-left transition ${
+                    active
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-border bg-card/70 hover:border-primary/40 hover:bg-primary/5"
+                  }`}
+                >
+                  <span className={`grid h-9 w-9 place-items-center rounded-xl bg-muted ${Meta.tone}`}>
+                    <c.icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold">{c.label}</div>
+                    <div className="truncate text-[10px] text-muted-foreground">{Meta.label}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Filter row */}
+      <div className="sticky top-[57px] z-10 border-b border-border/40 bg-background/85 backdrop-blur-xl">
+        <div className="mx-auto max-w-5xl px-4 py-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[200px] flex-1">
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search} onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search reports…" className="pl-8 h-9"
+                placeholder="Search discussions…" className="h-9 pl-8"
               />
             </div>
             <Select value={category} onValueChange={(v) => setCategory(v as typeof category)}>
-              <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All categories</SelectItem>
                 {FEEDBACK_CATEGORIES.map((c) => (
@@ -148,67 +240,74 @@ function FeedbackPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
-              <SelectTrigger className="h-9 w-[140px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All status</SelectItem>
-                {FEEDBACK_STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>{STATUS_META[s].label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
-              <SelectTrigger className="h-9 w-[130px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="trending">Trending</SelectItem>
-                <SelectItem value="top">Most votes</SelectItem>
-                <SelectItem value="recent">Recent</SelectItem>
-                <SelectItem value="oldest">Oldest</SelectItem>
-              </SelectContent>
-            </Select>
+          </div>
+          <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+            {TABS.map((t) => {
+              const Icon = t.icon;
+              const active = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                    active
+                      ? "border-primary bg-primary text-primary-foreground shadow"
+                      : "border-border bg-card text-foreground hover:border-primary/40"
+                  }`}
+                >
+                  <Icon className={`h-3.5 w-3.5 ${active ? "" : t.tone}`} /> {t.label}
+                </button>
+              );
+            })}
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="mx-auto max-w-4xl space-y-3 p-4">
+      {/* List */}
+      <main className="mx-auto max-w-5xl space-y-3 p-4">
         {isLoading && (
           <div className="grid place-items-center py-16 text-muted-foreground">
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         )}
         {!isLoading && (items?.length ?? 0) === 0 && (
-          <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-            No reports match your filters. Be the first to submit one.
-          </div>
+          <EmptyState tab={tab} onNew={() => setComposerOpen(true)} canPost={!!user} />
         )}
         {(items ?? []).map((r) => {
           const Cat = CATEGORY_META[r.category as FeedbackCategory] ?? CATEGORY_META.other;
           const St  = STATUS_META[r.status as FeedbackStatus] ?? STATUS_META.open;
+          const trending = (r.upvote_count ?? 0) >= 10 || (r.comment_count ?? 0) >= 5;
           return (
-            <button
+            <article
               key={r.id}
-              onClick={() => setOpenId(r.id)}
-              className="group flex w-full items-start gap-3 rounded-2xl border border-border bg-card p-4 text-left transition hover:border-primary/50 hover:shadow-sm"
+              className="group flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/50 hover:shadow-md"
             >
-              <div
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!user) { toast.error("Sign in to vote"); return; }
                   voteMut.mutate(r.id);
                 }}
-                className={`flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-xl border transition ${
+                className={`flex h-16 w-12 shrink-0 flex-col items-center justify-center rounded-xl border transition ${
                   r.hasVoted
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border bg-background text-foreground hover:border-primary/60"
                 }`}
+                aria-label="Upvote"
               >
                 <ChevronUp className="h-4 w-4" />
                 <span className="text-sm font-semibold tabular-nums">{r.upvote_count}</span>
-              </div>
-              <div className="min-w-0 flex-1">
+                <span className="text-[9px] uppercase text-muted-foreground">votes</span>
+              </button>
+              <Link
+                to="/feedback/$id"
+                params={{ id: r.id }}
+                className="min-w-0 flex-1"
+              >
                 <div className="flex items-center gap-2">
                   {r.is_pinned && <Pin className="h-3.5 w-3.5 text-primary" />}
-                  <h3 className="truncate font-medium">{r.title}</h3>
+                  {trending && <TrendingUp className="h-3.5 w-3.5 text-orange-500" />}
+                  <h3 className="truncate font-semibold group-hover:text-primary">{r.title}</h3>
                 </div>
                 {r.description && (
                   <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{r.description}</p>
@@ -224,20 +323,40 @@ function FeedbackPage() {
                     <MessageCircle className="h-3 w-3" /> {r.comment_count}
                   </span>
                 </div>
-              </div>
-            </button>
+              </Link>
+            </article>
           );
         })}
       </main>
+    </div>
+  );
+}
 
-      {openId && (
-        <DetailDialog id={openId} open={!!openId} onClose={() => setOpenId(null)} cfg={cfg} />
+function EmptyState({ tab, onNew, canPost }: { tab: Tab; onNew: () => void; canPost: boolean }) {
+  const meta = TABS.find((t) => t.id === tab)!;
+  return (
+    <div className="rounded-3xl border border-dashed border-border bg-card/30 p-10 text-center">
+      <div className={`mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-muted ${meta.tone}`}>
+        <meta.icon className="h-6 w-6" />
+      </div>
+      <h3 className="text-base font-semibold">Nothing here yet</h3>
+      <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+        Be the first to start a discussion in <span className="font-semibold">{meta.label}</span>.
+      </p>
+      {canPost ? (
+        <Button size="sm" className="mt-4 gap-1.5" onClick={onNew}>
+          <Plus className="h-4 w-4" /> New discussion
+        </Button>
+      ) : (
+        <Link to="/auth" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+          Sign in to post
+        </Link>
       )}
     </div>
   );
 }
 
-// ============== COMPOSER ==============
+// ============== COMPOSER (unchanged behavior; used by forum home) ==============
 function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }) {
   const qc = useQueryClient();
   const create = useServerFn(createFeedback);
@@ -257,7 +376,7 @@ function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }
   }, [title]);
 
   const { data: similar } = useQuery({
-    queryKey: ["feedback-similar", debouncedTitle],
+    queryKey: ["forum-similar", debouncedTitle],
     queryFn: () => findSimilar({ data: { title: debouncedTitle } }),
     enabled: cfg.duplicateDetection && debouncedTitle.length >= 4,
   });
@@ -279,8 +398,8 @@ function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }
         },
       }),
     onSuccess: () => {
-      toast.success("Report submitted. Thank you!");
-      qc.invalidateQueries({ queryKey: ["feedback"] });
+      toast.success("Discussion posted. Thank you!");
+      qc.invalidateQueries({ queryKey: ["forum"] });
       onClose();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -308,7 +427,7 @@ function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }
   return (
     <DialogContent className="max-w-xl">
       <DialogHeader>
-        <DialogTitle>New report</DialogTitle>
+        <DialogTitle>Start a new discussion</DialogTitle>
       </DialogHeader>
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
@@ -347,12 +466,14 @@ function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }
             <div className="mt-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2">
               <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
                 <AlertTriangle className="h-3.5 w-3.5" />
-                Similar reports already exist — consider upvoting instead:
+                Similar discussions already exist — consider upvoting instead:
               </div>
               <ul className="mt-1.5 space-y-1">
                 {(similar ?? []).map((s) => (
                   <li key={s.id} className="flex items-center justify-between gap-2 text-xs">
-                    <span className="line-clamp-1">{s.title}</span>
+                    <Link to="/feedback/$id" params={{ id: s.id }} className="line-clamp-1 hover:underline">
+                      {s.title}
+                    </Link>
                     <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
                       ▲ {s.upvote_count}
                     </span>
@@ -403,7 +524,7 @@ function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }
           <label className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 p-2.5 text-sm cursor-pointer">
             <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(!!v)} />
             <EyeOff className="h-4 w-4 text-muted-foreground" />
-            <span className="flex-1">Submit anonymously</span>
+            <span className="flex-1">Post anonymously</span>
             <span className="text-xs text-muted-foreground">Your name will be hidden</span>
           </label>
         )}
@@ -415,144 +536,9 @@ function Composer({ cfg, onClose }: { cfg: FeedbackConfig; onClose: () => void }
           disabled={mut.isPending || title.trim().length < 4}
         >
           {mut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Submit report
+          Post discussion
         </Button>
       </DialogFooter>
     </DialogContent>
-  );
-}
-
-// ============== DETAIL ==============
-function DetailDialog({ id, open, onClose, cfg }: { id: string; open: boolean; onClose: () => void; cfg: FeedbackConfig }) {
-  const qc = useQueryClient();
-  const get = useServerFn(getFeedback);
-  const comment = useServerFn(postComment);
-  const vote = useServerFn(toggleVote);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["feedback", "detail", id],
-    queryFn: () => get({ data: { id } }),
-    enabled: open,
-  });
-
-  const [text, setText] = useState("");
-  const postMut = useMutation({
-    mutationFn: () => comment({ data: { reportId: id, text: text.trim() } }),
-    onSuccess: () => {
-      setText("");
-      qc.invalidateQueries({ queryKey: ["feedback", "detail", id] });
-      qc.invalidateQueries({ queryKey: ["feedback"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-  const voteMut = useMutation({
-    mutationFn: () => vote({ data: { reportId: id } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["feedback", "detail", id] });
-      qc.invalidateQueries({ queryKey: ["feedback"] });
-    },
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl">
-        {isLoading || !data ? (
-          <div className="grid place-items-center py-12">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <>
-            <DialogHeader>
-              <DialogTitle className="pr-8">{data.report.title}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {(() => {
-                  const Cat = CATEGORY_META[data.report.category as FeedbackCategory] ?? CATEGORY_META.other;
-                  const St  = STATUS_META[data.report.status as FeedbackStatus] ?? STATUS_META.open;
-                  return (
-                    <>
-                      <span className={`inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium ${Cat.tone}`}>
-                        <Cat.icon className="h-3 w-3" /> {Cat.label}
-                      </span>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${St.tone}`}>
-                        {St.label}
-                      </span>
-                      {data.report.is_anonymous && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                          <EyeOff className="h-3 w-3" /> Anonymous
-                        </span>
-                      )}
-                    </>
-                  );
-                })()}
-                <Button
-                  size="sm" variant={data.hasVoted ? "default" : "outline"}
-                  className="ml-auto gap-1.5"
-                  onClick={() => voteMut.mutate()}
-                  disabled={voteMut.isPending}
-                >
-                  <ChevronUp className="h-4 w-4" />
-                  {data.report.upvote_count} {data.hasVoted ? "Voted" : "Upvote"}
-                </Button>
-              </div>
-
-              {data.report.description && (
-                <div className="whitespace-pre-wrap rounded-xl border border-border bg-muted/40 p-3 text-sm">
-                  {data.report.description}
-                </div>
-              )}
-              {(data.report.screenshots ?? []).length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
-                  {data.report.screenshots.map((url: string) => (
-                    <a key={url} href={url} target="_blank" rel="noreferrer" className="overflow-hidden rounded-md border border-border">
-                      <img src={url} alt="Screenshot" className="h-24 w-full object-cover" />
-                    </a>
-                  ))}
-                </div>
-              )}
-              {data.report.admin_note && (
-                <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm">
-                  <div className="mb-1 text-xs font-semibold text-primary">Admin note</div>
-                  {data.report.admin_note}
-                </div>
-              )}
-
-              {cfg.allowComments && (
-                <div className="space-y-2 pt-2">
-                  <h4 className="text-sm font-semibold">Comments ({data.comments.length})</h4>
-                  <div className="max-h-64 space-y-2 overflow-auto">
-                    {data.comments.map((c) => (
-                      <div key={c.id} className={`rounded-lg border p-2 text-sm ${c.is_admin_response ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
-                        {c.is_admin_response && (
-                          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">Admin</div>
-                        )}
-                        <p className="whitespace-pre-wrap">{c.text}</p>
-                      </div>
-                    ))}
-                    {data.comments.length === 0 && (
-                      <p className="text-xs text-muted-foreground">No comments yet.</p>
-                    )}
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <Textarea
-                      value={text} onChange={(e) => setText(e.target.value)}
-                      rows={2} maxLength={2000} placeholder="Add a comment…"
-                      className="flex-1"
-                    />
-                    <Button
-                      size="icon" onClick={() => postMut.mutate()}
-                      disabled={postMut.isPending || text.trim().length === 0}
-                    >
-                      {postMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
   );
 }
