@@ -160,7 +160,7 @@ const ReportInput = z.object({
 });
 
 export const reportContent = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth, withRateLimit("moderation:report", 10, 60)])
+  .middleware([requireSupabaseAuth, withRateLimit("moderation.report")])
   .inputValidator((raw) => ReportInput.parse(raw))
   .handler(async ({ data, context }) => {
     const sb = await admin();
