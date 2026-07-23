@@ -311,3 +311,15 @@ function NumberField({ label, value, onChange, step = 1 }: { label: string; valu
     </div>
   );
 }
+
+function ToggleRow({ label, description, checked, onCheckedChange }: { label: string; description?: string; checked: boolean; onCheckedChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-lg border bg-card p-3">
+      <div className="min-w-0">
+        <div className="text-sm font-medium">{label}</div>
+        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+      </div>
+      <AdminToggle checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  );
+}
