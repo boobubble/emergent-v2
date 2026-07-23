@@ -68,6 +68,7 @@ import { Route as MehfilChallengesRouteImport } from './routes/mehfil.challenges
 import { Route as MehfilSlugRouteImport } from './routes/mehfil.$slug'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as GamesLudoRouteImport } from './routes/games.ludo'
+import { Route as FeedbackIdRouteImport } from './routes/feedback.$id'
 import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
 import { Route as CompetitionsLeaderboardRouteImport } from './routes/competitions.leaderboard'
 import { Route as CompetitionsHallOfFameRouteImport } from './routes/competitions.hall-of-fame'
@@ -494,6 +495,11 @@ const GamesLudoRoute = GamesLudoRouteImport.update({
   id: '/ludo',
   path: '/ludo',
   getParentRoute: () => GamesRoute,
+} as any)
+const FeedbackIdRoute = FeedbackIdRouteImport.update({
+  id: '/feedback/$id',
+  path: '/feedback/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const FeedSlugRoute = FeedSlugRouteImport.update({
   id: '/feed/$slug',
@@ -1305,6 +1311,7 @@ export interface FileRoutesByFullPath {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/feedback/$id': typeof FeedbackIdRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
@@ -1493,6 +1500,7 @@ export interface FileRoutesByTo {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/feedback/$id': typeof FeedbackIdRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
@@ -1687,6 +1695,7 @@ export interface FileRoutesById {
   '/competitions/hall-of-fame': typeof CompetitionsHallOfFameRoute
   '/competitions/leaderboard': typeof CompetitionsLeaderboardRoute
   '/feed/$slug': typeof FeedSlugRoute
+  '/feedback/$id': typeof FeedbackIdRoute
   '/games/ludo': typeof GamesLudoRoute
   '/invite/$code': typeof InviteCodeRoute
   '/mehfil/$slug': typeof MehfilSlugRoute
@@ -1881,6 +1890,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/feedback/$id'
     | '/games/ludo'
     | '/invite/$code'
     | '/mehfil/$slug'
@@ -2069,6 +2079,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/feedback/$id'
     | '/games/ludo'
     | '/invite/$code'
     | '/mehfil/$slug'
@@ -2262,6 +2273,7 @@ export interface FileRouteTypes {
     | '/competitions/hall-of-fame'
     | '/competitions/leaderboard'
     | '/feed/$slug'
+    | '/feedback/$id'
     | '/games/ludo'
     | '/invite/$code'
     | '/mehfil/$slug'
@@ -2361,6 +2373,7 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
   FeedSlugRoute: typeof FeedSlugRoute
+  FeedbackIdRoute: typeof FeedbackIdRoute
   InviteCodeRoute: typeof InviteCodeRoute
   MehfilSlugRoute: typeof MehfilSlugRoute
   MehfilChallengesRoute: typeof MehfilChallengesRoute
@@ -2819,6 +2832,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/games/ludo'
       preLoaderRoute: typeof GamesLudoRouteImport
       parentRoute: typeof GamesRoute
+    }
+    '/feedback/$id': {
+      id: '/feedback/$id'
+      path: '/feedback/$id'
+      fullPath: '/feedback/$id'
+      preLoaderRoute: typeof FeedbackIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/feed/$slug': {
       id: '/feed/$slug'
@@ -4092,6 +4112,7 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
   FeedSlugRoute: FeedSlugRoute,
+  FeedbackIdRoute: FeedbackIdRoute,
   InviteCodeRoute: InviteCodeRoute,
   MehfilSlugRoute: MehfilSlugRoute,
   MehfilChallengesRoute: MehfilChallengesRoute,
