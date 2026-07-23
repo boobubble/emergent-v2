@@ -1054,6 +1054,9 @@ function FeedPage() {
                       <div className="lg:hidden"><PromotedPostsWidget profiles={profiles} /></div>
                     )}
                     {mehfilWidgetEnabled && idx > 0 && (idx + 1) % mehfilWidgetFreq === 0 && <MehfilTrendingWidget />}
+                    {discoveryCfg.enabled && idx > 0 && (idx + 1) % discoveryCfg.insertEvery === 0 && (idx + 1) % mehfilWidgetFreq !== 0 && (
+                      <ModuleDiscoveryWidget slotIndex={Math.floor((idx + 1) / discoveryCfg.insertEvery)} />
+                    )}
                     {idx === 4 && (
                       <div className="lg:hidden"><SuggestedGroupsWidget /></div>
                     )}
