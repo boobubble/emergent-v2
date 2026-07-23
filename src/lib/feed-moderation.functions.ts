@@ -135,10 +135,8 @@ export const listFeedModerationQueue = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     await assertFeedMod(context.userId);
     const sb = await admin();
-    const out: {
-      posts: Array<Record<string, unknown>>;
-      comments: Array<Record<string, unknown>>;
-    } = { posts: [], comments: [] };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const out: { posts: any[]; comments: any[] } = { posts: [], comments: [] };
 
     if (data.kind === "post" || data.kind === "all") {
       let q = sb.from("posts")
