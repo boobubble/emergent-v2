@@ -384,7 +384,7 @@ export const listPostingBans = createServerFn({ method: "GET" })
     await assertMod(context.userId);
     const sb = await admin();
     const { data } = await sb.from("feed_posting_bans")
-      .select("id, user_id, moderator_id, reason, expires_at, active, scope, created_at")
+      .select("id, user_id, created_by, reason, expires_at, active, scope, created_at")
       .order("created_at", { ascending: false }).limit(200);
     return data ?? [];
   });
