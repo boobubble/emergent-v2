@@ -882,6 +882,8 @@ function FeedPage() {
 
               <div className="feed-section-label">Explore</div>
               <SideLink to="/chatroom" iconSrc={chatroomIcon} label="Chatrooms" />
+              <SideNavLink to="/hall-of-fame" icon={Crown} label="Hall of Fame" color="text-amber-400" />
+              <SideNavLink to="/communities" icon={Globe} label="Communities" color="text-emerald-400" />
               <SideNavLink to="/poetry" icon={PenLine} label={mehfilLabel} color="text-fuchsia-400" />
               <SideNavLink to="/reels" icon={Film} label="Reels" badge="Soon" color="text-pink-400" />
               <SideNavLink to="/pages" icon={FileText} label="Pages" badge="Soon" color="text-cyan-400" />
@@ -1098,8 +1100,6 @@ function FeedPage() {
             <RailSection label="Quick Links" tone="primary" />
             <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/60 bg-card/70 p-2 shadow-sm backdrop-blur">
               {[
-                { label: "Hall of Fame", icon: Crown, color: "from-amber-500 to-yellow-500", onClick: () => navigate({ to: "/hall-of-fame" }) },
-                { label: "Communities", icon: Globe, color: "from-emerald-500 to-teal-500", onClick: () => navigate({ to: "/communities" }) },
                 { label: "Feedback", icon: MessageSquare, color: "from-blue-500 to-indigo-500", onClick: () => navigate({ to: "/feedback" }) },
                 { label: "Report a Bug", icon: Bug, color: "from-rose-500 to-red-600", onClick: () => navigate({ to: "/feedback", search: { type: "bug" } as never }) },
               ].map((a) => {
