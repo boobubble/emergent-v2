@@ -84,6 +84,7 @@ import { Route as AdminVoiceNotesRouteImport } from './routes/admin.voice-notes'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminUpdatesRouteImport } from './routes/admin.updates'
 import { Route as AdminUpcomingRouteImport } from './routes/admin.upcoming'
+import { Route as AdminTrustSafetyRouteImport } from './routes/admin.trust-safety'
 import { Route as AdminSystemRouteImport } from './routes/admin.system'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
 import { Route as AdminStickersRouteImport } from './routes/admin.stickers'
@@ -570,6 +571,11 @@ const AdminUpdatesRoute = AdminUpdatesRouteImport.update({
 const AdminUpcomingRoute = AdminUpcomingRouteImport.update({
   id: '/upcoming',
   path: '/upcoming',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTrustSafetyRoute = AdminTrustSafetyRouteImport.update({
+  id: '/trust-safety',
+  path: '/trust-safety',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSystemRoute = AdminSystemRouteImport.update({
@@ -1255,6 +1261,7 @@ export interface FileRoutesByFullPath {
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
+  '/admin/trust-safety': typeof AdminTrustSafetyRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
@@ -1440,6 +1447,7 @@ export interface FileRoutesByTo {
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
+  '/admin/trust-safety': typeof AdminTrustSafetyRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
@@ -1628,6 +1636,7 @@ export interface FileRoutesById {
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
+  '/admin/trust-safety': typeof AdminTrustSafetyRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
@@ -1818,6 +1827,7 @@ export interface FileRouteTypes {
     | '/admin/stickers'
     | '/admin/subscriptions'
     | '/admin/system'
+    | '/admin/trust-safety'
     | '/admin/upcoming'
     | '/admin/updates'
     | '/admin/users'
@@ -2003,6 +2013,7 @@ export interface FileRouteTypes {
     | '/admin/stickers'
     | '/admin/subscriptions'
     | '/admin/system'
+    | '/admin/trust-safety'
     | '/admin/upcoming'
     | '/admin/updates'
     | '/admin/users'
@@ -2190,6 +2201,7 @@ export interface FileRouteTypes {
     | '/admin/stickers'
     | '/admin/subscriptions'
     | '/admin/system'
+    | '/admin/trust-safety'
     | '/admin/upcoming'
     | '/admin/updates'
     | '/admin/users'
@@ -2872,6 +2884,13 @@ declare module '@tanstack/react-router' {
       path: '/upcoming'
       fullPath: '/admin/upcoming'
       preLoaderRoute: typeof AdminUpcomingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/trust-safety': {
+      id: '/admin/trust-safety'
+      path: '/trust-safety'
+      fullPath: '/admin/trust-safety'
+      preLoaderRoute: typeof AdminTrustSafetyRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/system': {
@@ -3743,6 +3762,7 @@ interface AdminRouteChildren {
   AdminStickersRoute: typeof AdminStickersRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminSystemRoute: typeof AdminSystemRoute
+  AdminTrustSafetyRoute: typeof AdminTrustSafetyRoute
   AdminUpcomingRoute: typeof AdminUpcomingRouteWithChildren
   AdminUpdatesRoute: typeof AdminUpdatesRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -3830,6 +3850,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminStickersRoute: AdminStickersRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminSystemRoute: AdminSystemRoute,
+  AdminTrustSafetyRoute: AdminTrustSafetyRoute,
   AdminUpcomingRoute: AdminUpcomingRouteWithChildren,
   AdminUpdatesRoute: AdminUpdatesRoute,
   AdminUsersRoute: AdminUsersRoute,
