@@ -270,13 +270,13 @@ function SettingsTab() {
     <Card>
       <CardHeader><CardTitle>Feed Moderation Settings</CardTitle></CardHeader>
       <CardContent className="space-y-4">
-        <AdminToggle
+        <ToggleRow
           label="Enable Feed Moderation"
           description="Master switch. When off, spam/duplicate checks and AI moderation are skipped."
           checked={!!cur.enabled}
           onCheckedChange={(v) => setForm((f) => ({ ...f, enabled: v }))}
         />
-        <AdminToggle
+        <ToggleRow
           label="AI Image Moderation"
           description="Scan uploaded images for nudity, violence, gore, child safety, drugs, weapons."
           checked={!!cur.ai_image_moderation_enabled}
