@@ -1162,14 +1162,18 @@ function FeedPage() {
           { label: "Find Friends", icon: UserPlus, color: "from-teal-500 to-emerald-500", onClick: () => setView("findFriends") },
           { label: "Messages", icon: MessageCircle, color: "from-sky-500 to-indigo-500", onClick: () => setDmOpenKey(k => k + 1) },
           { label: "Notifications", icon: Bell, color: "from-rose-500 to-red-500", onClick: () => { setView("feed"); setTab("notifications"); } },
+          { label: "Hall of Fame", icon: Crown, color: "from-amber-500 to-yellow-500", onClick: () => navigate({ to: "/hall-of-fame" }) },
           { label: "Achievements", icon: Award, color: "from-yellow-500 to-amber-500", onClick: () => setView("achievements") },
           { label: "Leaderboard", icon: Trophy, color: "from-amber-500 to-orange-500", onClick: () => setView("leaderboard") },
           { label: "Competitions", icon: Trophy, color: "from-amber-400 to-yellow-500", onClick: () => navigate({ to: "/competitions" }) },
           { label: "Battle Hub", icon: Radio, color: "from-rose-500 to-red-500", onClick: () => navigate({ to: "/battle-hub" }) },
           { label: mehfilLabel, icon: PenLine, color: "from-fuchsia-500 to-purple-500", onClick: () => navigate({ to: "/poetry" }) },
+          { label: "Communities", icon: Globe, color: "from-emerald-500 to-teal-500", onClick: () => navigate({ to: "/communities" }) },
           { label: "Daily Chest", icon: Gift, color: "from-rose-500 to-fuchsia-500", onClick: () => setView("dailyChest") },
           { label: "Daily Spin", icon: Sparkles, color: "from-violet-500 to-purple-500", onClick: () => setView("spin") },
           { label: "Shop", icon: Coins, color: "from-emerald-500 to-green-500", onClick: () => setView("shop") },
+          { label: "Feedback", icon: MessageSquare, color: "from-blue-500 to-indigo-500", onClick: () => navigate({ to: "/feedback" }) },
+          { label: "Report a Bug", icon: Bug, color: "from-rose-500 to-red-600", onClick: () => navigate({ to: "/feedback", search: { type: "bug" } as never }) },
         ]}
         extraActions={[
           { label: "Create Post", icon: Plus, color: "from-primary to-primary/70", onClick: focusComposer },
@@ -1181,6 +1185,7 @@ function FeedPage() {
           { label: "Report a Bug", icon: Bug, color: "from-rose-500 to-red-600", onClick: () => navigate({ to: "/feedback", search: { type: "bug" } as never }) },
         ]}
       />
+
 
 
 
