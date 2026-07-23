@@ -204,7 +204,7 @@ export const PostCard = memo(function PostCard({
               const reason = window.prompt("Why are you reporting this post? (Spam, Abuse, NSFW, Harassment, Other)");
               if (!reason) return;
               try {
-                await reportFeedContent({ data: { target_type: "post", target_id: post.id, reason: reason.slice(0, 200) } });
+                await reportContent({ data: { content_type: "feed_post", content_id: post.id, reason: reason.slice(0, 200) } });
                 toast.success("Reported. Our team will review it.");
               } catch (e) {
                 toast.error(e instanceof Error ? e.message : "Failed to report");
