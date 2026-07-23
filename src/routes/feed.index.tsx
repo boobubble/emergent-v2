@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon, Shield, LogOut, Radio, PenLine } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon, Shield, LogOut, Radio, PenLine, Crown, Bug, MessageSquare, Globe } from "lucide-react";
 import { useMehfilSettings } from "@/lib/use-mehfil-label";
 import { useAppSettings } from "@/lib/app-settings";
 import { useThemeMode } from "@/lib/use-theme-mode";
@@ -1175,6 +1175,10 @@ function FeedPage() {
           { label: "Create Post", icon: Plus, color: "from-primary to-primary/70", onClick: focusComposer },
           { label: "Public Chat", icon: Users, color: "from-sky-500 to-cyan-500", onClick: () => navigate({ to: "/chatroom" }) },
           { label: "Private Chat", icon: MessageCircle, color: "from-indigo-500 to-violet-500", onClick: () => setDmOpenKey(k => k + 1) },
+          { label: "Hall of Fame", icon: Crown, color: "from-amber-500 to-yellow-500", onClick: () => navigate({ to: "/hall-of-fame" }) },
+          { label: "Communities", icon: Globe, color: "from-emerald-500 to-teal-500", onClick: () => navigate({ to: "/communities" }) },
+          { label: "Feedback", icon: MessageSquare, color: "from-blue-500 to-indigo-500", onClick: () => navigate({ to: "/feedback" }) },
+          { label: "Report a Bug", icon: Bug, color: "from-rose-500 to-red-600", onClick: () => navigate({ to: "/feedback", search: { type: "bug" } as never }) },
         ]}
       />
 
