@@ -7297,7 +7297,14 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "super_admin" | "admin" | "moderator" | "user" | "dj" | "rj"
+      app_role:
+        | "super_admin"
+        | "admin"
+        | "moderator"
+        | "user"
+        | "dj"
+        | "rj"
+        | "feed_moderator"
       ban_type: "ban" | "temp_ban" | "shadow_ban" | "ip_ban"
       community_member_role: "owner" | "moderator" | "member"
       community_member_status: "active" | "pending" | "banned" | "muted"
@@ -7526,7 +7533,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "admin", "moderator", "user", "dj", "rj"],
+      app_role: [
+        "super_admin",
+        "admin",
+        "moderator",
+        "user",
+        "dj",
+        "rj",
+        "feed_moderator",
+      ],
       ban_type: ["ban", "temp_ban", "shadow_ban", "ip_ban"],
       community_member_role: ["owner", "moderator", "member"],
       community_member_status: ["active", "pending", "banned", "muted"],
