@@ -84,6 +84,7 @@ import { Route as AdminVoiceNotesRouteImport } from './routes/admin.voice-notes'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminUpdatesRouteImport } from './routes/admin.updates'
 import { Route as AdminUpcomingRouteImport } from './routes/admin.upcoming'
+import { Route as AdminTrustSafetyRouteImport } from './routes/admin.trust-safety'
 import { Route as AdminSystemRouteImport } from './routes/admin.system'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
 import { Route as AdminStickersRouteImport } from './routes/admin.stickers'
@@ -183,6 +184,7 @@ import { Route as ApiGamesEventRouteImport } from './routes/api/games.event'
 import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
 import { Route as ApiGamesAchievementRouteImport } from './routes/api/games.achievement'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
+import { Route as AuthenticatedSettingsPrivacyRouteImport } from './routes/_authenticated.settings.privacy'
 import { Route as CommunitySlugChatroomsIndexRouteImport } from './routes/community.$slug.chatrooms.index'
 import { Route as CompetitionsSlugFunTypeRouteImport } from './routes/competitions.$slug.fun.$type'
 import { Route as CommunitySlugChatroomsRoomSlugRouteImport } from './routes/community.$slug.chatrooms.$roomSlug'
@@ -570,6 +572,11 @@ const AdminUpdatesRoute = AdminUpdatesRouteImport.update({
 const AdminUpcomingRoute = AdminUpcomingRouteImport.update({
   id: '/upcoming',
   path: '/upcoming',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTrustSafetyRoute = AdminTrustSafetyRouteImport.update({
+  id: '/trust-safety',
+  path: '/trust-safety',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSystemRoute = AdminSystemRouteImport.update({
@@ -1073,6 +1080,12 @@ const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   path: '/$key',
   getParentRoute: () => AdminUpcomingRoute,
 } as any)
+const AuthenticatedSettingsPrivacyRoute =
+  AuthenticatedSettingsPrivacyRouteImport.update({
+    id: '/_authenticated/settings/privacy',
+    path: '/settings/privacy',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CommunitySlugChatroomsIndexRoute =
   CommunitySlugChatroomsIndexRouteImport.update({
     id: '/chatrooms/',
@@ -1255,6 +1268,7 @@ export interface FileRoutesByFullPath {
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
+  '/admin/trust-safety': typeof AdminTrustSafetyRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
@@ -1294,6 +1308,7 @@ export interface FileRoutesByFullPath {
   '/feed/': typeof FeedIndexRoute
   '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
+  '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1440,6 +1455,7 @@ export interface FileRoutesByTo {
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
+  '/admin/trust-safety': typeof AdminTrustSafetyRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
@@ -1478,6 +1494,7 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedIndexRoute
   '/mehfil': typeof MehfilIndexRoute
   '/poetry': typeof PoetryIndexRoute
+  '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1628,6 +1645,7 @@ export interface FileRoutesById {
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/system': typeof AdminSystemRoute
+  '/admin/trust-safety': typeof AdminTrustSafetyRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/updates': typeof AdminUpdatesRoute
   '/admin/users': typeof AdminUsersRoute
@@ -1667,6 +1685,7 @@ export interface FileRoutesById {
   '/feed/': typeof FeedIndexRoute
   '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
+  '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1818,6 +1837,7 @@ export interface FileRouteTypes {
     | '/admin/stickers'
     | '/admin/subscriptions'
     | '/admin/system'
+    | '/admin/trust-safety'
     | '/admin/upcoming'
     | '/admin/updates'
     | '/admin/users'
@@ -1857,6 +1877,7 @@ export interface FileRouteTypes {
     | '/feed/'
     | '/mehfil/'
     | '/poetry/'
+    | '/settings/privacy'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -2003,6 +2024,7 @@ export interface FileRouteTypes {
     | '/admin/stickers'
     | '/admin/subscriptions'
     | '/admin/system'
+    | '/admin/trust-safety'
     | '/admin/upcoming'
     | '/admin/updates'
     | '/admin/users'
@@ -2041,6 +2063,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/mehfil'
     | '/poetry'
+    | '/settings/privacy'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -2190,6 +2213,7 @@ export interface FileRouteTypes {
     | '/admin/stickers'
     | '/admin/subscriptions'
     | '/admin/system'
+    | '/admin/trust-safety'
     | '/admin/upcoming'
     | '/admin/updates'
     | '/admin/users'
@@ -2229,6 +2253,7 @@ export interface FileRouteTypes {
     | '/feed/'
     | '/mehfil/'
     | '/poetry/'
+    | '/_authenticated/settings/privacy'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -2321,6 +2346,7 @@ export interface RootRouteChildren {
   FeedIndexRoute: typeof FeedIndexRoute
   MehfilIndexRoute: typeof MehfilIndexRoute
   PoetryIndexRoute: typeof PoetryIndexRoute
+  AuthenticatedSettingsPrivacyRoute: typeof AuthenticatedSettingsPrivacyRoute
   ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
   ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
   ApiGamesEventRoute: typeof ApiGamesEventRoute
@@ -2872,6 +2898,13 @@ declare module '@tanstack/react-router' {
       path: '/upcoming'
       fullPath: '/admin/upcoming'
       preLoaderRoute: typeof AdminUpcomingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/trust-safety': {
+      id: '/admin/trust-safety'
+      path: '/trust-safety'
+      fullPath: '/admin/trust-safety'
+      preLoaderRoute: typeof AdminTrustSafetyRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/system': {
@@ -3567,6 +3600,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUpcomingKeyRouteImport
       parentRoute: typeof AdminUpcomingRoute
     }
+    '/_authenticated/settings/privacy': {
+      id: '/_authenticated/settings/privacy'
+      path: '/settings/privacy'
+      fullPath: '/settings/privacy'
+      preLoaderRoute: typeof AuthenticatedSettingsPrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/community/$slug/chatrooms/': {
       id: '/community/$slug/chatrooms/'
       path: '/chatrooms'
@@ -3743,6 +3783,7 @@ interface AdminRouteChildren {
   AdminStickersRoute: typeof AdminStickersRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminSystemRoute: typeof AdminSystemRoute
+  AdminTrustSafetyRoute: typeof AdminTrustSafetyRoute
   AdminUpcomingRoute: typeof AdminUpcomingRouteWithChildren
   AdminUpdatesRoute: typeof AdminUpdatesRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -3830,6 +3871,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminStickersRoute: AdminStickersRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminSystemRoute: AdminSystemRoute,
+  AdminTrustSafetyRoute: AdminTrustSafetyRoute,
   AdminUpcomingRoute: AdminUpcomingRouteWithChildren,
   AdminUpdatesRoute: AdminUpdatesRoute,
   AdminUsersRoute: AdminUsersRoute,
@@ -4000,6 +4042,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedIndexRoute: FeedIndexRoute,
   MehfilIndexRoute: MehfilIndexRoute,
   PoetryIndexRoute: PoetryIndexRoute,
+  AuthenticatedSettingsPrivacyRoute: AuthenticatedSettingsPrivacyRoute,
   ApiGamesAchievementRoute: ApiGamesAchievementRoute,
   ApiGamesCoinsRoute: ApiGamesCoinsRoute,
   ApiGamesEventRoute: ApiGamesEventRoute,

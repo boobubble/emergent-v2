@@ -13,6 +13,7 @@ import { useIgnore } from "@/lib/ignore-store";
 import { linkify } from "@/lib/linkify";
 import { MediaEmbed } from "./MediaEmbed";
 import { VoiceNoteBubble } from "./VoiceNoteBubble";
+import { useDmUrlMask } from "@/lib/dm-url-mask";
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.mime?.startsWith("audio/")) {
@@ -97,6 +98,10 @@ function ReplyPreview({ message, align = "left" }: { message: Message; align?: "
 export function MessageList({ channelId }: { channelId: string }) {
   const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt } = useChat();
   const { isIgnored } = useIgnore();
+  const maskDmUrls = useDmUrlMask();
+  const isDmChan = isDM(channelId);
+  const applyMask = (authorId: string, text: string) =>
+    isDmChan && authorId !== "me" ? maskDmUrls(text) : text;
   const allMsgs = channelMessages(channelId);
   const msgs = useMemo(
     () => allMsgs.filter(m => {
@@ -207,7 +212,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                                   : "rounded-2xl rounded-tr-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in"
                               }
                             >
-                              <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                              <div className="whitespace-pre-wrap break-words">{renderText(applyMask(m.authorId, m.text))}</div>
                               {m.text && <MediaEmbed text={m.text} />}
                               {m.attachment && <AttachmentView a={m.attachment} />}
                             </div>
@@ -260,7 +265,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                                 : "max-w-[80%] rounded-2xl rounded-tl-md border border-border bg-card/70 backdrop-blur-sm px-3 py-1.5 text-xs leading-snug text-foreground/90 shadow-sm chat-bubble-in"
                             }
                           >
-                            <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                            <div className="whitespace-pre-wrap break-words">{renderText(applyMask(m.authorId, m.text))}</div>
                             {m.text && <MediaEmbed text={m.text} />}
                             {m.attachment && <AttachmentView a={m.attachment} />}
                           </div>
