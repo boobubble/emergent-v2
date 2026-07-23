@@ -1175,6 +1175,10 @@ function FeedPage() {
           { label: "Create Post", icon: Plus, color: "from-primary to-primary/70", onClick: focusComposer },
           { label: "Public Chat", icon: Users, color: "from-sky-500 to-cyan-500", onClick: () => navigate({ to: "/chatroom" }) },
           { label: "Private Chat", icon: MessageCircle, color: "from-indigo-500 to-violet-500", onClick: () => setDmOpenKey(k => k + 1) },
+          { label: "Hall of Fame", icon: Crown, color: "from-amber-500 to-yellow-500", onClick: () => navigate({ to: "/hall-of-fame" }) },
+          { label: "Communities", icon: Globe, color: "from-emerald-500 to-teal-500", onClick: () => navigate({ to: "/communities" }) },
+          { label: "Feedback", icon: MessageSquare, color: "from-blue-500 to-indigo-500", onClick: () => navigate({ to: "/feedback" }) },
+          { label: "Report a Bug", icon: Bug, color: "from-rose-500 to-red-600", onClick: () => navigate({ to: "/feedback", search: { type: "bug" } as never }) },
         ]}
       />
 
