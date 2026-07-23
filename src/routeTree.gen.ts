@@ -44,6 +44,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as SlugRouteImport } from './routes/$slug'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PoetryIndexRouteImport } from './routes/poetry.index'
 import { Route as MehfilIndexRouteImport } from './routes/mehfil.index'
@@ -132,6 +133,7 @@ import { Route as AdminEmailRouteImport } from './routes/admin.email'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
 import { Route as AdminDmWallpapersRouteImport } from './routes/admin.dm-wallpapers'
 import { Route as AdminDjRouteImport } from './routes/admin.dj'
+import { Route as AdminDiscoveryWidgetsRouteImport } from './routes/admin.discovery-widgets'
 import { Route as AdminDemoRouteImport } from './routes/admin.demo'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
 import { Route as AdminCompetitionsFeedRouteImport } from './routes/admin.competitions-feed'
@@ -371,6 +373,10 @@ const AccountRoute = AccountRouteImport.update({
 const SlugRoute = SlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -814,6 +820,11 @@ const AdminDjRoute = AdminDjRouteImport.update({
   path: '/dj',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDiscoveryWidgetsRoute = AdminDiscoveryWidgetsRouteImport.update({
+  id: '/discovery-widgets',
+  path: '/discovery-widgets',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDemoRoute = AdminDemoRouteImport.update({
   id: '/demo',
   path: '/demo',
@@ -1082,9 +1093,9 @@ const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
 } as any)
 const AuthenticatedSettingsPrivacyRoute =
   AuthenticatedSettingsPrivacyRouteImport.update({
-    id: '/_authenticated/settings/privacy',
+    id: '/settings/privacy',
     path: '/settings/privacy',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const CommunitySlugChatroomsIndexRoute =
   CommunitySlugChatroomsIndexRouteImport.update({
@@ -1221,6 +1232,7 @@ export interface FileRoutesByFullPath {
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
+  '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -1408,6 +1420,7 @@ export interface FileRoutesByTo {
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
+  '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -1534,6 +1547,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/$slug': typeof SlugRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
@@ -1598,6 +1612,7 @@ export interface FileRoutesById {
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
+  '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -1790,6 +1805,7 @@ export interface FileRouteTypes {
     | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
+    | '/admin/discovery-widgets'
     | '/admin/dj'
     | '/admin/dm-wallpapers'
     | '/admin/economy'
@@ -1977,6 +1993,7 @@ export interface FileRouteTypes {
     | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
+    | '/admin/discovery-widgets'
     | '/admin/dj'
     | '/admin/dm-wallpapers'
     | '/admin/economy'
@@ -2102,6 +2119,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/$slug'
     | '/account'
     | '/achievements'
@@ -2166,6 +2184,7 @@ export interface FileRouteTypes {
     | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
+    | '/admin/discovery-widgets'
     | '/admin/dj'
     | '/admin/dm-wallpapers'
     | '/admin/economy'
@@ -2293,6 +2312,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   SlugRoute: typeof SlugRoute
   AccountRoute: typeof AccountRoute
   AchievementsRoute: typeof AchievementsRoute
@@ -2346,7 +2366,6 @@ export interface RootRouteChildren {
   FeedIndexRoute: typeof FeedIndexRoute
   MehfilIndexRoute: typeof MehfilIndexRoute
   PoetryIndexRoute: typeof PoetryIndexRoute
-  AuthenticatedSettingsPrivacyRoute: typeof AuthenticatedSettingsPrivacyRoute
   ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
   ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
   ApiGamesEventRoute: typeof ApiGamesEventRoute
@@ -2618,6 +2637,13 @@ declare module '@tanstack/react-router' {
       path: '/$slug'
       fullPath: '/$slug'
       preLoaderRoute: typeof SlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -3236,6 +3262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDjRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/discovery-widgets': {
+      id: '/admin/discovery-widgets'
+      path: '/discovery-widgets'
+      fullPath: '/admin/discovery-widgets'
+      preLoaderRoute: typeof AdminDiscoveryWidgetsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/demo': {
       id: '/admin/demo'
       path: '/demo'
@@ -3605,7 +3638,7 @@ declare module '@tanstack/react-router' {
       path: '/settings/privacy'
       fullPath: '/settings/privacy'
       preLoaderRoute: typeof AuthenticatedSettingsPrivacyRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/community/$slug/chatrooms/': {
       id: '/community/$slug/chatrooms/'
@@ -3694,6 +3727,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedSettingsPrivacyRoute: typeof AuthenticatedSettingsPrivacyRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedSettingsPrivacyRoute: AuthenticatedSettingsPrivacyRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 interface AdminUpcomingRouteChildren {
   AdminUpcomingKeyRoute: typeof AdminUpcomingKeyRoute
 }
@@ -3736,6 +3780,7 @@ interface AdminRouteChildren {
   AdminCompetitionsFeedRoute: typeof AdminCompetitionsFeedRoute
   AdminConfessionsRoute: typeof AdminConfessionsRoute
   AdminDemoRoute: typeof AdminDemoRoute
+  AdminDiscoveryWidgetsRoute: typeof AdminDiscoveryWidgetsRoute
   AdminDjRoute: typeof AdminDjRoute
   AdminDmWallpapersRoute: typeof AdminDmWallpapersRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
@@ -3824,6 +3869,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCompetitionsFeedRoute: AdminCompetitionsFeedRoute,
   AdminConfessionsRoute: AdminConfessionsRoute,
   AdminDemoRoute: AdminDemoRoute,
+  AdminDiscoveryWidgetsRoute: AdminDiscoveryWidgetsRoute,
   AdminDjRoute: AdminDjRoute,
   AdminDmWallpapersRoute: AdminDmWallpapersRoute,
   AdminEconomyRoute: AdminEconomyRoute,
@@ -3989,6 +4035,7 @@ const GamesRouteWithChildren = GamesRoute._addFileChildren(GamesRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   SlugRoute: SlugRoute,
   AccountRoute: AccountRoute,
   AchievementsRoute: AchievementsRoute,
@@ -4042,7 +4089,6 @@ const rootRouteChildren: RootRouteChildren = {
   FeedIndexRoute: FeedIndexRoute,
   MehfilIndexRoute: MehfilIndexRoute,
   PoetryIndexRoute: PoetryIndexRoute,
-  AuthenticatedSettingsPrivacyRoute: AuthenticatedSettingsPrivacyRoute,
   ApiGamesAchievementRoute: ApiGamesAchievementRoute,
   ApiGamesCoinsRoute: ApiGamesCoinsRoute,
   ApiGamesEventRoute: ApiGamesEventRoute,

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } 
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon, Shield, LogOut, Radio, PenLine } from "lucide-react";
 import { useMehfilSettings } from "@/lib/use-mehfil-label";
+import { useAppSettings } from "@/lib/app-settings";
 import { useThemeMode } from "@/lib/use-theme-mode";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -30,6 +31,8 @@ import { ConfessionsFeedWidget, ActivePollsWidget } from "@/components/feed/Conf
 import { BoobubbleAssistantWidget } from "@/components/feed/BoobubbleAssistantWidget";
 import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
 import { MehfilTrendingWidget } from "@/components/feed/MehfilTrendingWidget";
+import { ModuleDiscoveryWidget } from "@/components/feed/ModuleDiscoveryWidget";
+import { mergeDiscoveryWidgetsConfig } from "@/lib/discovery-widgets-config";
 import { BirthdaysWidget } from "@/components/feed/BirthdaysWidget";
 import { MissionsPanel } from "@/components/feed/MissionsPanel";
 import { FeedNotifications } from "@/components/feed/FeedNotifications";
@@ -141,6 +144,11 @@ function FeedPage() {
   const mehfilLabel = mehfilSettings.module_name || "Poetry Hub";
   const mehfilWidgetEnabled = mehfilSettings.enabled !== false;
   const mehfilWidgetFreq = Math.max(2, Number(mehfilSettings.trending_widget_frequency) || 5);
+  const appSettings = useAppSettings();
+  const discoveryCfg = useMemo(
+    () => mergeDiscoveryWidgetsConfig(appSettings.raw?.discovery_widgets),
+    [appSettings.raw],
+  );
 
   // Universal Platform Search — extends the header search with debounced
   // server results for Poems, Poetry Battles, Categories, and Hall of Fame.
@@ -1046,6 +1054,9 @@ function FeedPage() {
                       <div className="lg:hidden"><PromotedPostsWidget profiles={profiles} /></div>
                     )}
                     {mehfilWidgetEnabled && idx > 0 && (idx + 1) % mehfilWidgetFreq === 0 && <MehfilTrendingWidget />}
+                    {discoveryCfg.enabled && idx > 0 && (idx + 1) % discoveryCfg.insertEvery === 0 && (idx + 1) % mehfilWidgetFreq !== 0 && (
+                      <ModuleDiscoveryWidget slotIndex={Math.floor((idx + 1) / discoveryCfg.insertEvery)} />
+                    )}
                     {idx === 4 && (
                       <div className="lg:hidden"><SuggestedGroupsWidget /></div>
                     )}
