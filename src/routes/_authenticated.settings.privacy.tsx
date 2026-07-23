@@ -107,7 +107,7 @@ function PrivacySettings() {
           {score.data && (
             <div className="text-sm">
               <span className="text-muted-foreground">Current violation points:</span>{" "}
-              <span className="font-mono font-bold">{String(score.data.score ?? 0)}</span>
+              <span className="font-mono font-bold">{String(score.data.points ?? 0)}</span>
               <p className="mt-1 text-xs text-muted-foreground">Points decay over time. High scores can trigger automatic warnings, mutes, or suspensions.</p>
             </div>
           )}
