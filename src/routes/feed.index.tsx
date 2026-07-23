@@ -882,6 +882,8 @@ function FeedPage() {
 
               <div className="feed-section-label">Explore</div>
               <SideLink to="/chatroom" iconSrc={chatroomIcon} label="Chatrooms" />
+              <SideNavLink to="/hall-of-fame" icon={Crown} label="Hall of Fame" color="text-amber-400" />
+              <SideNavLink to="/communities" icon={Globe} label="Communities" color="text-emerald-400" />
               <SideNavLink to="/poetry" icon={PenLine} label={mehfilLabel} color="text-fuchsia-400" />
               <SideNavLink to="/reels" icon={Film} label="Reels" badge="Soon" color="text-pink-400" />
               <SideNavLink to="/pages" icon={FileText} label="Pages" badge="Soon" color="text-cyan-400" />
