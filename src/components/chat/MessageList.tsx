@@ -265,7 +265,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                                 : "max-w-[80%] rounded-2xl rounded-tl-md border border-border bg-card/70 backdrop-blur-sm px-3 py-1.5 text-xs leading-snug text-foreground/90 shadow-sm chat-bubble-in"
                             }
                           >
-                            <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                            <div className="whitespace-pre-wrap break-words">{renderText(applyMask(m.authorId, m.text))}</div>
                             {m.text && <MediaEmbed text={m.text} />}
                             {m.attachment && <AttachmentView a={m.attachment} />}
                           </div>
