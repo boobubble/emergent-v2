@@ -425,7 +425,8 @@ export const scanPostImages = createServerFn({ method: "POST" })
       patch.moderation_reason = `AI moderation: score ${worst.toFixed(2)}`;
       patch.hidden_at = new Date().toISOString();
     }
-    await sb.from("posts").update(patch).eq("id", post.id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await sb.from("posts").update(patch as any).eq("id", post.id);
     if (worst >= threshold) {
       await log(context.userId, "feed_ai_auto_hide_post", { target_id: post.id, payload: { worst, threshold } });
     }
