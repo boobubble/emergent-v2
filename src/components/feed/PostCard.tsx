@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket, Bookmark } from "lucide-react";
+import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket, Bookmark, Flag } from "lucide-react";
+import { reportFeedContent } from "@/lib/feed-moderation.functions";
 import { useSavedPosts } from "@/lib/use-saved-posts";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
