@@ -2026,6 +2026,93 @@ export type Database = {
         }
         Relationships: []
       }
+      content_moderation: {
+        Row: {
+          ai_flags: Json | null
+          content_id: string
+          content_type: Database["public"]["Enums"]["moderatable_content_type"]
+          created_at: string
+          hidden_at: string | null
+          id: string
+          last_actor_id: string | null
+          owner_id: string | null
+          reason: string | null
+          report_count: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_flags?: Json | null
+          content_id: string
+          content_type: Database["public"]["Enums"]["moderatable_content_type"]
+          created_at?: string
+          hidden_at?: string | null
+          id?: string
+          last_actor_id?: string | null
+          owner_id?: string | null
+          reason?: string | null
+          report_count?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_flags?: Json | null
+          content_id?: string
+          content_type?: Database["public"]["Enums"]["moderatable_content_type"]
+          created_at?: string
+          hidden_at?: string | null
+          id?: string
+          last_actor_id?: string | null
+          owner_id?: string | null
+          reason?: string | null
+          report_count?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_moderation_logs: {
+        Row: {
+          action_taken: string
+          content_id: string | null
+          content_type:
+            | Database["public"]["Enums"]["moderatable_content_type"]
+            | null
+          created_at: string
+          id: string
+          metadata: Json
+          moderator_id: string | null
+          reason: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action_taken: string
+          content_id?: string | null
+          content_type?:
+            | Database["public"]["Enums"]["moderatable_content_type"]
+            | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          moderator_id?: string | null
+          reason?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action_taken?: string
+          content_id?: string | null
+          content_type?:
+            | Database["public"]["Enums"]["moderatable_content_type"]
+            | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          moderator_id?: string | null
+          reason?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       custom_pages: {
         Row: {
           canonical_url: string | null
@@ -2477,6 +2564,7 @@ export type Database = {
           id: string
           moderator_id: string | null
           reason: string
+          scope: string
           severity: string
           target_id: string | null
           target_type: string | null
@@ -2488,6 +2576,7 @@ export type Database = {
           id?: string
           moderator_id?: string | null
           reason: string
+          scope?: string
           severity?: string
           target_id?: string | null
           target_type?: string | null
@@ -2499,6 +2588,7 @@ export type Database = {
           id?: string
           moderator_id?: string | null
           reason?: string
+          scope?: string
           severity?: string
           target_id?: string | null
           target_type?: string | null
@@ -2514,6 +2604,7 @@ export type Database = {
           expires_at: string | null
           id: string
           reason: string | null
+          scope: string
           user_id: string
         }
         Insert: {
@@ -2523,6 +2614,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           reason?: string | null
+          scope?: string
           user_id: string
         }
         Update: {
@@ -2532,6 +2624,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           reason?: string | null
+          scope?: string
           user_id?: string
         }
         Relationships: []
@@ -6968,6 +7061,33 @@ export type Database = {
         }[]
       }
       complete_installation: { Args: { _payload: Json }; Returns: Json }
+      content_moderation_bump_report: {
+        Args: {
+          _content_id: string
+          _content_type: Database["public"]["Enums"]["moderatable_content_type"]
+          _owner_id?: string
+        }
+        Returns: {
+          ai_flags: Json | null
+          content_id: string
+          content_type: Database["public"]["Enums"]["moderatable_content_type"]
+          created_at: string
+          hidden_at: string | null
+          id: string
+          last_actor_id: string | null
+          owner_id: string | null
+          reason: string | null
+          report_count: number
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "content_moderation"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_coin_order: {
         Args: { _package_id: string; _provider: string }
         Returns: {
@@ -7489,6 +7609,14 @@ export type Database = {
         | "add_url_rule"
         | "remove_url_rule"
         | "clear_channel"
+      moderatable_content_type:
+        | "feed_post"
+        | "poetry_poem"
+        | "comment"
+        | "competition_submission"
+        | "meme"
+        | "image"
+        | "video"
       mute_scope: "global" | "room"
       pathescape_difficulty:
         | "easy"
@@ -7733,6 +7861,15 @@ export const Constants = {
         "add_url_rule",
         "remove_url_rule",
         "clear_channel",
+      ],
+      moderatable_content_type: [
+        "feed_post",
+        "poetry_poem",
+        "comment",
+        "competition_submission",
+        "meme",
+        "image",
+        "video",
       ],
       mute_scope: ["global", "room"],
       pathescape_difficulty: [
