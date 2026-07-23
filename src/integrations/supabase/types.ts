@@ -7502,7 +7502,7 @@ export type Database = {
       radio_schedule_status: "scheduled" | "live" | "completed" | "cancelled"
       reaction_type: "like" | "love" | "haha" | "angry" | "fire" | "wow"
       report_status: "open" | "reviewing" | "resolved" | "dismissed"
-      report_target: "message" | "post" | "user" | "room"
+      report_target: "message" | "post" | "user" | "room" | "comment"
       url_rule_kind: "whitelist" | "block"
       word_filter_action: "delete" | "warn" | "mute" | "ban"
     }
@@ -7748,7 +7748,7 @@ export const Constants = {
       radio_schedule_status: ["scheduled", "live", "completed", "cancelled"],
       reaction_type: ["like", "love", "haha", "angry", "fire", "wow"],
       report_status: ["open", "reviewing", "resolved", "dismissed"],
-      report_target: ["message", "post", "user", "room"],
+      report_target: ["message", "post", "user", "room", "comment"],
       url_rule_kind: ["whitelist", "block"],
       word_filter_action: ["delete", "warn", "mute", "ban"],
     },
