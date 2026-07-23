@@ -380,6 +380,9 @@ function HallOfFamePage() {
           </div>
         </section>
 
+        {/* Champion of the Month spotlight */}
+        {championOfMonth && <SpotlightCard row={championOfMonth} />}
+
         {/* Featured Champions carousel */}
         {featured.length > 0 && (
           <section className="mb-10">
