@@ -167,21 +167,29 @@ export const reportContent = createServerFn({ method: "POST" })
     const owner = await fetchOwner(data.content_type, data.content_id);
     if (owner === context.userId) throw new Error("You cannot report your own content");
 
+    // Map our engine content_type onto the legacy `reports.target_type` enum.
+    const REPORT_TARGET_MAP: Record<ContentType, "post" | "comment" | "user" | "message" | "room"> = {
+      feed_post: "post", meme: "post", image: "post", video: "post", poetry_poem: "post",
+      competition_submission: "post", comment: "comment",
+    };
+    const target_type = REPORT_TARGET_MAP[data.content_type];
+
     // De-duplicate: same reporter + target within 24h
     const { data: existing } = await sb.from("reports")
       .select("id").eq("reporter_id", context.userId)
-      .eq("target_type", data.content_type).eq("target_id", data.content_id)
+      .eq("target_type", target_type).eq("target_id", data.content_id)
       .gt("created_at", new Date(Date.now() - 86_400_000).toISOString())
       .maybeSingle();
     if (existing) return { ok: true, deduped: true };
 
     await sb.from("reports").insert({
       reporter_id: context.userId,
-      target_type: data.content_type as never,
+      target_type,
       target_id: data.content_id,
       reason: data.reason,
       status: "open",
-    } as never);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     // Atomically bump the counter (trigger auto-hides at threshold)
     await sb.rpc("content_moderation_bump_report", {
