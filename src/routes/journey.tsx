@@ -15,6 +15,8 @@ import {
   XP_PER_LEVEL,
 } from "@/lib/journey";
 import { BADGES, TIER_COLOR } from "@/lib/achievements";
+import { MissionsPanel } from "@/components/feed/MissionsPanel";
+import { DailyChallengesWidget } from "@/components/feed/DailyChallengesWidget";
 
 export const Route = createFileRoute("/journey")({
   head: () => ({
