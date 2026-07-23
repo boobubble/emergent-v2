@@ -36,7 +36,8 @@ async function assertAdmin(userId: string) {
 
 async function log(actor_id: string, action: string, extra: Record<string, unknown> = {}) {
   const sb = await admin();
-  await sb.from("mod_logs").insert({ actor_id, action, ...extra });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await sb.from("mod_logs").insert({ actor_id, action, ...extra } as any);
 }
 
 // ---------------- Settings ----------------
