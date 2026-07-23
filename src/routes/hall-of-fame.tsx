@@ -916,3 +916,153 @@ function AchievementTile({
     </div>
   );
 }
+
+function SpotlightCard({ row }: { row: UnifiedRow }) {
+  const monthLabel = new Date().toLocaleString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+  const kind =
+    row.kind === "poetry"
+      ? { label: "Poetry Champion", icon: <Feather className="h-3.5 w-3.5" /> }
+      : { label: "Competition Champion", icon: <Trophy className="h-3.5 w-3.5" /> };
+
+  return (
+    <section className="relative mb-10 overflow-hidden rounded-3xl border border-amber-400/30 bg-gradient-to-br from-amber-500/15 via-[#120c05] to-fuchsia-500/10 p-6 shadow-[0_30px_80px_-30px_rgba(251,191,36,0.5)] sm:p-8">
+      {/* Ambient glow + rays */}
+      <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-amber-400/25 blur-3xl" />
+      <div className="pointer-events-none absolute inset-0 bg-[conic-gradient(from_180deg_at_50%_0%,transparent_0deg,rgba(251,191,36,0.08)_60deg,transparent_120deg,rgba(217,70,239,0.08)_240deg,transparent_360deg)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
+
+      <div className="relative flex flex-col items-center gap-6 md:flex-row md:items-stretch md:gap-8">
+        {/* Trophy + avatar column */}
+        <div className="relative flex shrink-0 flex-col items-center">
+          <div className="mb-3 inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-200">
+            <Crown className="h-3 w-3" /> Champion of {monthLabel}
+          </div>
+
+          <div className="relative">
+            {/* Rotating halo */}
+            <div className="pointer-events-none absolute -inset-4 animate-[spin_18s_linear_infinite] rounded-full bg-[conic-gradient(from_0deg,rgba(251,191,36,0.6),transparent_35%,rgba(217,70,239,0.5)_60%,transparent_80%,rgba(251,191,36,0.6))] blur-md opacity-70" />
+            {/* Pulsing outer glow */}
+            <div className="pointer-events-none absolute -inset-2 animate-pulse rounded-full bg-amber-400/30 blur-2xl" />
+
+            {row.profile ? (
+              <Link
+                to="/u/$username"
+                params={{ username: row.profile.username ?? "" }}
+                className="relative block"
+              >
+                {row.profile.avatar_url ? (
+                  <img
+                    src={row.profile.avatar_url}
+                    alt={row.profile.username ?? ""}
+                    className="relative h-28 w-28 rounded-full border-[3px] border-amber-300/70 object-cover shadow-[0_0_40px_-5px_rgba(251,191,36,0.7)] sm:h-32 sm:w-32"
+                  />
+                ) : (
+                  <div className="relative flex h-28 w-28 items-center justify-center rounded-full border-[3px] border-amber-300/70 bg-gradient-to-br from-amber-400/30 to-fuchsia-500/20 text-3xl font-black text-amber-100 shadow-[0_0_40px_-5px_rgba(251,191,36,0.7)] sm:h-32 sm:w-32">
+                    {(row.profile.username ?? "?")[0]?.toUpperCase()}
+                  </div>
+                )}
+              </Link>
+            ) : (
+              <div className="h-28 w-28 rounded-full border-[3px] border-amber-300/70 bg-white/10 sm:h-32 sm:w-32" />
+            )}
+
+            {/* Bouncing trophy medallion */}
+            <div className="absolute -bottom-2 left-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-700 shadow-[0_10px_30px_-5px_rgba(251,191,36,0.7)] ring-4 ring-[#120c05] animate-[bounce_2.4s_ease-in-out_infinite]">
+              <Trophy className="h-6 w-6 text-[#120c05]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Info column */}
+        <div className="relative min-w-0 flex-1 text-center md:text-left">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 md:justify-start">
+            <Badge
+              variant="outline"
+              className="gap-1 border-amber-400/50 bg-amber-500/10 text-amber-200"
+            >
+              {kind.icon} {kind.label}
+            </Badge>
+            {row.category && (
+              <Badge
+                variant="outline"
+                style={{
+                  borderColor: row.category.color ?? undefined,
+                  color: row.category.color ?? undefined,
+                }}
+              >
+                {row.category.name}
+              </Badge>
+            )}
+          </div>
+
+          <h3 className="mt-3 bg-gradient-to-r from-amber-100 via-yellow-200 to-amber-300 bg-clip-text text-2xl font-black leading-tight text-transparent sm:text-3xl">
+            @{row.profile?.username ?? "champion"}
+          </h3>
+          <p className="mt-1 text-sm text-amber-100/80">
+            {row.kind === "poetry" ? "Crowned for " : "Winner of "}
+            <Link
+              to={row.linkTo as any}
+              params={row.linkParams as any}
+              className="font-semibold text-amber-200 underline-offset-2 hover:underline"
+            >
+              {row.kind === "poetry" ? `"${row.title}"` : row.title}
+            </Link>
+          </p>
+
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+            {typeof row.votes === "number" && (
+              <SpotlightStat label="Votes" value={formatNumber(row.votes)} />
+            )}
+            {typeof row.share === "number" && (
+              <SpotlightStat
+                label="Win Share"
+                value={`${(row.share * 100).toFixed(0)}%`}
+              />
+            )}
+            {row.prize && <SpotlightStat label="Prize" value={row.prize} />}
+            <SpotlightStat label="Awarded" value={relativeTime(row.awardedAt)} />
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 md:justify-start">
+            <Link to={row.linkTo as any} params={row.linkParams as any}>
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-amber-400 to-yellow-600 font-semibold text-black shadow-[0_10px_30px_-10px_rgba(251,191,36,0.8)] hover:from-amber-300 hover:to-yellow-500"
+              >
+                View Legacy <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              </Button>
+            </Link>
+            {row.profile?.username && (
+              <Link
+                to="/u/$username"
+                params={{ username: row.profile.username }}
+              >
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-amber-400/40 text-amber-200 hover:bg-amber-500/10"
+                >
+                  Visit Profile
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SpotlightStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-amber-400/20 bg-black/30 p-2 backdrop-blur-xl">
+      <div className="truncate text-sm font-bold text-amber-100">{value}</div>
+      <div className="text-[10px] uppercase tracking-[0.18em] text-amber-200/60">
+        {label}
+      </div>
+    </div>
+  );
+}
