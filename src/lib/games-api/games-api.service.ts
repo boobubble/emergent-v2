@@ -184,51 +184,81 @@ export async function apiAddXP(
   ctx: SessionCtx,
   input: { amount: number; reason?: string; metadata?: Meta },
 ) {
+  const { enforceGameReward } = await import("../games-reward-enforcer.server");
+  const amount = await enforceGameReward({
+    userId: ctx.userId,
+    gameId: ctx.gameId,
+    kind: "xp",
+    requested: input.amount,
+  });
+  if (amount <= 0) return { xpAdded: 0 };
   const admin = await getAdmin();
   const reason = (input.reason ?? "game.xp").slice(0, 80);
-  await emit(admin, ctx.userId, reason, input.amount, {
+  await emit(admin, ctx.userId, reason, amount, {
     ...(input.metadata ?? {}),
     gameId: ctx.gameId,
     sdk: true,
   });
-  return { xpAdded: input.amount };
+  return { xpAdded: amount };
 }
 
 export async function apiAddCoins(
   ctx: SessionCtx,
   input: { amount: number; reason?: string },
 ) {
+  const { enforceGameReward } = await import("../games-reward-enforcer.server");
+  const amount = await enforceGameReward({
+    userId: ctx.userId,
+    gameId: ctx.gameId,
+    kind: "coins",
+    requested: input.amount,
+  });
   const admin = await getAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const a = admin as any;
-  const { error } = await a.rpc("gam_award", {
-    _user_id: ctx.userId,
-    _coins: input.amount,
-    _xp: 0,
-    _badge: null,
-    _reason: (input.reason ?? "game.coins").slice(0, 80),
-    _reference: ctx.gameId || null,
-  });
-  if (error) throw new Error(error.message);
+  if (amount > 0) {
+    const { error } = await a.rpc("gam_award", {
+      _user_id: ctx.userId,
+      _coins: amount,
+      _xp: 0,
+      _badge: null,
+      _reason: (input.reason ?? "game.coins").slice(0, 80),
+      _reference: ctx.gameId || null,
+    });
+    if (error) throw new Error(error.message);
+  }
   const { data: prof } = await a
     .from("profiles")
     .select("coins")
     .eq("id", ctx.userId)
     .maybeSingle();
-  return { coins: Number(prof?.coins ?? 0), added: input.amount };
+  return { coins: Number(prof?.coins ?? 0), added: amount };
 }
 
 export async function apiUnlockAchievement(
   ctx: SessionCtx,
   input: { achievementId: string; coins?: number; xp?: number; reason?: string },
 ) {
+  const { enforceGameReward } = await import("../games-reward-enforcer.server");
+  await enforceGameReward({
+    userId: ctx.userId,
+    gameId: ctx.gameId,
+    kind: "achievement",
+    requested: 1,
+  });
+  const coins = input.coins && input.coins > 0
+    ? await enforceGameReward({ userId: ctx.userId, gameId: ctx.gameId, kind: "coins", requested: input.coins })
+    : 0;
+  const xp = input.xp && input.xp > 0
+    ? await enforceGameReward({ userId: ctx.userId, gameId: ctx.gameId, kind: "xp", requested: input.xp })
+    : 0;
   const admin = await getAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const a = admin as any;
   const { error } = await a.rpc("gam_award", {
     _user_id: ctx.userId,
-    _coins: input.coins ?? 0,
-    _xp: input.xp ?? 0,
+    _coins: coins,
+    _xp: xp,
     _badge: input.achievementId,
     _reason: (input.reason ?? "sdk.achievement").slice(0, 80),
     _reference: input.achievementId,

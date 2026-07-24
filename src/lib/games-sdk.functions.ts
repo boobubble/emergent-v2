@@ -30,12 +30,20 @@ export const sdkAddXP = createServerFn({ method: "POST" })
     metadata: i.metadata ?? {},
   }))
   .handler(async ({ data, context }) => {
+    const { enforceGameReward } = await import("./games-reward-enforcer.server");
+    const amount = await enforceGameReward({
+      userId: context.userId,
+      gameId: data.gameId,
+      kind: "xp",
+      requested: data.amount,
+    });
+    if (amount <= 0) return { ok: true };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = context.supabase as any;
     const { error } = await sb.rpc("gam_emit", {
       _user_id: context.userId,
       _event_type: data.reason,
-      _amount: data.amount,
+      _amount: amount,
       _metadata: { ...data.metadata, sdk: true, gameId: data.gameId },
     });
     if (error) throw new Error(error.message);
@@ -51,18 +59,27 @@ export const sdkAddCoins = createServerFn({ method: "POST" })
     gameId: (i.gameId ?? "").toString().slice(0, 80),
   }))
   .handler(async ({ data, context }) => {
+    const { enforceGameReward } = await import("./games-reward-enforcer.server");
+    const amount = await enforceGameReward({
+      userId: context.userId,
+      gameId: data.gameId,
+      kind: "coins",
+      requested: data.amount,
+    });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const admin = supabaseAdmin as any;
-    const { error } = await admin.rpc("gam_award", {
-      _user_id: context.userId,
-      _coins: data.amount,
-      _xp: 0,
-      _badge: null,
-      _reason: data.reason,
-      _reference: data.gameId || null,
-    });
-    if (error) throw new Error(error.message);
+    if (amount > 0) {
+      const { error } = await admin.rpc("gam_award", {
+        _user_id: context.userId,
+        _coins: amount,
+        _xp: 0,
+        _badge: null,
+        _reason: data.reason,
+        _reference: data.gameId || null,
+      });
+      if (error) throw new Error(error.message);
+    }
     // Return fresh balance for the SDK caller.
     const { data: prof } = await admin
       .from("profiles")
@@ -75,21 +92,38 @@ export const sdkAddCoins = createServerFn({ method: "POST" })
 /* --------------------------------------------------------- Achievement */
 export const sdkUnlockAchievement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, withRateLimit("xp.write")])
-  .inputValidator((i: { achievementId: string; coins?: number; xp?: number; reason?: string }) => ({
+  .inputValidator((i: { achievementId: string; coins?: number; xp?: number; reason?: string; gameId?: string }) => ({
     achievementId: String(i.achievementId ?? "").slice(0, 120),
     coins: Math.max(0, Math.floor(Number(i.coins) || 0)),
     xp: Math.max(0, Math.floor(Number(i.xp) || 0)),
     reason: (i.reason ?? "sdk.achievement").toString().slice(0, 80),
+    gameId: (i.gameId ?? "").toString().slice(0, 80),
   }))
   .handler(async ({ data, context }) => {
     if (!data.achievementId) throw new Error("achievementId required");
+    const { enforceGameReward } = await import("./games-reward-enforcer.server");
+    // Registers the unlock and enforces per-day cap. Throws on unknown gameId.
+    await enforceGameReward({
+      userId: context.userId,
+      gameId: data.gameId,
+      kind: "achievement",
+      requested: 1,
+    });
+    // Any bundled coin/xp payload is clamped through the same enforcer so
+    // the caller cannot inflate the reward.
+    const coins = data.coins > 0
+      ? await enforceGameReward({ userId: context.userId, gameId: data.gameId, kind: "coins", requested: data.coins })
+      : 0;
+    const xp = data.xp > 0
+      ? await enforceGameReward({ userId: context.userId, gameId: data.gameId, kind: "xp", requested: data.xp })
+      : 0;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const admin = supabaseAdmin as any;
     const { error } = await admin.rpc("gam_award", {
       _user_id: context.userId,
-      _coins: data.coins,
-      _xp: data.xp,
+      _coins: coins,
+      _xp: xp,
       _badge: data.achievementId,
       _reason: data.reason,
       _reference: data.achievementId,

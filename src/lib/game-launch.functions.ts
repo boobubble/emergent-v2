@@ -24,6 +24,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { createHmac, randomBytes } from "crypto";
+import { isRegisteredGame } from "./games-hub-caps";
 
 const TTL_SECONDS = 600; // 10 minutes
 
@@ -51,6 +52,9 @@ export const mintGameSession = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const secret = process.env.GAME_LAUNCH_HMAC_SECRET;
     if (!secret) throw new Error("GAME_LAUNCH_HMAC_SECRET not configured");
+    if (!isRegisteredGame(data.gameId)) {
+      throw new Error("This game is not registered.");
+    }
 
     const { supabase, userId } = context;
 
