@@ -24,6 +24,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { createHmac, randomBytes } from "crypto";
+import { isRegisteredGame } from "./games-hub-caps";
 
 const TTL_SECONDS = 600; // 10 minutes
 
