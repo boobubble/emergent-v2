@@ -30,12 +30,20 @@ export const sdkAddXP = createServerFn({ method: "POST" })
     metadata: i.metadata ?? {},
   }))
   .handler(async ({ data, context }) => {
+    const { enforceGameReward } = await import("./games-reward-enforcer.server");
+    const amount = await enforceGameReward({
+      userId: context.userId,
+      gameId: data.gameId,
+      kind: "xp",
+      requested: data.amount,
+    });
+    if (amount <= 0) return { ok: true };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = context.supabase as any;
     const { error } = await sb.rpc("gam_emit", {
       _user_id: context.userId,
       _event_type: data.reason,
-      _amount: data.amount,
+      _amount: amount,
       _metadata: { ...data.metadata, sdk: true, gameId: data.gameId },
     });
     if (error) throw new Error(error.message);
