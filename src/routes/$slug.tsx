@@ -4,6 +4,7 @@ import { getCommunityBySlug } from "@/lib/community.functions";
 import { isReservedSlug } from "@/lib/reserved-routes";
 
 import { sanitizeHtml } from "@/lib/pages-io";
+import { injectHeadingIds } from "@/lib/heading-ids";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Eye } from "lucide-react";
@@ -115,7 +116,7 @@ export const Route = createFileRoute("/$slug")({
 
 function PublicPage() {
   const { page } = Route.useLoaderData();
-  const safeHtml = sanitizeHtml(page.content);
+  const safeHtml = sanitizeHtml(injectHeadingIds(page.content));
 
   const layout = (page.layout ?? "boxed") as "full" | "boxed";
   const leftSidebar = (page.sidebar_left ?? "none") as "none" | "ads" | "feed";
