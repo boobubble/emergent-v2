@@ -171,7 +171,7 @@ function RootComponent() {
 }
 
 // Paths an unauthenticated visitor can reach directly (no AuthScreen takeover).
-const PUBLIC_PATH_PREFIXES = ["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/p/", "/api/", "/installer"];
+const PUBLIC_PATH_PREFIXES = ["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/p/", "/api/", "/lovable/", "/installer"];
 const PUBLIC_EXACT = new Set(["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/installer"]);
 // Publicly readable app routes — guests may view content, but individual
 // write actions (like, comment, vote, follow, join, publish, edit, delete)
