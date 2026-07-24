@@ -59,18 +59,27 @@ export const sdkAddCoins = createServerFn({ method: "POST" })
     gameId: (i.gameId ?? "").toString().slice(0, 80),
   }))
   .handler(async ({ data, context }) => {
+    const { enforceGameReward } = await import("./games-reward-enforcer.server");
+    const amount = await enforceGameReward({
+      userId: context.userId,
+      gameId: data.gameId,
+      kind: "coins",
+      requested: data.amount,
+    });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const admin = supabaseAdmin as any;
-    const { error } = await admin.rpc("gam_award", {
-      _user_id: context.userId,
-      _coins: data.amount,
-      _xp: 0,
-      _badge: null,
-      _reason: data.reason,
-      _reference: data.gameId || null,
-    });
-    if (error) throw new Error(error.message);
+    if (amount > 0) {
+      const { error } = await admin.rpc("gam_award", {
+        _user_id: context.userId,
+        _coins: amount,
+        _xp: 0,
+        _badge: null,
+        _reason: data.reason,
+        _reference: data.gameId || null,
+      });
+      if (error) throw new Error(error.message);
+    }
     // Return fresh balance for the SDK caller.
     const { data: prof } = await admin
       .from("profiles")
