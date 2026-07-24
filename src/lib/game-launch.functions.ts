@@ -52,6 +52,9 @@ export const mintGameSession = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const secret = process.env.GAME_LAUNCH_HMAC_SECRET;
     if (!secret) throw new Error("GAME_LAUNCH_HMAC_SECRET not configured");
+    if (!isRegisteredGame(data.gameId)) {
+      throw new Error("This game is not registered.");
+    }
 
     const { supabase, userId } = context;
 
