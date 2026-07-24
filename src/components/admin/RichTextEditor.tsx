@@ -21,6 +21,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { sanitizeHtml } from "@/lib/pages-io";
+import { injectHeadingIds } from "@/lib/heading-ids";
 
 interface Props {
   value: string;

@@ -4,7 +4,7 @@ import { getCommunityBySlug } from "@/lib/community.functions";
 import { isReservedSlug } from "@/lib/reserved-routes";
 
 import { sanitizeHtml } from "@/lib/pages-io";
-import { injectHeadingIds } from "@/components/admin/RichTextEditor";
+import { injectHeadingIds } from "@/lib/heading-ids";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Eye } from "lucide-react";
