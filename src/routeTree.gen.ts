@@ -190,6 +190,7 @@ import { Route as ApiGamesAchievementRouteImport } from './routes/api/games.achi
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 import { Route as AuthenticatedSettingsPrivacyRouteImport } from './routes/_authenticated.settings.privacy'
 import { Route as CommunitySlugChatroomsIndexRouteImport } from './routes/community.$slug.chatrooms.index'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as CompetitionsSlugFunTypeRouteImport } from './routes/competitions.$slug.fun.$type'
 import { Route as CommunitySlugChatroomsRoomSlugRouteImport } from './routes/community.$slug.chatrooms.$roomSlug'
 import { Route as ApiPublicLicenseVerifyRouteImport } from './routes/api/public/license/verify'
@@ -1115,6 +1116,12 @@ const CommunitySlugChatroomsIndexRoute =
     path: '/chatrooms/',
     getParentRoute: () => CommunitySlugRoute,
   } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CompetitionsSlugFunTypeRoute = CompetitionsSlugFunTypeRouteImport.update({
   id: '/fun/$type',
   path: '/fun/$type',
@@ -1368,6 +1375,7 @@ export interface FileRoutesByFullPath {
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
   '/community/$slug/chatrooms/$roomSlug': typeof CommunitySlugChatroomsRoomSlugRoute
   '/competitions/$slug/fun/$type': typeof CompetitionsSlugFunTypeRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/community/$slug/chatrooms/': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
@@ -1557,6 +1565,7 @@ export interface FileRoutesByTo {
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
   '/community/$slug/chatrooms/$roomSlug': typeof CommunitySlugChatroomsRoomSlugRoute
   '/competitions/$slug/fun/$type': typeof CompetitionsSlugFunTypeRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/community/$slug/chatrooms': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
@@ -1752,6 +1761,7 @@ export interface FileRoutesById {
   '/api/public/license/verify': typeof ApiPublicLicenseVerifyRoute
   '/community/$slug/chatrooms/$roomSlug': typeof CommunitySlugChatroomsRoomSlugRoute
   '/competitions/$slug/fun/$type': typeof CompetitionsSlugFunTypeRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/community/$slug/chatrooms/': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
 }
@@ -1947,6 +1957,7 @@ export interface FileRouteTypes {
     | '/api/public/license/verify'
     | '/community/$slug/chatrooms/$roomSlug'
     | '/competitions/$slug/fun/$type'
+    | '/lovable/email/queue/process'
     | '/community/$slug/chatrooms/'
     | '/api/public/og/competition/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -2136,6 +2147,7 @@ export interface FileRouteTypes {
     | '/api/public/license/verify'
     | '/community/$slug/chatrooms/$roomSlug'
     | '/competitions/$slug/fun/$type'
+    | '/lovable/email/queue/process'
     | '/community/$slug/chatrooms'
     | '/api/public/og/competition/$slug'
   id:
@@ -2330,6 +2342,7 @@ export interface FileRouteTypes {
     | '/api/public/license/verify'
     | '/community/$slug/chatrooms/$roomSlug'
     | '/competitions/$slug/fun/$type'
+    | '/lovable/email/queue/process'
     | '/community/$slug/chatrooms/'
     | '/api/public/og/competition/$slug'
   fileRoutesById: FileRoutesById
@@ -2415,6 +2428,7 @@ export interface RootRouteChildren {
   ApiPublicLicenseDeactivateRoute: typeof ApiPublicLicenseDeactivateRoute
   ApiPublicLicenseResetRoute: typeof ApiPublicLicenseResetRoute
   ApiPublicLicenseVerifyRoute: typeof ApiPublicLicenseVerifyRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   ApiPublicOgCompetitionSlugRoute: typeof ApiPublicOgCompetitionSlugRoute
 }
 
@@ -3687,6 +3701,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunitySlugChatroomsIndexRouteImport
       parentRoute: typeof CommunitySlugRoute
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/competitions/$slug/fun/$type': {
       id: '/competitions/$slug/fun/$type'
       path: '/fun/$type'
@@ -4154,6 +4175,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLicenseDeactivateRoute: ApiPublicLicenseDeactivateRoute,
   ApiPublicLicenseResetRoute: ApiPublicLicenseResetRoute,
   ApiPublicLicenseVerifyRoute: ApiPublicLicenseVerifyRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   ApiPublicOgCompetitionSlugRoute: ApiPublicOgCompetitionSlugRoute,
 }
 export const routeTree = rootRouteImport
