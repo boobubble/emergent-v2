@@ -1663,3 +1663,52 @@
   .community-announcement-out { animation: none; }
 }
 
+
+/* ─── CMS Rich Content (Pages) ───────────────────────────────────────── */
+.prose .callout {
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.5);
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  border-left-width: 4px;
+}
+.prose .callout > p:last-child { margin-bottom: 0; }
+.prose .callout > p:first-child { margin-top: 0; }
+.prose .callout-info    { border-left-color: hsl(217 91% 60%); background: hsl(217 91% 60% / 0.08); }
+.prose .callout-success { border-left-color: hsl(142 71% 45%); background: hsl(142 71% 45% / 0.08); }
+.prose .callout-warning { border-left-color: hsl(38 92% 50%);  background: hsl(38 92% 50% / 0.10); }
+.prose .callout-danger  { border-left-color: hsl(0 84% 60%);   background: hsl(0 84% 60% / 0.08); }
+
+.prose nav.toc {
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: hsl(var(--muted) / 0.4);
+  margin: 1rem 0 1.5rem;
+}
+.prose nav.toc .toc-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.5rem;
+}
+.prose nav.toc ul { list-style: none; padding-left: 0; margin: 0; }
+.prose nav.toc li { margin: 0.15rem 0; }
+.prose nav.toc li.toc-l3 { padding-left: 1rem; font-size: 0.875rem; }
+.prose nav.toc a { text-decoration: none; color: hsl(var(--foreground)); }
+.prose nav.toc a:hover { text-decoration: underline; }
+
+.prose ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+.prose ul[data-type="taskList"] li { display: flex; gap: 0.5rem; align-items: flex-start; }
+.prose ul[data-type="taskList"] li > label { user-select: none; margin-top: 0.15rem; }
+.prose ul[data-type="taskList"] li > div { flex: 1; }
+.prose ul[data-type="taskList"] li > div > p { margin: 0; }
+
+.prose table { border-collapse: collapse; width: 100%; }
+.prose table th, .prose table td { border: 1px solid hsl(var(--border)); padding: 0.4rem 0.6rem; }
+.prose table th { background: hsl(var(--muted)); text-align: left; }
+
+.prose h2, .prose h3 { scroll-margin-top: 5rem; }
