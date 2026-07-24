@@ -265,22 +265,22 @@ function escapeHtml(s: string) {
 }
 
 /** Add stable slug ids to h2/h3 so TOC anchor links work in preview and public render. */
+/** Add stable slug ids to h2/h3 so TOC anchor links work in preview, SSR, and public render. */
 export function injectHeadingIds(html: string): string {
-  if (typeof document === "undefined") return html;
-  const tmp = document.createElement("div");
-  tmp.innerHTML = html;
+  if (!html) return html;
   const used = new Set<string>();
-  tmp.querySelectorAll("h2, h3").forEach((el) => {
-    if (el.id) { used.add(el.id); return; }
-    const text = (el.textContent || "").trim();
-    if (!text) return;
+  return html.replace(/<(h[23])(\s[^>]*)?>([\s\S]*?)<\/\1>/gi, (full, tag, attrs = "", inner) => {
+    const attrStr: string = attrs || "";
+    const existingId = /\sid\s*=\s*["']([^"']+)["']/i.exec(attrStr);
+    if (existingId) { used.add(existingId[1]); return full; }
+    const text = String(inner).replace(/<[^>]+>/g, "").trim();
+    if (!text) return full;
     let base = text.toLowerCase().replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 60) || "section";
     let id = base, n = 2;
     while (used.has(id)) id = `${base}-${n++}`;
     used.add(id);
-    el.id = id;
+    return `<${tag}${attrStr} id="${id}">${inner}</${tag}>`;
   });
-  return tmp.innerHTML;
 }
 
 // Expose Editor type for consumers if needed later.
