@@ -41,6 +41,8 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
         codeBlock: { HTMLAttributes: { class: "rounded-md bg-muted p-3 text-xs font-mono" } },
+        link: false,
+        underline: false,
       }),
       Underline,
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" } }),
