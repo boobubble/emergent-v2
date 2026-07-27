@@ -36,14 +36,5 @@ export default defineConfig({
     resolve: {
       alias: [srcAlias],
     },
-    ssr: {
-      resolve: {
-        alias: [srcAlias],
-      },
-    },
-    environments: {
-      client: { resolve: { alias: [srcAlias] } },
-      ssr: { resolve: { alias: [srcAlias] } },
-    },
   },
 });
