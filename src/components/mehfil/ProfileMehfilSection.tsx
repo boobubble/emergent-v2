@@ -5,6 +5,7 @@ import { BookOpen, Feather, Heart, Eye, Trophy, MessageCircle, Star, Flame, Swor
 import { getMehfilProfileSection } from "@/lib/mehfil.functions";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
 import { poemPreview } from "@/lib/mehfil-types";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 export function ProfileMehfilSection({ username }: { username: string }) {
   const fetchSection = useServerFn(getMehfilProfileSection);
@@ -65,7 +66,7 @@ export function ProfileMehfilSection({ username }: { username: string }) {
         <div className="mb-3">
           <h3 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Active Battles</h3>
           <div className="grid gap-2 sm:grid-cols-2">
-            {active_battles.slice(0, 4).map((b: any) => (
+            {active_battles.slice(0, 4).filter((b: any) => isNavigableSlug(b.competition_slug)).map((b: any) => (
               <Link key={b.competition_id} to="/competitions/$slug" params={{ slug: b.competition_slug }}
                 className="rounded-xl border border-cyan-400/30 bg-cyan-500/5 p-3 hover:border-cyan-400/60">
                 <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-cyan-300">
@@ -120,7 +121,7 @@ export function ProfileMehfilSection({ username }: { username: string }) {
         <div className="mb-3">
           <h3 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Battle History</h3>
           <div className="grid gap-1.5">
-            {battle_history.map((b: any) => (
+            {battle_history.filter((b: any) => isNavigableSlug(b.competition_slug)).map((b: any) => (
               <Link key={b.competition_id} to="/competitions/$slug" params={{ slug: b.competition_slug }}
                 className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 hover:border-primary/40">
                 <span className="line-clamp-1 text-xs font-semibold">{b.competition_name}</span>
@@ -154,7 +155,7 @@ export function ProfileMehfilSection({ username }: { username: string }) {
         <div>
           <h3 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Categories Written</h3>
           <div className="flex flex-wrap gap-1.5">
-            {categories_written.map((c: any) => (
+            {categories_written.filter((c: any) => isNavigableSlug(c.slug)).map((c: any) => (
               <Link key={c.id} to="/poetry/category/$slug" params={{ slug: c.slug }}
                 className="rounded-full px-2 py-0.5 text-[10px] font-bold"
                 style={{ background: `${c.color ?? "#7c3aed"}22`, color: c.color ?? "#7c3aed" }}>
@@ -169,6 +170,26 @@ export function ProfileMehfilSection({ username }: { username: string }) {
 }
 
 function PoemChip({ p }: { p: any }) {
+  if (!isNavigableSlug(p.slug)) {
+    return (
+      <div className="group rounded-2xl border border-border bg-card p-4">
+        <div className="mb-1 flex items-center gap-2">
+          {p.category && (
+            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+              style={{ background: `${p.category.color ?? "#7c3aed"}22`, color: p.category.color ?? "#7c3aed" }}>
+              {p.category.name}
+            </span>
+          )}
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            {p.upvote_count ?? 0} ♥ · {p.read_count ?? 0} 👁
+          </span>
+        </div>
+        <div className="line-clamp-1 text-sm font-semibold">{p.title}</div>
+        <div className="mt-1 line-clamp-2 whitespace-pre-line text-xs text-muted-foreground">{poemPreview(p.body, 140)}</div>
+      </div>
+    );
+  }
+
   return (
     <Link to="/poetry/$slug" params={{ slug: p.slug }}
       className="group rounded-2xl border border-border bg-card p-4 transition hover:border-primary/40">

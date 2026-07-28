@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { isNavigableSlug } from "@/lib/route-slug";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Swords, ChevronRight, Sparkles } from "lucide-react";
@@ -28,7 +29,7 @@ export function MehfilTrendingWidget() {
         </Link>
       </div>
       <div className="flex gap-3 overflow-x-auto p-3 scrollbar-thin">
-        {poems.map((p) => (
+        {poems.filter((p) => isNavigableSlug(p.slug)).map((p) => (
           <Link
             key={p.id}
             to="/poetry/$slug"

@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { VenetianMask, ArrowRight, Sparkles, BarChart3, Radio } from "lucide-react";
 import { postsSafe } from "@/lib/posts-safe";
 import { listConfessions } from "@/lib/confessions.functions";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 interface Item {
   id: string;
@@ -149,7 +150,7 @@ export function ActivePollsWidget() {
           <div className="h-6 rounded-lg skeleton-shimmer" />
           <div className="h-6 rounded-lg skeleton-shimmer" />
         </div>
-      ) : !poll ? (
+      ) : !poll || !isNavigableSlug(poll.slug) ? (
         <p className="px-1 py-1 text-xs text-muted-foreground">
           No active polls — create one with the composer.
         </p>

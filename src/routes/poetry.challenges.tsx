@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Swords, Users, Clock, Trophy } from "lucide-react";
 import { listPoetryBattles, type PoetryBattle } from "@/lib/mehfil-battles.functions";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 export const Route = createFileRoute("/poetry/challenges")({
   head: () => ({
@@ -65,12 +66,11 @@ function ChallengesPage() {
 function BattleCard({ battle }: { battle: PoetryBattle }) {
   const endsIn = new Date(battle.end_at).getTime() - Date.now();
   const days = Math.max(0, Math.floor(endsIn / 86400000));
-  return (
-    <Link
-      to="/competitions/$slug"
-      params={{ slug: battle.slug }}
-      className="group block overflow-hidden rounded-2xl border border-border/60 bg-card hover:border-primary/50 hover:shadow-lg transition"
-    >
+  const className =
+    "group block overflow-hidden rounded-2xl border border-border/60 bg-card hover:border-primary/50 hover:shadow-lg transition";
+
+  const content = (
+    <>
       {battle.banner_url ? (
         <img src={battle.banner_url} alt="" className="h-32 w-full object-cover" />
       ) : (
@@ -96,6 +96,16 @@ function BattleCard({ battle }: { battle: PoetryBattle }) {
           {battle.status === "completed" && <span className="inline-flex items-center gap-1 text-amber-500 font-semibold"><Trophy className="h-3 w-3" /> Ended</span>}
         </div>
       </div>
+    </>
+  );
+
+  if (!isNavigableSlug(battle.slug)) {
+    return <div className={className}>{content}</div>;
+  }
+
+  return (
+    <Link to="/competitions/$slug" params={{ slug: battle.slug }} className={className}>
+      {content}
     </Link>
   );
 }

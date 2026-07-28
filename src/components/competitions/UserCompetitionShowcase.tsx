@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import type React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -6,6 +7,7 @@ import {
   Trophy, TrendingUp, Users, Vote, Zap,
 } from "lucide-react";
 import { getUserCompetitionShowcase } from "@/lib/competitions.functions";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -23,6 +25,25 @@ const eventLabel: Record<string, { emoji: string; text: string }> = {
   competition_win_3rd: { emoji: "🥉", text: "Third place" },
   competition_win: { emoji: "🏆", text: "Won" },
 };
+
+function CompetitionSlugLink({
+  slug,
+  className,
+  children,
+}: {
+  slug?: string | null;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  if (!isNavigableSlug(slug)) {
+    return <div className={className}>{children}</div>;
+  }
+  return (
+    <Link to="/competitions/$slug" params={{ slug }} className={className}>
+      {children}
+    </Link>
+  );
+}
 
 export function UserCompetitionShowcase({ username }: { username: string }) {
   const fetchShowcase = useServerFn(getUserCompetitionShowcase);
@@ -63,10 +84,9 @@ export function UserCompetitionShowcase({ username }: { username: string }) {
       {showcase.length > 0 && (
         <div className="grid gap-2 sm:grid-cols-2">
           {showcase.map((s, i) => (
-            <Link
+            <CompetitionSlugLink
               key={i}
-              to="/competitions/$slug"
-              params={{ slug: s.competition?.slug ?? "" }}
+              slug={s.competition?.slug}
               className="group flex items-center gap-3 overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-fuchsia-500/5 to-transparent p-3 transition-all hover:border-amber-400/40"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-lg shadow-lg">
@@ -76,7 +96,7 @@ export function UserCompetitionShowcase({ username }: { username: string }) {
                 <div className="truncate text-xs font-bold uppercase tracking-wide text-amber-200">{s.label}</div>
                 {s.extra && <div className="truncate text-[10px] text-muted-foreground">{s.extra}</div>}
               </div>
-            </Link>
+            </CompetitionSlugLink>
           ))}
         </div>
       )}
@@ -129,10 +149,9 @@ export function UserCompetitionShowcase({ username }: { username: string }) {
           </h3>
           <div className="grid gap-2 sm:grid-cols-2">
             {currentLive.map((c) => (
-              <Link
+              <CompetitionSlugLink
                 key={c.id}
-                to="/competitions/$slug"
-                params={{ slug: c.competition?.slug ?? "" }}
+                slug={c.competition?.slug}
                 className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2.5 hover:border-emerald-400/40"
               >
                 {c.photo_url ? (
@@ -144,7 +163,7 @@ export function UserCompetitionShowcase({ username }: { username: string }) {
                   <div className="truncate text-xs font-semibold">{c.competition?.name ?? "Competition"}</div>
                   <div className="text-[10px] text-muted-foreground">{fmt(c.vote_count)} votes</div>
                 </div>
-              </Link>
+              </CompetitionSlugLink>
             ))}
           </div>
         </div>
@@ -158,10 +177,9 @@ export function UserCompetitionShowcase({ username }: { username: string }) {
           </h3>
           <div className="space-y-1.5">
             {(recentAwards as any[]).map((a) => (
-              <Link
+              <CompetitionSlugLink
                 key={a.id}
-                to="/competitions/$slug"
-                params={{ slug: a.competition?.slug ?? "" }}
+                slug={a.competition?.slug}
                 className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-2.5 hover:border-white/20"
               >
                 <div className="text-lg">{a.place === 1 ? "🏆" : a.place === 2 ? "🥈" : a.place === 3 ? "🥉" : "🏅"}</div>
@@ -171,7 +189,7 @@ export function UserCompetitionShowcase({ username }: { username: string }) {
                     #{a.place} · {new Date(a.awarded_at).toLocaleDateString()}
                   </div>
                 </div>
-              </Link>
+              </CompetitionSlugLink>
             ))}
           </div>
         </div>
@@ -212,9 +230,8 @@ export function UserCompetitionShowcase({ username }: { username: string }) {
               {timeline.map((t, i) => (
                 <div key={i} className="relative">
                   <div className="absolute -left-[14px] top-2 h-2 w-2 rounded-full bg-amber-400" />
-                  <Link
-                    to="/competitions/$slug"
-                    params={{ slug: t.competition?.slug ?? "" }}
+                  <CompetitionSlugLink
+                    slug={t.competition?.slug}
                     className="block rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 hover:border-white/20"
                   >
                     <div className="flex items-center gap-2 text-[11px]">
@@ -231,7 +248,7 @@ export function UserCompetitionShowcase({ username }: { username: string }) {
                       {new Date(t.at).toLocaleDateString()}
                       {t.kind === "join" && (t as any).vote_count > 0 ? ` · ${fmt((t as any).vote_count)} votes` : ""}
                     </div>
-                  </Link>
+                  </CompetitionSlugLink>
                 </div>
               ))}
             </div>

@@ -11,6 +11,7 @@ import {
   type FunZoneSummary,
 } from "@/lib/competition-memes";
 import { useAppSettings } from "@/lib/app-settings";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 function timeAgo(iso: string | null) {
   if (!iso) return "";
@@ -64,6 +65,7 @@ export function FunZone({
 
   if (!modules.funZone) return null;
   if (enabledCats.length === 0) return null;
+  if (!isNavigableSlug(competitionSlug)) return null;
 
   const perCat = summary?.perCategory;
   const highlights = (summary?.highlights ?? []).filter((h) => enabledCats.includes(h.category));

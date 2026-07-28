@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { AnimatedCounter } from "@/components/competitions/AnimatedCounter";
 import { Countdown } from "@/components/competitions/Countdown";
 import { useAuth } from "@/lib/auth-store";
+import { isNavigableSlug } from "@/lib/route-slug";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useMehfilLabel } from "@/lib/use-mehfil-label";
@@ -509,20 +510,24 @@ function ArenaCard({ c }: { c: EnrichedCompetition }) {
 
       {/* Actions */}
       <div className="flex items-center gap-1 border-t border-white/[0.06] p-1.5">
-        <Link
-          to="/competitions/$slug"
-          params={{ slug: c.slug }}
-          className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-gradient-to-r from-violet-500 to-fuchsia-500 py-1 text-[10px] font-black text-white shadow-md shadow-violet-500/20 transition-transform hover:scale-[1.01]"
-        >
-          <Zap className="h-2.5 w-2.5" /> {c.status === "live" ? "Vote" : c.status === "upcoming" ? "Preview" : "Result"}
-        </Link>
-        <Link
-          to="/competitions/$slug"
-          params={{ slug: c.slug }}
-          className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] font-bold text-slate-200 hover:bg-white/[0.06]"
-        >
-          Open
-        </Link>
+        {isNavigableSlug(c.slug) ? (
+          <>
+            <Link
+              to="/competitions/$slug"
+              params={{ slug: c.slug }}
+              className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-gradient-to-r from-violet-500 to-fuchsia-500 py-1 text-[10px] font-black text-white shadow-md shadow-violet-500/20 transition-transform hover:scale-[1.01]"
+            >
+              <Zap className="h-2.5 w-2.5" /> {c.status === "live" ? "Vote" : c.status === "upcoming" ? "Preview" : "Result"}
+            </Link>
+            <Link
+              to="/competitions/$slug"
+              params={{ slug: c.slug }}
+              className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] font-bold text-slate-200 hover:bg-white/[0.06]"
+            >
+              Open
+            </Link>
+          </>
+        ) : null}
         <button
           type="button"
           onClick={onShare}

@@ -21,6 +21,7 @@ import { useAuthGate } from "@/lib/auth-gate";
 import { gamify, GAM_EVENTS } from "@/lib/gamification-emit";
 import { useMehfilPoemRealtime } from "@/lib/mehfil-realtime";
 import { supabase } from "@/integrations/supabase/client";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 const SITE_URL = "https://holo-chat-quest.lovable.app";
 
@@ -37,6 +38,7 @@ function countryFlag(cc?: string | null): string | null {
 
 export const Route = createFileRoute("/poetry/$slug")({
   loader: async ({ params }) => {
+    if (!isNavigableSlug(params.slug)) throw notFound();
     const poem = await getPoemBySlug({ data: { slug: params.slug } });
     if (!poem) throw notFound();
     return { poem };
@@ -490,7 +492,7 @@ function PoemDetailPage() {
         {/* Prev / Next */}
         {(prev || next) && (
           <nav className="mt-10 grid gap-3 sm:grid-cols-2">
-            {prev ? (
+            {prev && isNavigableSlug(prev.slug) ? (
               <Link
                 to="/poetry/$slug" params={{ slug: prev.slug }}
                 className="group flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-4 transition hover:border-primary/40"
@@ -502,7 +504,7 @@ function PoemDetailPage() {
                 </div>
               </Link>
             ) : <div />}
-            {next ? (
+            {next && isNavigableSlug(next.slug) ? (
               <Link
                 to="/poetry/$slug" params={{ slug: next.slug }}
                 className="group flex items-center justify-end gap-3 rounded-2xl border border-border/60 bg-card p-4 text-right transition hover:border-primary/40"

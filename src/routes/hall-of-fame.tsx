@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { listHallOfFame } from "@/lib/competitions.functions";
 import { getMehfilHallOfFame } from "@/lib/mehfil.functions";
+import { isNavigableSlug } from "@/lib/route-slug";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -153,7 +154,7 @@ function HallOfFamePage() {
   const unified = useMemo<UnifiedRow[]>(() => {
     const rows: UnifiedRow[] = [];
     (compQ.data ?? []).forEach((r: any) => {
-      if (!r.competition?.slug) return;
+      if (!isNavigableSlug(r.competition?.slug)) return;
       rows.push({
         id: `c:${r.id}`,
         kind: "competition",
@@ -182,8 +183,8 @@ function HallOfFamePage() {
         awardedAt: r.awarded_at,
         profile: r.profile,
         title: r.poem?.title ?? "Poetry Battle",
-        linkTo: r.poem?.slug ? "/poetry/$slug" : "/poetry",
-        linkParams: r.poem?.slug ? { slug: r.poem.slug } : {},
+        linkTo: r.poem?.slug && isNavigableSlug(r.poem.slug) ? "/poetry/$slug" : "/poetry",
+        linkParams: r.poem?.slug && isNavigableSlug(r.poem.slug) ? { slug: r.poem.slug } : {},
         period: r.period,
       });
     });

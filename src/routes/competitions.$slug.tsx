@@ -42,6 +42,7 @@ import { FunZone } from "@/components/competitions/FunZone";
 import { Link as RouterLink } from "@tanstack/react-router";
 import { PartyPopper } from "lucide-react";
 import { useAppSettings } from "@/lib/app-settings";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +53,7 @@ const SITE = "https://holo-chat-quest.lovable.app";
 
 export const Route = createFileRoute("/competitions/$slug")({
   loader: async ({ params }) => {
+    if (!isNavigableSlug(params.slug)) throw notFound();
     const data = await getCompetitionBySlug({ data: { slug: params.slug } });
     if (!data?.competition) throw notFound();
     const canonical = (data.competition as any).slug as string | undefined;
@@ -115,6 +117,15 @@ export const Route = createFileRoute("/competitions/$slug")({
     };
   },
   component: CompetitionDetail,
+  notFoundComponent: () => (
+    <div className="mx-auto max-w-2xl px-4 py-20 text-center">
+      <h1 className="text-xl font-bold">Competition not found</h1>
+      <p className="mt-2 text-sm text-muted-foreground">This competition does not exist or was removed.</p>
+      <RouterLink to="/competitions" className="mt-4 inline-block text-sm text-primary underline">
+        Browse competitions
+      </RouterLink>
+    </div>
+  ),
 });
 
 function CompetitionDetail() {
@@ -615,7 +626,7 @@ function CompetitionDetail() {
           </section>
         )}
 
-        {c.status === "completed" && (awards.length > 0 || funAwards.length > 0) && (
+        {c.status === "completed" && (awards.length > 0 || funAwards.length > 0) && isNavigableSlug(c.slug) && (
           <div className="mt-4 flex justify-center">
             <RouterLink
               to="/competitions/$slug/recap"

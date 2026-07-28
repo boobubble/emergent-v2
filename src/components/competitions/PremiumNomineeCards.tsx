@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { voteForCompetitor } from "@/lib/competitions.functions";
 import type { Competitor } from "@/components/competitions/CompetitorGrid";
 import { MomentumBadge, useCompetitorMomentum } from "@/components/competitions/BattleWidgets";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 type RankStyle = { ring: string; badge: string; glow: string; label: string; icon: string };
 
@@ -218,7 +219,7 @@ export function PremiumNomineeCards({
                 </div>
               )}
 
-              {competitionSlug && memeCounts && (memeCounts[c.id] ?? 0) > 0 && (
+              {isNavigableSlug(competitionSlug) && memeCounts && (memeCounts[c.id] ?? 0) > 0 && (
                 <Link
                   to="/competitions/$slug/memes"
                   params={{ slug: competitionSlug }}

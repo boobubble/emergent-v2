@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { isNavigableSlug } from "@/lib/route-slug";
 import { Crown, Eye, Flame, Heart, Pencil, Sparkles, Trophy, Users, Vote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Countdown } from "./Countdown";
@@ -38,13 +39,12 @@ export function CompetitionProfileCard({ c, onEdit, trending }: CompetitionProfi
   const prize = prizeSummary(c.rewards);
   const leading = c.top_competitors[0];
   const top3 = c.top_competitors.slice(0, 3);
+  const className =
+    "group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.01] shadow-lg backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_20px_60px_-15px_rgba(139,92,246,0.5)]";
+  const canNavigate = isNavigableSlug(c.slug);
 
-  return (
-    <Link
-      to="/competitions/$slug"
-      params={{ slug: c.slug }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.01] shadow-lg backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_20px_60px_-15px_rgba(139,92,246,0.5)]"
-    >
+  const body = (
+    <>
       {/* Banner */}
       <div
         className="relative h-36 w-full overflow-hidden"
@@ -212,6 +212,16 @@ export function CompetitionProfileCard({ c, onEdit, trending }: CompetitionProfi
           </div>
         )}
       </div>
+    </>
+  );
+
+  if (!canNavigate) {
+    return <div className={className}>{body}</div>;
+  }
+
+  return (
+    <Link to="/competitions/$slug" params={{ slug: c.slug }} className={className}>
+      {body}
     </Link>
   );
 }

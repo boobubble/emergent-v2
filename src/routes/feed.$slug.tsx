@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { postsSafe } from "@/lib/posts-safe";
@@ -8,6 +8,7 @@ import { PostCard } from "@/components/feed/PostCard";
 import { postSlug } from "@/lib/post-slug";
 import type { FeedPost } from "@/lib/feed-types";
 import type { User } from "@/lib/chat-types";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 const SITE_URL = "https://holo-chat-quest.lovable.app";
 
@@ -34,6 +35,7 @@ async function fetchPostForHead(slug: string) {
 
 export const Route = createFileRoute("/feed/$slug")({
   loader: async ({ params }) => {
+    if (!isNavigableSlug(params.slug)) throw notFound();
     const data = await fetchPostForHead(params.slug);
     return { headData: data };
   },

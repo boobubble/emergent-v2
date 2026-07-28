@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import type React from "react";
+import { isNavigableSlug } from "@/lib/route-slug";
 const totalReactions = (p: { upvote_count: number; reaction_count?: number }) =>
   (p.upvote_count ?? 0) + (p.reaction_count ?? 0);
 import { Heart, Eye, MessageCircle, Sparkles, Swords } from "lucide-react";
@@ -16,14 +18,20 @@ export function PoemCard({ poem, variant = "default" }: Props) {
   const themeStyle = poem.theme
     ? { background: poem.theme }
     : { background: "linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)/0.4) 100%)" };
+  const slug = poem.slug;
+  const canNavigate = isNavigableSlug(slug);
+
+  const wrap = (className: string, children: React.ReactNode) =>
+    canNavigate ? (
+      <Link to="/poetry/$slug" params={{ slug }} className={className}>{children}</Link>
+    ) : (
+      <div className={className}>{children}</div>
+    );
 
   if (variant === "compact") {
-    return (
-      <Link
-        to="/poetry/$slug"
-        params={{ slug: poem.slug }}
-        className="group block rounded-xl border border-border/60 bg-card p-4 transition hover:border-primary/40 hover:shadow-md"
-      >
+    return wrap(
+      "group block rounded-xl border border-border/60 bg-card p-4 transition hover:border-primary/40 hover:shadow-md",
+      <>
         <div className="mb-1 flex items-center justify-between gap-2">
           {poem.category ? (
             <span
@@ -44,16 +52,13 @@ export function PoemCard({ poem, variant = "default" }: Props) {
             <span className="inline-flex items-center gap-0.5"><Eye className="h-3 w-3" /> {poem.read_count}</span>
           </span>
         </div>
-      </Link>
+      </>,
     );
   }
 
-  return (
-    <Link
-      to="/poetry/$slug"
-      params={{ slug: poem.slug }}
-      className="group block overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-xl"
-    >
+  return wrap(
+    "group block overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-xl",
+    <>
       <div className="relative p-5" style={themeStyle}>
         {poem.competition_id && (
           <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-orange-500/90 px-2 py-0.5 text-[10px] font-bold text-white shadow">
@@ -95,6 +100,6 @@ export function PoemCard({ poem, variant = "default" }: Props) {
           <span className="inline-flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" /> {poem.comment_count}</span>
         </div>
       </div>
-    </Link>
+    </>,
   );
 }

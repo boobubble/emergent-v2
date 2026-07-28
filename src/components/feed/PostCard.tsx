@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type FeedReaction, type ReactionType } from "@/lib/feed-types";
 import { postSlug } from "@/lib/post-slug";
+import { isNavigableSlug } from "@/lib/route-slug";
 import { ShareModal, type SharePayload } from "@/components/feed/ShareModal";
 import { PollBlock } from "@/components/feed/PollBlock";
 import type { User } from "@/lib/chat-types";
@@ -189,7 +190,11 @@ export const PostCard = memo(function PostCard({
             )}
           </div>
           <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-muted-foreground/85">
-            <Link to="/feed/$slug" params={{ slug: postSlug(post) }} className="hover:text-foreground/90 transition-colors">{timeAgo(post.created_at)}</Link>
+            {isNavigableSlug(postSlug(post)) ? (
+              <Link to="/feed/$slug" params={{ slug: postSlug(post) }} className="hover:text-foreground/90 transition-colors">{timeAgo(post.created_at)}</Link>
+            ) : (
+              <span>{timeAgo(post.created_at)}</span>
+            )}
             <span className="text-muted-foreground/40">·</span>
             <span className="capitalize tracking-wide">{post.privacy}</span>
           </div>

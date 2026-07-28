@@ -4,6 +4,7 @@ import { Laugh, MessageCircle, Heart, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { listCompetitionMemes } from "@/lib/competition-memes";
 import type { FeedPost } from "@/lib/feed-types";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 /**
  * 😂 Trending Battle Memes — compact horizontal carousel that reads Feed
@@ -45,6 +46,7 @@ export function CompetitionMemesCarousel({
   }, [competitionId, nomineeId, limit]);
 
   if (loading && memes.length === 0) return null;
+  if (!isNavigableSlug(competitionSlug)) return null;
 
   const viewAllTo = nomineeId
     ? `/competitions/${competitionSlug}/memes?nominee=${nomineeId}`
@@ -74,13 +76,11 @@ export function CompetitionMemesCarousel({
         <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1">
           {memes.map((m) => {
             const img = (m.media_urls ?? []).find((u) => /\.(jpe?g|png|gif|webp|avif)$/i.test(u)) ?? m.media_urls?.[0];
-            return (
-              <Link
-                key={m.id}
-                to="/feed/$slug"
-                params={{ slug: m.slug || m.id }}
-                className="group relative w-40 shrink-0 snap-start overflow-hidden rounded-xl border border-white/10 bg-black/40 sm:w-48"
-              >
+            const feedSlug = m.slug || m.id;
+            const cardClassName =
+              "group relative w-40 shrink-0 snap-start overflow-hidden rounded-xl border border-white/10 bg-black/40 sm:w-48";
+            const cardBody = (
+              <>
                 {img ? (
                   /\.(mp4|webm)$/i.test(img) ? (
                     <video src={img} className="h-40 w-full object-cover sm:h-48" muted playsInline />
@@ -96,6 +96,25 @@ export function CompetitionMemesCarousel({
                   <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" />{m.reaction_count ?? 0}</span>
                   <span className="inline-flex items-center gap-1"><MessageCircle className="h-3 w-3" />{m.comment_count ?? 0}</span>
                 </div>
+              </>
+            );
+
+            if (!isNavigableSlug(feedSlug)) {
+              return (
+                <div key={m.id} className={cardClassName}>
+                  {cardBody}
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={m.id}
+                to="/feed/$slug"
+                params={{ slug: feedSlug }}
+                className={cardClassName}
+              >
+                {cardBody}
               </Link>
             );
           })}

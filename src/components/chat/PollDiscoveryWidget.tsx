@@ -4,6 +4,7 @@
 // commenting and engagement happens on the feed page — the CTA links there.
 
 import { Link } from "@tanstack/react-router";
+import { isNavigableSlug } from "@/lib/route-slug";
 import { Clock3, Users, ArrowRight, Vote } from "lucide-react";
 
 import { usePollWidgetConfig, usePollPreviews } from "@/lib/poll-widget-store";
@@ -79,9 +80,9 @@ function PollPreviewCard({
         by <span className="font-medium text-foreground/80">{preview.creatorName}</span>
       </div>
 
-      {config.redirectToFeed && (
+      {config.redirectToFeed && isNavigableSlug(preview.slug) && (
         <Link
-          to="/$slug"
+          to="/feed/$slug"
           params={{ slug: preview.slug }}
           className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary/90 px-2.5 py-1 text-[11px] font-semibold text-primary-foreground transition-colors hover:bg-primary"
           aria-label={`Vote on ${preview.question} in the feed`}

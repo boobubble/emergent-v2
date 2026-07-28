@@ -5,8 +5,12 @@ import { useState } from "react";
 import { listPoemsByCategory } from "@/lib/mehfil.functions";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { PoemCard } from "@/components/mehfil/PoemCard";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 export const Route = createFileRoute("/poetry/category/$slug")({
+  loader: ({ params }) => {
+    if (!isNavigableSlug(params.slug)) throw notFound();
+  },
   head: ({ params }) => ({
     meta: [
       { title: `${cap(params.slug)} Poetry · Poetry Hub` },

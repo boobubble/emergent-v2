@@ -10,6 +10,7 @@ import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { useAuth } from "@/lib/auth-store";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { gamify } from "@/lib/gamification-emit";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 export const Route = createFileRoute("/poetry/compose")({
   head: () => ({
@@ -83,7 +84,11 @@ function ComposePage() {
       if (poem.status === "published") {
         gamify("poetry_publish", 1, { poem_id: poem.id, category: categorySlug });
         toast.success(optInBattle ? "Published & entered active battle" : "Poem published to Poetry Hub");
-        nav({ to: "/poetry/$slug", params: { slug: poem.slug } });
+        if (isNavigableSlug(poem.slug)) {
+          nav({ to: "/poetry/$slug", params: { slug: poem.slug } });
+        } else {
+          nav({ to: "/poetry" });
+        }
       } else {
         toast.success("Saved as draft");
         nav({ to: "/poetry" });

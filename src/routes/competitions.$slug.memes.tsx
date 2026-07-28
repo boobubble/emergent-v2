@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Laugh } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,13 +8,16 @@ import { PostCard } from "@/components/feed/PostCard";
 import type { FeedPost } from "@/lib/feed-types";
 import type { User } from "@/lib/chat-types";
 import { useAuth } from "@/lib/auth-store";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 export const Route = createFileRoute("/competitions/$slug/memes")({
   validateSearch: (s: Record<string, unknown>) => ({
     nominee: typeof s.nominee === "string" ? s.nominee : "",
   }),
   loader: async ({ params }) => {
+    if (!isNavigableSlug(params.slug)) throw notFound();
     const data = await getCompetitionBySlug({ data: { slug: params.slug } });
+    if (!data?.competition) throw notFound();
     return data;
   },
   head: ({ params }) => ({
@@ -26,6 +29,9 @@ export const Route = createFileRoute("/competitions/$slug/memes")({
     ],
   }),
   component: CompetitionMemesPage,
+  notFoundComponent: () => (
+    <div className="mx-auto max-w-2xl p-8 text-center text-sm text-muted-foreground">Competition not found.</div>
+  ),
 });
 
 function CompetitionMemesPage() {

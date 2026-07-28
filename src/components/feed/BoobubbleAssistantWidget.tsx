@@ -39,6 +39,7 @@ type LiveComp = {
   end_at?: string | null;
 };
 import { useAuth } from "@/lib/auth-store";
+import { isNavigableSlug } from "@/lib/route-slug";
 
 const DISMISS_KEY = "boobubble:feed-rec:dismissed-at";
 
@@ -273,7 +274,7 @@ export function BoobubbleAssistantWidget() {
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> Live
               </span>
             </p>
-            {liveComps.map((c) => (
+            {liveComps.filter((c) => isNavigableSlug(c.slug)).map((c) => (
               <Link
                 key={c.id}
                 to="/competitions/$slug"

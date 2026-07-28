@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { isNavigableSlug } from "@/lib/route-slug";
 import { Pencil, Trophy, Users, Vote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,12 +29,10 @@ const statusStyle: Record<string, string> = {
 
 export function CompetitionCard({ c, onEdit }: { c: CompetitionSummary; onEdit?: (c: CompetitionSummary) => void }) {
   const color = c.category?.color ?? "#8b5cf6";
-  return (
-    <Link
-      to="/competitions/$slug"
-      params={{ slug: c.slug }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl shadow-lg transition-transform hover:-translate-y-0.5 hover:shadow-2xl"
-    >
+  const canNavigate = isNavigableSlug(c.slug);
+
+  const card = (
+    <>
       <div
         className="relative h-32 w-full overflow-hidden"
         style={{
@@ -88,6 +87,19 @@ export function CompetitionCard({ c, onEdit }: { c: CompetitionSummary; onEdit?:
           </div>
         ) : null}
       </div>
+    </>
+  );
+
+  const className =
+    "group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl shadow-lg transition-transform hover:-translate-y-0.5 hover:shadow-2xl";
+
+  if (!canNavigate) {
+    return <div className={className}>{card}</div>;
+  }
+
+  return (
+    <Link to="/competitions/$slug" params={{ slug: c.slug }} className={className}>
+      {card}
     </Link>
   );
 }

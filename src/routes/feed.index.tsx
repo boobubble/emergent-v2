@@ -18,6 +18,7 @@ import { useSavedPosts } from "@/lib/use-saved-posts";
 import { Composer } from "@/components/feed/Composer";
 import { StoryTray } from "@/components/feed/StoryTray";
 import { PostCard } from "@/components/feed/PostCard";
+import { isNavigableSlug } from "@/lib/route-slug";
 import { FriendsWidget, HashtagsWidget } from "@/components/feed/SideWidgets";
 import {
   PromotedPostsWidget,
@@ -367,7 +368,7 @@ function FeedPage() {
       if (view !== "feed") setView("feed");
       const tag = s.value.replace(/^#/, "").toLowerCase();
       const match = posts.find(p => (p.hashtags || []).some(t => String(t).toLowerCase().replace(/^#/, "") === tag));
-      if (match?.slug) {
+      if (match?.slug && isNavigableSlug(match.slug)) {
         navigate({ to: "/feed/$slug", params: { slug: match.slug } });
         return;
       }
@@ -686,7 +687,7 @@ function FeedPage() {
                         {poems.map((p) => (
                           <li
                             key={`poem-${p.id}`}
-                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/poetry/$slug", params: { slug: p.slug } }); }}
+                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); if (isNavigableSlug(p.slug)) navigate({ to: "/poetry/$slug", params: { slug: p.slug } }); }}
                             className="flex cursor-pointer items-start gap-3 rounded-xl px-3 py-2 hover:bg-accent/50"
                           >
                             {p.author?.avatar_url ? (
@@ -727,7 +728,7 @@ function FeedPage() {
                           return (
                             <li
                               key={`battle-${b.id}`}
-                              onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/competitions/$slug", params: { slug: b.slug } }); }}
+                              onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); if (isNavigableSlug(b.slug)) navigate({ to: "/competitions/$slug", params: { slug: b.slug } }); }}
                               className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-accent/50"
                             >
                               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-orange-500/15 text-orange-600"><Swords className="h-4 w-4" /></div>
@@ -753,7 +754,7 @@ function FeedPage() {
                         {cats.map((c) => (
                           <li
                             key={`cat-${c.id}`}
-                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/poetry/category/$slug", params: { slug: c.slug } }); }}
+                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); if (isNavigableSlug(c.slug)) navigate({ to: "/poetry/category/$slug", params: { slug: c.slug } }); }}
                             className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-accent/50"
                           >
                             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary text-sm">📚</div>
@@ -776,7 +777,7 @@ function FeedPage() {
                         {hof.map((h) => (
                           <li
                             key={`hof-${h.id}`}
-                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); navigate({ to: "/poetry/$slug", params: { slug: h.poem_slug } }); }}
+                            onMouseDown={(e) => { e.preventDefault(); setSearchOpen(false); setQuery(""); if (isNavigableSlug(h.poem_slug)) navigate({ to: "/poetry/$slug", params: { slug: h.poem_slug } }); }}
                             className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-accent/50"
                           >
                             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-500/15 text-amber-600 text-sm">🏆</div>

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { CommunityBadges } from "@/components/community/CommunityBadges";
+import { isNavigableSlug } from "@/lib/route-slug";
 import { ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/admin/community-verification")({
@@ -76,13 +77,17 @@ function AdminCommunityVerification() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <Link
-                      to="/community/$slug"
-                      params={{ slug: r.community?.slug ?? "" }}
-                      className="truncate text-sm font-semibold hover:underline"
-                    >
-                      {r.community?.name ?? r.community_name}
-                    </Link>
+                    {isNavigableSlug(r.community?.slug) ? (
+                      <Link
+                        to="/community/$slug"
+                        params={{ slug: r.community.slug }}
+                        className="truncate text-sm font-semibold hover:underline"
+                      >
+                        {r.community?.name ?? r.community_name}
+                      </Link>
+                    ) : (
+                      <span className="truncate text-sm font-semibold">{r.community?.name ?? r.community_name}</span>
+                    )}
                     <CommunityBadges c={r.community ?? {}} />
                     <StatusBadge status={r.status} />
                   </div>
