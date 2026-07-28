@@ -155,6 +155,7 @@ function RecapPage() {
                     key={cat}
                     to="/competitions/$slug/fun/$type"
                     params={{ slug: c.slug, type: meta.slug }}
+                    search={{ nominee: "" }}
                     className={`rounded-2xl border border-white/10 bg-gradient-to-br ${meta.accent} p-3 hover:border-white/25`}
                   >
                     <div className="text-2xl">{meta.emoji}</div>

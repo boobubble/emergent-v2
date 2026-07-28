@@ -137,7 +137,7 @@ function WalletPage() {
       <div className="mx-auto max-w-2xl p-8 text-center">
         <Coins className="mx-auto mb-4 h-10 w-10 text-primary" />
         <h1 className="text-2xl font-semibold">Sign in to see your Wallet</h1>
-        <Link to="/auth" className="mt-4 inline-block underline">Go to sign in</Link>
+        <Link to="/login" className="mt-4 inline-block underline">Go to sign in</Link>
       </div>
     );
   }

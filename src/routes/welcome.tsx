@@ -830,7 +830,7 @@ function LandingPage() {
           <SectionTitle icon="💬" title="Latest Public Discussions" href="/" />
           <div className="mt-4 divide-y divide-white/[0.05]">
             {discussions.map((d, i) => (
-              <Link key={i} to="/discussions" className="flex items-center gap-3 py-3 transition-colors hover:bg-white/[0.02] sm:gap-4">
+              <Link key={i} to="/feedback" className="flex items-center gap-3 py-3 transition-colors hover:bg-white/[0.02] sm:gap-4">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-base ring-1 ring-white/10">
                   💬
                 </div>

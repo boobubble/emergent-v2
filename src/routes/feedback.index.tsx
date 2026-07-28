@@ -178,7 +178,7 @@ function ForumHome() {
             </div>
             {!user && (
               <Link
-                to="/auth"
+                to="/login"
                 className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow hover:opacity-90"
               >
                 Sign in to join
@@ -348,7 +348,7 @@ function EmptyState({ tab, onNew, canPost }: { tab: Tab; onNew: () => void; canP
           <Plus className="h-4 w-4" /> New discussion
         </Button>
       ) : (
-        <Link to="/auth" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+        <Link to="/login" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
           Sign in to post
         </Link>
       )}

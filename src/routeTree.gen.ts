@@ -9,368 +9,203 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WelcomeRouteImport } from './routes/welcome'
-import { Route as WalletRouteImport } from './routes/wallet'
-import { Route as TrustRouteImport } from './routes/trust'
-import { Route as SetupWizardRouteImport } from './routes/setup-wizard'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ReelsRouteImport } from './routes/reels'
-import { Route as RadioRouteImport } from './routes/radio'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as PagesRouteImport } from './routes/pages'
-import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as LeaderboardRouteImport } from './routes/leaderboard'
-import { Route as JourneyRouteImport } from './routes/journey'
-import { Route as InstallerRouteImport } from './routes/installer'
-import { Route as HeropageRouteImport } from './routes/heropage'
-import { Route as HallOfFameRouteImport } from './routes/hall-of-fame'
-import { Route as GroupsRouteImport } from './routes/groups'
-import { Route as GamificationRouteImport } from './routes/gamification'
-import { Route as GamesRouteImport } from './routes/games'
-import { Route as FindFriendsRouteImport } from './routes/find-friends'
-import { Route as DeployRouteImport } from './routes/deploy'
-import { Route as ConfessionsRouteImport } from './routes/confessions'
-import { Route as CompetitionsRouteImport } from './routes/competitions'
-import { Route as CommunityRouteImport } from './routes/community'
-import { Route as CommunitiesRouteImport } from './routes/communities'
-import { Route as ChatroomsRouteImport } from './routes/chatrooms'
-import { Route as ChatroomRouteImport } from './routes/chatroom'
-import { Route as ChatRouteImport } from './routes/chat'
-import { Route as BroadcasterRouteImport } from './routes/broadcaster'
-import { Route as BattleHubRouteImport } from './routes/battle-hub'
-import { Route as BannedRouteImport } from './routes/banned'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AchievementsRouteImport } from './routes/achievements'
-import { Route as AccountRouteImport } from './routes/account'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as PoetryIndexRouteImport } from './routes/poetry.index'
-import { Route as MehfilIndexRouteImport } from './routes/mehfil.index'
-import { Route as FeedbackIndexRouteImport } from './routes/feedback.index'
-import { Route as FeedIndexRouteImport } from './routes/feed.index'
-import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
-import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as AchievementsRouteImport } from './routes/achievements'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as BannedRouteImport } from './routes/banned'
+import { Route as BattleHubRouteImport } from './routes/battle-hub'
+import { Route as BroadcasterRouteImport } from './routes/broadcaster'
+import { Route as ChatRouteImport } from './routes/chat'
+import { Route as ChatroomRouteImport } from './routes/chatroom'
+import { Route as ChatroomsRouteImport } from './routes/chatrooms'
+import { Route as CommunitiesRouteImport } from './routes/communities'
+import { Route as CommunityRouteImport } from './routes/community'
+import { Route as CompetitionsRouteImport } from './routes/competitions'
+import { Route as ConfessionsRouteImport } from './routes/confessions'
+import { Route as DeployRouteImport } from './routes/deploy'
+import { Route as FindFriendsRouteImport } from './routes/find-friends'
+import { Route as GamesRouteImport } from './routes/games'
+import { Route as GamificationRouteImport } from './routes/gamification'
+import { Route as GroupsRouteImport } from './routes/groups'
+import { Route as HallOfFameRouteImport } from './routes/hall-of-fame'
+import { Route as HeropageRouteImport } from './routes/heropage'
+import { Route as InstallerRouteImport } from './routes/installer'
+import { Route as JourneyRouteImport } from './routes/journey'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
+import { Route as PagesRouteImport } from './routes/pages'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as RadioRouteImport } from './routes/radio'
+import { Route as ReelsRouteImport } from './routes/reels'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SetupWizardRouteImport } from './routes/setup-wizard'
+import { Route as TrustRouteImport } from './routes/trust'
+import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as UUsernameRouteImport } from './routes/u.$username'
-import { Route as PoetryLeaderboardRouteImport } from './routes/poetry.leaderboard'
-import { Route as PoetryHallOfFameRouteImport } from './routes/poetry.hall-of-fame'
-import { Route as PoetryComposeRouteImport } from './routes/poetry.compose'
-import { Route as PoetryChallengesRouteImport } from './routes/poetry.challenges'
-import { Route as PoetrySlugRouteImport } from './routes/poetry.$slug'
-import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
-import { Route as PSlugRouteImport } from './routes/p.$slug'
-import { Route as MehfilLeaderboardRouteImport } from './routes/mehfil.leaderboard'
-import { Route as MehfilHallOfFameRouteImport } from './routes/mehfil.hall-of-fame'
-import { Route as MehfilComposeRouteImport } from './routes/mehfil.compose'
-import { Route as MehfilChallengesRouteImport } from './routes/mehfil.challenges'
-import { Route as MehfilSlugRouteImport } from './routes/mehfil.$slug'
-import { Route as InviteCodeRouteImport } from './routes/invite.$code'
-import { Route as GamesLudoRouteImport } from './routes/games.ludo'
-import { Route as FeedbackIdRouteImport } from './routes/feedback.$id'
-import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
-import { Route as CompetitionsLeaderboardRouteImport } from './routes/competitions.leaderboard'
-import { Route as CompetitionsHallOfFameRouteImport } from './routes/competitions.hall-of-fame'
-import { Route as CompetitionsSlugRouteImport } from './routes/competitions.$slug'
-import { Route as CommunitySlugRouteImport } from './routes/community.$slug'
-import { Route as BroadcasterWidgetsRouteImport } from './routes/broadcaster.widgets'
-import { Route as BroadcasterScheduleRouteImport } from './routes/broadcaster.schedule'
-import { Route as BroadcasterQueueRouteImport } from './routes/broadcaster.queue'
-import { Route as BroadcasterMicRouteImport } from './routes/broadcaster.mic'
-import { Route as BroadcasterAnnouncementsRouteImport } from './routes/broadcaster.announcements'
-import { Route as BroadcasterAnalyticsRouteImport } from './routes/broadcaster.analytics'
-import { Route as AdminWalletRulesRouteImport } from './routes/admin.wallet-rules'
-import { Route as AdminWalletAnalyticsRouteImport } from './routes/admin.wallet-analytics'
-import { Route as AdminWalletRouteImport } from './routes/admin.wallet'
-import { Route as AdminVoiceNotesRouteImport } from './routes/admin.voice-notes'
-import { Route as AdminUsersRouteImport } from './routes/admin.users'
-import { Route as AdminUpdatesRouteImport } from './routes/admin.updates'
-import { Route as AdminUpcomingRouteImport } from './routes/admin.upcoming'
-import { Route as AdminTrustSafetyRouteImport } from './routes/admin.trust-safety'
-import { Route as AdminSystemRouteImport } from './routes/admin.system'
-import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
-import { Route as AdminStickersRouteImport } from './routes/admin.stickers'
-import { Route as AdminStaffPermissionsRouteImport } from './routes/admin.staff-permissions'
-import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
-import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
-import { Route as AdminSignupAccessRouteImport } from './routes/admin.signup-access'
-import { Route as AdminSetupWizardRouteImport } from './routes/admin.setup-wizard'
-import { Route as AdminSeoRouteImport } from './routes/admin.seo'
-import { Route as AdminSecurityRouteImport } from './routes/admin.security'
-import { Route as AdminSearchRouteImport } from './routes/admin.search'
-import { Route as AdminSafetyRouteImport } from './routes/admin.safety'
-import { Route as AdminRolesRouteImport } from './routes/admin.roles'
-import { Route as AdminRetentionRouteImport } from './routes/admin.retention'
-import { Route as AdminReportsRouteImport } from './routes/admin.reports'
-import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
-import { Route as AdminRealtimeRouteImport } from './routes/admin.realtime'
-import { Route as AdminProgressionRouteImport } from './routes/admin.progression'
-import { Route as AdminPremiumSlugsRouteImport } from './routes/admin.premium-slugs'
-import { Route as AdminPopupsRouteImport } from './routes/admin.popups'
-import { Route as AdminPollWidgetRouteImport } from './routes/admin.poll-widget'
-import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
-import { Route as AdminPagesRouteImport } from './routes/admin.pages'
-import { Route as AdminModulesRouteImport } from './routes/admin.modules'
-import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
-import { Route as AdminMehfilRouteImport } from './routes/admin.mehfil'
-import { Route as AdminMediaApisRouteImport } from './routes/admin.media-apis'
-import { Route as AdminMaintenanceRouteImport } from './routes/admin.maintenance'
-import { Route as AdminLicensesRouteImport } from './routes/admin.licenses'
-import { Route as AdminLanguagesRouteImport } from './routes/admin.languages'
-import { Route as AdminLandingRouteImport } from './routes/admin.landing'
-import { Route as AdminInternalLinkingRouteImport } from './routes/admin.internal-linking'
-import { Route as AdminHomepageRouteImport } from './routes/admin.homepage'
-import { Route as AdminHeroPageRouteImport } from './routes/admin.hero-page'
-import { Route as AdminGeneralRouteImport } from './routes/admin.general'
-import { Route as AdminGamificationRouteImport } from './routes/admin.gamification'
-import { Route as AdminGamesRouteImport } from './routes/admin.games'
-import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
-import { Route as AdminFeedbotRouteImport } from './routes/admin.feedbot'
-import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
-import { Route as AdminFeedThemesRouteImport } from './routes/admin.feed-themes'
-import { Route as AdminFeedModerationRouteImport } from './routes/admin.feed-moderation'
-import { Route as AdminExportRouteImport } from './routes/admin.export'
-import { Route as AdminEmailRouteImport } from './routes/admin.email'
-import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
-import { Route as AdminDmWallpapersRouteImport } from './routes/admin.dm-wallpapers'
-import { Route as AdminDjRouteImport } from './routes/admin.dj'
-import { Route as AdminDiscoveryWidgetsRouteImport } from './routes/admin.discovery-widgets'
-import { Route as AdminDemoRouteImport } from './routes/admin.demo'
-import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
-import { Route as AdminCompetitionsFeedRouteImport } from './routes/admin.competitions-feed'
-import { Route as AdminCompetitionsRouteImport } from './routes/admin.competitions'
-import { Route as AdminCompetitionCategoriesRouteImport } from './routes/admin.competition-categories'
-import { Route as AdminCompetitionAnalyticsRouteImport } from './routes/admin.competition-analytics'
-import { Route as AdminCommunityVerificationRouteImport } from './routes/admin.community-verification'
-import { Route as AdminCommunityReportsRouteImport } from './routes/admin.community-reports'
-import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
-import { Route as AdminChatThemesRouteImport } from './routes/admin.chat-themes'
-import { Route as AdminCallsRouteImport } from './routes/admin.calls'
-import { Route as AdminCacheRouteImport } from './routes/admin.cache'
-import { Route as AdminBrandingCheckRouteImport } from './routes/admin.branding-check'
-import { Route as AdminBotsRouteImport } from './routes/admin.bots'
-import { Route as AdminBotEventsRouteImport } from './routes/admin.bot-events'
-import { Route as AdminBoobubbleRouteImport } from './routes/admin.boobubble'
-import { Route as AdminBackupRouteImport } from './routes/admin.backup'
-import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
-import { Route as AdminAuthBackgroundRouteImport } from './routes/admin.auth-background'
-import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
-import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
-import { Route as AdminApiRouteImport } from './routes/admin.api'
-import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
-import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
-import { Route as AdminAiChatbotsRouteImport } from './routes/admin.ai-chatbots'
-import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
-import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
-import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
 import { Route as AdminAbuseProtectionRouteImport } from './routes/admin.abuse-protection'
-import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
-import { Route as PoetryCategorySlugRouteImport } from './routes/poetry.category.$slug'
-import { Route as MehfilCategorySlugRouteImport } from './routes/mehfil.category.$slug'
-import { Route as CompetitionsSlugRecapRouteImport } from './routes/competitions.$slug.recap'
-import { Route as CompetitionsSlugMemesRouteImport } from './routes/competitions.$slug.memes'
-import { Route as CommunitySlugMembersRouteImport } from './routes/community.$slug.members'
-import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
-import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
-import { Route as CommunitySlugCompetitionsRouteImport } from './routes/community.$slug.competitions'
-import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
-import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
-import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
-import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
-import { Route as ApiPublicBackupRetentionRouteImport } from './routes/api/public/backup-retention'
-import { Route as ApiGamesXpRouteImport } from './routes/api/games.xp'
-import { Route as ApiGamesStartRouteImport } from './routes/api/games.start'
-import { Route as ApiGamesScoreRouteImport } from './routes/api/games.score'
-import { Route as ApiGamesSaveRouteImport } from './routes/api/games.save'
-import { Route as ApiGamesFinishRouteImport } from './routes/api/games.finish'
-import { Route as ApiGamesEventRouteImport } from './routes/api/games.event'
-import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
-import { Route as ApiGamesAchievementRouteImport } from './routes/api/games.achievement'
-import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
+import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
+import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
+import { Route as AdminAdsScriptsRouteImport } from './routes/admin.ads-scripts'
+import { Route as AdminAiChatbotsRouteImport } from './routes/admin.ai-chatbots'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
+import { Route as AdminApiRouteImport } from './routes/admin.api'
+import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
+import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
+import { Route as AdminAuthBackgroundRouteImport } from './routes/admin.auth-background'
+import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
+import { Route as AdminBackupRouteImport } from './routes/admin.backup'
+import { Route as AdminBoobubbleRouteImport } from './routes/admin.boobubble'
+import { Route as AdminBotEventsRouteImport } from './routes/admin.bot-events'
+import { Route as AdminBotsRouteImport } from './routes/admin.bots'
+import { Route as AdminBrandingCheckRouteImport } from './routes/admin.branding-check'
+import { Route as AdminCacheRouteImport } from './routes/admin.cache'
+import { Route as AdminCallsRouteImport } from './routes/admin.calls'
+import { Route as AdminChatThemesRouteImport } from './routes/admin.chat-themes'
+import { Route as AdminChatroomsRouteImport } from './routes/admin.chatrooms'
+import { Route as AdminCommunityReportsRouteImport } from './routes/admin.community-reports'
+import { Route as AdminCommunityVerificationRouteImport } from './routes/admin.community-verification'
+import { Route as AdminCompetitionAnalyticsRouteImport } from './routes/admin.competition-analytics'
+import { Route as AdminCompetitionCategoriesRouteImport } from './routes/admin.competition-categories'
+import { Route as AdminCompetitionsRouteImport } from './routes/admin.competitions'
+import { Route as AdminCompetitionsFeedRouteImport } from './routes/admin.competitions-feed'
+import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
+import { Route as AdminDemoRouteImport } from './routes/admin.demo'
+import { Route as AdminDiscoveryWidgetsRouteImport } from './routes/admin.discovery-widgets'
+import { Route as AdminDjRouteImport } from './routes/admin.dj'
+import { Route as AdminDmWallpapersRouteImport } from './routes/admin.dm-wallpapers'
+import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
+import { Route as AdminEmailRouteImport } from './routes/admin.email'
+import { Route as AdminExportRouteImport } from './routes/admin.export'
+import { Route as AdminFeedModerationRouteImport } from './routes/admin.feed-moderation'
+import { Route as AdminFeedThemesRouteImport } from './routes/admin.feed-themes'
+import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
+import { Route as AdminFeedbotRouteImport } from './routes/admin.feedbot'
+import { Route as AdminFiltersRouteImport } from './routes/admin.filters'
+import { Route as AdminGamesRouteImport } from './routes/admin.games'
+import { Route as AdminGamificationRouteImport } from './routes/admin.gamification'
+import { Route as AdminGeneralRouteImport } from './routes/admin.general'
+import { Route as AdminHeroPageRouteImport } from './routes/admin.hero-page'
+import { Route as AdminHomepageRouteImport } from './routes/admin.homepage'
+import { Route as AdminInternalLinkingRouteImport } from './routes/admin.internal-linking'
+import { Route as AdminLandingRouteImport } from './routes/admin.landing'
+import { Route as AdminLanguagesRouteImport } from './routes/admin.languages'
+import { Route as AdminLicensesRouteImport } from './routes/admin.licenses'
+import { Route as AdminMaintenanceRouteImport } from './routes/admin.maintenance'
+import { Route as AdminMediaApisRouteImport } from './routes/admin.media-apis'
+import { Route as AdminMehfilRouteImport } from './routes/admin.mehfil'
+import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
+import { Route as AdminModulesRouteImport } from './routes/admin.modules'
+import { Route as AdminPagesRouteImport } from './routes/admin.pages'
+import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
+import { Route as AdminPollWidgetRouteImport } from './routes/admin.poll-widget'
+import { Route as AdminPopupsRouteImport } from './routes/admin.popups'
+import { Route as AdminPremiumSlugsRouteImport } from './routes/admin.premium-slugs'
+import { Route as AdminProgressionRouteImport } from './routes/admin.progression'
+import { Route as AdminRealtimeRouteImport } from './routes/admin.realtime'
+import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminRetentionRouteImport } from './routes/admin.retention'
+import { Route as AdminRolesRouteImport } from './routes/admin.roles'
+import { Route as AdminSafetyRouteImport } from './routes/admin.safety'
+import { Route as AdminSearchRouteImport } from './routes/admin.search'
+import { Route as AdminSecurityRouteImport } from './routes/admin.security'
+import { Route as AdminSeoRouteImport } from './routes/admin.seo'
+import { Route as AdminSetupWizardRouteImport } from './routes/admin.setup-wizard'
+import { Route as AdminSignupAccessRouteImport } from './routes/admin.signup-access'
+import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
+import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
+import { Route as AdminStaffPermissionsRouteImport } from './routes/admin.staff-permissions'
+import { Route as AdminStickersRouteImport } from './routes/admin.stickers'
+import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
+import { Route as AdminSystemRouteImport } from './routes/admin.system'
+import { Route as AdminTrustSafetyRouteImport } from './routes/admin.trust-safety'
+import { Route as AdminUpcomingRouteImport } from './routes/admin.upcoming'
+import { Route as AdminUpdatesRouteImport } from './routes/admin.updates'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminVoiceNotesRouteImport } from './routes/admin.voice-notes'
+import { Route as AdminWalletRouteImport } from './routes/admin.wallet'
+import { Route as AdminWalletAnalyticsRouteImport } from './routes/admin.wallet-analytics'
+import { Route as AdminWalletRulesRouteImport } from './routes/admin.wallet-rules'
+import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
+import { Route as BroadcasterAnalyticsRouteImport } from './routes/broadcaster.analytics'
+import { Route as BroadcasterAnnouncementsRouteImport } from './routes/broadcaster.announcements'
+import { Route as BroadcasterMicRouteImport } from './routes/broadcaster.mic'
+import { Route as BroadcasterQueueRouteImport } from './routes/broadcaster.queue'
+import { Route as BroadcasterScheduleRouteImport } from './routes/broadcaster.schedule'
+import { Route as BroadcasterWidgetsRouteImport } from './routes/broadcaster.widgets'
+import { Route as CommunitySlugRouteImport } from './routes/community.$slug'
+import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
+import { Route as CompetitionsSlugRouteImport } from './routes/competitions.$slug'
+import { Route as CompetitionsHallOfFameRouteImport } from './routes/competitions.hall-of-fame'
+import { Route as CompetitionsLeaderboardRouteImport } from './routes/competitions.leaderboard'
+import { Route as FeedIndexRouteImport } from './routes/feed.index'
+import { Route as FeedSlugRouteImport } from './routes/feed.$slug'
+import { Route as FeedbackIndexRouteImport } from './routes/feedback.index'
+import { Route as FeedbackIdRouteImport } from './routes/feedback.$id'
+import { Route as GamesLudoRouteImport } from './routes/games.ludo'
+import { Route as InviteCodeRouteImport } from './routes/invite.$code'
+import { Route as MehfilIndexRouteImport } from './routes/mehfil.index'
+import { Route as MehfilSlugRouteImport } from './routes/mehfil.$slug'
+import { Route as MehfilChallengesRouteImport } from './routes/mehfil.challenges'
+import { Route as MehfilComposeRouteImport } from './routes/mehfil.compose'
+import { Route as MehfilHallOfFameRouteImport } from './routes/mehfil.hall-of-fame'
+import { Route as MehfilLeaderboardRouteImport } from './routes/mehfil.leaderboard'
+import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as PagesEditorIdRouteImport } from './routes/pages-editor.$id'
+import { Route as PoetryIndexRouteImport } from './routes/poetry.index'
+import { Route as PoetrySlugRouteImport } from './routes/poetry.$slug'
+import { Route as PoetryChallengesRouteImport } from './routes/poetry.challenges'
+import { Route as PoetryComposeRouteImport } from './routes/poetry.compose'
+import { Route as PoetryHallOfFameRouteImport } from './routes/poetry.hall-of-fame'
+import { Route as PoetryLeaderboardRouteImport } from './routes/poetry.leaderboard'
+import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as AuthenticatedSettingsPrivacyRouteImport } from './routes/_authenticated.settings.privacy'
-import { Route as CommunitySlugChatroomsIndexRouteImport } from './routes/community.$slug.chatrooms.index'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
-import { Route as CompetitionsSlugFunTypeRouteImport } from './routes/competitions.$slug.fun.$type'
-import { Route as CommunitySlugChatroomsRoomSlugRouteImport } from './routes/community.$slug.chatrooms.$roomSlug'
-import { Route as ApiPublicLicenseVerifyRouteImport } from './routes/api/public/license/verify'
-import { Route as ApiPublicLicenseResetRouteImport } from './routes/api/public/license/reset'
-import { Route as ApiPublicLicenseDeactivateRouteImport } from './routes/api/public/license/deactivate'
-import { Route as ApiPublicLicenseCheckRouteImport } from './routes/api/public/license/check'
-import { Route as ApiPublicLicenseActivateRouteImport } from './routes/api/public/license/activate'
-import { Route as ApiPublicHooksLicenseRevalidateRouteImport } from './routes/api/public/hooks/license-revalidate'
-import { Route as ApiPublicHooksFeedbotSummaryRouteImport } from './routes/api/public/hooks/feedbot-summary'
+import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
+import { Route as ApiGamesAchievementRouteImport } from './routes/api/games.achievement'
+import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
+import { Route as ApiGamesEventRouteImport } from './routes/api/games.event'
+import { Route as ApiGamesFinishRouteImport } from './routes/api/games.finish'
+import { Route as ApiGamesSaveRouteImport } from './routes/api/games.save'
+import { Route as ApiGamesScoreRouteImport } from './routes/api/games.score'
+import { Route as ApiGamesStartRouteImport } from './routes/api/games.start'
+import { Route as ApiGamesXpRouteImport } from './routes/api/games.xp'
+import { Route as ApiPublicBackupRetentionRouteImport } from './routes/api/public/backup-retention'
+import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/community-bg'
+import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
+import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
+import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
+import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
+import { Route as CommunitySlugCompetitionsRouteImport } from './routes/community.$slug.competitions'
+import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
+import { Route as CommunitySlugFeedRouteImport } from './routes/community.$slug.feed'
+import { Route as CommunitySlugMembersRouteImport } from './routes/community.$slug.members'
+import { Route as CompetitionsSlugMemesRouteImport } from './routes/competitions.$slug.memes'
+import { Route as CompetitionsSlugRecapRouteImport } from './routes/competitions.$slug.recap'
+import { Route as MehfilCategorySlugRouteImport } from './routes/mehfil.category.$slug'
+import { Route as PoetryCategorySlugRouteImport } from './routes/poetry.category.$slug'
 import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/public/hooks/feedbot-dispatch'
+import { Route as ApiPublicHooksFeedbotSummaryRouteImport } from './routes/api/public/hooks/feedbot-summary'
+import { Route as ApiPublicHooksLicenseRevalidateRouteImport } from './routes/api/public/hooks/license-revalidate'
+import { Route as ApiPublicLicenseActivateRouteImport } from './routes/api/public/license/activate'
+import { Route as ApiPublicLicenseCheckRouteImport } from './routes/api/public/license/check'
+import { Route as ApiPublicLicenseDeactivateRouteImport } from './routes/api/public/license/deactivate'
+import { Route as ApiPublicLicenseResetRouteImport } from './routes/api/public/license/reset'
+import { Route as ApiPublicLicenseVerifyRouteImport } from './routes/api/public/license/verify'
+import { Route as CommunitySlugChatroomsIndexRouteImport } from './routes/community.$slug.chatrooms.index'
+import { Route as CommunitySlugChatroomsRoomSlugRouteImport } from './routes/community.$slug.chatrooms.$roomSlug'
+import { Route as CompetitionsSlugFunTypeRouteImport } from './routes/competitions.$slug.fun.$type'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicOgCompetitionSlugRouteImport } from './routes/api/public/og/competition.$slug'
 
-const WelcomeRoute = WelcomeRouteImport.update({
-  id: '/welcome',
-  path: '/welcome',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WalletRoute = WalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TrustRoute = TrustRouteImport.update({
-  id: '/trust',
-  path: '/trust',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SetupWizardRoute = SetupWizardRouteImport.update({
-  id: '/setup-wizard',
-  path: '/setup-wizard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReelsRoute = ReelsRouteImport.update({
-  id: '/reels',
-  path: '/reels',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RadioRoute = RadioRouteImport.update({
-  id: '/radio',
-  path: '/radio',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PagesRoute = PagesRouteImport.update({
-  id: '/pages',
-  path: '/pages',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
-  id: '/manifest.webmanifest',
-  path: '/manifest.webmanifest',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LeaderboardRoute = LeaderboardRouteImport.update({
-  id: '/leaderboard',
-  path: '/leaderboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JourneyRoute = JourneyRouteImport.update({
-  id: '/journey',
-  path: '/journey',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InstallerRoute = InstallerRouteImport.update({
-  id: '/installer',
-  path: '/installer',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HeropageRoute = HeropageRouteImport.update({
-  id: '/heropage',
-  path: '/heropage',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HallOfFameRoute = HallOfFameRouteImport.update({
-  id: '/hall-of-fame',
-  path: '/hall-of-fame',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GroupsRoute = GroupsRouteImport.update({
-  id: '/groups',
-  path: '/groups',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GamificationRoute = GamificationRouteImport.update({
-  id: '/gamification',
-  path: '/gamification',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GamesRoute = GamesRouteImport.update({
-  id: '/games',
-  path: '/games',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FindFriendsRoute = FindFriendsRouteImport.update({
-  id: '/find-friends',
-  path: '/find-friends',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeployRoute = DeployRouteImport.update({
-  id: '/deploy',
-  path: '/deploy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConfessionsRoute = ConfessionsRouteImport.update({
-  id: '/confessions',
-  path: '/confessions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompetitionsRoute = CompetitionsRouteImport.update({
-  id: '/competitions',
-  path: '/competitions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CommunityRoute = CommunityRouteImport.update({
-  id: '/community',
-  path: '/community',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CommunitiesRoute = CommunitiesRouteImport.update({
-  id: '/communities',
-  path: '/communities',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChatroomsRoute = ChatroomsRouteImport.update({
-  id: '/chatrooms',
-  path: '/chatrooms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChatroomRoute = ChatroomRouteImport.update({
-  id: '/chatroom',
-  path: '/chatroom',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChatRoute = ChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BroadcasterRoute = BroadcasterRouteImport.update({
-  id: '/broadcaster',
-  path: '/broadcaster',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BattleHubRoute = BattleHubRouteImport.update({
-  id: '/battle-hub',
-  path: '/battle-hub',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BannedRoute = BannedRouteImport.update({
-  id: '/banned',
-  path: '/banned',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AchievementsRoute = AchievementsRouteImport.update({
-  id: '/achievements',
-  path: '/achievements',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AccountRoute = AccountRouteImport.update({
-  id: '/account',
-  path: '/account',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlugRoute = SlugRouteImport.update({
@@ -382,486 +217,295 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PoetryIndexRoute = PoetryIndexRouteImport.update({
-  id: '/poetry/',
-  path: '/poetry/',
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MehfilIndexRoute = MehfilIndexRouteImport.update({
-  id: '/mehfil/',
-  path: '/mehfil/',
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FeedbackIndexRoute = FeedbackIndexRouteImport.update({
-  id: '/feedback/',
-  path: '/feedback/',
+const BannedRoute = BannedRouteImport.update({
+  id: '/banned',
+  path: '/banned',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FeedIndexRoute = FeedIndexRouteImport.update({
-  id: '/feed/',
-  path: '/feed/',
+const BattleHubRoute = BattleHubRouteImport.update({
+  id: '/battle-hub',
+  path: '/battle-hub',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CompetitionsRoute,
+const BroadcasterRoute = BroadcasterRouteImport.update({
+  id: '/broadcaster',
+  path: '/broadcaster',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const BroadcasterIndexRoute = BroadcasterIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => BroadcasterRoute,
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatroomRoute = ChatroomRouteImport.update({
+  id: '/chatroom',
+  path: '/chatroom',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatroomsRoute = ChatroomsRouteImport.update({
+  id: '/chatrooms',
+  path: '/chatrooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunitiesRoute = CommunitiesRouteImport.update({
+  id: '/communities',
+  path: '/communities',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompetitionsRoute = CompetitionsRouteImport.update({
+  id: '/competitions',
+  path: '/competitions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfessionsRoute = ConfessionsRouteImport.update({
+  id: '/confessions',
+  path: '/confessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeployRoute = DeployRouteImport.update({
+  id: '/deploy',
+  path: '/deploy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FindFriendsRoute = FindFriendsRouteImport.update({
+  id: '/find-friends',
+  path: '/find-friends',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamificationRoute = GamificationRouteImport.update({
+  id: '/gamification',
+  path: '/gamification',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsRoute = GroupsRouteImport.update({
+  id: '/groups',
+  path: '/groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HallOfFameRoute = HallOfFameRouteImport.update({
+  id: '/hall-of-fame',
+  path: '/hall-of-fame',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HeropageRoute = HeropageRouteImport.update({
+  id: '/heropage',
+  path: '/heropage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstallerRoute = InstallerRouteImport.update({
+  id: '/installer',
+  path: '/installer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JourneyRoute = JourneyRouteImport.update({
+  id: '/journey',
+  path: '/journey',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
+  id: '/manifest.webmanifest',
+  path: '/manifest.webmanifest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagesRoute = PagesRouteImport.update({
+  id: '/pages',
+  path: '/pages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RadioRoute = RadioRouteImport.update({
+  id: '/radio',
+  path: '/radio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReelsRoute = ReelsRouteImport.update({
+  id: '/reels',
+  path: '/reels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupWizardRoute = SetupWizardRouteImport.update({
+  id: '/setup-wizard',
+  path: '/setup-wizard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrustRoute = TrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const UUsernameRoute = UUsernameRouteImport.update({
-  id: '/u/$username',
-  path: '/u/$username',
-  getParentRoute: () => rootRouteImport,
+const AdminAbuseProtectionRoute = AdminAbuseProtectionRouteImport.update({
+  id: '/abuse-protection',
+  path: '/abuse-protection',
+  getParentRoute: () => AdminRoute,
 } as any)
-const PoetryLeaderboardRoute = PoetryLeaderboardRouteImport.update({
-  id: '/poetry/leaderboard',
-  path: '/poetry/leaderboard',
-  getParentRoute: () => rootRouteImport,
+const AdminActivityLogsRoute = AdminActivityLogsRouteImport.update({
+  id: '/activity-logs',
+  path: '/activity-logs',
+  getParentRoute: () => AdminRoute,
 } as any)
-const PoetryHallOfFameRoute = PoetryHallOfFameRouteImport.update({
-  id: '/poetry/hall-of-fame',
-  path: '/poetry/hall-of-fame',
-  getParentRoute: () => rootRouteImport,
+const AdminAdPlacementsRoute = AdminAdPlacementsRouteImport.update({
+  id: '/ad-placements',
+  path: '/ad-placements',
+  getParentRoute: () => AdminRoute,
 } as any)
-const PoetryComposeRoute = PoetryComposeRouteImport.update({
-  id: '/poetry/compose',
-  path: '/poetry/compose',
-  getParentRoute: () => rootRouteImport,
+const AdminAdsScriptsRoute = AdminAdsScriptsRouteImport.update({
+  id: '/ads-scripts',
+  path: '/ads-scripts',
+  getParentRoute: () => AdminRoute,
 } as any)
-const PoetryChallengesRoute = PoetryChallengesRouteImport.update({
-  id: '/poetry/challenges',
-  path: '/poetry/challenges',
-  getParentRoute: () => rootRouteImport,
+const AdminAiChatbotsRoute = AdminAiChatbotsRouteImport.update({
+  id: '/ai-chatbots',
+  path: '/ai-chatbots',
+  getParentRoute: () => AdminRoute,
 } as any)
-const PoetrySlugRoute = PoetrySlugRouteImport.update({
-  id: '/poetry/$slug',
-  path: '/poetry/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PagesEditorIdRoute = PagesEditorIdRouteImport.update({
-  id: '/pages-editor/$id',
-  path: '/pages-editor/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PSlugRoute = PSlugRouteImport.update({
-  id: '/p/$slug',
-  path: '/p/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MehfilLeaderboardRoute = MehfilLeaderboardRouteImport.update({
-  id: '/mehfil/leaderboard',
-  path: '/mehfil/leaderboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MehfilHallOfFameRoute = MehfilHallOfFameRouteImport.update({
-  id: '/mehfil/hall-of-fame',
-  path: '/mehfil/hall-of-fame',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MehfilComposeRoute = MehfilComposeRouteImport.update({
-  id: '/mehfil/compose',
-  path: '/mehfil/compose',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MehfilChallengesRoute = MehfilChallengesRouteImport.update({
-  id: '/mehfil/challenges',
-  path: '/mehfil/challenges',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MehfilSlugRoute = MehfilSlugRouteImport.update({
-  id: '/mehfil/$slug',
-  path: '/mehfil/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InviteCodeRoute = InviteCodeRouteImport.update({
-  id: '/invite/$code',
-  path: '/invite/$code',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GamesLudoRoute = GamesLudoRouteImport.update({
-  id: '/ludo',
-  path: '/ludo',
-  getParentRoute: () => GamesRoute,
-} as any)
-const FeedbackIdRoute = FeedbackIdRouteImport.update({
-  id: '/feedback/$id',
-  path: '/feedback/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FeedSlugRoute = FeedSlugRouteImport.update({
-  id: '/feed/$slug',
-  path: '/feed/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompetitionsLeaderboardRoute = CompetitionsLeaderboardRouteImport.update({
-  id: '/leaderboard',
-  path: '/leaderboard',
-  getParentRoute: () => CompetitionsRoute,
-} as any)
-const CompetitionsHallOfFameRoute = CompetitionsHallOfFameRouteImport.update({
-  id: '/hall-of-fame',
-  path: '/hall-of-fame',
-  getParentRoute: () => CompetitionsRoute,
-} as any)
-const CompetitionsSlugRoute = CompetitionsSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => CompetitionsRoute,
-} as any)
-const CommunitySlugRoute = CommunitySlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => CommunityRoute,
-} as any)
-const BroadcasterWidgetsRoute = BroadcasterWidgetsRouteImport.update({
-  id: '/widgets',
-  path: '/widgets',
-  getParentRoute: () => BroadcasterRoute,
-} as any)
-const BroadcasterScheduleRoute = BroadcasterScheduleRouteImport.update({
-  id: '/schedule',
-  path: '/schedule',
-  getParentRoute: () => BroadcasterRoute,
-} as any)
-const BroadcasterQueueRoute = BroadcasterQueueRouteImport.update({
-  id: '/queue',
-  path: '/queue',
-  getParentRoute: () => BroadcasterRoute,
-} as any)
-const BroadcasterMicRoute = BroadcasterMicRouteImport.update({
-  id: '/mic',
-  path: '/mic',
-  getParentRoute: () => BroadcasterRoute,
-} as any)
-const BroadcasterAnnouncementsRoute =
-  BroadcasterAnnouncementsRouteImport.update({
-    id: '/announcements',
-    path: '/announcements',
-    getParentRoute: () => BroadcasterRoute,
-  } as any)
-const BroadcasterAnalyticsRoute = BroadcasterAnalyticsRouteImport.update({
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
-  getParentRoute: () => BroadcasterRoute,
-} as any)
-const AdminWalletRulesRoute = AdminWalletRulesRouteImport.update({
-  id: '/wallet-rules',
-  path: '/wallet-rules',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminWalletAnalyticsRoute = AdminWalletAnalyticsRouteImport.update({
-  id: '/wallet-analytics',
-  path: '/wallet-analytics',
+const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminWalletRoute = AdminWalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
+const AdminApiRoute = AdminApiRouteImport.update({
+  id: '/api',
+  path: '/api',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminVoiceNotesRoute = AdminVoiceNotesRouteImport.update({
-  id: '/voice-notes',
-  path: '/voice-notes',
+const AdminAppearanceRoute = AdminAppearanceRouteImport.update({
+  id: '/appearance',
+  path: '/appearance',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
+const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminUpdatesRoute = AdminUpdatesRouteImport.update({
-  id: '/updates',
-  path: '/updates',
+const AdminAuthBackgroundRoute = AdminAuthBackgroundRouteImport.update({
+  id: '/auth-background',
+  path: '/auth-background',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminUpcomingRoute = AdminUpcomingRouteImport.update({
-  id: '/upcoming',
-  path: '/upcoming',
+const AdminAutomationRoute = AdminAutomationRouteImport.update({
+  id: '/automation',
+  path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminTrustSafetyRoute = AdminTrustSafetyRouteImport.update({
-  id: '/trust-safety',
-  path: '/trust-safety',
+const AdminBackupRoute = AdminBackupRouteImport.update({
+  id: '/backup',
+  path: '/backup',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSystemRoute = AdminSystemRouteImport.update({
-  id: '/system',
-  path: '/system',
+const AdminBoobubbleRoute = AdminBoobubbleRouteImport.update({
+  id: '/boobubble',
+  path: '/boobubble',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
-  id: '/subscriptions',
-  path: '/subscriptions',
+const AdminBotEventsRoute = AdminBotEventsRouteImport.update({
+  id: '/bot-events',
+  path: '/bot-events',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminStickersRoute = AdminStickersRouteImport.update({
-  id: '/stickers',
-  path: '/stickers',
+const AdminBotsRoute = AdminBotsRouteImport.update({
+  id: '/bots',
+  path: '/bots',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminStaffPermissionsRoute = AdminStaffPermissionsRouteImport.update({
-  id: '/staff-permissions',
-  path: '/staff-permissions',
+const AdminBrandingCheckRoute = AdminBrandingCheckRouteImport.update({
+  id: '/branding-check',
+  path: '/branding-check',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSocialLayoutRoute = AdminSocialLayoutRouteImport.update({
-  id: '/social-layout',
-  path: '/social-layout',
+const AdminCacheRoute = AdminCacheRouteImport.update({
+  id: '/cache',
+  path: '/cache',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSocialFeedRoute = AdminSocialFeedRouteImport.update({
-  id: '/social-feed',
-  path: '/social-feed',
+const AdminCallsRoute = AdminCallsRouteImport.update({
+  id: '/calls',
+  path: '/calls',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSignupAccessRoute = AdminSignupAccessRouteImport.update({
-  id: '/signup-access',
-  path: '/signup-access',
+const AdminChatThemesRoute = AdminChatThemesRouteImport.update({
+  id: '/chat-themes',
+  path: '/chat-themes',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSetupWizardRoute = AdminSetupWizardRouteImport.update({
-  id: '/setup-wizard',
-  path: '/setup-wizard',
+const AdminChatroomsRoute = AdminChatroomsRouteImport.update({
+  id: '/chatrooms',
+  path: '/chatrooms',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSeoRoute = AdminSeoRouteImport.update({
-  id: '/seo',
-  path: '/seo',
+const AdminCommunityReportsRoute = AdminCommunityReportsRouteImport.update({
+  id: '/community-reports',
+  path: '/community-reports',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSecurityRoute = AdminSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSearchRoute = AdminSearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSafetyRoute = AdminSafetyRouteImport.update({
-  id: '/safety',
-  path: '/safety',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRolesRoute = AdminRolesRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRetentionRoute = AdminRetentionRouteImport.update({
-  id: '/retention',
-  path: '/retention',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminReportsRoute = AdminReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminReferralsRoute = AdminReferralsRouteImport.update({
-  id: '/referrals',
-  path: '/referrals',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRealtimeRoute = AdminRealtimeRouteImport.update({
-  id: '/realtime',
-  path: '/realtime',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminProgressionRoute = AdminProgressionRouteImport.update({
-  id: '/progression',
-  path: '/progression',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPremiumSlugsRoute = AdminPremiumSlugsRouteImport.update({
-  id: '/premium-slugs',
-  path: '/premium-slugs',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPopupsRoute = AdminPopupsRouteImport.update({
-  id: '/popups',
-  path: '/popups',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPollWidgetRoute = AdminPollWidgetRouteImport.update({
-  id: '/poll-widget',
-  path: '/poll-widget',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
-  id: '/performance',
-  path: '/performance',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPagesRoute = AdminPagesRouteImport.update({
-  id: '/pages',
-  path: '/pages',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminModulesRoute = AdminModulesRouteImport.update({
-  id: '/modules',
-  path: '/modules',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminModerationRoute = AdminModerationRouteImport.update({
-  id: '/moderation',
-  path: '/moderation',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminMehfilRoute = AdminMehfilRouteImport.update({
-  id: '/mehfil',
-  path: '/mehfil',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminMediaApisRoute = AdminMediaApisRouteImport.update({
-  id: '/media-apis',
-  path: '/media-apis',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminMaintenanceRoute = AdminMaintenanceRouteImport.update({
-  id: '/maintenance',
-  path: '/maintenance',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLicensesRoute = AdminLicensesRouteImport.update({
-  id: '/licenses',
-  path: '/licenses',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLanguagesRoute = AdminLanguagesRouteImport.update({
-  id: '/languages',
-  path: '/languages',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLandingRoute = AdminLandingRouteImport.update({
-  id: '/landing',
-  path: '/landing',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminInternalLinkingRoute = AdminInternalLinkingRouteImport.update({
-  id: '/internal-linking',
-  path: '/internal-linking',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminHomepageRoute = AdminHomepageRouteImport.update({
-  id: '/homepage',
-  path: '/homepage',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminHeroPageRoute = AdminHeroPageRouteImport.update({
-  id: '/hero-page',
-  path: '/hero-page',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminGeneralRoute = AdminGeneralRouteImport.update({
-  id: '/general',
-  path: '/general',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminGamificationRoute = AdminGamificationRouteImport.update({
-  id: '/gamification',
-  path: '/gamification',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminGamesRoute = AdminGamesRouteImport.update({
-  id: '/games',
-  path: '/games',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFiltersRoute = AdminFiltersRouteImport.update({
-  id: '/filters',
-  path: '/filters',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFeedbotRoute = AdminFeedbotRouteImport.update({
-  id: '/feedbot',
-  path: '/feedbot',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
-  id: '/feedback',
-  path: '/feedback',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFeedThemesRoute = AdminFeedThemesRouteImport.update({
-  id: '/feed-themes',
-  path: '/feed-themes',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFeedModerationRoute = AdminFeedModerationRouteImport.update({
-  id: '/feed-moderation',
-  path: '/feed-moderation',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminExportRoute = AdminExportRouteImport.update({
-  id: '/export',
-  path: '/export',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEmailRoute = AdminEmailRouteImport.update({
-  id: '/email',
-  path: '/email',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEconomyRoute = AdminEconomyRouteImport.update({
-  id: '/economy',
-  path: '/economy',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminDmWallpapersRoute = AdminDmWallpapersRouteImport.update({
-  id: '/dm-wallpapers',
-  path: '/dm-wallpapers',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminDjRoute = AdminDjRouteImport.update({
-  id: '/dj',
-  path: '/dj',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminDiscoveryWidgetsRoute = AdminDiscoveryWidgetsRouteImport.update({
-  id: '/discovery-widgets',
-  path: '/discovery-widgets',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminDemoRoute = AdminDemoRouteImport.update({
-  id: '/demo',
-  path: '/demo',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminConfessionsRoute = AdminConfessionsRouteImport.update({
-  id: '/confessions',
-  path: '/confessions',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCompetitionsFeedRoute = AdminCompetitionsFeedRouteImport.update({
-  id: '/competitions-feed',
-  path: '/competitions-feed',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCompetitionsRoute = AdminCompetitionsRouteImport.update({
-  id: '/competitions',
-  path: '/competitions',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCompetitionCategoriesRoute =
-  AdminCompetitionCategoriesRouteImport.update({
-    id: '/competition-categories',
-    path: '/competition-categories',
+const AdminCommunityVerificationRoute =
+  AdminCommunityVerificationRouteImport.update({
+    id: '/community-verification',
+    path: '/community-verification',
     getParentRoute: () => AdminRoute,
   } as any)
 const AdminCompetitionAnalyticsRoute =
@@ -870,187 +514,527 @@ const AdminCompetitionAnalyticsRoute =
     path: '/competition-analytics',
     getParentRoute: () => AdminRoute,
   } as any)
-const AdminCommunityVerificationRoute =
-  AdminCommunityVerificationRouteImport.update({
-    id: '/community-verification',
-    path: '/community-verification',
+const AdminCompetitionCategoriesRoute =
+  AdminCompetitionCategoriesRouteImport.update({
+    id: '/competition-categories',
+    path: '/competition-categories',
     getParentRoute: () => AdminRoute,
   } as any)
-const AdminCommunityReportsRoute = AdminCommunityReportsRouteImport.update({
-  id: '/community-reports',
-  path: '/community-reports',
+const AdminCompetitionsRoute = AdminCompetitionsRouteImport.update({
+  id: '/competitions',
+  path: '/competitions',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminChatroomsRoute = AdminChatroomsRouteImport.update({
-  id: '/chatrooms',
-  path: '/chatrooms',
+const AdminCompetitionsFeedRoute = AdminCompetitionsFeedRouteImport.update({
+  id: '/competitions-feed',
+  path: '/competitions-feed',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminChatThemesRoute = AdminChatThemesRouteImport.update({
-  id: '/chat-themes',
-  path: '/chat-themes',
+const AdminConfessionsRoute = AdminConfessionsRouteImport.update({
+  id: '/confessions',
+  path: '/confessions',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCallsRoute = AdminCallsRouteImport.update({
-  id: '/calls',
-  path: '/calls',
+const AdminDemoRoute = AdminDemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCacheRoute = AdminCacheRouteImport.update({
-  id: '/cache',
-  path: '/cache',
+const AdminDiscoveryWidgetsRoute = AdminDiscoveryWidgetsRouteImport.update({
+  id: '/discovery-widgets',
+  path: '/discovery-widgets',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminBrandingCheckRoute = AdminBrandingCheckRouteImport.update({
-  id: '/branding-check',
-  path: '/branding-check',
+const AdminDjRoute = AdminDjRouteImport.update({
+  id: '/dj',
+  path: '/dj',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminBotsRoute = AdminBotsRouteImport.update({
-  id: '/bots',
-  path: '/bots',
+const AdminDmWallpapersRoute = AdminDmWallpapersRouteImport.update({
+  id: '/dm-wallpapers',
+  path: '/dm-wallpapers',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminBotEventsRoute = AdminBotEventsRouteImport.update({
-  id: '/bot-events',
-  path: '/bot-events',
+const AdminEconomyRoute = AdminEconomyRouteImport.update({
+  id: '/economy',
+  path: '/economy',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminBoobubbleRoute = AdminBoobubbleRouteImport.update({
-  id: '/boobubble',
-  path: '/boobubble',
+const AdminEmailRoute = AdminEmailRouteImport.update({
+  id: '/email',
+  path: '/email',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminBackupRoute = AdminBackupRouteImport.update({
-  id: '/backup',
-  path: '/backup',
+const AdminExportRoute = AdminExportRouteImport.update({
+  id: '/export',
+  path: '/export',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAutomationRoute = AdminAutomationRouteImport.update({
-  id: '/automation',
-  path: '/automation',
+const AdminFeedModerationRoute = AdminFeedModerationRouteImport.update({
+  id: '/feed-moderation',
+  path: '/feed-moderation',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAuthBackgroundRoute = AdminAuthBackgroundRouteImport.update({
-  id: '/auth-background',
-  path: '/auth-background',
+const AdminFeedThemesRoute = AdminFeedThemesRouteImport.update({
+  id: '/feed-themes',
+  path: '/feed-themes',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
-  id: '/audit-logs',
-  path: '/audit-logs',
+const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAppearanceRoute = AdminAppearanceRouteImport.update({
-  id: '/appearance',
-  path: '/appearance',
+const AdminFeedbotRoute = AdminFeedbotRouteImport.update({
+  id: '/feedbot',
+  path: '/feedbot',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminApiRoute = AdminApiRouteImport.update({
-  id: '/api',
-  path: '/api',
+const AdminFiltersRoute = AdminFiltersRouteImport.update({
+  id: '/filters',
+  path: '/filters',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
-  id: '/announcements',
-  path: '/announcements',
+const AdminGamesRoute = AdminGamesRouteImport.update({
+  id: '/games',
+  path: '/games',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
+const AdminGamificationRoute = AdminGamificationRouteImport.update({
+  id: '/gamification',
+  path: '/gamification',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAiChatbotsRoute = AdminAiChatbotsRouteImport.update({
-  id: '/ai-chatbots',
-  path: '/ai-chatbots',
+const AdminGeneralRoute = AdminGeneralRouteImport.update({
+  id: '/general',
+  path: '/general',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAdsScriptsRoute = AdminAdsScriptsRouteImport.update({
-  id: '/ads-scripts',
-  path: '/ads-scripts',
+const AdminHeroPageRoute = AdminHeroPageRouteImport.update({
+  id: '/hero-page',
+  path: '/hero-page',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAdPlacementsRoute = AdminAdPlacementsRouteImport.update({
-  id: '/ad-placements',
-  path: '/ad-placements',
+const AdminHomepageRoute = AdminHomepageRouteImport.update({
+  id: '/homepage',
+  path: '/homepage',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminActivityLogsRoute = AdminActivityLogsRouteImport.update({
-  id: '/activity-logs',
-  path: '/activity-logs',
+const AdminInternalLinkingRoute = AdminInternalLinkingRouteImport.update({
+  id: '/internal-linking',
+  path: '/internal-linking',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAbuseProtectionRoute = AdminAbuseProtectionRouteImport.update({
-  id: '/abuse-protection',
-  path: '/abuse-protection',
+const AdminLandingRoute = AdminLandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => AdminRoute,
 } as any)
-const CommunitySlugIndexRoute = CommunitySlugIndexRouteImport.update({
+const AdminLanguagesRoute = AdminLanguagesRouteImport.update({
+  id: '/languages',
+  path: '/languages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLicensesRoute = AdminLicensesRouteImport.update({
+  id: '/licenses',
+  path: '/licenses',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMaintenanceRoute = AdminMaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMediaApisRoute = AdminMediaApisRouteImport.update({
+  id: '/media-apis',
+  path: '/media-apis',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMehfilRoute = AdminMehfilRouteImport.update({
+  id: '/mehfil',
+  path: '/mehfil',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminModerationRoute = AdminModerationRouteImport.update({
+  id: '/moderation',
+  path: '/moderation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminModulesRoute = AdminModulesRouteImport.update({
+  id: '/modules',
+  path: '/modules',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPagesRoute = AdminPagesRouteImport.update({
+  id: '/pages',
+  path: '/pages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPollWidgetRoute = AdminPollWidgetRouteImport.update({
+  id: '/poll-widget',
+  path: '/poll-widget',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPopupsRoute = AdminPopupsRouteImport.update({
+  id: '/popups',
+  path: '/popups',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPremiumSlugsRoute = AdminPremiumSlugsRouteImport.update({
+  id: '/premium-slugs',
+  path: '/premium-slugs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProgressionRoute = AdminProgressionRouteImport.update({
+  id: '/progression',
+  path: '/progression',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRealtimeRoute = AdminRealtimeRouteImport.update({
+  id: '/realtime',
+  path: '/realtime',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReferralsRoute = AdminReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRetentionRoute = AdminRetentionRouteImport.update({
+  id: '/retention',
+  path: '/retention',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRolesRoute = AdminRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSafetyRoute = AdminSafetyRouteImport.update({
+  id: '/safety',
+  path: '/safety',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSearchRoute = AdminSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSecurityRoute = AdminSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSeoRoute = AdminSeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSetupWizardRoute = AdminSetupWizardRouteImport.update({
+  id: '/setup-wizard',
+  path: '/setup-wizard',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSignupAccessRoute = AdminSignupAccessRouteImport.update({
+  id: '/signup-access',
+  path: '/signup-access',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSocialFeedRoute = AdminSocialFeedRouteImport.update({
+  id: '/social-feed',
+  path: '/social-feed',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSocialLayoutRoute = AdminSocialLayoutRouteImport.update({
+  id: '/social-layout',
+  path: '/social-layout',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStaffPermissionsRoute = AdminStaffPermissionsRouteImport.update({
+  id: '/staff-permissions',
+  path: '/staff-permissions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStickersRoute = AdminStickersRouteImport.update({
+  id: '/stickers',
+  path: '/stickers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSystemRoute = AdminSystemRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTrustSafetyRoute = AdminTrustSafetyRouteImport.update({
+  id: '/trust-safety',
+  path: '/trust-safety',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUpcomingRoute = AdminUpcomingRouteImport.update({
+  id: '/upcoming',
+  path: '/upcoming',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUpdatesRoute = AdminUpdatesRouteImport.update({
+  id: '/updates',
+  path: '/updates',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminVoiceNotesRoute = AdminVoiceNotesRouteImport.update({
+  id: '/voice-notes',
+  path: '/voice-notes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWalletRoute = AdminWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWalletAnalyticsRoute = AdminWalletAnalyticsRouteImport.update({
+  id: '/wallet-analytics',
+  path: '/wallet-analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWalletRulesRoute = AdminWalletRulesRouteImport.update({
+  id: '/wallet-rules',
+  path: '/wallet-rules',
+  getParentRoute: () => AdminRoute,
+} as any)
+const BroadcasterIndexRoute = BroadcasterIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => CommunitySlugRoute,
+  getParentRoute: () => BroadcasterRoute,
 } as any)
-const PoetryCategorySlugRoute = PoetryCategorySlugRouteImport.update({
-  id: '/poetry/category/$slug',
-  path: '/poetry/category/$slug',
-  getParentRoute: () => rootRouteImport,
+const BroadcasterAnalyticsRoute = BroadcasterAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => BroadcasterRoute,
 } as any)
-const MehfilCategorySlugRoute = MehfilCategorySlugRouteImport.update({
-  id: '/mehfil/category/$slug',
-  path: '/mehfil/category/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompetitionsSlugRecapRoute = CompetitionsSlugRecapRouteImport.update({
-  id: '/recap',
-  path: '/recap',
-  getParentRoute: () => CompetitionsSlugRoute,
-} as any)
-const CompetitionsSlugMemesRoute = CompetitionsSlugMemesRouteImport.update({
-  id: '/memes',
-  path: '/memes',
-  getParentRoute: () => CompetitionsSlugRoute,
-} as any)
-const CommunitySlugMembersRoute = CommunitySlugMembersRouteImport.update({
-  id: '/members',
-  path: '/members',
-  getParentRoute: () => CommunitySlugRoute,
-} as any)
-const CommunitySlugFeedRoute = CommunitySlugFeedRouteImport.update({
-  id: '/feed',
-  path: '/feed',
-  getParentRoute: () => CommunitySlugRoute,
-} as any)
-const CommunitySlugDashboardRoute = CommunitySlugDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => CommunitySlugRoute,
-} as any)
-const CommunitySlugCompetitionsRoute =
-  CommunitySlugCompetitionsRouteImport.update({
-    id: '/competitions',
-    path: '/competitions',
-    getParentRoute: () => CommunitySlugRoute,
+const BroadcasterAnnouncementsRoute =
+  BroadcasterAnnouncementsRouteImport.update({
+    id: '/announcements',
+    path: '/announcements',
+    getParentRoute: () => BroadcasterRoute,
   } as any)
-const ApiPublicLandingRoute = ApiPublicLandingRouteImport.update({
-  id: '/api/public/landing',
-  path: '/api/public/landing',
+const BroadcasterMicRoute = BroadcasterMicRouteImport.update({
+  id: '/mic',
+  path: '/mic',
+  getParentRoute: () => BroadcasterRoute,
+} as any)
+const BroadcasterQueueRoute = BroadcasterQueueRouteImport.update({
+  id: '/queue',
+  path: '/queue',
+  getParentRoute: () => BroadcasterRoute,
+} as any)
+const BroadcasterScheduleRoute = BroadcasterScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => BroadcasterRoute,
+} as any)
+const BroadcasterWidgetsRoute = BroadcasterWidgetsRouteImport.update({
+  id: '/widgets',
+  path: '/widgets',
+  getParentRoute: () => BroadcasterRoute,
+} as any)
+const CommunitySlugRoute = CommunitySlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => CommunityRoute,
+} as any)
+const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompetitionsRoute,
+} as any)
+const CompetitionsSlugRoute = CompetitionsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => CompetitionsRoute,
+} as any)
+const CompetitionsHallOfFameRoute = CompetitionsHallOfFameRouteImport.update({
+  id: '/hall-of-fame',
+  path: '/hall-of-fame',
+  getParentRoute: () => CompetitionsRoute,
+} as any)
+const CompetitionsLeaderboardRoute = CompetitionsLeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => CompetitionsRoute,
+} as any)
+const FeedIndexRoute = FeedIndexRouteImport.update({
+  id: '/feed/',
+  path: '/feed/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicFeedbackShowcaseRoute =
-  ApiPublicFeedbackShowcaseRouteImport.update({
-    id: '/api/public/feedback-showcase',
-    path: '/api/public/feedback-showcase',
-    getParentRoute: () => rootRouteImport,
+const FeedSlugRoute = FeedSlugRouteImport.update({
+  id: '/feed/$slug',
+  path: '/feed/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackIndexRoute = FeedbackIndexRouteImport.update({
+  id: '/feedback/',
+  path: '/feedback/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackIdRoute = FeedbackIdRouteImport.update({
+  id: '/feedback/$id',
+  path: '/feedback/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesLudoRoute = GamesLudoRouteImport.update({
+  id: '/ludo',
+  path: '/ludo',
+  getParentRoute: () => GamesRoute,
+} as any)
+const InviteCodeRoute = InviteCodeRouteImport.update({
+  id: '/invite/$code',
+  path: '/invite/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilIndexRoute = MehfilIndexRouteImport.update({
+  id: '/mehfil/',
+  path: '/mehfil/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilSlugRoute = MehfilSlugRouteImport.update({
+  id: '/mehfil/$slug',
+  path: '/mehfil/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilChallengesRoute = MehfilChallengesRouteImport.update({
+  id: '/mehfil/challenges',
+  path: '/mehfil/challenges',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilComposeRoute = MehfilComposeRouteImport.update({
+  id: '/mehfil/compose',
+  path: '/mehfil/compose',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilHallOfFameRoute = MehfilHallOfFameRouteImport.update({
+  id: '/mehfil/hall-of-fame',
+  path: '/mehfil/hall-of-fame',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MehfilLeaderboardRoute = MehfilLeaderboardRouteImport.update({
+  id: '/mehfil/leaderboard',
+  path: '/mehfil/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PSlugRoute = PSlugRouteImport.update({
+  id: '/p/$slug',
+  path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagesEditorIdRoute = PagesEditorIdRouteImport.update({
+  id: '/pages-editor/$id',
+  path: '/pages-editor/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoetryIndexRoute = PoetryIndexRouteImport.update({
+  id: '/poetry/',
+  path: '/poetry/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoetrySlugRoute = PoetrySlugRouteImport.update({
+  id: '/poetry/$slug',
+  path: '/poetry/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoetryChallengesRoute = PoetryChallengesRouteImport.update({
+  id: '/poetry/challenges',
+  path: '/poetry/challenges',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoetryComposeRoute = PoetryComposeRouteImport.update({
+  id: '/poetry/compose',
+  path: '/poetry/compose',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoetryHallOfFameRoute = PoetryHallOfFameRouteImport.update({
+  id: '/poetry/hall-of-fame',
+  path: '/poetry/hall-of-fame',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoetryLeaderboardRoute = PoetryLeaderboardRouteImport.update({
+  id: '/poetry/leaderboard',
+  path: '/poetry/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UUsernameRoute = UUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSettingsPrivacyRoute =
+  AuthenticatedSettingsPrivacyRouteImport.update({
+    id: '/settings/privacy',
+    path: '/settings/privacy',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicDemoCleanupRoute = ApiPublicDemoCleanupRouteImport.update({
-  id: '/api/public/demo-cleanup',
-  path: '/api/public/demo-cleanup',
+const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
+  id: '/$key',
+  path: '/$key',
+  getParentRoute: () => AdminUpcomingRoute,
+} as any)
+const ApiGamesAchievementRoute = ApiGamesAchievementRouteImport.update({
+  id: '/api/games/achievement',
+  path: '/api/games/achievement',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicCommunityBgRoute = ApiPublicCommunityBgRouteImport.update({
-  id: '/api/public/community-bg',
-  path: '/api/public/community-bg',
+const ApiGamesCoinsRoute = ApiGamesCoinsRouteImport.update({
+  id: '/api/games/coins',
+  path: '/api/games/coins',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesEventRoute = ApiGamesEventRouteImport.update({
+  id: '/api/games/event',
+  path: '/api/games/event',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesFinishRoute = ApiGamesFinishRouteImport.update({
+  id: '/api/games/finish',
+  path: '/api/games/finish',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesSaveRoute = ApiGamesSaveRouteImport.update({
+  id: '/api/games/save',
+  path: '/api/games/save',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesScoreRoute = ApiGamesScoreRouteImport.update({
+  id: '/api/games/score',
+  path: '/api/games/score',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesStartRoute = ApiGamesStartRouteImport.update({
+  id: '/api/games/start',
+  path: '/api/games/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGamesXpRoute = ApiGamesXpRouteImport.update({
+  id: '/api/games/xp',
+  path: '/api/games/xp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicBackupRetentionRoute =
@@ -1059,111 +1043,77 @@ const ApiPublicBackupRetentionRoute =
     path: '/api/public/backup-retention',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiGamesXpRoute = ApiGamesXpRouteImport.update({
-  id: '/api/games/xp',
-  path: '/api/games/xp',
+const ApiPublicCommunityBgRoute = ApiPublicCommunityBgRouteImport.update({
+  id: '/api/public/community-bg',
+  path: '/api/public/community-bg',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGamesStartRoute = ApiGamesStartRouteImport.update({
-  id: '/api/games/start',
-  path: '/api/games/start',
+const ApiPublicDemoCleanupRoute = ApiPublicDemoCleanupRouteImport.update({
+  id: '/api/public/demo-cleanup',
+  path: '/api/public/demo-cleanup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGamesScoreRoute = ApiGamesScoreRouteImport.update({
-  id: '/api/games/score',
-  path: '/api/games/score',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGamesSaveRoute = ApiGamesSaveRouteImport.update({
-  id: '/api/games/save',
-  path: '/api/games/save',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGamesFinishRoute = ApiGamesFinishRouteImport.update({
-  id: '/api/games/finish',
-  path: '/api/games/finish',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGamesEventRoute = ApiGamesEventRouteImport.update({
-  id: '/api/games/event',
-  path: '/api/games/event',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGamesCoinsRoute = ApiGamesCoinsRouteImport.update({
-  id: '/api/games/coins',
-  path: '/api/games/coins',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGamesAchievementRoute = ApiGamesAchievementRouteImport.update({
-  id: '/api/games/achievement',
-  path: '/api/games/achievement',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
-  id: '/$key',
-  path: '/$key',
-  getParentRoute: () => AdminUpcomingRoute,
-} as any)
-const AuthenticatedSettingsPrivacyRoute =
-  AuthenticatedSettingsPrivacyRouteImport.update({
-    id: '/settings/privacy',
-    path: '/settings/privacy',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const CommunitySlugChatroomsIndexRoute =
-  CommunitySlugChatroomsIndexRouteImport.update({
-    id: '/chatrooms/',
-    path: '/chatrooms/',
-    getParentRoute: () => CommunitySlugRoute,
-  } as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
+const ApiPublicFeedbackShowcaseRoute =
+  ApiPublicFeedbackShowcaseRouteImport.update({
+    id: '/api/public/feedback-showcase',
+    path: '/api/public/feedback-showcase',
     getParentRoute: () => rootRouteImport,
   } as any)
-const CompetitionsSlugFunTypeRoute = CompetitionsSlugFunTypeRouteImport.update({
-  id: '/fun/$type',
-  path: '/fun/$type',
+const ApiPublicLandingRoute = ApiPublicLandingRouteImport.update({
+  id: '/api/public/landing',
+  path: '/api/public/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunitySlugIndexRoute = CommunitySlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
+const CommunitySlugCompetitionsRoute =
+  CommunitySlugCompetitionsRouteImport.update({
+    id: '/competitions',
+    path: '/competitions',
+    getParentRoute: () => CommunitySlugRoute,
+  } as any)
+const CommunitySlugDashboardRoute = CommunitySlugDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
+const CommunitySlugFeedRoute = CommunitySlugFeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
+const CommunitySlugMembersRoute = CommunitySlugMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => CommunitySlugRoute,
+} as any)
+const CompetitionsSlugMemesRoute = CompetitionsSlugMemesRouteImport.update({
+  id: '/memes',
+  path: '/memes',
   getParentRoute: () => CompetitionsSlugRoute,
 } as any)
-const CommunitySlugChatroomsRoomSlugRoute =
-  CommunitySlugChatroomsRoomSlugRouteImport.update({
-    id: '/chatrooms/$roomSlug',
-    path: '/chatrooms/$roomSlug',
-    getParentRoute: () => CommunitySlugRoute,
-  } as any)
-const ApiPublicLicenseVerifyRoute = ApiPublicLicenseVerifyRouteImport.update({
-  id: '/api/public/license/verify',
-  path: '/api/public/license/verify',
+const CompetitionsSlugRecapRoute = CompetitionsSlugRecapRouteImport.update({
+  id: '/recap',
+  path: '/recap',
+  getParentRoute: () => CompetitionsSlugRoute,
+} as any)
+const MehfilCategorySlugRoute = MehfilCategorySlugRouteImport.update({
+  id: '/mehfil/category/$slug',
+  path: '/mehfil/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicLicenseResetRoute = ApiPublicLicenseResetRouteImport.update({
-  id: '/api/public/license/reset',
-  path: '/api/public/license/reset',
+const PoetryCategorySlugRoute = PoetryCategorySlugRouteImport.update({
+  id: '/poetry/category/$slug',
+  path: '/poetry/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicLicenseDeactivateRoute =
-  ApiPublicLicenseDeactivateRouteImport.update({
-    id: '/api/public/license/deactivate',
-    path: '/api/public/license/deactivate',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicLicenseCheckRoute = ApiPublicLicenseCheckRouteImport.update({
-  id: '/api/public/license/check',
-  path: '/api/public/license/check',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicLicenseActivateRoute =
-  ApiPublicLicenseActivateRouteImport.update({
-    id: '/api/public/license/activate',
-    path: '/api/public/license/activate',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksLicenseRevalidateRoute =
-  ApiPublicHooksLicenseRevalidateRouteImport.update({
-    id: '/api/public/hooks/license-revalidate',
-    path: '/api/public/hooks/license-revalidate',
+const ApiPublicHooksFeedbotDispatchRoute =
+  ApiPublicHooksFeedbotDispatchRouteImport.update({
+    id: '/api/public/hooks/feedbot-dispatch',
+    path: '/api/public/hooks/feedbot-dispatch',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksFeedbotSummaryRoute =
@@ -1172,10 +1122,60 @@ const ApiPublicHooksFeedbotSummaryRoute =
     path: '/api/public/hooks/feedbot-summary',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksFeedbotDispatchRoute =
-  ApiPublicHooksFeedbotDispatchRouteImport.update({
-    id: '/api/public/hooks/feedbot-dispatch',
-    path: '/api/public/hooks/feedbot-dispatch',
+const ApiPublicHooksLicenseRevalidateRoute =
+  ApiPublicHooksLicenseRevalidateRouteImport.update({
+    id: '/api/public/hooks/license-revalidate',
+    path: '/api/public/hooks/license-revalidate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicLicenseActivateRoute =
+  ApiPublicLicenseActivateRouteImport.update({
+    id: '/api/public/license/activate',
+    path: '/api/public/license/activate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicLicenseCheckRoute = ApiPublicLicenseCheckRouteImport.update({
+  id: '/api/public/license/check',
+  path: '/api/public/license/check',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLicenseDeactivateRoute =
+  ApiPublicLicenseDeactivateRouteImport.update({
+    id: '/api/public/license/deactivate',
+    path: '/api/public/license/deactivate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicLicenseResetRoute = ApiPublicLicenseResetRouteImport.update({
+  id: '/api/public/license/reset',
+  path: '/api/public/license/reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLicenseVerifyRoute = ApiPublicLicenseVerifyRouteImport.update({
+  id: '/api/public/license/verify',
+  path: '/api/public/license/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunitySlugChatroomsIndexRoute =
+  CommunitySlugChatroomsIndexRouteImport.update({
+    id: '/chatrooms/',
+    path: '/chatrooms/',
+    getParentRoute: () => CommunitySlugRoute,
+  } as any)
+const CommunitySlugChatroomsRoomSlugRoute =
+  CommunitySlugChatroomsRoomSlugRouteImport.update({
+    id: '/chatrooms/$roomSlug',
+    path: '/chatrooms/$roomSlug',
+    getParentRoute: () => CommunitySlugRoute,
+  } as any)
+const CompetitionsSlugFunTypeRoute = CompetitionsSlugFunTypeRouteImport.update({
+  id: '/fun/$type',
+  path: '/fun/$type',
+  getParentRoute: () => CompetitionsSlugRoute,
+} as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicOgCompetitionSlugRoute =
@@ -2434,242 +2434,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/welcome': {
-      id: '/welcome'
-      path: '/welcome'
-      fullPath: '/welcome'
-      preLoaderRoute: typeof WelcomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/wallet': {
-      id: '/wallet'
-      path: '/wallet'
-      fullPath: '/wallet'
-      preLoaderRoute: typeof WalletRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/trust': {
-      id: '/trust'
-      path: '/trust'
-      fullPath: '/trust'
-      preLoaderRoute: typeof TrustRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/setup-wizard': {
-      id: '/setup-wizard'
-      path: '/setup-wizard'
-      fullPath: '/setup-wizard'
-      preLoaderRoute: typeof SetupWizardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reels': {
-      id: '/reels'
-      path: '/reels'
-      fullPath: '/reels'
-      preLoaderRoute: typeof ReelsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/radio': {
-      id: '/radio'
-      path: '/radio'
-      fullPath: '/radio'
-      preLoaderRoute: typeof RadioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pages': {
-      id: '/pages'
-      path: '/pages'
-      fullPath: '/pages'
-      preLoaderRoute: typeof PagesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/manifest.webmanifest': {
-      id: '/manifest.webmanifest'
-      path: '/manifest.webmanifest'
-      fullPath: '/manifest.webmanifest'
-      preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/leaderboard': {
-      id: '/leaderboard'
-      path: '/leaderboard'
-      fullPath: '/leaderboard'
-      preLoaderRoute: typeof LeaderboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/journey': {
-      id: '/journey'
-      path: '/journey'
-      fullPath: '/journey'
-      preLoaderRoute: typeof JourneyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/installer': {
-      id: '/installer'
-      path: '/installer'
-      fullPath: '/installer'
-      preLoaderRoute: typeof InstallerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/heropage': {
-      id: '/heropage'
-      path: '/heropage'
-      fullPath: '/heropage'
-      preLoaderRoute: typeof HeropageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hall-of-fame': {
-      id: '/hall-of-fame'
-      path: '/hall-of-fame'
-      fullPath: '/hall-of-fame'
-      preLoaderRoute: typeof HallOfFameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/groups': {
-      id: '/groups'
-      path: '/groups'
-      fullPath: '/groups'
-      preLoaderRoute: typeof GroupsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/gamification': {
-      id: '/gamification'
-      path: '/gamification'
-      fullPath: '/gamification'
-      preLoaderRoute: typeof GamificationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/games': {
-      id: '/games'
-      path: '/games'
-      fullPath: '/games'
-      preLoaderRoute: typeof GamesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/find-friends': {
-      id: '/find-friends'
-      path: '/find-friends'
-      fullPath: '/find-friends'
-      preLoaderRoute: typeof FindFriendsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/deploy': {
-      id: '/deploy'
-      path: '/deploy'
-      fullPath: '/deploy'
-      preLoaderRoute: typeof DeployRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/confessions': {
-      id: '/confessions'
-      path: '/confessions'
-      fullPath: '/confessions'
-      preLoaderRoute: typeof ConfessionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/competitions': {
-      id: '/competitions'
-      path: '/competitions'
-      fullPath: '/competitions'
-      preLoaderRoute: typeof CompetitionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/community': {
-      id: '/community'
-      path: '/community'
-      fullPath: '/community'
-      preLoaderRoute: typeof CommunityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/communities': {
-      id: '/communities'
-      path: '/communities'
-      fullPath: '/communities'
-      preLoaderRoute: typeof CommunitiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chatrooms': {
-      id: '/chatrooms'
-      path: '/chatrooms'
-      fullPath: '/chatrooms'
-      preLoaderRoute: typeof ChatroomsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chatroom': {
-      id: '/chatroom'
-      path: '/chatroom'
-      fullPath: '/chatroom'
-      preLoaderRoute: typeof ChatroomRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chat': {
-      id: '/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof ChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/broadcaster': {
-      id: '/broadcaster'
-      path: '/broadcaster'
-      fullPath: '/broadcaster'
-      preLoaderRoute: typeof BroadcasterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/battle-hub': {
-      id: '/battle-hub'
-      path: '/battle-hub'
-      fullPath: '/battle-hub'
-      preLoaderRoute: typeof BattleHubRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/banned': {
-      id: '/banned'
-      path: '/banned'
-      fullPath: '/banned'
-      preLoaderRoute: typeof BannedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/achievements': {
-      id: '/achievements'
-      path: '/achievements'
-      fullPath: '/achievements'
-      preLoaderRoute: typeof AchievementsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/account': {
-      id: '/account'
-      path: '/account'
-      fullPath: '/account'
-      preLoaderRoute: typeof AccountRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$slug': {
@@ -2686,837 +2455,249 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/poetry/': {
-      id: '/poetry/'
-      path: '/poetry'
-      fullPath: '/poetry/'
-      preLoaderRoute: typeof PoetryIndexRouteImport
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mehfil/': {
-      id: '/mehfil/'
-      path: '/mehfil'
-      fullPath: '/mehfil/'
-      preLoaderRoute: typeof MehfilIndexRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/feedback/': {
-      id: '/feedback/'
-      path: '/feedback'
-      fullPath: '/feedback/'
-      preLoaderRoute: typeof FeedbackIndexRouteImport
+    '/banned': {
+      id: '/banned'
+      path: '/banned'
+      fullPath: '/banned'
+      preLoaderRoute: typeof BannedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/feed/': {
-      id: '/feed/'
-      path: '/feed'
-      fullPath: '/feed/'
-      preLoaderRoute: typeof FeedIndexRouteImport
+    '/battle-hub': {
+      id: '/battle-hub'
+      path: '/battle-hub'
+      fullPath: '/battle-hub'
+      preLoaderRoute: typeof BattleHubRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/competitions/': {
-      id: '/competitions/'
-      path: '/'
-      fullPath: '/competitions/'
-      preLoaderRoute: typeof CompetitionsIndexRouteImport
-      parentRoute: typeof CompetitionsRoute
+    '/broadcaster': {
+      id: '/broadcaster'
+      path: '/broadcaster'
+      fullPath: '/broadcaster'
+      preLoaderRoute: typeof BroadcasterRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/broadcaster/': {
-      id: '/broadcaster/'
-      path: '/'
-      fullPath: '/broadcaster/'
-      preLoaderRoute: typeof BroadcasterIndexRouteImport
-      parentRoute: typeof BroadcasterRoute
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chatroom': {
+      id: '/chatroom'
+      path: '/chatroom'
+      fullPath: '/chatroom'
+      preLoaderRoute: typeof ChatroomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chatrooms': {
+      id: '/chatrooms'
+      path: '/chatrooms'
+      fullPath: '/chatrooms'
+      preLoaderRoute: typeof ChatroomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/communities': {
+      id: '/communities'
+      path: '/communities'
+      fullPath: '/communities'
+      preLoaderRoute: typeof CommunitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/competitions': {
+      id: '/competitions'
+      path: '/competitions'
+      fullPath: '/competitions'
+      preLoaderRoute: typeof CompetitionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confessions': {
+      id: '/confessions'
+      path: '/confessions'
+      fullPath: '/confessions'
+      preLoaderRoute: typeof ConfessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deploy': {
+      id: '/deploy'
+      path: '/deploy'
+      fullPath: '/deploy'
+      preLoaderRoute: typeof DeployRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/find-friends': {
+      id: '/find-friends'
+      path: '/find-friends'
+      fullPath: '/find-friends'
+      preLoaderRoute: typeof FindFriendsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gamification': {
+      id: '/gamification'
+      path: '/gamification'
+      fullPath: '/gamification'
+      preLoaderRoute: typeof GamificationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups': {
+      id: '/groups'
+      path: '/groups'
+      fullPath: '/groups'
+      preLoaderRoute: typeof GroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hall-of-fame': {
+      id: '/hall-of-fame'
+      path: '/hall-of-fame'
+      fullPath: '/hall-of-fame'
+      preLoaderRoute: typeof HallOfFameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/heropage': {
+      id: '/heropage'
+      path: '/heropage'
+      fullPath: '/heropage'
+      preLoaderRoute: typeof HeropageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/installer': {
+      id: '/installer'
+      path: '/installer'
+      fullPath: '/installer'
+      preLoaderRoute: typeof InstallerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journey': {
+      id: '/journey'
+      path: '/journey'
+      fullPath: '/journey'
+      preLoaderRoute: typeof JourneyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manifest.webmanifest': {
+      id: '/manifest.webmanifest'
+      path: '/manifest.webmanifest'
+      fullPath: '/manifest.webmanifest'
+      preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pages': {
+      id: '/pages'
+      path: '/pages'
+      fullPath: '/pages'
+      preLoaderRoute: typeof PagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/radio': {
+      id: '/radio'
+      path: '/radio'
+      fullPath: '/radio'
+      preLoaderRoute: typeof RadioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reels': {
+      id: '/reels'
+      path: '/reels'
+      fullPath: '/reels'
+      preLoaderRoute: typeof ReelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup-wizard': {
+      id: '/setup-wizard'
+      path: '/setup-wizard'
+      fullPath: '/setup-wizard'
+      preLoaderRoute: typeof SetupWizardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trust': {
+      id: '/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof TrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/u/$username': {
-      id: '/u/$username'
-      path: '/u/$username'
-      fullPath: '/u/$username'
-      preLoaderRoute: typeof UUsernameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/poetry/leaderboard': {
-      id: '/poetry/leaderboard'
-      path: '/poetry/leaderboard'
-      fullPath: '/poetry/leaderboard'
-      preLoaderRoute: typeof PoetryLeaderboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/poetry/hall-of-fame': {
-      id: '/poetry/hall-of-fame'
-      path: '/poetry/hall-of-fame'
-      fullPath: '/poetry/hall-of-fame'
-      preLoaderRoute: typeof PoetryHallOfFameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/poetry/compose': {
-      id: '/poetry/compose'
-      path: '/poetry/compose'
-      fullPath: '/poetry/compose'
-      preLoaderRoute: typeof PoetryComposeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/poetry/challenges': {
-      id: '/poetry/challenges'
-      path: '/poetry/challenges'
-      fullPath: '/poetry/challenges'
-      preLoaderRoute: typeof PoetryChallengesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/poetry/$slug': {
-      id: '/poetry/$slug'
-      path: '/poetry/$slug'
-      fullPath: '/poetry/$slug'
-      preLoaderRoute: typeof PoetrySlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pages-editor/$id': {
-      id: '/pages-editor/$id'
-      path: '/pages-editor/$id'
-      fullPath: '/pages-editor/$id'
-      preLoaderRoute: typeof PagesEditorIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/p/$slug': {
-      id: '/p/$slug'
-      path: '/p/$slug'
-      fullPath: '/p/$slug'
-      preLoaderRoute: typeof PSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mehfil/leaderboard': {
-      id: '/mehfil/leaderboard'
-      path: '/mehfil/leaderboard'
-      fullPath: '/mehfil/leaderboard'
-      preLoaderRoute: typeof MehfilLeaderboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mehfil/hall-of-fame': {
-      id: '/mehfil/hall-of-fame'
-      path: '/mehfil/hall-of-fame'
-      fullPath: '/mehfil/hall-of-fame'
-      preLoaderRoute: typeof MehfilHallOfFameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mehfil/compose': {
-      id: '/mehfil/compose'
-      path: '/mehfil/compose'
-      fullPath: '/mehfil/compose'
-      preLoaderRoute: typeof MehfilComposeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mehfil/challenges': {
-      id: '/mehfil/challenges'
-      path: '/mehfil/challenges'
-      fullPath: '/mehfil/challenges'
-      preLoaderRoute: typeof MehfilChallengesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mehfil/$slug': {
-      id: '/mehfil/$slug'
-      path: '/mehfil/$slug'
-      fullPath: '/mehfil/$slug'
-      preLoaderRoute: typeof MehfilSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/invite/$code': {
-      id: '/invite/$code'
-      path: '/invite/$code'
-      fullPath: '/invite/$code'
-      preLoaderRoute: typeof InviteCodeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/games/ludo': {
-      id: '/games/ludo'
-      path: '/ludo'
-      fullPath: '/games/ludo'
-      preLoaderRoute: typeof GamesLudoRouteImport
-      parentRoute: typeof GamesRoute
-    }
-    '/feedback/$id': {
-      id: '/feedback/$id'
-      path: '/feedback/$id'
-      fullPath: '/feedback/$id'
-      preLoaderRoute: typeof FeedbackIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/feed/$slug': {
-      id: '/feed/$slug'
-      path: '/feed/$slug'
-      fullPath: '/feed/$slug'
-      preLoaderRoute: typeof FeedSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/competitions/leaderboard': {
-      id: '/competitions/leaderboard'
-      path: '/leaderboard'
-      fullPath: '/competitions/leaderboard'
-      preLoaderRoute: typeof CompetitionsLeaderboardRouteImport
-      parentRoute: typeof CompetitionsRoute
-    }
-    '/competitions/hall-of-fame': {
-      id: '/competitions/hall-of-fame'
-      path: '/hall-of-fame'
-      fullPath: '/competitions/hall-of-fame'
-      preLoaderRoute: typeof CompetitionsHallOfFameRouteImport
-      parentRoute: typeof CompetitionsRoute
-    }
-    '/competitions/$slug': {
-      id: '/competitions/$slug'
-      path: '/$slug'
-      fullPath: '/competitions/$slug'
-      preLoaderRoute: typeof CompetitionsSlugRouteImport
-      parentRoute: typeof CompetitionsRoute
-    }
-    '/community/$slug': {
-      id: '/community/$slug'
-      path: '/$slug'
-      fullPath: '/community/$slug'
-      preLoaderRoute: typeof CommunitySlugRouteImport
-      parentRoute: typeof CommunityRoute
-    }
-    '/broadcaster/widgets': {
-      id: '/broadcaster/widgets'
-      path: '/widgets'
-      fullPath: '/broadcaster/widgets'
-      preLoaderRoute: typeof BroadcasterWidgetsRouteImport
-      parentRoute: typeof BroadcasterRoute
-    }
-    '/broadcaster/schedule': {
-      id: '/broadcaster/schedule'
-      path: '/schedule'
-      fullPath: '/broadcaster/schedule'
-      preLoaderRoute: typeof BroadcasterScheduleRouteImport
-      parentRoute: typeof BroadcasterRoute
-    }
-    '/broadcaster/queue': {
-      id: '/broadcaster/queue'
-      path: '/queue'
-      fullPath: '/broadcaster/queue'
-      preLoaderRoute: typeof BroadcasterQueueRouteImport
-      parentRoute: typeof BroadcasterRoute
-    }
-    '/broadcaster/mic': {
-      id: '/broadcaster/mic'
-      path: '/mic'
-      fullPath: '/broadcaster/mic'
-      preLoaderRoute: typeof BroadcasterMicRouteImport
-      parentRoute: typeof BroadcasterRoute
-    }
-    '/broadcaster/announcements': {
-      id: '/broadcaster/announcements'
-      path: '/announcements'
-      fullPath: '/broadcaster/announcements'
-      preLoaderRoute: typeof BroadcasterAnnouncementsRouteImport
-      parentRoute: typeof BroadcasterRoute
-    }
-    '/broadcaster/analytics': {
-      id: '/broadcaster/analytics'
-      path: '/analytics'
-      fullPath: '/broadcaster/analytics'
-      preLoaderRoute: typeof BroadcasterAnalyticsRouteImport
-      parentRoute: typeof BroadcasterRoute
-    }
-    '/admin/wallet-rules': {
-      id: '/admin/wallet-rules'
-      path: '/wallet-rules'
-      fullPath: '/admin/wallet-rules'
-      preLoaderRoute: typeof AdminWalletRulesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/wallet-analytics': {
-      id: '/admin/wallet-analytics'
-      path: '/wallet-analytics'
-      fullPath: '/admin/wallet-analytics'
-      preLoaderRoute: typeof AdminWalletAnalyticsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/wallet': {
-      id: '/admin/wallet'
-      path: '/wallet'
-      fullPath: '/admin/wallet'
-      preLoaderRoute: typeof AdminWalletRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/voice-notes': {
-      id: '/admin/voice-notes'
-      path: '/voice-notes'
-      fullPath: '/admin/voice-notes'
-      preLoaderRoute: typeof AdminVoiceNotesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/updates': {
-      id: '/admin/updates'
-      path: '/updates'
-      fullPath: '/admin/updates'
-      preLoaderRoute: typeof AdminUpdatesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/upcoming': {
-      id: '/admin/upcoming'
-      path: '/upcoming'
-      fullPath: '/admin/upcoming'
-      preLoaderRoute: typeof AdminUpcomingRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/trust-safety': {
-      id: '/admin/trust-safety'
-      path: '/trust-safety'
-      fullPath: '/admin/trust-safety'
-      preLoaderRoute: typeof AdminTrustSafetyRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/system': {
-      id: '/admin/system'
-      path: '/system'
-      fullPath: '/admin/system'
-      preLoaderRoute: typeof AdminSystemRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/subscriptions': {
-      id: '/admin/subscriptions'
-      path: '/subscriptions'
-      fullPath: '/admin/subscriptions'
-      preLoaderRoute: typeof AdminSubscriptionsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/stickers': {
-      id: '/admin/stickers'
-      path: '/stickers'
-      fullPath: '/admin/stickers'
-      preLoaderRoute: typeof AdminStickersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/staff-permissions': {
-      id: '/admin/staff-permissions'
-      path: '/staff-permissions'
-      fullPath: '/admin/staff-permissions'
-      preLoaderRoute: typeof AdminStaffPermissionsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/social-layout': {
-      id: '/admin/social-layout'
-      path: '/social-layout'
-      fullPath: '/admin/social-layout'
-      preLoaderRoute: typeof AdminSocialLayoutRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/social-feed': {
-      id: '/admin/social-feed'
-      path: '/social-feed'
-      fullPath: '/admin/social-feed'
-      preLoaderRoute: typeof AdminSocialFeedRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/signup-access': {
-      id: '/admin/signup-access'
-      path: '/signup-access'
-      fullPath: '/admin/signup-access'
-      preLoaderRoute: typeof AdminSignupAccessRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/setup-wizard': {
-      id: '/admin/setup-wizard'
-      path: '/setup-wizard'
-      fullPath: '/admin/setup-wizard'
-      preLoaderRoute: typeof AdminSetupWizardRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/seo': {
-      id: '/admin/seo'
-      path: '/seo'
-      fullPath: '/admin/seo'
-      preLoaderRoute: typeof AdminSeoRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/security': {
-      id: '/admin/security'
-      path: '/security'
-      fullPath: '/admin/security'
-      preLoaderRoute: typeof AdminSecurityRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/search': {
-      id: '/admin/search'
-      path: '/search'
-      fullPath: '/admin/search'
-      preLoaderRoute: typeof AdminSearchRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/safety': {
-      id: '/admin/safety'
-      path: '/safety'
-      fullPath: '/admin/safety'
-      preLoaderRoute: typeof AdminSafetyRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/roles': {
-      id: '/admin/roles'
-      path: '/roles'
-      fullPath: '/admin/roles'
-      preLoaderRoute: typeof AdminRolesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/retention': {
-      id: '/admin/retention'
-      path: '/retention'
-      fullPath: '/admin/retention'
-      preLoaderRoute: typeof AdminRetentionRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/reports': {
-      id: '/admin/reports'
-      path: '/reports'
-      fullPath: '/admin/reports'
-      preLoaderRoute: typeof AdminReportsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/referrals': {
-      id: '/admin/referrals'
-      path: '/referrals'
-      fullPath: '/admin/referrals'
-      preLoaderRoute: typeof AdminReferralsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/realtime': {
-      id: '/admin/realtime'
-      path: '/realtime'
-      fullPath: '/admin/realtime'
-      preLoaderRoute: typeof AdminRealtimeRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/progression': {
-      id: '/admin/progression'
-      path: '/progression'
-      fullPath: '/admin/progression'
-      preLoaderRoute: typeof AdminProgressionRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/premium-slugs': {
-      id: '/admin/premium-slugs'
-      path: '/premium-slugs'
-      fullPath: '/admin/premium-slugs'
-      preLoaderRoute: typeof AdminPremiumSlugsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/popups': {
-      id: '/admin/popups'
-      path: '/popups'
-      fullPath: '/admin/popups'
-      preLoaderRoute: typeof AdminPopupsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/poll-widget': {
-      id: '/admin/poll-widget'
-      path: '/poll-widget'
-      fullPath: '/admin/poll-widget'
-      preLoaderRoute: typeof AdminPollWidgetRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/performance': {
-      id: '/admin/performance'
-      path: '/performance'
-      fullPath: '/admin/performance'
-      preLoaderRoute: typeof AdminPerformanceRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/pages': {
-      id: '/admin/pages'
-      path: '/pages'
-      fullPath: '/admin/pages'
-      preLoaderRoute: typeof AdminPagesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/modules': {
-      id: '/admin/modules'
-      path: '/modules'
-      fullPath: '/admin/modules'
-      preLoaderRoute: typeof AdminModulesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/moderation': {
-      id: '/admin/moderation'
-      path: '/moderation'
-      fullPath: '/admin/moderation'
-      preLoaderRoute: typeof AdminModerationRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/mehfil': {
-      id: '/admin/mehfil'
-      path: '/mehfil'
-      fullPath: '/admin/mehfil'
-      preLoaderRoute: typeof AdminMehfilRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/media-apis': {
-      id: '/admin/media-apis'
-      path: '/media-apis'
-      fullPath: '/admin/media-apis'
-      preLoaderRoute: typeof AdminMediaApisRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/maintenance': {
-      id: '/admin/maintenance'
-      path: '/maintenance'
-      fullPath: '/admin/maintenance'
-      preLoaderRoute: typeof AdminMaintenanceRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/licenses': {
-      id: '/admin/licenses'
-      path: '/licenses'
-      fullPath: '/admin/licenses'
-      preLoaderRoute: typeof AdminLicensesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/languages': {
-      id: '/admin/languages'
-      path: '/languages'
-      fullPath: '/admin/languages'
-      preLoaderRoute: typeof AdminLanguagesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/landing': {
-      id: '/admin/landing'
-      path: '/landing'
-      fullPath: '/admin/landing'
-      preLoaderRoute: typeof AdminLandingRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/internal-linking': {
-      id: '/admin/internal-linking'
-      path: '/internal-linking'
-      fullPath: '/admin/internal-linking'
-      preLoaderRoute: typeof AdminInternalLinkingRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/homepage': {
-      id: '/admin/homepage'
-      path: '/homepage'
-      fullPath: '/admin/homepage'
-      preLoaderRoute: typeof AdminHomepageRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/hero-page': {
-      id: '/admin/hero-page'
-      path: '/hero-page'
-      fullPath: '/admin/hero-page'
-      preLoaderRoute: typeof AdminHeroPageRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/general': {
-      id: '/admin/general'
-      path: '/general'
-      fullPath: '/admin/general'
-      preLoaderRoute: typeof AdminGeneralRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/gamification': {
-      id: '/admin/gamification'
-      path: '/gamification'
-      fullPath: '/admin/gamification'
-      preLoaderRoute: typeof AdminGamificationRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/games': {
-      id: '/admin/games'
-      path: '/games'
-      fullPath: '/admin/games'
-      preLoaderRoute: typeof AdminGamesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/filters': {
-      id: '/admin/filters'
-      path: '/filters'
-      fullPath: '/admin/filters'
-      preLoaderRoute: typeof AdminFiltersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/feedbot': {
-      id: '/admin/feedbot'
-      path: '/feedbot'
-      fullPath: '/admin/feedbot'
-      preLoaderRoute: typeof AdminFeedbotRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/feedback': {
-      id: '/admin/feedback'
-      path: '/feedback'
-      fullPath: '/admin/feedback'
-      preLoaderRoute: typeof AdminFeedbackRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/feed-themes': {
-      id: '/admin/feed-themes'
-      path: '/feed-themes'
-      fullPath: '/admin/feed-themes'
-      preLoaderRoute: typeof AdminFeedThemesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/feed-moderation': {
-      id: '/admin/feed-moderation'
-      path: '/feed-moderation'
-      fullPath: '/admin/feed-moderation'
-      preLoaderRoute: typeof AdminFeedModerationRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/export': {
-      id: '/admin/export'
-      path: '/export'
-      fullPath: '/admin/export'
-      preLoaderRoute: typeof AdminExportRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/email': {
-      id: '/admin/email'
-      path: '/email'
-      fullPath: '/admin/email'
-      preLoaderRoute: typeof AdminEmailRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/economy': {
-      id: '/admin/economy'
-      path: '/economy'
-      fullPath: '/admin/economy'
-      preLoaderRoute: typeof AdminEconomyRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/dm-wallpapers': {
-      id: '/admin/dm-wallpapers'
-      path: '/dm-wallpapers'
-      fullPath: '/admin/dm-wallpapers'
-      preLoaderRoute: typeof AdminDmWallpapersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/dj': {
-      id: '/admin/dj'
-      path: '/dj'
-      fullPath: '/admin/dj'
-      preLoaderRoute: typeof AdminDjRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/discovery-widgets': {
-      id: '/admin/discovery-widgets'
-      path: '/discovery-widgets'
-      fullPath: '/admin/discovery-widgets'
-      preLoaderRoute: typeof AdminDiscoveryWidgetsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/demo': {
-      id: '/admin/demo'
-      path: '/demo'
-      fullPath: '/admin/demo'
-      preLoaderRoute: typeof AdminDemoRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/confessions': {
-      id: '/admin/confessions'
-      path: '/confessions'
-      fullPath: '/admin/confessions'
-      preLoaderRoute: typeof AdminConfessionsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/competitions-feed': {
-      id: '/admin/competitions-feed'
-      path: '/competitions-feed'
-      fullPath: '/admin/competitions-feed'
-      preLoaderRoute: typeof AdminCompetitionsFeedRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/competitions': {
-      id: '/admin/competitions'
-      path: '/competitions'
-      fullPath: '/admin/competitions'
-      preLoaderRoute: typeof AdminCompetitionsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/competition-categories': {
-      id: '/admin/competition-categories'
-      path: '/competition-categories'
-      fullPath: '/admin/competition-categories'
-      preLoaderRoute: typeof AdminCompetitionCategoriesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/competition-analytics': {
-      id: '/admin/competition-analytics'
-      path: '/competition-analytics'
-      fullPath: '/admin/competition-analytics'
-      preLoaderRoute: typeof AdminCompetitionAnalyticsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/community-verification': {
-      id: '/admin/community-verification'
-      path: '/community-verification'
-      fullPath: '/admin/community-verification'
-      preLoaderRoute: typeof AdminCommunityVerificationRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/community-reports': {
-      id: '/admin/community-reports'
-      path: '/community-reports'
-      fullPath: '/admin/community-reports'
-      preLoaderRoute: typeof AdminCommunityReportsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/chatrooms': {
-      id: '/admin/chatrooms'
-      path: '/chatrooms'
-      fullPath: '/admin/chatrooms'
-      preLoaderRoute: typeof AdminChatroomsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/chat-themes': {
-      id: '/admin/chat-themes'
-      path: '/chat-themes'
-      fullPath: '/admin/chat-themes'
-      preLoaderRoute: typeof AdminChatThemesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/calls': {
-      id: '/admin/calls'
-      path: '/calls'
-      fullPath: '/admin/calls'
-      preLoaderRoute: typeof AdminCallsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/cache': {
-      id: '/admin/cache'
-      path: '/cache'
-      fullPath: '/admin/cache'
-      preLoaderRoute: typeof AdminCacheRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/branding-check': {
-      id: '/admin/branding-check'
-      path: '/branding-check'
-      fullPath: '/admin/branding-check'
-      preLoaderRoute: typeof AdminBrandingCheckRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/bots': {
-      id: '/admin/bots'
-      path: '/bots'
-      fullPath: '/admin/bots'
-      preLoaderRoute: typeof AdminBotsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/bot-events': {
-      id: '/admin/bot-events'
-      path: '/bot-events'
-      fullPath: '/admin/bot-events'
-      preLoaderRoute: typeof AdminBotEventsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/boobubble': {
-      id: '/admin/boobubble'
-      path: '/boobubble'
-      fullPath: '/admin/boobubble'
-      preLoaderRoute: typeof AdminBoobubbleRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/backup': {
-      id: '/admin/backup'
-      path: '/backup'
-      fullPath: '/admin/backup'
-      preLoaderRoute: typeof AdminBackupRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/automation': {
-      id: '/admin/automation'
-      path: '/automation'
-      fullPath: '/admin/automation'
-      preLoaderRoute: typeof AdminAutomationRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/auth-background': {
-      id: '/admin/auth-background'
-      path: '/auth-background'
-      fullPath: '/admin/auth-background'
-      preLoaderRoute: typeof AdminAuthBackgroundRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/audit-logs': {
-      id: '/admin/audit-logs'
-      path: '/audit-logs'
-      fullPath: '/admin/audit-logs'
-      preLoaderRoute: typeof AdminAuditLogsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/appearance': {
-      id: '/admin/appearance'
-      path: '/appearance'
-      fullPath: '/admin/appearance'
-      preLoaderRoute: typeof AdminAppearanceRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/api': {
-      id: '/admin/api'
-      path: '/api'
-      fullPath: '/admin/api'
-      preLoaderRoute: typeof AdminApiRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/announcements': {
-      id: '/admin/announcements'
-      path: '/announcements'
-      fullPath: '/admin/announcements'
-      preLoaderRoute: typeof AdminAnnouncementsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/analytics': {
-      id: '/admin/analytics'
-      path: '/analytics'
-      fullPath: '/admin/analytics'
-      preLoaderRoute: typeof AdminAnalyticsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/ai-chatbots': {
-      id: '/admin/ai-chatbots'
-      path: '/ai-chatbots'
-      fullPath: '/admin/ai-chatbots'
-      preLoaderRoute: typeof AdminAiChatbotsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/ads-scripts': {
-      id: '/admin/ads-scripts'
-      path: '/ads-scripts'
-      fullPath: '/admin/ads-scripts'
-      preLoaderRoute: typeof AdminAdsScriptsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/ad-placements': {
-      id: '/admin/ad-placements'
-      path: '/ad-placements'
-      fullPath: '/admin/ad-placements'
-      preLoaderRoute: typeof AdminAdPlacementsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/activity-logs': {
-      id: '/admin/activity-logs'
-      path: '/activity-logs'
-      fullPath: '/admin/activity-logs'
-      preLoaderRoute: typeof AdminActivityLogsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/abuse-protection': {
@@ -3526,144 +2707,844 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAbuseProtectionRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/community/$slug/': {
-      id: '/community/$slug/'
-      path: '/'
-      fullPath: '/community/$slug/'
-      preLoaderRoute: typeof CommunitySlugIndexRouteImport
-      parentRoute: typeof CommunitySlugRoute
+    '/admin/activity-logs': {
+      id: '/admin/activity-logs'
+      path: '/activity-logs'
+      fullPath: '/admin/activity-logs'
+      preLoaderRoute: typeof AdminActivityLogsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/poetry/category/$slug': {
-      id: '/poetry/category/$slug'
-      path: '/poetry/category/$slug'
-      fullPath: '/poetry/category/$slug'
-      preLoaderRoute: typeof PoetryCategorySlugRouteImport
-      parentRoute: typeof rootRouteImport
+    '/admin/ad-placements': {
+      id: '/admin/ad-placements'
+      path: '/ad-placements'
+      fullPath: '/admin/ad-placements'
+      preLoaderRoute: typeof AdminAdPlacementsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/mehfil/category/$slug': {
-      id: '/mehfil/category/$slug'
-      path: '/mehfil/category/$slug'
-      fullPath: '/mehfil/category/$slug'
-      preLoaderRoute: typeof MehfilCategorySlugRouteImport
-      parentRoute: typeof rootRouteImport
+    '/admin/ads-scripts': {
+      id: '/admin/ads-scripts'
+      path: '/ads-scripts'
+      fullPath: '/admin/ads-scripts'
+      preLoaderRoute: typeof AdminAdsScriptsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/competitions/$slug/recap': {
-      id: '/competitions/$slug/recap'
-      path: '/recap'
-      fullPath: '/competitions/$slug/recap'
-      preLoaderRoute: typeof CompetitionsSlugRecapRouteImport
-      parentRoute: typeof CompetitionsSlugRoute
+    '/admin/ai-chatbots': {
+      id: '/admin/ai-chatbots'
+      path: '/ai-chatbots'
+      fullPath: '/admin/ai-chatbots'
+      preLoaderRoute: typeof AdminAiChatbotsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/competitions/$slug/memes': {
-      id: '/competitions/$slug/memes'
-      path: '/memes'
-      fullPath: '/competitions/$slug/memes'
-      preLoaderRoute: typeof CompetitionsSlugMemesRouteImport
-      parentRoute: typeof CompetitionsSlugRoute
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/community/$slug/members': {
-      id: '/community/$slug/members'
-      path: '/members'
-      fullPath: '/community/$slug/members'
-      preLoaderRoute: typeof CommunitySlugMembersRouteImport
-      parentRoute: typeof CommunitySlugRoute
+    '/admin/announcements': {
+      id: '/admin/announcements'
+      path: '/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AdminAnnouncementsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/community/$slug/feed': {
-      id: '/community/$slug/feed'
-      path: '/feed'
-      fullPath: '/community/$slug/feed'
-      preLoaderRoute: typeof CommunitySlugFeedRouteImport
-      parentRoute: typeof CommunitySlugRoute
+    '/admin/api': {
+      id: '/admin/api'
+      path: '/api'
+      fullPath: '/admin/api'
+      preLoaderRoute: typeof AdminApiRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/community/$slug/dashboard': {
-      id: '/community/$slug/dashboard'
-      path: '/dashboard'
-      fullPath: '/community/$slug/dashboard'
-      preLoaderRoute: typeof CommunitySlugDashboardRouteImport
-      parentRoute: typeof CommunitySlugRoute
+    '/admin/appearance': {
+      id: '/admin/appearance'
+      path: '/appearance'
+      fullPath: '/admin/appearance'
+      preLoaderRoute: typeof AdminAppearanceRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/community/$slug/competitions': {
-      id: '/community/$slug/competitions'
+    '/admin/audit-logs': {
+      id: '/admin/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/admin/audit-logs'
+      preLoaderRoute: typeof AdminAuditLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/auth-background': {
+      id: '/admin/auth-background'
+      path: '/auth-background'
+      fullPath: '/admin/auth-background'
+      preLoaderRoute: typeof AdminAuthBackgroundRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/automation': {
+      id: '/admin/automation'
+      path: '/automation'
+      fullPath: '/admin/automation'
+      preLoaderRoute: typeof AdminAutomationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/backup': {
+      id: '/admin/backup'
+      path: '/backup'
+      fullPath: '/admin/backup'
+      preLoaderRoute: typeof AdminBackupRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/boobubble': {
+      id: '/admin/boobubble'
+      path: '/boobubble'
+      fullPath: '/admin/boobubble'
+      preLoaderRoute: typeof AdminBoobubbleRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bot-events': {
+      id: '/admin/bot-events'
+      path: '/bot-events'
+      fullPath: '/admin/bot-events'
+      preLoaderRoute: typeof AdminBotEventsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bots': {
+      id: '/admin/bots'
+      path: '/bots'
+      fullPath: '/admin/bots'
+      preLoaderRoute: typeof AdminBotsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/branding-check': {
+      id: '/admin/branding-check'
+      path: '/branding-check'
+      fullPath: '/admin/branding-check'
+      preLoaderRoute: typeof AdminBrandingCheckRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/cache': {
+      id: '/admin/cache'
+      path: '/cache'
+      fullPath: '/admin/cache'
+      preLoaderRoute: typeof AdminCacheRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/calls': {
+      id: '/admin/calls'
+      path: '/calls'
+      fullPath: '/admin/calls'
+      preLoaderRoute: typeof AdminCallsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/chat-themes': {
+      id: '/admin/chat-themes'
+      path: '/chat-themes'
+      fullPath: '/admin/chat-themes'
+      preLoaderRoute: typeof AdminChatThemesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/chatrooms': {
+      id: '/admin/chatrooms'
+      path: '/chatrooms'
+      fullPath: '/admin/chatrooms'
+      preLoaderRoute: typeof AdminChatroomsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/community-reports': {
+      id: '/admin/community-reports'
+      path: '/community-reports'
+      fullPath: '/admin/community-reports'
+      preLoaderRoute: typeof AdminCommunityReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/community-verification': {
+      id: '/admin/community-verification'
+      path: '/community-verification'
+      fullPath: '/admin/community-verification'
+      preLoaderRoute: typeof AdminCommunityVerificationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/competition-analytics': {
+      id: '/admin/competition-analytics'
+      path: '/competition-analytics'
+      fullPath: '/admin/competition-analytics'
+      preLoaderRoute: typeof AdminCompetitionAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/competition-categories': {
+      id: '/admin/competition-categories'
+      path: '/competition-categories'
+      fullPath: '/admin/competition-categories'
+      preLoaderRoute: typeof AdminCompetitionCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/competitions': {
+      id: '/admin/competitions'
       path: '/competitions'
-      fullPath: '/community/$slug/competitions'
-      preLoaderRoute: typeof CommunitySlugCompetitionsRouteImport
-      parentRoute: typeof CommunitySlugRoute
+      fullPath: '/admin/competitions'
+      preLoaderRoute: typeof AdminCompetitionsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/api/public/landing': {
-      id: '/api/public/landing'
-      path: '/api/public/landing'
-      fullPath: '/api/public/landing'
-      preLoaderRoute: typeof ApiPublicLandingRouteImport
+    '/admin/competitions-feed': {
+      id: '/admin/competitions-feed'
+      path: '/competitions-feed'
+      fullPath: '/admin/competitions-feed'
+      preLoaderRoute: typeof AdminCompetitionsFeedRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/confessions': {
+      id: '/admin/confessions'
+      path: '/confessions'
+      fullPath: '/admin/confessions'
+      preLoaderRoute: typeof AdminConfessionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/demo': {
+      id: '/admin/demo'
+      path: '/demo'
+      fullPath: '/admin/demo'
+      preLoaderRoute: typeof AdminDemoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/discovery-widgets': {
+      id: '/admin/discovery-widgets'
+      path: '/discovery-widgets'
+      fullPath: '/admin/discovery-widgets'
+      preLoaderRoute: typeof AdminDiscoveryWidgetsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/dj': {
+      id: '/admin/dj'
+      path: '/dj'
+      fullPath: '/admin/dj'
+      preLoaderRoute: typeof AdminDjRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/dm-wallpapers': {
+      id: '/admin/dm-wallpapers'
+      path: '/dm-wallpapers'
+      fullPath: '/admin/dm-wallpapers'
+      preLoaderRoute: typeof AdminDmWallpapersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/economy': {
+      id: '/admin/economy'
+      path: '/economy'
+      fullPath: '/admin/economy'
+      preLoaderRoute: typeof AdminEconomyRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/email': {
+      id: '/admin/email'
+      path: '/email'
+      fullPath: '/admin/email'
+      preLoaderRoute: typeof AdminEmailRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/export': {
+      id: '/admin/export'
+      path: '/export'
+      fullPath: '/admin/export'
+      preLoaderRoute: typeof AdminExportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/feed-moderation': {
+      id: '/admin/feed-moderation'
+      path: '/feed-moderation'
+      fullPath: '/admin/feed-moderation'
+      preLoaderRoute: typeof AdminFeedModerationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/feed-themes': {
+      id: '/admin/feed-themes'
+      path: '/feed-themes'
+      fullPath: '/admin/feed-themes'
+      preLoaderRoute: typeof AdminFeedThemesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/feedback': {
+      id: '/admin/feedback'
+      path: '/feedback'
+      fullPath: '/admin/feedback'
+      preLoaderRoute: typeof AdminFeedbackRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/feedbot': {
+      id: '/admin/feedbot'
+      path: '/feedbot'
+      fullPath: '/admin/feedbot'
+      preLoaderRoute: typeof AdminFeedbotRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/filters': {
+      id: '/admin/filters'
+      path: '/filters'
+      fullPath: '/admin/filters'
+      preLoaderRoute: typeof AdminFiltersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/games': {
+      id: '/admin/games'
+      path: '/games'
+      fullPath: '/admin/games'
+      preLoaderRoute: typeof AdminGamesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/gamification': {
+      id: '/admin/gamification'
+      path: '/gamification'
+      fullPath: '/admin/gamification'
+      preLoaderRoute: typeof AdminGamificationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/general': {
+      id: '/admin/general'
+      path: '/general'
+      fullPath: '/admin/general'
+      preLoaderRoute: typeof AdminGeneralRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/hero-page': {
+      id: '/admin/hero-page'
+      path: '/hero-page'
+      fullPath: '/admin/hero-page'
+      preLoaderRoute: typeof AdminHeroPageRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/homepage': {
+      id: '/admin/homepage'
+      path: '/homepage'
+      fullPath: '/admin/homepage'
+      preLoaderRoute: typeof AdminHomepageRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/internal-linking': {
+      id: '/admin/internal-linking'
+      path: '/internal-linking'
+      fullPath: '/admin/internal-linking'
+      preLoaderRoute: typeof AdminInternalLinkingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/landing': {
+      id: '/admin/landing'
+      path: '/landing'
+      fullPath: '/admin/landing'
+      preLoaderRoute: typeof AdminLandingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/languages': {
+      id: '/admin/languages'
+      path: '/languages'
+      fullPath: '/admin/languages'
+      preLoaderRoute: typeof AdminLanguagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/licenses': {
+      id: '/admin/licenses'
+      path: '/licenses'
+      fullPath: '/admin/licenses'
+      preLoaderRoute: typeof AdminLicensesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/maintenance': {
+      id: '/admin/maintenance'
+      path: '/maintenance'
+      fullPath: '/admin/maintenance'
+      preLoaderRoute: typeof AdminMaintenanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/media-apis': {
+      id: '/admin/media-apis'
+      path: '/media-apis'
+      fullPath: '/admin/media-apis'
+      preLoaderRoute: typeof AdminMediaApisRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/mehfil': {
+      id: '/admin/mehfil'
+      path: '/mehfil'
+      fullPath: '/admin/mehfil'
+      preLoaderRoute: typeof AdminMehfilRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/moderation': {
+      id: '/admin/moderation'
+      path: '/moderation'
+      fullPath: '/admin/moderation'
+      preLoaderRoute: typeof AdminModerationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/modules': {
+      id: '/admin/modules'
+      path: '/modules'
+      fullPath: '/admin/modules'
+      preLoaderRoute: typeof AdminModulesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pages': {
+      id: '/admin/pages'
+      path: '/pages'
+      fullPath: '/admin/pages'
+      preLoaderRoute: typeof AdminPagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/performance': {
+      id: '/admin/performance'
+      path: '/performance'
+      fullPath: '/admin/performance'
+      preLoaderRoute: typeof AdminPerformanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/poll-widget': {
+      id: '/admin/poll-widget'
+      path: '/poll-widget'
+      fullPath: '/admin/poll-widget'
+      preLoaderRoute: typeof AdminPollWidgetRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/popups': {
+      id: '/admin/popups'
+      path: '/popups'
+      fullPath: '/admin/popups'
+      preLoaderRoute: typeof AdminPopupsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/premium-slugs': {
+      id: '/admin/premium-slugs'
+      path: '/premium-slugs'
+      fullPath: '/admin/premium-slugs'
+      preLoaderRoute: typeof AdminPremiumSlugsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/progression': {
+      id: '/admin/progression'
+      path: '/progression'
+      fullPath: '/admin/progression'
+      preLoaderRoute: typeof AdminProgressionRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/realtime': {
+      id: '/admin/realtime'
+      path: '/realtime'
+      fullPath: '/admin/realtime'
+      preLoaderRoute: typeof AdminRealtimeRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/referrals': {
+      id: '/admin/referrals'
+      path: '/referrals'
+      fullPath: '/admin/referrals'
+      preLoaderRoute: typeof AdminReferralsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/retention': {
+      id: '/admin/retention'
+      path: '/retention'
+      fullPath: '/admin/retention'
+      preLoaderRoute: typeof AdminRetentionRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/roles': {
+      id: '/admin/roles'
+      path: '/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof AdminRolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/safety': {
+      id: '/admin/safety'
+      path: '/safety'
+      fullPath: '/admin/safety'
+      preLoaderRoute: typeof AdminSafetyRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/search': {
+      id: '/admin/search'
+      path: '/search'
+      fullPath: '/admin/search'
+      preLoaderRoute: typeof AdminSearchRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/security': {
+      id: '/admin/security'
+      path: '/security'
+      fullPath: '/admin/security'
+      preLoaderRoute: typeof AdminSecurityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/seo': {
+      id: '/admin/seo'
+      path: '/seo'
+      fullPath: '/admin/seo'
+      preLoaderRoute: typeof AdminSeoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/setup-wizard': {
+      id: '/admin/setup-wizard'
+      path: '/setup-wizard'
+      fullPath: '/admin/setup-wizard'
+      preLoaderRoute: typeof AdminSetupWizardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/signup-access': {
+      id: '/admin/signup-access'
+      path: '/signup-access'
+      fullPath: '/admin/signup-access'
+      preLoaderRoute: typeof AdminSignupAccessRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/social-feed': {
+      id: '/admin/social-feed'
+      path: '/social-feed'
+      fullPath: '/admin/social-feed'
+      preLoaderRoute: typeof AdminSocialFeedRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/social-layout': {
+      id: '/admin/social-layout'
+      path: '/social-layout'
+      fullPath: '/admin/social-layout'
+      preLoaderRoute: typeof AdminSocialLayoutRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/staff-permissions': {
+      id: '/admin/staff-permissions'
+      path: '/staff-permissions'
+      fullPath: '/admin/staff-permissions'
+      preLoaderRoute: typeof AdminStaffPermissionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/stickers': {
+      id: '/admin/stickers'
+      path: '/stickers'
+      fullPath: '/admin/stickers'
+      preLoaderRoute: typeof AdminStickersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/subscriptions': {
+      id: '/admin/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/admin/subscriptions'
+      preLoaderRoute: typeof AdminSubscriptionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/system': {
+      id: '/admin/system'
+      path: '/system'
+      fullPath: '/admin/system'
+      preLoaderRoute: typeof AdminSystemRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/trust-safety': {
+      id: '/admin/trust-safety'
+      path: '/trust-safety'
+      fullPath: '/admin/trust-safety'
+      preLoaderRoute: typeof AdminTrustSafetyRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/upcoming': {
+      id: '/admin/upcoming'
+      path: '/upcoming'
+      fullPath: '/admin/upcoming'
+      preLoaderRoute: typeof AdminUpcomingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/updates': {
+      id: '/admin/updates'
+      path: '/updates'
+      fullPath: '/admin/updates'
+      preLoaderRoute: typeof AdminUpdatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/voice-notes': {
+      id: '/admin/voice-notes'
+      path: '/voice-notes'
+      fullPath: '/admin/voice-notes'
+      preLoaderRoute: typeof AdminVoiceNotesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/wallet': {
+      id: '/admin/wallet'
+      path: '/wallet'
+      fullPath: '/admin/wallet'
+      preLoaderRoute: typeof AdminWalletRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/wallet-analytics': {
+      id: '/admin/wallet-analytics'
+      path: '/wallet-analytics'
+      fullPath: '/admin/wallet-analytics'
+      preLoaderRoute: typeof AdminWalletAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/wallet-rules': {
+      id: '/admin/wallet-rules'
+      path: '/wallet-rules'
+      fullPath: '/admin/wallet-rules'
+      preLoaderRoute: typeof AdminWalletRulesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/broadcaster/': {
+      id: '/broadcaster/'
+      path: '/'
+      fullPath: '/broadcaster/'
+      preLoaderRoute: typeof BroadcasterIndexRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/broadcaster/analytics': {
+      id: '/broadcaster/analytics'
+      path: '/analytics'
+      fullPath: '/broadcaster/analytics'
+      preLoaderRoute: typeof BroadcasterAnalyticsRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/broadcaster/announcements': {
+      id: '/broadcaster/announcements'
+      path: '/announcements'
+      fullPath: '/broadcaster/announcements'
+      preLoaderRoute: typeof BroadcasterAnnouncementsRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/broadcaster/mic': {
+      id: '/broadcaster/mic'
+      path: '/mic'
+      fullPath: '/broadcaster/mic'
+      preLoaderRoute: typeof BroadcasterMicRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/broadcaster/queue': {
+      id: '/broadcaster/queue'
+      path: '/queue'
+      fullPath: '/broadcaster/queue'
+      preLoaderRoute: typeof BroadcasterQueueRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/broadcaster/schedule': {
+      id: '/broadcaster/schedule'
+      path: '/schedule'
+      fullPath: '/broadcaster/schedule'
+      preLoaderRoute: typeof BroadcasterScheduleRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/broadcaster/widgets': {
+      id: '/broadcaster/widgets'
+      path: '/widgets'
+      fullPath: '/broadcaster/widgets'
+      preLoaderRoute: typeof BroadcasterWidgetsRouteImport
+      parentRoute: typeof BroadcasterRoute
+    }
+    '/community/$slug': {
+      id: '/community/$slug'
+      path: '/$slug'
+      fullPath: '/community/$slug'
+      preLoaderRoute: typeof CommunitySlugRouteImport
+      parentRoute: typeof CommunityRoute
+    }
+    '/competitions/': {
+      id: '/competitions/'
+      path: '/'
+      fullPath: '/competitions/'
+      preLoaderRoute: typeof CompetitionsIndexRouteImport
+      parentRoute: typeof CompetitionsRoute
+    }
+    '/competitions/$slug': {
+      id: '/competitions/$slug'
+      path: '/$slug'
+      fullPath: '/competitions/$slug'
+      preLoaderRoute: typeof CompetitionsSlugRouteImport
+      parentRoute: typeof CompetitionsRoute
+    }
+    '/competitions/hall-of-fame': {
+      id: '/competitions/hall-of-fame'
+      path: '/hall-of-fame'
+      fullPath: '/competitions/hall-of-fame'
+      preLoaderRoute: typeof CompetitionsHallOfFameRouteImport
+      parentRoute: typeof CompetitionsRoute
+    }
+    '/competitions/leaderboard': {
+      id: '/competitions/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/competitions/leaderboard'
+      preLoaderRoute: typeof CompetitionsLeaderboardRouteImport
+      parentRoute: typeof CompetitionsRoute
+    }
+    '/feed/': {
+      id: '/feed/'
+      path: '/feed'
+      fullPath: '/feed/'
+      preLoaderRoute: typeof FeedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/feedback-showcase': {
-      id: '/api/public/feedback-showcase'
-      path: '/api/public/feedback-showcase'
-      fullPath: '/api/public/feedback-showcase'
-      preLoaderRoute: typeof ApiPublicFeedbackShowcaseRouteImport
+    '/feed/$slug': {
+      id: '/feed/$slug'
+      path: '/feed/$slug'
+      fullPath: '/feed/$slug'
+      preLoaderRoute: typeof FeedSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/demo-cleanup': {
-      id: '/api/public/demo-cleanup'
-      path: '/api/public/demo-cleanup'
-      fullPath: '/api/public/demo-cleanup'
-      preLoaderRoute: typeof ApiPublicDemoCleanupRouteImport
+    '/feedback/': {
+      id: '/feedback/'
+      path: '/feedback'
+      fullPath: '/feedback/'
+      preLoaderRoute: typeof FeedbackIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/community-bg': {
-      id: '/api/public/community-bg'
-      path: '/api/public/community-bg'
-      fullPath: '/api/public/community-bg'
-      preLoaderRoute: typeof ApiPublicCommunityBgRouteImport
+    '/feedback/$id': {
+      id: '/feedback/$id'
+      path: '/feedback/$id'
+      fullPath: '/feedback/$id'
+      preLoaderRoute: typeof FeedbackIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/backup-retention': {
-      id: '/api/public/backup-retention'
-      path: '/api/public/backup-retention'
-      fullPath: '/api/public/backup-retention'
-      preLoaderRoute: typeof ApiPublicBackupRetentionRouteImport
+    '/games/ludo': {
+      id: '/games/ludo'
+      path: '/ludo'
+      fullPath: '/games/ludo'
+      preLoaderRoute: typeof GamesLudoRouteImport
+      parentRoute: typeof GamesRoute
+    }
+    '/invite/$code': {
+      id: '/invite/$code'
+      path: '/invite/$code'
+      fullPath: '/invite/$code'
+      preLoaderRoute: typeof InviteCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/games/xp': {
-      id: '/api/games/xp'
-      path: '/api/games/xp'
-      fullPath: '/api/games/xp'
-      preLoaderRoute: typeof ApiGamesXpRouteImport
+    '/mehfil/': {
+      id: '/mehfil/'
+      path: '/mehfil'
+      fullPath: '/mehfil/'
+      preLoaderRoute: typeof MehfilIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/games/start': {
-      id: '/api/games/start'
-      path: '/api/games/start'
-      fullPath: '/api/games/start'
-      preLoaderRoute: typeof ApiGamesStartRouteImport
+    '/mehfil/$slug': {
+      id: '/mehfil/$slug'
+      path: '/mehfil/$slug'
+      fullPath: '/mehfil/$slug'
+      preLoaderRoute: typeof MehfilSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/games/score': {
-      id: '/api/games/score'
-      path: '/api/games/score'
-      fullPath: '/api/games/score'
-      preLoaderRoute: typeof ApiGamesScoreRouteImport
+    '/mehfil/challenges': {
+      id: '/mehfil/challenges'
+      path: '/mehfil/challenges'
+      fullPath: '/mehfil/challenges'
+      preLoaderRoute: typeof MehfilChallengesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/games/save': {
-      id: '/api/games/save'
-      path: '/api/games/save'
-      fullPath: '/api/games/save'
-      preLoaderRoute: typeof ApiGamesSaveRouteImport
+    '/mehfil/compose': {
+      id: '/mehfil/compose'
+      path: '/mehfil/compose'
+      fullPath: '/mehfil/compose'
+      preLoaderRoute: typeof MehfilComposeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/games/finish': {
-      id: '/api/games/finish'
-      path: '/api/games/finish'
-      fullPath: '/api/games/finish'
-      preLoaderRoute: typeof ApiGamesFinishRouteImport
+    '/mehfil/hall-of-fame': {
+      id: '/mehfil/hall-of-fame'
+      path: '/mehfil/hall-of-fame'
+      fullPath: '/mehfil/hall-of-fame'
+      preLoaderRoute: typeof MehfilHallOfFameRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/games/event': {
-      id: '/api/games/event'
-      path: '/api/games/event'
-      fullPath: '/api/games/event'
-      preLoaderRoute: typeof ApiGamesEventRouteImport
+    '/mehfil/leaderboard': {
+      id: '/mehfil/leaderboard'
+      path: '/mehfil/leaderboard'
+      fullPath: '/mehfil/leaderboard'
+      preLoaderRoute: typeof MehfilLeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$slug': {
+      id: '/p/$slug'
+      path: '/p/$slug'
+      fullPath: '/p/$slug'
+      preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pages-editor/$id': {
+      id: '/pages-editor/$id'
+      path: '/pages-editor/$id'
+      fullPath: '/pages-editor/$id'
+      preLoaderRoute: typeof PagesEditorIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poetry/': {
+      id: '/poetry/'
+      path: '/poetry'
+      fullPath: '/poetry/'
+      preLoaderRoute: typeof PoetryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poetry/$slug': {
+      id: '/poetry/$slug'
+      path: '/poetry/$slug'
+      fullPath: '/poetry/$slug'
+      preLoaderRoute: typeof PoetrySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poetry/challenges': {
+      id: '/poetry/challenges'
+      path: '/poetry/challenges'
+      fullPath: '/poetry/challenges'
+      preLoaderRoute: typeof PoetryChallengesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poetry/compose': {
+      id: '/poetry/compose'
+      path: '/poetry/compose'
+      fullPath: '/poetry/compose'
+      preLoaderRoute: typeof PoetryComposeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poetry/hall-of-fame': {
+      id: '/poetry/hall-of-fame'
+      path: '/poetry/hall-of-fame'
+      fullPath: '/poetry/hall-of-fame'
+      preLoaderRoute: typeof PoetryHallOfFameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poetry/leaderboard': {
+      id: '/poetry/leaderboard'
+      path: '/poetry/leaderboard'
+      fullPath: '/poetry/leaderboard'
+      preLoaderRoute: typeof PoetryLeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$username': {
+      id: '/u/$username'
+      path: '/u/$username'
+      fullPath: '/u/$username'
+      preLoaderRoute: typeof UUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/settings/privacy': {
+      id: '/_authenticated/settings/privacy'
+      path: '/settings/privacy'
+      fullPath: '/settings/privacy'
+      preLoaderRoute: typeof AuthenticatedSettingsPrivacyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/admin/upcoming/$key': {
+      id: '/admin/upcoming/$key'
+      path: '/$key'
+      fullPath: '/admin/upcoming/$key'
+      preLoaderRoute: typeof AdminUpcomingKeyRouteImport
+      parentRoute: typeof AdminUpcomingRoute
+    }
+    '/api/games/achievement': {
+      id: '/api/games/achievement'
+      path: '/api/games/achievement'
+      fullPath: '/api/games/achievement'
+      preLoaderRoute: typeof ApiGamesAchievementRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/games/coins': {
@@ -3673,95 +3554,151 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGamesCoinsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/games/achievement': {
-      id: '/api/games/achievement'
-      path: '/api/games/achievement'
-      fullPath: '/api/games/achievement'
-      preLoaderRoute: typeof ApiGamesAchievementRouteImport
+    '/api/games/event': {
+      id: '/api/games/event'
+      path: '/api/games/event'
+      fullPath: '/api/games/event'
+      preLoaderRoute: typeof ApiGamesEventRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/upcoming/$key': {
-      id: '/admin/upcoming/$key'
-      path: '/$key'
-      fullPath: '/admin/upcoming/$key'
-      preLoaderRoute: typeof AdminUpcomingKeyRouteImport
-      parentRoute: typeof AdminUpcomingRoute
+    '/api/games/finish': {
+      id: '/api/games/finish'
+      path: '/api/games/finish'
+      fullPath: '/api/games/finish'
+      preLoaderRoute: typeof ApiGamesFinishRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/settings/privacy': {
-      id: '/_authenticated/settings/privacy'
-      path: '/settings/privacy'
-      fullPath: '/settings/privacy'
-      preLoaderRoute: typeof AuthenticatedSettingsPrivacyRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/api/games/save': {
+      id: '/api/games/save'
+      path: '/api/games/save'
+      fullPath: '/api/games/save'
+      preLoaderRoute: typeof ApiGamesSaveRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/community/$slug/chatrooms/': {
-      id: '/community/$slug/chatrooms/'
-      path: '/chatrooms'
-      fullPath: '/community/$slug/chatrooms/'
-      preLoaderRoute: typeof CommunitySlugChatroomsIndexRouteImport
+    '/api/games/score': {
+      id: '/api/games/score'
+      path: '/api/games/score'
+      fullPath: '/api/games/score'
+      preLoaderRoute: typeof ApiGamesScoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/games/start': {
+      id: '/api/games/start'
+      path: '/api/games/start'
+      fullPath: '/api/games/start'
+      preLoaderRoute: typeof ApiGamesStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/games/xp': {
+      id: '/api/games/xp'
+      path: '/api/games/xp'
+      fullPath: '/api/games/xp'
+      preLoaderRoute: typeof ApiGamesXpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/backup-retention': {
+      id: '/api/public/backup-retention'
+      path: '/api/public/backup-retention'
+      fullPath: '/api/public/backup-retention'
+      preLoaderRoute: typeof ApiPublicBackupRetentionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/community-bg': {
+      id: '/api/public/community-bg'
+      path: '/api/public/community-bg'
+      fullPath: '/api/public/community-bg'
+      preLoaderRoute: typeof ApiPublicCommunityBgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/demo-cleanup': {
+      id: '/api/public/demo-cleanup'
+      path: '/api/public/demo-cleanup'
+      fullPath: '/api/public/demo-cleanup'
+      preLoaderRoute: typeof ApiPublicDemoCleanupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/feedback-showcase': {
+      id: '/api/public/feedback-showcase'
+      path: '/api/public/feedback-showcase'
+      fullPath: '/api/public/feedback-showcase'
+      preLoaderRoute: typeof ApiPublicFeedbackShowcaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/landing': {
+      id: '/api/public/landing'
+      path: '/api/public/landing'
+      fullPath: '/api/public/landing'
+      preLoaderRoute: typeof ApiPublicLandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community/$slug/': {
+      id: '/community/$slug/'
+      path: '/'
+      fullPath: '/community/$slug/'
+      preLoaderRoute: typeof CommunitySlugIndexRouteImport
       parentRoute: typeof CommunitySlugRoute
     }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
-      parentRoute: typeof rootRouteImport
+    '/community/$slug/competitions': {
+      id: '/community/$slug/competitions'
+      path: '/competitions'
+      fullPath: '/community/$slug/competitions'
+      preLoaderRoute: typeof CommunitySlugCompetitionsRouteImport
+      parentRoute: typeof CommunitySlugRoute
     }
-    '/competitions/$slug/fun/$type': {
-      id: '/competitions/$slug/fun/$type'
-      path: '/fun/$type'
-      fullPath: '/competitions/$slug/fun/$type'
-      preLoaderRoute: typeof CompetitionsSlugFunTypeRouteImport
+    '/community/$slug/dashboard': {
+      id: '/community/$slug/dashboard'
+      path: '/dashboard'
+      fullPath: '/community/$slug/dashboard'
+      preLoaderRoute: typeof CommunitySlugDashboardRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
+    '/community/$slug/feed': {
+      id: '/community/$slug/feed'
+      path: '/feed'
+      fullPath: '/community/$slug/feed'
+      preLoaderRoute: typeof CommunitySlugFeedRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
+    '/community/$slug/members': {
+      id: '/community/$slug/members'
+      path: '/members'
+      fullPath: '/community/$slug/members'
+      preLoaderRoute: typeof CommunitySlugMembersRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
+    '/competitions/$slug/memes': {
+      id: '/competitions/$slug/memes'
+      path: '/memes'
+      fullPath: '/competitions/$slug/memes'
+      preLoaderRoute: typeof CompetitionsSlugMemesRouteImport
       parentRoute: typeof CompetitionsSlugRoute
     }
-    '/community/$slug/chatrooms/$roomSlug': {
-      id: '/community/$slug/chatrooms/$roomSlug'
-      path: '/chatrooms/$roomSlug'
-      fullPath: '/community/$slug/chatrooms/$roomSlug'
-      preLoaderRoute: typeof CommunitySlugChatroomsRoomSlugRouteImport
-      parentRoute: typeof CommunitySlugRoute
+    '/competitions/$slug/recap': {
+      id: '/competitions/$slug/recap'
+      path: '/recap'
+      fullPath: '/competitions/$slug/recap'
+      preLoaderRoute: typeof CompetitionsSlugRecapRouteImport
+      parentRoute: typeof CompetitionsSlugRoute
     }
-    '/api/public/license/verify': {
-      id: '/api/public/license/verify'
-      path: '/api/public/license/verify'
-      fullPath: '/api/public/license/verify'
-      preLoaderRoute: typeof ApiPublicLicenseVerifyRouteImport
+    '/mehfil/category/$slug': {
+      id: '/mehfil/category/$slug'
+      path: '/mehfil/category/$slug'
+      fullPath: '/mehfil/category/$slug'
+      preLoaderRoute: typeof MehfilCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/license/reset': {
-      id: '/api/public/license/reset'
-      path: '/api/public/license/reset'
-      fullPath: '/api/public/license/reset'
-      preLoaderRoute: typeof ApiPublicLicenseResetRouteImport
+    '/poetry/category/$slug': {
+      id: '/poetry/category/$slug'
+      path: '/poetry/category/$slug'
+      fullPath: '/poetry/category/$slug'
+      preLoaderRoute: typeof PoetryCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/license/deactivate': {
-      id: '/api/public/license/deactivate'
-      path: '/api/public/license/deactivate'
-      fullPath: '/api/public/license/deactivate'
-      preLoaderRoute: typeof ApiPublicLicenseDeactivateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/license/check': {
-      id: '/api/public/license/check'
-      path: '/api/public/license/check'
-      fullPath: '/api/public/license/check'
-      preLoaderRoute: typeof ApiPublicLicenseCheckRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/license/activate': {
-      id: '/api/public/license/activate'
-      path: '/api/public/license/activate'
-      fullPath: '/api/public/license/activate'
-      preLoaderRoute: typeof ApiPublicLicenseActivateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/license-revalidate': {
-      id: '/api/public/hooks/license-revalidate'
-      path: '/api/public/hooks/license-revalidate'
-      fullPath: '/api/public/hooks/license-revalidate'
-      preLoaderRoute: typeof ApiPublicHooksLicenseRevalidateRouteImport
+    '/api/public/hooks/feedbot-dispatch': {
+      id: '/api/public/hooks/feedbot-dispatch'
+      path: '/api/public/hooks/feedbot-dispatch'
+      fullPath: '/api/public/hooks/feedbot-dispatch'
+      preLoaderRoute: typeof ApiPublicHooksFeedbotDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/feedbot-summary': {
@@ -3771,11 +3708,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksFeedbotSummaryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/feedbot-dispatch': {
-      id: '/api/public/hooks/feedbot-dispatch'
-      path: '/api/public/hooks/feedbot-dispatch'
-      fullPath: '/api/public/hooks/feedbot-dispatch'
-      preLoaderRoute: typeof ApiPublicHooksFeedbotDispatchRouteImport
+    '/api/public/hooks/license-revalidate': {
+      id: '/api/public/hooks/license-revalidate'
+      path: '/api/public/hooks/license-revalidate'
+      fullPath: '/api/public/hooks/license-revalidate'
+      preLoaderRoute: typeof ApiPublicHooksLicenseRevalidateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/license/activate': {
+      id: '/api/public/license/activate'
+      path: '/api/public/license/activate'
+      fullPath: '/api/public/license/activate'
+      preLoaderRoute: typeof ApiPublicLicenseActivateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/license/check': {
+      id: '/api/public/license/check'
+      path: '/api/public/license/check'
+      fullPath: '/api/public/license/check'
+      preLoaderRoute: typeof ApiPublicLicenseCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/license/deactivate': {
+      id: '/api/public/license/deactivate'
+      path: '/api/public/license/deactivate'
+      fullPath: '/api/public/license/deactivate'
+      preLoaderRoute: typeof ApiPublicLicenseDeactivateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/license/reset': {
+      id: '/api/public/license/reset'
+      path: '/api/public/license/reset'
+      fullPath: '/api/public/license/reset'
+      preLoaderRoute: typeof ApiPublicLicenseResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/license/verify': {
+      id: '/api/public/license/verify'
+      path: '/api/public/license/verify'
+      fullPath: '/api/public/license/verify'
+      preLoaderRoute: typeof ApiPublicLicenseVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community/$slug/chatrooms/': {
+      id: '/community/$slug/chatrooms/'
+      path: '/chatrooms'
+      fullPath: '/community/$slug/chatrooms/'
+      preLoaderRoute: typeof CommunitySlugChatroomsIndexRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
+    '/community/$slug/chatrooms/$roomSlug': {
+      id: '/community/$slug/chatrooms/$roomSlug'
+      path: '/chatrooms/$roomSlug'
+      fullPath: '/community/$slug/chatrooms/$roomSlug'
+      preLoaderRoute: typeof CommunitySlugChatroomsRoomSlugRouteImport
+      parentRoute: typeof CommunitySlugRoute
+    }
+    '/competitions/$slug/fun/$type': {
+      id: '/competitions/$slug/fun/$type'
+      path: '/fun/$type'
+      fullPath: '/competitions/$slug/fun/$type'
+      preLoaderRoute: typeof CompetitionsSlugFunTypeRouteImport
+      parentRoute: typeof CompetitionsSlugRoute
+    }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/og/competition/$slug': {
@@ -4181,3 +4181,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

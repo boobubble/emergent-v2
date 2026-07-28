@@ -263,7 +263,7 @@ function DiscussionPage() {
               </div>
             ) : (
               <Link
-                to="/auth"
+                to="/login"
                 className="mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-3 text-sm font-medium text-primary hover:bg-primary/10"
               >
                 Sign in to reply

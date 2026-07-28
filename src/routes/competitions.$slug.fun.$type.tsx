@@ -126,6 +126,7 @@ function FunTypePage() {
             <Link
               to="/competitions/$slug/fun/$type"
               params={{ slug: competition.slug, type: meta.slug }}
+              search={{ nominee: "" }}
               className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${!nominee ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
             >
               All

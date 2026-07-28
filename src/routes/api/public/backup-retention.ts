@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { requireFeedbotHookAuth } from "@/lib/feedbot-auth.server";
 
 // Cron-callable endpoint that purges expired backup_history rows.
 export const Route = createFileRoute("/api/public/backup-retention")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const denied = await requireFeedbotHookAuth(request);
+        if (denied) return denied;
         const url = process.env.SUPABASE_URL;
         const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
         if (!url || !key) {

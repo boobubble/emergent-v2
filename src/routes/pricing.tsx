@@ -158,7 +158,7 @@ function PricingPage() {
                 ) : (
                   <button
                     onClick={() => {
-                      if (!user) { navigate({ to: "/auth" } as never); return; }
+                      if (!user) { navigate({ to: "/login" }); return; }
                       if (isFree) {
                         setChosen(p);
                         submit.mutate();

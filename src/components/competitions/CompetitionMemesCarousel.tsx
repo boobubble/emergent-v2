@@ -59,7 +59,7 @@ export function CompetitionMemesCarousel({
         <Link
           to="/competitions/$slug/memes"
           params={{ slug: competitionSlug }}
-          {...(nomineeId ? { search: { nominee: nomineeId } as any } : {})}
+          search={{ nominee: nomineeId ?? "" }}
           className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
         >
           View all <ArrowRight className="h-3 w-3" />

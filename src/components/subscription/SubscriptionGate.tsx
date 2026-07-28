@@ -3,7 +3,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-store";
 import { useMySubscription, useSubscriptionMode } from "@/lib/use-subscription";
 
-const ALLOWED_PATHS = ["/pricing", "/auth", "/installer", "/banned", "/welcome", "/login", "/reset-password"];
+const ALLOWED_PATHS = ["/pricing", "/installer", "/banned", "/welcome", "/login", "/reset-password"];
 
 /**
  * When admin sets subscription mode to "required", signed-in users without an

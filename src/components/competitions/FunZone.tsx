@@ -80,6 +80,7 @@ export function FunZone({
               key={`stat-${cat}`}
               to="/competitions/$slug/fun/$type"
               params={{ slug: competitionSlug, type: meta.slug }}
+              search={{ nominee: "" }}
               className="rounded-xl border border-white/10 bg-black/30 px-2 py-1.5 text-center transition hover:border-white/25"
             >
               <div className="text-base leading-none">{meta.emoji}</div>
@@ -112,6 +113,7 @@ export function FunZone({
               key={cat}
               to="/competitions/$slug/fun/$type"
               params={{ slug: competitionSlug, type: meta.slug }}
+              search={{ nominee: "" }}
               className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${meta.accent} p-3 transition hover:border-white/25 hover:shadow-lg`}
             >
               <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-black/40">
