@@ -7,9 +7,43 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadEnv } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const srcAlias = { find: /^@\/(.*)$/, replacement: path.resolve(__dirname, "src") + "/$1" };
+
+/** Supabase vars mirrored from VITE_* when server names are absent. */
+const SUPABASE_ENV_KEYS = [
+  "SUPABASE_URL",
+  "SUPABASE_PUBLISHABLE_KEY",
+  "SUPABASE_PROJECT_ID",
+  "VITE_SUPABASE_URL",
+  "VITE_SUPABASE_PUBLISHABLE_KEY",
+  "VITE_SUPABASE_PROJECT_ID",
+] as const;
+
+function applySupabaseEnvAliases(env: Record<string, string>) {
+  if (!env.SUPABASE_URL && env.VITE_SUPABASE_URL) {
+    env.SUPABASE_URL = env.VITE_SUPABASE_URL;
+  }
+  if (!env.SUPABASE_PUBLISHABLE_KEY && env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+    env.SUPABASE_PUBLISHABLE_KEY = env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  }
+  if (!env.SUPABASE_PROJECT_ID && env.VITE_SUPABASE_PROJECT_ID) {
+    env.SUPABASE_PROJECT_ID = env.VITE_SUPABASE_PROJECT_ID;
+  }
+  for (const key of SUPABASE_ENV_KEYS) {
+    const value = env[key]?.trim();
+    if (value && process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+}
+
+// Load .env / .env.local before config is evaluated so server-side aliases
+// (SUPABASE_* ← VITE_*) exist for dev, build, and Nitro bundling.
+const env = loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "");
+applySupabaseEnvAliases(env);
 
 // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
 // This entry is fetch-shaped and works for both the Cloudflare-module preset (used inside
@@ -33,6 +67,7 @@ export default defineConfig({
     preset: "node-server",
   },
   vite: {
+    envDir: process.cwd(),
     resolve: {
       alias: [srcAlias],
     },

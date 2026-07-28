@@ -106,8 +106,8 @@ export const loginWithIdentifier = createServerFn({ method: "POST" })
     // Use an anon-key client server-side to perform the actual password sign-in.
     // The resolved email never leaves the server.
     const { createClient } = await import("@supabase/supabase-js");
-    const url = process.env.SUPABASE_URL!;
-    const anonKey = process.env.SUPABASE_PUBLISHABLE_KEY!;
+    const { getSupabasePublicEnv } = await import("@/integrations/supabase/env.server");
+    const { url, publishableKey: anonKey } = getSupabasePublicEnv();
     const authClient = createClient(url, anonKey, { auth: { persistSession: false } });
     const { data: signIn, error } = await authClient.auth.signInWithPassword({ email, password: data.password });
     if (error || !signIn.session) throw new Error("Invalid login credentials");
