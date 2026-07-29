@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
@@ -32,14 +33,8 @@ async function handleGameLaunch(e: React.MouseEvent<HTMLAnchorElement>, game: Hu
 
 
 export const Route = createFileRoute("/games")({
-  head: () => ({
-    meta: [
-      { title: "Games Hub — Play, earn XP, unlock achievements" },
-      { name: "description", content: "Featured games, daily challenges, achievements and leaderboards, all in one place." },
-      { property: "og:title", content: "Games Hub" },
-      { property: "og:description", content: "Featured games, daily challenges, achievements and leaderboards." },
-    ],
-  }),
+  loader: () => loadRouteSeo("/games", "Games Hub", "Featured games, daily challenges, achievements and leaderboards."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: () => (
     <RouteErrorBoundary section="Games">
       <GamesHub />

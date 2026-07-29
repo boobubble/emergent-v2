@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -220,15 +220,11 @@ function WhiteLabelCard() {
 
         <div className="border-t pt-4">
           <div className="mb-2 text-xs font-semibold text-muted-foreground">SEO / Social</div>
+          <p className="text-sm text-muted-foreground mb-3">
+            Meta titles, descriptions, keywords, and OG tags are managed in{" "}
+            <Link to="/admin/seo" className="text-primary underline font-medium">SEO Manager</Link>.
+          </p>
           <div className="grid gap-3 sm:grid-cols-2">
-            {field("metaTitle", "Meta title")}
-            {field("metaDescription", "Meta description")}
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 mt-3">
-            {field("metaKeywords", "Meta keywords", "chat, community, games")}
-            {field("ogImage", "Open Graph image URL", "https://…/og.png", "url")}
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 mt-3">
             {field("appleTouchIcon", "Apple touch icon URL", "/apple-touch-icon.png", "url")}
             {field("placeholderImage", "Default placeholder image URL", "https://…/placeholder.png", "url")}
           </div>

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Save, MessageSquareHeart, Plus, Trash2 } from "lucide-react";
@@ -57,8 +57,6 @@ function AdminConfessionsPage() {
     patch({ moderation: { ...values.moderation, [k]: v } });
   const setLb = (k: keyof ConfessionsConfig["leaderboards"], v: boolean) =>
     patch({ leaderboards: { ...values.leaderboards, [k]: v } });
-  const setSeo = (k: keyof ConfessionsConfig["seo"], v: any) =>
-    patch({ seo: { ...values.seo, [k]: v } });
   const setExpiry = (k: keyof ConfessionsConfig["expiry"], v: any) =>
     patch({ expiry: { ...values.expiry, [k]: v } });
 
@@ -251,17 +249,13 @@ function AdminConfessionsPage() {
         </div>
       </Section>
 
-      {/* SEO */}
-      <Section title="SEO" desc="Metadata for the /confessions page.">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div><Label className="text-xs">Meta title</Label><Input value={values.seo.metaTitle} onChange={(e) => setSeo("metaTitle", e.target.value)} className="mt-1" /></div>
-          <div><Label className="text-xs">Keywords</Label><Input value={values.seo.keywords} onChange={(e) => setSeo("keywords", e.target.value)} className="mt-1" /></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Meta description</Label><Textarea rows={2} value={values.seo.metaDescription} onChange={(e) => setSeo("metaDescription", e.target.value)} className="mt-1" /></div>
-          <div><Label className="text-xs">OG title</Label><Input value={values.seo.ogTitle} onChange={(e) => setSeo("ogTitle", e.target.value)} className="mt-1" /></div>
-          <div><Label className="text-xs">OG image URL</Label><Input value={values.seo.ogImage} onChange={(e) => setSeo("ogImage", e.target.value)} className="mt-1" /></div>
-          <div className="sm:col-span-2"><Label className="text-xs">OG description</Label><Textarea rows={2} value={values.seo.ogDescription} onChange={(e) => setSeo("ogDescription", e.target.value)} className="mt-1" /></div>
-          <Row title="No-index page" compact><AdminToggle size="sm" checked={values.seo.noindex} onCheckedChange={(v) => setSeo("noindex", v)} /></Row>
-        </div>
+      {/* SEO — centralized in SEO Manager */}
+      <Section title="SEO" desc="Page metadata for /confessions is managed in SEO Manager.">
+        <p className="text-sm text-muted-foreground">
+          Edit title, description, keywords, OG tags, and robots for the Confessions page in{" "}
+          <Link to="/admin/seo" className="text-primary underline font-medium">SEO Manager</Link>{" "}
+          (Page SEO → Confessions).
+        </p>
       </Section>
 
       <div className="flex justify-end">

@@ -42,7 +42,9 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as RadioRouteImport } from './routes/radio'
 import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SetupWizardRouteImport } from './routes/setup-wizard'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as WelcomeRouteImport } from './routes/welcome'
@@ -372,9 +374,19 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SetupWizardRoute = SetupWizardRouteImport.update({
   id: '/setup-wizard',
   path: '/setup-wizard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrustRoute = TrustRouteImport.update({
@@ -1248,7 +1260,9 @@ export interface FileRoutesByFullPath {
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/setup-wizard': typeof SetupWizardRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
@@ -1444,7 +1458,9 @@ export interface FileRoutesByTo {
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/setup-wizard': typeof SetupWizardRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
@@ -1644,7 +1660,9 @@ export interface FileRoutesById {
   '/radio': typeof RadioRoute
   '/reels': typeof ReelsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/setup-wizard': typeof SetupWizardRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
@@ -1845,7 +1863,9 @@ export interface FileRouteTypes {
     | '/radio'
     | '/reels'
     | '/reset-password'
+    | '/robots.txt'
     | '/setup-wizard'
+    | '/sitemap.xml'
     | '/trust'
     | '/wallet'
     | '/welcome'
@@ -2041,7 +2061,9 @@ export interface FileRouteTypes {
     | '/radio'
     | '/reels'
     | '/reset-password'
+    | '/robots.txt'
     | '/setup-wizard'
+    | '/sitemap.xml'
     | '/trust'
     | '/wallet'
     | '/welcome'
@@ -2240,7 +2262,9 @@ export interface FileRouteTypes {
     | '/radio'
     | '/reels'
     | '/reset-password'
+    | '/robots.txt'
     | '/setup-wizard'
+    | '/sitemap.xml'
     | '/trust'
     | '/wallet'
     | '/welcome'
@@ -2441,7 +2465,9 @@ export interface RootRouteChildren {
   RadioRoute: typeof RadioRoute
   ReelsRoute: typeof ReelsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SetupWizardRoute: typeof SetupWizardRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrustRoute: typeof TrustRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -2725,11 +2751,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/setup-wizard': {
       id: '/setup-wizard'
       path: '/setup-wizard'
       fullPath: '/setup-wizard'
       preLoaderRoute: typeof SetupWizardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trust': {
@@ -4243,7 +4283,9 @@ const rootRouteChildren: RootRouteChildren = {
   RadioRoute: RadioRoute,
   ReelsRoute: ReelsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SetupWizardRoute: SetupWizardRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrustRoute: TrustRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,

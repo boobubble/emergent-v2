@@ -1,22 +1,31 @@
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useBrand } from "@/lib/branding";
+import { getPublicSeoGlobal } from "@/lib/seo.functions";
 
 /**
- * Applies white-label branding to <head> at runtime.
- *
- * The root route's static head() runs during SSR before app_settings loads,
- * so it ships defaults. This component mounts inside AppSettingsProvider and
- * overrides title, meta, theme-color, favicon, and OG tags once the buyer's
- * branding is resolved from the database.
+ * Applies centralized SEO global defaults + white-label branding to <head> at runtime.
  */
 export function DynamicBrandHead() {
   const brand = useBrand();
+  const fetchGlobal = useServerFn(getPublicSeoGlobal);
+  const { data: seoGlobal } = useQuery({
+    queryKey: ["seo-global-public"],
+    queryFn: () => fetchGlobal({}),
+    staleTime: 5 * 60_000,
+  });
 
   useEffect(() => {
     if (typeof document === "undefined") return;
 
-    // Title
-    if (brand.metaTitle) document.title = brand.metaTitle;
+    const title = seoGlobal?.default_title || brand.metaTitle;
+    const description = seoGlobal?.default_description || brand.metaDescription;
+    const keywords = seoGlobal?.default_keywords || brand.metaKeywords;
+    const ogImage = seoGlobal?.default_og_image || brand.ogImage;
+    const themeColor = seoGlobal?.theme_color || brand.themeColor;
+
+    if (title) document.title = title;
 
     const setMeta = (attr: "name" | "property", key: string, content: string) => {
       if (!content) return;
@@ -29,19 +38,25 @@ export function DynamicBrandHead() {
       el.setAttribute("content", content);
     };
 
-    setMeta("name", "description", brand.metaDescription);
-    setMeta("name", "keywords", brand.metaKeywords);
-    setMeta("name", "theme-color", brand.themeColor);
-    setMeta("name", "apple-mobile-web-app-title", brand.shortName);
-    setMeta("property", "og:title", brand.metaTitle);
-    setMeta("property", "og:description", brand.metaDescription);
-    setMeta("property", "og:site_name", brand.name);
-    if (brand.ogImage) setMeta("property", "og:image", brand.ogImage);
-    setMeta("name", "twitter:title", brand.metaTitle);
-    setMeta("name", "twitter:description", brand.metaDescription);
-    if (brand.ogImage) setMeta("name", "twitter:image", brand.ogImage);
+    setMeta("name", "description", description);
+    setMeta("name", "keywords", keywords);
+    setMeta("name", "theme-color", themeColor);
+    setMeta("name", "apple-mobile-web-app-title", seoGlobal?.site_name || brand.shortName);
+    if (seoGlobal?.author) setMeta("name", "author", seoGlobal.author);
+    if (seoGlobal?.google_verification) setMeta("name", "google-site-verification", seoGlobal.google_verification);
+    if (seoGlobal?.bing_verification) setMeta("name", "msvalidate.01", seoGlobal.bing_verification);
 
-    // Favicon + apple touch
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", description);
+    setMeta("property", "og:site_name", seoGlobal?.site_name || brand.name);
+    if (ogImage) setMeta("property", "og:image", ogImage);
+    setMeta("name", "twitter:card", seoGlobal?.twitter_card || "summary_large_image");
+    setMeta("name", "twitter:title", title);
+    setMeta("name", "twitter:description", description);
+    if (seoGlobal?.twitter_site) setMeta("name", "twitter:site", seoGlobal.twitter_site);
+    if (seoGlobal?.twitter_creator) setMeta("name", "twitter:creator", seoGlobal.twitter_creator);
+    if (ogImage) setMeta("name", "twitter:image", ogImage);
+
     const setLink = (rel: string, href: string, type?: string) => {
       if (!href) return;
       let el = document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
@@ -55,7 +70,7 @@ export function DynamicBrandHead() {
     };
     if (brand.favicon) setLink("icon", brand.favicon, brand.favicon.endsWith(".ico") ? "image/x-icon" : "image/png");
     if (brand.appleTouchIcon) setLink("apple-touch-icon", brand.appleTouchIcon);
-  }, [brand]);
+  }, [brand, seoGlobal]);
 
   return null;
 }

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Save, Home, Plus, Trash2 } from "lucide-react";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -243,18 +243,16 @@ export function HomepagePage() {
         </CardContent>
       </Card>
 
-      {/* SEO */}
+      {/* Landing content — SEO metadata lives in SEO Manager (/welcome, /heropage) */}
       <Card>
         <CardContent className="space-y-3 p-5">
           <div className="text-sm font-semibold">SEO</div>
-          <Field label="Page title"><Input value={values.seoTitle} maxLength={70} onChange={(e) => set("seoTitle", e.target.value)} /></Field>
-          <Field label="Meta description"><Textarea value={values.seoDescription} maxLength={200} rows={2} onChange={(e) => set("seoDescription", e.target.value)} /></Field>
-          <Field label="Keywords (comma-separated)"><Input value={values.seoKeywords} maxLength={200} onChange={(e) => set("seoKeywords", e.target.value)} /></Field>
-          <Field label="Open Graph image URL"><Input value={values.ogImageUrl} maxLength={400} placeholder="https://..." onChange={(e) => set("ogImageUrl", e.target.value)} /></Field>
-          <Row label="Enable structured data (JSON-LD)" checked={values.enableStructuredData} onChange={(v) => set("enableStructuredData", v)} />
-          <p className="text-[11px] text-muted-foreground">
-            Title / description shown here are surfaced via the public landing route's head metadata on the next build.
+          <p className="text-sm text-muted-foreground">
+            Landing page titles, descriptions, and OG tags are managed centrally in{" "}
+            <Link to="/admin/seo" className="text-primary underline font-medium">SEO Manager</Link>{" "}
+            (Page SEO → Welcome / Hero Page). Structured data toggles remain in landing config below.
           </p>
+          <Row label="Enable structured data (JSON-LD)" checked={values.enableStructuredData} onChange={(v) => set("enableStructuredData", v)} />
         </CardContent>
       </Card>
     </div>

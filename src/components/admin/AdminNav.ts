@@ -49,7 +49,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/feed-themes",   label: "Feed Themes",   icon: Palette,           keywords: ["feed", "skins", "themes", "store", "coins", "premium", "layout"] },
       { to: "/admin/chat-themes",   label: "Chatroom Themes", icon: Palette,         keywords: ["chatroom", "chat", "skins", "themes", "store", "coins", "premium", "override", "event", "layout"] },
 
-      { to: "/admin/seo",           label: "SEO",           icon: Search,            keywords: ["seo", "meta", "sitemap"] },
+      { to: "/admin/seo",           label: "SEO Manager",   icon: Search,            keywords: ["seo", "meta", "sitemap", "robots", "og", "twitter", "keywords", "canonical"] },
       { to: "/admin/search",        label: "Search",        icon: Search,            keywords: ["search", "universal", "sources", "users", "poems", "mehfil", "battles", "categories", "toggle"] },
       { to: "/admin/internal-linking", label: "Internal Linking", icon: Link2,         keywords: ["internal links", "seo hub", "linking", "cornerstone", "orphan", "anchors", "targets"] },
       { to: "/admin/ads-scripts",   label: "Ads & Scripts", icon: Megaphone,         keywords: ["ads", "adsense", "scripts", "header", "footer", "tracking", "analytics", "pixel"] },

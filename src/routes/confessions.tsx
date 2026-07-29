@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -28,14 +29,8 @@ import {
 import { useAuth } from "@/lib/auth-store";
 
 export const Route = createFileRoute("/confessions")({
-  head: () => ({
-    meta: [
-      { title: "Confessions — Share anonymously" },
-      { name: "description", content: "A safe space to share secrets, ask for advice, and connect anonymously." },
-      { property: "og:title", content: "Confessions" },
-      { property: "og:description", content: "Anonymous community confessions, polls, and questions." },
-    ],
-  }),
+  loader: () => loadRouteSeo("/confessions", "Confessions", "A safe space to share secrets and connect anonymously."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: ConfessionsPage,
 });
 

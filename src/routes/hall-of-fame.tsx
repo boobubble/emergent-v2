@@ -1,5 +1,6 @@
 import type React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -32,24 +33,13 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/hall-of-fame")({
   validateSearch: searchSchema,
-  head: () => ({
-    meta: [
-      { title: "Hall of Fame — Museum of Champions" },
-      {
-        name: "description",
-        content:
-          "The greatest creators in platform history. Every competition champion and poetry laureate — one elegant gallery.",
-      },
-      { property: "og:title", content: "Hall of Fame — Museum of Champions" },
-      {
-        property: "og:description",
-        content: "The greatest creators in platform history.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    scripts: [
-      {
+  loader: () => loadRouteSeo("/hall-of-fame", "Hall of Fame", "The greatest creators in platform history."),
+  head: ({ loaderData }) => {
+    const base = headFromRouteSeo(loaderData);
+    if (base.scripts?.length) return base;
+    return {
+      ...base,
+      scripts: [{
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
@@ -57,9 +47,9 @@ export const Route = createFileRoute("/hall-of-fame")({
           name: "Hall of Fame",
           description: "Every champion across competitions and poetry battles.",
         }),
-      },
-    ],
-  }),
+      }],
+    };
+  },
   component: HallOfFamePage,
 });
 

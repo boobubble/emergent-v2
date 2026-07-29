@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
@@ -12,16 +13,8 @@ import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import type { WriterRank } from "@/lib/mehfil-types";
 
 export const Route = createFileRoute("/poetry/")({
-  head: () => ({
-    meta: [
-      { title: "Poetry Hub — A Community of Poets" },
-      { name: "description", content: "Read, write and share original poetry. Trending verses, poetry battles, and a home for every kind of poet." },
-      { property: "og:title", content: "Poetry Hub — A Community of Poets" },
-      { property: "og:description", content: "Read, write and share original poetry. Trending verses, poetry battles, and a home for every kind of poet." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  loader: () => loadRouteSeo("/poetry/", "Poetry Hub", "Read, write and share original poetry."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: () => (
     <RouteErrorBoundary section="Poetry">
       <MehfilDiscoveryPage />

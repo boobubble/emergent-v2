@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 import type React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -29,15 +30,8 @@ import { toast } from "sonner";
 import { useMehfilLabel } from "@/lib/use-mehfil-label";
 
 export const Route = createFileRoute("/battle-hub")({
-  head: () => ({
-    meta: [
-      { title: "Battle Hub — Watch Every Live Competition in Real Time" },
-      { name: "description", content: "A realtime dashboard of every live competition — votes, leaders, and battles as they happen." },
-      { property: "og:title", content: "Battle Hub" },
-      { property: "og:description", content: "Every live competition, all in one premium realtime arena." },
-      { property: "og:type", content: "website" },
-    ],
-  }),
+  loader: () => loadRouteSeo("/battle-hub", "Battle Hub", "A realtime dashboard of every live competition."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: BattleHubPage,
 });
 
