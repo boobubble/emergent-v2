@@ -1,0 +1,1 @@
+import{C as o}from"./CompetitionsFeedPanel-BAftbvNw.js";import"./index-_-sbO4Mi.js";import"./feedbot-format-BQJf6Q86.js";import"./badge-check-DCAe0ih7.js";import"./trophy-BZVpdwXW.js";const n=o;export{n as component};

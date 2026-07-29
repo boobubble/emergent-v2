@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { buildPublicSitemapXml } from "@/lib/seo.functions";
 
-export const Route = createFileRoute("/sitemap.xml" as never)({
+export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {

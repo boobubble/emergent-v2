@@ -1,0 +1,1 @@
+import "./prosemirror-tables.mjs";

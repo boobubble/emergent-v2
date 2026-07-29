@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { buildPublicRobotsTxt } from "@/lib/seo.functions";
 
-export const Route = createFileRoute("/robots.txt" as never)({
+export const Route = createFileRoute("/robots.txt")({
   server: {
     handlers: {
       GET: async () => {

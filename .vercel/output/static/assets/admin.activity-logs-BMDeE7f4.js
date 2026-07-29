@@ -1,0 +1,1 @@
+import{j as s,bU as e,bX as i}from"./index-_-sbO4Mi.js";function o(){return s.jsxs("div",{children:[s.jsx(e,{title:"User Activity Logs",description:"Per-user login, IP, device and session history."}),s.jsx(i,{title:"Activity stream",points:["Logins, logouts, password changes","Devices and IP addresses","Filter by user or time range","Export to CSV"]})]})}export{o as component};

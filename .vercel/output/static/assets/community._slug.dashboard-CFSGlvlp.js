@@ -1,0 +1,1 @@
+import{j as e}from"./index-_-sbO4Mi.js";const t=()=>e.jsx("div",{className:"grid min-h-screen place-items-center bg-background text-foreground",children:e.jsx("div",{className:"text-center",children:e.jsx("h1",{className:"text-2xl font-bold",children:"Community not found"})})});export{t as notFoundComponent};

@@ -1,0 +1,77 @@
+{
+  "common": {
+    "send": "Send",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "loading": "Loading…",
+    "search": "Search",
+    "more": "More",
+    "back": "Back",
+    "next": "Next",
+    "yes": "Yes",
+    "no": "No",
+    "translate": "Translate",
+    "translateSoon": "AI translation coming soon",
+    "language": "Language"
+  },
+  "nav": {
+    "feed": "Feed",
+    "chatrooms": "Chatrooms",
+    "friends": "Friends",
+    "games": "Games",
+    "leaderboard": "Leaderboard",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "settings": "Settings",
+    "wallet": "Wallet",
+    "confessions": "Confessions",
+    "polls": "Polls",
+    "missions": "Daily Missions",
+    "admin": "Admin"
+  },
+  "auth": {
+    "login": "Log in",
+    "signup": "Sign up",
+    "logout": "Log out",
+    "email": "Email",
+    "password": "Password",
+    "username": "Username",
+    "forgot": "Forgot password?"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Check your connection.",
+    "notFound": "Not found.",
+    "unauthorized": "You don't have access to this."
+  },
+  "empty": {
+    "noPosts": "No posts yet.",
+    "noFriends": "No friends yet.",
+    "noNotifications": "You're all caught up.",
+    "noResults": "No results."
+  },
+  "feed": {
+    "composerPlaceholder": "What's on your mind?",
+    "publish": "Publish",
+    "publishPoll": "Publish poll",
+    "poll": "Poll",
+    "confession": "Confession",
+    "post": "Post"
+  },
+  "admin": {
+    "languages": {
+      "title": "Languages & i18n",
+      "subtitle": "Configure multilingual support for the app.",
+      "enabled": "Enable multilingual support",
+      "autoDetect": "Auto-detect browser language",
+      "defaultLanguage": "Default language",
+      "supportedLanguages": "Supported languages",
+      "aiTranslation": "Enable AI translation for user content (coming soon)"
+    }
+  }
+}

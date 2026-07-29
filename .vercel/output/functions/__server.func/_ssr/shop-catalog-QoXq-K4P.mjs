@@ -1,0 +1,256 @@
+function stickerGifUrl(cp) {
+  return `https://fonts.gstatic.com/s/e/notoemoji/latest/${cp}/512.gif`;
+}
+const SHOP_ITEMS = [
+  // ============= Frames (12) =============
+  { id: "frame_gold", category: "frame", name: "Gold Frame", description: "Shiny gold ring around your avatar.", price: 500, preview: "🟡", frameRing: "ring-2 ring-yellow-400 ring-offset-2 ring-offset-background" },
+  { id: "frame_silver", category: "frame", name: "Silver Frame", description: "Polished silver ring.", price: 250, preview: "⚪", frameRing: "ring-2 ring-slate-300 ring-offset-2 ring-offset-background" },
+  { id: "frame_bronze", category: "frame", name: "Bronze Frame", description: "Earthy bronze ring.", price: 150, preview: "🟤", frameRing: "ring-2 ring-amber-700 ring-offset-2 ring-offset-background" },
+  { id: "frame_neon", category: "frame", name: "Neon Frame", description: "Glowing cyan halo.", price: 350, preview: "💠", frameRing: "ring-2 ring-cyan-400 ring-offset-2 ring-offset-background shadow-[0_0_12px_rgba(34,211,238,0.6)]" },
+  { id: "frame_rose", category: "frame", name: "Rose Frame", description: "Soft pink ring.", price: 200, preview: "🌸", frameRing: "ring-2 ring-pink-400 ring-offset-2 ring-offset-background" },
+  { id: "frame_violet", category: "frame", name: "Violet Frame", description: "Deep purple ring.", price: 300, preview: "🟣", frameRing: "ring-2 ring-violet-500 ring-offset-2 ring-offset-background shadow-[0_0_10px_rgba(139,92,246,0.5)]" },
+  { id: "frame_emerald", category: "frame", name: "Emerald Frame", description: "Lush emerald glow.", price: 350, preview: "🟢", frameRing: "ring-2 ring-emerald-400 ring-offset-2 ring-offset-background shadow-[0_0_10px_rgba(52,211,153,0.5)]" },
+  { id: "frame_crimson", category: "frame", name: "Crimson Frame", description: "Bold crimson red.", price: 400, preview: "🔴", frameRing: "ring-2 ring-red-500 ring-offset-2 ring-offset-background shadow-[0_0_10px_rgba(239,68,68,0.5)]" },
+  { id: "frame_ice", category: "frame", name: "Ice Frame", description: "Frosty white-blue halo.", price: 500, preview: "❄️", frameRing: "ring-2 ring-sky-200 ring-offset-2 ring-offset-background shadow-[0_0_14px_rgba(186,230,253,0.8)]" },
+  { id: "frame_fire", category: "frame", name: "Fire Frame", description: "Burning orange aura.", price: 700, preview: "🔥", frameRing: "ring-2 ring-orange-500 ring-offset-2 ring-offset-background shadow-[0_0_16px_rgba(249,115,22,0.7)]" },
+  { id: "frame_legend", category: "frame", name: "Legend Frame", description: "Animated rainbow ring.", price: 1500, preview: "🌈", frameRing: "ring-[3px] ring-fuchsia-500 ring-offset-2 ring-offset-background shadow-[0_0_18px_rgba(217,70,239,0.7)]" },
+  { id: "frame_mythic", category: "frame", name: "Mythic Frame", description: "Ultimate prismatic halo.", price: 3e3, preview: "👑", frameRing: "ring-[3px] ring-amber-300 ring-offset-2 ring-offset-background shadow-[0_0_24px_rgba(252,211,77,0.9)] animate-pulse" },
+  { id: "frame_sakura", category: "frame", name: "Sakura Frame", description: "Cherry blossom petal ring.", price: 280, preview: "🌸", frameRing: "ring-2 ring-pink-300 ring-offset-2 ring-offset-background shadow-[0_0_10px_rgba(249,168,212,0.6)]" },
+  { id: "frame_obsidian", category: "frame", name: "Obsidian Frame", description: "Sleek black volcanic ring.", price: 450, preview: "⚫", frameRing: "ring-2 ring-zinc-900 ring-offset-2 ring-offset-background shadow-[0_0_10px_rgba(24,24,27,0.8)]" },
+  { id: "frame_pearl", category: "frame", name: "Pearl Frame", description: "Iridescent pearl shimmer.", price: 550, preview: "🤍", frameRing: "ring-2 ring-stone-200 ring-offset-2 ring-offset-background shadow-[0_0_12px_rgba(231,229,228,0.8)]" },
+  { id: "frame_lava", category: "frame", name: "Lava Frame", description: "Molten lava glow.", price: 650, preview: "🌋", frameRing: "ring-2 ring-red-600 ring-offset-2 ring-offset-background shadow-[0_0_14px_rgba(220,38,38,0.7)]" },
+  { id: "frame_aurora", category: "frame", name: "Aurora Frame", description: "Shifting northern lights ring.", price: 900, preview: "🌌", frameRing: "ring-[3px] ring-teal-400 ring-offset-2 ring-offset-background shadow-[0_0_18px_rgba(45,212,191,0.7)]" },
+  { id: "frame_galaxy", category: "frame", name: "Galaxy Frame", description: "Stardust violet halo.", price: 850, preview: "🪐", frameRing: "ring-[3px] ring-indigo-500 ring-offset-2 ring-offset-background shadow-[0_0_16px_rgba(99,102,241,0.7)]" },
+  { id: "frame_thunder", category: "frame", name: "Thunder Frame", description: "Electric yellow bolt ring.", price: 600, preview: "⚡", frameRing: "ring-2 ring-yellow-300 ring-offset-2 ring-offset-background shadow-[0_0_14px_rgba(253,224,71,0.8)]" },
+  { id: "frame_jade", category: "frame", name: "Jade Frame", description: "Ancient jade green ring.", price: 320, preview: "🟩", frameRing: "ring-2 ring-green-600 ring-offset-2 ring-offset-background shadow-[0_0_10px_rgba(22,163,74,0.5)]" },
+  { id: "frame_amethyst", category: "frame", name: "Amethyst Frame", description: "Royal amethyst purple.", price: 420, preview: "💜", frameRing: "ring-2 ring-purple-400 ring-offset-2 ring-offset-background shadow-[0_0_12px_rgba(192,132,252,0.6)]" },
+  { id: "frame_sapphire", category: "frame", name: "Sapphire Frame", description: "Brilliant sapphire blue.", price: 480, preview: "🔷", frameRing: "ring-2 ring-blue-500 ring-offset-2 ring-offset-background shadow-[0_0_12px_rgba(59,130,246,0.6)]" },
+  { id: "frame_ruby", category: "frame", name: "Ruby Frame", description: "Precious ruby red.", price: 480, preview: "♦️", frameRing: "ring-2 ring-rose-600 ring-offset-2 ring-offset-background shadow-[0_0_12px_rgba(225,29,72,0.6)]" },
+  { id: "frame_void", category: "frame", name: "Void Frame", description: "Dark matter ring with rim glow.", price: 1200, preview: "🕳️", frameRing: "ring-[3px] ring-zinc-700 ring-offset-2 ring-offset-background shadow-[0_0_20px_rgba(168,85,247,0.6)]" },
+  // ============= Username effects (10) =============
+  { id: "name_gradient", category: "username_effect", name: "Gradient Name", description: "Purple→pink gradient text.", price: 250, preview: "🎨", usernameClass: "bg-gradient-to-r from-fuchsia-500 to-pink-500 bg-clip-text text-transparent" },
+  { id: "name_gold", category: "username_effect", name: "Gold Name", description: "Pure gold username.", price: 400, preview: "✨", usernameClass: "text-yellow-500 drop-shadow-[0_0_4px_rgba(234,179,8,0.6)]" },
+  { id: "name_neon", category: "username_effect", name: "Neon Name", description: "Cyan glow text.", price: 300, preview: "⚡", usernameClass: "text-cyan-400 drop-shadow-[0_0_4px_rgba(34,211,238,0.7)]" },
+  { id: "name_fire", category: "username_effect", name: "Fire Name", description: "Red-orange flame gradient.", price: 500, preview: "🔥", usernameClass: "bg-gradient-to-r from-red-500 via-orange-500 to-yellow-400 bg-clip-text text-transparent" },
+  { id: "name_ocean", category: "username_effect", name: "Ocean Name", description: "Blue wave gradient.", price: 350, preview: "🌊", usernameClass: "bg-gradient-to-r from-sky-500 via-cyan-400 to-blue-600 bg-clip-text text-transparent" },
+  { id: "name_emerald", category: "username_effect", name: "Emerald Name", description: "Glowing emerald text.", price: 350, preview: "💚", usernameClass: "text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.7)]" },
+  { id: "name_galaxy", category: "username_effect", name: "Galaxy Name", description: "Purple-blue cosmic shimmer.", price: 600, preview: "🌌", usernameClass: "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent" },
+  { id: "name_shadow", category: "username_effect", name: "Shadow Name", description: "Mysterious dark glow.", price: 450, preview: "🌑", usernameClass: "text-zinc-800 dark:text-zinc-100 drop-shadow-[0_0_6px_rgba(0,0,0,0.8)]" },
+  { id: "name_legend", category: "username_effect", name: "Legend Name", description: "Animated rainbow text.", price: 1200, preview: "🌟", usernameClass: "bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 bg-clip-text text-transparent animate-pulse" },
+  { id: "name_mythic", category: "username_effect", name: "Mythic Name", description: "Sparkling royal gold.", price: 2500, preview: "👑", usernameClass: "bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-600 bg-clip-text text-transparent animate-pulse drop-shadow-[0_0_6px_rgba(252,211,77,0.9)]" },
+  { id: "name_lava", category: "username_effect", name: "Lava Name", description: "Molten red-orange glow.", price: 480, preview: "🌋", usernameClass: "bg-gradient-to-r from-red-700 via-orange-500 to-amber-400 bg-clip-text text-transparent" },
+  { id: "name_ice", category: "username_effect", name: "Ice Name", description: "Frozen blue shimmer.", price: 380, preview: "❄️", usernameClass: "text-sky-300 drop-shadow-[0_0_5px_rgba(125,211,252,0.8)]" },
+  { id: "name_sunset", category: "username_effect", name: "Sunset Name", description: "Pink-orange dusk gradient.", price: 420, preview: "🌅", usernameClass: "bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent" },
+  { id: "name_jungle", category: "username_effect", name: "Jungle Name", description: "Deep forest green text.", price: 320, preview: "🌿", usernameClass: "bg-gradient-to-r from-green-700 via-emerald-500 to-lime-400 bg-clip-text text-transparent" },
+  { id: "name_candy", category: "username_effect", name: "Candy Name", description: "Sweet pink-mint pop.", price: 360, preview: "🍬", usernameClass: "bg-gradient-to-r from-pink-400 via-purple-300 to-teal-300 bg-clip-text text-transparent" },
+  { id: "name_chrome", category: "username_effect", name: "Chrome Name", description: "Polished metallic silver.", price: 550, preview: "🪞", usernameClass: "bg-gradient-to-r from-zinc-300 via-zinc-100 to-zinc-400 bg-clip-text text-transparent drop-shadow-[0_0_3px_rgba(228,228,231,0.8)]" },
+  { id: "name_neon_pink", category: "username_effect", name: "Hot Pink Name", description: "Vibrant neon pink.", price: 320, preview: "💗", usernameClass: "text-pink-500 drop-shadow-[0_0_5px_rgba(236,72,153,0.8)]" },
+  { id: "name_matrix", category: "username_effect", name: "Matrix Name", description: "Hacker terminal green.", price: 400, preview: "💻", usernameClass: "text-green-400 font-mono drop-shadow-[0_0_5px_rgba(74,222,128,0.8)]" },
+  { id: "name_royal", category: "username_effect", name: "Royal Name", description: "Deep purple with gold.", price: 700, preview: "👑", usernameClass: "bg-gradient-to-r from-purple-700 via-violet-500 to-amber-400 bg-clip-text text-transparent" },
+  { id: "name_holo", category: "username_effect", name: "Holographic", description: "Iridescent rainbow shimmer.", price: 900, preview: "🔮", usernameClass: "bg-gradient-to-r from-pink-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent animate-pulse" },
+  { id: "name_blood", category: "username_effect", name: "Blood Name", description: "Dark crimson menace.", price: 600, preview: "🩸", usernameClass: "text-red-700 drop-shadow-[0_0_6px_rgba(185,28,28,0.9)]" },
+  // ============= Themes (8) =============
+  { id: "theme_ocean", category: "theme", name: "Ocean Theme", description: "Deep blue accent across the app.", price: 600, preview: "🌊", themeAccent: "oklch(0.62 0.18 230)" },
+  { id: "theme_sunset", category: "theme", name: "Sunset Theme", description: "Warm orange accent.", price: 600, preview: "🌇", themeAccent: "oklch(0.7 0.18 50)" },
+  { id: "theme_forest", category: "theme", name: "Forest Theme", description: "Emerald accent.", price: 600, preview: "🌲", themeAccent: "oklch(0.62 0.15 155)" },
+  { id: "theme_rose", category: "theme", name: "Rose Theme", description: "Romantic pink accent.", price: 600, preview: "🌹", themeAccent: "oklch(0.68 0.18 0)" },
+  { id: "theme_lavender", category: "theme", name: "Lavender Theme", description: "Soft purple accent.", price: 600, preview: "💜", themeAccent: "oklch(0.65 0.16 295)" },
+  { id: "theme_mint", category: "theme", name: "Mint Theme", description: "Fresh mint accent.", price: 700, preview: "🍃", themeAccent: "oklch(0.78 0.12 165)" },
+  { id: "theme_midnight", category: "theme", name: "Midnight Theme", description: "Deep indigo accent.", price: 800, preview: "🌃", themeAccent: "oklch(0.45 0.18 270)" },
+  { id: "theme_gold", category: "theme", name: "Gold Theme", description: "Luxurious gold accent.", price: 1e3, preview: "🏆", themeAccent: "oklch(0.75 0.15 85)" },
+  { id: "theme_cherry", category: "theme", name: "Cherry Theme", description: "Sweet cherry pink accent.", price: 650, preview: "🍒", themeAccent: "oklch(0.65 0.2 15)" },
+  { id: "theme_cyber", category: "theme", name: "Cyber Theme", description: "Electric cyber-cyan accent.", price: 750, preview: "🤖", themeAccent: "oklch(0.72 0.18 200)" },
+  { id: "theme_emerald", category: "theme", name: "Emerald Theme", description: "Vivid emerald green accent.", price: 700, preview: "🟢", themeAccent: "oklch(0.65 0.18 145)" },
+  { id: "theme_crimson", category: "theme", name: "Crimson Theme", description: "Bold crimson red accent.", price: 750, preview: "🔴", themeAccent: "oklch(0.58 0.22 25)" },
+  { id: "theme_amber", category: "theme", name: "Amber Theme", description: "Warm amber glow accent.", price: 700, preview: "🟠", themeAccent: "oklch(0.72 0.17 65)" },
+  { id: "theme_grape", category: "theme", name: "Grape Theme", description: "Juicy grape purple accent.", price: 700, preview: "🍇", themeAccent: "oklch(0.55 0.2 305)" },
+  { id: "theme_neon", category: "theme", name: "Neon Theme", description: "Hot neon pink accent.", price: 850, preview: "💖", themeAccent: "oklch(0.7 0.25 350)" },
+  { id: "theme_aqua", category: "theme", name: "Aqua Theme", description: "Crystal aqua blue accent.", price: 700, preview: "💧", themeAccent: "oklch(0.75 0.13 210)" },
+  { id: "theme_void", category: "theme", name: "Void Theme", description: "Deep void violet accent.", price: 1100, preview: "🕳️", themeAccent: "oklch(0.4 0.22 290)" },
+  // ============= Emoji packs (8) =============
+  // ============= Animated Sticker Packs (17) — unlock animated stickers in chat =============
+  { id: "pack_party", category: "emoji_pack", name: "Party Pack", description: "Animated party stickers for chatrooms.", price: 300, preview: "🎉", previewCp: "1f389", stickers: [
+    { cp: "1f389", name: "party", label: "Party" },
+    { cp: "1f973", name: "partyface", label: "Party Face" },
+    { cp: "1f38a", name: "confetti", label: "Confetti" },
+    { cp: "1f381", name: "gift", label: "Gift" },
+    { cp: "1f382", name: "cake", label: "Cake" }
+  ] },
+  { id: "pack_animals", category: "emoji_pack", name: "Critters Pack", description: "Animated cute animal stickers.", price: 300, preview: "🐱", previewCp: "1f431", stickers: [
+    { cp: "1f431", name: "cat", label: "Cat" },
+    { cp: "1f436", name: "dog", label: "Dog" },
+    { cp: "1f43b", name: "bear", label: "Bear" },
+    { cp: "1f98a", name: "fox", label: "Fox" },
+    { cp: "1f43c", name: "panda", label: "Panda" },
+    { cp: "1f430", name: "rabbit", label: "Rabbit" }
+  ] },
+  { id: "pack_space", category: "emoji_pack", name: "Cosmic Pack", description: "Out-of-this-world animated stickers.", price: 450, preview: "🚀", previewCp: "1f680", stickers: [
+    { cp: "1f680", name: "rocket", label: "Rocket" },
+    { cp: "1f30c", name: "milkyway", label: "Milky Way" },
+    { cp: "1f47d", name: "alien", label: "Alien" },
+    { cp: "1fa90", name: "saturn", label: "Saturn" },
+    { cp: "1f320", name: "shootingstar", label: "Shooting Star" },
+    { cp: "2b50", name: "star", label: "Star" }
+  ] },
+  { id: "pack_food", category: "emoji_pack", name: "Foodie Pack", description: "Yummy animated food stickers.", price: 350, preview: "🍕", previewCp: "1f355", stickers: [
+    { cp: "1f355", name: "pizza", label: "Pizza" },
+    { cp: "1f354", name: "burger", label: "Burger" },
+    { cp: "1f369", name: "donut", label: "Donut" },
+    { cp: "1f32e", name: "taco", label: "Taco" },
+    { cp: "1f366", name: "icecream", label: "Ice Cream" }
+  ] },
+  { id: "pack_sports", category: "emoji_pack", name: "Sports Pack", description: "Athletic animated stickers.", price: 300, preview: "⚽", previewCp: "26bd", stickers: [
+    { cp: "26bd", name: "soccer", label: "Soccer" },
+    { cp: "1f3c0", name: "basketball", label: "Basketball" },
+    { cp: "1f3c8", name: "football", label: "Football" },
+    { cp: "26be", name: "baseball", label: "Baseball" },
+    { cp: "1f3be", name: "tennis", label: "Tennis" },
+    { cp: "1f3c6", name: "trophy", label: "Trophy" }
+  ] },
+  { id: "pack_nature", category: "emoji_pack", name: "Nature Pack", description: "Floral & lucky animated stickers.", price: 400, preview: "🌸", previewCp: "1f338", stickers: [
+    { cp: "1f338", name: "blossom", label: "Cherry Blossom" },
+    { cp: "1f33b", name: "sunflower", label: "Sunflower" },
+    { cp: "1f337", name: "tulip", label: "Tulip" },
+    { cp: "1f340", name: "clover", label: "Clover" },
+    { cp: "1f339", name: "rose", label: "Rose" }
+  ] },
+  { id: "pack_magic", category: "emoji_pack", name: "Magic Pack", description: "Mystical animated stickers.", price: 600, preview: "🔮", previewCp: "2728", stickers: [
+    { cp: "2728", name: "sparkles", label: "Sparkles" },
+    { cp: "1f52e", name: "crystal", label: "Crystal Ball" },
+    { cp: "1fa84", name: "wand", label: "Magic Wand" },
+    { cp: "1f31f", name: "glowstar", label: "Glow Star" },
+    { cp: "1f4ab", name: "dizzy", label: "Dizzy" }
+  ] },
+  { id: "pack_legend", category: "emoji_pack", name: "Legendary Pack", description: "Elite animated stickers.", price: 1500, preview: "💎", previewCp: "1f48e", stickers: [
+    { cp: "1f48e", name: "gem", label: "Gem" },
+    { cp: "1f451", name: "crown", label: "Crown" },
+    { cp: "1f3c6", name: "trophy", label: "Trophy" },
+    { cp: "1f3c5", name: "medal", label: "Medal" },
+    { cp: "1f947", name: "gold", label: "Gold" }
+  ] },
+  { id: "pack_hearts", category: "emoji_pack", name: "Hearts Pack", description: "Animated love stickers.", price: 350, preview: "💖", previewCp: "2764_fe0f", stickers: [
+    { cp: "2764_fe0f", name: "heart", label: "Heart" },
+    { cp: "1f496", name: "sparkleheart", label: "Sparkle Heart" },
+    { cp: "1f498", name: "cupid", label: "Cupid" },
+    { cp: "1f49d", name: "heartribbon", label: "Heart Ribbon" },
+    { cp: "1f495", name: "twohearts", label: "Two Hearts" },
+    { cp: "1f494", name: "brokenheart", label: "Broken Heart" }
+  ] },
+  { id: "pack_weather", category: "emoji_pack", name: "Weather Pack", description: "Moody sky animated stickers.", price: 320, preview: "🌈", previewCp: "1f308", stickers: [
+    { cp: "2600_fe0f", name: "sun", label: "Sun" },
+    { cp: "1f308", name: "rainbow", label: "Rainbow" },
+    { cp: "26c8_fe0f", name: "storm", label: "Storm" },
+    { cp: "2744_fe0f", name: "snow", label: "Snowflake" },
+    { cp: "1f327_fe0f", name: "rain", label: "Rain" }
+  ] },
+  { id: "pack_gaming", category: "emoji_pack", name: "Gamer Pack", description: "Game-on animated stickers.", price: 400, preview: "🎮", previewCp: "1f3ae", stickers: [
+    { cp: "1f3ae", name: "gamepad", label: "Gamepad" },
+    { cp: "1f579_fe0f", name: "joystick", label: "Joystick" },
+    { cp: "1f47e", name: "invader", label: "Invader" },
+    { cp: "1f3af", name: "bullseye", label: "Bullseye" },
+    { cp: "1f3c5", name: "medal", label: "Medal" }
+  ] },
+  { id: "pack_meme", category: "emoji_pack", name: "Meme Pack", description: "Chronically online animated stickers.", price: 500, preview: "💀", previewCp: "1f480", stickers: [
+    { cp: "1f602", name: "joy", label: "Joy" },
+    { cp: "1f923", name: "rofl", label: "ROFL" },
+    { cp: "1f480", name: "skull", label: "Skull" },
+    { cp: "1f440", name: "eyes", label: "Eyes" },
+    { cp: "1f525", name: "fire", label: "Fire" }
+  ] },
+  { id: "pack_drinks", category: "emoji_pack", name: "Drinks Pack", description: "Cheers! Animated drink stickers.", price: 300, preview: "🍻", previewCp: "1f37b", stickers: [
+    { cp: "1f37b", name: "beers", label: "Beers" },
+    { cp: "1f377", name: "wine", label: "Wine" },
+    { cp: "1f379", name: "cocktail", label: "Cocktail" },
+    { cp: "2615", name: "coffee", label: "Coffee" },
+    { cp: "1f9cb", name: "bubbletea", label: "Bubble Tea" }
+  ] },
+  { id: "pack_music", category: "emoji_pack", name: "Music Pack", description: "Turn it up — animated music stickers.", price: 380, preview: "🎵", previewCp: "1f3b5", stickers: [
+    { cp: "1f3b5", name: "note", label: "Music Note" },
+    { cp: "1f3b6", name: "notes", label: "Music Notes" },
+    { cp: "1f3b8", name: "guitar", label: "Guitar" },
+    { cp: "1f3b9", name: "piano", label: "Piano" },
+    { cp: "1f3a4", name: "mic", label: "Mic" },
+    { cp: "1f941", name: "drum", label: "Drum" }
+  ] },
+  { id: "pack_zodiac", category: "emoji_pack", name: "Zodiac Pack", description: "Astro animated stickers.", price: 550, preview: "♈", previewCp: "2728", stickers: [
+    { cp: "2728", name: "sparkles", label: "Sparkles" },
+    { cp: "1f31f", name: "glowstar", label: "Glow Star" },
+    { cp: "1f319", name: "moon", label: "Moon" },
+    { cp: "2600_fe0f", name: "sun", label: "Sun" },
+    { cp: "1f320", name: "shootingstar", label: "Shooting Star" }
+  ] },
+  { id: "pack_travel", category: "emoji_pack", name: "Travel Pack", description: "Wanderlust animated stickers.", price: 450, preview: "✈️", previewCp: "2708_fe0f", stickers: [
+    { cp: "2708_fe0f", name: "plane", label: "Plane" },
+    { cp: "1f3d6_fe0f", name: "beach", label: "Beach" },
+    { cp: "1f686", name: "train", label: "Train" },
+    { cp: "1f3dd_fe0f", name: "island", label: "Island" },
+    { cp: "1f5fa_fe0f", name: "map", label: "Map" }
+  ] },
+  { id: "pack_horror", category: "emoji_pack", name: "Spooky Pack", description: "Scary animated stickers.", price: 500, preview: "🎃", previewCp: "1f383", stickers: [
+    { cp: "1f383", name: "pumpkin", label: "Pumpkin" },
+    { cp: "1f47b", name: "ghost", label: "Ghost" },
+    { cp: "1f9db", name: "vampire", label: "Vampire" },
+    { cp: "1f9df", name: "zombie", label: "Zombie" },
+    { cp: "1f987", name: "bat", label: "Bat" },
+    { cp: "1f577_fe0f", name: "spider", label: "Spider" }
+  ] },
+  // ============= Badges (8) — shown next to your name =============
+  { id: "badge_verified", category: "badge", name: "Verified Badge", description: "Blue check next to your name.", price: 800, preview: "✅", badgeIcon: "✅" },
+  { id: "badge_star", category: "badge", name: "Star Badge", description: "Gold star achievement.", price: 400, preview: "⭐", badgeIcon: "⭐" },
+  { id: "badge_heart", category: "badge", name: "Heart Badge", description: "Show some love.", price: 250, preview: "❤️", badgeIcon: "❤️" },
+  { id: "badge_rocket", category: "badge", name: "Rocket Badge", description: "For the early adopters.", price: 500, preview: "🚀", badgeIcon: "🚀" },
+  { id: "badge_crown", category: "badge", name: "Crown Badge", description: "Royal status.", price: 1e3, preview: "👑", badgeIcon: "👑" },
+  { id: "badge_diamond", category: "badge", name: "Diamond Badge", description: "Premium member.", price: 1500, preview: "💎", badgeIcon: "💎" },
+  { id: "badge_fire", category: "badge", name: "Fire Badge", description: "On a hot streak.", price: 600, preview: "🔥", badgeIcon: "🔥" },
+  { id: "badge_trophy", category: "badge", name: "Trophy Badge", description: "Champion of the feed.", price: 2e3, preview: "🏆", badgeIcon: "🏆" },
+  { id: "badge_lightning", category: "badge", name: "Lightning Badge", description: "Lightning-fast responder.", price: 450, preview: "⚡", badgeIcon: "⚡" },
+  { id: "badge_moon", category: "badge", name: "Moon Badge", description: "Night owl member.", price: 350, preview: "🌙", badgeIcon: "🌙" },
+  { id: "badge_sun", category: "badge", name: "Sun Badge", description: "Daily streak hero.", price: 500, preview: "☀️", badgeIcon: "☀️" },
+  { id: "badge_unicorn", category: "badge", name: "Unicorn Badge", description: "Rare and magical.", price: 1300, preview: "🦄", badgeIcon: "🦄" },
+  { id: "badge_ghost", category: "badge", name: "Ghost Badge", description: "Stealthy lurker.", price: 400, preview: "👻", badgeIcon: "👻" },
+  { id: "badge_robot", category: "badge", name: "Robot Badge", description: "Beep boop, tech enthusiast.", price: 550, preview: "🤖", badgeIcon: "🤖" },
+  { id: "badge_alien", category: "badge", name: "Alien Badge", description: "Out of this world.", price: 700, preview: "👽", badgeIcon: "👽" },
+  { id: "badge_ninja", category: "badge", name: "Ninja Badge", description: "Silent and deadly.", price: 800, preview: "🥷", badgeIcon: "🥷" },
+  { id: "badge_dragon", category: "badge", name: "Dragon Badge", description: "Mythical guardian.", price: 1800, preview: "🐉", badgeIcon: "🐉" },
+  { id: "badge_pheonix", category: "badge", name: "Phoenix Badge", description: "Reborn from fire.", price: 2200, preview: "🦅", badgeIcon: "🦅" },
+  { id: "badge_skull", category: "badge", name: "Skull Badge", description: "Hardcore vibes.", price: 650, preview: "💀", badgeIcon: "💀" },
+  // ============= Profile backgrounds (6) =============
+  { id: "bg_aurora", category: "background", name: "Aurora", description: "Northern lights gradient header.", price: 800, preview: "🌌", backgroundClass: "bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" },
+  { id: "bg_sunset", category: "background", name: "Sunset Sky", description: "Warm sunset gradient header.", price: 700, preview: "🌅", backgroundClass: "bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600" },
+  { id: "bg_ocean", category: "background", name: "Ocean Wave", description: "Cool ocean gradient header.", price: 700, preview: "🌊", backgroundClass: "bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600" },
+  { id: "bg_forest", category: "background", name: "Forest Mist", description: "Lush green gradient header.", price: 700, preview: "🌲", backgroundClass: "bg-gradient-to-br from-emerald-400 via-teal-500 to-green-700" },
+  { id: "bg_cherry", category: "background", name: "Cherry Bloom", description: "Soft sakura pink header.", price: 600, preview: "🌸", backgroundClass: "bg-gradient-to-br from-pink-300 via-rose-400 to-pink-500" },
+  { id: "bg_galaxy", category: "background", name: "Galaxy", description: "Deep space gradient header.", price: 1200, preview: "✨", backgroundClass: "bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900" },
+  { id: "bg_lava", category: "background", name: "Lava Flow", description: "Molten red-orange header.", price: 900, preview: "🌋", backgroundClass: "bg-gradient-to-br from-red-700 via-orange-500 to-yellow-400" },
+  { id: "bg_arctic", category: "background", name: "Arctic", description: "Icy blue-white header.", price: 750, preview: "🧊", backgroundClass: "bg-gradient-to-br from-sky-200 via-cyan-300 to-blue-400" },
+  { id: "bg_neon", category: "background", name: "Neon City", description: "Cyberpunk magenta-cyan.", price: 1100, preview: "🏙️", backgroundClass: "bg-gradient-to-br from-fuchsia-600 via-purple-600 to-cyan-500" },
+  { id: "bg_desert", category: "background", name: "Desert Dunes", description: "Warm sandstone header.", price: 650, preview: "🏜️", backgroundClass: "bg-gradient-to-br from-amber-300 via-orange-400 to-rose-500" },
+  { id: "bg_jungle", category: "background", name: "Jungle", description: "Lush deep-green header.", price: 700, preview: "🌴", backgroundClass: "bg-gradient-to-br from-lime-500 via-green-600 to-emerald-800" },
+  { id: "bg_midnight", category: "background", name: "Midnight", description: "Deep indigo night sky.", price: 850, preview: "🌃", backgroundClass: "bg-gradient-to-br from-indigo-900 via-blue-950 to-slate-900" },
+  { id: "bg_candy", category: "background", name: "Cotton Candy", description: "Pastel pink-blue dream.", price: 700, preview: "🍭", backgroundClass: "bg-gradient-to-br from-pink-300 via-fuchsia-300 to-sky-300" },
+  { id: "bg_emerald", category: "background", name: "Emerald Mine", description: "Rich emerald-teal header.", price: 800, preview: "💎", backgroundClass: "bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700" },
+  { id: "bg_royal", category: "background", name: "Royal", description: "Regal purple-gold header.", price: 1400, preview: "👑", backgroundClass: "bg-gradient-to-br from-purple-700 via-violet-600 to-amber-400" }
+];
+const SHOP_BY_ID = Object.fromEntries(SHOP_ITEMS.map((i) => [i.id, i]));
+const SHOP_BY_CATEGORY = {
+  frame: SHOP_ITEMS.filter((i) => i.category === "frame"),
+  username_effect: SHOP_ITEMS.filter((i) => i.category === "username_effect"),
+  theme: SHOP_ITEMS.filter((i) => i.category === "theme"),
+  emoji_pack: SHOP_ITEMS.filter((i) => i.category === "emoji_pack"),
+  badge: SHOP_ITEMS.filter((i) => i.category === "badge"),
+  background: SHOP_ITEMS.filter((i) => i.category === "background")
+};
+const CATEGORY_LABEL = {
+  frame: "Profile Frames",
+  username_effect: "Username Effects",
+  theme: "Themes",
+  emoji_pack: "Emoji Packs",
+  badge: "Badges",
+  background: "Backgrounds"
+};
+export {
+  CATEGORY_LABEL as C,
+  SHOP_BY_ID as S,
+  SHOP_BY_CATEGORY as a,
+  stickerGifUrl as s
+};

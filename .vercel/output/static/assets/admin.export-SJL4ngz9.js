@@ -1,0 +1,1 @@
+import{j as s,bU as t,bX as e}from"./index-_-sbO4Mi.js";function a(){return s.jsxs("div",{children:[s.jsx(t,{title:"Export",description:"Download CSV / Excel snapshots of core data."}),s.jsx(e,{title:"Data export",points:["Users, posts, messages, transactions","Filter by date range","CSV and XLSX formats"]})]})}export{a as component};

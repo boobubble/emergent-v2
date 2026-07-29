@@ -1,0 +1,1 @@
+import{e as t,a0 as a,h as o}from"./index-_-sbO4Mi.js";const r={mod_can_kick:!0,mod_can_mute:!0,mod_can_ban:!0,mod_can_announce:!1,mod_can_clear:!1};function u(){const e=t(a),{data:s}=o({queryKey:["admin-settings"],queryFn:()=>e({}),staleTime:6e4}),n=s?.staff_permissions??{};return{...r,...n}}export{r as D,u};

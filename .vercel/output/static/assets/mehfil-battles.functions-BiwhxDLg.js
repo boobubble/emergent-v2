@@ -1,0 +1,1 @@
+import{a7 as e,a8 as a}from"./index-_-sbO4Mi.js";const c=e({method:"GET"}).handler(a("504e142cdc51dc62a074486e594ede5de4ba6cae1788134a6b1555b9b766bf20")),d=e({method:"GET"}).handler(a("2df76ac4651f7ee09e175ef1f8d2135014a5ba67b9fb26911dfc0354c2cf886b"));export{d as g,c as l};

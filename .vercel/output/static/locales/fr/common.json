@@ -1,0 +1,39 @@
+{
+  "common": {
+    "send": "Envoyer", "cancel": "Annuler", "save": "Enregistrer", "saving": "Enregistrement…",
+    "delete": "Supprimer", "edit": "Modifier", "close": "Fermer", "confirm": "Confirmer",
+    "loading": "Chargement…", "search": "Rechercher", "more": "Plus", "back": "Retour",
+    "next": "Suivant", "yes": "Oui", "no": "Non",
+    "translate": "Traduire", "translateSoon": "Traduction IA bientôt", "language": "Langue"
+  },
+  "nav": {
+    "feed": "Fil", "chatrooms": "Salons", "friends": "Amis", "games": "Jeux",
+    "leaderboard": "Classement", "notifications": "Notifications", "profile": "Profil",
+    "settings": "Paramètres", "wallet": "Portefeuille", "confessions": "Confessions",
+    "polls": "Sondages", "missions": "Missions quotidiennes", "admin": "Admin"
+  },
+  "auth": {
+    "login": "Connexion", "signup": "Inscription", "logout": "Déconnexion",
+    "email": "E-mail", "password": "Mot de passe", "username": "Nom d'utilisateur", "forgot": "Mot de passe oublié ?"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue.", "network": "Erreur réseau.",
+    "notFound": "Introuvable.", "unauthorized": "Accès refusé."
+  },
+  "empty": {
+    "noPosts": "Aucune publication.", "noFriends": "Aucun ami.",
+    "noNotifications": "Tout est à jour.", "noResults": "Aucun résultat."
+  },
+  "feed": {
+    "composerPlaceholder": "Quoi de neuf ?", "publish": "Publier",
+    "publishPoll": "Publier le sondage", "poll": "Sondage", "confession": "Confession", "post": "Publication"
+  },
+  "admin": {
+    "languages": {
+      "title": "Langues et i18n", "subtitle": "Configurer le support multilingue.",
+      "enabled": "Activer le multilingue", "autoDetect": "Détecter la langue du navigateur",
+      "defaultLanguage": "Langue par défaut", "supportedLanguages": "Langues prises en charge",
+      "aiTranslation": "Activer la traduction IA (bientôt)"
+    }
+  }
+}
