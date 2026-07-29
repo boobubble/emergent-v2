@@ -1,5 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { ChatApp } from "@/components/chat/ChatApp";
+import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 import { useAppSettings } from "@/lib/app-settings";
 
 export const Route = createFileRoute("/")({
@@ -28,5 +29,9 @@ function HomeRouter() {
   if (layoutPriority === "feed_first") {
     return <Navigate to="/feed" replace />;
   }
-  return <ChatApp />;
+  return (
+    <ChatErrorBoundary label="chat-route">
+      <ChatApp />
+    </ChatErrorBoundary>
+  );
 }

@@ -38,18 +38,26 @@ import {
   recordAttempt,
   type BotEventKind,
 } from "./bot-events";
+import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
+import {
+  CHAT_SYNC_CHANNEL,
+  LEGACY_CHAT_STORAGE_KEYS,
+  UUID_RE,
+  dmChannelFor,
+  isBotUiId,
+  isRemoteDmChannel,
+  isUuid,
+  parseDmChannel,
+  sanitizeChatState,
+  showDmParticipantError,
+  storageKeyForUsername,
+} from "./dm-utils";
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-function isUuid(s: string) { return UUID_RE.test(s); }
+export { dmChannelFor } from "./dm-utils";
 
-export function dmChannelFor(meId: string | null, peerId: string): string {
-  if (!meId || !isUuid(peerId)) return `dm:${peerId}`;
-  return "dm:" + [meId, peerId].sort().join(":");
-}
 function isRemoteChannel(channelId: string, meId: string | null): boolean {
   if (channelId === "lobby" || channelId === "games") return true;
-  if (!meId) return false;
-  return channelId.startsWith("dm:") && channelId.includes(meId);
+  return isRemoteDmChannel(channelId, meId);
 }
 function rowToMessage(row: { id: string; channel_id: string; author_id: string; text: string; kind: string | null; attachment: unknown; reply_to_id: string | null; created_at: string }, meAuthUuid: string | null): Message {
   const authorId = meAuthUuid && row.author_id === meAuthUuid ? "me" : row.author_id;
@@ -72,9 +80,9 @@ function newUuid(): string {
   });
 }
 
-const STORAGE_KEY_BASE = "palrgo:state:v3";
-const SYNC_CHANNEL = "palrgo:sync:v3";
-function storageKeyFor(username: string) { return `${STORAGE_KEY_BASE}:${username.toLowerCase()}`; }
+function storageKeyFor(username: string) {
+  return storageKeyForUsername(username);
+}
 const SEED_TIME = 1_700_000_000_000;
 
 const AVATAR_COLORS = [
@@ -309,9 +317,29 @@ function ensureBots(state: State): State {
 
 function load(username: string): State {
   try {
-    const raw = localStorage.getItem(storageKeyFor(username));
-    if (raw) return ensureBots(ensureWelcome(normalizeMe(JSON.parse(raw), username), username));
-  } catch {}
+    let raw = localStorage.getItem(storageKeyFor(username));
+    if (!raw) {
+      for (const legacyKey of LEGACY_CHAT_STORAGE_KEYS) {
+        const legacyRaw = localStorage.getItem(`${legacyKey}:${username.toLowerCase()}`);
+        if (legacyRaw) {
+          raw = legacyRaw;
+          break;
+        }
+      }
+    }
+    if (raw) {
+      const parsed = sanitizeChatState(JSON.parse(raw) as State, null);
+      const state = ensureBots(ensureWelcome(normalizeMe(parsed, username), username));
+      try {
+        localStorage.setItem(storageKeyFor(username), JSON.stringify(state));
+      } catch {
+        /* ignore quota errors */
+      }
+      return state;
+    }
+  } catch (err) {
+    if (import.meta.env.DEV) console.warn("[chat-store] Failed to load persisted state; using seed.", err);
+  }
   return seed(username);
 }
 
@@ -399,7 +427,7 @@ interface Ctx {
   channelLabel: (id: string) => string;
   isDM: (id: string) => boolean;
   dmUser: (id: string) => User | undefined;
-  dmChannelFor: (peerId: string) => string;
+  dmChannelFor: (peerId: string) => string | null;
   replyingTo: Message | null;
   setReplyingTo: (m: Message | null) => void;
   findMessage: (id: string) => Message | undefined;
@@ -566,7 +594,7 @@ function pickBotReply(text: string): string {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export function ChatProvider({ username, authUserId = null, isGuest = false, children }: { username: string; authUserId?: string | null; isGuest?: boolean; children: ReactNode }) {
+function ChatProviderInner({ username, authUserId = null, isGuest = false, children }: { username: string; authUserId?: string | null; isGuest?: boolean; children: ReactNode }) {
   const [state, setState] = useState<State>(() => seed(username));
   const [storageReady, setStorageReady] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
@@ -583,12 +611,28 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
 
 
   useEffect(() => {
-    const loaded = load(username);
-    const me = { ...loaded.me, isGuest };
-    setState({ ...loaded, me, users: { ...loaded.users, me } });
+    try {
+      const loaded = load(username);
+      const me = { ...loaded.me, isGuest };
+      setState({ ...loaded, me, users: { ...loaded.users, me } });
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn("[chat-store] Hydration failed; resetting chat state.", err);
+      try {
+        localStorage.removeItem(storageKeyFor(username));
+      } catch {
+        /* ignore */
+      }
+      setState(seed(username));
+    }
     setStorageReady(true);
     streakChecked.current = null;
   }, [username, isGuest]);
+
+  // Self-heal persisted DM identity once auth UUID is known (replace "me", drop malformed entries).
+  useEffect(() => {
+    if (!storageReady || !authUserId) return;
+    setState((s) => sanitizeChatState(s, authUserId));
+  }, [storageReady, authUserId]);
 
   // Daily streak check on first load per user
   useEffect(() => {
@@ -620,7 +664,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   useEffect(() => {
     if (!storageReady) return;
     if (typeof BroadcastChannel !== "undefined") {
-      const ch = new BroadcastChannel(`${SYNC_CHANNEL}:${username.toLowerCase()}`);
+      const ch = new BroadcastChannel(`${CHAT_SYNC_CHANNEL}:${username.toLowerCase()}`);
       syncRef.current = ch;
       ch.onmessage = (e) => {
         if (e.data?.type === "state") {
@@ -634,10 +678,18 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
 
   useEffect(() => {
     if (!storageReady) return;
-    try { localStorage.setItem(storageKeyFor(username), JSON.stringify(state)); } catch {}
-    if (skipBroadcast.current) { skipBroadcast.current = false; return; }
-    syncRef.current?.postMessage({ type: "state", state });
-  }, [state, storageReady, username]);
+    const toPersist = authUserId ? sanitizeChatState(state, authUserId) : state;
+    try {
+      localStorage.setItem(storageKeyFor(username), JSON.stringify(toPersist));
+    } catch {
+      /* ignore quota errors */
+    }
+    if (skipBroadcast.current) {
+      skipBroadcast.current = false;
+      return;
+    }
+    syncRef.current?.postMessage({ type: "state", state: toPersist });
+  }, [state, storageReady, username, authUserId]);
 
   // Ambient bot chatter (disabled — bots only respond to user commands now)
 
@@ -930,7 +982,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   useEffect(() => {
     if (!authUserId) return;
     const channelId = state.activeChannel;
-    if (!channelId.startsWith("dm:") || !channelId.includes(authUserId)) return;
+    if (!channelId.startsWith("dm:") || !isRemoteDmChannel(channelId, authUserId)) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabase
@@ -952,7 +1004,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
   useEffect(() => {
     if (!authUserId) return;
     const channelId = state.activeChannel;
-    if (!channelId.startsWith("dm:") || !channelId.includes(authUserId)) return;
+    if (!channelId.startsWith("dm:") || !isRemoteDmChannel(channelId, authUserId)) return;
     const msgs = state.messages[channelId] || [];
     const latest = msgs.length ? msgs[msgs.length - 1].ts : Date.now();
     if (lastMsgTsRef.current[channelId] === latest) return;
@@ -1085,10 +1137,8 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
         const secs = Math.ceil((lobbyMod.mutedUntil - now) / 1000);
         const friends = s.me.friends ?? [];
         if (channelId.startsWith("dm:")) {
-          const parts = channelId.split(":");
-          const meUid = authUserId || "me";
-          const otherId = parts[1] === meUid ? parts[2] : parts[1];
-          if (!friends.includes(otherId)) {
+          const { peerId: otherId } = parseDmChannel(channelId, authUserId);
+          if (otherId && !friends.includes(otherId)) {
             const sysId = uid();
             return {
               ...s,
@@ -1346,11 +1396,13 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       return badged.state;
     });
     if (outgoingRemotes.length && authUserId) {
-      for (const out of outgoingRemotes) {
+      const safeRemotes = outgoingRemotes.filter((out) => isRemoteChannel(out.channelId, authUserId));
+      for (const out of safeRemotes) {
         rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "out", `${out.channelId} · ${out.text.slice(0, 30)}`);
       }
+      if (safeRemotes.length) {
       void supabase.from("messages").insert(
-        outgoingRemotes.map(out => ({
+        safeRemotes.map(out => ({
           id: out.id,
           channel_id: out.channelId,
           author_id: authUserId,
@@ -1363,7 +1415,7 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
         if (error) { console.error("send failed", error); rtLog("error", "send-failed", error.message); }
         else {
           // Fire-and-forget AI chatbot reply for chatroom messages
-          for (const out of outgoingRemotes) {
+          for (const out of safeRemotes) {
             if (out.channelId.startsWith("dm:") || out.kind === "system") continue;
             import("@/lib/ai-chatbots.functions").then(({ aiChatbotReply }) => {
               aiChatbotReply({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
@@ -1377,19 +1429,51 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
           }
         }
       });
+      }
     }
     setReplyingTo(null);
   }, [authUserId, isGuest]);
 
   const startDM = useCallback((userId: string) => {
     if (isGuest) {
+      showDmParticipantError("🚫 Guest users cannot send DMs. Sign up to message users.");
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("palrgo:toast", { detail: { message: "🚫 Guest users not allowed DM. Sign up to message users." } }));
         alert("Guest users not allowed DM. Sign up to message users.");
       }
       return;
     }
+    if (isLocalBotPeerId(userId)) {
+      const channelId = dmChannelFor(authUserId, userId);
+      if (!channelId) return;
+      setState(s => {
+        const next: State = {
+          ...s,
+          dmOrder: s.dmOrder.includes(userId) ? s.dmOrder : [...s.dmOrder, userId],
+          activeChannel: channelId,
+        };
+        const badged = applyBadges(next);
+        if (badged.newBadges.length && typeof window !== "undefined") {
+          setTimeout(() => window.dispatchEvent(new CustomEvent("palrgo:badge", { detail: { ids: badged.newBadges } })), 200);
+        }
+        return badged.state;
+      });
+      return;
+    }
+    if (!authUserId || !isUuid(authUserId)) {
+      showDmParticipantError("Could not open DM — sign in again and retry.");
+      if (import.meta.env.DEV) console.warn("[chat-store] startDM blocked: missing auth UUID");
+      return;
+    }
+    if (!isUuid(userId)) {
+      showDmParticipantError("Could not open DM — this profile is not available yet.");
+      if (import.meta.env.DEV) console.warn("[chat-store] startDM blocked: invalid target id", userId);
+      return;
+    }
     const channelId = dmChannelFor(authUserId, userId);
+    if (!channelId) {
+      showDmParticipantError("Could not open DM — invalid conversation.");
+      return;
+    }
     setState(s => {
       const next: State = {
         ...s,
@@ -1406,12 +1490,13 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
 
   const closeDM = useCallback((userId: string) => {
     const channelId = dmChannelFor(authUserId, userId);
+    if (!channelId) return;
     setState(s => ({
       ...s,
       dmOrder: s.dmOrder.filter(id => id !== userId),
       activeChannel: s.activeChannel === channelId ? s.roomOrder[0] || s.activeChannel : s.activeChannel,
     }));
-  }, []);
+  }, [authUserId]);
 
   const joinRoom = useCallback((roomId: string) => {
     setState(s => {
@@ -1656,9 +1741,8 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     channelMessages: (id) => state.messages[id] || [],
     channelLabel: (id) => {
       if (id.startsWith("dm:")) {
-        const rest = id.slice(3);
-        const peer = rest.includes(":") ? rest.split(":").find(p => p !== authUserId) || rest : rest;
-        const u = state.users[peer];
+        const { peerId } = parseDmChannel(id, authUserId);
+        const u = peerId ? state.users[peerId] : undefined;
         return u ? u.name : "Direct Message";
       }
       return state.rooms[id]?.name || id;
@@ -1666,9 +1750,8 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
     isDM: (id) => id.startsWith("dm:"),
     dmUser: (id) => {
       if (!id.startsWith("dm:")) return undefined;
-      const rest = id.slice(3);
-      const peer = rest.includes(":") ? rest.split(":").find(p => p !== authUserId) || rest : rest;
-      return state.users[peer];
+      const { peerId } = parseDmChannel(id, authUserId);
+      return peerId ? state.users[peerId] : undefined;
     },
     dmChannelFor: (peerId: string) => dmChannelFor(authUserId, peerId),
     replyingTo, setReplyingTo,
@@ -1683,8 +1766,9 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       return max;
     },
     isDmUnread: (peerId: string) => {
-      if (!authUserId) return false;
+      if (!authUserId || !isUuid(peerId)) return false;
       const ch = dmChannelFor(authUserId, peerId);
+      if (!ch || !isRemoteDmChannel(ch, authUserId)) return false;
       if (state.activeChannel === ch) return false;
       const latest = dmLatestTs[ch] ?? 0;
       if (!latest) return false;
@@ -1695,7 +1779,9 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
       if (!authUserId) return 0;
       let n = 0;
       for (const peerId of state.dmOrder) {
+        if (!isUuid(peerId)) continue;
         const ch = dmChannelFor(authUserId, peerId);
+        if (!ch || !isRemoteDmChannel(ch, authUserId)) continue;
         if (state.activeChannel === ch) continue;
         const latest = dmLatestTs[ch] ?? 0;
         if (!latest) continue;
@@ -1710,6 +1796,26 @@ export function ChatProvider({ username, authUserId = null, isGuest = false, chi
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
+}
+
+export function ChatProvider({ username, authUserId = null, isGuest = false, children }: { username: string; authUserId?: string | null; isGuest?: boolean; children: ReactNode }) {
+  const [recoveryKey, setRecoveryKey] = useState(0);
+  const handleRecover = useCallback(() => {
+    try {
+      localStorage.removeItem(storageKeyFor(username));
+    } catch {
+      /* ignore */
+    }
+    setRecoveryKey((k) => k + 1);
+  }, [username]);
+
+  return (
+    <ChatErrorBoundary onRecover={handleRecover}>
+      <ChatProviderInner key={recoveryKey} username={username} authUserId={authUserId} isGuest={isGuest}>
+        {children}
+      </ChatProviderInner>
+    </ChatErrorBoundary>
+  );
 }
 
 export function useChat() {

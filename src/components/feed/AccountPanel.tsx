@@ -12,6 +12,7 @@ import { useUsernameCheck } from "@/lib/use-username-check";
 import { RecentVisitorsWidget } from "@/components/feed/RecentVisitorsWidget";
 import { ProfileViewPrivacySettings } from "@/components/feed/ProfileViewPrivacySettings";
 import { deleteMyAccount } from "@/lib/account-dm.functions";
+import { resolveDmTargetId } from "@/lib/dm-utils";
 
 
 export function AccountPanel() {
@@ -222,7 +223,18 @@ export function AccountPanel() {
                   <div className="truncate text-sm font-bold">{u.name}</div>
                   <div className="text-[11px] text-muted-foreground">Lv {u.level} · {u.xp} XP</div>
                 </div>
-                <button onClick={() => { startDM(u.id); navigate({ to: "/" }); }} className="rounded-full bg-primary/15 p-1.5 text-primary hover:bg-primary/25" title="Send message"><MessageCircle className="h-3.5 w-3.5" /></button>
+                <button
+                  onClick={() => {
+                    const targetId = resolveDmTargetId(u.id);
+                    if (!targetId) return;
+                    startDM(targetId);
+                    navigate({ to: "/" });
+                  }}
+                  className="rounded-full bg-primary/15 p-1.5 text-primary hover:bg-primary/25"
+                  title="Send message"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                </button>
                 <button onClick={() => removeFriend(u.id)} className="rounded-full bg-white/5 p-1.5 text-muted-foreground hover:bg-destructive/20 hover:text-destructive" title="Remove friend"><UserMinus className="h-3.5 w-3.5" /></button>
               </li>
             ))}

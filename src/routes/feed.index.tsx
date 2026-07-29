@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { postsSafe } from "@/lib/posts-safe";
 import { useAuth } from "@/lib/auth-store";
 import { useChat } from "@/lib/chat-store";
+import { resolveDmTargetId } from "@/lib/dm-utils";
+import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useFeedPrefs } from "@/lib/feed-prefs";
 import { useSavedPosts } from "@/lib/use-saved-posts";
@@ -1205,9 +1207,26 @@ function FeedPage() {
   );
 }
 
-
 function FriendsListCard({ friendIds, profiles, onChat }: { friendIds: Set<string>; profiles: Record<string, import("@/lib/chat-types").User>; onChat: () => void }) {
   const { startDM } = useChat();
+  return (
+    <ChatErrorBoundary label="feed-friends-dm">
+      <FriendsListCardInner friendIds={friendIds} profiles={profiles} onChat={onChat} startDM={startDM} />
+    </ChatErrorBoundary>
+  );
+}
+
+function FriendsListCardInner({
+  friendIds,
+  profiles,
+  onChat,
+  startDM,
+}: {
+  friendIds: Set<string>;
+  profiles: Record<string, import("@/lib/chat-types").User>;
+  onChat: () => void;
+  startDM: (id: string) => void;
+}) {
   const list = Array.from(friendIds).map(id => profiles[id]).filter(Boolean) as import("@/lib/chat-types").User[];
   return (
     <div className="rounded-2xl bg-card p-3 shadow-sm border border-border">
@@ -1219,7 +1238,12 @@ function FriendsListCard({ friendIds, profiles, onChat }: { friendIds: Set<strin
           {list.slice(0, 8).map(u => (
             <button
               key={u.id}
-              onClick={() => { startDM(u.id); onChat(); }}
+              onClick={() => {
+                const targetId = resolveDmTargetId(u.id, profiles);
+                if (!targetId) return;
+                startDM(targetId);
+                onChat();
+              }}
               className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left hover:bg-accent"
             >
               <Avatar user={u} size={28} />

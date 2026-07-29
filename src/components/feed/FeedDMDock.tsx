@@ -3,6 +3,8 @@ import { MessageCircle, X, ChevronLeft, Search, Trash2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/lib/chat-store";
+import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
+import { isRemoteDmChannel, isUuid, parseDmChannel, resolveDmTargetId } from "@/lib/dm-utils";
 import { Avatar } from "@/components/chat/Avatar";
 import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
 import { MessageList } from "@/components/chat/MessageList";
@@ -19,7 +21,15 @@ interface Props {
   onClose?: () => void;
 }
 
-export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Props) {
+export function FeedDMDock(props: Props) {
+  return (
+    <ChatErrorBoundary label="feed-dm">
+      <FeedDMDockInner {...props} />
+    </ChatErrorBoundary>
+  );
+}
+
+function FeedDMDockInner({ meId, profiles, initialOpen = false, onClose }: Props) {
   const { state, startDM, isDM, isDmUnread, dmUnreadCount } = useChat();
   const [open, setOpen] = useState(initialOpen);
   const [friendIds, setFriendIds] = useState<string[]>([]);
@@ -72,8 +82,8 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
   const activePeerId = useMemo(() => {
     const ch = state.activeChannel;
     if (!ch.startsWith("dm:")) return null;
-    const parts = ch.slice(3).split(":");
-    return parts.find(p => p !== meId) ?? null;
+    const { peerId } = parseDmChannel(ch, meId);
+    return peerId;
   }, [state.activeChannel, meId]);
 
   const activePeer = activePeerId ? (profiles[activePeerId] ?? state.users[activePeerId]) : null;
@@ -166,10 +176,17 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
               <p className="px-3 py-6 text-center text-xs text-muted-foreground">
                 {friendIds.length === 0 && (state.dmOrder ?? []).length === 0 ? "Add friends or message a user to start chatting." : "No matches."}
               </p>
-            ) : friends.map(u => (
+            ) : friends.map(u => {
+              const targetId = resolveDmTargetId(u.id, profiles) ?? (isUuid(u.id) ? u.id : null);
+              return (
               <button
                 key={u.id}
-                onClick={() => { startDM(u.id); setView("chat"); }}
+                onClick={() => {
+                  if (!targetId) return;
+                  startDM(targetId);
+                  setView("chat");
+                }}
+                disabled={!targetId}
                 className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left hover:bg-accent"
               >
                 <FrameAvatar user={u} size={32} />
@@ -185,12 +202,12 @@ export function FeedDMDock({ meId, profiles, initialOpen = false, onClose }: Pro
                   </div>
                 </div>
               </button>
-            ))}
+            );})}
           </div>
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
-          {isDM(state.activeChannel) ? (
+          {isDM(state.activeChannel) && (isRemoteDmChannel(state.activeChannel, meId) || state.activeChannel.startsWith("dm:bot-")) ? (
             <>
               <div className="flex min-h-0 flex-1 flex-col">
                 <MessageList channelId={state.activeChannel} />

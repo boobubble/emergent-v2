@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { deleteMyDmConversation } from "@/lib/account-dm.functions";
 
 import { useChat } from "@/lib/chat-store";
+import { isRemoteDmChannel } from "@/lib/dm-utils";
 import { useAuth } from "@/lib/auth-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
@@ -129,7 +130,7 @@ export function FloatingDMDock() {
     const meId = authUser.id;
     open.forEach(peerId => {
       const ch = dmChannelFor(peerId);
-      if (!ch.startsWith("dm:") || !ch.includes(meId)) return;
+      if (!ch || !isRemoteDmChannel(ch, meId)) return;
       void supabase
         .from("dm_reads")
         .upsert(
@@ -199,7 +200,10 @@ export function FloatingDMDock() {
             leavingMode={leaving[peerId]}
             onClose={() => closeWindow(peerId)}
             onMinimize={() => minimizeWindow(peerId)}
-            onOpenFull={() => setActive(dmChannelFor(peerId))}
+            onOpenFull={() => {
+              const ch = dmChannelFor(peerId);
+              if (ch) setActive(ch);
+            }}
             onActivity={() => bumpToTop(peerId)}
             send={send}
             dmChannelFor={dmChannelFor}
@@ -227,13 +231,14 @@ function MiniDMWindow({
   onOpenFull: () => void;
   onActivity: () => void;
   send: (text: string, opts?: { channelId?: string; attachment?: Attachment }) => void;
-  dmChannelFor: (peerId: string) => string;
+  dmChannelFor: (peerId: string) => string | null;
 }) {
   const chat = useChat();
   const { state } = chat;
   const unread = chat.isDmUnread(peerId);
   const u = state.users[peerId];
   const channelId = dmChannelFor(peerId);
+  if (!channelId || !u) return null;
   const me = state.users.me;
   const meForTyping = me && !me.isGuest ? { id: me.id, name: me.name } : null;
   const { typers, sendTyping } = useTyping(channelId, meForTyping, !!meForTyping);

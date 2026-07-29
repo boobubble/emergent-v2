@@ -1,6 +1,9 @@
 import { useNavigate } from "@tanstack/react-router";
 import { MessageCircle, Crown, Shield, ShieldHalf, Trophy, Flame, Award, Coins, UserPlus, UserMinus, Ban, ShieldCheck } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+import { useRemoteProfiles } from "@/lib/use-remote-profiles";
+import { resolveDmTargetId } from "@/lib/dm-utils";
+import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 import { Avatar } from "@/components/chat/Avatar";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
@@ -9,10 +12,22 @@ import { UserCompetitionShowcase } from "@/components/competitions/UserCompetiti
 import { ProfileMehfilSection } from "@/components/mehfil/ProfileMehfilSection";
 
 export function ProfilePanel({ username, onBack }: { username: string; onBack: () => void }) {
+  return (
+    <ChatErrorBoundary label="feed-profile-dm">
+      <ProfilePanelInner username={username} onBack={onBack} />
+    </ChatErrorBoundary>
+  );
+}
+
+function ProfilePanelInner({ username, onBack }: { username: string; onBack: () => void }) {
   const navigate = useNavigate();
+  const { profiles } = useRemoteProfiles();
   const { state, startDM, addFriend, removeFriend, blockUser, unblockUser, isFriend, isBlocked } = useChat();
 
-  const user = Object.values(state.users).find(u => u.name.toLowerCase() === username.toLowerCase());
+  const userFromProfiles = Object.values(profiles).find(u => u.name.toLowerCase() === username.toLowerCase());
+  const userFromChat = Object.values(state.users).find(u => u.name.toLowerCase() === username.toLowerCase());
+  const user = userFromProfiles ?? userFromChat;
+  const dmTargetId = user ? resolveDmTargetId(user.id, profiles) : null;
   useRecordProfileView(user && !user.isBot && user.id !== "me" ? user.id : null);
   const ranked = Object.values(state.users).sort((a, b) => b.xp - a.xp);
   const rank = user ? ranked.findIndex(u => u.id === user.id) + 1 : 0;
@@ -49,7 +64,15 @@ export function ProfilePanel({ username, onBack }: { username: string; onBack: (
             {user.bio && <p className="mt-2 text-sm text-muted-foreground">{user.bio}</p>}
             {user.id !== "me" && (
               <div className="mt-4 flex flex-wrap gap-2">
-                <button onClick={() => { startDM(user.id); navigate({ to: "/" }); }} className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
+                <button
+                  onClick={() => {
+                    if (!dmTargetId) return;
+                    startDM(dmTargetId);
+                    navigate({ to: "/" });
+                  }}
+                  disabled={!dmTargetId}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                >
                   <MessageCircle className="h-4 w-4" /> Send message
                 </button>
                 {isFriend(user.id) ? (

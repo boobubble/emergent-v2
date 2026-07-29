@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { isRemoteDmChannel } from "./dm-utils";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchPersonalTheme,
@@ -60,7 +61,7 @@ export function useDmTheme(channelId: string | null | undefined, userId: string 
   }, []);
 
   useEffect(() => {
-    if (!isDm || !channelId || !userId) {
+    if (!isDm || !channelId || !userId || !isRemoteDmChannel(channelId, userId)) {
       setPersonal(null);
       setShared(null);
       return;
@@ -81,7 +82,7 @@ export function useDmTheme(channelId: string | null | undefined, userId: string 
 
   // Realtime: pick up shared-theme changes made by the other participant.
   useEffect(() => {
-    if (!isDm || !channelId) return;
+    if (!isDm || !channelId || !userId || !isRemoteDmChannel(channelId, userId)) return;
     const channel = sb
       .channel(`dm-shared-theme-${channelId}`)
       .on(

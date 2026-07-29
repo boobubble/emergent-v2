@@ -35,7 +35,9 @@ export function MobileDMMinimizedDock() {
   if (!isMobile || minimized.length === 0) return null;
 
   const restore = (peerId: string) => {
-    setActive(dmChannelFor(peerId));
+    const ch = dmChannelFor(peerId);
+    if (!ch) return;
+    setActive(ch);
     setMinimized((m) => m.filter((id) => id !== peerId));
   };
 
