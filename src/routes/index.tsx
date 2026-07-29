@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { ChatApp } from "@/components/chat/ChatApp";
-import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
+import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import { useAppSettings } from "@/lib/app-settings";
 
 export const Route = createFileRoute("/")({
@@ -30,8 +30,8 @@ function HomeRouter() {
     return <Navigate to="/feed" replace />;
   }
   return (
-    <ChatErrorBoundary label="chat-route">
+    <RouteErrorBoundary section="Chatrooms" featureStore="chat">
       <ChatApp />
-    </ChatErrorBoundary>
+    </RouteErrorBoundary>
   );
 }

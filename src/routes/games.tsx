@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/auth-store";
 import { listGames, listFeatured, getGame, type HubGame } from "@/lib/games-hub-registry";
 import { getRecent, getContinuePlaying, type RecentEntry } from "@/lib/games-hub-tracking";
 import { GameLaunchService } from "@/lib/game-launch-service";
+import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 
 async function handleGameLaunch(e: React.MouseEvent<HTMLAnchorElement>, game: HubGame) {
   e.preventDefault();
@@ -39,7 +40,11 @@ export const Route = createFileRoute("/games")({
       { property: "og:description", content: "Featured games, daily challenges, achievements and leaderboards." },
     ],
   }),
-  component: GamesHub,
+  component: () => (
+    <RouteErrorBoundary section="Games">
+      <GamesHub />
+    </RouteErrorBoundary>
+  ),
 });
 
 interface AchievementRow {

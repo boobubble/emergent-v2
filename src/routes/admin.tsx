@@ -1,4 +1,5 @@
 import { Link, Outlet, createFileRoute, useRouterState, Navigate } from "@tanstack/react-router";
+import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, useMemo, useState } from "react";
@@ -88,7 +89,9 @@ function AdminShell({ isSuper }: { isSuper: boolean }) {
         <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
           <div className="mx-auto w-full max-w-6xl">
             <Suspense fallback={<div className="text-sm text-muted-foreground">Loading module…</div>}>
-              <Outlet />
+              <RouteErrorBoundary section="Admin">
+                <Outlet />
+              </RouteErrorBoundary>
             </Suspense>
           </div>
         </main>

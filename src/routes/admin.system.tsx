@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Server, RotateCcw, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Server, RotateCcw, CheckCircle2, AlertTriangle, Bug, Activity, Database, HardDrive, Radio, KeyRound, History, ListOrdered } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { fetchInstallStatus, resetInstallation, type InstallStatus } from "@/lib/installer";
 import { toast } from "sonner";
 
@@ -32,7 +33,30 @@ function SystemPage() {
 
   return (
     <div className="space-y-4">
-      <AdminPageHeader title="System" description="Database, jobs and websocket settings. Super admin only." />
+      <AdminPageHeader title="System" description="Monitoring, health checks, and installer controls. Super admin only." />
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {[
+          { to: "/admin/error-logs", label: "Error Logs", icon: Bug },
+          { to: "/admin/api", label: "API Logs", icon: KeyRound },
+          { to: "/admin/activity-logs", label: "Auth Logs", icon: History },
+          { to: "/admin/system/queue", label: "Queue Status", icon: ListOrdered },
+          { to: "/admin/system/jobs", label: "Background Jobs", icon: Server },
+          { to: "/admin/realtime", label: "Realtime Status", icon: Radio },
+          { to: "/admin/system/database", label: "Database Health", icon: Database },
+          { to: "/admin/system/storage", label: "Storage Health", icon: HardDrive },
+          { to: "/admin/performance", label: "Performance Metrics", icon: Activity },
+        ].map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-sm font-medium hover:bg-muted/50"
+          >
+            <item.icon className="h-4 w-4 text-primary" />
+            {item.label}
+          </Link>
+        ))}
+      </div>
 
       <Card>
         <CardHeader>

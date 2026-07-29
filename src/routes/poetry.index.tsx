@@ -8,6 +8,7 @@ import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { MehfilSearchBar } from "@/components/mehfil/MehfilSearchBar";
 import { PoemCard } from "@/components/mehfil/PoemCard";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
+import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import type { WriterRank } from "@/lib/mehfil-types";
 
 export const Route = createFileRoute("/poetry/")({
@@ -21,7 +22,11 @@ export const Route = createFileRoute("/poetry/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: MehfilDiscoveryPage,
+  component: () => (
+    <RouteErrorBoundary section="Poetry">
+      <MehfilDiscoveryPage />
+    </RouteErrorBoundary>
+  ),
 });
 
 function MehfilDiscoveryPage() {

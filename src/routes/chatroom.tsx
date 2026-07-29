@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ChatApp } from "@/components/chat/ChatApp";
+import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 
 export const Route = createFileRoute("/chatroom")({
   head: () => ({
@@ -10,5 +11,9 @@ export const Route = createFileRoute("/chatroom")({
       { property: "og:description", content: "Hang out in public rooms, DM friends, and play games with chat commands." },
     ],
   }),
-  component: ChatApp,
+  component: () => (
+    <RouteErrorBoundary section="Chatrooms" featureStore="chat">
+      <ChatApp />
+    </RouteErrorBoundary>
+  ),
 });

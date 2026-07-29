@@ -45,6 +45,7 @@ import {
   UUID_RE,
   dmChannelFor,
   isBotUiId,
+  isLocalBotPeerId,
   isRemoteDmChannel,
   isUuid,
   parseDmChannel,
@@ -52,6 +53,7 @@ import {
   showDmParticipantError,
   storageKeyForUsername,
 } from "./dm-utils";
+import { removeCorruptedKey } from "./persisted-state-recovery";
 
 export { dmChannelFor } from "./dm-utils";
 
@@ -328,8 +330,16 @@ function load(username: string): State {
       }
     }
     if (raw) {
-      const parsed = sanitizeChatState(JSON.parse(raw) as State, null);
-      const state = ensureBots(ensureWelcome(normalizeMe(parsed, username), username));
+      let parsed: State;
+      try {
+        parsed = JSON.parse(raw) as State;
+      } catch (parseErr) {
+        if (import.meta.env.DEV) console.warn("[chat-store] Corrupted JSON; resetting chat state.", parseErr);
+        removeCorruptedKey(storageKeyFor(username));
+        return seed(username);
+      }
+      const sanitized = sanitizeChatState(parsed, null);
+      const state = ensureBots(ensureWelcome(normalizeMe(sanitized, username), username));
       try {
         localStorage.setItem(storageKeyFor(username), JSON.stringify(state));
       } catch {

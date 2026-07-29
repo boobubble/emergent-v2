@@ -13,6 +13,7 @@ import { postsSafe } from "@/lib/posts-safe";
 import { useAuth } from "@/lib/auth-store";
 import { useChat } from "@/lib/chat-store";
 import { resolveDmTargetId } from "@/lib/dm-utils";
+import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useFeedPrefs } from "@/lib/feed-prefs";
@@ -83,7 +84,11 @@ export const Route = createFileRoute("/feed/")({
       { property: "og:description", content: "Lightweight social feed for the community." },
     ],
   }),
-  component: FeedPage,
+  component: () => (
+    <RouteErrorBoundary section="Feed" featureStore="feed-prefs">
+      <FeedPage />
+    </RouteErrorBoundary>
+  ),
 });
 
 type Tab = "foryou" | "trending" | "latest" | "friends" | "saved" | "notifications";

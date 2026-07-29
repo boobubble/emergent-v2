@@ -81,6 +81,7 @@ import { Route as AdminDjRouteImport } from './routes/admin.dj'
 import { Route as AdminDmWallpapersRouteImport } from './routes/admin.dm-wallpapers'
 import { Route as AdminEconomyRouteImport } from './routes/admin.economy'
 import { Route as AdminEmailRouteImport } from './routes/admin.email'
+import { Route as AdminErrorLogsRouteImport } from './routes/admin.error-logs'
 import { Route as AdminExportRouteImport } from './routes/admin.export'
 import { Route as AdminFeedModerationRouteImport } from './routes/admin.feed-moderation'
 import { Route as AdminFeedThemesRouteImport } from './routes/admin.feed-themes'
@@ -166,6 +167,10 @@ import { Route as PoetryHallOfFameRouteImport } from './routes/poetry.hall-of-fa
 import { Route as PoetryLeaderboardRouteImport } from './routes/poetry.leaderboard'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as AuthenticatedSettingsPrivacyRouteImport } from './routes/_authenticated.settings.privacy'
+import { Route as AdminSystemDatabaseRouteImport } from './routes/admin.system.database'
+import { Route as AdminSystemJobsRouteImport } from './routes/admin.system.jobs'
+import { Route as AdminSystemQueueRouteImport } from './routes/admin.system.queue'
+import { Route as AdminSystemStorageRouteImport } from './routes/admin.system.storage'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
 import { Route as ApiGamesAchievementRouteImport } from './routes/api/games.achievement'
 import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
@@ -563,6 +568,11 @@ const AdminEconomyRoute = AdminEconomyRouteImport.update({
 const AdminEmailRoute = AdminEmailRouteImport.update({
   id: '/email',
   path: '/email',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminErrorLogsRoute = AdminErrorLogsRouteImport.update({
+  id: '/error-logs',
+  path: '/error-logs',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminExportRoute = AdminExportRouteImport.update({
@@ -992,6 +1002,26 @@ const AuthenticatedSettingsPrivacyRoute =
     path: '/settings/privacy',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AdminSystemDatabaseRoute = AdminSystemDatabaseRouteImport.update({
+  id: '/database',
+  path: '/database',
+  getParentRoute: () => AdminSystemRoute,
+} as any)
+const AdminSystemJobsRoute = AdminSystemJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => AdminSystemRoute,
+} as any)
+const AdminSystemQueueRoute = AdminSystemQueueRouteImport.update({
+  id: '/queue',
+  path: '/queue',
+  getParentRoute: () => AdminSystemRoute,
+} as any)
+const AdminSystemStorageRoute = AdminSystemStorageRouteImport.update({
+  id: '/storage',
+  path: '/storage',
+  getParentRoute: () => AdminSystemRoute,
+} as any)
 const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   id: '/$key',
   path: '/$key',
@@ -1256,6 +1286,7 @@ export interface FileRoutesByFullPath {
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
+  '/admin/error-logs': typeof AdminErrorLogsRoute
   '/admin/export': typeof AdminExportRoute
   '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
@@ -1298,7 +1329,7 @@ export interface FileRoutesByFullPath {
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
-  '/admin/system': typeof AdminSystemRoute
+  '/admin/system': typeof AdminSystemRouteWithChildren
   '/admin/trust-safety': typeof AdminTrustSafetyRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/updates': typeof AdminUpdatesRoute
@@ -1342,6 +1373,10 @@ export interface FileRoutesByFullPath {
   '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
+  '/admin/system/database': typeof AdminSystemDatabaseRoute
+  '/admin/system/jobs': typeof AdminSystemJobsRoute
+  '/admin/system/queue': typeof AdminSystemQueueRoute
+  '/admin/system/storage': typeof AdminSystemStorageRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1447,6 +1482,7 @@ export interface FileRoutesByTo {
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
+  '/admin/error-logs': typeof AdminErrorLogsRoute
   '/admin/export': typeof AdminExportRoute
   '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
@@ -1489,7 +1525,7 @@ export interface FileRoutesByTo {
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
-  '/admin/system': typeof AdminSystemRoute
+  '/admin/system': typeof AdminSystemRouteWithChildren
   '/admin/trust-safety': typeof AdminTrustSafetyRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/updates': typeof AdminUpdatesRoute
@@ -1532,6 +1568,10 @@ export interface FileRoutesByTo {
   '/mehfil': typeof MehfilIndexRoute
   '/poetry': typeof PoetryIndexRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
+  '/admin/system/database': typeof AdminSystemDatabaseRoute
+  '/admin/system/jobs': typeof AdminSystemJobsRoute
+  '/admin/system/queue': typeof AdminSystemQueueRoute
+  '/admin/system/storage': typeof AdminSystemStorageRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1642,6 +1682,7 @@ export interface FileRoutesById {
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/email': typeof AdminEmailRoute
+  '/admin/error-logs': typeof AdminErrorLogsRoute
   '/admin/export': typeof AdminExportRoute
   '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
@@ -1684,7 +1725,7 @@ export interface FileRoutesById {
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
-  '/admin/system': typeof AdminSystemRoute
+  '/admin/system': typeof AdminSystemRouteWithChildren
   '/admin/trust-safety': typeof AdminTrustSafetyRoute
   '/admin/upcoming': typeof AdminUpcomingRouteWithChildren
   '/admin/updates': typeof AdminUpdatesRoute
@@ -1728,6 +1769,10 @@ export interface FileRoutesById {
   '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
   '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
+  '/admin/system/database': typeof AdminSystemDatabaseRoute
+  '/admin/system/jobs': typeof AdminSystemJobsRoute
+  '/admin/system/queue': typeof AdminSystemQueueRoute
+  '/admin/system/storage': typeof AdminSystemStorageRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
@@ -1838,6 +1883,7 @@ export interface FileRouteTypes {
     | '/admin/dm-wallpapers'
     | '/admin/economy'
     | '/admin/email'
+    | '/admin/error-logs'
     | '/admin/export'
     | '/admin/feed-moderation'
     | '/admin/feed-themes'
@@ -1924,6 +1970,10 @@ export interface FileRouteTypes {
     | '/mehfil/'
     | '/poetry/'
     | '/settings/privacy'
+    | '/admin/system/database'
+    | '/admin/system/jobs'
+    | '/admin/system/queue'
+    | '/admin/system/storage'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -2029,6 +2079,7 @@ export interface FileRouteTypes {
     | '/admin/dm-wallpapers'
     | '/admin/economy'
     | '/admin/email'
+    | '/admin/error-logs'
     | '/admin/export'
     | '/admin/feed-moderation'
     | '/admin/feed-themes'
@@ -2114,6 +2165,10 @@ export interface FileRouteTypes {
     | '/mehfil'
     | '/poetry'
     | '/settings/privacy'
+    | '/admin/system/database'
+    | '/admin/system/jobs'
+    | '/admin/system/queue'
+    | '/admin/system/storage'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -2223,6 +2278,7 @@ export interface FileRouteTypes {
     | '/admin/dm-wallpapers'
     | '/admin/economy'
     | '/admin/email'
+    | '/admin/error-logs'
     | '/admin/export'
     | '/admin/feed-moderation'
     | '/admin/feed-themes'
@@ -2309,6 +2365,10 @@ export interface FileRouteTypes {
     | '/mehfil/'
     | '/poetry/'
     | '/_authenticated/settings/privacy'
+    | '/admin/system/database'
+    | '/admin/system/jobs'
+    | '/admin/system/queue'
+    | '/admin/system/storage'
     | '/admin/upcoming/$key'
     | '/api/games/achievement'
     | '/api/games/coins'
@@ -2938,6 +2998,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEmailRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/error-logs': {
+      id: '/admin/error-logs'
+      path: '/error-logs'
+      fullPath: '/admin/error-logs'
+      preLoaderRoute: typeof AdminErrorLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/export': {
       id: '/admin/export'
       path: '/export'
@@ -3533,6 +3600,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsPrivacyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/admin/system/database': {
+      id: '/admin/system/database'
+      path: '/database'
+      fullPath: '/admin/system/database'
+      preLoaderRoute: typeof AdminSystemDatabaseRouteImport
+      parentRoute: typeof AdminSystemRoute
+    }
+    '/admin/system/jobs': {
+      id: '/admin/system/jobs'
+      path: '/jobs'
+      fullPath: '/admin/system/jobs'
+      preLoaderRoute: typeof AdminSystemJobsRouteImport
+      parentRoute: typeof AdminSystemRoute
+    }
+    '/admin/system/queue': {
+      id: '/admin/system/queue'
+      path: '/queue'
+      fullPath: '/admin/system/queue'
+      preLoaderRoute: typeof AdminSystemQueueRouteImport
+      parentRoute: typeof AdminSystemRoute
+    }
+    '/admin/system/storage': {
+      id: '/admin/system/storage'
+      path: '/storage'
+      fullPath: '/admin/system/storage'
+      preLoaderRoute: typeof AdminSystemStorageRouteImport
+      parentRoute: typeof AdminSystemRoute
+    }
     '/admin/upcoming/$key': {
       id: '/admin/upcoming/$key'
       path: '/$key'
@@ -3799,6 +3894,24 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AdminSystemRouteChildren {
+  AdminSystemDatabaseRoute: typeof AdminSystemDatabaseRoute
+  AdminSystemJobsRoute: typeof AdminSystemJobsRoute
+  AdminSystemQueueRoute: typeof AdminSystemQueueRoute
+  AdminSystemStorageRoute: typeof AdminSystemStorageRoute
+}
+
+const AdminSystemRouteChildren: AdminSystemRouteChildren = {
+  AdminSystemDatabaseRoute: AdminSystemDatabaseRoute,
+  AdminSystemJobsRoute: AdminSystemJobsRoute,
+  AdminSystemQueueRoute: AdminSystemQueueRoute,
+  AdminSystemStorageRoute: AdminSystemStorageRoute,
+}
+
+const AdminSystemRouteWithChildren = AdminSystemRoute._addFileChildren(
+  AdminSystemRouteChildren,
+)
+
 interface AdminUpcomingRouteChildren {
   AdminUpcomingKeyRoute: typeof AdminUpcomingKeyRoute
 }
@@ -3846,6 +3959,7 @@ interface AdminRouteChildren {
   AdminDmWallpapersRoute: typeof AdminDmWallpapersRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
   AdminEmailRoute: typeof AdminEmailRoute
+  AdminErrorLogsRoute: typeof AdminErrorLogsRoute
   AdminExportRoute: typeof AdminExportRoute
   AdminFeedModerationRoute: typeof AdminFeedModerationRoute
   AdminFeedThemesRoute: typeof AdminFeedThemesRoute
@@ -3888,7 +4002,7 @@ interface AdminRouteChildren {
   AdminStaffPermissionsRoute: typeof AdminStaffPermissionsRoute
   AdminStickersRoute: typeof AdminStickersRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
-  AdminSystemRoute: typeof AdminSystemRoute
+  AdminSystemRoute: typeof AdminSystemRouteWithChildren
   AdminTrustSafetyRoute: typeof AdminTrustSafetyRoute
   AdminUpcomingRoute: typeof AdminUpcomingRouteWithChildren
   AdminUpdatesRoute: typeof AdminUpdatesRoute
@@ -3935,6 +4049,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDmWallpapersRoute: AdminDmWallpapersRoute,
   AdminEconomyRoute: AdminEconomyRoute,
   AdminEmailRoute: AdminEmailRoute,
+  AdminErrorLogsRoute: AdminErrorLogsRoute,
   AdminExportRoute: AdminExportRoute,
   AdminFeedModerationRoute: AdminFeedModerationRoute,
   AdminFeedThemesRoute: AdminFeedThemesRoute,
@@ -3977,7 +4092,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminStaffPermissionsRoute: AdminStaffPermissionsRoute,
   AdminStickersRoute: AdminStickersRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
-  AdminSystemRoute: AdminSystemRoute,
+  AdminSystemRoute: AdminSystemRouteWithChildren,
   AdminTrustSafetyRoute: AdminTrustSafetyRoute,
   AdminUpcomingRoute: AdminUpcomingRouteWithChildren,
   AdminUpdatesRoute: AdminUpdatesRoute,

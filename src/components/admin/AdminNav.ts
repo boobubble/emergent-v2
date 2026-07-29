@@ -6,6 +6,7 @@ import {
   Rocket, Flame, Radio, Trophy, Youtube, Disc3, MessageSquareHeart, Vote,
   Bug, Home, Wand2, Database, ScrollText, History, Bell, MousePointerClick, Mail,
   PowerOff, RefreshCw, Gift, Download, Languages, Link2, UserPlus, PhoneCall, Crown,
+  ListOrdered, HardDrive,
 } from "lucide-react";
 
 export interface AdminLeaf {
@@ -144,6 +145,21 @@ export const ADMIN_NAV: AdminGroup[] = [
   },
 
   {
+    label: "System", icon: Server, advanced: true, superOnly: true, children: [
+      { to: "/admin/error-logs", label: "Error Logs", icon: Bug, keywords: ["error", "crash", "client", "stack", "runtime", "monitoring"] },
+      { to: "/admin/api", label: "API Logs", icon: KeyRound, keywords: ["api", "webhooks", "requests"] },
+      { to: "/admin/activity-logs", label: "Auth Logs", icon: History, keywords: ["auth", "login", "sessions"] },
+      { to: "/admin/system/queue", label: "Queue Status", icon: ListOrdered, keywords: ["queue", "jobs", "background"] },
+      { to: "/admin/system/jobs", label: "Background Jobs", icon: Server, keywords: ["cron", "scheduled", "workers"] },
+      { to: "/admin/realtime", label: "Realtime Status", icon: Radio, keywords: ["websocket", "presence", "live"] },
+      { to: "/admin/system/database", label: "Database Health", icon: Database, keywords: ["database", "postgres", "schema"] },
+      { to: "/admin/system/storage", label: "Storage Health", icon: HardDrive, keywords: ["storage", "bucket", "media"] },
+      { to: "/admin/performance", label: "Performance Metrics", icon: Activity, keywords: ["performance", "cache", "latency"] },
+      { to: "/admin/system", label: "Installer & Backend", icon: Server, keywords: ["installer", "system", "reset"] },
+    ],
+  },
+
+  {
     label: "Tools", icon: Wrench, advanced: true, children: [
       { to: "/admin/setup-wizard",  label: "Setup Wizard",  icon: Wand2,                                                  keywords: ["onboarding", "first run", "wizard"] },
       { to: "/admin/demo",          label: "Demo Data",     icon: Database,                                               keywords: ["import", "reset", "seed", "sample"] },
@@ -154,7 +170,6 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/security",      label: "Security",      icon: Lock,     badge: "Soon", advanced: true,                keywords: ["captcha", "rate", "sessions"] },
       { to: "/admin/performance",   label: "Performance",   icon: Activity, advanced: true,                               keywords: ["cache", "cdn"] },
       { to: "/admin/realtime",      label: "Realtime",      icon: Radio,    advanced: true,                               keywords: ["websocket", "presence", "live"] },
-      { to: "/admin/system",        label: "System",        icon: Server,   advanced: true, superOnly: true,              keywords: ["database", "jobs"] },
       { to: "/admin/updates",       label: "Updates",       icon: Sparkles, superOnly: true,                              keywords: ["update", "upgrade", "version", "release", "changelog", "migration"] },
       { to: "/admin/backup",        label: "Backup",        icon: Download, superOnly: true,                              keywords: ["backup", "restore", "database", "media", "zip"] },
       { to: "/admin/api",           label: "API & Webhooks", icon: KeyRound, advanced: true, superOnly: true,             keywords: ["api", "keys", "webhooks"] },

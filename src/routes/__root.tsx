@@ -36,6 +36,9 @@ import { useHomePageMode } from "@/lib/use-home-page-mode";
 import "@/i18n";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import { DynamicBrandHead } from "@/components/DynamicBrandHead";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
+import { GlobalErrorMonitoring } from "@/components/GlobalErrorMonitoring";
+import { logger } from "@/lib/logger";
 
 import appCss from "../styles.css?url";
 
@@ -62,7 +65,12 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+  logger.capture({
+    severity: "fatal",
+    message: error.message || "Route error",
+    stack: error.stack ?? null,
+    metadata: { source: "tanstack-router-errorComponent" },
+  });
   const router = useRouter();
 
   return (
@@ -155,18 +163,21 @@ function RootComponent() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AppSettingsProvider>
-        <LanguageProvider>
-          <DynamicBrandHead />
-          <AuthProvider>
-            <AuthGateProvider>
-              <AuthGate />
-            </AuthGateProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </AppSettingsProvider>
-    </QueryClientProvider>
+    <AppErrorBoundary section="application" variant="page">
+      <QueryClientProvider client={queryClient}>
+        <AppSettingsProvider>
+          <LanguageProvider>
+            <DynamicBrandHead />
+            <AuthProvider>
+              <GlobalErrorMonitoring />
+              <AuthGateProvider>
+                <AuthGate />
+              </AuthGateProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </AppSettingsProvider>
+      </QueryClientProvider>
+    </AppErrorBoundary>
   );
 }
 
