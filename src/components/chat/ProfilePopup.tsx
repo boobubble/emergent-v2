@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   MessageCircle, UserPlus, UserMinus, Ban, ShieldCheck, ExternalLink,
@@ -22,6 +22,7 @@ import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
 import { banUser, muteUser } from "@/lib/moderation.functions";
 import { recordProfileView } from "@/lib/use-profile-views";
 import type { Role } from "@/lib/chat-types";
+import type { ProfileCloseReason } from "@/lib/profile-popup-context";
 
 type Tab = "info" | "about" | "friends" | "activity" | "daily";
 
@@ -44,12 +45,26 @@ function relTime(ms?: number): string {
 export function ProfilePopup({
   userId,
   open,
-  onOpenChange,
+  onClose,
 }: {
   userId: string;
   open: boolean;
-  onOpenChange: (v: boolean) => void;
+  onClose: (reason: ProfileCloseReason) => void;
 }) {
+  const pendingCloseReasonRef = useRef<ProfileCloseReason>("programmatic");
+
+  const handleDialogOpenChange = (next: boolean) => {
+    if (!next) {
+      onClose(pendingCloseReasonRef.current);
+      pendingCloseReasonRef.current = "programmatic";
+    }
+  };
+
+  const closeNow = (reason: ProfileCloseReason) => {
+    pendingCloseReasonRef.current = reason;
+    onClose(reason);
+    pendingCloseReasonRef.current = "programmatic";
+  };
   const { state, startDM, addFriend, removeFriend, blockUser, unblockUser, isFriend, isBlocked, staffKick } = useChat();
   const { isIgnored, toggleIgnoreUser } = useIgnore();
   const { user: authUser } = useAuth();
@@ -127,7 +142,7 @@ export function ProfilePopup({
 
   if (!user) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="max-w-sm">
           <p className="text-sm text-muted-foreground">User not found.</p>
         </DialogContent>
@@ -146,18 +161,17 @@ export function ProfilePopup({
   const activeTab = tabs.some(t => t.id === tab) ? tab : "info";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent
         className="max-w-sm max-h-[92vh] flex flex-col overflow-hidden rounded-3xl border-border bg-card p-0 [&>button.absolute]:hidden"
         onOpenAutoFocus={(e) => e.preventDefault()}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={() => { pendingCloseReasonRef.current = "outside-click"; }}
+        onEscapeKeyDown={() => { pendingCloseReasonRef.current = "escape-key"; }}
       >
         {/* Header banner */}
         <div className="relative bg-gradient-to-b from-primary/30 via-primary/10 to-transparent px-6 pb-4 pt-8 text-center">
           <button
-            onClick={() => onOpenChange(false)}
+            onClick={() => closeNow("x-button")}
             className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-background/40 text-muted-foreground hover:bg-background/70 hover:text-foreground"
             aria-label="Close"
           >
@@ -260,7 +274,6 @@ export function ProfilePopup({
               <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">Friends</div>
               <Link
                 to="/find-friends"
-                onClick={() => onOpenChange(false)}
                 className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
               >
                 <UserPlus className="h-3.5 w-3.5" /> Find more friends
@@ -277,7 +290,6 @@ export function ProfilePopup({
                   <Link
                     key={p.id}
                     to="/feed"
-                    onClick={() => onOpenChange(false)}
                     className="block rounded-xl border border-border bg-white/[0.02] px-3 py-2 hover:bg-white/5"
                   >
                     <p className="line-clamp-2 text-xs text-foreground/90">{p.text || "—"}</p>
@@ -293,7 +305,7 @@ export function ProfilePopup({
           )}
 
           {activeTab === "daily" && (
-            <DailyProgress data={daily} onClose={() => onOpenChange(false)} />
+            <DailyProgress data={daily} />
           )}
         </div>
 
@@ -305,7 +317,6 @@ export function ProfilePopup({
                 const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
                 if (isMobile) startDM(userId);
                 else window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId: userId } }));
-                onOpenChange(false);
               }}
               className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
             >
@@ -315,7 +326,6 @@ export function ProfilePopup({
               <button
                 onClick={() => {
                   window.dispatchEvent(new CustomEvent("palrgo:mention", { detail: { name: user.name } }));
-                  onOpenChange(false);
                 }}
                 title={`Mention @${user.name} in chat`}
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
@@ -359,7 +369,6 @@ export function ProfilePopup({
                 onClick={() => {
                   staffKick(realId, state.activeChannel, user.name);
                   toast.success(`Kicked ${user.name} from this room`);
-                  onOpenChange(false);
                 }}
                 className="inline-flex h-9 flex-1 min-w-[80px] items-center justify-center gap-1.5 rounded-full border border-warning/40 bg-warning/10 px-3 text-xs font-bold text-warning hover:bg-warning/20"
                 title="Kick from this room"
@@ -390,7 +399,6 @@ export function ProfilePopup({
                   try {
                     await banFn({ data: { user_id: realId, ban_type: "temp_ban", expires_in_hours: 24, reason: "Staff ban" } });
                     toast.success(`Banned ${user.name} for 24h`);
-                    onOpenChange(false);
                   } catch (e: unknown) {
                     toast.error(e instanceof Error ? e.message : "Failed to ban");
                   }
@@ -408,7 +416,6 @@ export function ProfilePopup({
             <Link
               to="/feed"
               search={{ tab: "account" } as never}
-              onClick={() => onOpenChange(false)}
               className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
             >
               <ExternalLink className="h-4 w-4 shrink-0" /> Edit profile
@@ -420,7 +427,6 @@ export function ProfilePopup({
             <Link
               to="/u/$username"
               params={{ username: user.name }}
-              onClick={() => onOpenChange(false)}
               className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
             >
               <ExternalLink className="h-4 w-4 shrink-0" /> View full profile
@@ -441,7 +447,7 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
   );
 }
 
-function DailyProgress({ data, onClose }: { data: { values?: Record<string, number>; claimed?: Record<string, boolean> } | null; onClose: () => void }) {
+function DailyProgress({ data }: { data: { values?: Record<string, number>; claimed?: Record<string, boolean> } | null }) {
   const items = [
     { id: "post", label: "Create a post", emoji: "✍️", goal: 1 },
     { id: "react5", label: "React to 5 posts", emoji: "❤️", goal: 5 },
@@ -479,7 +485,6 @@ function DailyProgress({ data, onClose }: { data: { values?: Record<string, numb
       </ul>
       <Link
         to="/feed"
-        onClick={onClose}
         className="block rounded-full bg-primary/10 py-2 text-center text-xs font-semibold text-primary hover:bg-primary/20"
       >
         Open feed to earn more

@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { ProfilePopup } from "./ProfilePopup";
+import { useProfilePopup } from "@/lib/profile-popup-context";
 
 export function UserMenu({
   userId,
@@ -9,17 +8,18 @@ export function UserMenu({
   username?: string;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
+  const { openProfile } = useProfilePopup();
+
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="cursor-pointer bg-transparent p-0 text-left hover:text-primary focus:outline-none"
-      >
-        {children}
-      </button>
-      <ProfilePopup userId={userId} open={open} onOpenChange={setOpen} />
-    </>
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        openProfile(userId);
+      }}
+      className="cursor-pointer bg-transparent p-0 text-left hover:text-primary focus:outline-none"
+    >
+      {children}
+    </button>
   );
 }

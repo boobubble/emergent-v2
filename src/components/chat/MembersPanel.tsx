@@ -42,6 +42,66 @@ const ICONS: Record<Role, React.ReactNode> = {
   member: null,
 };
 
+function MemberRow({
+  id,
+  role,
+  user,
+  muted,
+  onClick,
+}: {
+  id: string;
+  role: Role;
+  user: User;
+  muted: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div className="group flex w-full items-center gap-2 rounded-xl px-2 py-1 transition-colors hover:bg-white/5">
+      <UserMenu userId={user.id} username={user.name}>
+        <div className="relative">
+          <FrameAvatar user={user} size={32} />
+          {muted && (
+            <span
+              title="Muted in lobby"
+              className="absolute -bottom-0.5 -left-0.5 grid h-4 w-4 place-items-center rounded-full bg-destructive text-destructive-foreground shadow"
+            >
+              <VolumeX className="h-2.5 w-2.5" />
+            </span>
+          )}
+        </div>
+      </UserMenu>
+      <UserMenu userId={user.id} username={user.name}>
+        <div className="min-w-0 flex-1 leading-tight">
+          <div className="flex items-center gap-1.5 truncate text-xs font-semibold text-foreground/90 hover:text-primary">
+            <CosmeticName userId={user.id} name={user.name} />
+            <NameAdornments user={user} />
+            {ICONS[role]}
+            {muted && <VolumeX className="h-3 w-3 text-destructive" />}
+          </div>
+          {(muted || user.isBot || user.isGuest) && (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <span className="truncate">{muted ? "Muted" : user.isBot ? "Bot" : "Guest"}</span>
+            </div>
+          )}
+        </div>
+      </UserMenu>
+
+      {id !== "me" && (
+        <>
+          <StaffActionsMenu targetUserId={user.id} targetName={user.name} isBot={user.isBot} size="xs" />
+          <button
+            onClick={onClick}
+            title="Send DM"
+            className="shrink-0 rounded-full p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function MembersPanel({ roomId }: { roomId: string }) {
   const { state, startDM, closeDM, dmChannelFor, isDmUnread, dmUnreadCount } = useChat();
   const { user: authUser } = useAuth();
@@ -213,6 +273,21 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   if (!room) return null;
 
+  const renderMemberRow = (id: string, onClick: () => void) => {
+    const u = usersById[id];
+    if (!u) return null;
+    const lobbyMod = state.moderation?.["lobby"]?.[id];
+    const muted = !!(lobbyMod?.mutedUntil && lobbyMod.mutedUntil > Date.now());
+    return (
+      <MemberRow
+        id={id}
+        role={room.roles[id] || "member"}
+        user={u}
+        muted={muted}
+        onClick={onClick}
+      />
+    );
+  };
 
   const body = (
     <>
@@ -523,7 +598,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                     className={activeInRoom ? "rounded-xl ring-1 ring-primary/40 bg-primary/5" : ""}
                     title={activeInRoom ? "Active in this room" : undefined}
                   >
-                    <MemberRow id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
+                    {renderMemberRow(id, () => openDM(id))}
                   </div>
                 );
               })
@@ -537,7 +612,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             </p>
           ) : (
             onlineBots.map((id) => (
-              <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
+              <div key={id}>{renderMemberRow(id, () => openDM(id))}</div>
             ))
           )}
         </div>
@@ -551,7 +626,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               </p>
             ) : (
               (effectiveMode === "split" ? onlineUsers : online).map((id) => (
-                <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
+                <div key={id}>{renderMemberRow(id, () => openDM(id))}</div>
               ))
             )}
           </div>
@@ -563,7 +638,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               </div>
               <div className="space-y-1 opacity-60">
                 {(effectiveMode === "split" ? offlineUsers : offline).map((id) => (
-                  <MemberRow key={id} id={id} role={room.roles[id] || "member"} onClick={() => openDM(id)} />
+                  <div key={id}>{renderMemberRow(id, () => openDM(id))}</div>
                 ))}
               </div>
               {(effectiveMode === "split" ? hiddenOfflineUsers : hiddenOffline) > 0 && (
@@ -604,66 +679,4 @@ export function MembersPanel({ roomId }: { roomId: string }) {
       </Sheet>
     </>
   );
-
-
-  function MemberRow({
-    id,
-    role,
-    onClick,
-  }: {
-    id: string;
-    role: Role;
-    onClick: () => void;
-  }) {
-    const u = usersById[id];
-    if (!u) return null;
-    const lobbyMod = state.moderation?.["lobby"]?.[id];
-    const muted = !!(lobbyMod?.mutedUntil && lobbyMod.mutedUntil > Date.now());
-    return (
-      <div className="group flex w-full items-center gap-2 rounded-xl px-2 py-1 transition-colors hover:bg-white/5">
-        <UserMenu userId={u.id} username={u.name}>
-          <div className="relative">
-            <FrameAvatar user={u} size={32} />
-            {muted && (
-              <span
-                title="Muted in lobby"
-                className="absolute -bottom-0.5 -left-0.5 grid h-4 w-4 place-items-center rounded-full bg-destructive text-destructive-foreground shadow"
-              >
-                <VolumeX className="h-2.5 w-2.5" />
-              </span>
-            )}
-          </div>
-        </UserMenu>
-        <UserMenu userId={u.id} username={u.name}>
-          <div className="min-w-0 flex-1 leading-tight">
-            <div className="flex items-center gap-1.5 truncate text-xs font-semibold text-foreground/90 hover:text-primary">
-              <CosmeticName userId={u.id} name={u.name} />
-              <NameAdornments user={u} />
-              {ICONS[role]}
-              {muted && <VolumeX className="h-3 w-3 text-destructive" />}
-            </div>
-            {(muted || u.isBot || u.isGuest) && (
-              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                <span className="truncate">{muted ? "Muted" : u.isBot ? "Bot" : "Guest"}</span>
-              </div>
-            )}
-          </div>
-
-        </UserMenu>
-
-        {id !== "me" && (
-          <>
-            <StaffActionsMenu targetUserId={u.id} targetName={u.name} isBot={u.isBot} size="xs" />
-            <button
-              onClick={onClick}
-              title="Send DM"
-              className="shrink-0 rounded-full p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
-            >
-              <MessageCircle className="h-3.5 w-3.5" />
-            </button>
-          </>
-        )}
-      </div>
-    );
-  }
 }

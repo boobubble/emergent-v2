@@ -29,6 +29,8 @@ import { DjFooter } from "@/components/chat/DjFooter";
 import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
 import { ScheduledAnnouncementsRunner } from "@/components/chat/ScheduledAnnouncements";
+import { ProfilePopupProvider } from "@/lib/profile-popup-context";
+import { ChatProfilePopupHost } from "@/components/chat/ChatProfilePopupHost";
 import { BADGE_MAP } from "@/lib/achievements";
 import { chatVariantFor } from "@/lib/theme-variants";
 
@@ -297,6 +299,7 @@ export function ChatApp() {
 
 
   return (
+    <ProfilePopupProvider>
     <>
       <div ref={rootRef} data-chat-theme={chatTheme} data-theme-variant={chatVariantFor(chatTheme)} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
         {sidebarOpen && (
@@ -414,6 +417,7 @@ export function ChatApp() {
           onThemeChange={refreshChatTheme}
         />
         <CommunityHub open={hubOpen} onOpenChange={setHubOpen} isMobile={isMobile} />
+        <ChatProfilePopupHost />
       </div>
 
       {toast && (
@@ -435,5 +439,6 @@ export function ChatApp() {
         </>
       )}
     </>
+    </ProfilePopupProvider>
   );
 }
