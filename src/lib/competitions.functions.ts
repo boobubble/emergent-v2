@@ -788,19 +788,28 @@ export const adminFinalizeWinners = createServerFn({ method: "POST" })
 
     await context.supabase.from("competitions").update({ status: "completed" }).eq("id", data.competitionId);
 
-    // Grant coin rewards if configured
+    // Grant coin rewards if configured (wallet-first, idempotent per winner+place)
     const coins = Number((comp.rewards as any)?.coins ?? 0);
     if (coins > 0) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       for (const r of rows) {
-        await supabaseAdmin.rpc("has_role", { _user_id: r.user_id, _role: "admin" }); // noop, keeps import used
-        await supabaseAdmin.from("coin_transactions").insert({
-          user_id: r.user_id, kind: "coins", amount: coins,
-          reason: `competition_win:${comp.slug}`, ref_type: "competition", ref_id: data.competitionId,
+        const reference = `${data.competitionId}:${r.user_id}:${r.place}`;
+        const { error: walletErr } = await supabaseAdmin.rpc("wallet_apply", {
+          _user: r.user_id,
+          _amount: coins,
+          _direction: "credit",
+          _kind: "competition",
+          _status: "completed",
+          _provider: "system",
+          _reference: reference,
+          _metadata: {
+            competition_id: data.competitionId,
+            place: r.place,
+            slug: comp.slug,
+            reason: `competition_win:${comp.slug}`,
+          },
         });
-        await supabaseAdmin.rpc("has_role", { _user_id: r.user_id, _role: "admin" });
-        // Bump profile coin balance via service role
-        await supabaseAdmin.from("profiles").update({ coins: coins }).eq("id", r.user_id).select();
+        if (walletErr) throw new Error(walletErr.message);
       }
     }
 
