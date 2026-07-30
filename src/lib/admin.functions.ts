@@ -428,30 +428,56 @@ export const adminGrantCoins = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const admin = await getSupabaseAdmin();
     const { data: prof, error: pErr } = await admin
-      .from("profiles").select("coins").eq("id", data.user_id).maybeSingle();
+      .from("profiles").select("id").eq("id", data.user_id).maybeSingle();
     if (pErr) throw new Error(pErr.message);
     if (!prof) throw new Error("User not found");
-    const next = Math.max(0, (prof.coins ?? 0) + data.amount);
-    const { error: uErr } = await admin
-      .from("profiles").update({ coins: next }).eq("id", data.user_id);
-    if (uErr) throw new Error(uErr.message);
-    await admin.from("coin_transactions").insert({
-      user_id: data.user_id,
-      kind: "coins",
-      amount: data.amount,
-      reason: data.reason?.trim() || (data.amount >= 0 ? "admin_grant" : "admin_deduct"),
-      ref_type: "admin",
-      ref_id: context.userId,
-    } as never);
-    await admin.from("mod_logs").insert({
+
+    const reference = crypto.randomUUID();
+    const direction = data.amount >= 0 ? "credit" : "debit";
+    const amount = Math.abs(data.amount);
+    const reasonText = data.reason?.trim() || (data.amount >= 0 ? "admin_grant" : "admin_deduct");
+
+    const { error: walletErr } = await admin.rpc("wallet_apply", {
+      _user: data.user_id,
+      _amount: amount,
+      _direction: direction,
+      _kind: "admin_grant",
+      _status: "completed",
+      _provider: "system",
+      _reference: reference,
+      _metadata: {
+        reason: reasonText,
+        granted_by: context.userId,
+      },
+    });
+    if (walletErr) throw new Error(walletErr.message);
+
+    const { data: updated, error: balErr } = await admin
+      .from("profiles").select("coins").eq("id", data.user_id).maybeSingle();
+    if (balErr) throw new Error(balErr.message);
+    const newBalance = updated?.coins ?? 0;
+
+    const { error: logErr } = await admin.from("mod_logs").insert({
       actor_id: context.userId,
       action: "note",
       target_user_id: data.user_id,
       target_type: "user",
       target_id: data.user_id,
-      payload: { amount: data.amount, new_balance: next, reason: data.reason ?? null },
+      payload: {
+        amount: data.amount,
+        new_balance: newBalance,
+        reason: data.reason ?? null,
+        wallet_reference: reference,
+      },
     });
-    return { ok: true, new_balance: next };
+    if (logErr) {
+      console.error("mod_logs insert failed after wallet_apply", {
+        reference,
+        error: logErr.message,
+      });
+    }
+
+    return { ok: true, new_balance: newBalance };
   });
 
 
