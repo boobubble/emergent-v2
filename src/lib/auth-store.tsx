@@ -207,21 +207,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Safety net: guarantee `ready` flips even if getSession hangs or throws.
     const readyTimer = window.setTimeout(markReady, 3000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      applySession(session);
-      markReady();
-    });
+    let subscription: { unsubscribe: () => void } | null = null;
 
-    supabase.auth.getSession()
-      .then(({ data }) => { applySession(data.session); })
-      .catch((e) => { console.warn("getSession failed", e); })
-      .finally(() => { markReady(); });
+try {
+  const listener = supabase.auth.onAuthStateChange((_event, session) => {
+    applySession(session);
+    markReady();
+  });
 
-    return () => {
-      cancelled = true;
-      window.clearTimeout(readyTimer);
-      subscription.unsubscribe();
-    };
+  subscription = listener?.data?.subscription ?? null;
+} catch (e) {
+  console.warn("[auth-store] onAuthStateChange failed to attach", e);
+  markReady();
+}
+
+supabase.auth.getSession()
+  .then(({ data }) => {
+    applySession(data.session);
+  })
+  .catch((e) => {
+    console.warn("getSession failed", e);
+  })
+  .finally(() => {
+    markReady();
+  });
+
+return () => {
+  cancelled = true;
+  window.clearTimeout(readyTimer);
+  subscription?.unsubscribe();
+};
   }, []);
 
   // Re-fetch own username on tab focus so a rename made elsewhere reflects quickly.

@@ -68,6 +68,9 @@ export default defineConfig({
   },
   vite: {
     envDir: process.cwd(),
+    ssr: {
+      noExternal: ["tslib"],
+    },
     resolve: {
       alias: [srcAlias],
     },
