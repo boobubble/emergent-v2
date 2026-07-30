@@ -57,6 +57,19 @@ const SENSITIVE_SETTING_KEYS = new Set<string>([
   "ai_chat", "feedbot_hook_secret",
 ]);
 
+// Writable via updateSetting only by super_admin (regular admin → Forbidden).
+const SUPER_ADMIN_ONLY_SETTING_KEYS = new Set<string>([
+  "admin_roles",
+  "staff_permissions",
+  "admin_modules",
+  "boobubble_openai_key",
+  "boobubble_gemini_key",
+  "feedbot_hook_secret",
+  "ai_chat",
+  "ai_chatbots",
+  "security",
+]);
+
 // -------- Settings (public read; sensitive keys stripped) --------
 export const getAllSettings = createServerFn({ method: "GET" }).handler(async () => {
   const { data, error } = await (await getSupabaseAdmin()).from("app_settings").select("*");
@@ -87,7 +100,11 @@ export const updateSetting = createServerFn({ method: "POST" })
     z.object({ key: z.string().min(1).max(64), value: z.any() }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    if (SUPER_ADMIN_ONLY_SETTING_KEYS.has(data.key)) {
+      await assertSuperAdmin(context.userId);
+    } else {
+      await assertAdmin(context.userId);
+    }
     const { error } = await supabaseAdmin
       .from("app_settings")
       .upsert({ key: data.key, value: data.value, updated_at: new Date().toISOString(), updated_by: context.userId });
