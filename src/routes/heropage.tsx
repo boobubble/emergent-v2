@@ -1,13 +1,17 @@
-import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight, MessageCircle, Newspaper, Radio, Gamepad2, Users,
-  Flame, Sparkles, Heart, Sun, Moon, LogIn, UserPlus, Target,
+  Flame, Sparkles, Heart, LogIn, UserPlus, Target,
   Send, Mic, Play, Hash, Star, Zap, Crown, Award,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
+import { LandingFooter } from "@/components/landing/LandingFooter";
+import { LandingHeader } from "@/components/landing/LandingHeader";
+import { GlassCard } from "@/components/landing/ui/GlassCard";
+import { SectionShell } from "@/components/landing/ui/SectionShell";
 
 import {
   HERO_DEFAULTS, HERO_SETTINGS_KEY, mergeHeroConfig,
@@ -131,14 +135,6 @@ function Reveal({ children, className = "", delay = 0 }: { children: React.React
   );
 }
 
-function Glass({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.35)] ${className}`}>
-      {children}
-    </div>
-  );
-}
-
 function SectionTag({ children }: { children: React.ReactNode }) {
   return (
     <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.15em] backdrop-blur-xl">
@@ -162,18 +158,6 @@ function FeatureRow({ items }: { items: HeroShowcaseItem[] }) {
         </Reveal>
       ))}
     </div>
-  );
-}
-
-function ThemeToggle({ dark, setDark }: { dark: boolean; setDark: (v: boolean) => void }) {
-  return (
-    <button
-      onClick={() => setDark(!dark)}
-      className="rounded-full border border-white/10 bg-white/5 p-2 text-white/80 backdrop-blur-xl hover:bg-white/10"
-      aria-label="Toggle theme"
-    >
-      {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-    </button>
   );
 }
 
@@ -545,7 +529,7 @@ function HeroHomepage() {
                   <ChatroomMockup />
                 </div>
                 <div className="absolute -bottom-6 -right-2 hidden w-40 rotate-3 sm:block" style={{ animation: "hero-float 9s ease-in-out 0.5s infinite" }}>
-                  <Glass className="overflow-hidden p-3">
+                  <GlassCard className="overflow-hidden p-3">
                     <div className="text-[10px] opacity-60">🔥 Trending Room</div>
                     <div className="mt-1 text-sm font-bold">Music Vibes</div>
                     <div className="mt-2 flex -space-x-1.5">
@@ -554,7 +538,7 @@ function HeroHomepage() {
                       ))}
                       <span className="ml-2 self-center text-[10px] opacity-70">+128</span>
                     </div>
-                  </Glass>
+                  </GlassCard>
                 </div>
               </Reveal>
             </div>
@@ -565,7 +549,7 @@ function HeroHomepage() {
         return (
           <SectionShell key="stats" className="!py-12">
             <Reveal>
-              <Glass className="p-6 sm:p-8">
+              <GlassCard className="p-6 sm:p-8">
                 <div className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider opacity-70">
                   <Flame className="h-4 w-4 text-orange-400" /> Live community pulse
                 </div>
@@ -580,7 +564,7 @@ function HeroHomepage() {
                     </Reveal>
                   ))}
                 </div>
-              </Glass>
+              </GlassCard>
             </Reveal>
           </SectionShell>
         );
@@ -743,11 +727,11 @@ function HeroHomepage() {
                 { icon: <Users className="h-4 w-4 text-cyan-300" />, label: "Popular Rooms", emoji: "💬", text: "Hop into the rooms with the loudest energy." },
               ].map((sp, i) => (
                 <Reveal key={sp.label} delay={i * 80}>
-                  <Glass className="h-full p-5 transition hover:-translate-y-1 hover:border-white/20">
+                  <GlassCard className="h-full p-5 transition hover:-translate-y-1 hover:border-white/20">
                     <div className="flex items-center gap-2 text-xs opacity-70">{sp.icon} {sp.label}</div>
                     <div className="mt-3 text-4xl">{sp.emoji}</div>
                     <div className="mt-2 text-sm opacity-75">{sp.text}</div>
-                  </Glass>
+                  </GlassCard>
                 </Reveal>
               ))}
             </div>
@@ -758,14 +742,14 @@ function HeroHomepage() {
                 { n: "Luna", role: "Super Active", q: "The best community platform ever! So much fun and positive vibes." },
               ].map((t, i) => (
                 <Reveal key={t.n} delay={i * 100}>
-                  <Glass className="h-full p-5">
+                  <GlassCard className="h-full p-5">
                     <div className="flex items-center gap-3">
                       <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-500 text-sm font-bold">{t.n[0]}</div>
                       <div><div className="text-sm font-semibold">{t.n}</div><div className="text-[11px] opacity-60">{t.role}</div></div>
                       <div className="ml-auto flex text-amber-300">{Array.from({length:5}).map((_,k)=><Star key={k} className="h-3 w-3 fill-current" />)}</div>
                     </div>
                     <p className="mt-3 text-sm opacity-80">"{t.q}"</p>
-                  </Glass>
+                  </GlassCard>
                 </Reveal>
               ))}
             </div>
@@ -815,35 +799,14 @@ function HeroHomepage() {
       <div className="pointer-events-none absolute top-40 -right-32 h-[28rem] w-[28rem] rounded-full bg-indigo-500/20 blur-3xl" />
       <div className="pointer-events-none absolute bottom-40 left-1/3 h-[28rem] w-[28rem] rounded-full bg-cyan-400/10 blur-3xl" />
 
-      {/* Sticky nav */}
-      <header className={`sticky top-0 z-30 transition-all ${scrolled ? "border-b border-white/10 bg-black/40 backdrop-blur-xl" : "bg-transparent"}`}>
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-2">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-lg shadow-lg">✨</div>
-            <span className="text-lg font-bold tracking-tight">{cfg.brandName}</span>
-          </div>
-          <nav className="hidden items-center gap-5 text-sm opacity-80 md:flex">
-            <a href="/heropage" onClick={goOrPopup("/heropage")} className="hover:opacity-100">Home</a>
-            <a href="/" onClick={goOrPopup("/")} className="hover:opacity-100">Chatrooms</a>
-            <a href="/feed" onClick={goOrPopup("/feed")} className="hover:opacity-100">Feed</a>
-            <a href="/confessions" onClick={goOrPopup("/confessions")} className="hover:opacity-100">Confessions</a>
-            <a href="/battle-hub" onClick={goOrPopup("/battle-hub")} className="hover:opacity-100">Battle Hub</a>
-            <a href="/games" onClick={goOrPopup("/games")} className="hover:opacity-100">Games</a>
-            <a href="/leaderboard" onClick={goOrPopup("/leaderboard")} className="hover:opacity-100">Leaderboard</a>
-          </nav>
-          <div className="flex items-center gap-2">
-            <ThemeToggle dark={dark} setDark={setDark} />
-            <button onClick={() => setPopup("signin")}
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium backdrop-blur-xl hover:bg-white/10">
-              Login
-            </button>
-            <button onClick={() => setPopup("signup")}
-              className="hidden rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-lg sm:inline-block">
-              Join Now
-            </button>
-          </div>
-        </div>
-      </header>
+      <LandingHeader
+        cfg={cfg}
+        dark={dark}
+        setDark={setDark}
+        setPopup={setPopup}
+        scrolled={scrolled}
+        goOrPopup={goOrPopup}
+      />
 
       {cfg.sections.map((s) => {
         const node = renderSection(s);
@@ -856,15 +819,7 @@ function HeroHomepage() {
         return id ? <div id={id} key={s.key}>{node}</div> : node;
       })}
 
-      <footer className="relative z-10 border-t border-white/10 py-8 text-center text-xs opacity-60">
-        <div className="mx-auto max-w-7xl px-5">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <Link to="/welcome" className="underline-offset-4 hover:underline">View classic homepage</Link>
-            <span className="mx-1">·</span>
-            © {new Date().getFullYear()} {cfg.brandName}
-          </div>
-        </div>
-      </footer>
+      <LandingFooter brandName={cfg.brandName} />
 
       <AuthDialogs popup={popup} setPopup={setPopup} />
     </div>
@@ -885,7 +840,7 @@ function FamousChatroomsSection({ rooms }: { rooms: FamousChatroom[] }) {
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {rooms.map((r, i) => (
           <Reveal key={i} delay={i * 80}>
-            <Glass className="flex items-start gap-3 p-5 transition hover:-translate-y-1 hover:border-white/25">
+            <GlassCard className="flex items-start gap-3 p-5 transition hover:-translate-y-1 hover:border-white/25">
               <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-fuchsia-500/30 to-indigo-500/30 text-3xl">{r.emoji}</div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
@@ -901,7 +856,7 @@ function FamousChatroomsSection({ rooms }: { rooms: FamousChatroom[] }) {
                   ))}
                 </div>
               </div>
-            </Glass>
+            </GlassCard>
           </Reveal>
         ))}
       </div>
@@ -922,7 +877,7 @@ function LiveUsersSection({ users }: { users: LiveUserCard[] }) {
       <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-4">
         {users.map((u, i) => (
           <Reveal key={i} delay={i * 60}>
-            <Glass className="p-5 text-center transition hover:-translate-y-1">
+            <GlassCard className="p-5 text-center transition hover:-translate-y-1">
               <div className="relative mx-auto grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-indigo-500/40 to-fuchsia-500/40 text-4xl">
                 {u.imageUrl
                   ? <img src={u.imageUrl} alt={u.name} className="h-full w-full rounded-full object-cover" />
@@ -932,7 +887,7 @@ function LiveUsersSection({ users }: { users: LiveUserCard[] }) {
               <div className="mt-3 text-sm font-semibold">{u.name}</div>
               <div className="mt-0.5 line-clamp-1 text-[11px] opacity-70">{u.status}</div>
               <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300"><Zap className="h-3 w-3" /> Active</div>
-            </Glass>
+            </GlassCard>
           </Reveal>
         ))}
       </div>
