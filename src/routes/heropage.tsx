@@ -1,9 +1,9 @@
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ArrowRight, MessageCircle, Newspaper, Radio, Gamepad2, Users,
-  Flame, Sparkles, Heart, LogIn, UserPlus, Target,
-  Send, Mic, Play, Hash, Star, Zap, Crown, Award,
+  Radio, Gamepad2, Users,
+  Flame, Heart, Target,
+  Play, Star, Zap, Crown, Award,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
@@ -11,6 +11,8 @@ import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { HeroSection as HeroSectionBlock } from "@/components/landing/sections/HeroSection";
+import { ChatroomsSection } from "@/components/landing/sections/ChatroomsSection";
+import { FeedSection } from "@/components/landing/sections/FeedSection";
 import { StatsSection, type LiveStats } from "@/components/landing/sections/StatsSection";
 import { GlassCard } from "@/components/landing/ui/GlassCard";
 import { SectionShell } from "@/components/landing/ui/SectionShell";
@@ -145,144 +147,6 @@ function FeatureRow({ items }: { items: HeroShowcaseItem[] }) {
           </div>
         </Reveal>
       ))}
-    </div>
-  );
-}
-
-/* ============================================================
-   Mockup components — built with JSX so they look like real app UI
-   ============================================================ */
-
-function ChatroomMockup() {
-  const rooms = [
-    { name: "Chill Lounge", active: true, badge: "12k" },
-    { name: "Music Vibes", badge: "3" },
-    { name: "Gaming Zone", badge: "8" },
-    { name: "Late Night", badge: "" },
-    { name: "Teen Hub", badge: "" },
-  ];
-  const messages = [
-    { name: "Alex", color: "from-fuchsia-500 to-pink-500", text: "This song is amazing! 🔥", time: "3:01 PM" },
-    { name: "Emma", color: "from-indigo-500 to-cyan-500", text: "Anyone up for a game? 🎮", time: "3:02 PM" },
-    { name: "Luna", color: "from-amber-400 to-rose-500", text: "I'm in! Let's go 🚀", time: "3:03 PM" },
-    { name: "Sam", color: "from-emerald-400 to-teal-500", text: "Hey everyone! 👋", time: "3:04 PM" },
-  ];
-  const online = ["Alex","Emma","Luna","Sam","Noah","Olivia","Liam","Ava"];
-  return (
-    <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#0b0b1a]/90 shadow-[0_30px_80px_-20px_rgba(168,85,247,0.45)] ring-1 ring-fuchsia-400/10 backdrop-blur-2xl">
-      <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 text-xs text-white/60">
-        <div className="flex items-center gap-2"><Sparkles className="h-3.5 w-3.5 text-fuchsia-300" /> Assistant</div>
-        <div className="hidden sm:flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-rose-400/80" />
-          <span className="h-2 w-2 rounded-full bg-amber-400/80" />
-          <span className="h-2 w-2 rounded-full bg-emerald-400/80" />
-        </div>
-      </div>
-      <div className="grid grid-cols-12 text-white">
-        {/* Rooms */}
-        <aside className="col-span-3 hidden border-r border-white/5 p-3 sm:block">
-          <div className="px-1 text-[10px] uppercase tracking-wide text-white/40">Public rooms</div>
-          <div className="mt-2 space-y-1">
-            {rooms.map((r) => (
-              <div key={r.name} className={`flex items-center justify-between rounded-lg px-2 py-1.5 text-xs ${r.active ? "bg-gradient-to-r from-fuchsia-500/20 to-indigo-500/20 ring-1 ring-fuchsia-400/30" : "hover:bg-white/5"}`}>
-                <span className="flex items-center gap-1.5 truncate"><Hash className="h-3 w-3 opacity-60" />{r.name}</span>
-                {r.badge && <span className="rounded-full bg-fuchsia-500/30 px-1.5 text-[9px] font-bold">{r.badge}</span>}
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 px-1 text-[10px] uppercase tracking-wide text-white/40">Voice rooms</div>
-          <div className="mt-2 flex items-center justify-between rounded-lg bg-white/[0.04] px-2 py-1.5 text-xs">
-            <span className="flex items-center gap-1.5"><Radio className="h-3 w-3 text-rose-300" /> Live Radio</span>
-            <span className="rounded bg-rose-500/30 px-1.5 text-[9px] font-bold text-rose-200">LIVE</span>
-          </div>
-        </aside>
-
-        {/* Chat */}
-        <div className="col-span-12 flex flex-col sm:col-span-6">
-          <div className="border-b border-white/5 px-4 py-3">
-            <div className="text-sm font-semibold">Chill Lounge</div>
-            <div className="text-[10px] text-emerald-300">● 12k members online</div>
-          </div>
-          <div className="flex-1 space-y-3 p-4">
-            {messages.map((m, i) => (
-              <div key={i} className="flex items-start gap-2.5" style={{ animation: `hero-msg-in 600ms ease-out ${i * 120}ms both` }}>
-                <div className={`grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br ${m.color} text-[10px] font-bold`}>{m.name[0]}</div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-[11px]"><span className="font-semibold">{m.name}</span><span className="text-white/40">{m.time}</span></div>
-                  <div className="mt-0.5 inline-block rounded-2xl rounded-tl-sm bg-white/[0.06] px-3 py-1.5 text-xs">{m.text}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="border-t border-white/5 p-3">
-            <div className="flex items-center gap-2 rounded-full bg-white/[0.05] px-3 py-2 text-xs text-white/50">
-              <span className="flex-1">Type a message…</span>
-              <Mic className="h-3.5 w-3.5" />
-              <button className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-500"><Send className="h-3.5 w-3.5 text-white" /></button>
-            </div>
-          </div>
-        </div>
-
-        {/* Online */}
-        <aside className="col-span-3 hidden border-l border-white/5 p-3 lg:block">
-          <div className="px-1 text-[10px] uppercase tracking-wide text-white/40">Online · {online.length * 16}</div>
-          <div className="mt-2 space-y-1.5">
-            {online.map((n, i) => (
-              <div key={n} className="flex items-center gap-2 rounded-lg px-1.5 py-1 text-xs hover:bg-white/5">
-                <div className={`grid h-6 w-6 place-items-center rounded-full text-[9px] font-bold text-white bg-gradient-to-br ${["from-fuchsia-500 to-pink-500","from-indigo-500 to-cyan-500","from-amber-400 to-rose-500","from-emerald-400 to-teal-500"][i % 4]}`}>{n[0]}</div>
-                <span className="flex-1 truncate">{n}</span>
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              </div>
-            ))}
-          </div>
-        </aside>
-      </div>
-    </div>
-  );
-}
-
-function FeedMockup() {
-  return (
-    <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#0b0b1a]/90 shadow-[0_30px_80px_-20px_rgba(99,102,241,0.45)] backdrop-blur-2xl">
-      <div className="grid grid-cols-12 text-white">
-        <div className="col-span-12 p-4 sm:col-span-8">
-          <div className="flex items-center gap-2 rounded-full bg-white/[0.06] px-3 py-2 text-xs text-white/50">
-            <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-500 text-[10px] font-bold">Y</div>
-            <span className="flex-1">What's on your mind?</span>
-            <button className="rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-3 py-1 text-[11px] font-semibold">Post</button>
-          </div>
-          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex items-center gap-2">
-              <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-amber-400 to-rose-500 text-xs font-bold">E</div>
-              <div className="text-xs"><div className="font-semibold">Emma</div><div className="opacity-60">2h ago</div></div>
-            </div>
-            <div className="mt-3 text-sm">Sunset vibes with good people 🌅✨</div>
-            <div className="mt-3 aspect-[16/9] w-full rounded-xl bg-gradient-to-br from-orange-500 via-pink-500 to-indigo-700" />
-            <div className="mt-3 flex items-center gap-4 text-xs opacity-80">
-              <span className="flex items-center gap-1"><Heart className="h-3.5 w-3.5 text-rose-400" /> 1.2k</span>
-              <span className="flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5 text-cyan-300" /> 45</span>
-              <span className="ml-auto rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] text-amber-300">+20 XP</span>
-            </div>
-          </div>
-        </div>
-        <aside className="col-span-12 border-l border-white/5 p-4 sm:col-span-4">
-          <div className="text-xs font-semibold opacity-80">🔥 Trending</div>
-          <div className="mt-2 space-y-2">
-            {["GoodVibes · 12.6k","MusicLovers · 8.2k","Vibes · 7.1k","GameNight · 6.3k"].map((t) => (
-              <div key={t} className="rounded-lg bg-white/[0.04] px-3 py-2 text-xs">{t}</div>
-            ))}
-          </div>
-          <div className="mt-4 text-xs font-semibold opacity-80">👑 Top Members</div>
-          <div className="mt-2 space-y-1.5">
-            {[["Alex","12.5K"],["Emma","11.3K"],["Luna","10.8K"]].map(([n,xp]) => (
-              <div key={n} className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5"><span className="grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-[9px] font-bold">{n[0]}</span>{n}</span>
-                <span className="opacity-60">{xp} XP</span>
-              </div>
-            ))}
-          </div>
-        </aside>
-      </div>
     </div>
   );
 }
@@ -483,63 +347,10 @@ function HeroHomepage() {
         );
 
       case "chatrooms":
-        return (
-          <div key="chatrooms" className="relative">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(217,70,239,0.18),_transparent_60%)]" />
-            <SectionShell>
-              <div className="grid items-center gap-14 lg:grid-cols-[1fr_1.25fr]">
-                <Reveal>
-                  <SectionTag><MessageCircle className="h-3.5 w-3.5 text-fuchsia-300" /> Chat Without Limits</SectionTag>
-                  <h2 className="text-4xl font-black leading-tight sm:text-5xl">
-                    Real-time Chatrooms<br />Built for{" "}
-                    <span className="bg-gradient-to-r from-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">Everyone</span>
-                  </h2>
-                  <p className="mt-5 max-w-xl opacity-75">
-                    Join public chatrooms, create private rooms or have fun in 3some rooms with your close friends.
-                    Realtime messaging, voice, radio and games — all in one place.
-                  </p>
-                  <FeatureRow items={cfg.chatroomFeatures.slice(0, 8)} />
-                </Reveal>
-                <Reveal delay={120} className="relative">
-                  <div className="pointer-events-none absolute -inset-8 rounded-[40px] bg-gradient-to-tr from-fuchsia-500/25 to-indigo-500/25 blur-3xl" />
-                  <div className="relative" style={{ animation: "hero-float 10s ease-in-out infinite" }}>
-                    <ChatroomMockup />
-                  </div>
-                </Reveal>
-              </div>
-            </SectionShell>
-          </div>
-        );
+        return <ChatroomsSection key="chatrooms" cfg={cfg} setPopup={setPopup} />;
 
       case "feed":
-        return (
-          <div key="feed" className="relative">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(99,102,241,0.15),_transparent_60%)]" />
-            <SectionShell>
-              <div className="grid items-center gap-14 lg:grid-cols-[1.25fr_1fr]">
-                <Reveal className="lg:order-2">
-                  <SectionTag><Newspaper className="h-3.5 w-3.5 text-cyan-300" /> Share Your Moments</SectionTag>
-                  <h2 className="text-4xl font-black leading-tight sm:text-5xl">
-                    Engaging Social Feed<br />For Your{" "}
-                    <span className="bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">Community</span>
-                  </h2>
-                  <p className="mt-5 max-w-xl opacity-75">
-                    Share updates, photos, thoughts and connect with people through reactions, comments and trending leaderboards.
-                  </p>
-                  <FeatureRow items={cfg.feedFeatures.slice(0, 8)} />
-                </Reveal>
-                <Reveal delay={120} className="lg:order-1">
-                  <div className="relative">
-                    <div className="pointer-events-none absolute -inset-8 rounded-[40px] bg-gradient-to-tr from-indigo-500/25 to-cyan-500/20 blur-3xl" />
-                    <div className="relative" style={{ animation: "hero-float 10s ease-in-out infinite" }}>
-                      <FeedMockup />
-                    </div>
-                  </div>
-                </Reveal>
-              </div>
-            </SectionShell>
-          </div>
-        );
+        return <FeedSection key="feed" cfg={cfg} />;
 
       case "radio":
         return (
