@@ -10,15 +10,28 @@ import type { FeedFriendship } from "@/lib/feed-types";
 export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Record<string, User> }) {
   const [friendships, setFriendships] = useState<FeedFriendship[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [pendingSent, setPendingSent] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    if (!meId) {
+      setFriendships([]);
+      setLoaded(true);
+      return;
+    }
     async function load() {
-      const { data } = await supabase.from("friendships").select("*");
+      const { data } = await supabase
+        .from("friendships")
+        .select("*")
+        .or(`sender_id.eq.${meId},receiver_id.eq.${meId}`);
       setFriendships((data ?? []) as FeedFriendship[]);
       setLoaded(true);
     }
     load();
-    const ch = supabase.channel(`fr-${meId}`).on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, () => load()).subscribe();
+    const ch = supabase
+      .channel(`fr-${meId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships", filter: `sender_id=eq.${meId}` }, () => { void load(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships", filter: `receiver_id=eq.${meId}` }, () => { void load(); })
+      .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [meId]);
 
@@ -37,6 +50,7 @@ export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Reco
     await supabase.from("friendships").delete().eq("id", f.id);
   }
   async function sendRequest(toId: string) {
+    setPendingSent((s) => new Set(s).add(toId));
     await supabase.from("friendships").insert({ sender_id: meId, receiver_id: toId, status: "pending" });
   }
 
@@ -56,16 +70,16 @@ export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Reco
                 <button
                   onClick={() => accept(f)}
                   aria-label="Accept"
-                  className="rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 p-1.5 text-white shadow-[0_0_10px_rgba(16,185,129,0.5)] transition hover:scale-105"
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.5)] transition hover:scale-105 active:scale-95"
                 >
-                  <Check className="h-3.5 w-3.5" />
+                  <Check className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => reject(f)}
                   aria-label="Reject"
-                  className="rounded-full bg-foreground/[0.06] dark:bg-white/[0.06] p-1.5 text-muted-foreground ring-1 ring-inset ring-border/60 dark:ring-white/10 transition hover:bg-white/[0.1] hover:text-foreground"
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-foreground/[0.06] text-muted-foreground ring-1 ring-inset ring-border/60 transition hover:bg-white/[0.1] hover:text-foreground active:scale-95 dark:bg-white/[0.06] dark:ring-white/10"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
             );
@@ -129,19 +143,28 @@ export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Reco
 
       {suggestions.length > 0 && (
         <PremiumCard title="Suggested for you" icon={<Sparkles className="h-3.5 w-3.5 text-violet-700 dark:text-violet-300" />} accent="violet">
-          {suggestions.map((u) => (
+          {suggestions.map((u) => {
+            const requested = sentIds.has(u.id) || pendingSent.has(u.id);
+            return (
             <div key={u.id} className="group flex items-center gap-2.5 rounded-xl px-1.5 py-1.5 transition hover:bg-foreground/[0.04] dark:hover:bg-white/[0.04]">
               <RingAvatar user={u} size={30} ring="violet" />
               <Link to="/u/$username" params={{ username: u.name }} className="flex-1 truncate text-sm font-semibold hover:underline">{u.name}</Link>
               <button
                 onClick={() => sendRequest(u.id)}
-                aria-label={`Add ${u.name}`}
-                className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 px-2.5 py-1 text-[11px] font-bold text-violet-700 dark:text-violet-200 ring-1 ring-inset ring-violet-400/30 transition hover:from-violet-500/35 hover:to-fuchsia-500/35 hover:text-white"
+                disabled={requested}
+                aria-label={requested ? `Request sent to ${u.name}` : `Add ${u.name} as friend`}
+                className={`inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full px-3 text-[11px] font-bold ring-1 ring-inset transition ${
+                  requested
+                    ? "cursor-default bg-muted/60 text-muted-foreground ring-border/60"
+                    : "bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 text-violet-700 ring-violet-400/30 hover:from-violet-500/35 hover:to-fuchsia-500/35 hover:text-white dark:text-violet-200"
+                }`}
               >
-                <UserPlus className="h-3 w-3" /> Add
+                <UserPlus className="h-3.5 w-3.5" />
+                {requested ? "Request sent" : "Add friend"}
               </button>
             </div>
-          ))}
+            );
+          })}
         </PremiumCard>
       )}
     </div>

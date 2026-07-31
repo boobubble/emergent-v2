@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon, Shield, LogOut, Radio, PenLine, Crown, Bug, MessageSquare, Globe } from "lucide-react";
+import { ArrowLeft, Home, Users, Sparkles, Flame, Clock, UserCircle, Settings, MessageCircle, Bookmark, Bell, Newspaper, Trophy, Award, Gift, Coins, Film, FileText, Users2, CirclePlus, Plus, Menu, X, UserPlus, Compass, Sun, Moon, Shield, LogOut, Radio, PenLine, Crown, Bug, MessageSquare, Globe, Search } from "lucide-react";
 import { useMehfilSettings } from "@/lib/use-mehfil-label";
 import { useAppSettings } from "@/lib/app-settings";
 import { useThemeMode } from "@/lib/use-theme-mode";
@@ -39,7 +39,7 @@ import { ModuleDiscoveryWidget } from "@/components/feed/ModuleDiscoveryWidget";
 import { mergeDiscoveryWidgetsConfig } from "@/lib/discovery-widgets-config";
 import { BirthdaysWidget } from "@/components/feed/BirthdaysWidget";
 import { MissionsPanel } from "@/components/feed/MissionsPanel";
-import { FeedNotifications } from "@/components/feed/FeedNotifications";
+import { FeedNotifications, FeedNotificationPanel, useFeedNotifications } from "@/components/feed/FeedNotifications";
 import { Avatar } from "@/components/chat/Avatar";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
 import { pingDailyStreak } from "@/lib/gamification.functions";
@@ -225,6 +225,7 @@ function FeedPage() {
   const [exploreKey, setExploreKey] = useState(0);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchHighlight, setSearchHighlight] = useState(0);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const loadingMoreRef = useRef(false);
@@ -276,6 +277,7 @@ function FeedPage() {
 
 
   const meId = user?.id ?? "";
+  const feedNotifications = useFeedNotifications(meId);
 
   function setTab(next: Tab) {
     setTabState(next);
@@ -572,6 +574,8 @@ function FeedPage() {
     { id: "trending", label: "Trending", icon: Flame },
     { id: "latest", label: "Latest", icon: Clock },
     { id: "friends", label: "Friends", icon: Users },
+    { id: "saved", label: "Saved", icon: Bookmark },
+    { id: "notifications", label: "Alerts", icon: Bell },
   ];
 
   const leftRailRef = useRef<HTMLDivElement | null>(null);
@@ -744,7 +748,7 @@ function FeedPage() {
             </span>
             <BrandText slot="feed" defaultText="Feed" className="hidden text-[17px] font-bold tracking-tight sm:inline" />
           </Link>
-          <div className="relative mx-auto hidden w-full max-w-md md:block">
+          <div className={`relative mx-auto w-full min-w-0 max-w-md ${mobileSearchOpen ? "flex-1" : "hidden md:block"}`}>
             <div className="flex items-center gap-2 rounded-full bg-muted/60 px-4 py-2 text-sm ring-1 ring-border focus-within:ring-primary/40 transition">
               <span className="text-muted-foreground">🔎</span>
               <input
@@ -974,13 +978,38 @@ function FeedPage() {
             })()}
           </div>
 
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileSearchOpen(o => {
+                  const next = !o;
+                  if (next) {
+                    setSearchOpen(true);
+                    setTimeout(() => searchInputRef.current?.focus(), 50);
+                  } else {
+                    setSearchOpen(false);
+                  }
+                  return next;
+                });
+              }}
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full hover:bg-accent/30 md:hidden"
+              aria-label={mobileSearchOpen ? "Close search" : "Search feed"}
+              aria-expanded={mobileSearchOpen}
+            >
+              {mobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+            </button>
             {user ? (
               <>
-                <FeedNotifications meId={meId} profiles={profiles} />
+                <FeedNotifications
+                  meId={meId}
+                  profiles={profiles}
+                  notifications={feedNotifications}
+                  onOpenFindFriends={() => setView("findFriends")}
+                />
                 <button
                   onClick={() => setDmOpenKey(k => k + 1)}
-                  className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent/30 transition"
+                  className="grid h-11 w-11 place-items-center rounded-full hover:bg-accent/30 transition"
                   title="Messages"
                   aria-label="Messages"
                 >
@@ -1184,7 +1213,7 @@ function FeedPage() {
                     <button
                       key={t.id}
                       onClick={() => setTab(t.id)}
-                      className={`feed-pill-tab min-h-11 flex-1 ${active ? "feed-pill-tab-active" : ""}`}
+                      className={`feed-pill-tab min-h-11 shrink-0 px-3 md:flex-1 md:shrink ${active ? "feed-pill-tab-active" : ""}`}
                     >
                       <Icon className="h-4 w-4 shrink-0" /> {t.label}
                     </button>
@@ -1212,11 +1241,12 @@ function FeedPage() {
                     </div>
                   ));
                 })() : tab === "notifications" ? (
-                  <div className="feed-card p-10 text-center">
-                    <Bell className="mx-auto h-10 w-10 text-muted-foreground/50" />
-                    <p className="mt-3 text-base font-semibold">Notifications</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Tap the bell in the top bar to view your latest activity.</p>
-                  </div>
+                  <FeedNotificationPanel
+                    meId={meId}
+                    profiles={profiles}
+                    notifications={feedNotifications}
+                    onOpenFindFriends={() => setView("findFriends")}
+                  />
                 ) : (<>
                 {loading && Array.from({ length: 3 }).map((_, i) => (
                   <PostSkeleton key={i} />
@@ -1338,15 +1368,7 @@ function FeedPage() {
         <Link to="/chatroom" className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted-foreground"><img src={chatroomIcon} alt="Chatrooms" className="h-5 w-5 rounded-full bg-white object-contain p-0.5" /> Rooms</Link>
         <div className="flex flex-1 justify-center">
           <button
-            onClick={() => {
-              setView("feed");
-              setTimeout(() => {
-                const ta = document.querySelector<HTMLTextAreaElement>('textarea[placeholder^="What\u2019s on your mind"], textarea[placeholder^="What\'s on your mind"]');
-                ta?.focus();
-                ta?.click();
-                ta?.scrollIntoView({ behavior: "smooth", block: "center" });
-              }, 50);
-            }}
+            onClick={focusComposer}
             aria-label="Create post"
             className="-mt-6 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_10px_24px_-8px_var(--primary-glow,theme(colors.primary.DEFAULT))] ring-4 ring-background transition-transform active:scale-95"
           >
@@ -1391,13 +1413,7 @@ function FeedPage() {
           { label: "Report a Bug", icon: Bug, color: "from-rose-500 to-red-600", onClick: () => navigate({ to: "/feedback", search: { type: "bug" } as never }) },
         ]}
         extraActions={[
-          { label: "Create Post", icon: Plus, color: "from-primary to-primary/70", onClick: focusComposer },
           { label: "Public Chat", icon: Users, color: "from-sky-500 to-cyan-500", onClick: () => navigate({ to: "/chatroom" }) },
-          { label: "Private Chat", icon: MessageCircle, color: "from-indigo-500 to-violet-500", onClick: () => setDmOpenKey(k => k + 1) },
-          { label: "Hall of Fame", icon: Crown, color: "from-amber-500 to-yellow-500", onClick: () => navigate({ to: "/hall-of-fame" }) },
-          { label: "Communities", icon: Globe, color: "from-emerald-500 to-teal-500", onClick: () => navigate({ to: "/communities" }) },
-          { label: "Feedback", icon: MessageSquare, color: "from-blue-500 to-indigo-500", onClick: () => navigate({ to: "/feedback" }) },
-          { label: "Report a Bug", icon: Bug, color: "from-rose-500 to-red-600", onClick: () => navigate({ to: "/feedback", search: { type: "bug" } as never }) },
         ]}
       />
 
@@ -1635,7 +1651,7 @@ function MobileSpeedDial({ open, onToggle, onClose, actions, extraActions = [] }
 
       <div
         className={`fixed left-3 z-[58] flex flex-col-reverse items-start gap-2 transition-all duration-200 ${open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-3 pointer-events-none"}`}
-        style={{ bottom: "calc(7.5rem + env(safe-area-inset-bottom))" }}
+        style={{ bottom: "calc(8.75rem + env(safe-area-inset-bottom))" }}
       >
         {showingExtra && (
           <div className="ml-1 mb-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">Quick Shortcuts</div>
@@ -1669,7 +1685,7 @@ function MobileSpeedDial({ open, onToggle, onClose, actions, extraActions = [] }
         aria-label={open ? "Close quick menu" : "Open quick menu (long-press for shortcuts)"}
         aria-expanded={open}
         className={`fixed left-4 z-[60] grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br ${showingExtra ? "from-fuchsia-500 to-violet-500" : "from-primary to-primary/70"} text-primary-foreground shadow-[0_10px_24px_-8px_var(--primary-glow)] ring-4 ring-background transition-all active:scale-90 select-none touch-none`}
-        style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
+        style={{ bottom: "calc(7.25rem + env(safe-area-inset-bottom))" }}
       >
         <span className={`transition-transform duration-200 ${open ? "rotate-90" : ""}`}>
           {open ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Menu className="h-5 w-5" strokeWidth={2.5} />}
