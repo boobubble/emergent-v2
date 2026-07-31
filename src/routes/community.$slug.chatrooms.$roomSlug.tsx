@@ -1,12 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, type ReactNode } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChatApp } from "@/components/chat/ChatApp";
+import { ChatroomPasswordDialog } from "@/components/chat/ChatroomPasswordDialog";
 import { useChat } from "@/lib/chat-store";
 import { useCommunity } from "@/lib/community-context";
 import { useAuth } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Lock, MessageSquare } from "lucide-react";
+import { ArrowLeft, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/community/$slug/chatrooms/$roomSlug")({
@@ -80,6 +81,17 @@ async function resolveCommunityRoom(
   return { access: { status: "ok", room }, queryError: null };
 }
 
+function registerRoomInput(room: ResolvedRoom) {
+  return {
+    id: room.id,
+    slug: room.slug,
+    name: room.name,
+    topic: room.description || room.name,
+    communityId: room.community_id,
+    isPublic: room.visibility === "public",
+  };
+}
+
 /**
  * Renders the existing ChatApp inside the persistent Community Shell so that
  * Community Context, branding, and header stay intact. We only wire routing
@@ -90,7 +102,9 @@ function CommunityChatroomView() {
   const { community, communityId, isMember, isOwner } = useCommunity();
   const { user } = useAuth();
   const chat = useChat();
+  const navigate = useNavigate();
   const registeredIdRef = useRef<string | null>(null);
+  const [passwordVerified, setPasswordVerified] = useState(false);
 
   const canEnter = !!user && (isMember || isOwner);
 
@@ -103,35 +117,37 @@ function CommunityChatroomView() {
   });
 
   const access = data?.access;
-  const resolvedRoom = access?.status === "ok" ? access.room : null;
+  const openRoom =
+    access?.status === "ok"
+      ? access.room
+      : access?.status === "password_required" && passwordVerified
+        ? access.room
+        : null;
 
   useEffect(() => {
-    if (!resolvedRoom) return;
-    if (registeredIdRef.current === resolvedRoom.id) return;
-    registeredIdRef.current = resolvedRoom.id;
-    chat.registerCommunityRoom({
-      id: resolvedRoom.id,
-      slug: resolvedRoom.slug,
-      name: resolvedRoom.name,
-      topic: resolvedRoom.description || resolvedRoom.name,
-      communityId: resolvedRoom.community_id,
-      isPublic: resolvedRoom.visibility === "public",
-    });
+    if (!openRoom) return;
+    if (registeredIdRef.current === openRoom.id) return;
+    registeredIdRef.current = openRoom.id;
+    chat.registerCommunityRoom(registerRoomInput(openRoom));
     return () => {
       registeredIdRef.current = null;
-      chat.leaveCommunityRoom(resolvedRoom.id);
+      chat.leaveCommunityRoom(openRoom.id);
     };
-  }, [resolvedRoom, chat]);
+  }, [openRoom, chat]);
 
   const backLink = (
     <Link
       to="/community/$slug/chatrooms"
       params={{ slug }}
-      className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+      className="inline-flex min-h-11 items-center gap-1 text-muted-foreground hover:text-foreground"
     >
       <ArrowLeft className="h-3.5 w-3.5" /> Back to {community.name} rooms
     </Link>
   );
+
+  const goBackToRooms = () => {
+    navigate({ to: "/community/$slug/chatrooms", params: { slug } });
+  };
 
   if (!user) {
     return (
@@ -197,14 +213,16 @@ function CommunityChatroomView() {
     );
   }
 
-  if (access.status === "password_required") {
+  if (access.status === "password_required" && !passwordVerified) {
     return (
       <div className="space-y-2">
         <div className="rounded-lg border bg-card px-3 py-2 text-xs">{backLink}</div>
-        <StatePanel
-          icon={<Lock className="h-8 w-8 text-muted-foreground" />}
-          title={`${access.room.name} is password protected`}
-          message="Password entry is not wired in this batch. A follow-up will add verification before joining."
+        <ChatroomPasswordDialog
+          open
+          roomId={access.room.id}
+          roomName={access.room.name}
+          onVerified={() => setPasswordVerified(true)}
+          onCancel={goBackToRooms}
         />
       </div>
     );
@@ -215,7 +233,7 @@ function CommunityChatroomView() {
       <div className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-xs">
         {backLink}
         <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold uppercase text-primary">
-          {resolvedRoom?.name ?? "Community room"}
+          {openRoom?.name ?? "Community room"}
         </span>
       </div>
       <div className="overflow-hidden rounded-xl border bg-card">
@@ -242,7 +260,7 @@ function StatePanel({
       <h3 className="mt-3 font-semibold">{title}</h3>
       <p className="mt-1 text-sm text-muted-foreground">{message}</p>
       {loading && (
-        <Button className="mt-4" size="sm" variant="outline" disabled>
+        <Button className="mt-4 min-h-11" size="sm" variant="outline" disabled>
           Loading…
         </Button>
       )}
