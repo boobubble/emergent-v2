@@ -4,23 +4,66 @@ export type FeedSort = "smart" | "latest" | "trending";
 export type DefaultTab = "foryou" | "trending" | "latest" | "friends";
 export type DefaultPrivacy = "public" | "friends";
 
+/** How the feed list queries additional pages from `posts_safe`. */
+export type FeedFetchMode = "chronological" | "trending";
+
+/**
+ * Preferences consumed by the feed list (pagination, ranking, filters).
+ * Other `FeedPrefs` fields remain stored for settings/composer and later batches.
+ */
+export const FEED_LIST_CONSUMED_PREFS = [
+  "defaultTab",
+  "sortOverride",
+  "hideMedia",
+  "mutedKeywords",
+  "mutedHashtags",
+] as const satisfies readonly (keyof FeedPrefs)[];
+
 export interface FeedPrefs {
+  /** Initial tab on feed mount — consumed by feed list. */
   defaultTab: DefaultTab;
+  /** Overrides tab sort when not `smart` — consumed by feed list fetch + display. */
   sortOverride: FeedSort;
   compactCards: boolean;
   hideCounts: boolean;
+  /** Hides media posts client-side — consumed by feed list. */
   hideMedia: boolean;
   autoplayVideos: boolean;
   postSound: boolean;
   emojiEffects: boolean;
   defaultPrivacy: DefaultPrivacy;
   anonymousByDefault: boolean;
+  /** Hide posts containing these words — consumed by feed list. */
   mutedKeywords: string[];
+  /** Hide posts with these tags (without #) — consumed by feed list. */
   mutedHashtags: string[];
   notifyFriendPosts: boolean;
   notifyComments: boolean;
   notifyReactions: boolean;
   notifyDMs: boolean;
+}
+
+/** Tab keys that render the main post stream (not Saved / Notifications stubs). */
+export type FeedStreamTab = DefaultTab | "saved" | "notifications";
+
+/** Resolve the active sort: `sortOverride` wins unless it is `smart`. */
+export function getEffectiveFeedSort(
+  tab: FeedStreamTab,
+  sortOverride: FeedSort,
+): FeedSort | "friends" | "saved" | "notifications" | "foryou" {
+  if (tab === "saved") return "saved";
+  if (tab === "notifications") return "notifications";
+  if (tab === "friends") return "friends";
+  if (sortOverride !== "smart") return sortOverride;
+  return tab;
+}
+
+/** DB fetch order for the next page — Trending uses `trending_score`, others use `created_at`. */
+export function getFeedFetchMode(tab: FeedStreamTab, sortOverride: FeedSort): FeedFetchMode {
+  if (tab === "saved" || tab === "notifications") return "chronological";
+  const effective = getEffectiveFeedSort(tab, sortOverride);
+  if (effective === "trending") return "trending";
+  return "chronological";
 }
 
 const DEFAULTS: FeedPrefs = {

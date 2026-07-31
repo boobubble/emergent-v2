@@ -16,7 +16,7 @@ import { resolveDmTargetId } from "@/lib/dm-utils";
 import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
-import { useFeedPrefs } from "@/lib/feed-prefs";
+import { useFeedPrefs, getFeedFetchMode, getEffectiveFeedSort, type FeedFetchMode } from "@/lib/feed-prefs";
 import { useSavedPosts } from "@/lib/use-saved-posts";
 import { Composer } from "@/components/feed/Composer";
 import { StoryTray } from "@/components/feed/StoryTray";
@@ -44,7 +44,7 @@ import { Avatar } from "@/components/chat/Avatar";
 import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
 import { pingDailyStreak } from "@/lib/gamification.functions";
 import { BrandMark, BrandText } from "@/components/BrandMark";
-import { PostSkeleton, WidgetSkeleton, RewardsWidgetSkeleton } from "@/components/feed/FeedSkeletons";
+import { PostSkeleton, LoadMoreSkeleton, WidgetSkeleton, RewardsWidgetSkeleton } from "@/components/feed/FeedSkeletons";
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
 import { FeedThemeStore } from "@/components/feed/FeedThemeStore";
 import { useActiveFeedTheme, activateFeedTheme, type FeedThemeKey } from "@/lib/feed-themes";
@@ -53,7 +53,7 @@ import { OrkutFeedLayout } from "@/components/feed/OrkutFeedLayout";
 import { useAuthGate } from "@/lib/auth-gate";
 import { useServerFn } from "@tanstack/react-start";
 import { universalSearch, type UniversalSearchResults } from "@/lib/universal-search.functions";
-import { Heart, Eye, Swords, TrendingUp } from "lucide-react";
+import { Heart, Eye, Swords, TrendingUp, AlertCircle, RefreshCw } from "lucide-react";
 
 import { Palette } from "lucide-react";
 
@@ -74,6 +74,83 @@ const FeedDMDock = lazy(() => import("@/components/feed/FeedDMDock").then(m => (
 const PanelFallback = () => (
   <div className="p-6 text-center text-sm text-muted-foreground">Loading…</div>
 );
+
+const FEED_PAGE_SIZE = 20;
+
+type FeedCursor =
+  | { mode: "chronological"; created_at: string; id: string }
+  | { mode: "trending"; trending_score: number; created_at: string; id: string };
+
+function cursorFromPost(post: FeedPost, mode: FeedFetchMode): FeedCursor {
+  if (mode === "trending") {
+    return {
+      mode: "trending",
+      trending_score: post.trending_score ?? 0,
+      created_at: post.created_at,
+      id: post.id,
+    };
+  }
+  return { mode: "chronological", created_at: post.created_at, id: post.id };
+}
+
+function mergePostsById(prev: FeedPost[], incoming: FeedPost[]): FeedPost[] {
+  if (incoming.length === 0) return prev;
+  const seen = new Set(prev.map((p) => p.id));
+  const next = [...prev];
+  for (const p of incoming) {
+    if (!seen.has(p.id)) {
+      seen.add(p.id);
+      next.push(p);
+    }
+  }
+  return next;
+}
+
+/** Replace the first page on refresh while keeping older loaded pages, deduped by id. */
+function reconcileFirstPage(prev: FeedPost[], firstPage: FeedPost[]): FeedPost[] {
+  const firstIds = new Set(firstPage.map((p) => p.id));
+  const older = prev.filter((p) => !firstIds.has(p.id));
+  return [...firstPage, ...older];
+}
+
+function applyFeedCursor(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  query: any,
+  cursor: FeedCursor,
+) {
+  if (cursor.mode === "trending") {
+    const ts = cursor.trending_score;
+    const ca = cursor.created_at;
+    const id = cursor.id;
+    return query.or(
+      `trending_score.lt.${ts},and(trending_score.eq.${ts},created_at.lt.${ca}),and(trending_score.eq.${ts},created_at.eq.${ca},id.lt.${id})`,
+    );
+  }
+  const ca = cursor.created_at;
+  const id = cursor.id;
+  return query.or(`created_at.lt.${ca},and(created_at.eq.${ca},id.lt.${id})`);
+}
+
+async function fetchFeedPage(
+  mode: FeedFetchMode,
+  cursor: FeedCursor | null,
+  limit: number,
+): Promise<{ posts: FeedPost[]; error: string | null }> {
+  let q = postsSafe().select("*").is("community_id", null);
+  if (mode === "trending") {
+    q = q
+      .order("trending_score", { ascending: false })
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
+    if (cursor?.mode === "trending") q = applyFeedCursor(q, cursor);
+  } else {
+    q = q.order("created_at", { ascending: false }).order("id", { ascending: false });
+    if (cursor?.mode === "chronological") q = applyFeedCursor(q, cursor);
+  }
+  const { data, error } = await q.limit(limit);
+  if (error) return { posts: [], error: error.message };
+  return { posts: ((data ?? []) as Partial<FeedPost>[]).map(normalizePost), error: null };
+}
 
 export const Route = createFileRoute("/feed/")({
   head: () => ({
@@ -139,6 +216,9 @@ function FeedPage() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [dmOpenKey, setDmOpenKey] = useState(0);
   const [defaultTabApplied, setDefaultTabApplied] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
@@ -147,6 +227,10 @@ function FeedPage() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchHighlight, setSearchHighlight] = useState(0);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const loadingMoreRef = useRef(false);
+  const cursorRef = useRef<FeedCursor | null>(null);
+  const fetchModeRef = useRef<FeedFetchMode>("chronological");
+  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const mehfilSettings = useMehfilSettings();
   const mehfilLabel = mehfilSettings.module_name || "Poetry Hub";
@@ -230,33 +314,115 @@ function FeedPage() {
     return () => { supabase.removeChannel(ch); };
   }, [meId]);
 
-  // Load posts
-  async function loadPosts() {
+  const fetchMode = useMemo(
+    () => getFeedFetchMode(tab, prefs.sortOverride),
+    [tab, prefs.sortOverride],
+  );
+
+  function updateCursorFromPosts(list: FeedPost[], mode: FeedFetchMode) {
+    if (list.length === 0) {
+      cursorRef.current = null;
+      return;
+    }
+    cursorRef.current = cursorFromPost(list[list.length - 1], mode);
+  }
+
+  async function loadFirstPage() {
     setLoading(true);
-    // Global feed: platform-wide posts only. Community-scoped posts stay
-    // exclusive to their community feed.
-    const { data } = await postsSafe()
-      .select("*")
-      .is("community_id", null)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setPosts(((data ?? []) as Partial<FeedPost>[]).map(normalizePost));
+    setFetchError(null);
+    setHasMore(true);
+    cursorRef.current = null;
+    fetchModeRef.current = fetchMode;
+    const { posts: page, error } = await fetchFeedPage(fetchMode, null, FEED_PAGE_SIZE);
+    if (error) {
+      setFetchError(error);
+      setPosts([]);
+      setHasMore(false);
+      cursorRef.current = null;
+    } else {
+      setPosts(page);
+      setHasMore(page.length >= FEED_PAGE_SIZE);
+      updateCursorFromPosts(page, fetchMode);
+    }
     setLoading(false);
   }
 
+  async function loadMorePosts() {
+    if (loadingMoreRef.current || !hasMore || loading || fetchError) return;
+    if (tab === "saved" || tab === "notifications") return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    const mode = fetchModeRef.current;
+    const { posts: page, error } = await fetchFeedPage(mode, cursorRef.current, FEED_PAGE_SIZE);
+    if (error) {
+      setFetchError(error);
+    } else if (page.length === 0) {
+      setHasMore(false);
+    } else {
+      setPosts((prev) => {
+        const merged = mergePostsById(prev, page);
+        updateCursorFromPosts(merged, mode);
+        return merged;
+      });
+      setHasMore(page.length >= FEED_PAGE_SIZE);
+    }
+    loadingMoreRef.current = false;
+    setLoadingMore(false);
+  }
+
+  async function refreshFeed() {
+    const mode = getFeedFetchMode(tab, prefs.sortOverride);
+    fetchModeRef.current = mode;
+    const { posts: page, error } = await fetchFeedPage(mode, null, FEED_PAGE_SIZE);
+    if (error) {
+      setFetchError(error);
+      return;
+    }
+    setFetchError(null);
+    setPosts((prev) => {
+      const merged = reconcileFirstPage(prev, page);
+      updateCursorFromPosts(merged, mode);
+      return merged;
+    });
+    setHasMore(page.length >= FEED_PAGE_SIZE);
+  }
+
+  // Initial load + refetch when fetch order changes (e.g. Trending ↔ Latest).
   useEffect(() => {
-    loadPosts();
+    void loadFirstPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meId, fetchMode]);
+
+  useEffect(() => {
+    const el = loadMoreSentinelRef.current;
+    if (!el || tab === "saved" || tab === "notifications") return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) void loadMorePosts();
+      },
+      { rootMargin: "240px 0px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, hasMore, loading, loadingMore, fetchError]);
+
+  useEffect(() => {
     const ch = supabase.channel("feed-posts")
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, (payload) => {
-        // Skip any post scoped to a community — global feed is platform-wide only.
         const row = (payload.new ?? payload.old) as Partial<FeedPost> & { community_id?: string | null };
         if (row && row.community_id) return;
-        if (payload.eventType === "INSERT") setPosts((p) => [normalizePost(payload.new as Partial<FeedPost>), ...p]);
-        else if (payload.eventType === "DELETE") setPosts((p) => p.filter((x) => x.id !== (payload.old as FeedPost).id));
-        else if (payload.eventType === "UPDATE") setPosts((p) => p.map((x) => x.id === (payload.new as FeedPost).id ? normalizePost(payload.new as Partial<FeedPost>) : x));
+        if (payload.eventType === "INSERT") {
+          const next = normalizePost(payload.new as Partial<FeedPost>);
+          setPosts((p) => (p.some((x) => x.id === next.id) ? p : [next, ...p]));
+        } else if (payload.eventType === "DELETE") {
+          setPosts((p) => p.filter((x) => x.id !== (payload.old as FeedPost).id));
+        } else if (payload.eventType === "UPDATE") {
+          const next = normalizePost(payload.new as Partial<FeedPost>);
+          setPosts((p) => p.map((x) => (x.id === next.id ? next : x)));
+        }
       }).subscribe();
     return () => { supabase.removeChannel(ch); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meId]);
 
   const filtered = useMemo(() => {
@@ -280,17 +446,19 @@ function FeedPage() {
     }
 
     // Sort: explicit override wins over tab-driven sort
-    const effective = prefs.sortOverride !== "smart" ? prefs.sortOverride : tab;
-    if (effective === "trending" || tab === "trending") {
-      list.sort((a, b) => {
-        const sa = a.reaction_count * 2 + a.comment_count * 3;
-        const sb = b.reaction_count * 2 + b.comment_count * 3;
-        return sb - sa;
-      });
-    } else if (effective === "latest" || tab === "latest") {
+    const effective = getEffectiveFeedSort(tab, prefs.sortOverride);
+    if (effective === "latest") {
       list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
-    } else if (tab === "friends") {
+    } else if (effective === "friends") {
       list = list.filter((p) => friendIds.has(p.owner_id) || p.owner_id === meId);
+      list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+    } else if (effective === "trending") {
+      // Already ordered by `trending_score` from the DB fetch; tie-break for safety.
+      list.sort((a, b) => {
+        const scoreDiff = (b.trending_score ?? 0) - (a.trending_score ?? 0);
+        if (scoreDiff !== 0) return scoreDiff;
+        return +new Date(b.created_at) - +new Date(a.created_at);
+      });
     } else {
       list.sort((a, b) => {
         const af = friendIds.has(a.owner_id) ? 1 : 0;
@@ -506,7 +674,7 @@ function FeedPage() {
           posts={filtered}
           friendIds={friendIds}
           loading={loading}
-          onReload={loadPosts}
+          onReload={refreshFeed}
           onOpenThemeStore={() => setThemeStoreOpen(true)}
           onOpenAccount={() => setView("account")}
           onOpenProfile={(uname) => { setProfileUsername(uname); setView("profile"); }}
@@ -1001,12 +1169,13 @@ function FeedPage() {
               <StoryTray />
               {meId ? (
                 <div className="feed-card mt-4">
-                  <Composer authorId={meId} onPosted={loadPosts} />
+                  <Composer authorId={meId} onPosted={refreshFeed} />
                 </div>
               ) : (
                 <SignInToPostCard />
               )}
 
+              <PullToRefresh onRefresh={refreshFeed}>
               <div className="mt-4 flex gap-1 overflow-x-auto rounded-full feed-card p-1.5 feed-scrollbar-hide">
                 {TABS.map((t) => {
                   const Icon = t.icon;
@@ -1015,15 +1184,15 @@ function FeedPage() {
                     <button
                       key={t.id}
                       onClick={() => setTab(t.id)}
-                      className={`feed-pill-tab flex-1 ${active ? "feed-pill-tab-active" : ""}`}
+                      className={`feed-pill-tab min-h-11 flex-1 ${active ? "feed-pill-tab-active" : ""}`}
                     >
-                      <Icon className="h-4 w-4" /> {t.label}
+                      <Icon className="h-4 w-4 shrink-0" /> {t.label}
                     </button>
                   );
                 })}
               </div>
 
-              <div className="mt-4 space-y-4">
+              <div className="mt-4 min-w-0 space-y-4">
                 {tab === "saved" ? (() => {
                   const savedPosts = savedIds
                     .map((id) => posts.find((p) => p.id === id))
@@ -1052,12 +1221,26 @@ function FeedPage() {
                 {loading && Array.from({ length: 3 }).map((_, i) => (
                   <PostSkeleton key={i} />
                 ))}
-                {!loading && filtered.length === 0 && (
+                {!loading && fetchError && (
+                  <div className="feed-card p-8 text-center">
+                    <AlertCircle className="mx-auto h-10 w-10 text-destructive/80" />
+                    <p className="mt-3 text-base font-semibold">Couldn&apos;t load posts</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{fetchError}</p>
+                    <button
+                      type="button"
+                      onClick={() => void loadFirstPage()}
+                      className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow hover:opacity-90 active:scale-[0.98]"
+                    >
+                      <RefreshCw className="h-4 w-4" /> Retry
+                    </button>
+                  </div>
+                )}
+                {!loading && !fetchError && filtered.length === 0 && (
                   <div className="feed-card p-10 text-center">
                     <p className="text-sm text-muted-foreground">No posts yet. Be the first to share something!</p>
                   </div>
                 )}
-                {!loading && filtered.map((post, idx) => (
+                {!loading && !fetchError && filtered.map((post, idx) => (
                   <div key={post.id} className="contents">
                     <div data-feed-post={post.id} className="rounded-3xl transition-shadow outline-none">
                       <PostCard post={post} profiles={profiles} meId={meId} />
@@ -1089,7 +1272,7 @@ function FeedPage() {
                     )}
                   </div>
                 ))}
-                {!loading && filtered.length > 0 && filtered.length <= 2 && (
+                {!loading && !fetchError && filtered.length > 0 && filtered.length <= 2 && (
                   <div className="space-y-4 lg:hidden">
                     <PromotedPostsWidget profiles={profiles} />
                     <SuggestedGroupsWidget />
@@ -1097,8 +1280,27 @@ function FeedPage() {
                     <TrendingCommunitiesWidget />
                   </div>
                 )}
+                {!loading && !fetchError && (
+                  <div className="min-w-0 pt-1">
+                    {loadingMore && <LoadMoreSkeleton />}
+                    {hasMore && !loadingMore && (
+                      <button
+                        type="button"
+                        onClick={() => void loadMorePosts()}
+                        className="flex min-h-11 w-full min-w-0 items-center justify-center rounded-2xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition hover:bg-accent active:scale-[0.99]"
+                      >
+                        Load more
+                      </button>
+                    )}
+                    {!hasMore && filtered.length > 0 && (
+                      <p className="py-3 text-center text-xs text-muted-foreground">You&apos;re all caught up.</p>
+                    )}
+                    <div ref={loadMoreSentinelRef} className="h-1 w-full" aria-hidden />
+                  </div>
+                )}
                 </>)}
               </div>
+              </PullToRefresh>
 
             </>
           )}
@@ -1383,22 +1585,6 @@ function RailSection({ label, tone }: { label: string; tone: "primary" | "sky" |
   );
 }
 
-function NavLink({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active?: boolean }) {
-  return (
-    <Link to={to} className={`flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
-      <Icon className="h-4 w-4" /> {label}
-    </Link>
-  );
-}
-
-function MobileNav({ to, params, icon: Icon, label, active }: { to: string; params?: Record<string, string>; icon: typeof Home; label: string; active?: boolean }) {
-  return (
-    <Link to={to} params={params as never} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${active ? "text-primary" : "text-muted-foreground"}`}>
-      <Icon className="h-5 w-5" /> {label}
-    </Link>
-  );
-}
-
 type SpeedDialAction = { label: string; icon: typeof Home; color: string; onClick: () => void };
 
 function MobileSpeedDial({ open, onToggle, onClose, actions, extraActions = [] }: { open: boolean; onToggle: () => void; onClose: () => void; actions: SpeedDialAction[]; extraActions?: SpeedDialAction[] }) {
@@ -1438,7 +1624,6 @@ function MobileSpeedDial({ open, onToggle, onClose, actions, extraActions = [] }
 
   return (
     <div className="lg:hidden">
-      {/* Backdrop */}
       {open && (
         <button
           type="button"
@@ -1448,7 +1633,6 @@ function MobileSpeedDial({ open, onToggle, onClose, actions, extraActions = [] }
         />
       )}
 
-      {/* Action sheet */}
       <div
         className={`fixed left-3 z-[58] flex flex-col-reverse items-start gap-2 transition-all duration-200 ${open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-3 pointer-events-none"}`}
         style={{ bottom: "calc(7.5rem + env(safe-area-inset-bottom))" }}
@@ -1474,7 +1658,6 @@ function MobileSpeedDial({ open, onToggle, onClose, actions, extraActions = [] }
         })}
       </div>
 
-      {/* Trigger FAB — tap toggles main menu, long-press opens extra shortcuts */}
       <button
         type="button"
         onClick={handleClick}

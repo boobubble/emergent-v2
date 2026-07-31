@@ -72,6 +72,15 @@ export function WidgetSkeleton({ rows = 3, title = true }: { rows?: number; titl
   );
 }
 
+/** Compact skeleton shown while paginating the feed stream. */
+export function LoadMoreSkeleton() {
+  return (
+    <div className="space-y-4 py-2" aria-hidden>
+      <PostSkeleton />
+    </div>
+  );
+}
+
 export function RewardsWidgetSkeleton() {
   return (
     <div className="feed-card p-3">

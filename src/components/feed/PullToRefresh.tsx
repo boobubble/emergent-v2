@@ -74,7 +74,7 @@ export function PullToRefresh({
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       onTouchCancel={onTouchEnd}
-      className={`relative ${className}`}
+      className={`relative min-w-0 overflow-x-hidden ${className}`}
       style={{ touchAction: pull > 0 ? "none" : "pan-y" }}
     >
       {/* Indicator */}
