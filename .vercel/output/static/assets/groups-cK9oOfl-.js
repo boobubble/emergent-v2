@@ -1,1 +1,0 @@
-import{j as o,ah as t}from"./index-_-sbO4Mi.js";import{U as s}from"./users-round-BYrn4xGL.js";const r=()=>o.jsx(t,{icon:s,title:"Groups",tagline:"Hang out with people who share your interests."});export{r as component};

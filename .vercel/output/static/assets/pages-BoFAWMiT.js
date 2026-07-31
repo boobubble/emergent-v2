@@ -1,1 +1,0 @@
-import{j as o,ah as t}from"./index-_-sbO4Mi.js";import{F as n}from"./file-text-K-2_Wm4b.js";const i=()=>o.jsx(t,{icon:n,title:"Pages",tagline:"Follow brands, creators, and communities."});export{i as component};

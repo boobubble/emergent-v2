@@ -1,1 +1,0 @@
-import{a7 as a,ag as e,a9 as d,a8 as c}from"./index-_-sbO4Mi.js";const t=a({method:"GET"}).middleware([e,d()]).handler(c("9ff2da6f1cb7b62b1f668664cc4268df30838ea70729b37d14d822951dd79994")),i=a({method:"POST"}).middleware([e,d()]).handler(c("6af5861777f1d7932c1ff026703c73ad4d97dc25f60de45493ad271c8c1e4d29"));export{i as c,t as g};

@@ -1,1 +1,0 @@
-import{j as o,bU as n,L as s}from"./index-_-sbO4Mi.js";const e=()=>o.jsxs("div",{className:"space-y-4",children:[o.jsx(n,{title:"Unknown module"}),o.jsx(s,{to:"/admin/upcoming",className:"text-sm text-primary",children:"← Back to upcoming modules"})]});export{e as notFoundComponent};

@@ -1,1 +1,0 @@
-import{eR as a,b as o,j as r,N as t}from"./index-_-sbO4Mi.js";function c(){const{username:e}=a.useParams(),{user:s}=o();return!!s?.username&&s.username.toLowerCase()===e.toLowerCase()?r.jsx(t,{to:"/feed",search:{tab:"account"},replace:!0}):r.jsx(t,{to:"/feed",search:{u:e},replace:!0})}export{c as component};

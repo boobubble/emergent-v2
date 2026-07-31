@@ -1,1 +1,0 @@
-import{j as e,bU as r}from"./index-_-sbO4Mi.js";const o=({reset:t})=>e.jsxs("div",{className:"space-y-4",children:[e.jsx(r,{title:"Something went wrong"}),e.jsx("button",{className:"text-sm text-primary",onClick:t,children:"Retry"})]});export{o as errorComponent};

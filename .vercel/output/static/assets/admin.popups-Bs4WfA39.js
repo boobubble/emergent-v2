@@ -1,1 +1,0 @@
-import{j as e,bU as n,bX as o}from"./index-_-sbO4Mi.js";function s(){return e.jsxs("div",{children:[e.jsx(n,{title:"Popup Manager",description:"Modals, welcome dialogs, and CTAs."}),e.jsx(o,{title:"Popups",points:["First-visit, on-login, on-event triggers","Image / video / rich text content","Frequency caps and audience rules"]})]})}export{s as component};

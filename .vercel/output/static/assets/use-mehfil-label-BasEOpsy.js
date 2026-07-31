@@ -1,1 +1,0 @@
-import{bo as e,e as n,h as r}from"./index-_-sbO4Mi.js";import{g as u}from"./mehfil-admin.functions-PNYi6uJT.js";function a(){const t=n(u),{data:s}=r({queryKey:["mehfil","settings"],queryFn:()=>t(),staleTime:5*6e4});return s??e}function m(){return a().module_name||e.module_name}export{a,m as u};
