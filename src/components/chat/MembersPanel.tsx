@@ -47,22 +47,33 @@ function MemberRow({
   role,
   user,
   muted,
+  isFriend,
+  isOffline,
   onClick,
 }: {
   id: string;
   role: Role;
   user: User;
   muted: boolean;
+  isFriend?: boolean;
+  isOffline?: boolean;
   onClick: () => void;
 }) {
   return (
-    <div className="group flex w-full items-center gap-2 rounded-xl px-2 py-1 transition-colors hover:bg-white/5">
+    <div
+      className={`group flex min-h-11 w-full items-center gap-2 rounded-xl px-2 py-1.5 transition-colors hover:bg-white/5 ${
+        isOffline ? "opacity-60" : ""
+      } ${user.isBot ? "bg-primary/5" : ""}`}
+    >
       <UserMenu userId={user.id} username={user.name}>
         <div className="relative">
           <FrameAvatar user={user} size={32} />
+          {!user.isBot && !isOffline && (
+            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-emerald-400" aria-hidden />
+          )}
           {muted && (
             <span
-              title="Muted in lobby"
+              title="Muted in this room"
               className="absolute -bottom-0.5 -left-0.5 grid h-4 w-4 place-items-center rounded-full bg-destructive text-destructive-foreground shadow"
             >
               <VolumeX className="h-2.5 w-2.5" />
@@ -76,11 +87,21 @@ function MemberRow({
             <CosmeticName userId={user.id} name={user.name} />
             <NameAdornments user={user} />
             {ICONS[role]}
+            {user.isBot && (
+              <span className="rounded-md bg-primary/15 px-1 py-0.5 text-[9px] font-bold uppercase tracking-tight text-primary">
+                Bot
+              </span>
+            )}
+            {isFriend && !user.isBot && (
+              <span className="rounded-md bg-sky-500/15 px-1 py-0.5 text-[9px] font-bold uppercase tracking-tight text-sky-400">
+                Friend
+              </span>
+            )}
             {muted && <VolumeX className="h-3 w-3 text-destructive" />}
           </div>
-          {(muted || user.isBot || user.isGuest) && (
+          {(muted || user.isGuest) && (
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <span className="truncate">{muted ? "Muted" : user.isBot ? "Bot" : "Guest"}</span>
+              <span className="truncate">{muted ? "Muted" : "Guest"}</span>
             </div>
           )}
         </div>
@@ -90,11 +111,13 @@ function MemberRow({
         <>
           <StaffActionsMenu targetUserId={user.id} targetName={user.name} isBot={user.isBot} size="xs" />
           <button
+            type="button"
             onClick={onClick}
             title="Send DM"
-            className="shrink-0 rounded-full p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
+            aria-label={`Message ${user.name}`}
+            className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-full text-muted-foreground opacity-70 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100 sm:min-h-8 sm:min-w-8"
           >
-            <MessageCircle className="h-3.5 w-3.5" />
+            <MessageCircle className="h-4 w-4" />
           </button>
         </>
       )}
@@ -273,17 +296,20 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   if (!room) return null;
 
-  const renderMemberRow = (id: string, onClick: () => void) => {
+  const renderMemberRow = (id: string, onClick: () => void, opts?: { offline?: boolean }) => {
     const u = usersById[id];
     if (!u) return null;
-    const lobbyMod = state.moderation?.["lobby"]?.[id];
-    const muted = !!(lobbyMod?.mutedUntil && lobbyMod.mutedUntil > Date.now());
+    const channelMod = state.moderation?.[roomId]?.[id];
+    const muted = !!(channelMod?.mutedUntil && channelMod.mutedUntil > Date.now());
+    const isFriend = friendIds.includes(id);
     return (
       <MemberRow
         id={id}
         role={room.roles[id] || "member"}
         user={u}
         muted={muted}
+        isFriend={isFriend}
+        isOffline={opts?.offline}
         onClick={onClick}
       />
     );
@@ -522,7 +548,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
               onClick={() => setTab(t.key)}
               title={t.label}
               aria-pressed={active}
-              className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-semibold transition-colors ${
+              className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-2 py-2 text-[11px] font-semibold transition-colors ${
                 active
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
@@ -559,7 +585,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={`Search ${tab}…`}
-            className="w-full rounded-full bg-white/5 py-1.5 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground outline-none ring-1 ring-border focus:ring-primary"
+            className="min-h-11 w-full rounded-full bg-white/5 py-2 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground outline-none ring-1 ring-border focus:ring-primary"
           />
           {search && (
             <button
@@ -620,6 +646,10 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         // Users tab — in merged mode bots are included via `online`/`offline`; in split mode bots are excluded.
         <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4 pt-2">
           <div className="space-y-1">
+            <div className="flex items-center gap-1.5 px-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400/90">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
+              Online — {(effectiveMode === "split" ? onlineUsers : online).length}
+            </div>
             {(effectiveMode === "split" ? onlineUsers : online).length === 0 ? (
               <p className="px-3 py-6 text-center text-xs text-muted-foreground">
                 {q ? "No users match your search." : "No users online."}
@@ -633,12 +663,13 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
           {(effectiveMode === "split" ? offlineUsers : offline).length > 0 && (
             <div>
-              <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+              <div className="flex items-center gap-1.5 px-1 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" aria-hidden />
                 Offline — {(effectiveMode === "split" ? offlineSortedUsers : offlineSorted).length}
               </div>
-              <div className="space-y-1 opacity-60">
+              <div className="space-y-1">
                 {(effectiveMode === "split" ? offlineUsers : offline).map((id) => (
-                  <div key={id}>{renderMemberRow(id, () => openDM(id))}</div>
+                  <div key={id}>{renderMemberRow(id, () => openDM(id), { offline: true })}</div>
                 ))}
               </div>
               {(effectiveMode === "split" ? hiddenOfflineUsers : hiddenOffline) > 0 && (

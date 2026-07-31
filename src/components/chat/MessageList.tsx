@@ -85,18 +85,38 @@ function ReplyPreview({ message, align = "left" }: { message: Message; align?: "
   const { state } = useChat();
   const author = state.users[message.authorId];
   return (
-    <div className={`mb-1 flex max-w-[80%] items-center gap-1.5 rounded-lg border-l-2 border-primary/60 bg-white/5 px-2 py-1 text-[11px] ${align === "right" ? "self-end" : ""}`}>
-      <CornerDownRight className="h-3 w-3 shrink-0 text-primary/70" />
-      <span className="font-semibold text-primary/90">{author?.name || "Unknown"}</span>
-      <span className="truncate text-muted-foreground">
-        {message.text || (message.attachment ? `📎 ${message.attachment.name}` : "(message)")}
-      </span>
+    <div
+      className={`mb-1.5 flex max-w-[min(80%,20rem)] items-start gap-1.5 rounded-lg border border-primary/25 bg-primary/5 px-2.5 py-1.5 text-[11px] ${
+        align === "right" ? "self-end border-r-2 border-r-primary/70" : "border-l-2 border-l-primary/70"
+      }`}
+    >
+      <CornerDownRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+      <div className="min-w-0">
+        <span className="block font-semibold text-primary">{author?.name || "Unknown"}</span>
+        <span className="line-clamp-2 text-muted-foreground">
+          {message.text || (message.attachment ? `📎 ${message.attachment.name}` : "(message)")}
+        </span>
+      </div>
     </div>
   );
 }
 
+function ReplyButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-full text-muted-foreground opacity-70 transition-opacity hover:bg-primary/10 hover:text-primary sm:min-h-8 sm:min-w-8 sm:opacity-0 sm:group-hover/msg:opacity-100"
+      title="Reply"
+      aria-label="Reply"
+    >
+      <Reply className="h-4 w-4" />
+    </button>
+  );
+}
+
 export function MessageList({ channelId }: { channelId: string }) {
-  const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt } = useChat();
+  const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt, replyingTo } = useChat();
   const { isIgnored } = useIgnore();
   const maskDmUrls = useDmUrlMask();
   const isDmChan = isDM(channelId);
@@ -155,7 +175,7 @@ export function MessageList({ channelId }: { channelId: string }) {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
     <EmojiEffectLayer channelId={channelId} />
-    <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2 text-xs md:text-[15px]">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 text-xs sm:px-4 md:text-[15px]">
       {groups.length === 0 && (
         <div className="grid h-full place-items-center text-center text-sm text-muted-foreground">
           <div>
@@ -167,7 +187,7 @@ export function MessageList({ channelId }: { channelId: string }) {
           </div>
         </div>
       )}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {groups.map((g, gi) => {
           const author = state.users[g[0].authorId];
           if (!author) return null;
@@ -175,10 +195,10 @@ export function MessageList({ channelId }: { channelId: string }) {
 
           if (isMe) {
             return (
-              <div key={gi} className="group flex flex-row-reverse gap-2">
+              <div key={gi} className="group flex flex-row-reverse gap-2.5">
                 <FrameAvatar user={author} size={28} />
                 <div className="flex min-w-0 flex-1 flex-col items-end">
-                  <div className="mb-0.5 flex items-center gap-1.5">
+                  <div className="mb-1 flex items-center gap-1.5">
 
                     <Time ts={g[0].ts} />
                     <UserMenu userId={author.id} username={author.name}>
@@ -193,23 +213,17 @@ export function MessageList({ channelId }: { channelId: string }) {
                   <div className="flex max-w-[80%] flex-col items-end gap-1">
                     {g.map(m => {
                       const replied = m.replyToId ? findMessage(m.replyToId) : null;
+                      const isReplyTarget = replyingTo?.id === m.id;
                       return (
                         <div key={m.id} className="flex w-full flex-col items-end">
                           {replied && <ReplyPreview message={replied} align="right" />}
-                          <div className="group/msg flex items-center gap-1">
-                            <button
-                              onClick={() => setReplyingTo(m)}
-                              className="opacity-0 transition-opacity hover:text-primary group-hover/msg:opacity-100"
-                              title="Reply"
-                              aria-label="Reply"
-                            >
-                              <Reply className="h-3.5 w-3.5 text-muted-foreground" />
-                            </button>
+                          <div className="group/msg flex items-center gap-0.5 sm:gap-1">
+                            <ReplyButton onClick={() => setReplyingTo(m)} />
                             <div
                               className={
                                 m.kind === "me"
-                                  ? "rounded-2xl bg-white/5 px-3 py-1.5 text-xs italic text-primary chat-bubble-in"
-                                  : "rounded-2xl rounded-tr-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in"
+                                  ? `rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
+                                  : `rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`
                               }
                             >
                               <div className="whitespace-pre-wrap break-words">{renderText(applyMask(m.authorId, m.text))}</div>
@@ -233,10 +247,10 @@ export function MessageList({ channelId }: { channelId: string }) {
           }
 
           return (
-            <div key={gi} className="group flex gap-2">
+            <div key={gi} className="group flex gap-2.5">
               <FrameAvatar user={author} size={28} />
               <div className="min-w-0 flex-1">
-                <div className="mb-0.5 flex items-center gap-1.5">
+                <div className="mb-1 flex items-center gap-1.5">
                   <UserMenu userId={author.id} username={author.name}>
                     <span className="inline-flex items-center gap-1 text-xs font-bold text-foreground">
                       <CosmeticName userId={author.id} name={author.name} />
@@ -254,32 +268,25 @@ export function MessageList({ channelId }: { channelId: string }) {
                 <div className="flex flex-col gap-1">
                   {g.map(m => {
                     const replied = m.replyToId ? findMessage(m.replyToId) : null;
+                    const isReplyTarget = replyingTo?.id === m.id;
                     return (
                       <div key={m.id} className="flex flex-col">
                         {replied && <ReplyPreview message={replied} />}
-                        <div className="group/msg flex items-center gap-1">
+                        <div className="group/msg flex items-center gap-0.5 sm:gap-1">
                           <div
                             className={
                               m.kind === "me"
-                                ? "rounded-2xl bg-white/5 px-3 py-1.5 text-xs italic text-primary chat-bubble-in"
-                                : "max-w-[80%] rounded-2xl rounded-tl-md border border-border bg-card/70 backdrop-blur-sm px-3 py-1.5 text-xs leading-snug text-foreground/90 shadow-sm chat-bubble-in"
+                                ? `rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
+                                : `max-w-[min(80%,20rem)] rounded-2xl rounded-tl-md border border-border bg-card/70 px-3 py-2 text-xs leading-snug text-foreground/90 shadow-sm backdrop-blur-sm chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/40" : ""}`
                             }
                           >
                             <div className="whitespace-pre-wrap break-words">{renderText(applyMask(m.authorId, m.text))}</div>
                             {m.text && <MediaEmbed text={m.text} />}
                             {m.attachment && <AttachmentView a={m.attachment} />}
                           </div>
-                          <button
-                            onClick={() => setReplyingTo(m)}
-                            className="opacity-0 transition-opacity hover:text-primary group-hover/msg:opacity-100"
-                            title="Reply"
-                            aria-label="Reply"
-                          >
-                            <Reply className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
+                          <ReplyButton onClick={() => setReplyingTo(m)} />
                           <HighlightButton messageId={m.id} channelId={state.activeChannel} />
                           <StaffActionsMenu targetUserId={author.id} targetName={author.name} isBot={author.isBot} messageId={m.id} size="xs" />
-
                         </div>
                       </div>
                     );

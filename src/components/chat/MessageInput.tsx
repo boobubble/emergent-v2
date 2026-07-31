@@ -18,6 +18,7 @@ import { clearChannelMessages } from "@/lib/moderation.functions";
 import type { Attachment } from "@/lib/chat-types";
 import { supabase } from "@/integrations/supabase/client";
 import { VoiceRecorder } from "./VoiceRecorder";
+import { TypingIndicator } from "./TypingIndicator";
 import { VOICE_NOTES_DEFAULTS, maxDurationForChannel, type VoiceNotesConfig } from "@/lib/voice-notes-config";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
 
@@ -283,24 +284,31 @@ export function MessageInput() {
 
   const replyAuthor = replyingTo ? state.users[replyingTo.authorId] : null;
 
-  const lobbyMuteUntil = state.moderation?.["lobby"]?.me?.mutedUntil;
-  const isLobbyMuted = !!(lobbyMuteUntil && lobbyMuteUntil > Date.now() && state.activeChannel === "lobby");
-  const muteSecsLeft = isLobbyMuted ? Math.ceil((lobbyMuteUntil! - Date.now()) / 1000) : 0;
+  const channelId = state.activeChannel;
+  const muteUntil = state.moderation?.[channelId]?.me?.mutedUntil;
+  const isChannelMuted = !!(muteUntil && muteUntil > Date.now());
+  const muteSecsLeft = isChannelMuted ? Math.ceil((muteUntil! - Date.now()) / 1000) : 0;
   const muteLabel = muteSecsLeft >= 60 ? `${Math.ceil(muteSecsLeft / 60)}m` : `${muteSecsLeft}s`;
+  const mutedRoomName = state.rooms[channelId]?.name || channelId;
 
   return (
-    <div className="px-3 py-0 sm:px-6">
+    <div className="min-w-0 overflow-x-hidden px-2 py-1 sm:px-6 sm:py-0">
       <AuthDialogs popup={authPopup} setPopup={setAuthPopup} />
       {replyingTo && (
-        <div className="mb-2 flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
-          <Reply className="h-3.5 w-3.5 shrink-0 text-primary" />
+        <div className="mb-2 flex min-h-11 items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
+          <Reply className="h-4 w-4 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
             <div className="font-semibold text-primary">Replying to {replyAuthor?.name || "user"}</div>
-            <div className="truncate text-muted-foreground">
+            <div className="line-clamp-2 text-muted-foreground">
               {replyingTo.text || (replyingTo.attachment ? `📎 ${replyingTo.attachment.name}` : "(message)")}
             </div>
           </div>
-          <button onClick={() => setReplyingTo(null)} className="shrink-0 text-muted-foreground hover:text-destructive" aria-label="Cancel reply">
+          <button
+            type="button"
+            onClick={() => setReplyingTo(null)}
+            className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            aria-label="Cancel reply"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -408,43 +416,34 @@ export function MessageInput() {
         </div>
       )}
       {attachError && <div className="mb-2 px-3 text-xs text-destructive">{attachError}</div>}
-      {typers.length > 0 && (
-        <div className="mb-1 flex items-center gap-1.5 px-3 text-[11px] italic text-muted-foreground">
-          <span className="inline-flex gap-0.5">
-            <span className="h-1 w-1 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
-            <span className="h-1 w-1 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
-            <span className="h-1 w-1 animate-bounce rounded-full bg-primary" />
-          </span>
-          {typers.length === 1
-            ? `${typers[0].name} is typing…`
-            : typers.length === 2
-              ? `${typers[0].name} and ${typers[1].name} are typing…`
-              : `${typers.length} people are typing…`}
-        </div>
-      )}
-      {isLobbyMuted ? (
-        <div className="flex items-center gap-2 rounded-3xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      {typers.length > 0 && <TypingIndicator typers={typers} className="mb-1 px-1" />}
+      {isChannelMuted ? (
+        <div className="flex min-h-11 items-center gap-2 rounded-3xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           <span className="text-base">🔇</span>
-          <span className="flex-1">You're muted in the lobby ({muteLabel} left). You can still DM friends from your friends list.</span>
+          <span className="flex-1 text-xs sm:text-sm">
+            You're muted in {mutedRoomName} ({muteLabel} left).
+            {channelId === "lobby" && " You can still DM friends from your friends list."}
+          </span>
         </div>
       ) : (
-      <div className="chat-composer-glow group relative flex items-end gap-1 rounded-3xl border border-border bg-card/60 pt-2 pb-0 pl-4 pr-2 shadow-sm backdrop-blur-md transition-all">
+      <div className="chat-composer-glow group relative flex min-w-0 items-end gap-0.5 rounded-3xl border border-border bg-card/60 pb-0 pl-2 pt-2 pr-1 shadow-sm backdrop-blur-md transition-all sm:gap-1 sm:pl-4 sm:pr-2">
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
-        <button onClick={() => fileRef.current?.click()} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Attach file">
+        <button onClick={() => fileRef.current?.click()} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Attach file" aria-label="Attach file">
           <Paperclip className="h-5 w-5" />
         </button>
-        <button onClick={() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !"))} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Command">
+        <button onClick={() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !"))} className="mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary sm:grid" title="Command" aria-label="Insert command">
           <Sparkles className="h-5 w-5" />
         </button>
-        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help or @mention"} className="max-h-[140px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70" />
-        <button onClick={() => { setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-primary" title="Animated stickers">
+        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help or @mention"} className="max-h-[140px] min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm" />
+        <button onClick={() => { setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Animated stickers" aria-label="Animated stickers">
           <Sticker className="h-5 w-5" />
         </button>
         {media.giphy.enabled && (
           <button
             onClick={() => { setShowGiphy(s => !s); setShowEmoji(false); setShowStickers(false); setShowYoutube(false); }}
-            className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-fuchsia-400"
+            className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-fuchsia-400"
             title="Share a GIF"
+            aria-label="Share a GIF"
           >
             <ImagePlay className="h-5 w-5" />
           </button>
@@ -452,8 +451,9 @@ export function MessageInput() {
         {media.youtube.enabled && (
           <button
             onClick={() => { setShowYoutube(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); }}
-            className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-red-500"
+            className="mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-red-500 sm:grid"
             title="Share a YouTube video"
+            aria-label="Share a YouTube video"
           >
             <Youtube className="h-5 w-5" />
           </button>
@@ -461,16 +461,17 @@ export function MessageInput() {
         {voiceCfg.enabled && (
           <button
             onClick={() => { setShowVoice(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }}
-            className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-red-400"
+            className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-red-400"
             title={`Voice note (max ${voiceMax}s)`}
+            aria-label="Voice note"
           >
             <Mic className="h-5 w-5" />
           </button>
         )}
-        <button onClick={() => { setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground" title="Emoji">
+        <button onClick={() => { setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground" title="Emoji" aria-label="Emoji">
           <Smile className="h-5 w-5" />
         </button>
-        <button onClick={submit} disabled={!text.trim() && !attachment} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-primary-foreground shadow-lg transition-all hover:scale-110 active:scale-90 disabled:opacity-40 disabled:hover:scale-100" style={{ background: "var(--gradient-primary)", boxShadow: "0 8px 24px -8px var(--primary-glow)" }}>
+        <button onClick={submit} disabled={!text.trim() && !attachment} className="mb-1 grid h-11 w-11 shrink-0 place-items-center rounded-full text-primary-foreground shadow-lg transition-all hover:scale-110 active:scale-90 disabled:opacity-40 disabled:hover:scale-100" style={{ background: "var(--gradient-primary)", boxShadow: "0 8px 24px -8px var(--primary-glow)" }} aria-label="Send message">
           <Send className="h-4 w-4" />
         </button>
       </div>
