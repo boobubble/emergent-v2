@@ -45,6 +45,15 @@ function applySupabaseEnvAliases(env: Record<string, string>) {
 const env = loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "");
 applySupabaseEnvAliases(env);
 
+const nitroTslibPackaging = {
+  traceDeps: ["tslib*"],
+  vercel: {
+    functions: {
+      includeFiles: "node_modules/tslib/**",
+    },
+  },
+} as const;
+
 // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
 // This entry is fetch-shaped and works for both the Cloudflare-module preset (used inside
 // the Lovable sandbox) and the Node standalone preset (default self-hosting target).
@@ -65,11 +74,19 @@ export default defineConfig({
   },
   nitro: {
     preset: "vercel",
+    ...nitroTslibPackaging,
   },
   vite: {
     envDir: process.cwd(),
     ssr: {
       noExternal: ["tslib"],
+    },
+    environments: {
+      ssr: {
+        resolve: {
+          noExternal: ["tslib"],
+        },
+      },
     },
     resolve: {
       alias: [srcAlias],
