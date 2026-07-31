@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate } from "@tanstack/react-router";
-import { Flame, Award, PanelLeftOpen, Star, X } from "lucide-react";
+import { Flame, Award, PanelLeftOpen, Star, X, MessageSquare } from "lucide-react";
 import { CommunityHub, useHubBadge } from "@/components/chat/CommunityHub";
 import { ChatThemeStore } from "@/components/chat/ChatThemeStore";
 import { useActiveChatTheme } from "@/lib/chat-themes";
@@ -27,6 +27,7 @@ import { TrioRoomsDock } from "@/components/chat/TrioRoomsDock";
 import { PresenceFeed } from "@/components/chat/PresenceFeed";
 import { DjFooter } from "@/components/chat/DjFooter";
 import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
 import { ScheduledAnnouncementsRunner } from "@/components/chat/ScheduledAnnouncements";
 import { ProfilePopupProvider } from "@/lib/profile-popup-context";
@@ -358,7 +359,7 @@ export function ChatApp() {
                   {!activeIsDM && chatTheme === "gaming_arena" && (
                     <GamingArenaHero channelId={state.activeChannel} />
                   )}
-                  <MessageList channelId={state.activeChannel} />
+                  <ChatChannelBody channelId={state.activeChannel} activeIsDM={activeIsDM} />
                   <PresenceFeed channelId={state.activeChannel} />
 
                 </div>
@@ -441,4 +442,65 @@ export function ChatApp() {
     </>
     </ProfilePopupProvider>
   );
+}
+
+function ChatChannelBody({ channelId, activeIsDM }: { channelId: string; activeIsDM: boolean }) {
+  const chat = useOptionalChat();
+  const [hydrating, setHydrating] = useState(true);
+  const messages = chat?.channelMessages(channelId) ?? [];
+  const room = chat?.state.rooms[channelId];
+  const isRemoteChannel =
+    channelId === "lobby" ||
+    channelId === "games" ||
+    channelId.startsWith("dm:") ||
+    !!room?.dbBacked;
+
+  useEffect(() => {
+    setHydrating(true);
+    const maxWait = window.setTimeout(() => setHydrating(false), 1200);
+    return () => window.clearTimeout(maxWait);
+  }, [channelId]);
+
+  useEffect(() => {
+    if (!isRemoteChannel) {
+      setHydrating(false);
+      return;
+    }
+    if (messages.length > 0) {
+      setHydrating(false);
+    }
+  }, [channelId, isRemoteChannel, messages.length]);
+
+  if (!chat) return null;
+
+  if (hydrating && isRemoteChannel) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-4" aria-busy="true" aria-label="Loading messages">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="flex items-start gap-3">
+            <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-4 w-full max-w-md" />
+              {i % 2 === 0 && <Skeleton className="h-4 w-2/3 max-w-sm" />}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!activeIsDM && messages.length === 0) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
+        <MessageSquare className="h-10 w-10 text-muted-foreground" aria-hidden />
+        <h3 className="text-sm font-semibold">No messages yet</h3>
+        <p className="max-w-xs text-xs text-muted-foreground">
+          Be the first to say something in {chat.channelLabel(channelId)}.
+        </p>
+      </div>
+    );
+  }
+
+  return <MessageList channelId={channelId} />;
 }

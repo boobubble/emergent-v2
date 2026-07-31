@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2, Gamepad2, LogIn, UserPlus } from "lucide-react";
+import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2, Gamepad2, LogIn, UserPlus, Search, X } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
@@ -28,12 +28,109 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newTopic, setNewTopic] = useState("");
+  const [roomSearch, setRoomSearch] = useState("");
   const chatLogo = useBrandAsset("chat");
+
+  const uniqueRoomOrder = useMemo(() => {
+    const seen = new Set<string>();
+    return state.roomOrder.filter((id) => {
+      if (!state.rooms[id] || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [state.roomOrder, state.rooms]);
+
+  const searchQuery = roomSearch.trim().toLowerCase();
+
+  const chatRoomIds = useMemo(() => {
+    return uniqueRoomOrder.filter((id) => {
+      if (state.rooms[id]?.kind === "game") return false;
+      if (!searchQuery) return true;
+      const r = state.rooms[id];
+      if (!r) return false;
+      return (
+        r.name.toLowerCase().includes(searchQuery) ||
+        r.topic.toLowerCase().includes(searchQuery) ||
+        id.toLowerCase().includes(searchQuery)
+      );
+    });
+  }, [uniqueRoomOrder, state.rooms, searchQuery]);
+
+  const gameRoomIds = useMemo(() => {
+    return uniqueRoomOrder.filter((id) => {
+      if (state.rooms[id]?.kind !== "game") return false;
+      if (!searchQuery) return true;
+      const r = state.rooms[id];
+      if (!r) return false;
+      return (
+        r.name.toLowerCase().includes(searchQuery) ||
+        r.topic.toLowerCase().includes(searchQuery) ||
+        id.toLowerCase().includes(searchQuery)
+      );
+    });
+  }, [uniqueRoomOrder, state.rooms, searchQuery]);
+
   const publicRoomIds = useMemo(
-    () => state.roomOrder.filter((id) => state.rooms[id]?.kind !== "game"),
-    [state.roomOrder, state.rooms],
+    () => uniqueRoomOrder.filter((id) => state.rooms[id]?.kind !== "game"),
+    [uniqueRoomOrder, state.rooms],
   );
   const onlineCounts = useRoomOnlineCounts(publicRoomIds);
+
+  const renderRoomItem = (id: string) => {
+    const r = state.rooms[id];
+    if (!r) return null;
+    const active = state.activeChannel === id;
+    return (
+      <div
+        key={id}
+        className={cn(
+          "premium-nav-item group/room",
+          active && "premium-nav-item-active",
+        )}
+      >
+        <button
+          onClick={() => setActive(id)}
+          className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5 truncate bg-transparent p-0 text-left"
+        >
+          {r.kind === "game" ? (
+            <Gamepad2 className={cn("h-3.5 w-3.5 shrink-0", active ? "text-primary" : "text-primary/70")} />
+          ) : (
+            <span className={cn("text-base leading-none", active ? "text-primary" : "opacity-50")}>
+              #
+            </span>
+          )}
+          <span className="truncate">{r.name}</span>
+          {r.dbBacked && (
+            <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-[9px] font-semibold uppercase text-primary">
+              Live
+            </span>
+          )}
+        </button>
+        <span className="flex items-center gap-1 text-[10px]">
+          <span className="chat-online-dot" aria-hidden style={{ width: "0.4rem", height: "0.4rem" }} />
+          <span className="font-semibold opacity-80" title={`${Math.max(onlineCounts[id] ?? 0, r.members.length)} online`}>
+            {Math.max(onlineCounts[id] ?? 0, r.members.length)}
+          </span>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm(`Delete channel "${r.name}"? This removes it for you and cannot be undone.`)) {
+                  deleteRoom(id);
+                }
+              }}
+              aria-label={`Delete ${r.name}`}
+              title="Delete channel (admin)"
+              className="ml-1 grid h-5 w-5 place-items-center rounded-full text-muted-foreground opacity-0 transition hover:bg-destructive/15 hover:text-destructive group-hover/room:opacity-100"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          )}
+        </span>
+      </div>
+    );
+  };
 
   return (
     <aside className="flex h-full w-56 shrink-0 flex-col bg-transparent p-1">
@@ -110,63 +207,55 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
                     setShowNew(false);
                   }
                 }}
-                className="w-full rounded-lg bg-primary px-2 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90"
+                className="min-h-11 w-full rounded-lg bg-primary px-2 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90"
               >
                 Create
               </button>
             </div>
           )}
-          <div className="space-y-1">
-            {state.roomOrder.map(id => {
-              const r = state.rooms[id];
-              const active = state.activeChannel === id;
-              return (
-                <div
-                  key={id}
-                  className={cn(
-                    "premium-nav-item group/room",
-                    active && "premium-nav-item-active",
-                  )}
-                >
-                  <button
-                    onClick={() => setActive(id)}
-                    className="flex min-w-0 flex-1 items-center gap-2.5 truncate bg-transparent p-0 text-left"
-                  >
-                    {r.kind === "game" ? (
-                      <Gamepad2 className={cn("h-3.5 w-3.5 shrink-0", active ? "text-primary" : "text-primary/70")} />
-                    ) : (
-                      <span className={cn("text-base leading-none", active ? "text-primary" : "opacity-50")}>
-                        #
-                      </span>
-                    )}
-                    <span className="truncate">{r.name}</span>
-                  </button>
-                  <span className="flex items-center gap-1 text-[10px]">
-                    <span className="chat-online-dot" aria-hidden style={{ width: "0.4rem", height: "0.4rem" }} />
-                    <span className="font-semibold opacity-80" title={`${Math.max(onlineCounts[id] ?? 0, r.members.length)} online`}>
-                      {Math.max(onlineCounts[id] ?? 0, r.members.length)}
-                    </span>
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Delete channel "${r.name}"? This removes it for you and cannot be undone.`)) {
-                            deleteRoom(id);
-                          }
-                        }}
-                        aria-label={`Delete ${r.name}`}
-                        title="Delete channel (admin)"
-                        className="ml-1 grid h-5 w-5 place-items-center rounded-full text-muted-foreground opacity-0 transition hover:bg-destructive/15 hover:text-destructive group-hover/room:opacity-100"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    )}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="relative mb-2">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              value={roomSearch}
+              onChange={(e) => setRoomSearch(e.target.value)}
+              placeholder="Search rooms…"
+              aria-label="Search rooms"
+              className="min-h-11 w-full rounded-xl border border-border bg-background py-2 pl-8 pr-8 text-sm outline-none focus:ring-1 focus:ring-ring"
+            />
+            {roomSearch && (
+              <button
+                type="button"
+                onClick={() => setRoomSearch("")}
+                aria-label="Clear room search"
+                className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
+          {chatRoomIds.length === 0 && gameRoomIds.length === 0 ? (
+            <p className="px-2 py-3 text-center text-[11px] text-muted-foreground">
+              {searchQuery ? "No rooms match your search." : "No rooms available."}
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {chatRoomIds.length > 0 && (
+                <div className="space-y-1">
+                  {gameRoomIds.length > 0 && (
+                    <SectionLabel title="Chat rooms" className="mt-0" />
+                  )}
+                  {chatRoomIds.map(renderRoomItem)}
+                </div>
+              )}
+              {gameRoomIds.length > 0 && (
+                <div className="space-y-1">
+                  <SectionLabel title="Games" className="mt-0" />
+                  {gameRoomIds.map(renderRoomItem)}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
       </nav>
