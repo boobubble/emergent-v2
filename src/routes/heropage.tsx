@@ -10,6 +10,8 @@ import { useAuth } from "@/lib/auth-store";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
+import { HeroSection as HeroSectionBlock } from "@/components/landing/sections/HeroSection";
+import { StatsSection, type LiveStats } from "@/components/landing/sections/StatsSection";
 import { GlassCard } from "@/components/landing/ui/GlassCard";
 import { SectionShell } from "@/components/landing/ui/SectionShell";
 
@@ -32,26 +34,14 @@ export const Route = createFileRoute("/heropage")({
   component: HeroHomepage,
 });
 
-interface LiveStats {
-  members: number; online: number; rooms: number; djs: number; postsToday: number;
+interface LiveStatsState extends LiveStats {
+  loaded: boolean;
 }
 
-function useHeroConfig(): HeroConfig {
-  const [cfg, setCfg] = useState<HeroConfig>(HERO_DEFAULTS);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from("app_settings").select("value").eq("key", HERO_SETTINGS_KEY).maybeSingle();
-      if (!cancelled) setCfg(mergeHeroConfig(data?.value as Partial<HeroConfig> | undefined));
-    })();
-    return () => { cancelled = true; };
-  }, []);
-  return cfg;
-}
-
-function useLiveStats(): LiveStats {
-  const [stats, setStats] = useState<LiveStats>({ members: 0, online: 0, rooms: 0, djs: 0, postsToday: 0 });
+function useLiveStats(): LiveStatsState {
+  const [stats, setStats] = useState<LiveStatsState>({
+    members: 0, online: 0, rooms: 0, djs: 0, postsToday: 0, loaded: false,
+  });
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -67,11 +57,14 @@ function useLiveStats(): LiveStats {
         setStats({
           members: m.count ?? 0,
           online: on.count ?? 0,
-          rooms: 12,
-          djs: 3,
+          rooms: 0,
+          djs: 0,
           postsToday: p.count ?? 0,
+          loaded: true,
         });
-      } catch {/* ignore */}
+      } catch {
+        if (!cancelled) setStats((prev) => ({ ...prev, loaded: true }));
+      }
     };
     load();
     const t = setInterval(load, 30_000);
@@ -80,23 +73,18 @@ function useLiveStats(): LiveStats {
   return stats;
 }
 
-function AnimatedCounter({ value }: { value: number }) {
-  const [n, setN] = useState(0);
+function useHeroConfig(): HeroConfig {
+  const [cfg, setCfg] = useState<HeroConfig>(HERO_DEFAULTS);
   useEffect(() => {
-    const start = performance.now();
-    const from = n; const to = value; const dur = 1200;
-    let raf = 0;
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setN(Math.round(from + (to - from) * eased));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
-  return <span>{n.toLocaleString()}</span>;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("app_settings").select("value").eq("key", HERO_SETTINGS_KEY).maybeSingle();
+      if (!cancelled) setCfg(mergeHeroConfig(data?.value as Partial<HeroConfig> | undefined));
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return cfg;
 }
 
 /** Reveal-on-scroll wrapper using IntersectionObserver. */
@@ -473,100 +461,25 @@ function HeroHomepage() {
     ? "bg-black bg-[radial-gradient(ellipse_at_top,_#1e1b4b_0%,_#0b0b1a_45%,_#000_100%)] text-white"
     : "bg-white bg-[radial-gradient(ellipse_at_top,_#dbeafe_0%,_#f5f3ff_45%,_#fff_100%)] text-slate-900";
 
-  const statCards = [
-    { emoji: "👥", label: "Members", value: stats.members || 25000 },
-    { emoji: "🟢", label: "Online", value: stats.online || 1200 },
-    { emoji: "💬", label: "Chatrooms", value: stats.rooms || 320 },
-    { emoji: "🎙️", label: "Live Radios", value: stats.djs || 48 },
-    { emoji: "📝", label: "Posts Today", value: stats.postsToday || 980 },
-  ];
-
-  const SectionShell: React.FC<{ id?: string; children: React.ReactNode; className?: string }> = ({ id, children, className = "" }) => (
-    <section id={id} className={`relative z-10 mx-auto w-full max-w-7xl px-5 py-20 sm:py-28 ${className}`}>{children}</section>
-  );
-
   const renderSection = (s: HeroSection) => {
     if (!s.enabled) return null;
     switch (s.key) {
       case "hero":
-        return (
-          <SectionShell key="hero" id="top" className="!py-12 sm:!py-16">
-            <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
-              <Reveal>
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium backdrop-blur-xl">
-                  <Sparkles className="h-3.5 w-3.5 text-fuchsia-300" /> Welcome to {cfg.brandName} Community ✨
-                </div>
-                <h1 className="mt-5 text-5xl font-black leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
-                  Connect, Chat,{" "}
-                  <span className="bg-gradient-to-r from-fuchsia-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">Share & Grow</span>{" "}
-                  Together
-                </h1>
-                <p className="mt-6 max-w-xl text-base opacity-80 sm:text-lg">{cfg.subheadline}</p>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <button onClick={() => setPopup("signup")}
-                    className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 px-7 py-3.5 text-sm font-semibold text-white shadow-[0_10px_40px_-10px_rgba(217,70,239,0.6)] transition-transform hover:scale-[1.03]">
-                    <UserPlus className="h-4 w-4" /> {cfg.ctaJoinLabel}
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </button>
-                  <button onClick={() => setPopup("signin")}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold backdrop-blur-xl hover:bg-white/10">
-                    <LogIn className="h-4 w-4" /> {cfg.ctaLoginLabel}
-                  </button>
-                </div>
-                <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  {statCards.slice(0, 4).map((sc) => (
-                    <div key={sc.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-xl">
-                      <div className="flex items-center gap-2 text-[11px] opacity-70"><span>{sc.emoji}</span>{sc.label}</div>
-                      <div className="mt-1 text-xl font-extrabold tracking-tight"><AnimatedCounter value={sc.value} /></div>
-                    </div>
-                  ))}
-                </div>
-              </Reveal>
-
-              <Reveal delay={120} className="relative">
-                <div className="pointer-events-none absolute -inset-10 rounded-[40px] bg-gradient-to-tr from-fuchsia-500/20 via-violet-500/10 to-cyan-500/20 blur-3xl" />
-                <div className="relative" style={{ animation: "hero-float 8s ease-in-out infinite" }}>
-                  <ChatroomMockup />
-                </div>
-                <div className="absolute -bottom-6 -right-2 hidden w-40 rotate-3 sm:block" style={{ animation: "hero-float 9s ease-in-out 0.5s infinite" }}>
-                  <GlassCard className="overflow-hidden p-3">
-                    <div className="text-[10px] opacity-60">🔥 Trending Room</div>
-                    <div className="mt-1 text-sm font-bold">Music Vibes</div>
-                    <div className="mt-2 flex -space-x-1.5">
-                      {["from-fuchsia-500 to-pink-500","from-indigo-500 to-cyan-500","from-amber-400 to-rose-500","from-emerald-400 to-teal-500"].map((g, i) => (
-                        <span key={i} className={`h-5 w-5 rounded-full bg-gradient-to-br ${g} ring-2 ring-[#0b0b1a]`} />
-                      ))}
-                      <span className="ml-2 self-center text-[10px] opacity-70">+128</span>
-                    </div>
-                  </GlassCard>
-                </div>
-              </Reveal>
-            </div>
-          </SectionShell>
-        );
+        return <HeroSectionBlock key="hero" cfg={cfg} setPopup={setPopup} />;
 
       case "stats":
         return (
-          <SectionShell key="stats" className="!py-12">
-            <Reveal>
-              <GlassCard className="p-6 sm:p-8">
-                <div className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider opacity-70">
-                  <Flame className="h-4 w-4 text-orange-400" /> Live community pulse
-                </div>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                  {statCards.map((sc, i) => (
-                    <Reveal key={sc.label} delay={i * 80}>
-                      <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.01] p-4 text-center">
-                        <div className="text-2xl">{sc.emoji}</div>
-                        <div className="mt-1 text-3xl font-black tracking-tight"><AnimatedCounter value={sc.value} /></div>
-                        <div className="mt-0.5 text-[10px] uppercase tracking-wider opacity-60">{sc.label}</div>
-                      </div>
-                    </Reveal>
-                  ))}
-                </div>
-              </GlassCard>
-            </Reveal>
-          </SectionShell>
+          <StatsSection
+            key="stats"
+            loaded={stats.loaded}
+            stats={{
+              members: stats.members,
+              online: stats.online,
+              rooms: stats.rooms,
+              djs: stats.djs,
+              postsToday: stats.postsToday,
+            }}
+          />
         );
 
       case "chatrooms":
