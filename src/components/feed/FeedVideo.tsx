@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Play, Pause, Loader2, VideoOff, X } from "lucide-react";
+import { useFeedPrefs } from "@/lib/feed-prefs";
 
 /**
  * Consistent video player for the feed.
@@ -16,6 +17,8 @@ export function FeedVideo({
   src: string;
   className?: string;
 }) {
+  const { prefs } = useFeedPrefs();
+  const autoplay = prefs.autoplayVideos;
   const previewRef = useRef<HTMLVideoElement | null>(null);
   const modalVideoRef = useRef<HTMLVideoElement | null>(null);
   const [poster, setPoster] = useState<string | null>(null);
@@ -77,10 +80,10 @@ export function FeedVideo({
     };
   }, [src]);
 
-  // Desktop hover: silent muted preview
+  // Desktop hover: silent muted preview (when autoplay preference is on)
   useEffect(() => {
     const v = previewRef.current;
-    if (!v) return;
+    if (!v || !autoplay) return;
     if (hovering) {
       v.muted = true;
       v.currentTime = 0;
@@ -89,7 +92,7 @@ export function FeedVideo({
       v.pause();
       try { v.currentTime = 0; } catch {}
     }
-  }, [hovering]);
+  }, [hovering, autoplay]);
 
   // Lock body scroll + ESC to close while modal is open
   useEffect(() => {
@@ -113,14 +116,14 @@ export function FeedVideo({
 
   function openModal() {
     setOpen(true);
+    setModalPlaying(false);
+    if (!autoplay) return;
     setModalPlaying(true);
-    // attempt autoplay once the video element is mounted
     requestAnimationFrame(() => {
       const v = modalVideoRef.current;
       if (!v) return;
       v.muted = false;
       v.play().catch(() => {
-        // autoplay with sound blocked — try muted, user can unmute via controls
         v.muted = true;
         v.play().catch(() => setModalPlaying(false));
       });
@@ -161,8 +164,8 @@ export function FeedVideo({
     <>
       <div
         className={`relative bg-black overflow-hidden cursor-pointer ${className}`}
-        onMouseEnter={() => setHovering(true)}
-        onMouseLeave={() => setHovering(false)}
+        onMouseEnter={() => autoplay && setHovering(true)}
+        onMouseLeave={() => autoplay && setHovering(false)}
         onClick={openModal}
         role="button"
         aria-label="Play video fullscreen"
@@ -210,7 +213,7 @@ export function FeedVideo({
               src={src}
               poster={poster ?? undefined}
               controls
-              autoPlay
+              autoPlay={autoplay}
               playsInline
               onPlay={() => setModalPlaying(true)}
               onPause={() => setModalPlaying(false)}

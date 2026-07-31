@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff, Sparkles, BarChart3, VenetianMask, Plus, Laugh, Trophy, Search } from "lucide-react";
+import { Image as ImageIcon, Smile, Hash, Loader2, X, Globe, Users, Lock, EyeOff, Sparkles, BarChart3, VenetianMask, Plus, Laugh, Trophy, Search, Film } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,15 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { awardXp } from "@/lib/gamification.functions";
 import { earnFeedPost } from "@/lib/economy.functions";
 import { createConfession } from "@/lib/confessions.functions";
-import { extractHashtags } from "@/lib/feed-types";
+import { extractHashtags, type PostKind } from "@/lib/feed-types";
 import { slugify } from "@/lib/post-slug";
 import { EmojiPicker } from "@/components/chat/EmojiPicker";
+import { GiphyPicker } from "@/components/chat/GiphyPicker";
 import { VideoThumb } from "@/components/feed/VideoThumb";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useFocusComposerConfig } from "@/lib/focus-composer-config";
 import { clearCaches, formatClearReport, isCurrentUserAdmin } from "@/lib/cache-manager";
 import type { PostPrivacy } from "@/lib/feed-types";
 import { useAppSettings } from "@/lib/app-settings";
+import { mergeMediaConfig } from "@/lib/media-providers-config";
+import { useFeedPrefs } from "@/lib/feed-prefs";
 import { searchActiveCompetitions, listCompetitionNominees, FUN_CATEGORIES, FUN_META, type FunCategory, type ActiveCompetitionLite, type NomineeLite } from "@/lib/competition-memes";
 
 
@@ -49,13 +52,39 @@ function validateAndFilter(incoming: File[]): { ok: File[]; rejected: string[] }
   return { ok, rejected };
 }
 
+function isGifFile(f: File): boolean {
+  const ext = (f.name.split(".").pop() || "").toLowerCase();
+  return f.type === "image/gif" || ext === "gif";
+}
+
+function isVideoFile(f: File): boolean {
+  const ext = (f.name.split(".").pop() || "").toLowerCase();
+  return f.type.startsWith("video/") || ["mp4", "webm", "mov", "m4v", "ogg", "avi", "mkv"].includes(ext);
+}
+
+function resolvePostKind(files: File[], gifUrl: string | null): PostKind {
+  if (gifUrl) return "gif";
+  if (!files.length) return "text";
+  if (files.every(isGifFile) && files.length === 1) return "gif";
+  if (files.some(isVideoFile)) return "image";
+  return "image";
+}
+
 type ComposerMode = "post" | "poll" | "confession" | "meme";
 
 export function Composer({ authorId, onPosted, communityId }: { authorId: string; onPosted?: () => void; communityId?: string | null }) {
+  const { prefs } = useFeedPrefs();
+  const { raw } = useAppSettings();
+  const giphyEnabled = mergeMediaConfig((raw as { media?: unknown })?.media).giphy.enabled;
   const [text, setText] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(DRAFT_KEY) || "" : ""));
   const [files, setFiles] = useState<File[]>([]);
-  const [privacy, setPrivacy] = useState<PostPrivacy>("public");
-  const [anonymous, setAnonymous] = useState(false);
+  const [gifUrl, setGifUrl] = useState<string | null>(null);
+  const [privacy, setPrivacy] = useState<PostPrivacy>(() => {
+    const d = prefs.defaultPrivacy;
+    return d === "friends" ? "friends" : "public";
+  });
+  const [anonymous, setAnonymous] = useState(prefs.anonymousByDefault);
+  const [prefsApplied, setPrefsApplied] = useState(false);
   const [eligibleForCompetitions, setEligibleForCompetitions] = useState(true);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,12 +99,21 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
   const [memeNominees, setMemeNominees] = useState<NomineeLite[]>([]);
   const [memeNomineeId, setMemeNomineeId] = useState<string | null>(null);
   const [funCategory, setFunCategory] = useState<FunCategory>("meme");
+  const [showGiphy, setShowGiphy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const earnPost = useServerFn(earnFeedPost);
   const submitConfession = useServerFn(createConfession);
   const { config: focusConfig } = useFocusComposerConfig();
-  const hasDraft = text.trim().length > 0 || files.length > 0;
+  const hasDraft = text.trim().length > 0 || files.length > 0 || !!gifUrl;
+
+  // Apply feed prefs once they hydrate from localStorage.
+  useEffect(() => {
+    if (prefsApplied) return;
+    setPrivacy(prefs.defaultPrivacy === "friends" ? "friends" : "public");
+    setAnonymous(prefs.anonymousByDefault);
+    setPrefsApplied(true);
+  }, [prefs.defaultPrivacy, prefs.anonymousByDefault, prefsApplied]);
 
   // ESC closes the spotlight overlay.
   useEffect(() => {
@@ -148,9 +186,9 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
     } else if (mode === "confession") {
       if (!text.trim()) { setError("Write your confession first."); return; }
     } else if (mode === "meme") {
-      if (!text.trim() && !files.length) { setError(`Add a caption or an image for your ${FUN_META[funCategory].label.toLowerCase()}.`); return; }
+      if (!text.trim() && !files.length && !gifUrl) { setError(`Add a caption or an image for your ${FUN_META[funCategory].label.toLowerCase()}.`); return; }
     } else {
-      if (!text.trim() && !files.length) return;
+      if (!text.trim() && !files.length && !gifUrl) return;
     }
 
     const trimmed = text.trim();
@@ -202,9 +240,10 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
         });
         if (error) throw new Error(error.message);
       } else {
-        const media_urls = await uploadFiles();
-        const hasMedia = files.length > 0;
-        const kind = hasMedia ? "image" : "text";
+        const uploaded = await uploadFiles();
+        const media_urls = gifUrl ? [gifUrl, ...uploaded] : uploaded;
+        const hasMedia = media_urls.length > 0;
+        const kind = resolvePostKind(files, gifUrl);
         const isMeme = mode === "meme";
         const activeCategory: FunCategory = isMeme ? funCategory : "meme";
         const { error } = await supabase.from("posts").insert({
@@ -228,7 +267,10 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
 
       try { await awardXp({ data: { action: "post" } }); } catch (e) { console.error("xp award failed", e); }
       earnPost().catch(() => {});
-      setText(""); setFiles([]); setAnonymous(false); setFocused(false);
+      setText(""); setFiles([]); setGifUrl(null); setShowGiphy(false);
+      setPrivacy(prefs.defaultPrivacy === "friends" ? "friends" : "public");
+      setAnonymous(prefs.anonymousByDefault);
+      setFocused(false);
       setPollQuestion(""); setPollOptions(["", ""]); setMode("post");
       setMemeCompetition(null); setMemeCompQuery(""); setMemeCompResults([]); setMemeNomineeId(null); setFunCategory("meme");
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
@@ -247,7 +289,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
   const card = (
     <div
       className={[
-        "relative rounded-[1.25rem] border bg-card p-5 transition-[box-shadow,border-color,transform] duration-200",
+        "relative min-w-0 overflow-x-hidden rounded-[1.25rem] border bg-card p-4 sm:p-5 transition-[box-shadow,border-color,transform] duration-200",
         spotlight
           ? "border-primary/60 shadow-2xl ring-2 ring-primary/30 sm:scale-[1.01]"
           : "border-border shadow-[0_8px_24px_-16px_oklch(0_0_0/0.5)]",
@@ -261,7 +303,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
           </span>
           <button
             onClick={() => setFocused(false)}
-            className="rounded-full p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="grid min-h-11 min-w-11 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
             aria-label="Close focus composer"
           >
             <X className="h-4 w-4" />
@@ -444,6 +486,30 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
           )}
         </div>
       )}
+      {gifUrl && (
+        <div className="mt-3 relative inline-block h-32 w-32 overflow-hidden rounded-xl border border-border bg-black">
+          <img src={gifUrl} alt="Selected GIF" className="h-full w-full object-cover" />
+          <button
+            type="button"
+            onClick={() => setGifUrl(null)}
+            className="absolute right-1 top-1 grid min-h-11 min-w-11 place-items-center rounded-full bg-black/70 text-white"
+            aria-label="Remove GIF"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+      {showGiphy && giphyEnabled && (
+        <div className="mt-3 min-w-0">
+          <GiphyPicker
+            onPick={(g) => {
+              setGifUrl(g.fullUrl);
+              setFiles([]);
+              setShowGiphy(false);
+            }}
+          />
+        </div>
+      )}
       {files.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {files.map((f, i) => (
@@ -453,7 +519,7 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
               ) : (
                 <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
               )}
-              <button onClick={() => setFiles(files.filter((_, j) => j !== i))} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white" aria-label="Remove file">
+              <button onClick={() => setFiles(files.filter((_, j) => j !== i))} className="absolute right-1 top-1 grid min-h-11 min-w-11 place-items-center rounded-full bg-black/70 text-white" aria-label="Remove file">
                 <X className="h-3 w-3" />
               </button>
             </div>
@@ -461,9 +527,13 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
         </div>
       )}
       {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
-      <div className="mt-4 flex flex-wrap items-center gap-1 border-t border-border pt-3">
-        <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-emerald-400 hover:bg-emerald-400/10 transition">
-          <ImageIcon className="h-4 w-4" /> <span className="hidden sm:inline">Photo</span>
+      <div className="mt-4 flex min-w-0 flex-wrap items-center gap-1 border-t border-border pt-3">
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-emerald-400 hover:bg-emerald-400/10 transition"
+        >
+          <ImageIcon className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Photo</span>
         </button>
         <input
           ref={fileRef}
@@ -475,59 +545,73 @@ export function Composer({ authorId, onPosted, communityId }: { authorId: string
             const picked = Array.from(e.target.files ?? []);
             const { ok, rejected } = validateAndFilter(picked);
             if (rejected.length) toast.error("Some files were skipped", { description: rejected.join("\n") });
-            if (ok.length) setFiles([...files, ...ok]);
+            if (ok.length) {
+              setGifUrl(null);
+              setFiles([...files, ...ok]);
+            }
             if (fileRef.current) fileRef.current.value = "";
           }}
         />
+        {giphyEnabled && mode !== "poll" && mode !== "confession" && (
+          <button
+            type="button"
+            onClick={() => { setShowGiphy((v) => !v); setMode("post"); }}
+            className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition ${showGiphy ? "bg-violet-500/15 text-violet-400" : "text-violet-400 hover:bg-violet-400/10"}`}
+          >
+            <Film className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">GIF</span>
+          </button>
+        )}
         <Popover>
           <PopoverTrigger asChild>
-            <button className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-amber-400 hover:bg-amber-400/10 transition">
-              <Smile className="h-4 w-4" /> <span className="hidden sm:inline">Emoji</span>
+            <button type="button" className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-amber-400 hover:bg-amber-400/10 transition">
+              <Smile className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Emoji</span>
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-[320px] p-0">
+          <PopoverContent align="start" className="w-[min(320px,calc(100vw-2rem))] p-0">
             <EmojiPicker onPick={(e) => updateText(text + e)} />
           </PopoverContent>
         </Popover>
 
-        <button onClick={() => updateText(text + " #")} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-sky-400 hover:bg-sky-400/10 transition">
-          <Hash className="h-4 w-4" /> <span className="hidden sm:inline">Tag</span>
+        <button type="button" onClick={() => updateText(text + " #")} className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-sky-400 hover:bg-sky-400/10 transition">
+          <Hash className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Tag</span>
         </button>
         {spotlight && (
           <span className="hidden text-[11px] text-muted-foreground sm:inline">
             {hasDraft ? "Draft auto-saved" : "Draft empty"}
           </span>
         )}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
           <select
             value={privacy}
             onChange={(e) => setPrivacy(e.target.value as PostPrivacy)}
-            className="rounded-full border border-border bg-background/50 px-3 py-1.5 text-xs font-medium"
+            className="min-h-11 max-w-[7.5rem] rounded-full border border-border bg-background/50 px-3 py-2 text-xs font-medium sm:max-w-none"
             aria-label="Post audience"
           >
             {PRIVACY.map((p) => (<option key={p.id} value={p.id}>{p.label}</option>))}
           </select>
-          <button onClick={() => setAnonymous(!anonymous)} className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition ${anonymous ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
-            <EyeOff className="h-3 w-3" /> Anon
+          <button type="button" onClick={() => setAnonymous(!anonymous)} className={`inline-flex min-h-11 items-center gap-1 rounded-full border px-3 py-2 text-xs font-medium transition ${anonymous ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+            <EyeOff className="h-3 w-3 shrink-0" /> Anon
           </button>
           <button
+            type="button"
             onClick={() => setEligibleForCompetitions((v) => !v)}
             title="Allow this post to auto-qualify for matching competitions"
-            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition ${eligibleForCompetitions ? "border-amber-400/60 bg-amber-400/10 text-amber-300" : "border-border text-muted-foreground hover:text-foreground"}`}
+            className={`hidden min-h-11 items-center gap-1 rounded-full border px-3 py-2 text-xs font-medium transition sm:inline-flex ${eligibleForCompetitions ? "border-amber-400/60 bg-amber-400/10 text-amber-300" : "border-border text-muted-foreground hover:text-foreground"}`}
           >
             🏆 Eligible
           </button>
-          <PrivacyIconEl className="h-3.5 w-3.5 text-muted-foreground" />
+          <PrivacyIconEl className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" />
           <button
+            type="button"
             onClick={submit}
             disabled={
               posting ||
-              (mode === "post" && !text.trim() && !files.length) ||
+              (mode === "post" && !text.trim() && !files.length && !gifUrl) ||
               (mode === "confession" && !text.trim()) ||
-              (mode === "meme" && !text.trim() && !files.length) ||
+              (mode === "meme" && !text.trim() && !files.length && !gifUrl) ||
               (mode === "poll" && (!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2))
             }
-            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-primary/80 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_8px_24px_-8px_var(--primary-glow)] hover:scale-[1.03] active:scale-[0.97] transition disabled:opacity-50 disabled:hover:scale-100"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-primary/80 px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-[0_8px_24px_-8px_var(--primary-glow)] hover:scale-[1.03] active:scale-[0.97] transition disabled:opacity-50 disabled:hover:scale-100"
           >
             {posting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {mode === "confession" ? "Confess" : mode === "poll" ? "Publish poll" : mode === "meme" ? `Post ${FUN_META[funCategory].label.toLowerCase()}` : "Post"}
@@ -593,8 +677,9 @@ function ModeChip({
         : "border-primary bg-primary/15 text-primary";
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+      className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold transition ${
         active ? accent : "border-border text-muted-foreground hover:text-foreground"
       }`}
     >

@@ -1,6 +1,7 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket, Bookmark, Flag } from "lucide-react";
+import { createPortal } from "react-dom";
+import { MessageCircle, Share2, Flame, EyeOff, Send, Loader2, Trash2, Smile, Rocket, Bookmark, Flag, Reply, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { reportContent } from "@/lib/moderation-engine.functions";
 import { useSavedPosts } from "@/lib/use-saved-posts";
 import { useServerFn } from "@tanstack/react-start";
@@ -35,6 +36,96 @@ function timeAgo(iso: string) {
   return `${Math.floor(h / 24)}d`;
 }
 
+function isVideoUrl(u: string) {
+  return /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(u);
+}
+
+function isGifUrl(u: string, kind: FeedPost["kind"]) {
+  return kind === "gif" || /\.gif(\?|$)/i.test(u);
+}
+
+function mergeComments(prev: FeedComment[], incoming: FeedComment[]): FeedComment[] {
+  const map = new Map(prev.map((c) => [c.id, c]));
+  for (const c of incoming) map.set(c.id, c);
+  return Array.from(map.values()).sort(
+    (a, b) => +new Date(a.created_at) - +new Date(b.created_at),
+  );
+}
+
+function CommentThread({
+  comment,
+  repliesByParent,
+  profiles,
+  meId,
+  depth,
+  onReply,
+  onDelete,
+}: {
+  comment: FeedComment;
+  repliesByParent: Map<string, FeedComment[]>;
+  profiles: Record<string, User>;
+  meId: string;
+  depth: number;
+  onReply: (c: FeedComment) => void;
+  onDelete: (id: string) => void;
+}) {
+  const cAuthor = profiles[comment.author_id];
+  const replies = repliesByParent.get(comment.id) ?? [];
+  return (
+    <div className={depth > 0 ? "ml-4 border-l-2 border-border/50 pl-3 sm:ml-6" : ""}>
+      <div className="flex gap-2.5 animate-fade-in">
+        {cAuthor ? <FrameAvatar user={cAuthor} size={depth > 0 ? 28 : 32} /> : (
+          <div className="h-8 w-8 shrink-0 rounded-full bg-muted" />
+        )}
+        <div className="min-w-0 flex-1 rounded-2xl bg-gradient-to-b from-accent/20 to-accent/10 border border-border/60 px-3.5 py-2.5 shadow-[inset_0_1px_0_oklch(1_0_0/0.04)]">
+          <div className="flex items-center gap-2 text-[11.5px]">
+            <span className="font-semibold text-foreground tracking-tight">
+              {cAuthor ? <CosmeticName userId={cAuthor.id} name={cAuthor.name} /> : "user"}
+            </span>
+            <span className="text-muted-foreground/80">{timeAgo(comment.created_at)}</span>
+            {comment.author_id === meId && (
+              <button
+                type="button"
+                onClick={() => onDelete(comment.id)}
+                className="ml-auto grid min-h-11 min-w-11 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:min-h-8 sm:min-w-8"
+                aria-label="Delete comment"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <p className="mt-1 text-[14px] leading-[1.6] text-foreground/95">{comment.text}</p>
+          {depth < 2 && (
+            <button
+              type="button"
+              onClick={() => onReply(comment)}
+              className="mt-1.5 inline-flex min-h-11 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/10 sm:min-h-8"
+            >
+              <Reply className="h-3 w-3" /> Reply
+            </button>
+          )}
+        </div>
+      </div>
+      {replies.length > 0 && (
+        <div className="mt-2 space-y-2">
+          {replies.map((r) => (
+            <CommentThread
+              key={r.id}
+              comment={r}
+              repliesByParent={repliesByParent}
+              profiles={profiles}
+              meId={meId}
+              depth={depth + 1}
+              onReply={onReply}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const PostCard = memo(function PostCard({
   post,
   profiles,
@@ -52,10 +143,12 @@ export const PostCard = memo(function PostCard({
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<FeedComment[]>([]);
   const [commentText, setCommentText] = useState("");
+  const [replyingTo, setReplyingTo] = useState<FeedComment | null>(null);
   const [sending, setSending] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState<SharePayload | null>(null);
   const [boosting, setBoosting] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { isSaved, toggle: toggleSaved } = useSavedPosts();
   const saved = isSaved(post.id);
   const { requireAuth } = useAuthGate();
@@ -68,6 +161,24 @@ export const PostCard = memo(function PostCard({
 
   const author = post.is_anonymous ? null : profiles[post.author_id];
   const mediaUrls = Array.isArray(post.media_urls) ? post.media_urls : [];
+  const imageUrls = useMemo(
+    () => mediaUrls.filter((u) => !isVideoUrl(u)),
+    [mediaUrls],
+  );
+  const { topLevelComments, repliesByParent } = useMemo(() => {
+    const top: FeedComment[] = [];
+    const repliesByParent = new Map<string, FeedComment[]>();
+    for (const c of comments) {
+      if (c.parent_comment_id) {
+        const list = repliesByParent.get(c.parent_comment_id) ?? [];
+        list.push(c);
+        repliesByParent.set(c.parent_comment_id, list);
+      } else {
+        top.push(c);
+      }
+    }
+    return { topLevelComments: top, repliesByParent };
+  }, [comments]);
   const reactionCount = post.reaction_count ?? 0;
   const commentCount = post.comment_count ?? 0;
   const trendingScore = post.trending_score ?? 0;
@@ -93,12 +204,37 @@ export const PostCard = memo(function PostCard({
       .then(({ data }) => { if (!cancelled) setComments((data ?? []) as FeedComment[]); });
     const ch = supabase.channel(`post-c-${post.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "comments", filter: `post_id=eq.${post.id}` }, (payload) => {
-        if (payload.eventType === "INSERT") setComments((p) => [...p, payload.new as FeedComment]);
-        if (payload.eventType === "DELETE") setComments((p) => p.filter((c) => c.id !== (payload.old as FeedComment).id));
+        if (payload.eventType === "INSERT") {
+          const row = payload.new as FeedComment;
+          setComments((p) => mergeComments(p, [row]));
+        }
+        if (payload.eventType === "UPDATE") {
+          const row = payload.new as FeedComment;
+          setComments((p) => p.map((c) => (c.id === row.id ? row : c)));
+        }
+        if (payload.eventType === "DELETE") {
+          setComments((p) => p.filter((c) => c.id !== (payload.old as FeedComment).id));
+        }
       })
       .subscribe();
     return () => { cancelled = true; supabase.removeChannel(ch); };
   }, [showComments, post.id]);
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxIndex(null);
+      if (e.key === "ArrowLeft") setLightboxIndex((i) => (i !== null && i > 0 ? i - 1 : i));
+      if (e.key === "ArrowRight") setLightboxIndex((i) => (i !== null && i < imageUrls.length - 1 ? i + 1 : i));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [lightboxIndex, imageUrls.length]);
 
   async function react(type: ReactionType) {
     setPickerOpen(false);
@@ -125,12 +261,23 @@ export const PostCard = memo(function PostCard({
   async function addComment() {
     if (!commentText.trim()) return;
     setSending(true);
-    const { error } = await supabase.from("comments").insert({ post_id: post.id, author_id: meId, text: commentText.trim() });
+    const { error } = await supabase.from("comments").insert({
+      post_id: post.id,
+      author_id: meId,
+      text: commentText.trim(),
+      parent_comment_id: replyingTo?.id ?? null,
+    });
     if (!error) {
       earnComment({ data: { postId: post.id } }).catch(() => {});
+      setCommentText("");
+      setReplyingTo(null);
     }
-    setCommentText("");
     setSending(false);
+  }
+
+  async function deleteComment(commentId: string) {
+    if (!confirm("Delete this comment?")) return;
+    await supabase.from("comments").delete().eq("id", commentId).eq("author_id", meId);
   }
 
   async function boost() {
@@ -200,7 +347,7 @@ export const PostCard = memo(function PostCard({
           </div>
         </div>
         {post.owner_id === meId ? (
-          <button onClick={del} className="rounded-full p-2 text-muted-foreground/80 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200" aria-label="Delete">
+          <button onClick={del} className="grid min-h-11 min-w-11 place-items-center rounded-full text-muted-foreground/80 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200 sm:min-h-8 sm:min-w-8" aria-label="Delete">
             <Trash2 className="h-4 w-4" />
           </button>
         ) : (
@@ -215,7 +362,7 @@ export const PostCard = memo(function PostCard({
                 toast.error(e instanceof Error ? e.message : "Failed to report");
               }
             })}
-            className="rounded-full p-2 text-muted-foreground/80 hover:bg-orange-500/10 hover:text-orange-500 transition-colors"
+            className="grid min-h-11 min-w-11 place-items-center rounded-full text-muted-foreground/80 hover:bg-orange-500/10 hover:text-orange-500 transition-colors sm:min-h-8 sm:min-w-8"
             aria-label="Report post"
           >
             <Flag className="h-4 w-4" />
@@ -230,7 +377,7 @@ export const PostCard = memo(function PostCard({
       {mediaUrls.length > 0 && (
         <div className={`mt-4 grid gap-1 overflow-hidden rounded-2xl ring-1 ring-inset ring-border/70 shadow-[0_8px_24px_-16px_oklch(0_0_0/0.55)] ${mediaUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
           {mediaUrls.map((u, i) => {
-            const isVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(u);
+            const isVideo = isVideoUrl(u);
             if (isVideo) {
               return (
                 <FeedVideo
@@ -240,19 +387,76 @@ export const PostCard = memo(function PostCard({
                 />
               );
             }
+            const imgIdx = imageUrls.indexOf(u);
             return (
-              <img
+              <button
                 key={i}
-                src={u}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                onLoad={(e) => e.currentTarget.classList.add("feed-media-in")}
-                className={`w-full bg-muted/40 object-cover transition-transform duration-[450ms] ease-out hover:scale-[1.02] ${compact ? "max-h-80" : "max-h-[480px]"}`}
-              />
+                type="button"
+                onClick={() => imgIdx >= 0 && setLightboxIndex(imgIdx)}
+                className="relative block w-full cursor-zoom-in overflow-hidden text-left"
+                aria-label="View image fullscreen"
+              >
+                <img
+                  src={u}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  onLoad={(e) => e.currentTarget.classList.add("feed-media-in")}
+                  className={`w-full bg-muted/40 object-cover transition-transform duration-[450ms] ease-out hover:scale-[1.02] ${compact ? "max-h-80" : "max-h-[480px]"}`}
+                />
+                {isGifUrl(u, post.kind) && (
+                  <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">GIF</span>
+                )}
+              </button>
             );
           })}
         </div>
+      )}
+
+      {lightboxIndex !== null && imageUrls[lightboxIndex] && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm animate-fade-in"
+          onClick={() => setLightboxIndex(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image viewer"
+        >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setLightboxIndex(null); }}
+            className="absolute top-4 right-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 backdrop-blur hover:bg-white/20"
+            aria-label="Close image"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          {imageUrls.length > 1 && lightboxIndex > 0 && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i !== null ? i - 1 : i)); }}
+              className="absolute left-3 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+          )}
+          {imageUrls.length > 1 && lightboxIndex < imageUrls.length - 1 && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i !== null ? i + 1 : i)); }}
+              className="absolute right-3 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+          )}
+          <img
+            src={imageUrls[lightboxIndex]}
+            alt=""
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[90vh] max-w-[min(100vw-2rem,56rem)] object-contain"
+          />
+        </div>,
+        document.body,
       )}
 
       {!hideCounts && (totalReactions > 0 || commentCount > 0) && (
@@ -273,11 +477,11 @@ export const PostCard = memo(function PostCard({
         </div>
       )}
 
-      <footer className="mt-3 flex items-center gap-1 border-t border-border/70 pt-2">
-        <div className="relative flex-1">
+      <footer className="mt-3 flex min-w-0 items-center gap-1 border-t border-border/70 pt-2">
+        <div className="relative min-w-0 flex-1">
           <button
             onClick={() => requireAuth(() => { ensureReactions(); setPickerOpen(!pickerOpen); })}
-            className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${myReaction ? "text-primary bg-primary/10 ring-1 ring-inset ring-primary/20" : "text-muted-foreground hover:bg-accent/25 hover:text-foreground"}`}
+            className={`inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] sm:px-3 ${myReaction ? "text-primary bg-primary/10 ring-1 ring-inset ring-primary/20" : "text-muted-foreground hover:bg-accent/25 hover:text-foreground"}`}
           >
             <span className={`text-lg ${myReaction ? "like-burst" : ""}`}>{myReaction ? REACTION_EMOJI[myReaction.type] : "👍"}</span>
             <span>{hideCounts ? "React" : (myReaction ? "Reacted" : "Like")}</span>
@@ -285,24 +489,24 @@ export const PostCard = memo(function PostCard({
           {pickerOpen && (
             <div className="feed-glass absolute bottom-full left-0 z-10 mb-2 flex gap-1 rounded-full p-1.5 animate-scale-in">
               {REACTION_ORDER.map((r) => (
-                <button key={r} onClick={() => requireAuth(() => react(r))} className="rounded-full p-1.5 text-xl transition-transform duration-200 hover:scale-[1.45] hover:-translate-y-1 active:scale-110">
+                <button key={r} onClick={() => requireAuth(() => react(r))} className="grid min-h-11 min-w-11 place-items-center rounded-full text-xl transition-transform duration-200 hover:scale-[1.45] hover:-translate-y-1 active:scale-110 sm:min-h-8 sm:min-w-8">
                   {REACTION_EMOJI[r]}
                 </button>
               ))}
             </div>
           )}
         </div>
-        <button onClick={() => setShowComments(!showComments)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-all duration-200 active:scale-[0.97]">
-          <MessageCircle className="h-4 w-4" /> <span>Comment</span>
+        <button onClick={() => setShowComments(!showComments)} className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-all duration-200 active:scale-[0.97] sm:px-3">
+          <MessageCircle className="h-4 w-4 shrink-0" /> <span className="truncate">Comment</span>
         </button>
         {post.owner_id !== meId && (
           <button
             onClick={() => requireAuth(boost)}
             disabled={boosting}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500 disabled:opacity-50 transition-all duration-200 active:scale-[0.97]"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500 disabled:opacity-50 transition-all duration-200 active:scale-[0.97] sm:px-3"
             title={`Boost (${SPEND.boost_post.coins} coins)`}
           >
-            {boosting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+            {boosting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4 shrink-0" />}
             <span className="hidden sm:inline">Boost</span>
           </button>
         )}
@@ -329,9 +533,9 @@ export const PostCard = memo(function PostCard({
             }
             setShareOpen(payload);
           }}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-all duration-200 active:scale-[0.97]"
+          className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-all duration-200 active:scale-[0.97] sm:px-3"
         >
-          <Share2 className="h-4 w-4" /> <span>Share</span>
+          <Share2 className="h-4 w-4 shrink-0" /> <span className="truncate">Share</span>
         </button>
         <button
           onClick={() => requireAuth(() => {
@@ -340,7 +544,7 @@ export const PostCard = memo(function PostCard({
           })}
           aria-pressed={saved}
           title={saved ? "Remove bookmark" : "Save post"}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${saved ? "text-amber-400 bg-amber-500/10 ring-1 ring-inset ring-amber-500/25" : "text-muted-foreground hover:bg-accent/25 hover:text-foreground"}`}
+          className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] sm:px-3 ${saved ? "text-amber-400 bg-amber-500/10 ring-1 ring-inset ring-amber-500/25" : "text-muted-foreground hover:bg-accent/25 hover:text-foreground"}`}
         >
           <Bookmark className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
           <span className="hidden sm:inline">{saved ? "Saved" : "Save"}</span>
@@ -351,35 +555,46 @@ export const PostCard = memo(function PostCard({
 
 
       {showComments && (
-        <div className="mt-4 space-y-3 border-t border-border/70 pt-4 animate-fade-in">
-          {comments.map((c) => {
-            const cAuthor = profiles[c.author_id];
-            return (
-              <div key={c.id} className="flex gap-2.5 animate-fade-in">
-                {cAuthor && <FrameAvatar user={cAuthor} size={32} />}
-                <div className="min-w-0 flex-1 rounded-2xl bg-gradient-to-b from-accent/20 to-accent/10 border border-border/60 px-3.5 py-2.5 shadow-[inset_0_1px_0_oklch(1_0_0/0.04)]">
-                  <div className="flex items-center gap-2 text-[11.5px]">
-                    <span className="font-semibold text-foreground tracking-tight">
-                      {cAuthor ? <CosmeticName userId={cAuthor.id} name={cAuthor.name} /> : "user"}
-                    </span>
-                    <span className="text-muted-foreground/80">{timeAgo(c.created_at)}</span>
-                  </div>
-                  <p className="mt-1 text-[14px] leading-[1.6] text-foreground/95">{c.text}</p>
-                </div>
-              </div>
-            );
-          })}
-          <div className="flex items-center gap-2 pt-1">
+        <div className="mt-4 min-w-0 space-y-3 border-t border-border/70 pt-4 animate-fade-in">
+          {topLevelComments.map((c) => (
+            <CommentThread
+              key={c.id}
+              comment={c}
+              repliesByParent={repliesByParent}
+              profiles={profiles}
+              meId={meId}
+              depth={0}
+              onReply={(comment) => setReplyingTo(comment)}
+              onDelete={deleteComment}
+            />
+          ))}
+          {replyingTo && (
+            <div className="flex min-h-11 items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+              <Reply className="h-3.5 w-3.5 shrink-0 text-primary" />
+              <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                Replying to <span className="font-semibold text-foreground">{profiles[replyingTo.author_id]?.name ?? "user"}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setReplyingTo(null)}
+                className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                aria-label="Cancel reply"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+          <div className="flex min-w-0 items-center gap-2 pt-1">
             <input
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); requireAuth(addComment); } }}
-              placeholder="Write a comment…"
-              className="flex-1 rounded-full border border-border/70 bg-background/60 px-4 py-2.5 text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all duration-200"
+              placeholder={replyingTo ? "Write a reply…" : "Write a comment…"}
+              className="min-h-11 min-w-0 flex-1 rounded-full border border-border/70 bg-background/60 px-4 py-2.5 text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all duration-200"
             />
             <Popover>
               <PopoverTrigger asChild>
-                <button type="button" className="rounded-full p-2 text-muted-foreground hover:bg-accent/30 hover:text-foreground transition-colors duration-200" aria-label="Add emoji">
+                <button type="button" className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-accent/30 hover:text-foreground transition-colors duration-200" aria-label="Add emoji">
                   <Smile className="h-4 w-4" />
                 </button>
               </PopoverTrigger>
@@ -387,7 +602,7 @@ export const PostCard = memo(function PostCard({
                 <EmojiPicker onPick={(e) => setCommentText((t) => t + e)} />
               </PopoverContent>
             </Popover>
-            <button onClick={() => requireAuth(addComment)} disabled={sending || !commentText.trim()} className="rounded-full bg-gradient-to-br from-primary to-primary/80 p-2.5 text-primary-foreground shadow-[0_8px_22px_-8px_var(--primary-glow)] hover:scale-[1.06] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100">
+            <button onClick={() => requireAuth(addComment)} disabled={sending || !commentText.trim()} className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_8px_22px_-8px_var(--primary-glow)] hover:scale-[1.06] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
           </div>

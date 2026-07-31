@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BarChart3, CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { FeedPost } from "@/lib/feed-types";
 
 const VOTE_KEY = (postId: string) => `feed-poll-vote:${postId}`;
+
+type PollData = NonNullable<FeedPost["poll"]>;
 
 function readVoted(postId: string): number | null {
   if (typeof window === "undefined") return null;
@@ -13,40 +15,84 @@ function readVoted(postId: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function normalizeVotes(raw: Record<string, number> | undefined | null): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!raw) return out;
+  for (const [k, v] of Object.entries(raw)) {
+    const n = Number(v);
+    if (Number.isFinite(n) && n >= 0) out[k] = n;
+  }
+  return out;
+}
+
 export function PollBlock({ post }: { post: FeedPost }) {
   const poll = post.poll;
-  const [votes, setVotes] = useState<Record<string, number>>(() => ({ ...(poll?.votes ?? {}) }));
+  const [votes, setVotes] = useState<Record<string, number>>(() => normalizeVotes(poll?.votes));
   const [voted, setVoted] = useState<number | null>(() => readVoted(post.id));
   const [busy, setBusy] = useState(false);
 
   const total = useMemo(() => Object.values(votes).reduce((a, b) => a + (Number(b) || 0), 0), [votes]);
+
+  // Sync when parent post updates (feed realtime) or poll JSON changes.
+  useEffect(() => {
+    if (post.poll?.votes) setVotes(normalizeVotes(post.poll.votes));
+  }, [post.id, post.poll]);
+
+  // Direct poll updates on this post row.
+  useEffect(() => {
+    const ch = supabase
+      .channel(`poll-post-${post.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "posts", filter: `id=eq.${post.id}` },
+        (payload) => {
+          const nextPoll = (payload.new as FeedPost).poll;
+          if (nextPoll?.votes) setVotes(normalizeVotes(nextPoll.votes));
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [post.id]);
 
   if (!poll) return null;
 
   async function castVote(idx: number) {
     if (voted !== null || busy) return;
     setBusy(true);
-    // Optimistic
-    const next = { ...votes, [String(idx)]: (votes[String(idx)] ?? 0) + 1 };
-    setVotes(next);
+    const prevVotes = { ...votes };
+    const prevVoted = voted;
+    const optimistic = { ...prevVotes, [String(idx)]: (prevVotes[String(idx)] ?? 0) + 1 };
+    setVotes(optimistic);
     setVoted(idx);
     try { localStorage.setItem(VOTE_KEY(post.id), String(idx)); } catch {}
 
     try {
-      // Read-modify-write — best effort. Final tally is approximate; UI feels instant.
-      const { data: row } = await supabase
+      const { data: row, error: readErr } = await supabase
         .from("posts")
         .select("poll")
         .eq("id", post.id)
         .maybeSingle();
-      const current = ((row?.poll as { votes?: Record<string, number> } | null)?.votes) ?? {};
-      const merged = { ...current, [String(idx)]: (current[String(idx)] ?? 0) + 1 };
-      const basePoll = (row?.poll as typeof poll) ?? poll;
-      const newPoll = { ...basePoll, votes: merged };
-      await supabase.from("posts").update({ poll: newPoll }).eq("id", post.id);
-      setVotes(merged);
+      if (readErr) throw readErr;
+
+      const serverPoll: PollData = (row?.poll as PollData | null) ?? poll!;
+      const serverVotes = normalizeVotes(serverPoll.votes);
+      const merged = { ...serverVotes, [String(idx)]: (serverVotes[String(idx)] ?? 0) + 1 };
+      const newPoll: PollData = { question: serverPoll.question, options: serverPoll.options, votes: merged };
+
+      const { data: updated, error: writeErr } = await supabase
+        .from("posts")
+        .update({ poll: newPoll })
+        .eq("id", post.id)
+        .select("poll")
+        .single();
+      if (writeErr) throw writeErr;
+
+      const finalPoll = (updated?.poll as PollData | null) ?? newPoll;
+      setVotes(normalizeVotes(finalPoll.votes));
     } catch {
-      /* ignore — optimistic state is good enough */
+      setVotes(prevVotes);
+      setVoted(prevVoted);
+      try { localStorage.removeItem(VOTE_KEY(post.id)); } catch {}
     } finally {
       setBusy(false);
     }
@@ -73,9 +119,10 @@ export function PollBlock({ post }: { post: FeedPost }) {
           return (
             <button
               key={idx}
+              type="button"
               onClick={() => castVote(idx)}
               disabled={showResults || busy}
-              className={`relative w-full overflow-hidden rounded-xl border px-3 py-2.5 text-left text-sm transition ${
+              className={`relative min-h-11 w-full overflow-hidden rounded-xl border px-3 py-2.5 text-left text-sm transition ${
                 isPicked
                   ? "border-primary bg-primary/10 text-foreground"
                   : showResults
@@ -91,12 +138,12 @@ export function PollBlock({ post }: { post: FeedPost }) {
                 />
               )}
               <span className="relative flex items-center gap-2">
-                {isPicked && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                {isPicked && <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />}
                 <span className="flex-1 font-medium">{opt}</span>
                 {showResults && (
                   <span className="text-xs font-semibold text-muted-foreground">{pct}%</span>
                 )}
-                {busy && isPicked && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+                {busy && isPicked && <Loader2 className="h-3 w-3 shrink-0 animate-spin text-primary" />}
               </span>
             </button>
           );
