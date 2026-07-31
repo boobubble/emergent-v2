@@ -7,7 +7,7 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadEnv } from "vite";
+import { loadEnv, type Plugin } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const srcAlias = { find: /^@\/(.*)$/, replacement: path.resolve(__dirname, "src") + "/$1" };
@@ -45,14 +45,63 @@ function applySupabaseEnvAliases(env: Record<string, string>) {
 const env = loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "");
 applySupabaseEnvAliases(env);
 
-const nitroTslibPackaging = {
-  traceDeps: ["tslib*"],
-  vercel: {
-    functions: {
-      includeFiles: "node_modules/tslib/**",
+const SSR_SERVICE_ENV = "ssr";
+const NITRO_SERVER_ENV = "nitro";
+
+type NoExternal = NonNullable<
+  NonNullable<import("vite").EnvironmentOptions["resolve"]>["noExternal"]
+>;
+
+function withTslibNoExternal(existing: NoExternal | undefined): NoExternal {
+  if (existing === true) return true;
+  const list = existing === undefined ? [] : Array.isArray(existing) ? [...existing] : [existing];
+  if (!list.includes("tslib")) list.push("tslib");
+  return list;
+}
+
+function nitroServerBundleTslib(): Plugin[] {
+  return [
+    {
+      name: "nitro-server-bundle-tslib:env",
+      apply: "build",
+      configEnvironment: {
+        order: "post",
+        handler(name, config) {
+          if (config.consumer !== "server") return;
+
+          if (name === SSR_SERVICE_ENV) {
+            config.resolve ??= {};
+            config.resolve.noExternal = true;
+            return;
+          }
+
+          if (name === NITRO_SERVER_ENV) {
+            config.resolve ??= {};
+            config.resolve.noExternal = withTslibNoExternal(config.resolve.noExternal);
+          }
+        },
+      },
     },
-  },
-} as const;
+    {
+      name: "nitro-server-bundle-tslib:inline-tslib",
+      apply: "build",
+      applyToEnvironment: (env) => env.name === NITRO_SERVER_ENV,
+      resolveId: {
+        order: "pre",
+        filter: { id: /^tslib$/ },
+        async handler(id, importer, options) {
+          const resolved = await this.resolve(id, importer, {
+            ...options,
+            custom: { "node-resolve": true },
+            skipSelf: true,
+          });
+          if (!resolved?.id) return null;
+          return { id: resolved.id, external: false };
+        },
+      },
+    },
+  ];
+}
 
 // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
 // This entry is fetch-shaped and works for both the Cloudflare-module preset (used inside
@@ -69,24 +118,17 @@ const nitroTslibPackaging = {
 // (client, ssr, worker, router client/server) even if a downstream build target strips
 // the tsconfig-paths plugin. This is a defensive fallback on top of the plugin.
 export default defineConfig({
+  plugins: nitroServerBundleTslib(),
   tanstackStart: {
     server: { entry: "server" },
   },
   nitro: {
     preset: "vercel",
-    ...nitroTslibPackaging,
   },
   vite: {
     envDir: process.cwd(),
     ssr: {
       noExternal: ["tslib"],
-    },
-    environments: {
-      ssr: {
-        resolve: {
-          noExternal: ["tslib"],
-        },
-      },
     },
     resolve: {
       alias: [srcAlias],
