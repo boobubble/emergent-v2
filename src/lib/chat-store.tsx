@@ -10,6 +10,16 @@ export interface AdminChannelInput {
   game?: RoomGameConfig;
 }
 
+/** Resolved public.chatrooms row — registered in chat-store for Supabase messaging. */
+export interface CommunityRoomInput {
+  id: string;
+  slug: string;
+  name: string;
+  topic?: string;
+  communityId: string;
+  isPublic: boolean;
+}
+
 function normalizeRoomGameConfig(game?: RoomGameConfig): RoomGameConfig | undefined {
   if (!game) return undefined;
   const type = canonicalGameType(game.type);
@@ -57,8 +67,12 @@ import { removeCorruptedKey } from "./persisted-state-recovery";
 
 export { dmChannelFor } from "./dm-utils";
 
+/** UUID channel ids registered via registerCommunityRoom — use Supabase messages. */
+const dbBackedRemoteChannels = new Set<string>();
+
 function isRemoteChannel(channelId: string, meId: string | null): boolean {
   if (channelId === "lobby" || channelId === "games") return true;
+  if (dbBackedRemoteChannels.has(channelId)) return true;
   return isRemoteDmChannel(channelId, meId);
 }
 function rowToMessage(row: { id: string; channel_id: string; author_id: string; text: string; kind: string | null; attachment: unknown; reply_to_id: string | null; created_at: string }, meAuthUuid: string | null): Message {
@@ -450,6 +464,8 @@ interface Ctx {
   wipeChannel: (channelId: string) => void;
   deleteRoom: (roomId: string) => void;
   syncAdminChannels: (channels: AdminChannelInput[]) => void;
+  registerCommunityRoom: (room: CommunityRoomInput) => void;
+  leaveCommunityRoom: (roomId: string) => void;
 
 }
 
@@ -613,6 +629,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const streakChecked = useRef<string | null>(null);
   const { profiles: remoteProfiles } = useRemoteProfiles();
   const seenRemoteMsgIds = useRef<Set<string>>(new Set());
+  const fetchErrorsShown = useRef<Set<string>>(new Set());
   // dmReads[channelId][userId] = epoch ms of last read
   const [dmReads, setDmReads] = useState<Record<string, Record<string, number>>>({});
   // Latest message timestamp per DM channel (for unread badges across reloads)
@@ -832,6 +849,13 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     };
   }, [authUserId]);
 
+  // Keep remote-channel registry aligned with persisted db-backed rooms.
+  useEffect(() => {
+    for (const [id, room] of Object.entries(state.rooms)) {
+      if (room.dbBacked) dbBackedRemoteChannels.add(id);
+    }
+  }, [state.rooms]);
+
   // Fetch existing remote messages for lobby + the active remote channel
   useEffect(() => {
     if (!authUserId) return;
@@ -842,12 +866,31 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     }
     (async () => {
       for (const ch of channelsToFetch) {
-        const { data: rows } = await supabase
+        const { data: rows, error } = await supabase
           .from("messages")
           .select("id, channel_id, author_id, text, kind, attachment, reply_to_id, created_at")
           .eq("channel_id", ch)
           .order("created_at", { ascending: false })
           .limit(200);
+        if (error) {
+          console.error("messages fetch failed", ch, error);
+          rtLog("error", "fetch-failed", `${ch}: ${error.message}`);
+          if (!cancelled && !fetchErrorsShown.current.has(ch)) {
+            fetchErrorsShown.current.add(ch);
+            setState(s => {
+              const sys: Message = {
+                id: uid(),
+                channelId: ch,
+                authorId: "bot-gamebot",
+                text: `⚠️ Could not load messages: ${error.message}`,
+                ts: Date.now(),
+                kind: "system",
+              };
+              return { ...s, messages: { ...s.messages, [ch]: [...(s.messages[ch] || []), sys] } };
+            });
+          }
+          continue;
+        }
         const data = rows ? [...rows].reverse() : null;
         if (cancelled || !data) continue;
         setState(s => {
@@ -1739,11 +1782,48 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     });
   }, []);
 
+  const registerCommunityRoom = useCallback((room: CommunityRoomInput) => {
+    dbBackedRemoteChannels.add(room.id);
+    setState(s => {
+      const existing = s.rooms[room.id];
+      const nextRoom: Room = {
+        id: room.id,
+        name: room.name,
+        topic: room.topic || room.name,
+        members: existing?.members ?? ["me"],
+        roles: existing?.roles ?? { me: "member" },
+        isPublic: room.isPublic,
+        kind: "chat",
+        slug: room.slug,
+        communityId: room.communityId,
+        dbBacked: true,
+      };
+      const roomOrder = s.roomOrder.includes(room.id) ? s.roomOrder : [...s.roomOrder, room.id];
+      return {
+        ...s,
+        rooms: { ...s.rooms, [room.id]: nextRoom },
+        roomOrder,
+        activeChannel: room.id,
+      };
+    });
+  }, []);
+
+  const leaveCommunityRoom = useCallback((roomId: string) => {
+    dbBackedRemoteChannels.delete(roomId);
+    setState(s => {
+      if (!s.rooms[roomId]?.dbBacked) return s;
+      const { [roomId]: _removed, ...rooms } = s.rooms;
+      const roomOrder = s.roomOrder.filter(id => id !== roomId);
+      const activeChannel =
+        s.activeChannel === roomId ? (roomOrder[0] || "lobby") : s.activeChannel;
+      return { ...s, rooms, roomOrder, activeChannel };
+    });
+  }, []);
 
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
     adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
-    pushSystem, wipeChannel, deleteRoom, syncAdminChannels,
+    pushSystem, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom,
 
     isFriend: (id) => (state.me.friends ?? []).includes(id),
     isBlocked: (id) => (state.me.blocked ?? []).includes(id),
@@ -1802,7 +1882,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     })(),
     staffKick,
     staffLocalMute,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, wipeChannel, deleteRoom, syncAdminChannels]);
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;

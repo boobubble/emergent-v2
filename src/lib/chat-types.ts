@@ -74,6 +74,12 @@ export interface Room {
   isPublic: boolean;
   kind?: "chat" | "game";
   game?: RoomGameConfig;
+  /** URL slug for database-backed community rooms (routing/display only). */
+  slug?: string;
+  /** Parent community id when this room is synced from public.chatrooms. */
+  communityId?: string;
+  /** When true, messages use Supabase with id as channel_id. */
+  dbBacked?: boolean;
 }
 
 export interface GameState {

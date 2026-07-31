@@ -125,6 +125,12 @@ function CommunityChatrooms() {
       {user && !isMember && !isOwner && (
         <p className="text-center text-xs text-muted-foreground">Join the community to enter its chatrooms.</p>
       )}
+
+      {rooms.some((r) => r.visibility === "private") && (
+        <p className="text-center text-xs text-muted-foreground">
+          Private rooms may require owner access. Password-protected rooms will need a follow-up password step before entry.
+        </p>
+      )}
     </div>
   );
 }
