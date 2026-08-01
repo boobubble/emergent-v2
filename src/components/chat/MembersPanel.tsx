@@ -299,11 +299,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   const body = (
     <>
-      {import.meta.env.DEV && (
-        <div className="hidden shrink-0 border-b border-amber-500/40 bg-amber-500/10 px-1 py-0.5 text-center text-[10px] font-bold uppercase tracking-wide text-amber-600 lg:block">
-          Compact members v2
-        </div>
-      )}
+      <div className="shrink-0 border-b border-fuchsia-500/50 bg-fuchsia-500/10 px-1 py-0.5 text-center text-[10px] font-bold uppercase tracking-wide text-fuchsia-600">
+        MEMBERS PANEL SOURCE: MembersPanel.tsx
+      </div>
       <div className="flex items-center justify-end gap-0 px-3 pt-2 pr-12 lg:pr-3">
 
         <button
