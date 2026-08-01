@@ -1,19 +1,23 @@
 import { useMemo, useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Search, ExternalLink } from "lucide-react";
+import { Search, ExternalLink, Pencil } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { getSeoInventory } from "@/lib/seo.functions";
+import { SeoEditDrawer } from "@/components/admin/seo/SeoEditDrawer";
+import { isSeoEditableRow } from "@/lib/seo/edit-form";
 import {
   fieldStateLabel,
   indexStateLabel,
+  summarizeSeoInventory,
   type SeoInventoryRow,
   type SeoInventoryStatus,
   type SeoInventorySummary,
 } from "@/lib/seo/inventory";
 import { SEO_INVENTORY_CATEGORIES, type SeoInventoryCategoryId } from "@/lib/seo/inventory-categories";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -53,10 +57,10 @@ function SeoManagerPage() {
     <div className="space-y-4">
       <AdminPageHeader
         title="SEO Manager"
-        description="Read-only inventory of public routes and current SEO sources. Editing will be enabled in a future batch."
+        description="Central SEO inventory. Batch 3 editing is enabled for Global Defaults and homepage routes only."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">Read-only · Batch 1</Badge>
+            <Badge variant="outline">Batch 3 · Limited editing</Badge>
             <a
               href="/sitemap.xml"
               target="_blank"
@@ -131,12 +135,19 @@ function filterRows(
 
 function SeoInventoryPanel() {
   const { category: categoryParam } = Route.useSearch();
+  const queryClient = useQueryClient();
   const fetchInventory = useServerFn(getSeoInventory);
   const inventory = useQuery({
     queryKey: ["seo-inventory"],
     queryFn: () => fetchInventory({}),
     staleTime: 60_000,
   });
+
+  const [editTarget, setEditTarget] = useState<{
+    target: "global" | "route";
+    routePath: string | null;
+    label: string;
+  } | null>(null);
 
   const [activeCategory, setActiveCategory] = useState<SeoInventoryCategoryId | typeof ALL>(() => parseCategoryParam(categoryParam));
   const [statusFilter, setStatusFilter] = useState<SeoInventoryStatus | typeof ALL>(ALL);
@@ -157,6 +168,21 @@ function SeoInventoryPanel() {
 
   const categoryCounts: SeoInventorySummary["byCategory"] =
     summary?.byCategory ?? ({} as SeoInventorySummary["byCategory"]);
+
+  const patchInventoryRow = (row: SeoInventoryRow) => {
+    queryClient.setQueryData<Awaited<ReturnType<typeof fetchInventory>>>(
+      ["seo-inventory"],
+      (old) => {
+        if (!old) return old;
+        const rows = old.rows.map((existing) => (existing.id === row.id ? row : existing));
+        return {
+          ...old,
+          rows,
+          summary: summarizeSeoInventory(rows),
+        };
+      },
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -251,26 +277,27 @@ function SeoInventoryPanel() {
               <TableHead>Index</TableHead>
               <TableHead>JSON-LD</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="w-[88px]">Edit</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {inventory.isLoading && (
               <TableRow>
-                <TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={11} className="py-8 text-center text-sm text-muted-foreground">
                   Loading SEO inventory...
                 </TableCell>
               </TableRow>
             )}
             {inventory.isError && (
               <TableRow>
-                <TableCell colSpan={10} className="py-8 text-center text-sm text-destructive">
+                <TableCell colSpan={11} className="py-8 text-center text-sm text-destructive">
                   Could not load inventory. Check admin permissions and try again.
                 </TableCell>
               </TableRow>
             )}
             {!inventory.isLoading && !inventory.isError && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={11} className="py-8 text-center text-sm text-muted-foreground">
                   No routes match the current filters.
                 </TableCell>
               </TableRow>
@@ -291,14 +318,45 @@ function SeoInventoryPanel() {
                 </TableCell>
                 <TableCell><FieldBadge state={row.jsonLd} /></TableCell>
                 <TableCell><StatusBadge status={row.status} /></TableCell>
+                <TableCell>
+                  {isSeoEditableRow(row) ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1 px-2"
+                      onClick={() => setEditTarget({
+                        target: row.id === "__global__" ? "global" : "route",
+                        routePath: row.id === "__global__" ? null : row.routePath,
+                        label: row.pageName,
+                      })}
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
 
+      {editTarget && (
+        <SeoEditDrawer
+          open={!!editTarget}
+          onOpenChange={(open) => { if (!open) setEditTarget(null); }}
+          target={editTarget.target}
+          routePath={editTarget.routePath}
+          label={editTarget.label}
+          onSaved={(row) => patchInventoryRow(row)}
+        />
+      )}
+
       <p className="text-xs text-muted-foreground">
-        Read-only inventory (Batch 1). Editing and saving will be added in a later batch. Unknown sources show as Not configured.
+        Batch 3 editing: Global Defaults and homepage routes (`/`, `/welcome`, `/heropage`) only. Other routes remain read-only.
       </p>
     </div>
   );

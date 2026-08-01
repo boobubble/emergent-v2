@@ -19,7 +19,17 @@ import {
   type SeoGlobal,
   type SeoPageRow,
 } from "@/lib/seo";
-import { buildSeoInventory, summarizeSeoInventory } from "@/lib/seo/inventory";
+import { buildSeoInventory, summarizeSeoInventory, type SeoInventoryRow } from "@/lib/seo/inventory";
+import {
+  editFormToGlobalPatch,
+  editFormToPagePatch,
+  globalToEditForm,
+  pageToEditForm,
+  SEO_EDITABLE_ROUTE_PATHS,
+  validateSeoEditForm,
+  type SeoEditFormValues,
+} from "@/lib/seo/edit-form";
+import { SEO_ROUTE_CATALOG } from "@/lib/seo/route-registry";
 
 async function assertAdmin(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -369,4 +379,146 @@ export const getSeoInventory = createServerFn({ method: "GET" })
       catalogCount: catalog.length,
       discoveredCount: discovered.length,
     };
+  });
+
+const seoEditFormSchema = z.object({
+  title: z.string().max(120),
+  description: z.string().max(500),
+  keywords: z.string().max(500),
+  canonicalUrl: z.string().max(500),
+  index: z.boolean(),
+  follow: z.boolean(),
+  ogTitle: z.string().max(120),
+  ogDescription: z.string().max(500),
+  ogImage: z.string().max(500),
+  twitterTitle: z.string().max(120),
+  twitterDescription: z.string().max(500),
+  twitterImage: z.string().max(500),
+});
+
+async function findPageForRoute(pages: SeoPageRow[], routePath: string): Promise<SeoPageRow | null> {
+  const pageKey = pageKeyFromPath(routePath);
+  return (
+    pages.find((p) => p.route_path === routePath)
+    ?? pages.find((p) => p.page_key === pageKey)
+    ?? null
+  );
+}
+
+/** Load editable SEO record for Batch 3 targets (global + homepage routes). */
+export const getSeoEditRecord = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
+  .inputValidator((input) => z.object({
+    target: z.enum(["global", "route"]),
+    routePath: z.string().optional(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+
+    if (data.target === "global") {
+      const global = await loadGlobal();
+      return {
+        target: "global" as const,
+        label: "Global Defaults",
+        routePath: null,
+        pageKey: null,
+        exists: !!global,
+        form: globalToEditForm(global),
+      };
+    }
+
+    const routePath = data.routePath?.trim();
+    if (!routePath || !(SEO_EDITABLE_ROUTE_PATHS as readonly string[]).includes(routePath)) {
+      throw new Error("This route is not editable in Batch 3.");
+    }
+
+    const pages = await loadPages();
+    const page = await findPageForRoute(pages, routePath);
+    const catalog = SEO_ROUTE_CATALOG.find((c) => c.routePath === routePath);
+
+    return {
+      target: "route" as const,
+      label: catalog?.label ?? labelFromPath(routePath),
+      routePath,
+      pageKey: page?.page_key ?? catalog?.pageKey ?? pageKeyFromPath(routePath),
+      exists: !!page,
+      form: pageToEditForm(page),
+    };
+  });
+
+/** Save editable SEO record — explicit admin action only; upserts existing row keys. */
+export const saveSeoEditRecord = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
+  .inputValidator((input) => z.object({
+    target: z.enum(["global", "route"]),
+    routePath: z.string().optional(),
+    form: seoEditFormSchema,
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+
+    const validation = validateSeoEditForm(data.form as SeoEditFormValues);
+    if (Object.keys(validation.fieldErrors).length) {
+      const first = Object.values(validation.fieldErrors)[0];
+      throw new Error(first ?? "Invalid SEO form");
+    }
+
+    if (data.target === "global") {
+      const patch = editFormToGlobalPatch(data.form as SeoEditFormValues);
+      const { error } = await (supabaseAdmin as any).from("seo_global").upsert({
+        id: 1,
+        ...patch,
+        updated_at: new Date().toISOString(),
+        updated_by: context.userId,
+      });
+      if (error) throw new Error(error.message);
+
+      const [global, pages, discovered] = await Promise.all([
+        loadGlobal(),
+        loadPages(),
+        Promise.resolve(readDiscoveredPaths()),
+      ]);
+      const catalog = buildRouteCatalog(discovered);
+      const row = buildSeoInventory({ global, pages, catalog, discovered })
+        .find((r) => r.id === "__global__") as SeoInventoryRow;
+
+      return { ok: true, row, warnings: validation.warnings };
+    }
+
+    const routePath = data.routePath?.trim();
+    if (!routePath || !(SEO_EDITABLE_ROUTE_PATHS as readonly string[]).includes(routePath)) {
+      throw new Error("This route is not editable in Batch 3.");
+    }
+
+    const pages = await loadPages();
+    const existing = await findPageForRoute(pages, routePath);
+    const catalog = SEO_ROUTE_CATALOG.find((c) => c.routePath === routePath);
+    const pageKey = existing?.page_key ?? catalog?.pageKey ?? pageKeyFromPath(routePath);
+
+    const patch = editFormToPagePatch(data.form as SeoEditFormValues, {
+      page_key: pageKey,
+      route_path: routePath,
+      label: existing?.label ?? catalog?.label ?? labelFromPath(routePath),
+      is_dynamic: false,
+      auto_discovered: existing?.auto_discovered ?? false,
+    });
+
+    const { error } = await (supabaseAdmin as any).from("seo_settings").upsert({
+      ...existing,
+      ...patch,
+      updated_at: new Date().toISOString(),
+      updated_by: context.userId,
+    }, { onConflict: "page_key" });
+    if (error) throw new Error(error.message);
+
+    const [global, freshPages, discovered] = await Promise.all([
+      loadGlobal(),
+      loadPages(),
+      Promise.resolve(readDiscoveredPaths()),
+    ]);
+    const catalogAll = buildRouteCatalog(discovered);
+    const row = buildSeoInventory({ global, pages: freshPages, catalog: catalogAll, discovered })
+      .find((r) => r.routePath === routePath) as SeoInventoryRow;
+
+    return { ok: true, row, warnings: validation.warnings };
   });
