@@ -1,80 +1,29 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Flame, TrendingUp, Trophy, UserPlus, Check, X, Radio, Sparkles, Users, Mars, Venus } from "lucide-react";
+import { Flame, TrendingUp, Trophy, UserPlus, Radio, Sparkles, Users, Mars, Venus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
 import { WidgetSkeleton } from "@/components/feed/FeedSkeletons";
+import { FriendActionButton, useSocialGraph } from "@/lib/use-social-graph";
 import type { User } from "@/lib/chat-types";
-import type { FeedFriendship } from "@/lib/feed-types";
 
 export function FriendsWidget({
   meId,
   profiles,
-  friendships: externalFriendships,
-  friendshipsLoaded: externalLoaded,
 }: {
   meId: string;
   profiles: Record<string, User>;
-  friendships?: FeedFriendship[];
-  friendshipsLoaded?: boolean;
 }) {
-  const [friendships, setFriendships] = useState<FeedFriendship[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [pendingSent, setPendingSent] = useState<Set<string>>(new Set());
+  const { friendships, friendshipsLoaded, friendIds } = useSocialGraph();
 
-  const useExternal = externalFriendships !== undefined;
-  const activeFriendships = useExternal ? externalFriendships : friendships;
-  const activeLoaded = useExternal ? (externalLoaded ?? true) : loaded;
-
-  useEffect(() => {
-    if (useExternal) return;
-    if (!meId) {
-      setFriendships([]);
-      setLoaded(true);
-      return;
-    }
-    let cancelled = false;
-    async function load() {
-      const { data } = await supabase
-        .from("friendships")
-        .select("*")
-        .or(`sender_id.eq.${meId},receiver_id.eq.${meId}`);
-      if (cancelled) return;
-      setFriendships((data ?? []) as FeedFriendship[]);
-      setLoaded(true);
-    }
-    void load();
-    const ch = supabase
-      .channel(`fr-${meId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "friendships", filter: `sender_id=eq.${meId}` }, () => { void load(); })
-      .on("postgres_changes", { event: "*", schema: "public", table: "friendships", filter: `receiver_id=eq.${meId}` }, () => { void load(); })
-      .subscribe();
-    return () => {
-      cancelled = true;
-      supabase.removeChannel(ch);
-    };
-  }, [meId, useExternal]);
-
-  const pendingIn = activeFriendships.filter((f) => f.receiver_id === meId && f.status === "pending");
-  const friendIds = new Set(activeFriendships.filter((f) => f.status === "accepted").map((f) => f.sender_id === meId ? f.receiver_id : f.sender_id));
-  const sentIds = new Set(activeFriendships.filter((f) => f.sender_id === meId && f.status === "pending").map((f) => f.receiver_id));
+  const pendingIn = friendships.filter((f) => f.receiver_id === meId && f.status === "pending");
+  const sentIds = new Set(friendships.filter((f) => f.sender_id === meId && f.status === "pending").map((f) => f.receiver_id));
   const friends = Array.from(friendIds).map((id) => profiles[id]).filter(Boolean) as User[];
   const suggestions = Object.values(profiles)
     .filter((u) => u.id !== meId && !friendIds.has(u.id) && !sentIds.has(u.id) && !u.isGuest && !u.isBot)
     .slice(0, 5);
 
-  async function accept(f: FeedFriendship) {
-    await supabase.from("friendships").update({ status: "accepted" }).eq("id", f.id);
-  }
-  async function reject(f: FeedFriendship) {
-    await supabase.from("friendships").delete().eq("id", f.id);
-  }
-  async function sendRequest(toId: string) {
-    setPendingSent((s) => new Set(s).add(toId));
-    await supabase.from("friendships").insert({ sender_id: meId, receiver_id: toId, status: "pending" });
-  }
-
-  if (!activeLoaded) return <WidgetSkeleton rows={4} />;
+  if (!friendshipsLoaded) return <WidgetSkeleton rows={4} />;
 
   return (
     <div className="space-y-4">
@@ -87,20 +36,7 @@ export function FriendsWidget({
               <div key={f.id} className="group flex items-center gap-2.5 rounded-xl px-1.5 py-1.5 transition hover:bg-foreground/[0.04] dark:hover:bg-white/[0.04]">
                 <RingAvatar user={u} size={34} ring="fuchsia" />
                 <Link to="/u/$username" params={{ username: u.name }} className="flex-1 truncate text-sm font-semibold hover:underline">{u.name}</Link>
-                <button
-                  onClick={() => accept(f)}
-                  aria-label="Accept"
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.5)] transition hover:scale-105 active:scale-95"
-                >
-                  <Check className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => reject(f)}
-                  aria-label="Reject"
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-foreground/[0.06] text-muted-foreground ring-1 ring-inset ring-border/60 transition hover:bg-white/[0.1] hover:text-foreground active:scale-95 dark:bg-white/[0.06] dark:ring-white/10"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <FriendActionButton targetUserId={u.id} targetName={u.name} variant="sidebar" />
               </div>
             );
           })}
@@ -163,28 +99,13 @@ export function FriendsWidget({
 
       {suggestions.length > 0 && (
         <PremiumCard title="Suggested for you" icon={<Sparkles className="h-3.5 w-3.5 text-violet-700 dark:text-violet-300" />} accent="violet">
-          {suggestions.map((u) => {
-            const requested = sentIds.has(u.id) || pendingSent.has(u.id);
-            return (
+          {suggestions.map((u) => (
             <div key={u.id} className="group flex items-center gap-2.5 rounded-xl px-1.5 py-1.5 transition hover:bg-foreground/[0.04] dark:hover:bg-white/[0.04]">
               <RingAvatar user={u} size={30} ring="violet" />
               <Link to="/u/$username" params={{ username: u.name }} className="flex-1 truncate text-sm font-semibold hover:underline">{u.name}</Link>
-              <button
-                onClick={() => sendRequest(u.id)}
-                disabled={requested}
-                aria-label={requested ? `Request sent to ${u.name}` : `Add ${u.name} as friend`}
-                className={`inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full px-3 text-[11px] font-bold ring-1 ring-inset transition ${
-                  requested
-                    ? "cursor-default bg-muted/60 text-muted-foreground ring-border/60"
-                    : "bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 text-violet-700 ring-violet-400/30 hover:from-violet-500/35 hover:to-fuchsia-500/35 hover:text-white dark:text-violet-200"
-                }`}
-              >
-                <UserPlus className="h-3.5 w-3.5" />
-                {requested ? "Request sent" : "Add friend"}
-              </button>
+              <FriendActionButton targetUserId={u.id} targetName={u.name} variant="compact" />
             </div>
-            );
-          })}
+          ))}
         </PremiumCard>
       )}
     </div>

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  MessageCircle, UserPlus, UserMinus, Ban, ShieldCheck, ExternalLink,
+import { MessageCircle, Ban, ShieldCheck, ExternalLink, UserPlus,
   Crown, Shield, ShieldHalf, Flame, Coins, Trophy, Calendar, Eye, Globe,
   Heart, Activity as ActivityIcon, Award, Sparkles, X, AtSign, BellOff, Bell,
   Gavel, VolumeX, LogOut,
@@ -21,6 +20,8 @@ import { NameEmojiBadge, CountryFlag, UserKindBadge } from "@/lib/name-emoji";
 import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
 import { banUser, muteUser } from "@/lib/moderation.functions";
 import { recordProfileView } from "@/lib/use-profile-views";
+import { FriendActionButton, useSocialGraph } from "@/lib/use-social-graph";
+import { FollowWriterButton } from "@/components/mehfil/FollowWriterButton";
 import type { Role } from "@/lib/chat-types";
 import type { ProfileCloseReason } from "@/lib/profile-popup-context";
 
@@ -65,7 +66,8 @@ export function ProfilePopup({
     onClose(reason);
     pendingCloseReasonRef.current = "programmatic";
   };
-  const { state, startDM, addFriend, removeFriend, blockUser, unblockUser, isFriend, isBlocked, staffKick } = useChat();
+  const { state, startDM, staffKick } = useChat();
+  const social = useSocialGraph();
   const { isIgnored, toggleIgnoreUser } = useIgnore();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
@@ -77,8 +79,8 @@ export function ProfilePopup({
   const realId = userId === "me" ? authUser?.id ?? "me" : userId;
   const user = state.users[userId] || profiles[realId] || state.users[realId];
   const isMe = userId === "me" || (authUser && realId === authUser.id);
-  const friend = !isMe && isFriend(userId);
-  const blocked = !isMe && isBlocked(userId);
+  const relation = !isMe && realId ? social.getRelation(realId) : "self";
+  const blocked = relation === "blocked_out" || relation === "blocked_in";
   const room = state.rooms[state.activeChannel];
   const role: Role = (room?.roles?.[userId] || room?.roles?.[realId] || "member") as Role;
   const currentRoom = room && !state.activeChannel.startsWith("dm:") ? room.name : "N/A";
@@ -333,16 +335,42 @@ export function ProfilePopup({
                 <AtSign className="h-4 w-4 shrink-0" />
               </button>
             )}
-            {!user.isBot && (friend ? (
-              <button onClick={() => removeFriend(userId)} className="inline-flex h-10 w-[110px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-border bg-card text-xs font-semibold hover:bg-white/5">
-                <UserMinus className="h-4 w-4 shrink-0" /> Friends
+            {!user.isBot && (
+              <>
+                <FriendActionButton targetUserId={realId} targetName={user.name} variant="compact" />
+                <FollowWriterButton writerId={realId} writerName={user.name} variant="compact" />
+              </>
+            )}
+            {!user.isBot && (blocked ? (
+              <button
+                type="button"
+                onClick={() => {
+                  void social.unblockUser(realId).then((res) => {
+                    if (res.ok) toast.success("Unblocked");
+                    else toast.error(res.error);
+                  });
+                }}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5"
+                title="Unblock"
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0" />
               </button>
             ) : (
-              <button onClick={() => addFriend(userId)} className="inline-flex h-10 w-[110px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 text-xs font-semibold text-primary hover:bg-primary/20">
-                <UserPlus className="h-4 w-4 shrink-0" /> Add
+              <button
+                type="button"
+                onClick={() => {
+                  void social.blockUser(realId).then((res) => {
+                    if (res.ok) toast.success("User blocked");
+                    else toast.error(res.error);
+                  });
+                }}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20"
+                title="Block"
+              >
+                <Ban className="h-4 w-4 shrink-0" />
               </button>
             ))}
-            {!isMe && (isIgnored(userId, user.isBot) ? (
+            {isIgnored(userId, user.isBot) ? (
               <button onClick={() => toggleIgnoreUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unignore (show messages)">
                 <Bell className="h-4 w-4 shrink-0" />
               </button>
@@ -350,16 +378,7 @@ export function ProfilePopup({
               <button onClick={() => toggleIgnoreUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card text-muted-foreground hover:bg-white/5 hover:text-foreground" title="Ignore (hide messages in chat)">
                 <BellOff className="h-4 w-4 shrink-0" />
               </button>
-            ))}
-            {!user.isBot && (blocked ? (
-              <button onClick={() => unblockUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5" title="Unblock">
-                <ShieldCheck className="h-4 w-4 shrink-0" />
-              </button>
-            ) : (
-              <button onClick={() => blockUser(userId)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20" title="Block">
-                <Ban className="h-4 w-4 shrink-0" />
-              </button>
-            ))}
+            )}
           </div>
         )}
         {isStaff && (canKick || canMute || canBan) && (

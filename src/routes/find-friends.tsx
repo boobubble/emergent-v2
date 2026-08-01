@@ -1,9 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Search, UserPlus, Check, X, UserMinus, Ban, Users, Sparkles, Clock, Inbox, Send, ShieldOff } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
+import { useSocialGraph } from "@/lib/use-social-graph";
+import {
+  acceptFriendRequest,
+  blockUserSocial,
+  rejectFriendRequest,
+  sendFriendRequest,
+  unfriend,
+  unblockUserSocial,
+} from "@/lib/use-social-graph";
 import type { User } from "@/lib/chat-types";
 import { toast } from "sonner";
 
@@ -33,30 +41,9 @@ function FindFriendsPage() {
   const { user } = useAuth();
   const { profiles } = useRemoteProfiles();
   const [tab, setTab] = useState<Tab>("suggestions");
-  const [rows, setRows] = useState<FriendshipRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-
   const meId = user?.id ?? "";
-
-  async function load() {
-    if (!meId) return;
-    setLoading(true);
-    const { data } = await supabase.from("friendships").select("*");
-    setRows((data ?? []) as FriendshipRow[]);
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    if (!meId) return;
-    load();
-    const ch = supabase
-      .channel(`find-friends-${meId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, () => load())
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meId]);
+  const { friendships: rows, friendshipsLoaded: loading } = useSocialGraph();
 
   // Indexes
   const { friendsOf, mineByOther, blockedByMe, blockedMe } = useMemo(() => {
@@ -135,38 +122,32 @@ function FindFriendsPage() {
 
   // Mutations
   async function sendRequest(otherId: string) {
-    const { error } = await supabase.from("friendships").insert({ sender_id: meId, receiver_id: otherId, status: "pending" });
-    if (error) toast.error(error.message); else toast.success("Request sent");
+    const res = await sendFriendRequest(meId, otherId, rows);
+    if (!res.ok) toast.error(res.error);
+    else if (res.action === "accepted") toast.success("You're now friends");
+    else if (res.action === "already_sent") toast.success("Request already sent");
+    else if (res.action === "already_friends") toast.success("Already friends");
+    else toast.success("Request sent");
   }
   async function accept(rowId: string) {
-    const { error } = await supabase.from("friendships").update({ status: "accepted" }).eq("id", rowId);
-    if (error) toast.error(error.message); else toast.success("You're now friends");
+    const res = await acceptFriendRequest(rowId);
+    if (!res.ok) toast.error(res.error); else toast.success("You're now friends");
   }
   async function removeRow(rowId: string) {
-    const { error } = await supabase.from("friendships").delete().eq("id", rowId);
-    if (error) toast.error(error.message);
+    const res = await rejectFriendRequest(rowId);
+    if (!res.ok) toast.error(res.error);
   }
-  async function unfriend(otherId: string) {
-    const row = rows.find(r => r.status === "accepted" && (
-      (r.sender_id === meId && r.receiver_id === otherId) ||
-      (r.receiver_id === meId && r.sender_id === otherId)
-    ));
-    if (!row) return;
-    const { error } = await supabase.from("friendships").delete().eq("id", row.id);
-    if (error) toast.error(error.message); else toast.success("Unfriended");
+  async function unfriendUser(otherId: string) {
+    const res = await unfriend(meId, otherId, rows);
+    if (!res.ok) toast.error(res.error); else toast.success("Unfriended");
   }
   async function block(otherId: string) {
-    // Remove any existing row first, then insert blocked from me
-    const existing = mineByOther.get(otherId);
-    if (existing) await supabase.from("friendships").delete().eq("id", existing.id);
-    const { error } = await supabase.from("friendships").insert({ sender_id: meId, receiver_id: otherId, status: "blocked" });
-    if (error) toast.error(error.message); else toast.success("User blocked");
+    const res = await blockUserSocial(meId, otherId, rows);
+    if (!res.ok) toast.error(res.error); else toast.success("User blocked");
   }
   async function unblock(otherId: string) {
-    const row = rows.find(r => r.status === "blocked" && r.sender_id === meId && r.receiver_id === otherId);
-    if (!row) return;
-    const { error } = await supabase.from("friendships").delete().eq("id", row.id);
-    if (error) toast.error(error.message); else toast.success("Unblocked");
+    const res = await unblockUserSocial(meId, otherId, rows);
+    if (!res.ok) toast.error(res.error); else toast.success("Unblocked");
   }
 
   function mutualWith(otherId: string): number {
@@ -289,7 +270,7 @@ function FindFriendsPage() {
               <CardGrid>
                 {friendsList.map(p => (
                   <PersonCard key={p.id} p={p} subtitle={p.status === "online" ? "Online" : (p.lastSeen ? `Active ${timeAgo(p.lastSeen)}` : "Offline")}>
-                    <button onClick={() => unfriend(p.id)} className="btn-ghost"><UserMinus className="h-3.5 w-3.5" /> Unfriend</button>
+                    <button onClick={() => unfriendUser(p.id)} className="btn-ghost"><UserMinus className="h-3.5 w-3.5" /> Unfriend</button>
                   </PersonCard>
                 ))}
                 {[...blockedByMe].length > 0 && (
@@ -318,7 +299,7 @@ function FindFriendsPage() {
                       {isBlockedByMe ? (
                         <button onClick={() => unblock(p.id)} className="btn-ghost"><ShieldOff className="h-3.5 w-3.5" /> Unblock</button>
                       ) : isFriend ? (
-                        <button onClick={() => unfriend(p.id)} className="btn-ghost"><UserMinus className="h-3.5 w-3.5" /> Unfriend</button>
+                        <button onClick={() => unfriendUser(p.id)} className="btn-ghost"><UserMinus className="h-3.5 w-3.5" /> Unfriend</button>
                       ) : row?.status === "pending" && row.sender_id === meId ? (
                         <button onClick={() => removeRow(row.id)} className="btn-ghost"><X className="h-3.5 w-3.5" /> Cancel</button>
                       ) : row?.status === "pending" && row.receiver_id === meId ? (

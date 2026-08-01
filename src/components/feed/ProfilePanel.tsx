@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
-import { MessageCircle, Crown, Shield, ShieldHalf, Trophy, Flame, Award, Coins, UserPlus, UserMinus, Ban, ShieldCheck } from "lucide-react";
+import { MessageCircle, Crown, Shield, ShieldHalf, Trophy, Flame, Award, Coins, Ban, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { useChat } from "@/lib/chat-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { resolveDmTargetId } from "@/lib/dm-utils";
@@ -10,6 +11,8 @@ import { BADGE_MAP, TIER_COLOR } from "@/lib/achievements";
 import { useRecordProfileView } from "@/lib/use-profile-views";
 import { UserCompetitionShowcase } from "@/components/competitions/UserCompetitionShowcase";
 import { ProfileMehfilSection } from "@/components/mehfil/ProfileMehfilSection";
+import { FriendActionButton, useSocialGraph } from "@/lib/use-social-graph";
+import { FollowWriterButton } from "@/components/mehfil/FollowWriterButton";
 
 export function ProfilePanel({ username, onBack }: { username: string; onBack: () => void }) {
   return (
@@ -22,7 +25,8 @@ export function ProfilePanel({ username, onBack }: { username: string; onBack: (
 function ProfilePanelInner({ username, onBack }: { username: string; onBack: () => void }) {
   const navigate = useNavigate();
   const { profiles } = useRemoteProfiles();
-  const { state, startDM, addFriend, removeFriend, blockUser, unblockUser, isFriend, isBlocked } = useChat();
+  const { state, startDM } = useChat();
+  const social = useSocialGraph();
 
   const userFromProfiles = Object.values(profiles).find(u => u.name.toLowerCase() === username.toLowerCase());
   const userFromChat = Object.values(state.users).find(u => u.name.toLowerCase() === username.toLowerCase());
@@ -75,16 +79,37 @@ function ProfilePanelInner({ username, onBack }: { username: string; onBack: () 
                 >
                   <MessageCircle className="h-4 w-4" /> Send message
                 </button>
-                {isFriend(user.id) ? (
-                  <button onClick={() => removeFriend(user.id)} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold hover:bg-white/5"><UserMinus className="h-4 w-4" /> Friends</button>
-                ) : (
-                  <button onClick={() => addFriend(user.id)} className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20"><UserPlus className="h-4 w-4" /> Add friend</button>
+                {!user.isBot && (
+                  <>
+                    <FriendActionButton targetUserId={user.id} targetName={user.name} />
+                    <FollowWriterButton writerId={user.id} writerName={user.name} />
+                  </>
                 )}
-                {isBlocked(user.id) ? (
-                  <button onClick={() => unblockUser(user.id)} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold hover:bg-white/5"><ShieldCheck className="h-4 w-4" /> Unblock</button>
+                {!user.isBot && (social.getRelation(user.id) === "blocked_out" ? (
+                  <button
+                    onClick={() => {
+                      void social.unblockUser(user.id).then((res) => {
+                        if (res.ok) toast.success("Unblocked");
+                        else toast.error(res.error);
+                      });
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold hover:bg-white/5"
+                  >
+                    <ShieldCheck className="h-4 w-4" /> Unblock
+                  </button>
                 ) : (
-                  <button onClick={() => blockUser(user.id)} className="inline-flex items-center gap-2 rounded-full border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm font-semibold text-destructive hover:bg-destructive/20"><Ban className="h-4 w-4" /> Block</button>
-                )}
+                  <button
+                    onClick={() => {
+                      void social.blockUser(user.id).then((res) => {
+                        if (res.ok) toast.success("User blocked");
+                        else toast.error(res.error);
+                      });
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm font-semibold text-destructive hover:bg-destructive/20"
+                  >
+                    <Ban className="h-4 w-4" /> Block
+                  </button>
+                ))}
               </div>
             )}
           </div>

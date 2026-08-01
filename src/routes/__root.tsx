@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from "@/lib/auth-store";
 import { AuthGateProvider } from "@/lib/auth-gate";
 import { ChatProvider } from "@/lib/chat-store";
 import { FeedPrefsProvider } from "@/lib/feed-prefs";
+import { SocialGraphProvider } from "@/lib/use-social-graph";
 import { IgnoreProvider } from "@/lib/ignore-store";
 import { AppSettingsProvider } from "@/lib/app-settings";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
@@ -299,6 +300,7 @@ function AuthGate() {
 
   return (
     <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
+      <SocialGraphProvider>
       <FeedPrefsProvider>
         <IgnoreProvider>
           <AuthenticatedHooks userId={user.id} />
@@ -316,6 +318,7 @@ function AuthGate() {
           <RealtimeDebugOverlay />
         </IgnoreProvider>
       </FeedPrefsProvider>
+      </SocialGraphProvider>
     </ChatProvider>
   );
 }

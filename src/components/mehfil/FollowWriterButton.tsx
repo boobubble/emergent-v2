@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { UserPlus, UserCheck } from "lucide-react";
 import { toast } from "sonner";
-import { followWriter, unfollowWriter, isFollowingWriter } from "@/lib/poetry-social.functions";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
+import { useSocialGraphOptional } from "@/lib/use-social-graph";
 
 interface Props {
   writerId: string;
@@ -14,59 +13,86 @@ interface Props {
 }
 
 /**
- * One-way follow control for a writer. Uses the poetry_writer_follows graph
- * (separate from friendships). Renders nothing when viewing self.
+ * One-way follow control (poetry_writer_follows). Uses the canonical SocialGraph
+ * provider when available; falls back to direct Supabase calls otherwise.
  */
 export function FollowWriterButton({ writerId, writerName, variant = "default", onChange }: Props) {
   const { user } = useAuth();
   const gate = useAuthGate();
-  const follow = useServerFn(followWriter);
-  const unfollow = useServerFn(unfollowWriter);
-  const check = useServerFn(isFollowingWriter);
+  const social = useSocialGraphOptional();
 
-  const [following, setFollowing] = useState<boolean | null>(null);
+  const [localFollowing, setLocalFollowing] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const followingFromCtx = social?.isFollowing(writerId);
+  const following = social ? followingFromCtx : localFollowing;
+
   useEffect(() => {
-    if (!user || user.id === writerId) { setFollowing(null); return; }
+    if (social || !user || user.id === writerId) {
+      setLocalFollowing(null);
+      return;
+    }
     let cancelled = false;
-    check({ data: { writerId } })
-      .then((r) => { if (!cancelled) setFollowing(!!r.following); })
-      .catch(() => {});
+    import("@/lib/use-social-graph").then(({ loadFollowingIds }) =>
+      loadFollowingIds(user.id).then(({ ids, error }) => {
+        if (cancelled || error) return;
+        setLocalFollowing(ids.has(writerId));
+      }),
+    );
     return () => { cancelled = true; };
-  }, [user?.id, writerId, check]);
+  }, [social, user?.id, writerId]);
 
   if (!writerId || user?.id === writerId) return null;
 
-  const onClick = () => {
+  const onClick = async () => {
     if (!user) { gate.openSignIn(); return; }
     if (busy) return;
     setBusy(true);
     const wasFollowing = !!following;
-    setFollowing(!wasFollowing);
-    const call = wasFollowing ? unfollow({ data: { writerId } }) : follow({ data: { writerId } });
-    call
-      .then(() => {
-        onChange?.(!wasFollowing);
-        toast.success(wasFollowing ? "Unfollowed" : `Following${writerName ? " " + writerName : ""}`);
-      })
-      .catch((e: any) => {
-        setFollowing(wasFollowing);
-        toast.error(e?.message ?? "Couldn't update follow");
-      })
-      .finally(() => setBusy(false));
+    try {
+      let ok = false;
+      let nowFollowing = !wasFollowing;
+      if (social) {
+        const res = wasFollowing
+          ? await social.unfollowWriter(writerId)
+          : await social.followWriter(writerId);
+        ok = res.ok;
+        if (res.ok) nowFollowing = res.following;
+        else toast.error(res.error);
+      } else {
+        const mod = await import("@/lib/use-social-graph");
+        const res = wasFollowing
+          ? await mod.unfollowWriterClient(user.id, writerId)
+          : await mod.followWriterClient(user.id, writerId);
+        ok = res.ok;
+        if (res.ok) {
+          nowFollowing = res.following;
+          setLocalFollowing(nowFollowing);
+        } else toast.error(res.error);
+      }
+      if (ok) {
+        onChange?.(nowFollowing);
+        toast.success(
+          nowFollowing
+            ? `Following${writerName ? ` ${writerName}` : ""}`
+            : "Unfollowed",
+        );
+      }
+    } finally {
+      setBusy(false);
+    }
   };
 
   const isFollowing = !!following;
-  const label = following === null
-    ? (user ? "Follow" : "Follow")
-    : isFollowing ? "Following" : "Follow";
+  const label = following === null && user ? "Follow" : isFollowing ? "Following" : "Follow";
   const Icon = isFollowing ? UserCheck : UserPlus;
 
   if (variant === "compact") {
     return (
       <button
-        onClick={onClick} disabled={busy}
+        type="button"
+        onClick={() => void onClick()}
+        disabled={busy || (following === null && !!user)}
         aria-pressed={isFollowing}
         className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
           isFollowing ? "border border-border bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:opacity-90"
@@ -79,7 +105,9 @@ export function FollowWriterButton({ writerId, writerName, variant = "default", 
 
   return (
     <button
-      onClick={onClick} disabled={busy}
+      type="button"
+      onClick={() => void onClick()}
+      disabled={busy || (following === null && !!user)}
       aria-pressed={isFollowing}
       className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
         isFollowing ? "border border-border bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:opacity-90"

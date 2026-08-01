@@ -55,7 +55,8 @@ const KIND_LABELS: Record<string, string> = {
   mention: "mentioned you",
   username_mention: "mentioned you",
   friend_request: "sent you a friend request",
-  writer_follow: "started following your writing",
+  friend_accepted: "accepted your friend request",
+  writer_follow: "started following you",
   competition_started: "a competition you follow has started",
   competition_ended: "a competition you follow has ended",
   competition_win: "placed in a competition",
@@ -186,6 +187,24 @@ async function navigateForNotification(
     if (onOpenFindFriends) onOpenFindFriends();
     else navigate({ to: "/find-friends" });
     return;
+  }
+
+  if (n.kind === "friend_accepted" && n.actor_id) {
+    const actor = profiles[n.actor_id];
+    if (actor?.name) {
+      navigate({ to: "/feed", search: { u: actor.name } as never });
+      return;
+    }
+    navigate({ to: "/find-friends" });
+    return;
+  }
+
+  if (n.kind === "writer_follow" && n.actor_id) {
+    const actor = profiles[n.actor_id];
+    if (actor?.name) {
+      navigate({ to: "/feed", search: { u: actor.name } as never });
+      return;
+    }
   }
 
   if (n.target_type === "competition" || n.kind.startsWith("competition_")) {

@@ -17,6 +17,7 @@ import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useFeedPrefs, getFeedFetchMode, getEffectiveFeedSort, type FeedFetchMode } from "@/lib/feed-prefs";
+import { useSocialGraph } from "@/lib/use-social-graph";
 import { useSavedPosts } from "@/lib/use-saved-posts";
 import { Composer } from "@/components/feed/Composer";
 import { StoryTray } from "@/components/feed/StoryTray";
@@ -41,7 +42,7 @@ import { BirthdaysWidget } from "@/components/feed/BirthdaysWidget";
 import { MissionsPanel } from "@/components/feed/MissionsPanel";
 import { FeedNotifications, FeedNotificationPanel, useFeedNotifications } from "@/components/feed/FeedNotifications";
 import { Avatar } from "@/components/chat/Avatar";
-import type { FeedPost, FeedFriendship } from "@/lib/feed-types";
+import type { FeedPost } from "@/lib/feed-types";
 import { pingDailyStreak } from "@/lib/gamification.functions";
 import { BrandMark, BrandText } from "@/components/BrandMark";
 import { PostSkeleton, LoadMoreSkeleton, WidgetSkeleton, RewardsWidgetSkeleton } from "@/components/feed/FeedSkeletons";
@@ -214,9 +215,6 @@ function FeedPage() {
   const [view, setView] = useState<View>(initial.view);
   const [profileUsername, setProfileUsername] = useState<string>(initial.username);
   const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
-  const [friendships, setFriendships] = useState<FeedFriendship[]>([]);
-  const [friendshipsLoaded, setFriendshipsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -279,6 +277,7 @@ function FeedPage() {
 
 
   const meId = user?.id ?? "";
+  const { friendIds } = useSocialGraph();
   const feedNotifications = useFeedNotifications(meId);
 
   function setTab(next: Tab) {
@@ -296,42 +295,6 @@ function FeedPage() {
   useEffect(() => {
     if (!meId) return;
     void pingDailyStreak().catch((e: unknown) => console.error("streak ping failed", e));
-  }, [meId]);
-
-  // Load friendships (single realtime channel shared with FriendsWidget)
-  useEffect(() => {
-    if (!meId) {
-      setFriendships([]);
-      setFriendIds(new Set());
-      setFriendshipsLoaded(false);
-      return;
-    }
-    let cancelled = false;
-    async function loadF() {
-      const { data } = await supabase
-        .from("friendships")
-        .select("*")
-        .or(`sender_id.eq.${meId},receiver_id.eq.${meId}`);
-      if (cancelled) return;
-      const list = (data ?? []) as FeedFriendship[];
-      setFriendships(list);
-      const ids = new Set<string>();
-      list.filter((f) => f.status === "accepted").forEach((f) => {
-        ids.add(f.sender_id === meId ? f.receiver_id : f.sender_id);
-      });
-      setFriendIds(ids);
-      setFriendshipsLoaded(true);
-    }
-    void loadF();
-    const ch = supabase
-      .channel(`feed-fr-${meId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "friendships", filter: `sender_id=eq.${meId}` }, () => { void loadF(); })
-      .on("postgres_changes", { event: "*", schema: "public", table: "friendships", filter: `receiver_id=eq.${meId}` }, () => { void loadF(); })
-      .subscribe();
-    return () => {
-      cancelled = true;
-      supabase.removeChannel(ch);
-    };
   }, [meId]);
 
   const fetchMode = useMemo(
@@ -1189,7 +1152,7 @@ function FeedPage() {
                   </p>
                 </div>
                 <div key={exploreKey} className="space-y-4">
-                  <FriendsWidget meId={meId} profiles={profiles} friendships={friendships} friendshipsLoaded={friendshipsLoaded} />
+                  <FriendsWidget meId={meId} profiles={profiles} />
                   <FeaturedMembersWidget meId={meId} profiles={profiles} />
                   <PromotedPostsWidget profiles={profiles} />
                   <SuggestedGroupsWidget />
@@ -1316,7 +1279,7 @@ function FeedPage() {
                       <div className="lg:hidden"><ActivePollsWidget /></div>
                     )}
                     {idx === 17 && (
-                      <div className="lg:hidden"><FriendsWidget meId={meId} profiles={profiles} friendships={friendships} friendshipsLoaded={friendshipsLoaded} /></div>
+                      <div className="lg:hidden"><FriendsWidget meId={meId} profiles={profiles} /></div>
                     )}
                   </div>
                 ))}
@@ -1374,7 +1337,7 @@ function FeedPage() {
             <ActivePollsWidget />
             <ConfessionsFeedWidget />
             <BirthdaysWidget />
-            <FriendsWidget meId={meId} profiles={profiles} friendships={friendships} friendshipsLoaded={friendshipsLoaded} />
+            <FriendsWidget meId={meId} profiles={profiles} />
             <HashtagsWidget />
           </div>
         </aside>
