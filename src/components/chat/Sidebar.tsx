@@ -84,13 +84,13 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
       <div
         key={id}
         className={cn(
-          "premium-nav-item group/room",
+          "premium-nav-item group/room min-h-11 lg:min-h-10",
           active && "premium-nav-item-active",
         )}
       >
         <button
           onClick={() => setActive(id)}
-          className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5 truncate bg-transparent p-0 text-left"
+          className="flex min-h-11 min-w-0 flex-1 items-center gap-2 truncate bg-transparent p-0 text-left lg:min-h-10"
         >
           {r.kind === "game" ? (
             <Gamepad2 className={cn("h-3.5 w-3.5 shrink-0", active ? "text-primary" : "text-primary/70")} />
@@ -136,14 +136,14 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
     <aside className="flex h-full w-56 shrink-0 flex-col bg-transparent p-1">
       <div className="flex h-full flex-col premium-floating-sidebar overflow-hidden">
 
-      <div className="flex items-center gap-2 p-3">
+      <div className="flex items-center gap-2 px-2 py-2">
         <BrandMark
           slot="chat"
           alt="Logo"
-          className="h-8 w-8 rounded-xl object-contain"
+          className="h-7 w-7 rounded-lg object-contain"
           fallback={
             <div
-              className="grid h-8 w-8 place-items-center rounded-xl text-xl font-bold text-primary-foreground"
+              className="grid h-7 w-7 place-items-center rounded-lg text-lg font-bold text-primary-foreground"
               style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}
             >
               P
@@ -161,7 +161,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
         {onCollapse && (
           <button
             onClick={onCollapse}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/30 transition-all hover:scale-105 hover:bg-primary hover:text-primary-foreground"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/30 transition-all hover:scale-105 hover:bg-primary hover:text-primary-foreground"
             title="Hide sidebar"
             aria-label="Hide sidebar"
           >
@@ -170,7 +170,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
         )}
       </div>
 
-      <nav className="flex-1 space-y-3 overflow-y-auto px-2">
+      <nav className="flex-1 space-y-2 overflow-y-auto px-1.5">
         <div>
           <SectionLabel
             title="Public Rooms"
@@ -213,7 +213,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
               </button>
             </div>
           )}
-          <div className="relative mb-2">
+          <div className="relative mb-1.5">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input
               type="search"
@@ -221,7 +221,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
               onChange={(e) => setRoomSearch(e.target.value)}
               placeholder="Search rooms…"
               aria-label="Search rooms"
-              className="min-h-11 w-full rounded-xl border border-border bg-background py-2 pl-8 pr-8 text-sm outline-none focus:ring-1 focus:ring-ring"
+              className="min-h-11 w-full rounded-lg border border-border bg-background py-1.5 pl-8 pr-8 text-sm outline-none focus:ring-1 focus:ring-ring lg:min-h-9"
             />
             {roomSearch && (
               <button
@@ -239,9 +239,9 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
               {searchQuery ? "No rooms match your search." : "No rooms available."}
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {chatRoomIds.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {gameRoomIds.length > 0 && (
                     <SectionLabel title="Chat rooms" className="mt-0" />
                   )}
@@ -249,7 +249,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
                 </div>
               )}
               {gameRoomIds.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <SectionLabel title="Games" className="mt-0" />
                   {gameRoomIds.map(renderRoomItem)}
                 </div>
@@ -262,8 +262,8 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
 
 
 
-      <div className="border-t border-border p-2">
-        <div className="mb-2 block">
+      <div className="border-t border-border px-1.5 py-1.5">
+        <div className="mb-1 block">
           <ChatExploreMenu />
         </div>
 
@@ -274,7 +274,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
             href="/feed"
             target="_blank"
             rel="noopener noreferrer"
-            className="mb-1 flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+            className="mb-1 flex min-h-11 w-full items-center gap-2 rounded-full px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground lg:min-h-10"
             title="Open achievements & leaderboard in feed"
           >
             <Award className="h-4 w-4" /> Achievements
@@ -284,7 +284,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
           </a>
         )}
 
-        <div className="mb-2">
+        <div className="mb-1">
           <ThemeToggle />
         </div>
 
@@ -294,14 +294,14 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
               href="/account"
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative block w-full overflow-hidden rounded-2xl border border-border bg-card/60 p-2 text-left transition-all hover:border-primary/30 hover:bg-card"
+              className="group relative block w-full overflow-hidden rounded-xl border border-border bg-card/60 p-1.5 text-left transition-all hover:border-primary/30 hover:bg-card"
               title="Open account settings in new tab"
             >
-              <div className="relative flex items-center gap-2">
-                <Avatar user={state.me} size={36} />
+              <div className="relative flex items-center gap-1.5">
+                <Avatar user={state.me} size={32} />
                 <div className="min-w-0 flex-1 leading-tight">
                   <div className="truncate text-sm font-bold text-foreground">{state.me.name}</div>
-                  <div className="mt-0.5 flex items-center gap-1.5 text-[10px]">
+                  <div className="mt-0.5 flex items-center gap-1 text-[10px]">
                     <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/20 to-fuchsia-500/20 px-1.5 py-0.5 font-bold text-amber-200 ring-1 ring-amber-400/30">
                       <Zap className="h-2.5 w-2.5" /> Lv {state.me.level}
                     </span>
@@ -317,7 +317,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
               {(() => {
                 const lp = levelProgress(state.me.xp ?? 0);
                 return (
-                  <div className="relative mt-2">
+                  <div className="relative mt-1.5">
                     <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-fuchsia-500 shadow-[0_0_10px_rgba(251,191,36,0.6)] transition-all duration-700"
@@ -335,20 +335,20 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
             <button
               type="button"
               onClick={onOpenProfile}
-              className="mt-1 w-full rounded-full px-3 py-1.5 text-[11px] text-muted-foreground hover:bg-white/5 hover:text-foreground"
+              className="mt-0.5 w-full rounded-full px-2.5 py-1 text-[11px] text-muted-foreground hover:bg-white/5 hover:text-foreground"
             >
               Quick edit profile
             </button>
-            <div className="mt-2 flex gap-1">
+            <div className="mt-1 flex gap-1">
               <button
                 onClick={() => { if (confirm("Reset chat data for this account?")) reset(); }}
-                className="flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+                className="flex min-h-9 flex-1 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
               >
                 <RotateCcw className="h-3 w-3" /> Reset
               </button>
               <button
                 onClick={() => { void logout().catch(() => undefined); }}
-                className="flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground hover:text-destructive"
+                className="flex min-h-9 flex-1 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] text-muted-foreground hover:text-destructive"
                 title={user?.email}
               >
                 <LogOut className="h-3 w-3" /> Sign out
@@ -397,7 +397,7 @@ function SectionLabel({
   return (
     <div
       className={cn(
-        "mb-1.5 flex items-center justify-between px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground",
+        "mb-0.5 flex items-center justify-between px-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground",
         className,
       )}
     >
