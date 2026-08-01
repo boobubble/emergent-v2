@@ -55,14 +55,14 @@ function MemberRow({
   onClick: () => void;
 }) {
   const isMobile = useIsMobile();
-  const avatarSize = isMobile ? 32 : 24;
+  const avatarSize = isMobile ? 32 : 28;
   const showSubtitle = muted || user.isGuest;
 
   return (
     <div
-      className={`group flex min-h-[44px] w-full items-center gap-0.5 rounded-md px-1 py-0 transition-colors hover:bg-white/5 lg:h-8 lg:min-h-8 lg:max-h-8 lg:gap-0 lg:rounded-none lg:px-1 ${
+      className={`group flex min-h-[44px] w-full items-center gap-0.5 rounded-md px-1 py-0 transition-colors hover:bg-white/5 lg:h-9 lg:min-h-9 lg:max-h-9 lg:gap-1 lg:px-1.5 ${
         isOffline ? "opacity-60" : ""
-      } ${user.isBot ? "bg-primary/5 lg:bg-transparent" : ""}`}
+      } ${user.isBot ? "bg-primary/5" : ""}`}
     >
       <UserMenu userId={user.id} username={user.name}>
         <div className="relative shrink-0">
@@ -73,26 +73,26 @@ function MemberRow({
           {muted && (
             <span
               title="Muted in this room"
-              className="absolute -bottom-px -left-px grid h-3 w-3 place-items-center rounded-full bg-destructive text-destructive-foreground shadow lg:h-2.5 lg:w-2.5"
+              className="absolute -bottom-px -left-px grid h-3 w-3 place-items-center rounded-full bg-destructive text-destructive-foreground shadow"
             >
-              <VolumeX className="h-1.5 w-1.5 lg:h-2 lg:w-2" />
+              <VolumeX className="h-1.5 w-1.5" />
             </span>
           )}
         </div>
       </UserMenu>
       <UserMenu userId={user.id} username={user.name}>
         <div className={`min-w-0 flex-1 ${showSubtitle ? "leading-tight lg:leading-none" : "leading-none"}`}>
-          <div className="flex items-center gap-0.5 truncate text-[13px] font-semibold text-foreground/90 hover:text-primary lg:gap-0 lg:text-xs">
+          <div className="flex items-center gap-0.5 truncate text-[13px] font-semibold text-foreground/90 hover:text-primary lg:gap-1">
             <CosmeticName userId={user.id} name={user.name} />
             <NameAdornments user={user} />
             {ICONS[role]}
             {user.isBot && (
-              <span className="rounded px-0.5 py-px text-[7px] font-bold uppercase tracking-tight text-primary lg:bg-transparent">
+              <span className="rounded bg-primary/15 px-0.5 py-px text-[7px] font-bold uppercase tracking-tight text-primary">
                 Bot
               </span>
             )}
             {isFriend && !user.isBot && (
-              <span className="rounded bg-sky-500/15 px-0.5 py-px text-[7px] font-bold uppercase tracking-tight text-sky-400 lg:bg-transparent">
+              <span className="rounded bg-sky-500/15 px-0.5 py-px text-[7px] font-bold uppercase tracking-tight text-sky-400">
                 Friend
               </span>
             )}
@@ -114,9 +114,9 @@ function MemberRow({
             onClick={onClick}
             title="Send DM"
             aria-label={`Message ${user.name}`}
-            className="grid min-h-11 min-w-11 shrink-0 place-items-center self-center rounded-md text-muted-foreground opacity-70 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100 lg:h-6 lg:w-6 lg:min-h-0 lg:min-w-0 lg:rounded-none"
+            className="grid min-h-11 min-w-11 shrink-0 place-items-center self-center rounded-md text-muted-foreground opacity-70 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100 lg:h-7 lg:w-7 lg:min-h-0 lg:min-w-0"
           >
-            <MessageCircle className="h-4 w-4 lg:h-3 lg:w-3" />
+            <MessageCircle className="h-4 w-4 lg:h-3.5 lg:w-3.5" />
           </button>
         </>
       )}
@@ -299,9 +299,6 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   const body = (
     <>
-      <div className="shrink-0 border-b border-fuchsia-500/50 bg-fuchsia-500/10 px-1 py-0.5 text-center text-[10px] font-bold uppercase tracking-wide text-fuchsia-600">
-        MEMBERS PANEL SOURCE: MembersPanel.tsx
-      </div>
       <div className="flex items-center justify-end gap-0 px-3 pt-2 pr-12 lg:pr-3">
 
         <button
@@ -592,7 +589,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
       {/* Tab content */}
       {tab === "friends" ? (
-        <div className="flex-1 space-y-[2px] overflow-y-auto px-1 pb-2 pt-0.5 lg:space-y-0">
+        <div className="flex-1 space-y-[2px] overflow-y-auto px-1 pb-2 pt-0.5">
           {friendIds.filter(matchesQuery).length === 0 ? (
             <p className="px-3 py-8 text-center text-xs text-muted-foreground">
               {q ? "No friends match your search." : "No friends yet. Add some from the feed or click a member to start."}
@@ -612,7 +609,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                 return (
                   <div
                     key={id}
-                    className={activeInRoom ? "rounded-md ring-1 ring-primary/40 bg-primary/5 lg:rounded-none lg:bg-transparent lg:ring-0" : ""}
+                    className={activeInRoom ? "rounded-md ring-1 ring-primary/40 bg-primary/5" : ""}
                     title={activeInRoom ? "Active in this room" : undefined}
                   >
                     {renderMemberRow(id, () => openDM(id))}
@@ -622,7 +619,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           )}
         </div>
       ) : tab === "bots" ? (
-        <div className="flex-1 space-y-[2px] overflow-y-auto px-1 pb-2 pt-0.5 lg:space-y-0">
+        <div className="flex-1 space-y-[2px] overflow-y-auto px-1 pb-2 pt-0.5">
           {onlineBots.length === 0 ? (
             <p className="px-3 py-6 text-center text-xs text-muted-foreground">
               {q ? "No bots match your search." : "No bots available."}
@@ -635,9 +632,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         </div>
       ) : (
         // Users tab — in merged mode bots are included via `online`/`offline`; in split mode bots are excluded.
-        <div className="flex-1 space-y-1 overflow-y-auto px-1 pb-2 pt-0.5 lg:space-y-0">
-          <div className="space-y-[2px] lg:space-y-0">
-            <div className="flex h-auto min-h-0 items-center gap-1 px-0.5 pb-0 text-[10px] font-bold uppercase tracking-wider text-emerald-400/90 lg:h-5 lg:min-h-5">
+        <div className="flex-1 space-y-1 overflow-y-auto px-1 pb-2 pt-0.5 lg:space-y-[2px]">
+          <div className="space-y-[2px]">
+            <div className="flex h-auto min-h-0 items-center gap-1 px-0.5 pb-0 text-[10px] font-bold uppercase tracking-wider text-emerald-400/90 lg:h-[22px] lg:min-h-[22px]">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
               Online — {(effectiveMode === "split" ? onlineUsers : online).length}
             </div>
@@ -654,11 +651,11 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
           {(effectiveMode === "split" ? offlineUsers : offline).length > 0 && (
             <div>
-              <div className="flex h-auto min-h-0 items-center gap-1 px-0.5 pb-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 lg:h-5 lg:min-h-5">
+              <div className="flex h-auto min-h-0 items-center gap-1 px-0.5 pb-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 lg:h-[22px] lg:min-h-[22px]">
                 <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" aria-hidden />
                 Offline — {(effectiveMode === "split" ? offlineSortedUsers : offlineSorted).length}
               </div>
-              <div className="space-y-[2px] lg:space-y-0">
+              <div className="space-y-[2px]">
                 {(effectiveMode === "split" ? offlineUsers : offline).map((id) => (
                   <div key={id}>{renderMemberRow(id, () => openDM(id), { offline: true })}</div>
                 ))}
