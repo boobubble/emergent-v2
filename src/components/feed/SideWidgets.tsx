@@ -7,37 +7,57 @@ import { WidgetSkeleton } from "@/components/feed/FeedSkeletons";
 import type { User } from "@/lib/chat-types";
 import type { FeedFriendship } from "@/lib/feed-types";
 
-export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Record<string, User> }) {
+export function FriendsWidget({
+  meId,
+  profiles,
+  friendships: externalFriendships,
+  friendshipsLoaded: externalLoaded,
+}: {
+  meId: string;
+  profiles: Record<string, User>;
+  friendships?: FeedFriendship[];
+  friendshipsLoaded?: boolean;
+}) {
   const [friendships, setFriendships] = useState<FeedFriendship[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [pendingSent, setPendingSent] = useState<Set<string>>(new Set());
 
+  const useExternal = externalFriendships !== undefined;
+  const activeFriendships = useExternal ? externalFriendships : friendships;
+  const activeLoaded = useExternal ? (externalLoaded ?? true) : loaded;
+
   useEffect(() => {
+    if (useExternal) return;
     if (!meId) {
       setFriendships([]);
       setLoaded(true);
       return;
     }
+    let cancelled = false;
     async function load() {
       const { data } = await supabase
         .from("friendships")
         .select("*")
         .or(`sender_id.eq.${meId},receiver_id.eq.${meId}`);
+      if (cancelled) return;
       setFriendships((data ?? []) as FeedFriendship[]);
       setLoaded(true);
     }
-    load();
+    void load();
     const ch = supabase
       .channel(`fr-${meId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "friendships", filter: `sender_id=eq.${meId}` }, () => { void load(); })
       .on("postgres_changes", { event: "*", schema: "public", table: "friendships", filter: `receiver_id=eq.${meId}` }, () => { void load(); })
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [meId]);
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(ch);
+    };
+  }, [meId, useExternal]);
 
-  const pendingIn = friendships.filter((f) => f.receiver_id === meId && f.status === "pending");
-  const friendIds = new Set(friendships.filter((f) => f.status === "accepted").map((f) => f.sender_id === meId ? f.receiver_id : f.sender_id));
-  const sentIds = new Set(friendships.filter((f) => f.sender_id === meId && f.status === "pending").map((f) => f.receiver_id));
+  const pendingIn = activeFriendships.filter((f) => f.receiver_id === meId && f.status === "pending");
+  const friendIds = new Set(activeFriendships.filter((f) => f.status === "accepted").map((f) => f.sender_id === meId ? f.receiver_id : f.sender_id));
+  const sentIds = new Set(activeFriendships.filter((f) => f.sender_id === meId && f.status === "pending").map((f) => f.receiver_id));
   const friends = Array.from(friendIds).map((id) => profiles[id]).filter(Boolean) as User[];
   const suggestions = Object.values(profiles)
     .filter((u) => u.id !== meId && !friendIds.has(u.id) && !sentIds.has(u.id) && !u.isGuest && !u.isBot)
@@ -54,7 +74,7 @@ export function FriendsWidget({ meId, profiles }: { meId: string; profiles: Reco
     await supabase.from("friendships").insert({ sender_id: meId, receiver_id: toId, status: "pending" });
   }
 
-  if (!loaded) return <WidgetSkeleton rows={4} />;
+  if (!activeLoaded) return <WidgetSkeleton rows={4} />;
 
   return (
     <div className="space-y-4">
@@ -272,12 +292,26 @@ export function ChatroomOnlineWidget() {
   }
 
   useEffect(() => {
-    load();
+    let cancelled = false;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const scheduleLoad = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (!cancelled) void load();
+      }, 2000);
+    };
+
+    void load();
     const ch = supabase
       .channel("chatroom-presence")
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, scheduleLoad)
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      cancelled = true;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase.removeChannel(ch);
+    };
   }, []);
 
   if (!loaded) {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Bell, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,18 +117,21 @@ export function useFeedNotifications(meId: string) {
     setItems((data ?? []) as FeedNotification[]);
   }, [meId]);
 
+  const loadRef = useRef(load);
+  loadRef.current = load;
+
   useEffect(() => {
     if (!meId) {
       setItems([]);
       return;
     }
-    void load();
+    void loadRef.current();
     const ch = supabase
       .channel(`feed-notif-${meId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${meId}` }, () => { void load(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${meId}` }, () => { void loadRef.current(); })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [meId, load]);
+  }, [meId]);
 
   const unread = useMemo(() => items.filter(i => !i.read).length, [items]);
 

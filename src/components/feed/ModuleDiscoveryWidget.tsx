@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useAppSettings } from "@/lib/app-settings";
@@ -6,14 +6,14 @@ import {
   DISCOVERY_WIDGETS_DEFAULTS,
   mergeDiscoveryWidgetsConfig,
   type DiscoveryWidgetItem,
-  type DiscoveryWidgetKey,
+  type DiscoveryWidgetsConfig,
 } from "@/lib/discovery-widgets-config";
 
 const STORAGE_KEY = "discovery-widgets:v1";
 
 interface Stats {
-  impressions: Partial<Record<DiscoveryWidgetKey, number>>;
-  clicks: Partial<Record<DiscoveryWidgetKey, number>>;
+  impressions: Partial<Record<string, number>>;
+  clicks: Partial<Record<string, number>>;
 }
 
 function loadStats(): Stats {
@@ -30,80 +30,67 @@ function saveStats(s: Stats) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch { /* ignore */ }
 }
 
+function pickDiscoveryItem(
+  config: DiscoveryWidgetsConfig,
+  stats: Stats,
+  slotIndex: number,
+): DiscoveryWidgetItem | null {
+  if (!config.enabled) return null;
+  const pool = config.items.filter((it) => it.enabled);
+  if (pool.length === 0) return null;
+
+  const scored = pool.map((it) => {
+    const imps = stats.impressions[it.key] ?? 0;
+    const clicks = stats.clicks[it.key] ?? 0;
+    const visitedPenalty = clicks > 0 ? 0.35 : 1.5;
+    const weight = (it.priority || 1) * (1 / (1 + imps * 0.6)) * visitedPenalty;
+    return { it, weight };
+  });
+  scored.sort((a, b) => b.weight - a.weight);
+  const rotated = scored[slotIndex % scored.length]?.it ?? scored[0].it;
+  return rotated;
+}
+
 /**
  * ModuleDiscoveryWidget — reusable feed widget promoting a platform module.
  *
- * Picks the best module to show at this feed slot based on:
- *  - Admin-configured priority & enabled flag
- *  - Impression count (rotation: less-seen wins)
- *  - Visit history (already-clicked → reduced weight)
- *
- * The parent controls placement (insertion frequency); this component
- * chooses which module to promote at its position and de-duplicates
- * across consecutive slots via the `slotIndex` prop.
+ * Picks a stable module per slot from admin config and impression weights.
+ * Impression tracking does not re-trigger selection (avoids rapid card rotation).
  */
 export function ModuleDiscoveryWidget({ slotIndex = 0 }: { slotIndex?: number }) {
   const { raw } = useAppSettings();
   const config = useMemo(
     () => mergeDiscoveryWidgetsConfig(raw?.discovery_widgets),
-    [raw],
+    [raw?.discovery_widgets],
   );
 
-  const [stats, setStats] = useState<Stats>(() => loadStats());
+  const item = useMemo(
+    () => pickDiscoveryItem(config, loadStats(), slotIndex),
+    [config, slotIndex],
+  );
 
-  // Track keys already shown this session in earlier slots — avoid repeats.
-  const [sessionShown] = useState<Set<string>>(() => new Set());
-
-  const item = useMemo<DiscoveryWidgetItem | null>(() => {
-    if (!config.enabled) return null;
-    const pool = config.items.filter((it) => it.enabled);
-    if (pool.length === 0) return null;
-    // Weight = priority * impression-decay * visited-penalty
-    const scored = pool.map((it) => {
-      const imps = stats.impressions[it.key] ?? 0;
-      const clicks = stats.clicks[it.key] ?? 0;
-      const visitedPenalty = clicks > 0 ? 0.35 : 1.5;
-      const weight = (it.priority || 1) * (1 / (1 + imps * 0.6)) * visitedPenalty;
-      return { it, weight };
-    });
-    // Deterministic pick per slotIndex using a rotating offset so consecutive
-    // slots don't collide.
-    scored.sort((a, b) => b.weight - a.weight);
-    // Filter items shown earlier this session in a nearby slot.
-    const fresh = scored.filter((s) => !sessionShown.has(s.it.key));
-    const winner = (fresh[0] ?? scored[0]).it;
-    // Rotate a bit by slotIndex to avoid the same top item always.
-    const rotated = scored[(slotIndex) % scored.length]?.it ?? winner;
-    // Prefer rotated when it's still reasonably weighted, else winner.
-    const pick = sessionShown.has(rotated.key) ? winner : rotated;
-    return pick;
-  }, [config, stats, slotIndex, sessionShown]);
-
+  const impressedRef = useRef<string | null>(null);
   useEffect(() => {
     if (!item) return;
-    sessionShown.add(item.key);
-    setStats((prev) => {
-      const next: Stats = {
-        impressions: { ...prev.impressions, [item.key]: (prev.impressions[item.key] ?? 0) + 1 },
-        clicks: { ...prev.clicks },
-      };
-      saveStats(next);
-      return next;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item?.key]);
+    if (impressedRef.current === item.key) return;
+    impressedRef.current = item.key;
+    const prev = loadStats();
+    const next: Stats = {
+      impressions: { ...prev.impressions, [item.key]: (prev.impressions[item.key] ?? 0) + 1 },
+      clicks: { ...prev.clicks },
+    };
+    saveStats(next);
+  }, [item]);
 
   if (!item) return null;
 
   const onClick = () => {
-    setStats((prev) => {
-      const next: Stats = {
-        impressions: { ...prev.impressions },
-        clicks: { ...prev.clicks, [item.key]: (prev.clicks[item.key] ?? 0) + 1 },
-      };
-      saveStats(next);
-      return next;
-    });
+    const prev = loadStats();
+    const next: Stats = {
+      impressions: { ...prev.impressions },
+      clicks: { ...prev.clicks, [item.key]: (prev.clicks[item.key] ?? 0) + 1 },
+    };
+    saveStats(next);
   };
 
   return (

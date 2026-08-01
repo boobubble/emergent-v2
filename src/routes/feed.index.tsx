@@ -215,6 +215,8 @@ function FeedPage() {
   const [profileUsername, setProfileUsername] = useState<string>(initial.username);
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
+  const [friendships, setFriendships] = useState<FeedFriendship[]>([]);
+  const [friendshipsLoaded, setFriendshipsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -296,24 +298,40 @@ function FeedPage() {
     void pingDailyStreak().catch((e: unknown) => console.error("streak ping failed", e));
   }, [meId]);
 
-  // Load friendships
+  // Load friendships (single realtime channel shared with FriendsWidget)
   useEffect(() => {
-    if (!meId) return;
+    if (!meId) {
+      setFriendships([]);
+      setFriendIds(new Set());
+      setFriendshipsLoaded(false);
+      return;
+    }
+    let cancelled = false;
     async function loadF() {
       const { data } = await supabase
         .from("friendships")
         .select("*")
-        .eq("status", "accepted")
         .or(`sender_id.eq.${meId},receiver_id.eq.${meId}`);
+      if (cancelled) return;
+      const list = (data ?? []) as FeedFriendship[];
+      setFriendships(list);
       const ids = new Set<string>();
-      ((data ?? []) as FeedFriendship[]).forEach((f) => {
+      list.filter((f) => f.status === "accepted").forEach((f) => {
         ids.add(f.sender_id === meId ? f.receiver_id : f.sender_id);
       });
       setFriendIds(ids);
+      setFriendshipsLoaded(true);
     }
-    loadF();
-    const ch = supabase.channel(`feed-fr-${meId}`).on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, () => loadF()).subscribe();
-    return () => { supabase.removeChannel(ch); };
+    void loadF();
+    const ch = supabase
+      .channel(`feed-fr-${meId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships", filter: `sender_id=eq.${meId}` }, () => { void loadF(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships", filter: `receiver_id=eq.${meId}` }, () => { void loadF(); })
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(ch);
+    };
   }, [meId]);
 
   const fetchMode = useMemo(
@@ -425,7 +443,7 @@ function FeedPage() {
         }
       }).subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [meId]);
+  }, []);
 
   const filtered = useMemo(() => {
     let list = [...posts];
@@ -1171,7 +1189,7 @@ function FeedPage() {
                   </p>
                 </div>
                 <div key={exploreKey} className="space-y-4">
-                  <FriendsWidget meId={meId} profiles={profiles} />
+                  <FriendsWidget meId={meId} profiles={profiles} friendships={friendships} friendshipsLoaded={friendshipsLoaded} />
                   <FeaturedMembersWidget meId={meId} profiles={profiles} />
                   <PromotedPostsWidget profiles={profiles} />
                   <SuggestedGroupsWidget />
@@ -1298,7 +1316,7 @@ function FeedPage() {
                       <div className="lg:hidden"><ActivePollsWidget /></div>
                     )}
                     {idx === 17 && (
-                      <div className="lg:hidden"><FriendsWidget meId={meId} profiles={profiles} /></div>
+                      <div className="lg:hidden"><FriendsWidget meId={meId} profiles={profiles} friendships={friendships} friendshipsLoaded={friendshipsLoaded} /></div>
                     )}
                   </div>
                 ))}
@@ -1356,7 +1374,7 @@ function FeedPage() {
             <ActivePollsWidget />
             <ConfessionsFeedWidget />
             <BirthdaysWidget />
-            <FriendsWidget meId={meId} profiles={profiles} />
+            <FriendsWidget meId={meId} profiles={profiles} friendships={friendships} friendshipsLoaded={friendshipsLoaded} />
             <HashtagsWidget />
           </div>
         </aside>
