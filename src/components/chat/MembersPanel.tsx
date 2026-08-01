@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, Users2, UserCheck, VolumeX, Search, Bot, Settings2, Check, Sparkles, Star } from "lucide-react";
 import { useHubBadge } from "./CommunityHub";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -22,18 +22,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Role, User } from "@/lib/chat-types";
-
-interface FeedNotification {
-  id: string;
-  user_id: string;
-  actor_id: string | null;
-  kind: string;
-  target_type: string | null;
-  target_id: string | null;
-  payload: { text?: string } | null;
-  read: boolean;
-  created_at: string;
-}
+import {
+  useNotifications,
+  navigateForNotification,
+  notificationKindLabel,
+  previewText,
+  timeAgo,
+} from "@/lib/use-notifications";
 
 const ICONS: Record<Role, React.ReactNode> = {
   owner: <Crown className="h-3 w-3 text-warning" />,
@@ -129,9 +124,10 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const { state, startDM, closeDM, dmChannelFor, isDmUnread, dmUnreadCount } = useChat();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
+  const navigate = useNavigate();
+  const { items: notifs, unread: unreadCount, markAllRead, markOne } = useNotifications();
   const [showAllOffline, setShowAllOffline] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [notifs, setNotifs] = useState<FeedNotification[]>([]);
   const [friendIds, setFriendIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -162,26 +158,6 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const meId = authUser?.id;
 
   useEffect(() => {
-    if (!meId) return;
-    async function load() {
-      const { data } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", meId as string)
-        .in("kind", ["friend_post", "friend_comment"])
-        .order("created_at", { ascending: false })
-        .limit(20);
-      setNotifs((data ?? []) as FeedNotification[]);
-    }
-    load();
-    const ch = supabase
-      .channel(`notif-${meId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${meId}` }, () => load())
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [meId]);
-
-  useEffect(() => {
     const open = () => setSheetOpen(true);
     window.addEventListener("open-members-panel", open);
     return () => window.removeEventListener("open-members-panel", open);
@@ -206,11 +182,13 @@ export function MembersPanel({ roomId }: { roomId: string }) {
     return () => { supabase.removeChannel(ch); };
   }, [meId]);
 
-  const unreadCount = notifs.filter(n => !n.read).length;
+  const usersByIdForNotifs: Record<string, User> = { ...state.users, ...profiles };
 
-  async function markAllRead() {
-    if (!meId || unreadCount === 0) return;
-    await supabase.from("notifications").update({ read: true }).eq("user_id", meId).eq("read", false);
+  async function onNotificationActivate(id: string) {
+    const n = notifs.find(item => item.id === id);
+    if (!n) return;
+    await markOne(n.id);
+    await navigateForNotification(n, navigate, usersByIdForNotifs);
   }
 
   const room = state.rooms[roomId];
@@ -420,22 +398,28 @@ export function MembersPanel({ roomId }: { roomId: string }) {
             ) : (
               notifs.map((n) => {
                 const actor = n.actor_id ? (usersById[n.actor_id] ?? profiles[n.actor_id]) : null;
-                const verb = n.kind === "friend_post" ? "shared a new post" : "commented on a post";
-                const preview = n.payload?.text;
+                const body = previewText(n.payload);
                 return (
-                  <DropdownMenuItem key={n.id} asChild className={!n.read ? "bg-primary/5" : ""}>
-                    <Link to="/feed" className="flex items-start gap-2 py-2">
+                  <DropdownMenuItem
+                    key={n.id}
+                    className={!n.read ? "bg-primary/5" : ""}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      void onNotificationActivate(n.id);
+                    }}
+                  >
+                    <div className="flex items-start gap-2 py-2">
                       {actor ? <Avatar user={actor} size={28} /> : <div className="h-7 w-7 rounded-full bg-muted" />}
                       <div className="min-w-0 flex-1 leading-tight">
                         <div className="text-xs">
-                          <span className="font-semibold">{actor?.name ?? "A friend"}</span>{" "}
-                          <span className="text-muted-foreground">{verb}</span>
+                          <span className="font-semibold">{actor?.name ?? "Someone"}</span>{" "}
+                          <span className="text-muted-foreground">{notificationKindLabel(n.kind)}</span>
                         </div>
-                        {preview && <div className="truncate text-[11px] text-muted-foreground">{preview}</div>}
-                        <div className="text-[10px] text-muted-foreground/70">{new Date(n.created_at).toLocaleString()}</div>
+                        {body && <div className="truncate text-[11px] text-muted-foreground">{body}</div>}
+                        <div className="text-[10px] text-muted-foreground/70">{timeAgo(n.created_at)} ago</div>
                       </div>
                       {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}
-                    </Link>
+                    </div>
                   </DropdownMenuItem>
                 );
               })

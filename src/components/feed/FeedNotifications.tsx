@@ -1,241 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Bell, Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
-import { isNavigableSlug } from "@/lib/route-slug";
 import type { User } from "@/lib/chat-types";
+import {
+  useNotifications,
+  navigateForNotification,
+  notificationKindLabel,
+  previewText,
+  timeAgo,
+  type AppNotification,
+  type FeedNotification,
+} from "@/lib/use-notifications";
 
-export interface FeedNotification {
-  id: string;
-  user_id: string;
-  actor_id: string | null;
-  kind: string;
-  target_type: string | null;
-  target_id: string | null;
-  payload: NotificationPayload | null;
-  read: boolean;
-  created_at: string;
-}
+export type { AppNotification, FeedNotification };
 
-type NotificationPayload = {
-  text?: string;
-  preview?: string;
-  body?: string;
-  title?: string;
-  slug?: string;
-  post_slug?: string;
-  post_id?: string;
-  name?: string;
-  competition_name?: string;
-  status?: string;
-  place?: number;
-  [key: string]: unknown;
-};
-
-function timeAgo(iso: string) {
-  const d = Date.now() - new Date(iso).getTime();
-  const s = Math.floor(d / 1000);
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
-}
-
-const KIND_LABELS: Record<string, string> = {
-  friend_post: "shared a new post",
-  friend_comment: "commented on a post",
-  reaction: "reacted to your post",
-  post_reaction: "reacted to your post",
-  comment: "commented on your post",
-  reply: "replied to your comment",
-  comment_reply: "replied to your comment",
-  mention: "mentioned you",
-  username_mention: "mentioned you",
-  friend_request: "sent you a friend request",
-  friend_accepted: "accepted your friend request",
-  writer_follow: "started following you",
-  competition_started: "a competition you follow has started",
-  competition_ended: "a competition you follow has ended",
-  competition_win: "placed in a competition",
-  competition_pending_approval: "has a qualification pending approval",
-  competition_auto_qualified: "auto-qualified for a competition",
-  competition_approved: "competition entry approved",
-  competition_rejected: "competition entry rejected",
-  assistant_welcome: "sent you a welcome message",
-  assistant_mission_daily: "sent your daily mission digest",
-  assistant_mission_weekly: "sent your weekly mission digest",
-  gamification_reward: "earned a reward",
-  feedback_status: "updated your feedback",
-  game_started: "started a game",
-  game_won: "won a game",
-  game_invite: "invited you to a game",
-};
-
-const POST_KINDS = new Set([
-  "friend_post",
-  "friend_comment",
-  "reaction",
-  "post_reaction",
-  "comment",
-  "reply",
-  "comment_reply",
-  "mention",
-  "username_mention",
-]);
-
-function previewText(payload: NotificationPayload | null | undefined): string | null {
-  if (!payload) return null;
-  const text = payload.text ?? payload.preview ?? payload.body ?? payload.title;
-  return typeof text === "string" && text.trim() ? text.trim() : null;
-}
-
-async function resolvePostSlug(postId: string): Promise<string | null> {
-  const { data } = await supabase.from("posts_safe").select("slug").eq("id", postId).maybeSingle();
-  const slug = (data as { slug?: string | null } | null)?.slug;
-  return isNavigableSlug(slug) ? slug : null;
-}
-
-async function resolveCompetitionSlug(competitionId: string): Promise<string | null> {
-  const { data } = await supabase.from("competitions").select("slug").eq("id", competitionId).maybeSingle();
-  const slug = (data as { slug?: string | null } | null)?.slug;
-  return isNavigableSlug(slug) ? slug : null;
-}
-
-export function useFeedNotifications(meId: string) {
-  const [items, setItems] = useState<FeedNotification[]>([]);
-
-  const load = useCallback(async () => {
-    if (!meId) return;
-    const { data } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", meId)
-      .order("created_at", { ascending: false })
-      .limit(30);
-    setItems((data ?? []) as FeedNotification[]);
-  }, [meId]);
-
-  const loadRef = useRef(load);
-  loadRef.current = load;
-
-  useEffect(() => {
-    if (!meId) {
-      setItems([]);
-      return;
-    }
-    void loadRef.current();
-    const ch = supabase
-      .channel(`feed-notif-${meId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${meId}` }, () => { void loadRef.current(); })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [meId]);
-
-  const unread = useMemo(() => items.filter(i => !i.read).length, [items]);
-
-  const markAllRead = useCallback(async () => {
-    if (!meId || unread === 0) return;
-    await supabase.from("notifications").update({ read: true }).eq("user_id", meId).eq("read", false);
-    setItems(prev => prev.map(i => ({ ...i, read: true })));
-  }, [meId, unread]);
-
-  const markOne = useCallback(async (id: string) => {
-    await supabase.from("notifications").update({ read: true }).eq("id", id);
-    setItems(prev => prev.map(i => (i.id === id ? { ...i, read: true } : i)));
-  }, []);
-
-  return { items, unread, load, markAllRead, markOne };
-}
-
-type NavigateFn = ReturnType<typeof useNavigate>;
-
-async function navigateForNotification(
-  n: FeedNotification,
-  navigate: NavigateFn,
-  profiles: Record<string, User>,
-  onOpenFindFriends?: () => void,
-) {
-  const payload = (n.payload ?? {}) as NotificationPayload;
-  const payloadSlug = payload.slug ?? payload.post_slug;
-  const postId = n.target_type === "post" && n.target_id
-    ? n.target_id
-    : typeof payload.post_id === "string"
-      ? payload.post_id
-      : null;
-
-  const wantsPost =
-    n.target_type === "post" ||
-    POST_KINDS.has(n.kind) ||
-    !!postId;
-
-  if (wantsPost && (postId || isNavigableSlug(payloadSlug))) {
-    const slug = isNavigableSlug(payloadSlug)
-      ? payloadSlug
-      : postId
-        ? await resolvePostSlug(postId)
-        : null;
-    if (slug) {
-      navigate({ to: "/feed/$slug", params: { slug } });
-      return;
-    }
-  }
-
-  if (n.kind === "friend_request") {
-    if (onOpenFindFriends) onOpenFindFriends();
-    else navigate({ to: "/find-friends" });
-    return;
-  }
-
-  if (n.kind === "friend_accepted" && n.actor_id) {
-    const actor = profiles[n.actor_id];
-    if (actor?.name) {
-      navigate({ to: "/feed", search: { u: actor.name } as never });
-      return;
-    }
-    navigate({ to: "/find-friends" });
-    return;
-  }
-
-  if (n.kind === "writer_follow" && n.actor_id) {
-    const actor = profiles[n.actor_id];
-    if (actor?.name) {
-      navigate({ to: "/feed", search: { u: actor.name } as never });
-      return;
-    }
-  }
-
-  if (n.target_type === "competition" || n.kind.startsWith("competition_")) {
-    const slug = isNavigableSlug(payloadSlug)
-      ? payloadSlug
-      : n.target_id
-        ? await resolveCompetitionSlug(n.target_id)
-        : null;
-    if (slug) {
-      navigate({ to: "/competitions/$slug", params: { slug } });
-      return;
-    }
-  }
-
-  if (n.target_type === "user" && n.actor_id) {
-    const actor = profiles[n.actor_id];
-    if (actor?.name) {
-      navigate({ to: "/u/$username", params: { username: actor.name } });
-      return;
-    }
-  }
-
-  if (n.target_type === "feedback") {
-    navigate({ to: "/feedback" });
-    return;
-  }
-
-  if (n.target_type === "game") {
-    navigate({ to: "/games" });
-  }
-}
+export { useNotifications, useNotifications as useFeedNotifications };
 
 function NotificationRow({
   n,
@@ -243,9 +23,9 @@ function NotificationRow({
   onActivate,
   compact = false,
 }: {
-  n: FeedNotification;
+  n: AppNotification;
   profiles: Record<string, User>;
-  onActivate: (n: FeedNotification) => void;
+  onActivate: (n: AppNotification) => void;
   compact?: boolean;
 }) {
   const actor = n.actor_id ? profiles[n.actor_id] : null;
@@ -260,7 +40,7 @@ function NotificationRow({
       <div className="min-w-0 flex-1">
         <div className="truncate">
           <span className="font-semibold">{actor?.name ?? "Someone"}</span>{" "}
-          <span className="text-muted-foreground">{KIND_LABELS[n.kind] ?? n.kind.replace(/_/g, " ")}</span>
+          <span className="text-muted-foreground">{notificationKindLabel(n.kind)}</span>
         </div>
         {body && (
           <div className="truncate text-xs text-muted-foreground">{body}</div>
@@ -276,17 +56,15 @@ export function FeedNotificationPanel({
   meId,
   profiles,
   onOpenFindFriends,
-  notifications,
 }: {
   meId: string;
   profiles: Record<string, User>;
   onOpenFindFriends?: () => void;
-  notifications: ReturnType<typeof useFeedNotifications>;
 }) {
   const navigate = useNavigate();
-  const { items, unread, markAllRead, markOne } = notifications;
+  const { items, unread, markAllRead, markOne } = useNotifications();
 
-  const onActivate = useCallback(async (n: FeedNotification) => {
+  const onActivate = useCallback(async (n: AppNotification) => {
     await markOne(n.id);
     await navigateForNotification(n, navigate, profiles, onOpenFindFriends);
   }, [markOne, navigate, profiles, onOpenFindFriends]);
@@ -331,18 +109,16 @@ export function FeedNotifications({
   meId,
   profiles,
   onOpenFindFriends,
-  notifications,
 }: {
   meId: string;
   profiles: Record<string, User>;
   onOpenFindFriends?: () => void;
-  notifications: ReturnType<typeof useFeedNotifications>;
 }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const { items, unread, markAllRead, markOne } = notifications;
+  const { items, unread, markAllRead, markOne } = useNotifications();
 
-  const onActivate = useCallback(async (n: FeedNotification) => {
+  const onActivate = useCallback(async (n: AppNotification) => {
     await markOne(n.id);
     setOpen(false);
     await navigateForNotification(n, navigate, profiles, onOpenFindFriends);

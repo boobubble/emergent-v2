@@ -40,7 +40,7 @@ import { ModuleDiscoveryWidget } from "@/components/feed/ModuleDiscoveryWidget";
 import { mergeDiscoveryWidgetsConfig } from "@/lib/discovery-widgets-config";
 import { BirthdaysWidget } from "@/components/feed/BirthdaysWidget";
 import { MissionsPanel } from "@/components/feed/MissionsPanel";
-import { FeedNotifications, FeedNotificationPanel, useFeedNotifications } from "@/components/feed/FeedNotifications";
+import { FeedNotifications, FeedNotificationPanel } from "@/components/feed/FeedNotifications";
 import { Avatar } from "@/components/chat/Avatar";
 import type { FeedPost } from "@/lib/feed-types";
 import { pingDailyStreak } from "@/lib/gamification.functions";
@@ -278,7 +278,6 @@ function FeedPage() {
 
   const meId = user?.id ?? "";
   const { friendIds } = useSocialGraph();
-  const feedNotifications = useFeedNotifications(meId);
 
   function setTab(next: Tab) {
     setTabState(next);
@@ -985,7 +984,6 @@ function FeedPage() {
                 <FeedNotifications
                   meId={meId}
                   profiles={profiles}
-                  notifications={feedNotifications}
                   onOpenFindFriends={() => setView("findFriends")}
                 />
                 <button
@@ -1225,7 +1223,6 @@ function FeedPage() {
                   <FeedNotificationPanel
                     meId={meId}
                     profiles={profiles}
-                    notifications={feedNotifications}
                     onOpenFindFriends={() => setView("findFriends")}
                   />
                 ) : (<>
