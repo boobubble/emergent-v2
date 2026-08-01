@@ -1,10 +1,11 @@
-import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { loginWithIdentifier } from "@/lib/auth.functions";
 import { deleteDemoAccount } from "@/lib/demo-account.functions";
 import { checkDeviceBan, recordDevice } from "@/lib/device.functions";
 import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
+import { HOME_PAGE_KEY, type HomePageMode } from "@/lib/hero-page-config";
 
 async function loadSignupAccess(): Promise<SignupAccessConfig> {
   try {
@@ -36,6 +37,7 @@ interface SignupExtras {
 interface Ctx {
   user: AuthUser | null;
   ready: boolean;
+  loggingOut: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string, gender: "male" | "female" | "other", extras?: SignupExtras) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -132,9 +134,21 @@ async function publishWelcomePost(userId: string, email?: string) {
   }
 }
 
+async function resolveLandingPath(): Promise<string> {
+  try {
+    const { data } = await supabase.from("app_settings").select("value").eq("key", HOME_PAGE_KEY).maybeSingle();
+    const mode = (data?.value as { mode?: HomePageMode } | null)?.mode;
+    return mode === "hero" ? "/heropage" : "/welcome";
+  } catch {
+    return "/welcome";
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const loggingOutRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -355,23 +369,35 @@ return () => {
   }, []);
 
   const logout = useCallback(async () => {
-    // Detect demo accounts by their auth metadata flag before we sign out.
-    let wasDemo = false;
+    if (loggingOutRef.current) return;
+    loggingOutRef.current = true;
+    setLoggingOut(true);
     try {
-      const { data } = await supabase.auth.getSession();
-      const meta = (data.session?.user?.user_metadata ?? {}) as { is_demo?: boolean };
-      wasDemo = Boolean(meta.is_demo);
-    } catch { /* ignore */ }
-    // End any Ludo games this user is hosting so other players aren't stuck.
-    try {
-      const endFn = (window as unknown as { __lovableEndMyLudoGames?: () => Promise<void> }).__lovableEndMyLudoGames;
-      if (typeof endFn === "function") await endFn();
-    } catch (e) { console.error("end-ludo-on-logout failed", e); }
-    if (wasDemo) {
-      try { await deleteDemoAccount(); } catch (e) { console.error("Demo cleanup failed", e); }
+      // Detect demo accounts by their auth metadata flag before we sign out.
+      let wasDemo = false;
+      try {
+        const { data } = await supabase.auth.getSession();
+        const meta = (data.session?.user?.user_metadata ?? {}) as { is_demo?: boolean };
+        wasDemo = Boolean(meta.is_demo);
+      } catch { /* ignore */ }
+      // End any Ludo games this user is hosting so other players aren't stuck.
+      try {
+        const endFn = (window as unknown as { __lovableEndMyLudoGames?: () => Promise<void> }).__lovableEndMyLudoGames;
+        if (typeof endFn === "function") await endFn();
+      } catch (e) { console.error("end-ludo-on-logout failed", e); }
+      if (wasDemo) {
+        try { await deleteDemoAccount(); } catch (e) { console.error("Demo cleanup failed", e); }
+      }
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      const landing = await resolveLandingPath();
+      window.location.replace(landing);
+    } catch (e) {
+      loggingOutRef.current = false;
+      setLoggingOut(false);
+      console.error("logout failed", e);
+      throw e instanceof Error ? e : new Error("Sign out failed");
     }
-    await supabase.auth.signOut();
-    setUser(null);
   }, []);
 
   const refreshUsername = useCallback(async () => {
@@ -385,7 +411,7 @@ return () => {
     setUser(prev => prev ? { ...prev, username: next } : prev);
   }, []);
 
-  const value = useMemo<Ctx>(() => ({ user, ready, login, signup, loginWithGoogle, logout, refreshUsername }), [user, ready, login, signup, loginWithGoogle, logout, refreshUsername]);
+  const value = useMemo<Ctx>(() => ({ user, ready, loggingOut, login, signup, loginWithGoogle, logout, refreshUsername }), [user, ready, loggingOut, login, signup, loginWithGoogle, logout, refreshUsername]);
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 

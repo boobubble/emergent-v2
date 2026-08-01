@@ -243,12 +243,20 @@ function AuthenticatedHooks({ userId }: { userId: string }) {
 }
 
 function AuthGate() {
-  const { user, ready } = useAuth();
+  const { user, ready, loggingOut } = useAuth();
   const location = useLocation();
   const path = location.pathname;
   const hasStoredSession = hasStoredAuthSession();
   const { mode: homeMode, ready: homeReady } = useHomePageMode();
   const landingPath = homeMode === "hero" ? "/heropage" : "/welcome";
+
+  if (loggingOut) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background px-4 text-center text-muted-foreground">
+        <p>Signing out…</p>
+      </div>
+    );
+  }
 
   if (!user && isPublicPath(path)) {
     return <PublicOutlet readOnlyApp={isReadOnlyPublicAppPath(path)} />;
@@ -340,9 +348,13 @@ function PublicOutlet({ readOnlyApp }: { readOnlyApp: boolean }) {
   if (!readOnlyApp) return content;
   return (
     <ChatProvider username="__public__" authUserId={null} isGuest>
+      <SocialGraphProvider>
+      <NotificationsProvider>
       <FeedPrefsProvider>
         <IgnoreProvider>{content}</IgnoreProvider>
       </FeedPrefsProvider>
+      </NotificationsProvider>
+      </SocialGraphProvider>
     </ChatProvider>
   );
 }

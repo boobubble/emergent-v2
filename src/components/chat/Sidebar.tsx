@@ -347,7 +347,7 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
                 <RotateCcw className="h-3 w-3" /> Reset
               </button>
               <button
-                onClick={logout}
+                onClick={() => { void logout().catch(() => undefined); }}
                 className="flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] text-muted-foreground hover:text-destructive"
                 title={user?.email}
               >

@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { PostCard } from "@/components/feed/PostCard";
 import { Composer } from "@/components/feed/Composer";
@@ -472,14 +473,11 @@ function OrkutQuickLinks({
   onThemes: () => void;
 }) {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const scrollToScrapbook = () => {
     if (typeof window === "undefined") return;
     const el = document.querySelector('[data-orkut-scrapbook]') as HTMLElement | null;
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-  const logout = async () => {
-    await supabase.auth.signOut();
-    navigate({ to: "/welcome" });
   };
   const items: { icon: typeof Heart; label: string; onClick: () => void }[] = [
     { icon: Smile, label: "profile", onClick: onProfile },
@@ -491,7 +489,7 @@ function OrkutQuickLinks({
     { icon: MessagesSquare, label: "chatrooms", onClick: () => navigate({ to: "/chatroom" }) },
     { icon: Palette, label: "themes", onClick: onThemes },
     { icon: Settings, label: "account", onClick: onAccount },
-    { icon: LogOut, label: "logout", onClick: logout },
+    { icon: LogOut, label: "logout", onClick: () => { void logout().catch(() => undefined); } },
   ];
   return (
     <div className="orkut-card">

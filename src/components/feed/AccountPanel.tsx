@@ -109,7 +109,7 @@ export function AccountPanel() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">Account settings</h2>
         <button
-          onClick={() => { logout(); navigate({ to: "/" }); }}
+          onClick={() => { void logout().catch((e: unknown) => alert((e as Error).message || "Sign out failed")); }}
           className="flex items-center gap-2 rounded-full bg-destructive/10 px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/20"
         >
           <LogOut className="h-4 w-4" /> Sign out
@@ -276,7 +276,6 @@ export function AccountPanel() {
                 try {
                   await deleteAccountFn({});
                   await logout();
-                  navigate({ to: '/' });
                 } catch (e) {
                   alert((e as Error).message || 'Failed to delete account');
                   setDeleting(false);
