@@ -19,6 +19,7 @@ import {
   type SeoGlobal,
   type SeoPageRow,
 } from "@/lib/seo";
+import { buildSeoInventory, summarizeSeoInventory } from "@/lib/seo/inventory";
 
 async function assertAdmin(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -345,5 +346,27 @@ export const getSeoTargetsSummary = createServerFn({ method: "GET" })
       profiles: profiles.count ?? 0,
       publicPosts: posts.count ?? 0,
       games: games.count ?? 0,
+    };
+  });
+
+/** Read-only SEO inventory for /admin/seo — no writes, no route sync. */
+export const getSeoInventory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const [global, pages, discovered] = await Promise.all([
+      loadGlobal(),
+      loadPages(),
+      Promise.resolve(readDiscoveredPaths()),
+    ]);
+    const catalog = buildRouteCatalog(discovered);
+    const rows = buildSeoInventory({ global, pages, catalog, discovered });
+    return {
+      rows,
+      summary: summarizeSeoInventory(rows),
+      global,
+      pageCount: pages.length,
+      catalogCount: catalog.length,
+      discoveredCount: discovered.length,
     };
   });
