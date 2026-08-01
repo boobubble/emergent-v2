@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 import { SettingsCard, NumberField, ToggleRow } from "@/components/admin/SettingsSection";
 import { Button } from "@/components/ui/button";
 import { useAdminSetting } from "@/lib/use-admin-setting";
@@ -46,6 +47,12 @@ function GamesPage() {
         description="Enable mini-games, configure rewards, and moderate live matches."
         actions={<Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save changes"}</Button>}
       />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/20 px-4 py-3">
+        <p className="text-sm text-muted-foreground">
+          Games hub and game page SEO is managed in SEO Manager.
+        </p>
+        <SeoManagerLink category="games" />
+      </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <SettingsCard title="Available games" description="Enable or disable individual games.">
           <div className="grid gap-2 sm:grid-cols-2">

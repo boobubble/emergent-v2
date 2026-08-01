@@ -1,10 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Save, MessageSquareHeart, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 import { Card, CardContent } from "@/components/ui/card";
 import { AdminToggle } from "@/components/admin/AdminToggle";
 import { Button } from "@/components/ui/button";
@@ -252,10 +253,9 @@ function AdminConfessionsPage() {
       {/* SEO — centralized in SEO Manager */}
       <Section title="SEO" desc="Page metadata for /confessions is managed in SEO Manager.">
         <p className="text-sm text-muted-foreground">
-          Edit title, description, keywords, OG tags, and robots for the Confessions page in{" "}
-          <Link to="/admin/seo" className="text-primary underline font-medium">SEO Manager</Link>{" "}
-          (Page SEO → Confessions).
+          Edit title, description, keywords, OG tags, and robots for the Confessions page in SEO Manager.
         </p>
+        <SeoManagerLink category="memes-confessions" />
       </Section>
 
       <div className="flex justify-end">

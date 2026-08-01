@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -108,6 +109,13 @@ function PagesAdmin() {
         title="Custom Pages"
         description="A lightweight, SEO-friendly CMS for landing, room, blog and info pages."
       />
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/20 px-4 py-3">
+        <p className="text-sm text-muted-foreground">
+          Per-page title, description, canonical, OG, and indexing settings live in SEO Manager.
+        </p>
+        <SeoManagerLink category="blog-static" />
+      </div>
 
       <Tabs defaultValue="pages">
         <TabsList className="mb-4 flex w-full flex-wrap">

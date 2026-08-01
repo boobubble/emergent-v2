@@ -10,6 +10,7 @@ import {
   adminDeleteCategory,
 } from "@/lib/competitions.functions";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,12 @@ function AdminCompetitionsPage() {
   const [tab, setTab] = useState<Tab>("Competitions");
   return (
     <div className="p-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/20 px-4 py-3">
+        <p className="text-sm text-muted-foreground">
+          Competitions hub and competition page SEO is managed in SEO Manager.
+        </p>
+        <SeoManagerLink category="competitions" />
+      </div>
       <div className="mb-4 flex gap-1 rounded-xl border border-border/60 bg-card p-1 w-fit">
         {TABS.map((t) => (
           <button

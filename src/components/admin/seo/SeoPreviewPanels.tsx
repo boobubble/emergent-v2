@@ -1,4 +1,6 @@
+import { Link } from "@tanstack/react-router";
 import type { ResolvedSeo } from "@/lib/seo/types";
+import type { SeoInventoryCategoryId } from "@/lib/seo/inventory-categories";
 
 export function SeoPreviewPanels({ seo }: { seo: ResolvedSeo }) {
   return (
@@ -45,5 +47,15 @@ function PreviewCard({ title, children }: { title: string; children: React.React
       <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</div>
       {children}
     </div>
+  );
+}
+
+/** Link to centralized SEO Manager; legacy per-page SEO forms stay in code but hidden. */
+export function SeoManagerLink({ category }: { category?: SeoInventoryCategoryId }) {
+  const to = category ? `/admin/seo?category=${category}` : "/admin/seo";
+  return (
+    <Link to={to} className="inline-flex items-center rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10">
+      Manage SEO in SEO Manager
+    </Link>
   );
 }

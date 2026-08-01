@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Save, Home, Plus, Trash2 } from "lucide-react";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 import { Card, CardContent } from "@/components/ui/card";
 import { AdminToggle } from "@/components/admin/AdminToggle";
 import { Button } from "@/components/ui/button";
@@ -248,10 +249,10 @@ export function HomepagePage() {
         <CardContent className="space-y-3 p-5">
           <div className="text-sm font-semibold">SEO</div>
           <p className="text-sm text-muted-foreground">
-            Landing page titles, descriptions, and OG tags are managed centrally in{" "}
-            <Link to="/admin/seo" className="text-primary underline font-medium">SEO Manager</Link>{" "}
-            (Page SEO → Welcome / Hero Page). Structured data toggles remain in landing config below.
+            Landing page titles, descriptions, and OG tags are managed centrally in SEO Manager.
+            Structured data toggles remain below.
           </p>
+          <SeoManagerLink category="homepage" />
           <Row label="Enable structured data (JSON-LD)" checked={values.enableStructuredData} onChange={(v) => set("enableStructuredData", v)} />
         </CardContent>
       </Card>

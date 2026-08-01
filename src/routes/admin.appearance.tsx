@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -221,9 +222,9 @@ function WhiteLabelCard() {
         <div className="border-t pt-4">
           <div className="mb-2 text-xs font-semibold text-muted-foreground">SEO / Social</div>
           <p className="text-sm text-muted-foreground mb-3">
-            Meta titles, descriptions, keywords, and OG tags are managed in{" "}
-            <Link to="/admin/seo" className="text-primary underline font-medium">SEO Manager</Link>.
+            Meta titles, descriptions, keywords, and OG tags are managed in SEO Manager.
           </p>
+          <SeoManagerLink category="global-defaults" />
           <div className="grid gap-3 sm:grid-cols-2">
             {field("appleTouchIcon", "Apple touch icon URL", "/apple-touch-icon.png", "url")}
             {field("placeholderImage", "Default placeholder image URL", "https://…/placeholder.png", "url")}

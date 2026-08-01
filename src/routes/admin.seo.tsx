@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -34,9 +34,19 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/seo")({
   component: SeoManagerPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    category: typeof search.category === "string" ? search.category : undefined,
+  }),
 });
 
 const ALL = "__all__";
+
+const CATEGORY_IDS = new Set<string>(SEO_INVENTORY_CATEGORIES.map((c) => c.id));
+
+function parseCategoryParam(value: string | undefined): SeoInventoryCategoryId | typeof ALL {
+  if (value && CATEGORY_IDS.has(value)) return value as SeoInventoryCategoryId;
+  return ALL;
+}
 
 function SeoManagerPage() {
   return (
@@ -120,6 +130,7 @@ function filterRows(
 }
 
 function SeoInventoryPanel() {
+  const { category: categoryParam } = Route.useSearch();
   const fetchInventory = useServerFn(getSeoInventory);
   const inventory = useQuery({
     queryKey: ["seo-inventory"],
@@ -127,10 +138,14 @@ function SeoInventoryPanel() {
     staleTime: 60_000,
   });
 
-  const [activeCategory, setActiveCategory] = useState<SeoInventoryCategoryId | typeof ALL>(ALL);
+  const [activeCategory, setActiveCategory] = useState<SeoInventoryCategoryId | typeof ALL>(() => parseCategoryParam(categoryParam));
   const [statusFilter, setStatusFilter] = useState<SeoInventoryStatus | typeof ALL>(ALL);
   const [routeKind, setRouteKind] = useState<"static" | "dynamic" | typeof ALL>(ALL);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    setActiveCategory(parseCategoryParam(categoryParam));
+  }, [categoryParam]);
 
   const rows = inventory.data?.rows ?? [];
   const summary = inventory.data?.summary;

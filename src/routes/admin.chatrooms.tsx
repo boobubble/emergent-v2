@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 import { Card, CardContent } from "@/components/ui/card";
 import { flattenAdminNav } from "@/components/admin/AdminNav";
 import { Badge } from "@/components/ui/badge";
@@ -251,6 +252,13 @@ function ChatroomsHub() {
         title="Chatrooms"
         description="Manage channels and chatroom-only settings. Feed, games and economy live in their own sections."
       />
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/20 px-4 py-3">
+        <p className="text-sm text-muted-foreground">
+          Chatroom hub SEO is managed in SEO Manager.
+        </p>
+        <SeoManagerLink category="chatrooms" />
+      </div>
 
       <ChannelsManager />
 

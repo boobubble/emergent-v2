@@ -18,11 +18,15 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 import { getPage, savePage, slugify } from "@/lib/pages.functions";
 import { useAuth } from "@/lib/auth-store";
 import { getMyRoles } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/pages-editor/$id")({ component: PageEditorGate });
+
+/** Legacy CMS SEO fields remain in save/load logic; UI hidden in favor of SEO Manager. */
+const SHOW_LEGACY_PAGE_SEO_FIELDS = false;
 
 type PageRow = {
   id: string;
@@ -296,6 +300,17 @@ function PageEditor() {
           </div>
 
           <div className="rounded-xl border border-border bg-background p-4 shadow-sm sm:p-5">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Search & social metadata</div>
+              <SeoManagerLink category="blog-static" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Title, description, keywords, canonical, OG tags, and indexing for this page are managed in SEO Manager.
+            </p>
+          </div>
+
+          {SHOW_LEGACY_PAGE_SEO_FIELDS && (
+          <div className="rounded-xl border border-border bg-background p-4 shadow-sm sm:p-5">
             <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <Search className="h-3.5 w-3.5" /> Search appearance
             </div>
@@ -338,6 +353,7 @@ function PageEditor() {
               </div>
             </div>
           </div>
+          )}
 
           <Collapsible title="Excerpt" defaultOpen={false}>
             <Textarea
@@ -349,6 +365,7 @@ function PageEditor() {
             />
           </Collapsible>
 
+          {SHOW_LEGACY_PAGE_SEO_FIELDS && (
           <Collapsible title="Advanced SEO (social & indexing)" defaultOpen={false}>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
@@ -389,6 +406,7 @@ function PageEditor() {
               </div>
             </div>
           </Collapsible>
+          )}
         </div>
 
         <aside className="space-y-4">
@@ -404,10 +422,12 @@ function PageEditor() {
                   </SelectContent>
                 </Select>
               </div>
+              {SHOW_LEGACY_PAGE_SEO_FIELDS && (
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Visibility</span>
                 <span className="text-xs">{row.noindex ? "Hidden from search" : "Public"}</span>
               </div>
+              )}
               {row.updated_at && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Last updated</span>
@@ -445,6 +465,7 @@ function PageEditor() {
             <p className="mt-1 text-[11px] text-muted-foreground">Comma separated (max 20).</p>
           </SidebarCard>
 
+          {SHOW_LEGACY_PAGE_SEO_FIELDS && (
           <SidebarCard icon={<ImageIcon className="h-4 w-4" />} title="Featured image (OG)">
             {row.og_image ? (
               <img src={row.og_image} alt="" className="mb-2 aspect-video w-full rounded-md border border-border object-cover" />
@@ -455,6 +476,7 @@ function PageEditor() {
             )}
             <Input value={row.og_image ?? ""} onChange={(e) => update("og_image", e.target.value)} placeholder="https://…" />
           </SidebarCard>
+          )}
 
           <SidebarCard icon={<Settings2 className="h-4 w-4" />} title="Page attributes">
             <div className="space-y-3 text-sm">

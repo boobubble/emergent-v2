@@ -16,6 +16,7 @@ import {
 } from "@/lib/mehfil-admin.functions";
 import type { MehfilCategory, MehfilPoem, MehfilSettings } from "@/lib/mehfil-types";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 
 export const Route = createFileRoute("/admin/mehfil")({
   head: () => ({ meta: [{ title: "Poetry Hub Admin" }, { name: "robots", content: "noindex" }] }),
@@ -33,6 +34,12 @@ function MehfilAdmin() {
         title="Poetry Hub"
         description="Poetry community — moderate poems, manage categories, configure Poetry Hub settings."
       />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/20 px-4 py-3">
+        <p className="text-sm text-muted-foreground">
+          Poetry hub SEO (titles, descriptions, OG) is managed in SEO Manager.
+        </p>
+        <SeoManagerLink category="poetry" />
+      </div>
       <div className="mt-4 mb-6 flex gap-1 rounded-xl border border-border/60 bg-card p-1 w-fit">
         {TABS.map((t) => (
           <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-lg text-sm font-semibold ${tab === t ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{t}</button>
