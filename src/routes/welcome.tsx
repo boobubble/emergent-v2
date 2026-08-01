@@ -16,6 +16,7 @@ import {
 } from "@/lib/landing-config";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
 import { useAuth } from "@/lib/auth-store";
+import { headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
 
 interface LandingStats {
   members: number; online: number; activeRooms: number;
@@ -40,32 +41,43 @@ interface LandingPayload {
 
 const HOST = "https://holo-chat-quest.lovable.app";
 
+const WELCOME_SEO_FALLBACK = {
+  title: LANDING_DEFAULTS.seoTitle,
+  description: LANDING_DEFAULTS.seoDescription,
+  keywords: LANDING_DEFAULTS.seoKeywords,
+  ogTitle: LANDING_DEFAULTS.seoTitle,
+  ogDescription: LANDING_DEFAULTS.seoDescription,
+  ogImage: LANDING_DEFAULTS.ogImageUrl || undefined,
+  twitterTitle: LANDING_DEFAULTS.seoTitle,
+  twitterDescription: LANDING_DEFAULTS.seoDescription,
+  canonical: `${HOST}/welcome`,
+};
+
 export const Route = createFileRoute("/welcome")({
-  head: () => ({
-    meta: [
-      { title: LANDING_DEFAULTS.seoTitle },
-      { name: "description", content: LANDING_DEFAULTS.seoDescription },
-      { name: "keywords", content: LANDING_DEFAULTS.seoKeywords },
-      { property: "og:title", content: LANDING_DEFAULTS.seoTitle },
-      { property: "og:description", content: LANDING_DEFAULTS.seoDescription },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: `${HOST}/welcome` },
-      { property: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [{ rel: "canonical", href: `${HOST}/welcome` }],
-    scripts: LANDING_DEFAULTS.enableStructuredData
-      ? [{
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            name: LANDING_DEFAULTS.copyrightOwner,
-            url: `${HOST}/welcome`,
-            description: LANDING_DEFAULTS.seoDescription,
-          }),
-        }]
-      : [],
-  }),
+  loader: () => loadRouteSeoWithDefaults("/welcome", WELCOME_SEO_FALLBACK),
+  head: ({ loaderData }) => {
+    const base = headFromRouteSeo(loaderData);
+    const description = loaderData?.seo.description ?? LANDING_DEFAULTS.seoDescription;
+    const url = loaderData?.seo.canonical ?? `${HOST}/welcome`;
+    return {
+      ...base,
+      scripts: [
+        ...(base.scripts ?? []),
+        ...(LANDING_DEFAULTS.enableStructuredData
+          ? [{
+              type: "application/ld+json",
+              children: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: LANDING_DEFAULTS.copyrightOwner,
+                url,
+                description,
+              }),
+            }]
+          : []),
+      ],
+    };
+  },
   component: LandingPage,
 });
 
@@ -139,28 +151,6 @@ function LandingPage() {
     })();
     return () => { cancel = true; };
   }, []);
-
-  // Keep meta tags in sync with admin-edited SEO config
-  useEffect(() => {
-    const cfg = data?.config;
-    if (!cfg || typeof document === "undefined") return;
-    if (cfg.seoTitle) document.title = cfg.seoTitle;
-    const setMeta = (selector: string, attr: "name" | "property", key: string, content: string) => {
-      if (!content) return;
-      let el = document.head.querySelector<HTMLMetaElement>(selector);
-      if (!el) {
-        el = document.createElement("meta");
-        el.setAttribute(attr, key);
-        document.head.appendChild(el);
-      }
-      el.setAttribute("content", content);
-    };
-    setMeta('meta[name="description"]', "name", "description", cfg.seoDescription);
-    setMeta('meta[name="keywords"]', "name", "keywords", cfg.seoKeywords);
-    setMeta('meta[property="og:title"]', "property", "og:title", cfg.seoTitle);
-    setMeta('meta[property="og:description"]', "property", "og:description", cfg.seoDescription);
-  }, [data?.config]);
-
 
   const cfg: LandingConfig = data?.config ?? LANDING_DEFAULTS;
   const stats: LandingStats = data?.stats ?? {

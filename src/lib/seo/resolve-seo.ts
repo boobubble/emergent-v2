@@ -43,7 +43,9 @@ export function resolvePageSeo(
   const twitterDescription = pick(page?.twitter_description, page?.og_description ?? page?.description, fb.twitterDescription ?? ogDescription);
   const twitterImage = (useCustom && page?.twitter_image?.trim()) || page?.og_image?.trim() || global?.default_og_image?.trim() || fb.twitterImage || ogImage;
 
-  const canonical = (useCustom && page?.canonical_url?.trim()) || `${origin}${routePath === "/" ? "" : routePath}`;
+  const canonical = (useCustom && page?.canonical_url?.trim())
+    || fb.canonical?.trim()
+    || `${origin}${routePath === "/" ? "" : routePath}`;
   const robotsParts: string[] = [];
   if (page?.noindex) robotsParts.push("noindex");
   else robotsParts.push("index");

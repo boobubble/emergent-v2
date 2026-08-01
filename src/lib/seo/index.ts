@@ -6,4 +6,4 @@ export * from "./health";
 export * from "./sitemap";
 
 export { createSeoRouteHead, seoFallback } from "./route-head";
-export { loadRouteSeo, headFromRouteSeo } from "./load-route-seo";
+export { loadRouteSeo, loadRouteSeoWithDefaults, headFromRouteSeo } from "./load-route-seo";

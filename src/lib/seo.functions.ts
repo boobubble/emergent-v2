@@ -185,7 +185,23 @@ export const getPublicSeoGlobal = createServerFn({ method: "GET" }).handler(asyn
 });
 
 export const getPublicSeoForPath = createServerFn({ method: "POST" })
-  .inputValidator((input) => z.object({ routePath: z.string() }).parse(input))
+  .inputValidator((input) => z.object({
+    routePath: z.string(),
+    fallback: z.object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+      keywords: z.string().optional(),
+      canonical: z.string().optional(),
+      ogTitle: z.string().optional(),
+      ogDescription: z.string().optional(),
+      ogImage: z.string().optional(),
+      twitterTitle: z.string().optional(),
+      twitterDescription: z.string().optional(),
+      twitterImage: z.string().optional(),
+    }).optional(),
+    /** When true, skip seo_global in resolution so route hardcoded defaults apply after enabled page fields. */
+    routeDefaultsOnly: z.boolean().optional(),
+  }).parse(input))
   .handler(async ({ data }) => {
     const [global, pagesRes] = await Promise.all([
       loadGlobal(),
@@ -193,23 +209,30 @@ export const getPublicSeoForPath = createServerFn({ method: "POST" })
     ]);
     if (pagesRes.error) throw new Error(pagesRes.error.message);
     const pages = (pagesRes.data ?? []) as SeoPageRow[];
-    const exact = pages.find((p) => p.route_path === data.routePath);
+    const globalForResolve = data.routeDefaultsOnly ? null : global;
+    const fallback = data.fallback;
+    const routePath = data.routePath;
+
+    const exact =
+      pages.find((p) => p.route_path === routePath)
+      ?? pages.find((p) => p.page_key === pageKeyFromPath(routePath));
+
     if (exact) {
-      const resolved = resolvePageSeo(exact, global, { routePath: data.routePath });
-      return { global, resolved };
+      const resolved = resolvePageSeo(exact, globalForResolve, { routePath, fallback });
+      return { global, resolved, page: exact };
     }
 
-    const dynamic = pages.find((p) => p.is_dynamic && p.enabled && data.routePath.match(pathToRegex(p.route_path ?? "")));
+    const dynamic = pages.find((p) => p.is_dynamic && p.enabled && routePath.match(pathToRegex(p.route_path ?? "")));
     if (dynamic) {
-      const resolved = resolvePageSeo(dynamic, global, { routePath: data.routePath });
-      return { global, resolved };
+      const resolved = resolvePageSeo(dynamic, globalForResolve, { routePath, fallback });
+      return { global, resolved, page: dynamic };
     }
 
-    const resolved = resolvePageSeo(null, global, {
-      routePath: data.routePath,
-      fallback: { title: labelFromPath(data.routePath) },
+    const resolved = resolvePageSeo(null, globalForResolve, {
+      routePath,
+      fallback: fallback ?? { title: labelFromPath(routePath) },
     });
-    return { global, resolved };
+    return { global, resolved, page: null };
   });
 
 function pathToRegex(routePath: string): RegExp {

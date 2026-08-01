@@ -2,16 +2,20 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { ChatApp } from "@/components/chat/ChatApp";
 import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import { useAppSettings } from "@/lib/app-settings";
+import { headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
+
+const HOME_SEO_FALLBACK = {
+  title: "Chat rooms & community",
+  description:
+    "Public chat rooms, private DMs, file sharing, threaded replies, daily streaks, achievements and game commands like !trivia, !hangman, !roll, !fish and !dig.",
+  ogTitle: "Chat rooms & community",
+  ogDescription:
+    "Hang out in public rooms, DM friends, share files, earn badges, and play games with chat commands.",
+};
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Chat rooms & community" },
-      { name: "description", content: "Public chat rooms, private DMs, file sharing, threaded replies, daily streaks, achievements and game commands like !trivia, !hangman, !roll, !fish and !dig." },
-      { property: "og:title", content: "Chat rooms & community" },
-      { property: "og:description", content: "Hang out in public rooms, DM friends, share files, earn badges, and play games with chat commands." },
-    ],
-  }),
+  loader: () => loadRouteSeoWithDefaults("/", HOME_SEO_FALLBACK),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: HomeRouter,
 });
 

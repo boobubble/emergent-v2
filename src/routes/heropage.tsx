@@ -22,17 +22,18 @@ import {
   type HeroConfig, type HeroSection, type HeroShowcaseItem,
   type FamousChatroom, type LiveUserCard,
 } from "@/lib/hero-page-config";
+import { headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
+
+const HEROPAGE_SEO_FALLBACK = {
+  title: `${HERO_DEFAULTS.brandName} — ${HERO_DEFAULTS.headline}`,
+  description: HERO_DEFAULTS.subheadline,
+  ogTitle: HERO_DEFAULTS.headline,
+  ogDescription: HERO_DEFAULTS.subheadline,
+};
 
 export const Route = createFileRoute("/heropage")({
-  head: () => ({
-    meta: [
-      { title: `${HERO_DEFAULTS.brandName} — ${HERO_DEFAULTS.headline}` },
-      { name: "description", content: HERO_DEFAULTS.subheadline },
-      { property: "og:title", content: HERO_DEFAULTS.headline },
-      { property: "og:description", content: HERO_DEFAULTS.subheadline },
-      { property: "og:type", content: "website" },
-    ],
-  }),
+  loader: () => loadRouteSeoWithDefaults("/heropage", HEROPAGE_SEO_FALLBACK),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: HeroHomepage,
 });
 
