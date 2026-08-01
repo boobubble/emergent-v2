@@ -56,47 +56,47 @@ function MemberRow({
 }) {
   return (
     <div
-      className={`group flex min-h-11 w-full items-center gap-2 rounded-xl px-2 py-1.5 transition-colors hover:bg-white/5 ${
+      className={`group flex min-h-[44px] w-full items-center gap-1.5 rounded-lg px-1.5 py-0.5 transition-colors hover:bg-white/5 ${
         isOffline ? "opacity-60" : ""
       } ${user.isBot ? "bg-primary/5" : ""}`}
     >
       <UserMenu userId={user.id} username={user.name}>
-        <div className="relative">
+        <div className="relative shrink-0">
           <FrameAvatar user={user} size={32} />
           {!user.isBot && !isOffline && (
-            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-emerald-400" aria-hidden />
+            <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-card bg-emerald-400" aria-hidden />
           )}
           {muted && (
             <span
               title="Muted in this room"
-              className="absolute -bottom-0.5 -left-0.5 grid h-4 w-4 place-items-center rounded-full bg-destructive text-destructive-foreground shadow"
+              className="absolute -bottom-0.5 -left-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-destructive text-destructive-foreground shadow"
             >
-              <VolumeX className="h-2.5 w-2.5" />
+              <VolumeX className="h-2 w-2" />
             </span>
           )}
         </div>
       </UserMenu>
       <UserMenu userId={user.id} username={user.name}>
-        <div className="min-w-0 flex-1 leading-tight">
-          <div className="flex items-center gap-1.5 truncate text-xs font-semibold text-foreground/90 hover:text-primary">
+        <div className="min-w-0 flex-1 leading-none">
+          <div className="flex items-center gap-1 truncate text-xs font-semibold text-foreground/90 hover:text-primary">
             <CosmeticName userId={user.id} name={user.name} />
             <NameAdornments user={user} />
             {ICONS[role]}
             {user.isBot && (
-              <span className="rounded-md bg-primary/15 px-1 py-0.5 text-[9px] font-bold uppercase tracking-tight text-primary">
+              <span className="rounded bg-primary/15 px-1 py-px text-[8px] font-bold uppercase tracking-tight text-primary">
                 Bot
               </span>
             )}
             {isFriend && !user.isBot && (
-              <span className="rounded-md bg-sky-500/15 px-1 py-0.5 text-[9px] font-bold uppercase tracking-tight text-sky-400">
+              <span className="rounded bg-sky-500/15 px-1 py-px text-[8px] font-bold uppercase tracking-tight text-sky-400">
                 Friend
               </span>
             )}
-            {muted && <VolumeX className="h-3 w-3 text-destructive" />}
+            {muted && <VolumeX className="h-2.5 w-2.5 shrink-0 text-destructive" />}
           </div>
           {(muted || user.isGuest) && (
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <span className="truncate">{muted ? "Muted" : "Guest"}</span>
+            <div className="mt-0.5 truncate text-[9px] leading-none text-muted-foreground">
+              {muted ? "Muted" : "Guest"}
             </div>
           )}
         </div>
@@ -110,7 +110,7 @@ function MemberRow({
             onClick={onClick}
             title="Send DM"
             aria-label={`Message ${user.name}`}
-            className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-full text-muted-foreground opacity-70 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100 sm:min-h-8 sm:min-w-8"
+            className="grid min-h-11 min-w-11 shrink-0 place-items-center self-center rounded-full text-muted-foreground opacity-70 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100 sm:min-h-8 sm:min-w-8"
           >
             <MessageCircle className="h-4 w-4" />
           </button>
@@ -585,7 +585,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
       {/* Tab content */}
       {tab === "friends" ? (
-        <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4 pt-2">
+        <div className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-3 pt-1">
           {friendIds.filter(matchesQuery).length === 0 ? (
             <p className="px-3 py-8 text-center text-xs text-muted-foreground">
               {q ? "No friends match your search." : "No friends yet. Add some from the feed or click a member to start."}
@@ -615,7 +615,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           )}
         </div>
       ) : tab === "bots" ? (
-        <div className="flex-1 space-y-1 overflow-y-auto px-3 pb-4 pt-2">
+        <div className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-3 pt-1">
           {onlineBots.length === 0 ? (
             <p className="px-3 py-6 text-center text-xs text-muted-foreground">
               {q ? "No bots match your search." : "No bots available."}
@@ -628,9 +628,9 @@ export function MembersPanel({ roomId }: { roomId: string }) {
         </div>
       ) : (
         // Users tab — in merged mode bots are included via `online`/`offline`; in split mode bots are excluded.
-        <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4 pt-2">
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 px-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400/90">
+        <div className="flex-1 space-y-2 overflow-y-auto px-2 pb-3 pt-1">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1.5 px-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400/90">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
               Online — {(effectiveMode === "split" ? onlineUsers : online).length}
             </div>
@@ -647,11 +647,11 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
           {(effectiveMode === "split" ? offlineUsers : offline).length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 px-1 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+              <div className="flex items-center gap-1.5 px-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
                 <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" aria-hidden />
                 Offline — {(effectiveMode === "split" ? offlineSortedUsers : offlineSorted).length}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {(effectiveMode === "split" ? offlineUsers : offline).map((id) => (
                   <div key={id}>{renderMemberRow(id, () => openDM(id), { offline: true })}</div>
                 ))}
