@@ -3,7 +3,10 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { isReservedSlug } from "@/lib/reserved-routes";
+import { slugify, slugifyPageSlug, validatePageSlug, assertUniquePageSlug } from "@/lib/page-slug";
 import { withRateLimit } from "./rate-limit-middleware";
+
+export { slugify } from "@/lib/page-slug";
 
 async function getSupabaseAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -19,16 +22,6 @@ async function assertAdmin(userId: string) {
     .in("role", ["super_admin", "admin"]);
   if (error) throw new Error(error.message);
   if (!data || data.length === 0) throw new Error("Forbidden: admin only");
-}
-
-export function slugify(input: string): string {
-  return (input || "")
-    .toLowerCase()
-    .replace(/https?:\/\/\S+/g, " ")
-    .replace(/[^a-z0-9\s-]/g, " ")
-    .replace(/[\s-]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80) || "page";
 }
 
 const LAYOUTS = ["full", "boxed"] as const;
@@ -55,7 +48,6 @@ const pageSchema = z.object({
   canonical_url: z.string().max(500).nullable().optional(),
   noindex: z.boolean().default(false),
   nofollow: z.boolean().default(false),
-  overwrite: z.boolean().optional(),
 });
 
 // ===== Admin =====
@@ -87,20 +79,23 @@ export const savePage = createServerFn({ method: "POST" })
   .inputValidator((input) => pageSchema.parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
-    const slug = slugify(data.slug);
-    if (isReservedSlug(slug)) {
-      throw new Error(`Slug "${slug}" is reserved by the platform. Choose another.`);
+    const slug = slugifyPageSlug(data.slug);
+    const reservedErr = validatePageSlug(slug, { required: data.status === "published" });
+    if (reservedErr) throw new Error(reservedErr);
+    if (data.status === "published" && !slug) {
+      throw new Error("Slug is required before publishing.");
     }
 
-    const { data: existing } = await supabaseAdmin
-      .from("custom_pages").select("id").eq("slug", slug).maybeSingle();
-    if (existing && existing.id !== data.id) {
-      if (!data.overwrite) {
-        throw new Error(`Slug "${slug}" already in use. Rename it or enable overwrite.`);
-      }
-      // overwrite path -> delete the existing page so we can update this one's slug
-      await (await getSupabaseAdmin()).from("custom_pages").delete().eq("id", existing.id);
+    const sb = await getSupabaseAdmin();
+    let previousSlug: string | null = null;
+    if (data.id) {
+      const { data: prev } = await sb.from("custom_pages").select("slug").eq("id", data.id).maybeSingle();
+      previousSlug = prev?.slug ?? null;
     }
+
+    const { data: existing } = await sb
+      .from("custom_pages").select("id").eq("slug", slug).maybeSingle();
+    assertUniquePageSlug(slug, existing, data.id);
 
     const row = {
       slug,
@@ -128,11 +123,17 @@ export const savePage = createServerFn({ method: "POST" })
     };
 
     if (data.id) {
-      const { error } = await (await getSupabaseAdmin()).from("custom_pages").update(row).eq("id", data.id);
+      const { error } = await sb.from("custom_pages").update(row).eq("id", data.id);
       if (error) throw new Error(error.message);
-      return { ok: true, id: data.id, slug };
+      if (previousSlug && previousSlug !== slug) {
+        await sb.from("page_redirects").upsert(
+          { from_slug: previousSlug, to_slug: slug },
+          { onConflict: "from_slug" },
+        );
+      }
+      return { ok: true, id: data.id, slug, previousSlug, slugChanged: previousSlug !== slug };
     }
-    const { data: ins, error } = await (await getSupabaseAdmin()).from("custom_pages").insert(row).select("id").single();
+    const { data: ins, error } = await sb.from("custom_pages").insert(row).select("id").single();
     if (error) throw new Error(error.message);
     return { ok: true, id: ins.id, slug };
   });
@@ -165,7 +166,7 @@ export const importPages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) =>
     z.object({
-      pages: z.array(pageSchema.omit({ id: true, overwrite: true })).min(1).max(200),
+      pages: z.array(pageSchema.omit({ id: true })).min(1).max(200),
       mode: z.enum(["skip", "overwrite"]).default("skip"),
     }).parse(input),
   )
@@ -201,7 +202,7 @@ export const importPages = createServerFn({ method: "POST" })
 export const getPublishedPage = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ slug: z.string().min(1).max(120) }).parse(input))
   .handler(async ({ data }) => {
-    const slug = slugify(data.slug);
+    const slug = slugifyPageSlug(data.slug);
     // Redirect lookup first
     const { data: redir } = await supabaseAdmin
       .from("page_redirects").select("to_slug").eq("from_slug", slug).maybeSingle();

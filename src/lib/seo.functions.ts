@@ -11,6 +11,8 @@ import {
   buildRobotsTxt,
   buildSitemapXml,
   staticSitemapEntries,
+  customPageSitemapEntries,
+  mergeSitemapEntries,
 } from "@/lib/seo/sitemap";
 import {
   buildRouteCatalog,
@@ -268,8 +270,21 @@ function pathToRegex(routePath: string): RegExp {
 }
 
 export async function buildPublicSitemapXml(): Promise<string> {
-  const [global, pages] = await Promise.all([loadGlobal(), loadPages()]);
-  return buildSitemapXml(staticSitemapEntries(pages, global));
+  const sb = await import("@/integrations/supabase/client.server").then((m) => m.supabaseAdmin);
+  const [global, seoPages, customPagesRes, redirectsRes] = await Promise.all([
+    loadGlobal(),
+    loadPages(),
+    sb.from("custom_pages")
+      .select("slug,updated_at,published_at,noindex")
+      .eq("status", "published"),
+    sb.from("page_redirects").select("from_slug"),
+  ]);
+  const redirectFromSlugs = new Set((redirectsRes.data ?? []).map((r) => r.from_slug));
+  const entries = mergeSitemapEntries(
+    staticSitemapEntries(seoPages, global),
+    customPageSitemapEntries(customPagesRes.data ?? [], redirectFromSlugs, global),
+  );
+  return buildSitemapXml(entries);
 }
 
 export async function buildPublicRobotsTxt(): Promise<string> {

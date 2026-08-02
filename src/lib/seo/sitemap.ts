@@ -42,6 +42,44 @@ export function staticSitemapEntries(pages: SeoPageRow[], global: SeoGlobal | nu
     }));
 }
 
+export type CustomPageSitemapRow = {
+  slug: string;
+  updated_at?: string | null;
+  published_at?: string | null;
+  noindex?: boolean | null;
+};
+
+/** Published CMS pages at /{custom_pages.slug}; excludes redirect source slugs. */
+export function customPageSitemapEntries(
+  pages: CustomPageSitemapRow[],
+  redirectFromSlugs: Set<string>,
+  global: SeoGlobal | null,
+): SitemapEntry[] {
+  const origin = siteOrigin(global);
+  const today = new Date().toISOString().slice(0, 10);
+  return pages
+    .filter((p) => p.slug && !p.noindex && !redirectFromSlugs.has(p.slug))
+    .map((p) => ({
+      loc: `${origin}/${p.slug}`,
+      lastmod: (p.updated_at ?? p.published_at)?.slice(0, 10) ?? today,
+      changefreq: "weekly",
+      priority: 0.6,
+    }));
+}
+
+export function mergeSitemapEntries(...groups: SitemapEntry[][]): SitemapEntry[] {
+  const seen = new Set<string>();
+  const merged: SitemapEntry[] = [];
+  for (const group of groups) {
+    for (const entry of group) {
+      if (seen.has(entry.loc)) continue;
+      seen.add(entry.loc);
+      merged.push(entry);
+    }
+  }
+  return merged;
+}
+
 function escapeXml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }

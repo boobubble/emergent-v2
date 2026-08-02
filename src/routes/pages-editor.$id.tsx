@@ -19,7 +19,14 @@ import {
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
-import { getPage, savePage, slugify } from "@/lib/pages.functions";
+import { getPage, savePage } from "@/lib/pages.functions";
+import {
+  slugifyPageSlug,
+  validatePageSlug,
+  pageSlugPreviewHost,
+  DUPLICATE_PAGE_SLUG_MESSAGE,
+  PageSlugValidationError,
+} from "@/lib/page-slug";
 import { normalizePageContentForSave } from "@/lib/page-content-paste";
 import { useAuth } from "@/lib/auth-store";
 import { getMyRoles } from "@/lib/admin.functions";
@@ -129,6 +136,8 @@ function PageEditor() {
   const skipNextSave = useRef(false);
   const contentModifiedRef = useRef(false);
   const initialContentRef = useRef("");
+  const initialSlugRef = useRef("");
+  const [slugError, setSlugError] = useState<string | null>(null);
 
   useEffect(() => {
     const serverRow: PageRow = isNew
@@ -140,7 +149,9 @@ function PageEditor() {
     setRow(serverRow);
     setAutoSlug(isNew);
     initialContentRef.current = serverRow.content ?? "";
+    initialSlugRef.current = serverRow.slug ?? "";
     contentModifiedRef.current = false;
+    setSlugError(validatePageSlug(serverRow.slug ?? ""));
 
     try {
       const raw = localStorage.getItem(draftKey);
@@ -198,8 +209,26 @@ function PageEditor() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [draftStatus]);
 
-  async function handleSave(opts: { publish?: boolean; overwrite?: boolean } = {}) {
+  async function handleSave(opts: { publish?: boolean } = {}) {
     if (!row.title.trim()) { toast.error("Add a title first"); return; }
+    const normalizedSlug = slugifyPageSlug(row.slug || row.title);
+    const publishing = opts.publish || row.status === "published";
+    const err = validatePageSlug(normalizedSlug, { required: publishing });
+    if (err) {
+      setSlugError(err);
+      toast.error(err);
+      return;
+    }
+    if (
+      initialSlugRef.current &&
+      normalizedSlug !== initialSlugRef.current &&
+      row.status === "published"
+    ) {
+      toast.warning(
+        "Changing a published URL can affect SEO. The previous slug will redirect to the new one.",
+        { duration: 6000 },
+      );
+    }
     setSaving(true);
     try {
       const status = opts.publish ? "published" : row.status;
@@ -211,7 +240,7 @@ function PageEditor() {
       }
       const payload = {
         id: row.id || undefined,
-        slug: row.slug || slugify(row.title),
+        slug: normalizedSlug,
         title: row.title,
         content: contentToSave,
         excerpt: row.excerpt || null,
@@ -230,30 +259,37 @@ function PageEditor() {
         canonical_url: row.canonical_url || null,
         noindex: row.noindex,
         nofollow: row.nofollow,
-        overwrite: opts.overwrite,
       };
       const saved: any = await save({ data: payload });
       toast.success(opts.publish ? "Published" : "Saved");
+      if (saved?.slugChanged && saved?.previousSlug) {
+        toast.info(`Redirect created: /${saved.previousSlug} → /${saved.slug}`, { duration: 6000 });
+      }
       try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
       setDraftStatus("idle");
       setDraftAt(null);
       contentModifiedRef.current = false;
       initialContentRef.current = contentToSave;
+      initialSlugRef.current = normalizedSlug;
+      setSlugError(null);
+      skipNextSave.current = true;
+      setRow((r) => ({ ...r, slug: normalizedSlug, status }));
       if (contentToSave !== row.content) {
-        skipNextSave.current = true;
         setRow((r) => ({ ...r, content: contentToSave }));
       }
       if (saved?.id && saved.id !== row.id) {
         navigate({ to: "/pages-editor/$id", params: { id: saved.id }, replace: true });
-      } else {
-        skipNextSave.current = true;
-        setRow((r) => ({ ...r, status }));
       }
-    } catch (e: any) {
-      const msg = e?.message ?? "Save failed";
-      if (msg.toLowerCase().includes("already in use")) {
-        if (confirm(`${msg}\n\nOverwrite the existing page?`)) return handleSave({ ...opts, overwrite: true });
-      } else { toast.error(msg); }
+    } catch (e: unknown) {
+      const err = e as { message?: string; code?: string };
+      const msg = err?.message ?? "Save failed";
+      if (err instanceof PageSlugValidationError || err?.code === "DUPLICATE_SLUG" || msg === DUPLICATE_PAGE_SLUG_MESSAGE) {
+        setSlugError(DUPLICATE_PAGE_SLUG_MESSAGE);
+        toast.error(DUPLICATE_PAGE_SLUG_MESSAGE);
+        return;
+      }
+      if (msg.toLowerCase().includes("slug")) setSlugError(msg);
+      toast.error(msg);
     } finally { setSaving(false); }
   }
 
@@ -261,7 +297,9 @@ function PageEditor() {
     return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Loading editor…</div>;
   }
 
-  const publicUrl = row.slug ? `/${row.slug}` : "";
+  const publicUrl = row.slug ? `/${slugifyPageSlug(row.slug)}` : "";
+  const slugPreview = slugifyPageSlug(row.slug || (autoSlug ? row.title : ""));
+  const slugHost = pageSlugPreviewHost();
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -298,21 +336,57 @@ function PageEditor() {
               maxLength={200}
               onChange={(e) => {
                 const t = e.target.value;
-                setRow((r) => ({ ...r, title: t, slug: autoSlug ? slugify(t) : r.slug }));
+                const nextSlug = autoSlug ? slugifyPageSlug(t) : row.slug;
+                setRow((r) => ({ ...r, title: t, slug: nextSlug }));
+                if (autoSlug) setSlugError(validatePageSlug(nextSlug));
               }}
               placeholder="Add title"
               className="!h-auto border-0 bg-transparent px-0 py-2 text-2xl font-bold shadow-none focus-visible:ring-0 sm:text-3xl"
             />
-            <div className="mb-3 mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <span>Permalink:</span>
-              <span className="font-mono text-foreground">/{row.slug || "your-slug"}</span>
-              <Input
-                value={row.slug}
-                maxLength={120}
-                onChange={(e) => { update("slug", slugify(e.target.value)); setAutoSlug(false); }}
-                className="ml-2 h-7 max-w-[220px] font-mono text-xs"
-                placeholder="page-slug"
-              />
+            <div className="mb-3 mt-3 rounded-lg border border-border bg-muted/20 p-3">
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Page URL
+              </div>
+              <div className="mb-2 truncate font-mono text-sm text-foreground">
+                {slugHost}/{slugPreview || "your-slug"}
+              </div>
+              <div className="flex flex-wrap items-start gap-2">
+                <Input
+                  value={row.slug}
+                  maxLength={120}
+                  onChange={(e) => {
+                    const next = slugifyPageSlug(e.target.value);
+                    update("slug", next);
+                    setAutoSlug(false);
+                    setSlugError(validatePageSlug(next));
+                  }}
+                  className="h-8 max-w-md font-mono text-xs"
+                  placeholder="indian-chat-room"
+                  aria-invalid={!!slugError}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    const next = slugifyPageSlug(row.title);
+                    update("slug", next);
+                    setAutoSlug(true);
+                    setSlugError(validatePageSlug(next));
+                  }}
+                >
+                  Regenerate from title
+                </Button>
+              </div>
+              {slugError && (
+                <p className="mt-2 text-xs text-destructive" role="alert">{slugError}</p>
+              )}
+              {autoSlug && !slugError && (
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  Slug auto-updates from the title until you edit it manually.
+                </p>
+              )}
             </div>
             <RichTextEditor
               value={row.content}

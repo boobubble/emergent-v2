@@ -67,7 +67,7 @@ export const Route = createFileRoute("/$slug")({
   head: ({ loaderData, params }) => {
     const p = loaderData?.page;
     if (!p) return {};
-    const url = `https://holo-chat-quest.lovable.app/${params.slug}`;
+    const url = `https://holo-chat-quest.lovable.app/${p.slug}`;
     const title = p.meta_title || p.title;
     const desc = p.meta_description || p.excerpt || `${p.title} on our community.`;
     const robots = [p.noindex ? "noindex" : "index", p.nofollow ? "nofollow" : "follow"].join(", ");
