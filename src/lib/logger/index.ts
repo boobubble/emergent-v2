@@ -16,6 +16,12 @@ function normalizeError(err: unknown): { message: string; stack?: string } {
   }
 }
 
+function shouldPersist(severity: LogSeverity, metadata?: Record<string, unknown>): boolean {
+  if (severity !== "error" && severity !== "fatal") return false;
+  if (metadata?.table === "client_error_logs") return false;
+  return true;
+}
+
 function emit(severity: LogSeverity, message: string, err?: unknown, metadata?: Record<string, unknown>) {
   const norm = err ? normalizeError(err) : { message };
   const key = throttleKey(norm.message, severity);
@@ -33,7 +39,7 @@ function emit(severity: LogSeverity, message: string, err?: unknown, metadata?: 
   else if (severity === "warn") console.warn(line, err ?? metadata ?? "");
   else console.error(line, err ?? metadata ?? "");
 
-  if (severity === "error" || severity === "fatal") {
+  if (shouldPersist(severity, metadata)) {
     persistErrorLog(payload);
   }
 }
@@ -59,7 +65,7 @@ export const logger = {
       ...payload,
     };
     console.error(`[${(full.severity ?? "error").toUpperCase()}] ${full.message}`, full.metadata ?? "");
-    if (full.severity === "error" || full.severity === "fatal") {
+    if (shouldPersist(full.severity ?? "error", full.metadata)) {
       persistErrorLog(full);
     }
   },

@@ -3,6 +3,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { logger } from "@/lib/logger";
 
 function logSupabaseError(op: string, err: unknown, meta: Record<string, unknown>) {
+  if (meta.table === "client_error_logs") return;
   const pg = err as { code?: string; message?: string; status?: number; details?: string };
   logger.error(`Supabase ${op} failed`, err instanceof Error ? err : new Error(pg.message ?? String(err)), {
     ...meta,
