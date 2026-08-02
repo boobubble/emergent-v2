@@ -3,22 +3,23 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { logSupabaseEnvPresence } from "@/integrations/supabase/env.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { withRateLimit } from "./rate-limit-middleware";
+import { auditSeoHealth } from "@/lib/seo/health";
 import {
-  auditSeoHealth,
   buildRobotsTxt,
-  buildRouteCatalog,
   buildSitemapXml,
+  staticSitemapEntries,
+} from "@/lib/seo/sitemap";
+import {
+  buildRouteCatalog,
   parseRoutePathsFromTree,
   pageKeyFromPath,
   labelFromPath,
-  resolvePageSeo,
-  staticSitemapEntries,
-  type SeoAiField,
-  type SeoGlobal,
-  type SeoPageRow,
-} from "@/lib/seo";
+} from "@/lib/seo/route-registry";
+import { resolvePageSeo } from "@/lib/seo/resolve-seo";
+import type { SeoAiField, SeoGlobal, SeoPageRow } from "@/lib/seo/types";
 import { buildSeoInventory, summarizeSeoInventory, type SeoInventoryRow } from "@/lib/seo/inventory";
 import {
   editFormToGlobalPatch,
@@ -30,6 +31,30 @@ import {
   type SeoEditFormValues,
 } from "@/lib/seo/edit-form";
 import { SEO_ROUTE_CATALOG } from "@/lib/seo/route-registry";
+
+const SEO_INVENTORY_GENERIC_ERROR =
+  "Could not load inventory. Check admin permissions and try again.";
+
+function isProductionRuntime(): boolean {
+  return process.env.NODE_ENV === "production";
+}
+
+function logSeoInventoryError(phase: string, err: unknown, userId?: string) {
+  const message = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack : undefined;
+  if (message.includes("supabaseKey is required") || message.includes("Missing Supabase environment")) {
+    logSupabaseEnvPresence(`getSeoInventory ${phase}`);
+  }
+  console.error("[getSeoInventory]", { phase, userId, message, stack });
+}
+
+function toClientSeoInventoryError(err: unknown): Error {
+  const message = err instanceof Error ? err.message : String(err);
+  if (isProductionRuntime()) {
+    return new Error(SEO_INVENTORY_GENERIC_ERROR);
+  }
+  return new Error(message || SEO_INVENTORY_GENERIC_ERROR);
+}
 
 async function assertAdmin(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -386,22 +411,28 @@ export const getSeoTargetsSummary = createServerFn({ method: "GET" })
 export const getSeoInventory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
-    const [global, pages, discovered] = await Promise.all([
-      loadGlobal(),
-      loadPages(),
-      Promise.resolve(readDiscoveredPaths()),
-    ]);
-    const catalog = buildRouteCatalog(discovered);
-    const rows = buildSeoInventory({ global, pages, catalog, discovered });
-    return {
-      rows,
-      summary: summarizeSeoInventory(rows),
-      global,
-      pageCount: pages.length,
-      catalogCount: catalog.length,
-      discoveredCount: discovered.length,
-    };
+    const userId = context.userId;
+    try {
+      await assertAdmin(userId);
+      const [global, pages, discovered] = await Promise.all([
+        loadGlobal(),
+        loadPages(),
+        Promise.resolve(readDiscoveredPaths()),
+      ]);
+      const catalog = buildRouteCatalog(discovered);
+      const rows = buildSeoInventory({ global, pages, catalog, discovered });
+      return {
+        rows,
+        summary: summarizeSeoInventory(rows),
+        global,
+        pageCount: pages.length,
+        catalogCount: catalog.length,
+        discoveredCount: discovered.length,
+      };
+    } catch (err) {
+      logSeoInventoryError("handler", err, userId);
+      throw toClientSeoInventoryError(err);
+    }
   });
 
 const seoEditFormSchema = z.object({

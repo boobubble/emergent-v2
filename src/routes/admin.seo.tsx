@@ -291,7 +291,9 @@ function SeoInventoryPanel() {
             {inventory.isError && (
               <TableRow>
                 <TableCell colSpan={11} className="py-8 text-center text-sm text-destructive">
-                  Could not load inventory. Check admin permissions and try again.
+                  {import.meta.env.DEV && inventory.error instanceof Error && inventory.error.message
+                    ? inventory.error.message
+                    : "Could not load inventory. Check admin permissions and try again."}
                 </TableCell>
               </TableRow>
             )}

@@ -1,5 +1,6 @@
 import { getPublicSeoForPath } from "@/lib/seo.functions";
-import { createSeoRouteHead, resolvePageSeo, seoFallback } from "@/lib/seo";
+import { createSeoRouteHead, seoFallback } from "@/lib/seo/route-head";
+import { resolvePageSeo } from "@/lib/seo/resolve-seo";
 import type { ResolvedSeo, SeoGlobal } from "@/lib/seo/types";
 
 export type RouteSeoLoaderData = {
