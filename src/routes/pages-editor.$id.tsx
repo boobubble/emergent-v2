@@ -20,6 +20,7 @@ import {
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 import { getPage, savePage, slugify } from "@/lib/pages.functions";
+import { normalizePageContentForSave } from "@/lib/page-content-paste";
 import { useAuth } from "@/lib/auth-store";
 import { getMyRoles } from "@/lib/admin.functions";
 
@@ -126,6 +127,8 @@ function PageEditor() {
   const draftKey = `lovable.pageDraft.${id}`;
   const hydrated = useRef(false);
   const skipNextSave = useRef(false);
+  const contentModifiedRef = useRef(false);
+  const initialContentRef = useRef("");
 
   useEffect(() => {
     const serverRow: PageRow = isNew
@@ -136,6 +139,8 @@ function PageEditor() {
     skipNextSave.current = true;
     setRow(serverRow);
     setAutoSlug(isNew);
+    initialContentRef.current = serverRow.content ?? "";
+    contentModifiedRef.current = false;
 
     try {
       const raw = localStorage.getItem(draftKey);
@@ -153,6 +158,7 @@ function PageEditor() {
             setRow(parsed.row);
             setAutoSlug(false);
             setDraftAt(parsed.savedAt);
+            contentModifiedRef.current = parsed.row.content !== initialContentRef.current;
           } else {
             localStorage.removeItem(draftKey);
           }
@@ -197,11 +203,17 @@ function PageEditor() {
     setSaving(true);
     try {
       const status = opts.publish ? "published" : row.status;
+      let contentToSave = row.content;
+      if (contentModifiedRef.current) {
+        const normalized = normalizePageContentForSave(row.content);
+        contentToSave = normalized.html;
+        for (const w of normalized.warnings) toast.info(w, { duration: 5000 });
+      }
       const payload = {
         id: row.id || undefined,
         slug: row.slug || slugify(row.title),
         title: row.title,
-        content: row.content,
+        content: contentToSave,
         excerpt: row.excerpt || null,
         layout: row.layout,
         sidebar_left: row.sidebar_left,
@@ -225,6 +237,12 @@ function PageEditor() {
       try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
       setDraftStatus("idle");
       setDraftAt(null);
+      contentModifiedRef.current = false;
+      initialContentRef.current = contentToSave;
+      if (contentToSave !== row.content) {
+        skipNextSave.current = true;
+        setRow((r) => ({ ...r, content: contentToSave }));
+      }
       if (saved?.id && saved.id !== row.id) {
         navigate({ to: "/pages-editor/$id", params: { id: saved.id }, replace: true });
       } else {
@@ -296,7 +314,13 @@ function PageEditor() {
                 placeholder="page-slug"
               />
             </div>
-            <RichTextEditor value={row.content} onChange={(html) => update("content", html)} />
+            <RichTextEditor
+              value={row.content}
+              onChange={(html) => {
+                contentModifiedRef.current = html !== initialContentRef.current;
+                update("content", html);
+              }}
+            />
           </div>
 
           <div className="rounded-xl border border-border bg-background p-4 shadow-sm sm:p-5">

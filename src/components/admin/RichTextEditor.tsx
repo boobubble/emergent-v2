@@ -22,6 +22,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { sanitizeHtml } from "@/lib/pages-io";
 import { injectHeadingIds } from "@/lib/heading-ids";
+import { processPastedPageContent } from "@/lib/page-content-paste";
+import { Switch } from "@/components/ui/switch";
 
 interface Props {
   value: string;
@@ -36,6 +38,13 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [mode, setMode] = useState<"edit" | "preview">("edit");
+  const [detectPlainTextHeadings, setDetectPlainTextHeadings] = useState(false);
+  const detectPlainTextRef = useRef(false);
+  const editorRef = useRef<Editor | null>(null);
+
+  useEffect(() => {
+    detectPlainTextRef.current = detectPlainTextHeadings;
+  }, [detectPlainTextHeadings]);
 
   const editor = useEditor({
     extensions: [
@@ -62,6 +71,45 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
         class:
           "prose prose-sm dark:prose-invert min-h-[320px] max-w-none p-3 text-sm outline-none focus:outline-none",
       },
+      handlePaste(_view, event) {
+        const clipboard = event.clipboardData;
+        if (!clipboard) return false;
+
+        const html = clipboard.getData("text/html")?.trim();
+        const plain = clipboard.getData("text/plain")?.trim();
+
+        if (html) {
+          const { html: processed, warnings } = processPastedPageContent({
+            html,
+            detectPlainTextHeadings: detectPlainTextRef.current,
+            pageTitleOwnsH1: true,
+          });
+          event.preventDefault();
+          editorRef.current?.chain().focus().insertContent(processed).run();
+          for (const w of warnings) toast.info(w, { duration: 5000 });
+          return true;
+        }
+
+        if (plain && detectPlainTextRef.current) {
+          const { html: processed, warnings } = processPastedPageContent({
+            plainText: plain,
+            detectPlainTextHeadings: true,
+            pageTitleOwnsH1: true,
+          });
+          event.preventDefault();
+          editorRef.current?.chain().focus().insertContent(processed).run();
+          for (const w of warnings) toast.info(w, { duration: 5000 });
+          return true;
+        }
+
+        return false;
+      },
+    },
+    onCreate: ({ editor: ed }) => {
+      editorRef.current = ed;
+    },
+    onDestroy: () => {
+      editorRef.current = null;
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   });
@@ -193,7 +241,16 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
         <Sep />
         <TB onClick={() => editor.chain().focus().undo().run()} title="Undo"><Undo2 className="h-3.5 w-3.5" /></TB>
         <TB onClick={() => editor.chain().focus().redo().run()} title="Redo"><Redo2 className="h-3.5 w-3.5" /></TB>
-        <div className="ml-auto flex items-center rounded-md border p-0.5">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground" title="When enabled, plain-text paste may detect Markdown-style or standalone headings">
+            <Switch
+              checked={detectPlainTextHeadings}
+              onCheckedChange={setDetectPlainTextHeadings}
+              className="scale-75"
+            />
+            Detect headings from plain text
+          </label>
+          <div className="flex items-center rounded-md border p-0.5">
           <button
             type="button"
             onClick={() => setMode("edit")}
@@ -208,6 +265,7 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
           >
             <Eye className="h-3 w-3" /> Preview
           </button>
+          </div>
         </div>
       </div>
 
