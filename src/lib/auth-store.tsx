@@ -16,6 +16,7 @@ async function loadSignupAccess(): Promise<SignupAccessConfig> {
 }
 
 import type { Session } from "@supabase/supabase-js";
+import { subscribeAuthStateChange } from "@/lib/auth-listener";
 
 export interface AuthUser {
   id: string;
@@ -221,19 +222,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Safety net: guarantee `ready` flips even if getSession hangs or throws.
     const readyTimer = window.setTimeout(markReady, 3000);
 
-    let subscription: { unsubscribe: () => void } | null = null;
+    let unsubscribe: (() => void) | null = null;
 
-try {
-  const listener = supabase.auth.onAuthStateChange((_event, session) => {
-    applySession(session);
-    markReady();
-  });
-
-  subscription = listener?.data?.subscription ?? null;
-} catch (e) {
-  console.warn("[auth-store] onAuthStateChange failed to attach", e);
-  markReady();
-}
+    try {
+      unsubscribe = subscribeAuthStateChange((_event, session) => {
+        applySession(session);
+        markReady();
+      });
+    } catch (e) {
+      console.warn("[auth-store] onAuthStateChange failed to attach", e);
+      markReady();
+    }
 
 supabase.auth.getSession()
   .then(({ data }) => {
@@ -249,7 +248,7 @@ supabase.auth.getSession()
 return () => {
   cancelled = true;
   window.clearTimeout(readyTimer);
-  subscription?.unsubscribe();
+  unsubscribe?.();
 };
   }, []);
 

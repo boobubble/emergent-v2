@@ -41,6 +41,7 @@ import {
   type SDKEventPayloadMap,
 } from "../../packages/games-sdk";
 import { supabase } from "@/integrations/supabase/client";
+import { subscribeAuthStateChange } from "@/lib/auth-listener";
 import {
   sdkAddXP,
   sdkAddCoins,
@@ -259,10 +260,9 @@ function makeAuthAdapter() {
       return ok({ userId: data.user.id });
     },
     onAuthChange(listener: (s: { userId: string } | null) => void) {
-      const { data } = supabase.auth.onAuthStateChange((_e, session) => {
+      return subscribeAuthStateChange((_e, session) => {
         listener(session?.user ? { userId: session.user.id } : null);
       });
-      return () => data.subscription.unsubscribe();
     },
   };
 }

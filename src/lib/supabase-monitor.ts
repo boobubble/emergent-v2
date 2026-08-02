@@ -3,8 +3,9 @@ import type { Database } from "@/integrations/supabase/types";
 import { logger } from "@/lib/logger";
 
 function logSupabaseError(op: string, err: unknown, meta: Record<string, unknown>) {
-  if (meta.table === "client_error_logs") return;
+  if (meta.table === "client_error_logs" || meta.table === "seo_global") return;
   const pg = err as { code?: string; message?: string; status?: number; details?: string };
+  if (pg.code === "PGRST205" && /seo_global/i.test(pg.message ?? "")) return;
   logger.error(`Supabase ${op} failed`, err instanceof Error ? err : new Error(pg.message ?? String(err)), {
     ...meta,
     postgresCode: pg.code,
@@ -82,8 +83,15 @@ export function attachSupabaseMonitoring(client: SupabaseClient<Database>): Supa
           get(at, ap, ar) {
             const av = Reflect.get(at, ap, ar);
             if (typeof av === "function") {
-              return (...args: unknown[]) =>
-                inspectResult(av.apply(at, args) as PromiseLike<unknown>, "auth", { op: String(ap) });
+              return (...args: unknown[]) => {
+                const result = av.apply(at, args);
+                // onAuthStateChange returns { data: { subscription } } synchronously —
+                // wrapping it in inspectResult would return a Promise and break callers.
+                if (result && typeof (result as PromiseLike<unknown>).then === "function") {
+                  return inspectResult(result as PromiseLike<unknown>, "auth", { op: String(ap) });
+                }
+                return result;
+              };
             }
             return av;
           },

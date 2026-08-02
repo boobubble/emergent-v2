@@ -19,6 +19,8 @@ function normalizeError(err: unknown): { message: string; stack?: string } {
 function shouldPersist(severity: LogSeverity, metadata?: Record<string, unknown>): boolean {
   if (severity !== "error" && severity !== "fatal") return false;
   if (metadata?.table === "client_error_logs") return false;
+  if (metadata?.table === "seo_global") return false;
+  if (metadata?.skipPersist === true) return false;
   return true;
 }
 

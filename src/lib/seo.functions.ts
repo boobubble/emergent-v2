@@ -33,6 +33,7 @@ import {
   type SeoEditFormValues,
 } from "@/lib/seo/edit-form";
 import { SEO_ROUTE_CATALOG } from "@/lib/seo/route-registry";
+import { loadSeoGlobal } from "@/lib/seo/load-global";
 
 const SEO_INVENTORY_GENERIC_ERROR =
   "Could not load inventory. Check admin permissions and try again.";
@@ -69,9 +70,7 @@ async function assertAdmin(userId: string) {
 }
 
 async function loadGlobal(): Promise<SeoGlobal | null> {
-  const { data, error } = await (supabaseAdmin as any).from("seo_global").select("*").eq("id", 1).maybeSingle();
-  if (error) throw new Error(error.message);
-  return data as SeoGlobal | null;
+  return loadSeoGlobal(supabaseAdmin as unknown as Parameters<typeof loadSeoGlobal>[0]);
 }
 
 async function loadPages(): Promise<SeoPageRow[]> {

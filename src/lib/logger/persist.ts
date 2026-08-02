@@ -21,7 +21,8 @@ function isTableUnavailableError(error: unknown): boolean {
   const e = error as { code?: string; message?: string };
   if (e?.code === "PGRST205") return true;
   const msg = e?.message ?? "";
-  return /could not find the table.*client_error_logs/i.test(msg);
+  return /could not find the table.*client_error_logs/i.test(msg)
+    || /could not find the table.*seo_global/i.test(msg);
 }
 
 async function flushQueue() {

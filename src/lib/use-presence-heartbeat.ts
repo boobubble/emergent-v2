@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { subscribeAuthStateChange } from "@/lib/auth-listener";
 import { rtLog } from "@/lib/realtime-debug";
 
 /** Keeps the current user's `profiles.last_seen` fresh so other clients
@@ -60,7 +61,7 @@ export function usePresenceHeartbeat() {
 
     void start();
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+    const unsubscribeAuth = subscribeAuthStateChange((_e, session) => {
       const newId = session?.user?.id ?? null;
       if (newId && newId !== userId) {
         userId = newId;
@@ -83,7 +84,7 @@ export function usePresenceHeartbeat() {
     return () => {
       cancelled = true;
       if (intervalId) window.clearInterval(intervalId);
-      sub.subscription.unsubscribe();
+      unsubscribeAuth();
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("pagehide", onUnload);

@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { subscribeAuthStateChange } from "@/lib/auth-listener";
 import { rtLog } from "@/lib/realtime-debug";
 
 // ---------- Session-conflict signal (module-level pub/sub) ----------
@@ -117,7 +118,7 @@ export function useSessionChangeDetector() {
     });
 
     // In-tab auth changes
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+    const unsubscribeAuth = subscribeAuthStateChange((event, session) => {
       rtLog("auth", event, session?.user?.id?.slice(0, 8) ?? "anon");
       handleUid(session?.user?.id ?? null, event);
     });
@@ -139,7 +140,7 @@ export function useSessionChangeDetector() {
 
     return () => {
       cancelled = true;
-      sub.subscription.unsubscribe();
+      unsubscribeAuth();
       window.removeEventListener("storage", onStorage);
       document.removeEventListener("visibilitychange", onFocus);
       window.removeEventListener("focus", onFocus);

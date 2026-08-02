@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { subscribeAuthStateChange } from "@/lib/auth-listener";
 import {
   isRtDebugEnabled,
   rtCounters,
@@ -44,11 +45,11 @@ export function RealtimeDebugOverlay() {
   useEffect(() => {
     if (!enabled) return;
     supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+    const unsubscribeAuth = subscribeAuthStateChange((_e, s) => {
       setUid(s?.user?.id ?? null);
     });
     const id = window.setInterval(() => force(t => t + 1), 1000);
-    return () => { sub.subscription.unsubscribe(); window.clearInterval(id); };
+    return () => { unsubscribeAuth(); window.clearInterval(id); };
   }, [enabled]);
 
   if (!enabled) return null;

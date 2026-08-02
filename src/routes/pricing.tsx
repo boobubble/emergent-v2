@@ -82,7 +82,7 @@ function PricingPage() {
           </Link>
           {user && mySub?.isActive && (
             <span className="text-sm text-muted-foreground">
-              Current plan: <strong className="text-foreground">{(mySub.subscription as any)?.plan?.name}</strong>
+              Current plan: <strong className="text-foreground">{(mySub?.subscription as any)?.plan?.name}</strong>
             </span>
           )}
         </div>

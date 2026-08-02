@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { subscribeAuthStateChange } from "@/lib/auth-listener";
 import { rtLog } from "@/lib/realtime-debug";
 import type { User } from "@/lib/chat-types";
 
@@ -188,10 +189,10 @@ async function startStore() {
   // Presence channel tied to the current auth user.
   const { data: u } = await supabase.auth.getUser();
   if (u.user?.id) await joinPresence(u.user.id);
-  const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+  const unsubscribeAuth = subscribeAuthStateChange((_event, session) => {
     if (session?.user?.id) void joinPresence(session.user.id);
   });
-  authSub = sub.subscription;
+  authSub = { unsubscribe: unsubscribeAuth };
 
   // Periodic freshness recompute (status/lastSeen derivation).
   tickInterval = window.setInterval(() => {

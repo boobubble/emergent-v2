@@ -14,6 +14,7 @@ export function DynamicBrandHead() {
     queryKey: ["seo-global-public"],
     queryFn: () => fetchGlobal({}),
     staleTime: 5 * 60_000,
+    retry: false,
   });
 
   useEffect(() => {
