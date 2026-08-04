@@ -1712,3 +1712,110 @@
 .prose table th { background: hsl(var(--muted)); text-align: left; }
 
 .prose h2, .prose h3 { scroll-margin-top: 5rem; }
+
+/* ─── Public CMS page body (/$slug only — scoped via .custom-page-content) ─ */
+.custom-page-content {
+  color: hsl(var(--foreground));
+  font-size: 0.875rem;
+  line-height: 1.625;
+}
+
+.custom-page-content h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: hsl(var(--foreground));
+  scroll-margin-top: 5rem;
+}
+
+.custom-page-content h3 {
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.35;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: hsl(var(--foreground));
+  scroll-margin-top: 5rem;
+}
+
+@media (min-width: 768px) {
+  .custom-page-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .custom-page-content h3 {
+    font-size: 1.25rem;
+  }
+}
+
+.custom-page-content p {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.625;
+}
+
+.custom-page-content > :first-child {
+  margin-top: 0;
+}
+
+.custom-page-content ul,
+.custom-page-content ol {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.custom-page-content ul {
+  list-style-type: disc;
+}
+
+.custom-page-content ol {
+  list-style-type: decimal;
+}
+
+.custom-page-content li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.custom-page-content li > p {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.custom-page-content a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.custom-page-content a:hover {
+  opacity: 0.9;
+}
+
+.custom-page-content blockquote {
+  border-left: 4px solid hsl(var(--border));
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
+.custom-page-content blockquote > p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.custom-page-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+  margin: 1rem 0;
+}
+
+.custom-page-content strong {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}

@@ -208,14 +208,14 @@ function PublicPageView({ page }: { page: PublishedCustomPage }) {
               <span className="mx-1">/</span>
               <span>{page.title}</span>
             </nav>
-            <h1 className="text-3xl font-bold tracking-tight">{page.title}</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">{page.title}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
               {(page.tags ?? []).map((t: string) => <Badge key={t} variant="secondary" className="text-[10px]">#{t}</Badge>)}
             </div>
             {page.excerpt && <p className="mt-3 text-sm text-muted-foreground">{page.excerpt}</p>}
 
             <div
-              className="prose prose-sm dark:prose-invert mt-6 max-w-none"
+              className="custom-page-content prose prose-sm dark:prose-invert mt-6 max-w-none"
               dangerouslySetInnerHTML={{ __html: safeHtml }}
             />
           </article>
