@@ -399,13 +399,13 @@ export function ChatApp() {
                   </div>
                 )}
 
-                <MessageInput />
+                <div className="chat-composer-footer shrink-0">
+                  <MessageInput />
+                  <DjFooter />
+                </div>
               </>
             );
           })()}
-
-
-          <DjFooter />
         </main>
         {!isDM(state.activeChannel) && <MembersPanel roomId={state.activeChannel} />}
         <FloatingDMDock />

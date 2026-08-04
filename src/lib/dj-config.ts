@@ -184,3 +184,89 @@ export function currentPositionSec(state: DjPlayerState, nowMs: number = Date.no
   if (!state.startedAtMs) return Math.max(0, state.positionSec);
   return Math.max(0, state.positionSec + (nowMs - state.startedAtMs) / 1000);
 }
+
+export type RadioWidgetRow = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  stream_url: string | null;
+};
+
+export type RadioWidgetStateRow = {
+  widget_id: string;
+  is_live: boolean | null;
+  current_track_title: string | null;
+  current_track_artist: string | null;
+  current_show_title: string | null;
+};
+
+export type ChatRadioView = {
+  visible: boolean;
+  state: DjPlayerState;
+  stationName: string;
+  trackLabel: string | null;
+  isLive: boolean;
+  source: "dj_player" | "radio_widget" | "none";
+};
+
+function trackLabelFromState(state: DjPlayerState): string | null {
+  if (!state.track) return null;
+  return state.track.title || (state.track.kind === "youtube" ? "YouTube stream" : "Live stream");
+}
+
+/** Resolve chatroom radio bar: dj_player first, then enabled radio_widgets stream URL. */
+export function resolveChatRadioView(
+  dj: DjPlayerState,
+  widget: RadioWidgetRow | null,
+  widgetState: RadioWidgetStateRow | null,
+): ChatRadioView {
+  const none: ChatRadioView = {
+    visible: false,
+    state: dj,
+    stationName: "",
+    trackLabel: null,
+    isLive: false,
+    source: "none",
+  };
+
+  if (dj.enabled) {
+    return {
+      visible: true,
+      state: dj,
+      stationName: dj.djName || "Yaarzo Radio",
+      trackLabel: trackLabelFromState(dj),
+      isLive: Boolean(dj.playing && dj.track),
+      source: "dj_player",
+    };
+  }
+
+  const streamUrl = widget?.stream_url?.trim();
+  if (!widget?.enabled || !streamUrl) return none;
+
+  const built = buildTrackFromUrl(streamUrl, widget.name);
+  if (!built) return none;
+
+  const title =
+    widgetState?.current_track_title ||
+    widgetState?.current_show_title ||
+    widget.name ||
+    "Live stream";
+  const artist = widgetState?.current_track_artist;
+  const track: DjTrack = { ...built, title: artist ? `${title} · ${artist}` : title };
+
+  return {
+    visible: true,
+    state: {
+      ...dj,
+      enabled: true,
+      track,
+      playing: true,
+      djName: widget.name,
+      allowListenerMute: true,
+    },
+    stationName: widget.name,
+    trackLabel: title,
+    isLive: widgetState?.is_live ?? true,
+    source: "radio_widget",
+  };
+}

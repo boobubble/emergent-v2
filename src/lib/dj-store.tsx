@@ -6,9 +6,17 @@
 // realtime channel used by AppSettingsProvider, so every listener stays
 // in sync without prop drilling.
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DJ_DEFAULTS, mergeDjConfig, type DjPlayerState } from "@/lib/dj-config";
+import {
+  DJ_DEFAULTS,
+  mergeDjConfig,
+  resolveChatRadioView,
+  type ChatRadioView,
+  type DjPlayerState,
+  type RadioWidgetRow,
+  type RadioWidgetStateRow,
+} from "@/lib/dj-config";
 
 const SETTINGS_KEY = "dj_player";
 
@@ -50,4 +58,58 @@ export function useDjPlayer(): { state: DjPlayerState; ready: boolean; reload: (
   }, []);
 
   return { state, ready, reload: load };
+}
+
+export function useChatRadioSource(): { ready: boolean; radio: ChatRadioView } {
+  const { state: djState, ready: djReady } = useDjPlayer();
+  const [widgets, setWidgets] = useState<RadioWidgetRow[]>([]);
+  const [states, setStates] = useState<RadioWidgetStateRow[]>([]);
+  const [widgetsReady, setWidgetsReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      const [{ data: w }, { data: s }] = await Promise.all([
+        supabase.from("radio_widgets").select("id, name, enabled, stream_url").order("created_at"),
+        supabase.from("radio_widget_state").select("widget_id, is_live, current_track_title, current_track_artist, current_show_title"),
+      ]);
+      if (!mounted) return;
+      setWidgets((w ?? []) as RadioWidgetRow[]);
+      setStates((s ?? []) as RadioWidgetStateRow[]);
+      setWidgetsReady(true);
+    }
+
+    load().catch(() => {
+      if (mounted) setWidgetsReady(true);
+    });
+
+    const channel = supabase
+      .channel(`chat_radio_${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "radio_widgets" }, () => {
+        load().catch(() => undefined);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "radio_widget_state" }, () => {
+        load().catch(() => undefined);
+      })
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const radio = useMemo(() => {
+    const activeWidget =
+      widgets.find((w) => w.enabled && w.stream_url) ??
+      widgets.find((w) => w.stream_url) ??
+      null;
+    const widgetState = activeWidget
+      ? states.find((st) => st.widget_id === activeWidget.id) ?? null
+      : null;
+    return resolveChatRadioView(djState ?? DJ_DEFAULTS, activeWidget, widgetState);
+  }, [djState, widgets, states]);
+
+  return { ready: djReady && widgetsReady, radio };
 }

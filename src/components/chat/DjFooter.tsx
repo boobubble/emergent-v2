@@ -11,107 +11,133 @@ import {
   Disc3, Pause, Play, Volume2, VolumeX, Radio, Bell, BellOff,
 } from "lucide-react";
 
-import { useDjPlayer } from "@/lib/dj-store";
-import {
-  currentPositionSec, DJ_DEFAULTS, normalizeStreamUrl, type DjPlayerState,
-} from "@/lib/dj-config";
+import { useChatRadioSource } from "@/lib/dj-store";
+import { currentPositionSec, DJ_DEFAULTS, normalizeStreamUrl, type DjPlayerState } from "@/lib/dj-config";
 import { Button } from "@/components/ui/button";
 import { BroadcasterTicker } from "@/components/broadcaster/BroadcasterAnnouncements";
 import { useSoundPrefs, setSoundPref } from "@/lib/sound-prefs";
 
 
 const LISTENER_MUTE_KEY = "dj_player.listener_muted.v2";
+const LISTENER_VOLUME_KEY = "dj_player.listener_volume.v1";
 
 type DjMediaControls = { play: () => void; pause: () => void };
 
 export function DjFooter() {
-  const { state, ready } = useDjPlayer();
+  const { ready, radio } = useChatRadioSource();
 
-  // Listener-side mute is stored locally, never broadcast.
   const [listenerMuted, setListenerMuted] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem(LISTENER_MUTE_KEY) === "1";
   });
+  const [listenerVolume, setListenerVolume] = useState<number>(() => {
+    if (typeof window === "undefined") return 100;
+    const raw = Number(localStorage.getItem(LISTENER_VOLUME_KEY));
+    return Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 100;
+  });
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(LISTENER_MUTE_KEY, listenerMuted ? "1" : "0");
   }, [listenerMuted]);
 
-  if (!ready || !state.enabled) return null;
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(LISTENER_VOLUME_KEY, String(listenerVolume));
+  }, [listenerVolume]);
+
+  if (!ready || !radio.visible) return null;
 
   return (
     <DjFooterView
-      state={state}
+      state={radio.state}
+      stationName={radio.stationName}
+      trackLabel={radio.trackLabel}
+      isLive={radio.isLive}
       listenerMuted={listenerMuted}
+      listenerVolume={listenerVolume}
       onToggleListenerMute={() => setListenerMuted((m) => !m)}
+      onListenerVolumeChange={setListenerVolume}
     />
   );
 }
 
 function DjFooterView({
-  state, listenerMuted, onToggleListenerMute,
+  state, stationName, trackLabel, isLive, listenerMuted, listenerVolume, onToggleListenerMute, onListenerVolumeChange,
 }: {
   state: DjPlayerState;
+  stationName: string;
+  trackLabel: string | null;
+  isLive: boolean;
   listenerMuted: boolean;
+  listenerVolume: number;
   onToggleListenerMute: () => void;
+  onListenerVolumeChange: (v: number) => void;
 }) {
   const muted = state.allowListenerMute && listenerMuted;
-  const effectiveVolume = muted ? 0 : Math.max(0, Math.min(100, state.defaultVolume));
+  const baseVolume = Math.max(0, Math.min(100, state.defaultVolume));
+  const effectiveVolume = muted ? 0 : Math.round((baseVolume * listenerVolume) / 100);
   const [playbackBlocked, setPlaybackBlocked] = useState(false);
   const [localPaused, setLocalPaused] = useState(false);
   const mediaControlsRef = useRef<DjMediaControls | null>(null);
 
   // ── Render ──────────────────────────────────────────────────────
   return (
-    <div className="border-t border-border/60 bg-muted/40 backdrop-blur-sm">
+    <div className="chat-radio-bar border-t border-border/60 bg-muted/40 backdrop-blur-sm">
       <BroadcasterTicker target="chatbar" />
-      <div className="flex flex-wrap items-center gap-2 px-3 py-0">
-        {/* On Air chip */}
-        <div className="flex items-center gap-2 rounded-full bg-background/70 px-2.5 py-1 shadow-sm">
+      <div className="flex flex-wrap items-center gap-1.5 px-2 py-1 sm:gap-2 sm:px-3 sm:py-1.5">
+        <div className="flex min-w-0 items-center gap-1.5 rounded-full bg-background/70 px-2 py-0.5 shadow-sm sm:px-2.5 sm:py-1">
           <span
-            className={`inline-block h-2 w-2 rounded-full ${
-              state.playing && state.track ? "bg-red-500 animate-pulse" : "bg-muted-foreground/40"
+            className={`inline-block h-2 w-2 shrink-0 rounded-full ${
+              isLive && state.track ? "bg-red-500 animate-pulse" : "bg-muted-foreground/40"
             }`}
             aria-hidden
           />
-          <Radio className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {state.playing && state.track ? "On Air" : "Off Air"}
+          <Radio className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
+            {isLive && state.track ? "Live" : "Off Air"}
           </span>
-          {state.djName && (
-            <span className="text-[11px] text-muted-foreground/80">· {state.djName}</span>
-          )}
+          <span className="hidden truncate text-[11px] text-muted-foreground/80 sm:inline">· {stationName}</span>
         </div>
 
-        {/* Now playing title */}
-        <div className="flex min-w-0 flex-1 items-center gap-2 text-xs">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[11px] sm:gap-2 sm:text-xs">
           <Disc3
-            className={`h-4 w-4 shrink-0 text-primary ${state.playing && state.track ? "animate-spin" : "opacity-50"}`}
+            className={`h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4 ${state.playing && state.track ? "animate-spin" : "opacity-50"}`}
             style={{ animationDuration: "3.5s" }}
           />
           <span className="truncate text-foreground/90">
-            {state.track
-              ? (state.track.title || (state.track.kind === "youtube" ? "YouTube stream" : "Audio stream"))
-              : <span className="text-muted-foreground italic">Nothing on air</span>}
+            {trackLabel ?? state.track?.title ?? (
+              <span className="text-muted-foreground italic">Nothing on air</span>
+            )}
           </span>
         </div>
 
-        {/* Listener controls (everyone) */}
         {state.allowListenerMute && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => {
-              onToggleListenerMute();
-              if (muted) mediaControlsRef.current?.play();
-            }}
-            title={muted ? "Unmute" : "Mute"}
-            aria-label={muted ? "Unmute DJ player" : "Mute DJ player"}
-          >
-            {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-          </Button>
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 sm:h-8 sm:w-8"
+              onClick={() => {
+                onToggleListenerMute();
+                if (muted) mediaControlsRef.current?.play();
+              }}
+              title={muted ? "Unmute" : "Mute"}
+              aria-label={muted ? "Unmute radio" : "Mute radio"}
+            >
+              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </Button>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={listenerVolume}
+              onChange={(e) => onListenerVolumeChange(Number(e.target.value))}
+              className="hidden h-1.5 w-16 cursor-pointer accent-primary sm:block md:w-24"
+              aria-label="Radio volume"
+            />
+          </>
         )}
 
         {/* Radio announcement notifications toggle */}

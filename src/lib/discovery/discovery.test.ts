@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mergeDiscoveryLocalizationConfig, normalizeModuleMix } from "@/lib/discovery/config";
+import { DJ_DEFAULTS, resolveChatRadioView } from "@/lib/dj-config";
 import { resolveDiscoveryCountry, prefsNeedOnboarding, hasConfiguredDiscovery, shouldShowPersonalizePrompt } from "@/lib/discovery/country";
 import { encodeStoredContentScope, parseStoredContentScope, contentScopeLabel } from "@/lib/discovery/content-scope";
 import { passesStrictCountryIsolation } from "@/lib/discovery/isolation";
@@ -150,5 +151,28 @@ describe("personalize prompt", () => {
     const config = mergeDiscoveryLocalizationConfig(null);
     expect(config.discoveryMode).toBe("global_first");
     expect(config.defaultLanguages).toEqual(["en"]);
+  });
+});
+
+describe("resolveChatRadioView", () => {
+  it("shows dj_player when enabled", () => {
+    const view = resolveChatRadioView({ ...DJ_DEFAULTS, enabled: true, djName: "DJ Sam" }, null, null);
+    expect(view.visible).toBe(true);
+    expect(view.source).toBe("dj_player");
+  });
+
+  it("falls back to enabled radio widget stream URL", () => {
+    const view = resolveChatRadioView(
+      DJ_DEFAULTS,
+      { id: "w1", name: "YoChat FM", enabled: true, stream_url: "https://radio.example.org/listen/station/radio.mp3" },
+      { widget_id: "w1", is_live: true, current_track_title: "Night Mix", current_track_artist: null, current_show_title: null },
+    );
+    expect(view.visible).toBe(true);
+    expect(view.source).toBe("radio_widget");
+    expect(view.state.playing).toBe(true);
+  });
+
+  it("hides when disabled with no stream", () => {
+    expect(resolveChatRadioView(DJ_DEFAULTS, { id: "w1", name: "X", enabled: false, stream_url: "https://x/a.mp3" }, null).visible).toBe(false);
   });
 });

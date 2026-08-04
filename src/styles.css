@@ -503,6 +503,27 @@
   transform: translateY(-1px);
 }
 
+/* Sticky composer + radio bar at bottom of chat column */
+.chat-composer-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  flex-shrink: 0;
+  background: color-mix(in oklab, var(--background) 92%, transparent);
+  backdrop-filter: blur(10px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.chat-radio-bar {
+  max-width: 100%;
+}
+
+@media (max-width: 639px) {
+  .chat-radio-bar .flex-wrap {
+    flex-wrap: nowrap;
+  }
+}
+
 @keyframes chat-bubble-in {
   0% { opacity: 0; transform: translateY(8px) scale(.975); filter: blur(2px); }
   100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
