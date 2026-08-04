@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import {
   listMessageRequests, respondMessageRequest,
   getTrustScore,
 } from "@/lib/trust-safety.functions";
-import { Shield, MailWarning } from "lucide-react";
+import { Shield, MailWarning, Compass } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings/privacy")({
   component: PrivacySettings,
@@ -54,6 +54,9 @@ function PrivacySettings() {
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><Shield className="h-5 w-5" /> Privacy</h1>
         <p className="text-sm text-muted-foreground">Control who can DM you and manage message requests.</p>
+        <Link to="/settings/discovery" className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:underline">
+          <Compass className="h-3.5 w-3.5" /> Content & Discovery settings
+        </Link>
       </div>
 
       <Card>

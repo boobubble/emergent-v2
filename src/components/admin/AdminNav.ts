@@ -56,6 +56,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/ad-placements", label: "Ad Placements", icon: Megaphone,         keywords: ["ads", "placement", "monetization", "feed", "chatroom", "dm", "profile", "games", "banner", "sponsor", "affiliate", "premium", "guest"] },
       { to: "/admin/media-apis",    label: "Media APIs",    icon: Youtube,           keywords: ["youtube", "giphy", "gif", "video", "embed", "api keys"] },
       { to: "/admin/languages",     label: "Languages",     icon: Languages,         keywords: ["i18n", "language", "translation", "locale", "multilingual", "rtl"] },
+      { to: "/admin/discovery-localization", label: "Discovery & Localization", icon: Compass, keywords: ["discovery", "country", "language", "interests", "onboarding", "localization", "hybrid", "isolation", "yaarzo"] },
     ],
   },
 

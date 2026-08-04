@@ -303,9 +303,9 @@ function AuthGate() {
   }
 
   // Authenticated users shouldn't sit on the public landing or login pages —
-  // send them to the app home (chatroom/feed) automatically after sign in.
+  // send them to chatrooms after sign in (Yaarzo default home).
   if (path === "/welcome" || path === "/heropage" || path === "/login") {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/chatroom" replace />;
   }
 
 

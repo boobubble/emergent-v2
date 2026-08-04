@@ -8,6 +8,13 @@ export interface AdminChannelInput {
   topic?: string;
   kind?: "chat" | "game";
   game?: RoomGameConfig;
+  audienceScope?: "global" | "single_country" | "multi_country" | "private";
+  countryCode?: string | null;
+  allowedCountryCodes?: string[];
+  languageCodes?: string[];
+  interestSlugs?: string[];
+  featured?: boolean;
+  memberCount?: number;
 }
 
 /** Resolved public.chatrooms row — registered in chat-store for Supabase messaging. */

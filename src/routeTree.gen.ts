@@ -78,6 +78,7 @@ import { Route as AdminCompetitionsRouteImport } from './routes/admin.competitio
 import { Route as AdminCompetitionsFeedRouteImport } from './routes/admin.competitions-feed'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
 import { Route as AdminDemoRouteImport } from './routes/admin.demo'
+import { Route as AdminDiscoveryLocalizationRouteImport } from './routes/admin.discovery-localization'
 import { Route as AdminDiscoveryWidgetsRouteImport } from './routes/admin.discovery-widgets'
 import { Route as AdminDjRouteImport } from './routes/admin.dj'
 import { Route as AdminDmWallpapersRouteImport } from './routes/admin.dm-wallpapers'
@@ -168,6 +169,7 @@ import { Route as PoetryComposeRouteImport } from './routes/poetry.compose'
 import { Route as PoetryHallOfFameRouteImport } from './routes/poetry.hall-of-fame'
 import { Route as PoetryLeaderboardRouteImport } from './routes/poetry.leaderboard'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as AuthenticatedSettingsDiscoveryRouteImport } from './routes/_authenticated.settings.discovery'
 import { Route as AuthenticatedSettingsPrivacyRouteImport } from './routes/_authenticated.settings.privacy'
 import { Route as AdminSystemDatabaseRouteImport } from './routes/admin.system.database'
 import { Route as AdminSystemJobsRouteImport } from './routes/admin.system.jobs'
@@ -557,6 +559,12 @@ const AdminDemoRoute = AdminDemoRouteImport.update({
   path: '/demo',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDiscoveryLocalizationRoute =
+  AdminDiscoveryLocalizationRouteImport.update({
+    id: '/discovery-localization',
+    path: '/discovery-localization',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminDiscoveryWidgetsRoute = AdminDiscoveryWidgetsRouteImport.update({
   id: '/discovery-widgets',
   path: '/discovery-widgets',
@@ -1008,6 +1016,12 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSettingsDiscoveryRoute =
+  AuthenticatedSettingsDiscoveryRouteImport.update({
+    id: '/settings/discovery',
+    path: '/settings/discovery',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsPrivacyRoute =
   AuthenticatedSettingsPrivacyRouteImport.update({
     id: '/settings/privacy',
@@ -1295,6 +1309,7 @@ export interface FileRoutesByFullPath {
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
+  '/admin/discovery-localization': typeof AdminDiscoveryLocalizationRoute
   '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
@@ -1386,6 +1401,7 @@ export interface FileRoutesByFullPath {
   '/feedback/': typeof FeedbackIndexRoute
   '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
+  '/settings/discovery': typeof AuthenticatedSettingsDiscoveryRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/admin/system/database': typeof AdminSystemDatabaseRoute
   '/admin/system/jobs': typeof AdminSystemJobsRoute
@@ -1493,6 +1509,7 @@ export interface FileRoutesByTo {
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
+  '/admin/discovery-localization': typeof AdminDiscoveryLocalizationRoute
   '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
@@ -1583,6 +1600,7 @@ export interface FileRoutesByTo {
   '/feedback': typeof FeedbackIndexRoute
   '/mehfil': typeof MehfilIndexRoute
   '/poetry': typeof PoetryIndexRoute
+  '/settings/discovery': typeof AuthenticatedSettingsDiscoveryRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/admin/system/database': typeof AdminSystemDatabaseRoute
   '/admin/system/jobs': typeof AdminSystemJobsRoute
@@ -1695,6 +1713,7 @@ export interface FileRoutesById {
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
   '/admin/demo': typeof AdminDemoRoute
+  '/admin/discovery-localization': typeof AdminDiscoveryLocalizationRoute
   '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
   '/admin/dj': typeof AdminDjRoute
   '/admin/dm-wallpapers': typeof AdminDmWallpapersRoute
@@ -1786,6 +1805,7 @@ export interface FileRoutesById {
   '/feedback/': typeof FeedbackIndexRoute
   '/mehfil/': typeof MehfilIndexRoute
   '/poetry/': typeof PoetryIndexRoute
+  '/_authenticated/settings/discovery': typeof AuthenticatedSettingsDiscoveryRoute
   '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/admin/system/database': typeof AdminSystemDatabaseRoute
   '/admin/system/jobs': typeof AdminSystemJobsRoute
@@ -1898,6 +1918,7 @@ export interface FileRouteTypes {
     | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
+    | '/admin/discovery-localization'
     | '/admin/discovery-widgets'
     | '/admin/dj'
     | '/admin/dm-wallpapers'
@@ -1989,6 +2010,7 @@ export interface FileRouteTypes {
     | '/feedback/'
     | '/mehfil/'
     | '/poetry/'
+    | '/settings/discovery'
     | '/settings/privacy'
     | '/admin/system/database'
     | '/admin/system/jobs'
@@ -2096,6 +2118,7 @@ export interface FileRouteTypes {
     | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
+    | '/admin/discovery-localization'
     | '/admin/discovery-widgets'
     | '/admin/dj'
     | '/admin/dm-wallpapers'
@@ -2186,6 +2209,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/mehfil'
     | '/poetry'
+    | '/settings/discovery'
     | '/settings/privacy'
     | '/admin/system/database'
     | '/admin/system/jobs'
@@ -2297,6 +2321,7 @@ export interface FileRouteTypes {
     | '/admin/competitions-feed'
     | '/admin/confessions'
     | '/admin/demo'
+    | '/admin/discovery-localization'
     | '/admin/discovery-widgets'
     | '/admin/dj'
     | '/admin/dm-wallpapers'
@@ -2388,6 +2413,7 @@ export interface FileRouteTypes {
     | '/feedback/'
     | '/mehfil/'
     | '/poetry/'
+    | '/_authenticated/settings/discovery'
     | '/_authenticated/settings/privacy'
     | '/admin/system/database'
     | '/admin/system/jobs'
@@ -3001,6 +3027,13 @@ declare module '@tanstack/react-router' {
       path: '/demo'
       fullPath: '/admin/demo'
       preLoaderRoute: typeof AdminDemoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/discovery-localization': {
+      id: '/admin/discovery-localization'
+      path: '/discovery-localization'
+      fullPath: '/admin/discovery-localization'
+      preLoaderRoute: typeof AdminDiscoveryLocalizationRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/discovery-widgets': {
@@ -3633,6 +3666,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings/discovery': {
+      id: '/_authenticated/settings/discovery'
+      path: '/settings/discovery'
+      fullPath: '/settings/discovery'
+      preLoaderRoute: typeof AuthenticatedSettingsDiscoveryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/privacy': {
       id: '/_authenticated/settings/privacy'
       path: '/settings/privacy'
@@ -3924,10 +3964,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedSettingsDiscoveryRoute: typeof AuthenticatedSettingsDiscoveryRoute
   AuthenticatedSettingsPrivacyRoute: typeof AuthenticatedSettingsPrivacyRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedSettingsDiscoveryRoute: AuthenticatedSettingsDiscoveryRoute,
   AuthenticatedSettingsPrivacyRoute: AuthenticatedSettingsPrivacyRoute,
 }
 
@@ -3994,6 +4036,7 @@ interface AdminRouteChildren {
   AdminCompetitionsFeedRoute: typeof AdminCompetitionsFeedRoute
   AdminConfessionsRoute: typeof AdminConfessionsRoute
   AdminDemoRoute: typeof AdminDemoRoute
+  AdminDiscoveryLocalizationRoute: typeof AdminDiscoveryLocalizationRoute
   AdminDiscoveryWidgetsRoute: typeof AdminDiscoveryWidgetsRoute
   AdminDjRoute: typeof AdminDjRoute
   AdminDmWallpapersRoute: typeof AdminDmWallpapersRoute
@@ -4084,6 +4127,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCompetitionsFeedRoute: AdminCompetitionsFeedRoute,
   AdminConfessionsRoute: AdminConfessionsRoute,
   AdminDemoRoute: AdminDemoRoute,
+  AdminDiscoveryLocalizationRoute: AdminDiscoveryLocalizationRoute,
   AdminDiscoveryWidgetsRoute: AdminDiscoveryWidgetsRoute,
   AdminDjRoute: AdminDjRoute,
   AdminDmWallpapersRoute: AdminDmWallpapersRoute,

@@ -10,6 +10,8 @@ import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 import { BrandMark, BrandText, useBrandAsset } from "@/components/BrandMark";
 import { ChatExploreMenu } from "./ChatExploreMenu";
+import { ChatroomDiscoveryPanel } from "@/components/discovery/ChatroomDiscoveryPanel";
+import type { DiscoveryContentScope } from "@/lib/discovery/config";
 import { levelProgress } from "@/lib/ranks";
 
 
@@ -18,9 +20,12 @@ interface Props {
   onOpenLeaderboard?: () => void;
   onOpenAchievements?: () => void;
   onCollapse?: () => void;
+  discoveryScope?: DiscoveryContentScope;
+  onDiscoveryScopeChange?: (scope: DiscoveryContentScope) => void;
+  onSelectDiscoveryChannel?: (id: string) => void;
 }
 
-export function Sidebar({ onOpenProfile, onCollapse }: Props) {
+export function Sidebar({ onOpenProfile, onCollapse, discoveryScope = "for_you", onDiscoveryScopeChange, onSelectDiscoveryChannel }: Props) {
   const { state, setActive, createRoom, deleteRoom, reset } = useChat();
   const { logout, user } = useAuth();
   const { openSignIn, openSignUp } = useAuthGate();
@@ -171,6 +176,14 @@ export function Sidebar({ onOpenProfile, onCollapse }: Props) {
       </div>
 
       <nav className="flex-1 space-y-2 overflow-y-auto px-1.5">
+        {user && !user.isGuest && onDiscoveryScopeChange && onSelectDiscoveryChannel && (
+          <ChatroomDiscoveryPanel
+            joinedChannelIds={uniqueRoomOrder.filter((id) => state.rooms[id]?.members.includes("me"))}
+            scope={discoveryScope}
+            onScopeChange={onDiscoveryScopeChange}
+            onSelectChannel={onSelectDiscoveryChannel}
+          />
+        )}
         <div>
           <SectionLabel
             title="Public Rooms"

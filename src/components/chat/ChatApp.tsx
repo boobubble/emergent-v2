@@ -27,6 +27,7 @@ import { TrioRoomsDock } from "@/components/chat/TrioRoomsDock";
 import { PresenceFeed } from "@/components/chat/PresenceFeed";
 import { DjFooter } from "@/components/chat/DjFooter";
 import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
+import { DiscoveryOnboarding } from "@/components/discovery/DiscoveryOnboarding";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
 import { ScheduledAnnouncementsRunner } from "@/components/chat/ScheduledAnnouncements";
@@ -49,6 +50,7 @@ export function ChatApp() {
     typeof window !== "undefined" ? window.matchMedia("(max-width: 768px)").matches : false,
   );
   const [feedbotChip, setFeedbotChip] = useState<{ title: string; body: string } | null>(null);
+  const [discoveryScope, setDiscoveryScope] = useState<"for_you" | "my_country" | "worldwide">("for_you");
   const hubBadge = useHubBadge(hubOpen);
   useBotEventsNotifier();
 
@@ -232,6 +234,10 @@ export function ChatApp() {
 
   if (!chat) return <Navigate to={homeMode === "hero" ? "/heropage" : "/welcome"} replace />;
 
+  const joinedChannelIds = Object.values(chat.state.rooms)
+    .filter((r) => r.members.includes("me"))
+    .map((r) => r.id);
+
   const { state, isDM } = chat;
   const { theme: chatTheme, refresh: refreshChatTheme } = useActiveChatTheme();
   const [themeStoreOpen, setThemeStoreOpen] = useState(false);
@@ -317,6 +323,9 @@ export function ChatApp() {
                 onOpenLeaderboard={() => setLbOpen(true)}
                 onOpenAchievements={() => setAchOpen(true)}
                 onCollapse={() => setSidebarOpen(false)}
+                discoveryScope={discoveryScope}
+                onDiscoveryScopeChange={setDiscoveryScope}
+                onSelectDiscoveryChannel={(id) => chat.joinRoom(id)}
               />
             </div>
           </>
@@ -418,6 +427,11 @@ export function ChatApp() {
           onThemeChange={refreshChatTheme}
         />
         <CommunityHub open={hubOpen} onOpenChange={setHubOpen} isMobile={isMobile} />
+        <DiscoveryOnboarding
+          isMobile={isMobile}
+          joinedChannelIds={joinedChannelIds}
+          onJoinChannels={(ids) => ids.forEach((id) => chat.joinRoom(id))}
+        />
         <ChatProfilePopupHost />
       </div>
 
