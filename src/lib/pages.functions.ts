@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { isReservedSlug } from "@/lib/reserved-routes";
 import { slugify, slugifyPageSlug, validatePageSlug, assertUniquePageSlug } from "@/lib/page-slug";
+import { fetchPublishedPageBySlug } from "@/lib/fetch-published-page";
 import { withRateLimit } from "./rate-limit-middleware";
 
 export { slugify } from "@/lib/page-slug";
@@ -199,24 +200,11 @@ export const importPages = createServerFn({ method: "POST" })
   });
 
 // ===== Public read (for /$slug route) =====
-export const getPublishedPage = createServerFn({ method: "GET" })
+export const getPublishedPage = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ slug: z.string().min(1).max(120) }).parse(input))
   .handler(async ({ data }) => {
-    const slug = slugifyPageSlug(data.slug);
-    // Redirect lookup first
-    const { data: redir } = await supabaseAdmin
-      .from("page_redirects").select("to_slug").eq("from_slug", slug).maybeSingle();
-    const finalSlug = redir?.to_slug ?? slug;
-    const { data: row } = await supabaseAdmin
-      .from("custom_pages")
-      .select("slug,title,content,excerpt,tags,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,noindex,nofollow,views,published_at")
-      .eq("slug", finalSlug)
-      .eq("status", "published")
-      .maybeSingle();
-    if (!row) return null;
-    // Fire-and-forget view bump
-    void (await getSupabaseAdmin()).rpc("bump_page_view", { _slug: finalSlug });
-    return { ...row, redirectedFrom: redir ? slug : null };
+    const sb = await getSupabaseAdmin();
+    return fetchPublishedPageBySlug(sb, data.slug);
   });
 
 export const listPublishedPages = createServerFn({ method: "GET" })

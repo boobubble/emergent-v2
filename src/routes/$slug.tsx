@@ -1,8 +1,15 @@
 import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { getPublishedPage } from "@/lib/pages.functions";
 import { getCommunityBySlug } from "@/lib/community.functions";
 import { isReservedSlug } from "@/lib/reserved-routes";
 import { isNavigableSlug } from "@/lib/route-slug";
+import {
+  customPageQueryKey,
+  publishedPageMatchesSlug,
+  type PublishedCustomPage,
+} from "@/lib/fetch-published-page";
 
 import { sanitizeHtml } from "@/lib/pages-io";
 import { injectHeadingIds } from "@/lib/heading-ids";
@@ -49,19 +56,27 @@ function PublicPageError({ reset }: { error: Error; reset: () => void }) {
   );
 }
 
+function PublicPageLoading() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-background px-4 text-foreground">
+      <p className="text-sm text-muted-foreground">Loading page…</p>
+    </div>
+  );
+}
+
 export const Route = createFileRoute("/$slug")({
+  staleTime: 0,
   loader: async ({ params }) => {
-    if (!isNavigableSlug(params.slug)) throw notFound();
-    // Reserved slugs should never reach a published page; bail early.
-    if (isReservedSlug(params.slug)) redirectReservedSlug(params.slug);
-    // Vanity resolver: community slugs take priority over custom pages.
-    const community = await getCommunityBySlug({ data: { slug: params.slug } });
+    const slug = params.slug;
+    if (!isNavigableSlug(slug)) throw notFound();
+    if (isReservedSlug(slug)) redirectReservedSlug(slug);
+    const community = await getCommunityBySlug({ data: { slug } });
     if (community) {
-      throw redirect({ to: "/community/$slug", params: { slug: params.slug }, replace: true });
+      throw redirect({ to: "/community/$slug", params: { slug }, replace: true });
     }
-    const page = await getPublishedPage({ data: { slug: params.slug } });
+    const page = await getPublishedPage({ data: { slug } });
     if (!page) throw notFound();
-    return { page };
+    return { page, slug };
   },
 
   head: ({ loaderData, params }) => {
@@ -113,11 +128,39 @@ export const Route = createFileRoute("/$slug")({
   },
   notFoundComponent: PublicPageNotFound,
   errorComponent: PublicPageError,
+  pendingComponent: PublicPageLoading,
   component: PublicPage,
 });
 
 function PublicPage() {
-  const { page } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  const loaderData = Route.useLoaderData();
+  const fetchPage = useServerFn(getPublishedPage);
+
+  const slugMatchesLoader = publishedPageMatchesSlug(loaderData.page, slug);
+
+  const pageQuery = useQuery({
+    queryKey: customPageQueryKey(slug),
+    queryFn: () => fetchPage({ data: { slug } }),
+    initialData: slugMatchesLoader ? loaderData.page : undefined,
+    staleTime: 0,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+  if (!slugMatchesLoader || pageQuery.isPending) {
+    return <PublicPageLoading />;
+  }
+
+  const page = pageQuery.data;
+  if (!page || !publishedPageMatchesSlug(page, slug)) {
+    return <PublicPageLoading />;
+  }
+
+  return <PublicPageView key={`${page.id}:${page.slug}`} page={page} />;
+}
+
+function PublicPageView({ page }: { page: PublishedCustomPage }) {
   const safeHtml = sanitizeHtml(injectHeadingIds(page.content));
 
   const layout = (page.layout ?? "boxed") as "full" | "boxed";
