@@ -76,6 +76,14 @@ export const Route = createFileRoute("/$slug")({
     }
     const page = await getPublishedPage({ data: { slug } });
     if (!page) throw notFound();
+    if (page.redirectedFrom) {
+      throw redirect({
+        to: "/$slug",
+        params: { slug: page.slug },
+        replace: true,
+        statusCode: 301,
+      });
+    }
     return { page, slug };
   },
 

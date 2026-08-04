@@ -5,6 +5,8 @@ import {
   fetchPublishedPageBySlug,
   CUSTOM_PAGE_QUERY_KEY,
 } from "@/lib/fetch-published-page";
+import { isPublicCmsSlugPath } from "@/lib/route-slug";
+import { buildPageCtaHtml, PAGE_CTA_CLASSES } from "@/lib/page-cta";
 
 describe("customPageQueryKey", () => {
   it("includes normalized slug and differs per slug", () => {
@@ -170,5 +172,42 @@ describe("navigation data replacement contract", () => {
     const previous = { slug: "lahore-chat-room", title: "Lahore Chat Rooms" };
     expect(publishedPageMatchesSlug(previous, "page")).toBe(false);
     expect(publishedPageMatchesSlug(previous, "lahore-chat-room")).toBe(true);
+  });
+});
+
+describe("isPublicCmsSlugPath", () => {
+  it("allows anonymous CMS slugs like /lahore-chat-room and /page", () => {
+    expect(isPublicCmsSlugPath("/lahore-chat-room")).toBe(true);
+    expect(isPublicCmsSlugPath("/page")).toBe(true);
+  });
+
+  it("rejects reserved application routes", () => {
+    expect(isPublicCmsSlugPath("/admin")).toBe(false);
+    expect(isPublicCmsSlugPath("/feed")).toBe(false);
+    expect(isPublicCmsSlugPath("/login")).toBe(false);
+    expect(isPublicCmsSlugPath("/pages")).toBe(false);
+  });
+
+  it("rejects multi-segment paths handled by other routes", () => {
+    expect(isPublicCmsSlugPath("/community/lahore")).toBe(false);
+    expect(isPublicCmsSlugPath("/p/my-post")).toBe(false);
+    expect(isPublicCmsSlugPath("/admin/pages")).toBe(false);
+  });
+
+  it("allows unknown single-segment slugs so the route can return 404", () => {
+    expect(isPublicCmsSlugPath("/missing-slug")).toBe(true);
+  });
+});
+
+describe("public CMS page CTA markup", () => {
+  it("includes centering class hooks used by production CSS", () => {
+    const html = buildPageCtaHtml({
+      buttonText: "Start Chatting Now",
+      href: "/chatrooms",
+      note: "Free to explore",
+    });
+    expect(html).toContain(`class="${PAGE_CTA_CLASSES[0]}"`);
+    expect(html).toContain(PAGE_CTA_CLASSES[1]);
+    expect(html).toContain(PAGE_CTA_CLASSES[2]);
   });
 });

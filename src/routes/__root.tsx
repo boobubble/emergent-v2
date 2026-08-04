@@ -41,6 +41,7 @@ import { DynamicBrandHead } from "@/components/DynamicBrandHead";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { GlobalErrorMonitoring } from "@/components/GlobalErrorMonitoring";
 import { logger } from "@/lib/logger";
+import { isPublicCmsSlugPath } from "@/lib/route-slug";
 
 import appCss from "../styles.css?url";
 
@@ -216,6 +217,7 @@ function isReadOnlyPublicAppPath(pathname: string) {
 }
 
 function isPublicPath(pathname: string) {
+  if (isPublicCmsSlugPath(pathname)) return true;
   if (isReadOnlyPublicAppPath(pathname)) return true;
   if (PUBLIC_EXACT.has(pathname)) return true;
   return PUBLIC_PATH_PREFIXES.some((p) => pathname.startsWith(p));
