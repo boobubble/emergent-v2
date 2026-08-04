@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { mergeDiscoveryLocalizationConfig, normalizeModuleMix } from "@/lib/discovery/config";
-import { resolveDiscoveryCountry, prefsNeedOnboarding } from "@/lib/discovery/country";
+import { resolveDiscoveryCountry, prefsNeedOnboarding, hasConfiguredDiscovery, shouldShowPersonalizePrompt } from "@/lib/discovery/country";
+import { encodeStoredContentScope, parseStoredContentScope, contentScopeLabel } from "@/lib/discovery/content-scope";
 import { passesStrictCountryIsolation } from "@/lib/discovery/isolation";
 import { rankDiscoverableChannels } from "@/lib/discovery/ranking";
 import type { DiscoverableChannel, DiscoveryContext } from "@/lib/discovery/types";
@@ -102,5 +103,52 @@ describe("prefsNeedOnboarding", () => {
   it("requires onboarding when never completed", () => {
     expect(prefsNeedOnboarding(null, {})).toBe(true);
     expect(prefsNeedOnboarding({ user_id: "u", discovery_country_code: null, preferred_languages: [], interests: [], selected_channel_ids: [], content_scope: "for_you", detected_country_code: null, discovery_onboarding_completed_at: null, personalize_prompt_dismissed_at: null, updated_at: "" }, {})).toBe(true);
+  });
+});
+
+describe("content scope encoding", () => {
+  it("round-trips strict isolation suffix", () => {
+    const encoded = encodeStoredContentScope("my_country", true);
+    expect(encoded).toBe("my_country|strict");
+    expect(parseStoredContentScope(encoded)).toEqual({ view: "my_country", strictIsolation: true });
+  });
+
+  it("maps legacy worldwide_first to worldwide view", () => {
+    expect(parseStoredContentScope("worldwide_first")).toEqual({ view: "worldwide", strictIsolation: false });
+  });
+
+  it("labels scopes for compact selector", () => {
+    expect(contentScopeLabel("for_you")).toBe("For You");
+    expect(contentScopeLabel("my_country")).toBe("My Country");
+  });
+});
+
+describe("personalize prompt", () => {
+  it("shows in settings when user has not configured discovery", () => {
+    expect(shouldShowPersonalizePrompt(null, {})).toBe(true);
+    expect(hasConfiguredDiscovery(null)).toBe(false);
+  });
+
+  it("hides after user configures country or interests", () => {
+    const prefs = {
+      user_id: "u",
+      discovery_country_code: "IN",
+      preferred_languages: [],
+      interests: [],
+      selected_channel_ids: [],
+      content_scope: "for_you" as const,
+      detected_country_code: null,
+      discovery_onboarding_completed_at: null,
+      personalize_prompt_dismissed_at: null,
+      updated_at: "",
+    };
+    expect(hasConfiguredDiscovery(prefs)).toBe(true);
+    expect(shouldShowPersonalizePrompt(prefs, {})).toBe(false);
+  });
+
+  it("uses admin defaults path when no prefs exist", () => {
+    const config = mergeDiscoveryLocalizationConfig(null);
+    expect(config.discoveryMode).toBe("global_first");
+    expect(config.defaultLanguages).toEqual(["en"]);
   });
 });

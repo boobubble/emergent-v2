@@ -26,6 +26,11 @@ export function resolveDiscoveryCountry(input: CountryResolutionInput): string {
   return "US";
 }
 
+export function hasConfiguredDiscovery(prefs: UserDiscoveryPrefs | null): boolean {
+  if (!prefs) return false;
+  return Boolean(prefs.discovery_country_code) || prefs.preferred_languages.length > 0 || prefs.interests.length > 0;
+}
+
 export function prefsNeedOnboarding(
   prefs: UserDiscoveryPrefs | null,
   opts: { requireAgain?: boolean },
@@ -44,7 +49,6 @@ export function shouldShowPersonalizePrompt(
   opts: { requireAgain?: boolean },
 ): boolean {
   if (opts.requireAgain) return false;
-  if (prefs?.discovery_onboarding_completed_at) return false;
   if (prefs?.personalize_prompt_dismissed_at) return false;
-  return true;
+  return !hasConfiguredDiscovery(prefs);
 }

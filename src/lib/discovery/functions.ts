@@ -16,6 +16,7 @@ import {
   toDiscoverablePlatformChannel,
 } from "@/lib/discovery/channels";
 import { buildChatroomDiscoverySections, rankDiscoverableChannels } from "@/lib/discovery/ranking";
+import { encodeStoredContentScope, parseStoredContentScope } from "@/lib/discovery/content-scope";
 import type { DiscoveryContext, UserDiscoveryPrefs } from "@/lib/discovery/types";
 import { withRateLimit } from "@/lib/rate-limit-middleware";
 
@@ -114,13 +115,13 @@ async function buildContext(
   const preferredLanguages = prefs?.preferred_languages?.length ? prefs.preferred_languages : config.defaultLanguages;
   const interests = prefs?.interests?.length ? prefs.interests : profileInterests.length ? profileInterests : config.defaultInterests;
 
-  let contentScope: DiscoveryContentScope = opts.scope ?? "for_you";
-  const userPref = prefs?.content_scope;
-  if (!opts.scope && userPref) {
-    if (userPref === "worldwide_first") contentScope = "worldwide";
-    else if (userPref === "country_first") contentScope = "my_country";
-  }
+  const parsedScope = parseStoredContentScope(typeof prefs?.content_scope === "string" ? prefs.content_scope : null);
+  let contentScope: DiscoveryContentScope = opts.scope ?? parsedScope.view;
   if (config.discoveryMode === "country_only") contentScope = "my_country";
+
+  const effectiveConfig = parsedScope.strictIsolation
+    ? { ...config, discoveryMode: "country_only" as const }
+    : config;
 
   return {
     userId,
@@ -130,7 +131,7 @@ async function buildContext(
     contentScope,
     joinedChannelIds: opts.joinedChannelIds ?? prefs?.selected_channel_ids ?? [],
     followedChannelIds: [],
-    config,
+    config: effectiveConfig,
   };
 }
 
@@ -194,11 +195,13 @@ const savePrefsSchema = z.object({
   preferred_languages: z.array(z.string()).optional(),
   interests: z.array(z.string()).optional(),
   selected_channel_ids: z.array(z.string()).optional(),
-  content_scope: z.enum(["for_you", "country_first", "balanced", "worldwide_first"]).optional(),
+  content_scope: z.enum(["for_you", "my_country", "worldwide", "country_first", "balanced", "worldwide_first"]).optional(),
+  strict_country_isolation: z.boolean().optional(),
   detected_country_code: z.string().nullable().optional(),
   complete_onboarding: z.boolean().optional(),
   skip_with_defaults: z.boolean().optional(),
   reset_onboarding: z.boolean().optional(),
+  reset_preferences: z.boolean().optional(),
   dismiss_personalize_prompt: z.boolean().optional(),
 });
 
@@ -214,6 +217,25 @@ export const saveDiscoveryPrefs = createServerFn({ method: "POST" })
       const { error } = await db.from("user_discovery_prefs").upsert({
         user_id: context.userId,
         discovery_onboarding_completed_at: null,
+        updated_at: new Date().toISOString(),
+      });
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    }
+
+    if (data.reset_preferences) {
+      const preserve = {
+        discovery_onboarding_completed_at: cur?.discovery_onboarding_completed_at ?? null,
+        personalize_prompt_dismissed_at: cur?.personalize_prompt_dismissed_at ?? null,
+      };
+      const { error } = await db.from("user_discovery_prefs").upsert({
+        user_id: context.userId,
+        discovery_country_code: null,
+        preferred_languages: config.defaultLanguages,
+        interests: config.defaultInterests,
+        selected_channel_ids: [],
+        content_scope: "for_you",
+        ...preserve,
         updated_at: new Date().toISOString(),
       });
       if (error) throw new Error(error.message);
@@ -238,7 +260,12 @@ export const saveDiscoveryPrefs = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString(),
     };
 
-    if (data.content_scope) payload.content_scope = data.content_scope;
+    if (data.content_scope !== undefined || data.strict_country_isolation !== undefined) {
+      const parsed = parseStoredContentScope(typeof cur?.content_scope === "string" ? cur.content_scope : null);
+      const view = (data.content_scope as DiscoveryContentScope | undefined) ?? parsed.view;
+      const strict = data.strict_country_isolation ?? parsed.strictIsolation;
+      payload.content_scope = encodeStoredContentScope(view, strict);
+    }
     if (data.detected_country_code !== undefined) payload.detected_country_code = data.detected_country_code;
     if (data.complete_onboarding) payload.discovery_onboarding_completed_at = new Date().toISOString();
     if (data.dismiss_personalize_prompt) payload.personalize_prompt_dismissed_at = new Date().toISOString();

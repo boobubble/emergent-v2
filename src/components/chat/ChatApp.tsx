@@ -27,7 +27,6 @@ import { TrioRoomsDock } from "@/components/chat/TrioRoomsDock";
 import { PresenceFeed } from "@/components/chat/PresenceFeed";
 import { DjFooter } from "@/components/chat/DjFooter";
 import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
-import { DiscoveryOnboarding } from "@/components/discovery/DiscoveryOnboarding";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
 import { ScheduledAnnouncementsRunner } from "@/components/chat/ScheduledAnnouncements";
@@ -234,10 +233,6 @@ export function ChatApp() {
 
   if (!chat) return <Navigate to={homeMode === "hero" ? "/heropage" : "/welcome"} replace />;
 
-  const joinedChannelIds = Object.values(chat.state.rooms)
-    .filter((r) => r.members.includes("me"))
-    .map((r) => r.id);
-
   const { state, isDM } = chat;
   const { theme: chatTheme, refresh: refreshChatTheme } = useActiveChatTheme();
   const [themeStoreOpen, setThemeStoreOpen] = useState(false);
@@ -427,11 +422,6 @@ export function ChatApp() {
           onThemeChange={refreshChatTheme}
         />
         <CommunityHub open={hubOpen} onOpenChange={setHubOpen} isMobile={isMobile} />
-        <DiscoveryOnboarding
-          isMobile={isMobile}
-          joinedChannelIds={joinedChannelIds}
-          onJoinChannels={(ids) => ids.forEach((id) => chat.joinRoom(id))}
-        />
         <ChatProfilePopupHost />
       </div>
 

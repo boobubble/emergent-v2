@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { X, Trophy, Flame, Award, Lock } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { X, Trophy, Flame, Award, Lock, Compass, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
@@ -163,6 +164,21 @@ export function ProfileModal({ open, onClose }: { open: boolean; onClose: () => 
             ))}
           </div>
         </div>
+
+        <Link
+          to="/settings/discovery"
+          onClick={onClose}
+          className="flex items-center gap-3 rounded-xl border border-border bg-white/5 p-3 transition-colors hover:bg-muted/40"
+        >
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
+            <Compass className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold">Content & Discovery</div>
+            <div className="text-xs text-muted-foreground">Choose your country, interests and what content you want to see</div>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Link>
       </div>
       <div className="flex justify-end gap-2 border-t border-border p-3">
         <button onClick={onClose} className="rounded px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">Cancel</button>

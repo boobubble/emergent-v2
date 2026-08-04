@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/auth-store";
 import { COUNTRY_OPTIONS, detectCountryCode, flagFromCode } from "@/lib/country-flag";
 import { DISCOVERY_LANGUAGE_OPTIONS } from "@/lib/discovery/config";
-import { prefsNeedOnboarding } from "@/lib/discovery/country";
 import {
   getChatroomDiscovery,
   getDiscoveryPrefs,
@@ -21,12 +20,15 @@ import { cn } from "@/lib/utils";
 type InterestTag = { slug: string; label: string; emoji: string | null; sort_order: number };
 
 type Props = {
+  /** When true, shows the manual onboarding dialog (never auto-opens). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   isMobile: boolean;
   joinedChannelIds: string[];
   onJoinChannels: (ids: string[]) => void;
 };
 
-export function DiscoveryOnboarding({ isMobile, joinedChannelIds, onJoinChannels }: Props) {
+export function DiscoveryOnboarding({ open: openProp, onOpenChange, isMobile, joinedChannelIds, onJoinChannels }: Props) {
   const { user } = useAuth();
   const fetchPrefs = useServerFn(getDiscoveryPrefs);
   const fetchTags = useServerFn(getInterestTags);
@@ -42,6 +44,11 @@ export function DiscoveryOnboarding({ isMobile, joinedChannelIds, onJoinChannels
   const tagsQ = useQuery({ queryKey: ["interest-tags"], queryFn: () => fetchTags() });
 
   const [open, setOpen] = useState(false);
+  const dialogOpen = openProp ?? open;
+  const setDialogOpen = (next: boolean) => {
+    setOpen(next);
+    onOpenChange?.(next);
+  };
   const [country, setCountry] = useState("WW");
   const [languages, setLanguages] = useState<string[]>(["en"]);
   const [interests, setInterests] = useState<string[]>([]);
@@ -52,24 +59,16 @@ export function DiscoveryOnboarding({ isMobile, joinedChannelIds, onJoinChannels
   const suggested = prefsQ.data?.suggestedCountry ?? (detectCountryCode() || "US");
 
   useEffect(() => {
-    if (!prefsQ.data || !config) return;
-    const need = config.onboardingEnabled && prefsNeedOnboarding(prefsQ.data.prefs, { requireAgain: config.requireOnboardingAgain });
-    setOpen(need);
+    if (!prefsQ.data) return;
     setCountry(prefsQ.data.prefs?.discovery_country_code ?? suggested);
     setLanguages(prefsQ.data.prefs?.preferred_languages?.length ? prefsQ.data.prefs.preferred_languages : ["en"]);
     setInterests(prefsQ.data.prefs?.interests ?? []);
-  }, [prefsQ.data, config, suggested]);
-
-  useEffect(() => {
-    const openOnboarding = () => setOpen(true);
-    window.addEventListener("yaarzo:open-discovery-onboarding", openOnboarding);
-    return () => window.removeEventListener("yaarzo:open-discovery-onboarding", openOnboarding);
-  }, []);
+  }, [prefsQ.data, suggested]);
 
   const discoveryQ = useQuery({
     queryKey: ["discovery-onboarding-channels", country, languages.join(","), interests.join(",")],
     queryFn: () => fetchDiscovery({ data: { joinedChannelIds, scope: "for_you" } }),
-    enabled: open && Boolean(user),
+    enabled: dialogOpen && Boolean(user),
   });
 
   const recommended: DiscoverableChannel[] = discoveryQ.data?.recommended ?? [];
@@ -103,7 +102,7 @@ export function DiscoveryOnboarding({ isMobile, joinedChannelIds, onJoinChannels
         },
       });
       if (!skip) onJoinChannels(selected);
-      setOpen(false);
+      setDialogOpen(false);
       await prefsQ.refetch();
     } finally {
       setSaving(false);
@@ -174,7 +173,7 @@ export function DiscoveryOnboarding({ isMobile, joinedChannelIds, onJoinChannels
 
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={dialogOpen} onOpenChange={setDialogOpen}>
         <SheetContent side="bottom" className="max-h-[92vh] rounded-t-2xl">
           <SheetHeader>
             <SheetTitle>Choose what you want to explore</SheetTitle>
@@ -187,7 +186,7 @@ export function DiscoveryOnboarding({ isMobile, joinedChannelIds, onJoinChannels
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Choose what you want to explore</DialogTitle>

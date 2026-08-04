@@ -1,14 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { COUNTRY_OPTIONS, flagFromCode } from "@/lib/country-flag";
-import { DISCOVERY_LANGUAGE_OPTIONS, type UserContentPreference } from "@/lib/discovery/config";
+import { COUNTRY_OPTIONS, detectCountryCode, flagFromCode } from "@/lib/country-flag";
+import { DISCOVERY_LANGUAGE_OPTIONS, type DiscoveryContentScope } from "@/lib/discovery/config";
+import { parseStoredContentScope, contentScopeLabel } from "@/lib/discovery/content-scope";
+import { shouldShowPersonalizePrompt } from "@/lib/discovery/country";
 import { getDiscoveryPrefs, getInterestTags, saveDiscoveryPrefs } from "@/lib/discovery/functions";
 import { cn } from "@/lib/utils";
-import { Compass } from "lucide-react";
+import { Compass, X } from "lucide-react";
 
 type InterestTag = { slug: string; label: string; emoji: string | null; sort_order: number };
 
@@ -17,12 +22,7 @@ export const Route = createFileRoute("/_authenticated/settings/discovery")({
   head: () => ({ meta: [{ title: "Content & Discovery · Settings" }] }),
 });
 
-const PREFS: { id: UserContentPreference; label: string }[] = [
-  { id: "for_you", label: "For You" },
-  { id: "country_first", label: "Country First" },
-  { id: "balanced", label: "Balanced" },
-  { id: "worldwide_first", label: "Worldwide First" },
-];
+const SCOPES: DiscoveryContentScope[] = ["for_you", "my_country", "worldwide"];
 
 function DiscoverySettingsPage() {
   const qc = useQueryClient();
@@ -37,113 +37,234 @@ function DiscoverySettingsPage() {
   const config = prefsQ.data?.config;
   const lockCountry = config?.strictIsolation.lockDiscoveryCountry && !config.allowUserChangeDiscoveryCountry;
 
-  async function update(patch: Record<string, unknown>) {
+  const parsed = useMemo(
+    () => parseStoredContentScope(typeof prefs?.content_scope === "string" ? prefs.content_scope : null),
+    [prefs?.content_scope],
+  );
+
+  const [country, setCountry] = useState<string | null>(null);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [contentScope, setContentScope] = useState<DiscoveryContentScope>("for_you");
+  const [strictIsolation, setStrictIsolation] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    if (!prefsQ.data) return;
+    const p = prefsQ.data.prefs;
+    const suggested = prefsQ.data.suggestedCountry;
+    setCountry(p?.discovery_country_code ?? suggested ?? null);
+    setLanguages(p?.preferred_languages?.length ? p.preferred_languages : config?.defaultLanguages ?? ["en"]);
+    setInterests(p?.interests?.length ? p.interests : []);
+    setContentScope(parsed.view);
+    setStrictIsolation(parsed.strictIsolation);
+    setDirty(false);
+  }, [prefsQ.data, config?.defaultLanguages, parsed.view, parsed.strictIsolation]);
+
+  const enabledCountries = config?.enabledCountries?.length
+    ? COUNTRY_OPTIONS.filter((c) => config.enabledCountries.includes(c.code))
+    : COUNTRY_OPTIONS;
+  const enabledLangs = DISCOVERY_LANGUAGE_OPTIONS.filter(
+    (l) => !config?.enabledLanguages?.length || config.enabledLanguages.includes(l.code),
+  );
+
+  const showBanner =
+    config?.onboardingEnabled &&
+    shouldShowPersonalizePrompt(prefs ?? null, { requireAgain: config?.requireOnboardingAgain });
+
+  const toggleLang = (code: string) => {
+    setLanguages((cur) => (cur.includes(code) ? cur.filter((x) => x !== code) : [...cur, code]));
+    setDirty(true);
+  };
+  const toggleInterest = (slug: string) => {
+    setInterests((cur) => (cur.includes(slug) ? cur.filter((x) => x !== slug) : [...cur, slug]));
+    setDirty(true);
+  };
+
+  async function handleSave() {
+    setSaving(true);
     try {
-      await savePrefs({ data: patch });
-      toast.success("Saved");
+      await savePrefs({
+        data: {
+          discovery_country_code: country,
+          preferred_languages: languages,
+          interests,
+          content_scope: contentScope,
+          strict_country_isolation: strictIsolation,
+          detected_country_code: detectCountryCode() || null,
+          complete_onboarding: true,
+        },
+      });
+      toast.success("Discovery preferences saved");
+      setDirty(false);
       qc.invalidateQueries({ queryKey: ["discovery-prefs"] });
+      qc.invalidateQueries({ queryKey: ["chatroom-discovery"] });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed");
+      toast.error(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleReset() {
+    if (!window.confirm("Reset discovery preferences to platform defaults? Your onboarding history will be kept.")) return;
+    setSaving(true);
+    try {
+      await savePrefs({ data: { reset_preferences: true } });
+      toast.success("Preferences reset");
+      qc.invalidateQueries({ queryKey: ["discovery-prefs"] });
+      qc.invalidateQueries({ queryKey: ["chatroom-discovery"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to reset");
+    } finally {
+      setSaving(false);
     }
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-4">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold"><Compass className="h-5 w-5" /> Content & Discovery</h1>
-        <p className="text-sm text-muted-foreground">Control how Yaarzo personalizes chatrooms, feed, poetry and more.</p>
+        <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <Compass className="h-5 w-5" /> Content & Discovery
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Choose your country, interests and what content you want to see across Yaarzo.
+        </p>
       </div>
 
+      {showBanner && (
+        <div className="relative rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm">
+          <button
+            type="button"
+            aria-label="Dismiss"
+            className="absolute right-2 top-2 rounded p-0.5 text-muted-foreground hover:bg-muted"
+            onClick={async () => {
+              await savePrefs({ data: { dismiss_personalize_prompt: true } });
+              qc.invalidateQueries({ queryKey: ["discovery-prefs"] });
+            }}
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+          <div className="font-semibold">Personalize your experience</div>
+          <p className="text-muted-foreground">Set your country and interests for better recommendations.</p>
+        </div>
+      )}
+
       <Card>
-        <CardHeader><CardTitle className="text-base">Discovery country</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base">Discovery country</CardTitle>
+          <CardDescription>Used for recommendations only — you can change this anytime.</CardDescription>
+        </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          {COUNTRY_OPTIONS.map((c) => (
-            <button
+          <Chip
+            active={country === null}
+            disabled={lockCountry}
+            onClick={() => { setCountry(null); setDirty(true); }}
+          >
+            🌍 Worldwide
+          </Chip>
+          {enabledCountries.map((c) => (
+            <Chip
               key={c.code}
-              type="button"
+              active={country === c.code}
               disabled={lockCountry}
-              onClick={() => update({ discovery_country_code: c.code })}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs",
-                prefs?.discovery_country_code === c.code ? "border-primary bg-primary/10 text-primary" : "border-border",
-              )}
+              onClick={() => { setCountry(c.code); setDirty(true); }}
             >
               {flagFromCode(c.code)} {c.name}
-            </button>
+            </Chip>
           ))}
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Languages</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Preferred languages</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          {DISCOVERY_LANGUAGE_OPTIONS.map((l) => {
-            const active = prefs?.preferred_languages?.includes(l.code);
-            return (
-              <button
-                key={l.code}
-                type="button"
-                onClick={() => {
-                  const cur = prefs?.preferred_languages ?? [];
-                  const next = active ? cur.filter((x) => x !== l.code) : [...cur, l.code];
-                  update({ preferred_languages: next });
-                }}
-                className={cn("rounded-full border px-3 py-1 text-xs", active ? "border-primary bg-primary/10 text-primary" : "border-border")}
-              >
-                {l.label}
-              </button>
-            );
-          })}
+          {enabledLangs.map((l) => (
+            <Chip key={l.code} active={languages.includes(l.code)} onClick={() => toggleLang(l.code)}>
+              {l.label}
+            </Chip>
+          ))}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Interests</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          {(tagsQ.data as InterestTag[] | undefined ?? []).map((t) => {
-            const active = prefs?.interests?.includes(t.slug);
-            return (
-              <button
-                key={t.slug}
-                type="button"
-                onClick={() => {
-                  const cur = prefs?.interests ?? [];
-                  const next = active ? cur.filter((x) => x !== t.slug) : [...cur, t.slug];
-                  update({ interests: next });
-                }}
-                className={cn("rounded-full border px-3 py-1 text-xs", active ? "border-primary bg-primary/10 text-primary" : "border-border")}
-              >
-                {t.emoji ? `${t.emoji} ` : ""}{t.label}
-              </button>
-            );
-          })}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle className="text-base">Content preference</CardTitle></CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          {PREFS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => update({ content_scope: p.id })}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs",
-                prefs?.content_scope === p.id ? "border-primary bg-primary/10 text-primary" : "border-border",
-              )}
-            >
-              {p.label}
-            </button>
+          {(tagsQ.data as InterestTag[] | undefined ?? []).map((t) => (
+            <Chip key={t.slug} active={interests.includes(t.slug)} onClick={() => toggleInterest(t.slug)}>
+              {t.emoji ? `${t.emoji} ` : ""}{t.label}
+            </Chip>
           ))}
         </CardContent>
       </Card>
 
-      <div className="flex gap-2">
-        <Button variant="outline" asChild><Link to="/chatroom">Open chatrooms</Link></Button>
-        <Button variant="outline" asChild><Link to="/settings/privacy">Privacy settings</Link></Button>
-        <Button variant="ghost" onClick={() => update({ reset_onboarding: true })}>Re-run onboarding</Button>
+      <Card>
+        <CardHeader><CardTitle className="text-base">Content scope</CardTitle></CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          {SCOPES.map((s) => (
+            <Chip
+              key={s}
+              active={contentScope === s}
+              onClick={() => { setContentScope(s); setDirty(true); }}
+            >
+              {contentScopeLabel(s)}
+            </Chip>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex items-center justify-between gap-3 p-4">
+          <div>
+            <Label htmlFor="strict-isolation" className="text-sm font-medium">Strict country isolation</Label>
+            <p className="text-xs text-muted-foreground">Only show content scoped to your discovery country.</p>
+          </div>
+          <Switch
+            id="strict-isolation"
+            checked={strictIsolation}
+            onCheckedChange={(v) => { setStrictIsolation(v); setDirty(true); }}
+            disabled={config?.strictIsolation.enabled && config.strictIsolation.lockDiscoveryCountry}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={handleSave} disabled={saving || !dirty}>
+          {saving ? "Saving…" : "Save preferences"}
+        </Button>
+        <Button variant="outline" disabled={saving} onClick={handleReset}>
+          Reset preferences
+        </Button>
+        <Button variant="ghost" asChild><Link to="/chatroom">Open chatrooms</Link></Button>
+        <Button variant="ghost" asChild><Link to="/settings/privacy">Privacy settings</Link></Button>
       </div>
     </div>
+  );
+}
+
+function Chip({
+  active,
+  disabled,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "rounded-full border px-3 py-1 text-xs transition-colors disabled:opacity-50",
+        active ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted",
+      )}
+    >
+      {children}
+    </button>
   );
 }
