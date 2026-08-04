@@ -3,6 +3,7 @@
  * Preserves semantic headings while stripping unsafe markup from Word, Docs, and HTML sources.
  */
 import DOMPurify from "isomorphic-dompurify";
+import { PAGE_CTA_CLASSES } from "./page-cta";
 
 const ALLOWED_TAGS = [
   "h1", "h2", "h3", "h4", "h5", "h6",
@@ -18,8 +19,22 @@ const ALLOWED_ATTR = [
   "href", "target", "rel", "id", "class", "src", "alt", "title",
   "colspan", "rowspan", "width", "height",
   "type", "checked", "disabled", "data-type", "data-checked",
-  "aria-label", "role",
+  "aria-label", "aria-hidden", "role",
 ];
+
+/** Classes permitted on CMS page HTML (CTA, callouts, TOC). Others are stripped on sanitize. */
+export const ALLOWED_PAGE_CONTENT_CLASSES = new Set([
+  ...PAGE_CTA_CLASSES,
+  "callout",
+  "callout-info",
+  "callout-success",
+  "callout-warning",
+  "callout-danger",
+  "toc",
+  "toc-title",
+  "toc-l2",
+  "toc-l3",
+]);
 
 export { ALLOWED_TAGS, ALLOWED_ATTR };
 
@@ -35,6 +50,52 @@ const FORBID_ATTR = [
   "style", "background", "xmlns", "xmlns:x", "x:str", "x:bool",
 ];
 
+let pageContentSanitizerHooksInstalled = false;
+
+function filterAllowedClasses(classValue: string): string {
+  return classValue
+    .split(/\s+/)
+    .filter((cls) => cls && ALLOWED_PAGE_CONTENT_CLASSES.has(cls))
+    .join(" ");
+}
+
+/** Install DOMPurify hooks once for class allow-list and external link rel. */
+export function ensurePageContentSanitizerHooks(): void {
+  if (pageContentSanitizerHooksInstalled) return;
+  pageContentSanitizerHooksInstalled = true;
+
+  DOMPurify.addHook("uponSanitizeAttribute", (_node, data) => {
+    if (data.attrName !== "class") return;
+    const filtered = filterAllowedClasses(data.attrValue ?? "");
+    if (filtered) {
+      data.attrValue = filtered;
+    } else {
+      data.keepAttr = false;
+    }
+  });
+
+  DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+    if (node.tagName !== "A") return;
+    if (node.getAttribute("target") !== "_blank") return;
+    const parts = new Set((node.getAttribute("rel") ?? "").split(/\s+/).filter(Boolean));
+    parts.add("noopener");
+    parts.add("noreferrer");
+    node.setAttribute("rel", [...parts].join(" "));
+  });
+}
+
+export function createPageContentPurifyConfig() {
+  ensurePageContentSanitizerHooks();
+  return {
+    ALLOWED_TAGS,
+    ALLOWED_ATTR,
+    FORBID_TAGS,
+    FORBID_ATTR,
+    ALLOW_DATA_ATTR: true,
+    ALLOW_UNKNOWN_PROTOCOLS: false,
+  };
+}
+
 export type PageContentNormalizeResult = {
   html: string;
   warnings: string[];
@@ -43,14 +104,7 @@ export type PageContentNormalizeResult = {
 };
 
 export function sanitizePageContentHtml(html: string): string {
-  return DOMPurify.sanitize(html ?? "", {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    FORBID_TAGS,
-    FORBID_ATTR,
-    ALLOW_DATA_ATTR: true,
-    ALLOW_UNKNOWN_PROTOCOLS: false,
-  });
+  return DOMPurify.sanitize(html ?? "", createPageContentPurifyConfig());
 }
 
 /** Strip Word / Google Docs noise while keeping semantic heading tags. */

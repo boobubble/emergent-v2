@@ -16,7 +16,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Heading1, Heading2, Heading3,
   List, ListOrdered, Quote, Link as LinkIcon, Image as ImageIcon,
   Minus, Code2, Undo2, Redo2, Upload, Loader2, CheckSquare,
-  Table as TableIcon, Info, ListTree, Eye, Pencil,
+  Table as TableIcon, Info, ListTree, Eye, Pencil, MousePointerClick,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -24,21 +24,26 @@ import { sanitizeHtml } from "@/lib/pages-io";
 import { injectHeadingIds } from "@/lib/heading-ids";
 import { processPastedPageContent } from "@/lib/page-content-paste";
 import { Switch } from "@/components/ui/switch";
+import { InsertCtaDialog } from "@/components/admin/InsertCtaDialog";
+import { DEFAULT_PAGE_CTA_DEFAULTS, type PageCtaDefaults } from "@/lib/page-cta";
 
 interface Props {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
   uploadFolder?: string;
+  /** Pre-fill Insert CTA dialog for new pages (does not auto-insert). */
+  ctaDefaults?: PageCtaDefaults;
 }
 
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
-export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "pages" }: Props) {
+export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "pages", ctaDefaults }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [detectPlainTextHeadings, setDetectPlainTextHeadings] = useState(false);
+  const [ctaDialogOpen, setCtaDialogOpen] = useState(false);
   const detectPlainTextRef = useRef(false);
   const editorRef = useRef<Editor | null>(null);
 
@@ -237,6 +242,7 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
         <TB onClick={insertTable} title="Insert table"><TableIcon className="h-3.5 w-3.5" /></TB>
         <TB onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider"><Minus className="h-3.5 w-3.5" /></TB>
         <TB onClick={() => insertCallout("info")} title="Callout / Info box"><Info className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => setCtaDialogOpen(true)} title="Insert CTA"><MousePointerClick className="h-3.5 w-3.5" /></TB>
         <TB onClick={insertTOC} title="Insert Table of Contents"><ListTree className="h-3.5 w-3.5" /></TB>
         <Sep />
         <TB onClick={() => editor.chain().focus().undo().run()} title="Undo"><Undo2 className="h-3.5 w-3.5" /></TB>
@@ -294,11 +300,20 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
           <EditorContent editor={editor} />
         ) : (
           <div
-            className="prose prose-sm dark:prose-invert min-h-[320px] max-w-none p-3 text-sm"
+            className="custom-page-content prose prose-sm dark:prose-invert min-h-[320px] max-w-none p-3 text-sm"
             dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
         )}
       </div>
+      <InsertCtaDialog
+        open={ctaDialogOpen}
+        onOpenChange={setCtaDialogOpen}
+        defaults={ctaDefaults ?? DEFAULT_PAGE_CTA_DEFAULTS}
+        onInsert={(html) => {
+          editor?.chain().focus().insertContent(html).run();
+          toast.success("CTA inserted");
+        }}
+      />
     </div>
   );
 }

@@ -1819,3 +1819,62 @@
   font-weight: 600;
   color: hsl(var(--foreground));
 }
+
+/* ─── Public CMS CTA blocks (scoped under .custom-page-content) ─────────── */
+.custom-page-content .custom-page-cta {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.custom-page-content .custom-page-cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  color: hsl(var(--primary-foreground));
+  background: hsl(var(--primary));
+  border: 2px solid transparent;
+  box-shadow: var(--shadow-soft-1);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+@media (min-width: 640px) {
+  .custom-page-content .custom-page-cta-button {
+    width: auto;
+    min-width: 14rem;
+  }
+}
+
+.custom-page-content a.custom-page-cta-button {
+  text-decoration: none;
+  color: hsl(var(--primary-foreground));
+}
+
+.custom-page-content a.custom-page-cta-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft-2);
+  opacity: 1;
+}
+
+.custom-page-content .custom-page-cta-button.custom-page-cta-secondary,
+.custom-page-content a.custom-page-cta-button.custom-page-cta-secondary {
+  color: hsl(var(--foreground));
+  background: hsl(var(--muted));
+  border-color: hsl(var(--border));
+}
+
+.custom-page-content .custom-page-cta-note {
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}

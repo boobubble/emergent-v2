@@ -246,12 +246,11 @@ export function detectFormatFromName(name: string): ExportFormat {
 // Uses DOMPurify to prevent XSS across all known vectors (unquoted attrs,
 // SVG onload, vbscript:, <object>/<embed>, nested obfuscation, etc.).
 import DOMPurify from "isomorphic-dompurify";
-import { ALLOWED_TAGS, ALLOWED_ATTR } from "./page-content-paste";
+import { ALLOWED_TAGS, ALLOWED_ATTR, createPageContentPurifyConfig } from "./page-content-paste";
 
 export function sanitizeHtml(html: string): string {
   return DOMPurify.sanitize(html ?? "", {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
+    ...createPageContentPurifyConfig(),
     FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form", "input"],
     FORBID_ATTR: [
       "onclick", "ondblclick", "onmousedown", "onmouseup", "onkeydown", "onkeyup", "onkeypress",

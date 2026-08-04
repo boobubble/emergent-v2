@@ -28,6 +28,7 @@ import {
   PageSlugValidationError,
 } from "@/lib/page-slug";
 import { normalizePageContentForSave } from "@/lib/page-content-paste";
+import { DEFAULT_PAGE_CTA_DEFAULTS } from "@/lib/page-cta";
 import { useAuth } from "@/lib/auth-store";
 import { getMyRoles } from "@/lib/admin.functions";
 
@@ -390,6 +391,7 @@ function PageEditor() {
             </div>
             <RichTextEditor
               value={row.content}
+              ctaDefaults={isNew ? DEFAULT_PAGE_CTA_DEFAULTS : undefined}
               onChange={(html) => {
                 contentModifiedRef.current = html !== initialContentRef.current;
                 update("content", html);
