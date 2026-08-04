@@ -1822,13 +1822,15 @@
 
 /* ─── Public CMS CTA blocks (scoped under .custom-page-content) ─────────── */
 .custom-page-content .custom-page-cta {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
-  align-items: center;
+  align-items: center !important;
+  justify-content: center;
+  width: 100%;
   margin: 2.75rem auto;
   padding: 1.25rem 1rem;
   max-width: 36rem;
-  text-align: center;
+  text-align: center !important;
   border-radius: 1rem;
   background: linear-gradient(
     180deg,
@@ -2011,8 +2013,23 @@
   margin-bottom: 0;
   font-size: 0.8125rem;
   line-height: 1.55;
-  text-align: center;
+  text-align: center !important;
   color: rgba(55, 65, 81, 0.88);
+}
+
+.custom-page-content .custom-page-cta > .custom-page-cta-button,
+.custom-page-content .custom-page-cta > a.custom-page-cta-button {
+  display: inline-flex;
+  width: auto;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+@media (max-width: 639px) {
+  .custom-page-content .custom-page-cta > .custom-page-cta-button,
+  .custom-page-content .custom-page-cta > a.custom-page-cta-button {
+    width: 100%;
+  }
 }
 
 .dark .custom-page-content .custom-page-cta-note,
