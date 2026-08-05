@@ -65,9 +65,22 @@ export default defineConfig({
   },
   nitro: {
     preset: "vercel",
-  },
+    minify: false,
+    sourceMap: false,
+    rollupConfig: {
+      output: {
+        inlineDynamicImports: false,
+      },
+    },
+  } as Record<string, unknown>,
   vite: {
     envDir: process.cwd(),
+    build: {
+      sourcemap: false,
+      rollupOptions: {
+        maxParallelFileOps: 2,
+      },
+    },
     ssr: {
       noExternal: ["tslib"],
     },

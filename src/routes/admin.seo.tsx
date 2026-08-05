@@ -6,7 +6,7 @@ import { Search, ExternalLink, Pencil } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { getSeoInventory } from "@/lib/seo.functions";
 import { SeoEditDrawer } from "@/components/admin/seo/SeoEditDrawer";
-import { isSeoEditableRow } from "@/lib/seo/edit-form";
+import { isSeoEditableRow, getEditActionLabel } from "@/lib/seo/edit-form";
 import {
   fieldStateLabel,
   indexStateLabel,
@@ -45,6 +45,15 @@ export const Route = createFileRoute("/admin/seo")({
 
 const ALL = "__all__";
 
+type SeoQuickFilter =
+  | typeof ALL
+  | "editable"
+  | "missing"
+  | "custom"
+  | "templates"
+  | "noindex"
+  | "sitemap-excluded";
+
 const CATEGORY_IDS = new Set<string>(SEO_INVENTORY_CATEGORIES.map((c) => c.id));
 
 function parseCategoryParam(value: string | undefined): SeoInventoryCategoryId | typeof ALL {
@@ -57,10 +66,10 @@ function SeoManagerPage() {
     <div className="space-y-4">
       <AdminPageHeader
         title="SEO Manager"
-        description="Central SEO inventory. Batch 3 editing is enabled for Global Defaults and homepage routes only."
+        description="Central SEO inventory with full route-level editing for static routes, dynamic templates, and global defaults."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">Batch 3 · Limited editing</Badge>
+            <Badge variant="outline">Full Route SEO Editing</Badge>
             <a
               href="/sitemap.xml"
               target="_blank"
@@ -115,6 +124,7 @@ function filterRows(
   category: SeoInventoryCategoryId | typeof ALL,
   status: SeoInventoryStatus | typeof ALL,
   routeKind: "static" | "dynamic" | typeof ALL,
+  seoFilter: SeoQuickFilter,
   search: string,
 ): SeoInventoryRow[] {
   const q = search.trim().toLowerCase();
@@ -123,6 +133,11 @@ function filterRows(
     if (status !== ALL && row.status !== status) return false;
     if (routeKind === "static" && row.isDynamic) return false;
     if (routeKind === "dynamic" && !row.isDynamic) return false;
+    if (seoFilter === "missing" && row.status !== "missing") return false;
+    if (seoFilter === "custom" && !row.hasCustomOverride) return false;
+    if (seoFilter === "templates" && !row.isDynamic) return false;
+    if (seoFilter === "noindex" && !row.isNoindex) return false;
+    if (seoFilter === "sitemap-excluded" && !row.sitemapExcluded) return false;
     if (!q) return true;
     return (
       row.pageName.toLowerCase().includes(q)
@@ -152,6 +167,7 @@ function SeoInventoryPanel() {
   const [activeCategory, setActiveCategory] = useState<SeoInventoryCategoryId | typeof ALL>(() => parseCategoryParam(categoryParam));
   const [statusFilter, setStatusFilter] = useState<SeoInventoryStatus | typeof ALL>(ALL);
   const [routeKind, setRouteKind] = useState<"static" | "dynamic" | typeof ALL>(ALL);
+  const [seoFilter, setSeoFilter] = useState<SeoQuickFilter>(ALL);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -162,8 +178,8 @@ function SeoInventoryPanel() {
   const summary = inventory.data?.summary;
 
   const filtered = useMemo(
-    () => filterRows(rows, activeCategory, statusFilter, routeKind, search),
-    [rows, activeCategory, statusFilter, routeKind, search],
+    () => filterRows(rows, activeCategory, statusFilter, routeKind, seoFilter, search),
+    [rows, activeCategory, statusFilter, routeKind, seoFilter, search],
   );
 
   const categoryCounts: SeoInventorySummary["byCategory"] =
@@ -250,6 +266,19 @@ function SeoInventoryPanel() {
             <SelectItem value="dynamic">Dynamic only</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={seoFilter} onValueChange={(v) => setSeoFilter(v as SeoQuickFilter)}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="SEO filter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>All routes</SelectItem>
+            <SelectItem value="missing">Missing SEO</SelectItem>
+            <SelectItem value="custom">Custom overrides</SelectItem>
+            <SelectItem value="templates">Dynamic templates</SelectItem>
+            <SelectItem value="noindex">Noindex</SelectItem>
+            <SelectItem value="sitemap-excluded">Sitemap excluded</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {summary && (
@@ -311,7 +340,17 @@ function SeoInventoryPanel() {
                 <TableCell>
                   <Badge variant="outline">{row.isDynamic ? "Dynamic" : "Static"}</Badge>
                 </TableCell>
-                <TableCell className="max-w-[220px] text-xs text-muted-foreground">{row.seoSource}</TableCell>
+                <TableCell className="max-w-[220px] text-xs text-muted-foreground">
+                  <div className="flex flex-col gap-1">
+                    <span>{row.seoSource}</span>
+                    {row.hasCustomOverride && (
+                      <Badge variant="secondary" className="w-fit text-[10px] font-normal">Custom override</Badge>
+                    )}
+                    {row.editMode === "cms" && (
+                      <Badge variant="outline" className="w-fit text-[10px] font-normal">Managed by CMS</Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell><FieldBadge state={row.title} /></TableCell>
                 <TableCell><FieldBadge state={row.description} /></TableCell>
                 <TableCell><FieldBadge state={row.canonical} /></TableCell>
@@ -334,7 +373,7 @@ function SeoInventoryPanel() {
                       })}
                     >
                       <Pencil className="h-3 w-3" />
-                      Edit
+                      {getEditActionLabel(row)}
                     </Button>
                   ) : (
                     <span className="text-xs text-muted-foreground">—</span>
@@ -356,10 +395,6 @@ function SeoInventoryPanel() {
           onSaved={(row) => patchInventoryRow(row)}
         />
       )}
-
-      <p className="text-xs text-muted-foreground">
-        Batch 3 editing: Global Defaults and homepage routes (`/`, `/welcome`, `/heropage`) only. Other routes remain read-only.
-      </p>
     </div>
   );
 }

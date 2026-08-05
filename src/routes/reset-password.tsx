@@ -1,8 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { loadPrivateRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/reset-password")({
+  loader: () => loadPrivateRouteSeo("/reset-password", "Reset Password", "Set a new password for your account."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: ResetPasswordPage,
 });
 

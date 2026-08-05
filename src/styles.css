@@ -651,6 +651,28 @@
   text-transform: uppercase;
   color: var(--color-muted-foreground);
 }
+.yaarzo-premium-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 0.85rem;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--primary-foreground);
+  background: linear-gradient(135deg, var(--primary) 0%, color-mix(in oklab, var(--primary) 75%, var(--accent)) 100%);
+  box-shadow: var(--shadow-soft-2), 0 0 0 1px color-mix(in oklab, var(--primary) 35%, transparent);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.yaarzo-premium-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft-3), 0 0 0 1px color-mix(in oklab, var(--primary) 45%, transparent);
+  filter: brightness(1.03);
+}
+.yaarzo-premium-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
 
 @keyframes presence-fade {
   0%   { opacity: 0; transform: translateY(6px) scale(0.96); }

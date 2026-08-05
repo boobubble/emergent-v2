@@ -22,8 +22,14 @@ import { gamify, GAM_EVENTS } from "@/lib/gamification-emit";
 import { useMehfilPoemRealtime } from "@/lib/mehfil-realtime";
 import { supabase } from "@/integrations/supabase/client";
 import { isNavigableSlug } from "@/lib/route-slug";
-
-const SITE_URL = "https://holo-chat-quest.lovable.app";
+import {
+  loadDynamicRouteSeo,
+  headFromRouteSeo,
+  buildPoetrySeoVars,
+  buildPoetryFallbackJsonLd,
+  loadSeoSiteContext,
+  DEFAULT_SITE_ORIGIN,
+} from "@/lib/seo";
 
 const FONT_SIZES = [16, 18, 20, 22, 24, 26, 28] as const;
 const FONT_STORAGE_KEY = "poetry:reader:fontSize";
@@ -39,58 +45,58 @@ function countryFlag(cc?: string | null): string | null {
 export const Route = createFileRoute("/poetry/$slug")({
   loader: async ({ params }) => {
     if (!isNavigableSlug(params.slug)) throw notFound();
+    const { origin, siteName } = await loadSeoSiteContext();
     const poem = await getPoemBySlug({ data: { slug: params.slug } });
     if (!poem) throw notFound();
-    return { poem };
+    const p = poem as Record<string, unknown> & typeof poem;
+    const slug = params.slug;
+    const url = `${origin}/poetry/${slug}`;
+    const author = p.author as { display_name?: string; username?: string } | null | undefined;
+    const authorName = author?.display_name || author?.username || "Anonymous";
+    const desc = String(p.seo_description || poemPreview(String(p.body ?? ""), 155));
+    const title = String(p.seo_title || `${p.title} · Poetry Hub`);
+    const seoData = await loadDynamicRouteSeo({
+      templatePath: "/poetry/$slug",
+      instancePath: `/poetry/${slug}`,
+      vars: buildPoetrySeoVars({ poem: p, slug, siteName, origin }),
+      entityOverride: {
+        title: p.seo_title ? String(p.seo_title) : undefined,
+        description: p.seo_description ? String(p.seo_description) : undefined,
+      },
+      fallback: {
+        title,
+        description: desc,
+        ogTitle: title,
+        ogDescription: desc,
+        twitterTitle: title,
+        twitterDescription: desc,
+        ogImage: p.cover_url ? String(p.cover_url) : undefined,
+        twitterImage: p.cover_url ? String(p.cover_url) : undefined,
+        canonical: url,
+      },
+      fallbackJsonLd: buildPoetryFallbackJsonLd({
+        title: String(p.title ?? "Poem"),
+        description: desc,
+        url,
+        publishedAt: p.published_at as string | null | undefined,
+        coverUrl: p.cover_url as string | null | undefined,
+        authorName,
+        categoryName: (p.category as { name?: string } | null)?.name,
+        upvotes: p.upvote_count as number | undefined,
+        reads: p.read_count as number | undefined,
+      }),
+    });
+    return { poem, seoData, origin };
   },
-  head: ({ params, loaderData }) => {
-    const url = `${SITE_URL}/poetry/${params.slug}`;
-    if (!loaderData) {
+  head: ({ loaderData }) => {
+    if (!loaderData?.poem) {
+      const origin = loaderData?.origin ?? DEFAULT_SITE_ORIGIN;
       return {
         meta: [{ title: "Poem not found · Poetry Hub" }, { name: "robots", content: "noindex" }],
-        links: [{ rel: "canonical", href: url }],
+        links: [{ rel: "canonical", href: `${origin}/poetry/unknown` }],
       };
     }
-    const p = loaderData.poem;
-    const desc = p.seo_description || poemPreview(p.body, 155);
-    const title = p.seo_title || `${p.title} · Poetry Hub`;
-    const authorName = p.author?.display_name || p.author?.username || "Anonymous";
-    return {
-      meta: [
-        { title },
-        { name: "description", content: desc },
-        { property: "og:title", content: title },
-        { property: "og:description", content: desc },
-        { property: "og:type", content: "article" },
-        { property: "og:url", content: url },
-        ...(p.cover_url ? [{ property: "og:image", content: p.cover_url }] : []),
-        { name: "twitter:card", content: p.cover_url ? "summary_large_image" : "summary" },
-        { name: "twitter:title", content: title },
-        { name: "twitter:description", content: desc },
-      ],
-      links: [{ rel: "canonical", href: url }],
-      scripts: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CreativeWork",
-            headline: p.title,
-            name: p.title,
-            description: desc,
-            url,
-            datePublished: p.published_at,
-            image: p.cover_url ? [p.cover_url] : undefined,
-            author: { "@type": "Person", name: authorName },
-            genre: p.category?.name,
-            interactionStatistic: [
-              { "@type": "InteractionCounter", interactionType: "https://schema.org/LikeAction", userInteractionCount: p.upvote_count ?? 0 },
-              { "@type": "InteractionCounter", interactionType: "https://schema.org/ReadAction", userInteractionCount: p.read_count ?? 0 },
-            ],
-          }),
-        },
-      ],
-    };
+    return headFromRouteSeo(loaderData.seoData);
   },
 
   component: PoemDetailPage,

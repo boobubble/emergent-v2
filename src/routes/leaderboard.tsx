@@ -6,16 +6,11 @@ import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { Avatar } from "@/components/chat/Avatar";
 import { BADGE_MAP } from "@/lib/achievements";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/leaderboard")({
-  head: () => ({
-    meta: [
-      { title: "Leaderboard" },
-      { name: "description", content: "Top members by XP and daily streaks ." },
-      { property: "og:title", content: "Leaderboard" },
-      { property: "og:description", content: "Top members by XP and daily streaks ." },
-    ],
-  }),
+  loader: () => loadRouteSeo("/leaderboard", "Leaderboard", "Top members by XP and daily streaks."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: LeaderboardPage,
 });
 

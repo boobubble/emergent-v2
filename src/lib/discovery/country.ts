@@ -1,5 +1,8 @@
 import { detectCountryCode } from "@/lib/country-flag";
 import type { UserDiscoveryPrefs } from "@/lib/discovery/types";
+import { hasConfiguredDiscovery } from "@/lib/discovery/rollout";
+
+export { hasConfiguredDiscovery, shouldShowFullScreenDiscovery } from "@/lib/discovery/rollout";
 
 export type CountryResolutionInput = {
   discoveryCountryCode?: string | null;
@@ -24,11 +27,6 @@ export function resolveDiscoveryCountry(input: CountryResolutionInput): string {
     if (code && /^[A-Z]{2}$/.test(code)) return code;
   }
   return "US";
-}
-
-export function hasConfiguredDiscovery(prefs: UserDiscoveryPrefs | null): boolean {
-  if (!prefs) return false;
-  return Boolean(prefs.discovery_country_code) || prefs.preferred_languages.length > 0 || prefs.interests.length > 0;
 }
 
 export function prefsNeedOnboarding(

@@ -39,37 +39,38 @@ interface LandingPayload {
   activities: LandingActivity[];
 }
 
-const HOST = "https://holo-chat-quest.lovable.app";
-
 const WELCOME_SEO_FALLBACK = {
-  title: LANDING_DEFAULTS.seoTitle,
-  description: LANDING_DEFAULTS.seoDescription,
-  keywords: LANDING_DEFAULTS.seoKeywords,
-  ogTitle: LANDING_DEFAULTS.seoTitle,
-  ogDescription: LANDING_DEFAULTS.seoDescription,
+  title: "Yaarzo – AI-Powered Chatrooms and Social Community",
+  description:
+    "Join live chatrooms, discover social posts, play games, earn rewards and connect with friends on Yaarzo.",
+  keywords: "Yaarzo, chatrooms, social community, online friends, games, rewards, live chat",
+  ogTitle: "Yaarzo – AI-Powered Chatrooms and Social Community",
+  ogDescription:
+    "Live chatrooms, social feed, games, rewards and friends — all on Yaarzo.",
   ogImage: LANDING_DEFAULTS.ogImageUrl || undefined,
-  twitterTitle: LANDING_DEFAULTS.seoTitle,
-  twitterDescription: LANDING_DEFAULTS.seoDescription,
-  canonical: `${HOST}/welcome`,
+  twitterTitle: "Yaarzo – AI-Powered Chatrooms and Social Community",
+  twitterDescription:
+    "Live chatrooms, social feed, games, rewards and friends — all on Yaarzo.",
 };
 
 export const Route = createFileRoute("/welcome")({
   loader: () => loadRouteSeoWithDefaults("/welcome", WELCOME_SEO_FALLBACK),
   head: ({ loaderData }) => {
     const base = headFromRouteSeo(loaderData);
-    const description = loaderData?.seo.description ?? LANDING_DEFAULTS.seoDescription;
-    const url = loaderData?.seo.canonical ?? `${HOST}/welcome`;
+    const description = loaderData?.seo.description ?? WELCOME_SEO_FALLBACK.description;
+    const url = loaderData?.seo.canonical;
+    const siteName = loaderData?.global?.site_name?.trim() || "Yaarzo";
     return {
       ...base,
       scripts: [
         ...(base.scripts ?? []),
-        ...(LANDING_DEFAULTS.enableStructuredData
+        ...(LANDING_DEFAULTS.enableStructuredData && url
           ? [{
               type: "application/ld+json",
               children: JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "WebSite",
-                name: LANDING_DEFAULTS.copyrightOwner,
+                name: siteName,
                 url,
                 description,
               }),

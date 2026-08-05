@@ -10,6 +10,7 @@ export interface StaffPermissions {
   mod_can_ban: boolean;
   mod_can_announce: boolean;
   mod_can_clear: boolean;
+  manage_seo_settings?: boolean;
 }
 
 export const DEFAULT_STAFF_PERMISSIONS: StaffPermissions = {

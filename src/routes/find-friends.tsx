@@ -14,16 +14,11 @@ import {
 } from "@/lib/use-social-graph";
 import type { User } from "@/lib/chat-types";
 import { toast } from "sonner";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/find-friends")({
-  head: () => ({
-    meta: [
-      { title: "Find Friends" },
-      { name: "description", content: "Discover people, accept requests, and grow your network ." },
-      { property: "og:title", content: "Find Friends" },
-      { property: "og:description", content: "Suggestions, requests, search and mutuals — all in one place." },
-    ],
-  }),
+  loader: () => loadRouteSeo("/find-friends", "Find Friends", "Discover people, accept requests, and grow your network."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: FindFriendsPage,
 });
 

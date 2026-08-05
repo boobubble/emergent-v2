@@ -13,16 +13,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/pricing")({
-  head: () => ({
-    meta: [
-      { title: "Pricing & Membership Plans" },
-      { name: "description", content: "Upgrade to unlock premium chatrooms, exclusive themes, no ads and creator perks." },
-      { property: "og:title", content: "Pricing & Membership Plans" },
-      { property: "og:description", content: "Choose a plan and join the premium community." },
-    ],
-  }),
+  loader: () => loadRouteSeo(
+    "/pricing",
+    "Pricing & Membership Plans",
+    "Upgrade to unlock premium chatrooms, exclusive themes, no ads and creator perks.",
+  ),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: PricingPage,
 });
 

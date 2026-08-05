@@ -20,7 +20,8 @@ import {
   pageKeyFromPath,
   labelFromPath,
 } from "@/lib/seo/route-registry";
-import { resolvePageSeo } from "@/lib/seo/resolve-seo";
+import { resolvePageSeo, type EntitySeoOverride } from "@/lib/seo/resolve-seo";
+import { getSeoCache, setSeoCache, invalidateSeoCache, seoCacheKey } from "@/lib/seo/load-route-seo";
 import type { SeoAiField, SeoGlobal, SeoPageRow } from "@/lib/seo/types";
 import { buildSeoInventory, summarizeSeoInventory, type SeoInventoryRow } from "@/lib/seo/inventory";
 import {
@@ -28,8 +29,12 @@ import {
   editFormToPagePatch,
   globalToEditForm,
   pageToEditForm,
-  SEO_EDITABLE_ROUTE_PATHS,
   validateSeoEditForm,
+  getRouteEditMode,
+  getTemplateVariablesForRoute,
+  isPrivateAuthRoute,
+  isCmsTemplateRoute,
+  PRIVATE_ROUTE_WARNING,
   type SeoEditFormValues,
 } from "@/lib/seo/edit-form";
 import { SEO_ROUTE_CATALOG } from "@/lib/seo/route-registry";
@@ -67,6 +72,70 @@ async function assertAdmin(userId: string) {
     .in("role", ["super_admin", "admin"]);
   if (error) throw new Error(error.message);
   if (!data?.length) throw new Error("Forbidden: admin only");
+}
+
+async function loadStaffPermissions(): Promise<{ manage_seo_settings?: boolean }> {
+  const { data } = await supabaseAdmin
+    .from("app_settings")
+    .select("value")
+    .eq("key", "staff_permissions")
+    .maybeSingle();
+  return (data?.value as { manage_seo_settings?: boolean } | null) ?? {};
+}
+
+async function assertSeoRead(userId: string) {
+  await assertAdmin(userId);
+}
+
+async function assertSeoManage(userId: string) {
+  const { data: roles, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+  if (error) throw new Error(error.message);
+  const list = (roles ?? []).map((r) => r.role as string);
+  if (list.includes("super_admin")) return;
+  if (list.includes("admin")) {
+    const perms = await loadStaffPermissions();
+    if (perms.manage_seo_settings !== false) return;
+    throw new Error("Forbidden: manage_seo_settings permission required");
+  }
+  throw new Error("Forbidden: admin only");
+}
+
+async function canManageSeo(userId: string): Promise<boolean> {
+  try {
+    await assertSeoManage(userId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function resolvedToInheritedForm(resolved: ReturnType<typeof resolvePageSeo>): SeoEditFormValues {
+  const { index, follow } = (() => {
+    const robots = resolved.robots.toLowerCase();
+    return { index: !robots.includes("noindex"), follow: !robots.includes("nofollow") };
+  })();
+  return {
+    title: resolved.title,
+    description: resolved.description,
+    keywords: resolved.keywords,
+    canonicalUrl: resolved.canonical,
+    index,
+    follow,
+    ogTitle: resolved.ogTitle,
+    ogDescription: resolved.ogDescription,
+    ogImage: resolved.ogImage,
+    twitterTitle: resolved.twitterTitle,
+    twitterDescription: resolved.twitterDescription,
+    twitterImage: resolved.twitterImage,
+    jsonLdType: typeof resolved.jsonLd?.["@type"] === "string" ? resolved.jsonLd["@type"] : "",
+    customJsonLd: resolved.jsonLd ? JSON.stringify(resolved.jsonLd, null, 2) : "",
+    sitemapEnabled: true,
+    sitemapPriority: "0.5",
+    sitemapChangeFreq: "weekly",
+  };
 }
 
 async function loadGlobal(): Promise<SeoGlobal | null> {
@@ -213,6 +282,23 @@ export const getPublicSeoGlobal = createServerFn({ method: "GET" }).handler(asyn
 export const getPublicSeoForPath = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({
     routePath: z.string(),
+    templatePath: z.string().optional(),
+    vars: z.record(z.string(), z.string()).optional(),
+    entityOverride: z.object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+      keywords: z.string().optional(),
+      canonical: z.string().optional(),
+      ogTitle: z.string().optional(),
+      ogDescription: z.string().optional(),
+      ogImage: z.string().optional(),
+      twitterTitle: z.string().optional(),
+      twitterDescription: z.string().optional(),
+      twitterImage: z.string().optional(),
+      robots: z.string().optional(),
+      noindex: z.boolean().optional(),
+      nofollow: z.boolean().optional(),
+    }).optional(),
     fallback: z.object({
       title: z.string().optional(),
       description: z.string().optional(),
@@ -224,41 +310,85 @@ export const getPublicSeoForPath = createServerFn({ method: "POST" })
       twitterTitle: z.string().optional(),
       twitterDescription: z.string().optional(),
       twitterImage: z.string().optional(),
+      robots: z.string().optional(),
+      noindex: z.boolean().optional(),
+      nofollow: z.boolean().optional(),
     }).optional(),
-    /** When true, skip seo_global in resolution so route hardcoded defaults apply after enabled page fields. */
     routeDefaultsOnly: z.boolean().optional(),
   }).parse(input))
   .handler(async ({ data }) => {
+    const cacheKey = seoCacheKey({
+      routePath: data.routePath,
+      templatePath: data.templatePath,
+      vars: data.vars ? JSON.stringify(data.vars) : undefined,
+      routeDefaultsOnly: data.routeDefaultsOnly,
+      entity: data.entityOverride ? "1" : "0",
+    });
+    const cached = getSeoCache<{ global: SeoGlobal | null; resolved: ReturnType<typeof resolvePageSeo>; page: SeoPageRow | null }>(cacheKey);
+    if (cached) return cached;
+
     const [global, pagesRes] = await Promise.all([
       loadGlobal(),
       supabaseAdmin.from("seo_settings").select("*"),
     ]);
     if (pagesRes.error) throw new Error(pagesRes.error.message);
     const pages = (pagesRes.data ?? []) as SeoPageRow[];
-    const globalForResolve = data.routeDefaultsOnly ? null : global;
     const fallback = data.fallback;
     const routePath = data.routePath;
+    const templatePath = data.templatePath ?? routePath;
+    const entityOverride = data.entityOverride as EntitySeoOverride | undefined;
+    const vars = {
+      ...(data.vars ?? {}),
+      site_name: global?.site_name?.trim() || data.vars?.site_name || "BooBubble",
+    };
+    const resolveOpts = {
+      routePath,
+      fallback,
+      vars,
+      entityOverride,
+      routeDefaultsOnly: data.routeDefaultsOnly,
+    };
 
     const exact =
-      pages.find((p) => p.route_path === routePath)
-      ?? pages.find((p) => p.page_key === pageKeyFromPath(routePath));
+      pages.find((p) => p.route_path === templatePath)
+      ?? pages.find((p) => p.route_path === routePath)
+      ?? pages.find((p) => p.page_key === pageKeyFromPath(templatePath));
 
-    if (exact) {
-      const resolved = resolvePageSeo(exact, globalForResolve, { routePath, fallback });
-      return { global, resolved, page: exact };
+    if (exact && !exact.is_dynamic) {
+      const result = {
+        global,
+        resolved: resolvePageSeo(exact, global, resolveOpts),
+        page: exact,
+      };
+      setSeoCache(cacheKey, result);
+      return result;
     }
 
-    const dynamic = pages.find((p) => p.is_dynamic && p.enabled && routePath.match(pathToRegex(p.route_path ?? "")));
-    if (dynamic) {
-      const resolved = resolvePageSeo(dynamic, globalForResolve, { routePath, fallback });
-      return { global, resolved, page: dynamic };
-    }
-
-    const resolved = resolvePageSeo(null, globalForResolve, {
-      routePath,
-      fallback: fallback ?? { title: labelFromPath(routePath) },
+    const dynamic = pages.find((p) => {
+      if (!p.is_dynamic || !p.enabled) return false;
+      if (templatePath && p.route_path === templatePath) return true;
+      return routePath.match(pathToRegex(p.route_path ?? "")) != null;
     });
-    return { global, resolved, page: null };
+    if (dynamic) {
+      const result = {
+        global,
+        resolved: resolvePageSeo(dynamic, global, resolveOpts),
+        page: dynamic,
+      };
+      setSeoCache(cacheKey, result);
+      return result;
+    }
+
+    const result = {
+      global,
+      resolved: resolvePageSeo(null, global, {
+        ...resolveOpts,
+        fallback: fallback ?? { title: labelFromPath(routePath) },
+      }),
+      page: null,
+    };
+    setSeoCache(cacheKey, result);
+    return result;
   });
 
 function pathToRegex(routePath: string): RegExp {
@@ -427,7 +557,7 @@ export const getSeoInventory = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const userId = context.userId;
     try {
-      await assertAdmin(userId);
+      await assertSeoRead(userId);
       const [global, pages, discovered] = await Promise.all([
         loadGlobal(),
         loadPages(),
@@ -450,18 +580,23 @@ export const getSeoInventory = createServerFn({ method: "GET" })
   });
 
 const seoEditFormSchema = z.object({
-  title: z.string().max(120),
-  description: z.string().max(500),
+  title: z.string().max(500),
+  description: z.string().max(2000),
   keywords: z.string().max(500),
   canonicalUrl: z.string().max(500),
   index: z.boolean(),
   follow: z.boolean(),
-  ogTitle: z.string().max(120),
-  ogDescription: z.string().max(500),
+  ogTitle: z.string().max(500),
+  ogDescription: z.string().max(2000),
   ogImage: z.string().max(500),
-  twitterTitle: z.string().max(120),
-  twitterDescription: z.string().max(500),
+  twitterTitle: z.string().max(500),
+  twitterDescription: z.string().max(2000),
   twitterImage: z.string().max(500),
+  jsonLdType: z.string().max(80),
+  customJsonLd: z.string().max(10000),
+  sitemapEnabled: z.boolean(),
+  sitemapPriority: z.string().max(10),
+  sitemapChangeFreq: z.string().max(20),
 });
 
 async function findPageForRoute(pages: SeoPageRow[], routePath: string): Promise<SeoPageRow | null> {
@@ -473,7 +608,7 @@ async function findPageForRoute(pages: SeoPageRow[], routePath: string): Promise
   );
 }
 
-/** Load editable SEO record for Batch 3 targets (global + homepage routes). */
+/** Load editable SEO record for any inventory route. */
 export const getSeoEditRecord = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .inputValidator((input) => z.object({
@@ -481,7 +616,8 @@ export const getSeoEditRecord = createServerFn({ method: "POST" })
     routePath: z.string().optional(),
   }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertSeoRead(context.userId);
+    const canManage = await canManageSeo(context.userId);
 
     if (data.target === "global") {
       const global = await loadGlobal();
@@ -492,17 +628,31 @@ export const getSeoEditRecord = createServerFn({ method: "POST" })
         pageKey: null,
         exists: !!global,
         form: globalToEditForm(global),
+        inherited: globalToEditForm(null),
+        editMode: "global" as const,
+        isTemplate: false,
+        templateVariables: [] as string[],
+        cmsManaged: false,
+        canManage,
       };
     }
 
     const routePath = data.routePath?.trim();
-    if (!routePath || !(SEO_EDITABLE_ROUTE_PATHS as readonly string[]).includes(routePath)) {
-      throw new Error("This route is not editable in Batch 3.");
-    }
+    if (!routePath) throw new Error("routePath is required for route edits.");
 
-    const pages = await loadPages();
+    const [global, pages] = await Promise.all([loadGlobal(), loadPages()]);
     const page = await findPageForRoute(pages, routePath);
     const catalog = SEO_ROUTE_CATALOG.find((c) => c.routePath === routePath);
+    const isDynamic = catalog?.isDynamic ?? routePath.includes("$");
+    const editMode = getRouteEditMode(routePath, isDynamic);
+    const templateVariables = isDynamic ? getTemplateVariablesForRoute(routePath) : [];
+    const isPrivateDefault = isPrivateAuthRoute(routePath) && !page;
+
+    const inheritedResolved = resolvePageSeo(null, global, {
+      routePath,
+      fallback: { title: catalog?.label ?? labelFromPath(routePath) },
+    });
+    const inherited = resolvedToInheritedForm(inheritedResolved);
 
     return {
       target: "route" as const,
@@ -510,7 +660,14 @@ export const getSeoEditRecord = createServerFn({ method: "POST" })
       routePath,
       pageKey: page?.page_key ?? catalog?.pageKey ?? pageKeyFromPath(routePath),
       exists: !!page,
-      form: pageToEditForm(page),
+      form: pageToEditForm(page, { isPrivateDefault }),
+      inherited,
+      editMode,
+      isTemplate: isDynamic,
+      templateVariables,
+      cmsManaged: isCmsTemplateRoute(routePath),
+      privateRouteWarning: editMode === "private" ? PRIVATE_ROUTE_WARNING : undefined,
+      canManage,
     };
   });
 
@@ -521,11 +678,23 @@ export const saveSeoEditRecord = createServerFn({ method: "POST" })
     target: z.enum(["global", "route"]),
     routePath: z.string().optional(),
     form: seoEditFormSchema,
+    resetToInherited: z.boolean().optional(),
   }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertSeoManage(context.userId);
 
-    const validation = validateSeoEditForm(data.form as SeoEditFormValues);
+    const catalogEntry = data.routePath
+      ? SEO_ROUTE_CATALOG.find((c) => c.routePath === data.routePath)
+      : undefined;
+    const isTemplate = catalogEntry?.isDynamic ?? (data.routePath?.includes("$") ?? false);
+    const templateVariables = isTemplate && data.routePath
+      ? getTemplateVariablesForRoute(data.routePath)
+      : [];
+
+    const validation = validateSeoEditForm(data.form as SeoEditFormValues, {
+      isTemplate,
+      templateVariables,
+    });
     if (Object.keys(validation.fieldErrors).length) {
       const first = Object.values(validation.fieldErrors)[0];
       throw new Error(first ?? "Invalid SEO form");
@@ -540,6 +709,7 @@ export const saveSeoEditRecord = createServerFn({ method: "POST" })
         updated_by: context.userId,
       });
       if (error) throw new Error(error.message);
+      invalidateSeoCache();
 
       const [global, pages, discovered] = await Promise.all([
         loadGlobal(),
@@ -554,30 +724,45 @@ export const saveSeoEditRecord = createServerFn({ method: "POST" })
     }
 
     const routePath = data.routePath?.trim();
-    if (!routePath || !(SEO_EDITABLE_ROUTE_PATHS as readonly string[]).includes(routePath)) {
-      throw new Error("This route is not editable in Batch 3.");
-    }
+    if (!routePath) throw new Error("routePath is required for route edits.");
 
     const pages = await loadPages();
     const existing = await findPageForRoute(pages, routePath);
     const catalog = SEO_ROUTE_CATALOG.find((c) => c.routePath === routePath);
     const pageKey = existing?.page_key ?? catalog?.pageKey ?? pageKeyFromPath(routePath);
+    const routeIsTemplate = catalog?.isDynamic ?? routePath.includes("$");
 
-    const patch = editFormToPagePatch(data.form as SeoEditFormValues, {
-      page_key: pageKey,
-      route_path: routePath,
-      label: existing?.label ?? catalog?.label ?? labelFromPath(routePath),
-      is_dynamic: false,
-      auto_discovered: existing?.auto_discovered ?? false,
-    });
+    if (data.resetToInherited) {
+      const { error } = await (supabaseAdmin as any).from("seo_settings").upsert({
+        ...existing,
+        page_key: pageKey,
+        route_path: routePath,
+        label: existing?.label ?? catalog?.label ?? labelFromPath(routePath),
+        enabled: false,
+        updated_at: new Date().toISOString(),
+        updated_by: context.userId,
+      }, { onConflict: "page_key" });
+      if (error) throw new Error(error.message);
+    } else {
+      const patch = editFormToPagePatch(data.form as SeoEditFormValues, {
+        page_key: pageKey,
+        route_path: routePath,
+        label: existing?.label ?? catalog?.label ?? labelFromPath(routePath),
+        auto_discovered: existing?.auto_discovered ?? false,
+      }, {
+        isTemplate: routeIsTemplate,
+        routeType: routeIsTemplate ? "dynamic" : "static",
+        templateVariables,
+      });
 
-    const { error } = await (supabaseAdmin as any).from("seo_settings").upsert({
-      ...existing,
-      ...patch,
-      updated_at: new Date().toISOString(),
-      updated_by: context.userId,
-    }, { onConflict: "page_key" });
-    if (error) throw new Error(error.message);
+      const { error } = await (supabaseAdmin as any).from("seo_settings").upsert({
+        ...existing,
+        ...patch,
+        updated_at: new Date().toISOString(),
+        updated_by: context.userId,
+      }, { onConflict: "page_key" });
+      if (error) throw new Error(error.message);
+    }
 
     const [global, freshPages, discovered] = await Promise.all([
       loadGlobal(),
@@ -588,5 +773,6 @@ export const saveSeoEditRecord = createServerFn({ method: "POST" })
     const row = buildSeoInventory({ global, pages: freshPages, catalog: catalogAll, discovered })
       .find((r) => r.routePath === routePath) as SeoInventoryRow;
 
+    invalidateSeoCache();
     return { ok: true, row, warnings: validation.warnings };
   });

@@ -8,19 +8,31 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { COUNTRY_OPTIONS, detectCountryCode, flagFromCode } from "@/lib/country-flag";
-import { DISCOVERY_LANGUAGE_OPTIONS, type DiscoveryContentScope } from "@/lib/discovery/config";
+import { DISCOVERY_LANGUAGE_OPTIONS, type DiscoveryContentScope, mergeDiscoveryLocalizationConfig } from "@/lib/discovery/config";
 import { parseStoredContentScope, contentScopeLabel } from "@/lib/discovery/content-scope";
 import { shouldShowPersonalizePrompt } from "@/lib/discovery/country";
 import { getDiscoveryPrefs, getInterestTags, saveDiscoveryPrefs } from "@/lib/discovery/functions";
+import { buildPersonalizationLabel } from "@/lib/discovery/discovery-label";
+import { shouldShowPersonalizationLabel } from "@/lib/discovery/rollout";
+import { DiscoverySearchPanel } from "@/components/discovery/DiscoverySearchPanel";
+import { YaarzoDiscoverySheet } from "@/components/discovery/YaarzoDiscoverySheet";
+import {
+  applyPrimaryToDraft,
+  mergeExperienceFromConfig,
+  prefsToDraft,
+  toggleDraftInterest,
+  type DiscoveryDraft,
+} from "@/lib/discovery/discovery-draft";
+import type { DiscoverySearchHit } from "@/lib/discovery/discovery-options";
 import { cn } from "@/lib/utils";
-import { Compass, X } from "lucide-react";
-
-type InterestTag = { slug: string; label: string; emoji: string | null; sort_order: number };
+import { Compass, Sparkles, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings/discovery")({
   component: DiscoverySettingsPage,
   head: () => ({ meta: [{ title: "Content & Discovery · Settings" }] }),
 });
+
+type InterestTag = { slug: string; label: string; emoji: string | null; sort_order: number };
 
 const SCOPES: DiscoveryContentScope[] = ["for_you", "my_country", "worldwide"];
 
@@ -35,6 +47,13 @@ function DiscoverySettingsPage() {
 
   const prefs = prefsQ.data?.prefs;
   const config = prefsQ.data?.config;
+  const experience = useMemo(() => (config ? mergeExperienceFromConfig(config) : null), [config]);
+  const personalizationLabel = shouldShowPersonalizationLabel(config ?? mergeDiscoveryLocalizationConfig(null))
+    ? buildPersonalizationLabel(prefs ?? null, {
+        primaryOptions: experience?.primaryOptions,
+        nestedOptions: experience?.nestedOptions,
+      })
+    : null;
   const lockCountry = config?.strictIsolation.lockDiscoveryCountry && !config.allowUserChangeDiscoveryCountry;
 
   const parsed = useMemo(
@@ -49,6 +68,8 @@ function DiscoverySettingsPage() {
   const [strictIsolation, setStrictIsolation] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [searchDraft, setSearchDraft] = useState<DiscoveryDraft | null>(null);
 
   useEffect(() => {
     if (!prefsQ.data) return;
@@ -59,6 +80,7 @@ function DiscoverySettingsPage() {
     setInterests(p?.interests?.length ? p.interests : []);
     setContentScope(parsed.view);
     setStrictIsolation(parsed.strictIsolation);
+    setSearchDraft(prefsToDraft(p));
     setDirty(false);
   }, [prefsQ.data, config?.defaultLanguages, parsed.view, parsed.strictIsolation]);
 
@@ -81,6 +103,23 @@ function DiscoverySettingsPage() {
     setInterests((cur) => (cur.includes(slug) ? cur.filter((x) => x !== slug) : [...cur, slug]));
     setDirty(true);
   };
+
+  function applySearchHit(hit: DiscoverySearchHit) {
+    if (!searchDraft || !experience) return;
+    const primary = experience.primaryOptions.find((p) => p.id === hit.primaryId);
+    let next = searchDraft;
+    if (primary) next = applyPrimaryToDraft(searchDraft, primary);
+    if (hit.slug) next = toggleDraftInterest(next, hit.slug, experience.nestedOptions);
+    if (hit.languageCode && !next.preferredLanguages.includes(hit.languageCode)) {
+      next = { ...next, preferredLanguages: [...next.preferredLanguages, hit.languageCode] };
+    }
+    setSearchDraft(next);
+    if (primary?.countryCode) setCountry(primary.countryCode);
+    if (primary?.contentScope) setContentScope(primary.contentScope);
+    if (hit.slug) setInterests(next.interests);
+    if (hit.languageCode) setLanguages(next.preferredLanguages);
+    setDirty(true);
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -132,6 +171,64 @@ function DiscoverySettingsPage() {
           Choose your country, interests and what content you want to see across Yaarzo.
         </p>
       </div>
+
+      {personalizationLabel && (
+        <div className="flex items-center gap-2 rounded-xl border border-primary/15 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+          {personalizationLabel}
+        </div>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Change Discovery</CardTitle>
+          <CardDescription>Open the full-screen Yaarzo discovery experience or search below to adjust your draft.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <button
+            type="button"
+            className="yaarzo-premium-btn w-full sm:w-auto"
+            onClick={() => setSheetOpen(true)}
+          >
+            Change Discovery
+          </button>
+          {searchDraft && experience && (
+            <DiscoverySearchPanel
+              draft={searchDraft}
+              primaryOptions={experience.primaryOptions}
+              nestedOptions={experience.nestedOptions}
+              enabledLanguages={config?.enabledLanguages ?? []}
+              onApplySearchHit={applySearchHit}
+              onToggleInterest={(slug) => {
+                if (!searchDraft) return;
+                const next = toggleDraftInterest(searchDraft, slug, experience.nestedOptions);
+                setSearchDraft(next);
+                setInterests(next.interests);
+                setDirty(true);
+              }}
+              onRemoveInterest={(slug) => {
+                if (!searchDraft) return;
+                const next = { ...searchDraft, interests: searchDraft.interests.filter((s) => s !== slug) };
+                setSearchDraft(next);
+                setInterests(next.interests);
+                setDirty(true);
+              }}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {sheetOpen && (
+        <YaarzoDiscoverySheet
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          manualReopen
+          onSaved={() => {
+            void prefsQ.refetch();
+            qc.invalidateQueries({ queryKey: ["chatroom-discovery"] });
+          }}
+        />
+      )}
 
       {showBanner && (
         <div className="relative rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm">
@@ -230,9 +327,9 @@ function DiscoverySettingsPage() {
       </Card>
 
       <div className="flex flex-wrap gap-2">
-        <Button onClick={handleSave} disabled={saving || !dirty}>
+        <button type="button" className="yaarzo-premium-btn" disabled={saving || !dirty} onClick={handleSave}>
           {saving ? "Saving…" : "Save preferences"}
-        </Button>
+        </button>
         <Button variant="outline" disabled={saving} onClick={handleReset}>
           Reset preferences
         </Button>

@@ -9,8 +9,14 @@ import { postSlug } from "@/lib/post-slug";
 import type { FeedPost } from "@/lib/feed-types";
 import type { User } from "@/lib/chat-types";
 import { isNavigableSlug } from "@/lib/route-slug";
-
-const SITE_URL = "https://holo-chat-quest.lovable.app";
+import {
+  loadDynamicRouteSeo,
+  headFromRouteSeo,
+  buildFeedPostSeoVars,
+  buildFeedPostFallbackJsonLd,
+  loadSeoSiteContext,
+  DEFAULT_SITE_ORIGIN,
+} from "@/lib/seo";
 
 async function fetchPostForHead(slug: string) {
   const { data: post } = await postsSafe().select("*").eq("slug", slug).maybeSingle();
@@ -36,12 +42,66 @@ async function fetchPostForHead(slug: string) {
 export const Route = createFileRoute("/feed/$slug")({
   loader: async ({ params }) => {
     if (!isNavigableSlug(params.slug)) throw notFound();
+    const { origin, siteName } = await loadSeoSiteContext();
     const data = await fetchPostForHead(params.slug);
-    return { headData: data };
+    if (!data) return { headData: null as null, seoData: null as null, origin };
+    const { post, authorName, authorUsername } = data;
+    const slug = params.slug;
+    const url = `${origin}/feed/${slug}`;
+    const rawText = (post.text || "").replace(/\s+/g, " ").trim();
+    const title = rawText
+      ? `${authorName}: ${rawText.slice(0, 60)}${rawText.length > 60 ? "…" : ""}`
+      : `${authorName} shared a post`;
+    const description = rawText ? rawText.slice(0, 160) : `See ${authorName}'s latest post.`;
+    const image = post.media_urls && post.media_urls.length > 0 ? post.media_urls[0] : undefined;
+    const isPublic = post.privacy === "public";
+    const seoData = await loadDynamicRouteSeo({
+      templatePath: "/feed/$slug",
+      instancePath: `/feed/${slug}`,
+      vars: buildFeedPostSeoVars({
+        post: post as unknown as Record<string, unknown>,
+        slug,
+        siteName,
+        origin,
+        authorName,
+        authorUsername,
+      }),
+      fallback: {
+        title,
+        description,
+        ogTitle: title,
+        ogDescription: description,
+        twitterTitle: title,
+        twitterDescription: description,
+        ogImage: image,
+        twitterImage: image,
+        canonical: url,
+        noindex: !isPublic,
+        nofollow: !isPublic,
+        robots: isPublic ? undefined : "noindex, nofollow",
+      },
+      entityOverride: isPublic
+        ? undefined
+        : { noindex: true, nofollow: true, robots: "noindex, nofollow" },
+      fallbackJsonLd: isPublic
+        ? buildFeedPostFallbackJsonLd({
+            title,
+            description,
+            url,
+            createdAt: post.created_at,
+            image,
+            authorName,
+            reactions: post.reaction_count ?? 0,
+            comments: post.comment_count ?? 0,
+          })
+        : null,
+    });
+    return { headData: data, seoData, origin };
   },
-  head: ({ params, loaderData }) => {
-    const url = `${SITE_URL}/feed/${params.slug}`;
+  head: ({ loaderData, params }) => {
+    const origin = loaderData?.origin ?? DEFAULT_SITE_ORIGIN;
     if (!loaderData?.headData) {
+      const url = `${origin}/feed/${params.slug}`;
       return {
         meta: [
           { title: "Post" },
@@ -55,65 +115,7 @@ export const Route = createFileRoute("/feed/$slug")({
         links: [{ rel: "canonical", href: url }],
       };
     }
-    const { post, authorName } = loaderData.headData;
-    const rawText = (post.text || "").replace(/\s+/g, " ").trim();
-    const title = rawText
-      ? `${authorName}: ${rawText.slice(0, 60)}${rawText.length > 60 ? "…" : ""}`
-      : `${authorName} shared a post`;
-    const description = rawText
-      ? rawText.slice(0, 160)
-      : `See ${authorName}'s latest post.`;
-    const image = post.media_urls && post.media_urls.length > 0 ? post.media_urls[0] : undefined;
-    const isPublic = post.privacy === "public";
-    const meta: Array<Record<string, string>> = [
-      { title },
-      { name: "description", content: description },
-      { name: "robots", content: isPublic ? "index, follow" : "noindex, nofollow" },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:url", content: url },
-      { property: "og:type", content: "article" },
-      { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
-      { name: "twitter:title", content: title },
-      { name: "twitter:description", content: description },
-    ];
-    if (image) {
-      meta.push({ property: "og:image", content: image });
-      meta.push({ name: "twitter:image", content: image });
-    }
-    return {
-      meta,
-      links: [{ rel: "canonical", href: url }],
-      scripts: isPublic
-        ? [
-            {
-              type: "application/ld+json",
-              children: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "SocialMediaPosting",
-                headline: title,
-                description,
-                url,
-                datePublished: post.created_at,
-                image: image ? [image] : undefined,
-                author: { "@type": "Person", name: authorName },
-                interactionStatistic: [
-                  {
-                    "@type": "InteractionCounter",
-                    interactionType: "https://schema.org/LikeAction",
-                    userInteractionCount: post.reaction_count ?? 0,
-                  },
-                  {
-                    "@type": "InteractionCounter",
-                    interactionType: "https://schema.org/CommentAction",
-                    userInteractionCount: post.comment_count ?? 0,
-                  },
-                ],
-              }),
-            },
-          ]
-        : [],
-    };
+    return headFromRouteSeo(loaderData.seoData);
   },
   component: PostPage,
 });

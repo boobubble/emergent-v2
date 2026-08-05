@@ -1,3 +1,8 @@
+import type { DiscoveryNestedOption, DiscoveryPrimaryOption } from "@/lib/discovery/discovery-options";
+import { DEFAULT_NESTED_OPTIONS, DEFAULT_PRIMARY_OPTIONS } from "@/lib/discovery/discovery-options";
+
+export type DiscoveryRolloutMode = "OFF" | "GLOBAL_ONLY" | "SELECTED_COUNTRIES" | "FULL_ROLLOUT";
+
 export type DiscoveryMode = "global_first" | "country_first" | "hybrid" | "country_only";
 export type DiscoveryContentScope = "for_you" | "my_country" | "worldwide";
 export type UserContentPreference = "for_you" | "country_first" | "balanced" | "worldwide_first";
@@ -19,9 +24,17 @@ export type StrictIsolationConfig = {
   allowUserChangeDiscoveryCountry: boolean;
 };
 
+
 export type DiscoveryLocalizationConfig = {
   onboardingEnabled: boolean;
   requireOnboardingAgain: boolean;
+  rolloutMode: DiscoveryRolloutMode;
+  fullScreenDiscoveryEnabled: boolean;
+  firstLoginDiscoveryRequired: boolean;
+  allowSkipOnboarding: boolean;
+  showComingSoonForDisabled: boolean;
+  primaryOptions: DiscoveryPrimaryOption[];
+  nestedOptions: DiscoveryNestedOption[];
   discoveryMode: DiscoveryMode;
   defaultCountryCode: string;
   enabledCountries: string[];
@@ -33,6 +46,7 @@ export type DiscoveryLocalizationConfig = {
     feed: boolean;
     poetry: boolean;
     competitions: boolean;
+    communities: boolean;
     profiles: boolean;
     games: boolean;
     forum: boolean;
@@ -57,9 +71,17 @@ export const DEFAULT_MODULE_MIX: ModuleDiscoveryMix = {
   globalPct: 20,
 };
 
+
 export const DISCOVERY_LOCALIZATION_DEFAULTS: DiscoveryLocalizationConfig = {
   onboardingEnabled: true,
   requireOnboardingAgain: false,
+  rolloutMode: "FULL_ROLLOUT",
+  fullScreenDiscoveryEnabled: true,
+  firstLoginDiscoveryRequired: true,
+  allowSkipOnboarding: false,
+  showComingSoonForDisabled: false,
+  primaryOptions: DEFAULT_PRIMARY_OPTIONS,
+  nestedOptions: DEFAULT_NESTED_OPTIONS,
   discoveryMode: "global_first",
   defaultCountryCode: "US",
   enabledCountries: ["US", "GB", "IN", "PK", "CA", "AU", "BD", "AE"],
@@ -71,6 +93,7 @@ export const DISCOVERY_LOCALIZATION_DEFAULTS: DiscoveryLocalizationConfig = {
     feed: true,
     poetry: true,
     competitions: true,
+    communities: true,
     profiles: true,
     games: true,
     forum: true,
@@ -115,6 +138,13 @@ export function mergeDiscoveryLocalizationConfig(raw: unknown): DiscoveryLocaliz
   return {
     onboardingEnabled: r.onboardingEnabled ?? DISCOVERY_LOCALIZATION_DEFAULTS.onboardingEnabled,
     requireOnboardingAgain: r.requireOnboardingAgain ?? DISCOVERY_LOCALIZATION_DEFAULTS.requireOnboardingAgain,
+    rolloutMode: r.rolloutMode ?? DISCOVERY_LOCALIZATION_DEFAULTS.rolloutMode,
+    fullScreenDiscoveryEnabled: r.fullScreenDiscoveryEnabled ?? DISCOVERY_LOCALIZATION_DEFAULTS.fullScreenDiscoveryEnabled,
+    firstLoginDiscoveryRequired: r.firstLoginDiscoveryRequired ?? DISCOVERY_LOCALIZATION_DEFAULTS.firstLoginDiscoveryRequired,
+    allowSkipOnboarding: r.allowSkipOnboarding ?? DISCOVERY_LOCALIZATION_DEFAULTS.allowSkipOnboarding,
+    showComingSoonForDisabled: r.showComingSoonForDisabled ?? DISCOVERY_LOCALIZATION_DEFAULTS.showComingSoonForDisabled,
+    primaryOptions: r.primaryOptions?.length ? r.primaryOptions : DISCOVERY_LOCALIZATION_DEFAULTS.primaryOptions,
+    nestedOptions: r.nestedOptions?.length ? r.nestedOptions : DISCOVERY_LOCALIZATION_DEFAULTS.nestedOptions,
     discoveryMode: r.discoveryMode ?? DISCOVERY_LOCALIZATION_DEFAULTS.discoveryMode,
     defaultCountryCode: (r.defaultCountryCode ?? DISCOVERY_LOCALIZATION_DEFAULTS.defaultCountryCode).toUpperCase().slice(0, 2),
     enabledCountries: r.enabledCountries?.length

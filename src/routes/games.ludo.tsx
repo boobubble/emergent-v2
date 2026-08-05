@@ -23,6 +23,12 @@ import {
   SEAT_NAMES,
   initLudoState,
 } from "@/lib/games-engine";
+import {
+  loadDynamicRouteSeo,
+  headFromRouteSeo,
+  buildGameSeoVars,
+  loadSeoSiteContext,
+} from "@/lib/seo";
 
 interface GameRow {
   id: string;
@@ -44,14 +50,33 @@ interface PlayerRow {
 interface ProfileRow { id: string; username: string; avatar_color: string; avatar_url: string | null; }
 
 export const Route = createFileRoute("/games/ludo")({
-  head: () => ({
-    meta: [
-      { title: "Games — Realtime Ludo & more" },
-      { name: "description", content: "Play realtime multiplayer Ludo with friends. Earn XP, coins, and climb the leaderboard." },
-      { property: "og:title", content: "Games" },
-      { property: "og:description", content: "Realtime multiplayer Ludo. Quick match, invite friends, earn rewards." },
-    ],
-  }),
+  loader: async () => {
+    const { origin, siteName } = await loadSeoSiteContext();
+    const slug = "ludo";
+    const title = "Games — Realtime Ludo & more";
+    const description = "Play realtime multiplayer Ludo with friends. Earn XP, coins, and climb the leaderboard.";
+    const seoData = await loadDynamicRouteSeo({
+      templatePath: "/games/$slug",
+      instancePath: `/games/${slug}`,
+      vars: buildGameSeoVars({
+        game: { name: "Ludo", title: "Ludo", description },
+        slug,
+        siteName,
+        origin,
+      }),
+      fallback: {
+        title,
+        description,
+        ogTitle: "Games",
+        ogDescription: description,
+        twitterTitle: "Games",
+        twitterDescription: "Realtime multiplayer Ludo. Quick match, invite friends, earn rewards.",
+        canonical: `${origin}/games/ludo`,
+      },
+    });
+    return { seoData };
+  },
+  head: ({ loaderData }) => headFromRouteSeo(loaderData?.seoData),
   validateSearch: (s: Record<string, unknown>) => ({ id: typeof s.id === "string" ? s.id : undefined }),
   component: GamesPage,
 });
