@@ -18,18 +18,15 @@ import {
   Clock, Gamepad2, Music, Film, Code2, Palette, Trophy, Laugh, GraduationCap,
   Briefcase, Mic, Radio, Heart, Globe, MapPin,
 } from "lucide-react";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/communities")({
-  head: () => ({
-    meta: [
-      { title: "Discover Communities — BooBubble" },
-      { name: "description", content: "Find and join creator communities: gaming, music, tech, art, sports and more. Live chat, feed, competitions and radio." },
-      { property: "og:title", content: "Discover Communities — BooBubble" },
-      { property: "og:description", content: "Browse trending creator communities and join the conversation." },
-      { property: "og:type", content: "website" },
-    ],
-    links: [{ rel: "canonical", href: "https://holo-chat-quest.lovable.app/communities" }],
-  }),
+  loader: () => loadRouteSeo(
+    "/communities",
+    "Discover Communities — BooBubble",
+    "Find and join creator communities: gaming, music, tech, art, sports and more. Live chat, feed, competitions and radio.",
+  ),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: DiscoveryPage,
 });
 

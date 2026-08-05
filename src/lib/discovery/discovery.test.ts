@@ -5,9 +5,32 @@ import { resolveDiscoveryCountry, prefsNeedOnboarding, hasConfiguredDiscovery, s
 import { encodeStoredContentScope, parseStoredContentScope, contentScopeLabel } from "@/lib/discovery/content-scope";
 import { passesStrictCountryIsolation } from "@/lib/discovery/isolation";
 import { rankDiscoverableChannels } from "@/lib/discovery/ranking";
-import type { DiscoverableChannel, DiscoveryContext } from "@/lib/discovery/types";
+import { rankDiscoverableContentList } from "@/lib/discovery/rank-content";
+import {
+  applyPrimaryToDraft,
+  draftToSavePayload,
+  prefsToDraft,
+} from "@/lib/discovery/discovery-draft";
+import { DEFAULT_NESTED_OPTIONS, DEFAULT_PRIMARY_OPTIONS, searchDiscoveryOptions } from "@/lib/discovery/discovery-options";
+import { buildPersonalizationLabel } from "@/lib/discovery/discovery-label";
+import {
+  isModuleRolloutEnabled,
+  isPersonalizationActive,
+  nestedOptionsForRollout,
+  primaryOptionsForRollout,
+  resolveEffectiveDiscoveryPrefs,
+  sanitizeDiscoverySave,
+  shouldShowFullScreenDiscovery,
+  shouldShowPersonalizationLabel,
+} from "@/lib/discovery/rollout";
+import type { DiscoveryLocalizationConfig } from "@/lib/discovery/config";
+import type { DiscoverableChannel, DiscoveryContext, UserDiscoveryPrefs } from "@/lib/discovery/types";
 
 const config = mergeDiscoveryLocalizationConfig(null);
+
+function rolloutConfig(over: Partial<DiscoveryLocalizationConfig> = {}) {
+  return mergeDiscoveryLocalizationConfig(over);
+}
 
 const baseCtx: DiscoveryContext = {
   userId: "u1",
@@ -151,6 +174,284 @@ describe("personalize prompt", () => {
     const config = mergeDiscoveryLocalizationConfig(null);
     expect(config.discoveryMode).toBe("global_first");
     expect(config.defaultLanguages).toEqual(["en"]);
+  });
+});
+
+describe("full-screen discovery draft", () => {
+  it("maps India selection to IN country code and interests", () => {
+    const draft = applyPrimaryToDraft(prefsToDraft(null), {
+      id: "IN",
+      label: "India",
+      description: "",
+      emoji: "🇮🇳",
+      kind: "country",
+      countryCode: "IN",
+      contentScope: "my_country",
+      preferredLanguages: ["hi", "en"],
+      sortOrder: 20,
+      enabled: true,
+    });
+    const payload = draftToSavePayload({ ...draft, interests: ["mumbai", "bollywood"] });
+    expect(payload.discovery_country_code).toBe("IN");
+    expect(payload.interests).toEqual(["mumbai", "bollywood"]);
+    expect(payload.content_scope).toBe("my_country");
+  });
+
+  it("maps English Community without fake country code", () => {
+    const draft = applyPrimaryToDraft(prefsToDraft(null), {
+      id: "english_community",
+      label: "English Community",
+      description: "",
+      emoji: "🇬🇧",
+      kind: "language_community",
+      countryCode: null,
+      contentScope: "worldwide",
+      preferredLanguages: ["en"],
+      sortOrder: 50,
+      enabled: true,
+    });
+    const payload = draftToSavePayload(draft);
+    expect(payload.discovery_country_code).toBeNull();
+    expect(payload.content_scope).toBe("worldwide");
+    expect(payload.preferred_languages).toContain("en");
+  });
+
+  it("maps Pakistan and Philippines", () => {
+    for (const [id, code] of [["PK", "PK"], ["PH", "PH"]] as const) {
+      const draft = applyPrimaryToDraft(prefsToDraft(null), {
+        id,
+        label: id,
+        description: "",
+        emoji: "",
+        kind: "country",
+        countryCode: code,
+        contentScope: "my_country",
+        preferredLanguages: [],
+        sortOrder: 1,
+        enabled: true,
+      });
+      expect(draftToSavePayload(draft).discovery_country_code).toBe(code);
+    }
+  });
+
+  it("builds personalization label", () => {
+    const label = buildPersonalizationLabel({
+      user_id: "u",
+      discovery_country_code: "IN",
+      preferred_languages: ["en"],
+      interests: ["mumbai", "bollywood"],
+      selected_channel_ids: [],
+      content_scope: "my_country",
+      detected_country_code: null,
+      discovery_onboarding_completed_at: "2026-01-01",
+      personalize_prompt_dismissed_at: null,
+      updated_at: "",
+    });
+    expect(label).toContain("India");
+    expect(label).toContain("Mumbai");
+  });
+});
+
+describe("shouldShowFullScreenDiscovery", () => {
+  const fullCfg = rolloutConfig({ rolloutMode: "FULL_ROLLOUT", firstLoginDiscoveryRequired: true });
+
+  it("shows for new users when rollout requires selection", () => {
+    expect(shouldShowFullScreenDiscovery(null, fullCfg)).toBe(true);
+  });
+
+  it("does not show for completed onboarding", () => {
+    expect(
+      shouldShowFullScreenDiscovery(
+        {
+          user_id: "u",
+          discovery_country_code: "IN",
+          preferred_languages: ["en"],
+          interests: ["cricket"],
+          selected_channel_ids: [],
+          content_scope: "my_country",
+          detected_country_code: null,
+          discovery_onboarding_completed_at: "2026-01-01",
+          personalize_prompt_dismissed_at: null,
+          updated_at: "",
+        },
+        fullCfg,
+      ),
+    ).toBe(false);
+  });
+
+  it("does not show for existing configured users without completed flag", () => {
+    expect(
+      shouldShowFullScreenDiscovery(
+        {
+          user_id: "u",
+          discovery_country_code: "IN",
+          preferred_languages: [],
+          interests: [],
+          selected_channel_ids: [],
+          content_scope: "for_you",
+          detected_country_code: null,
+          discovery_onboarding_completed_at: null,
+          personalize_prompt_dismissed_at: null,
+          updated_at: "",
+        },
+        fullCfg,
+      ),
+    ).toBe(false);
+  });
+
+  it("opens on explicit Change Discovery when feature enabled", () => {
+    expect(shouldShowFullScreenDiscovery(null, fullCfg, { forceOpen: true })).toBe(true);
+  });
+
+  it("GLOBAL_ONLY never opens first-login sheet", () => {
+    const globalCfg = rolloutConfig({ rolloutMode: "GLOBAL_ONLY" });
+    expect(shouldShowFullScreenDiscovery(null, globalCfg)).toBe(false);
+  });
+
+  it("OFF disables personalization and sheet", () => {
+    const offCfg = rolloutConfig({ rolloutMode: "OFF", fullScreenDiscoveryEnabled: false });
+    expect(shouldShowFullScreenDiscovery(null, offCfg)).toBe(false);
+    expect(isPersonalizationActive(offCfg)).toBe(false);
+  });
+});
+
+describe("discovery rollout", () => {
+  it("SELECTED_COUNTRIES exposes only enabled primaries", () => {
+    const cfg = rolloutConfig({
+      rolloutMode: "SELECTED_COUNTRIES",
+      primaryOptions: DEFAULT_PRIMARY_OPTIONS.map((p) =>
+        p.id === "PH" ? { ...p, enabled: false } : p,
+      ),
+    });
+    const primaries = primaryOptionsForRollout(cfg).map((p) => p.id);
+    expect(primaries).toContain("IN");
+    expect(primaries).toContain("PK");
+    expect(primaries).not.toContain("PH");
+  });
+
+  it("disabled Philippines not searchable in rollout-filtered nested options", () => {
+    const cfg = rolloutConfig({
+      rolloutMode: "SELECTED_COUNTRIES",
+      primaryOptions: DEFAULT_PRIMARY_OPTIONS.map((p) =>
+        p.id === "PH" ? { ...p, enabled: false } : p,
+      ),
+    });
+    const nested = nestedOptionsForRollout(cfg);
+    expect(nested.some((n) => n.slug === "manila")).toBe(false);
+    expect(searchDiscoveryOptions("manila", primaryOptionsForRollout(cfg), nested, []).length).toBe(0);
+  });
+
+  it("sanitize rejects disabled country and falls back to global", () => {
+    const cfg = rolloutConfig({
+      rolloutMode: "SELECTED_COUNTRIES",
+      primaryOptions: DEFAULT_PRIMARY_OPTIONS.map((p) =>
+        p.id === "PH" ? { ...p, enabled: false } : p,
+      ),
+    });
+    const result = sanitizeDiscoverySave(
+      { discovery_country_code: "PH", content_scope: "my_country", interests: ["manila"] },
+      cfg,
+      null,
+    );
+    expect(result.discovery_country_code).toBeNull();
+    expect(result.content_scope).toBe("worldwide");
+    expect(result.fellBackToGlobal).toBe(true);
+  });
+
+  it("preserves stored prefs when country later disabled but ranks with global fallback", () => {
+    const cfg = rolloutConfig({
+      rolloutMode: "SELECTED_COUNTRIES",
+      primaryOptions: DEFAULT_PRIMARY_OPTIONS.map((p) =>
+        p.id === "PH" ? { ...p, enabled: false } : p,
+      ),
+    });
+    const stored = {
+      user_id: "u",
+      discovery_country_code: "PH",
+      preferred_languages: ["en"],
+      interests: ["manila"],
+      selected_channel_ids: [],
+      content_scope: "my_country" as const,
+      detected_country_code: null,
+      discovery_onboarding_completed_at: "2026-01-01",
+      personalize_prompt_dismissed_at: null,
+      updated_at: "",
+    };
+    const effective = resolveEffectiveDiscoveryPrefs(stored, cfg);
+    expect(stored.discovery_country_code).toBe("PH");
+    expect(effective?.discovery_country_code).toBeNull();
+    expect(effective?.content_scope).toBe("worldwide");
+  });
+
+  it("feed toggle OFF hides personalization label", () => {
+    const cfg = rolloutConfig({ modules: { ...config.modules, feed: false } });
+    expect(shouldShowPersonalizationLabel(cfg)).toBe(false);
+  });
+
+  it("chatrooms module toggle OFF disables chatroom rollout", () => {
+    const cfg = rolloutConfig({ modules: { ...config.modules, chatrooms: false } });
+    expect(isModuleRolloutEnabled(cfg, "chatrooms")).toBe(false);
+  });
+
+  it("India selection saves IN via sanitize", () => {
+    const cfg = rolloutConfig({ rolloutMode: "SELECTED_COUNTRIES" });
+    const result = sanitizeDiscoverySave(
+      { discovery_country_code: "IN", content_scope: "my_country", interests: ["mumbai"] },
+      cfg,
+      null,
+    );
+    expect(result.discovery_country_code).toBe("IN");
+    expect(result.interests).toContain("mumbai");
+  });
+});
+
+describe("discovery search", () => {
+  it("finds cities and topics locally", () => {
+    const hits = searchDiscoveryOptions("mumbai", DEFAULT_PRIMARY_OPTIONS, DEFAULT_NESTED_OPTIONS, [{ code: "en", label: "English" }]);
+    expect(hits.some((h) => h.label === "Mumbai")).toBe(true);
+  });
+
+  it("groups poetry and lahore hits", () => {
+    expect(searchDiscoveryOptions("poetry", DEFAULT_PRIMARY_OPTIONS, DEFAULT_NESTED_OPTIONS, []).some((h) => h.group === "Topics")).toBe(true);
+    expect(searchDiscoveryOptions("lahore", DEFAULT_PRIMARY_OPTIONS, DEFAULT_NESTED_OPTIONS, []).some((h) => h.group === "Cities/Regions")).toBe(true);
+  });
+});
+
+describe("rankDiscoverableContentList", () => {
+  it("strict isolation hides unrelated country content", () => {
+    const isoConfig = mergeDiscoveryLocalizationConfig({
+      strictIsolation: { enabled: true, allowGlobalRooms: true, allowJoinedForeignRooms: false, allowCrossCountryInvites: false, allowSearchAcrossCountries: false, lockDiscoveryCountry: false, allowUserChangeDiscoveryCountry: true },
+    });
+    const ranked = rankDiscoverableContentList(
+      channels.map((c) => ({
+        id: c.id,
+        audienceScope: c.audienceScope,
+        contentCountry: c.countryCode,
+        contentLanguages: c.languageCodes,
+        contentTags: c.interestSlugs,
+        memberCount: c.memberCount,
+        featured: c.featured,
+      })),
+      {
+        userPrefs: {
+          user_id: "u",
+          discovery_country_code: "IN",
+          preferred_languages: ["hi"],
+          interests: ["gaming"],
+          selected_channel_ids: [],
+          content_scope: encodeStoredContentScope("my_country", true) as UserDiscoveryPrefs["content_scope"],
+          detected_country_code: null,
+          discovery_onboarding_completed_at: "2026",
+          personalize_prompt_dismissed_at: null,
+          updated_at: "",
+        },
+        adminConfig: isoConfig,
+        discoveryCountry: "IN",
+        contentScope: "my_country",
+      },
+    );
+    expect(ranked.some((r) => r.item.id === "pk-urdu")).toBe(false);
+    expect(ranked.some((r) => r.item.id === "in-gaming")).toBe(true);
   });
 });
 

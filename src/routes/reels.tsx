@@ -1,15 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Film, Sparkles } from "lucide-react";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/reels")({
-  head: () => ({
-    meta: [
-      { title: "Reels" },
-      { name: "description", content: "Short videos from the community." },
-      { property: "og:title", content: "Reels" },
-      { property: "og:description", content: "Short videos from the community." },
-    ],
-  }),
+  loader: () => loadRouteSeo("/reels", "Reels", "Short videos from the community."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: ReelsPage,
 });
 

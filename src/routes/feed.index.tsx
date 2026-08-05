@@ -43,6 +43,15 @@ import { MissionsPanel } from "@/components/feed/MissionsPanel";
 import { FeedNotifications, FeedNotificationPanel } from "@/components/feed/FeedNotifications";
 import { Avatar } from "@/components/chat/Avatar";
 import type { FeedPost } from "@/lib/feed-types";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { getDiscoveryPrefs } from "@/lib/discovery/functions";
+import { resolveDiscoveryCountry } from "@/lib/discovery/country";
+import { parseStoredContentScope } from "@/lib/discovery/content-scope";
+import { buildPersonalizationLabel } from "@/lib/discovery/discovery-label";
+import { mergeExperienceFromConfig } from "@/lib/discovery/discovery-draft";
+import { rankFeedPosts } from "@/lib/discovery/rank-content";
+import { isModuleRolloutEnabled, resolveEffectiveDiscoveryPrefs, shouldShowPersonalizationLabel } from "@/lib/discovery/rollout";
 import { pingDailyStreak } from "@/lib/gamification.functions";
 import { BrandMark, BrandText } from "@/components/BrandMark";
 import { PostSkeleton, LoadMoreSkeleton, WidgetSkeleton, RewardsWidgetSkeleton } from "@/components/feed/FeedSkeletons";
@@ -52,11 +61,11 @@ import { useActiveFeedTheme, activateFeedTheme, type FeedThemeKey } from "@/lib/
 import { feedVariantFor } from "@/lib/theme-variants";
 import { OrkutFeedLayout } from "@/components/feed/OrkutFeedLayout";
 import { useAuthGate } from "@/lib/auth-gate";
-import { useServerFn } from "@tanstack/react-start";
 import { universalSearch, type UniversalSearchResults } from "@/lib/universal-search.functions";
 import { Heart, Eye, Swords, TrendingUp, AlertCircle, RefreshCw } from "lucide-react";
 
 import { Palette } from "lucide-react";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 // Lazy-loaded panels — only fetched when the user navigates to them, keeping
 // the initial feed bundle small for faster first paint.
@@ -154,14 +163,8 @@ async function fetchFeedPage(
 }
 
 export const Route = createFileRoute("/feed/")({
-  head: () => ({
-    meta: [
-      { title: "Feed" },
-      { name: "description", content: "Share posts, react, comment, and connect with friends ." },
-      { property: "og:title", content: "Feed" },
-      { property: "og:description", content: "Lightweight social feed for the community." },
-    ],
-  }),
+  loader: () => loadRouteSeo("/feed", "Feed", "Share posts, react, comment, and connect with friends."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: () => (
     <RouteErrorBoundary section="Feed" featureStore="feed-prefs">
       <FeedPage />
@@ -243,10 +246,29 @@ function FeedPage() {
     [appSettings.raw],
   );
 
+  const meId = user?.id ?? "";
+  const { friendIds } = useSocialGraph();
+
   // Universal Platform Search — extends the header search with debounced
   // server results for Poems, Poetry Battles, Categories, and Hall of Fame.
   // The existing local user/hashtag suggestions remain untouched.
   const runUniversalSearch = useServerFn(universalSearch);
+  const fetchDiscoveryPrefs = useServerFn(getDiscoveryPrefs);
+  const discoveryPrefsQ = useQuery({
+    queryKey: ["discovery-prefs"],
+    queryFn: () => fetchDiscoveryPrefs(),
+    enabled: Boolean(meId),
+    staleTime: 120_000,
+  });
+  const feedPersonalizationLabel = useMemo(() => {
+    const cfg = discoveryPrefsQ.data?.config;
+    if (!cfg || !shouldShowPersonalizationLabel(cfg)) return null;
+    const exp = mergeExperienceFromConfig(cfg);
+    return buildPersonalizationLabel(discoveryPrefsQ.data?.prefs ?? null, {
+      primaryOptions: exp?.primaryOptions,
+      nestedOptions: exp?.nestedOptions,
+    });
+  }, [discoveryPrefsQ.data]);
   const [remoteResults, setRemoteResults] = useState<UniversalSearchResults | null>(null);
   const [remoteLoading, setRemoteLoading] = useState(false);
   useEffect(() => {
@@ -275,9 +297,6 @@ function FeedPage() {
   };
 
 
-
-  const meId = user?.id ?? "";
-  const { friendIds } = useSocialGraph();
 
   function setTab(next: Tab) {
     setTabState(next);
@@ -442,12 +461,34 @@ function FeedPage() {
         return +new Date(b.created_at) - +new Date(a.created_at);
       });
     } else {
-      list.sort((a, b) => {
-        const af = friendIds.has(a.owner_id) ? 1 : 0;
-        const bf = friendIds.has(b.owner_id) ? 1 : 0;
-        if (af !== bf) return bf - af;
-        return +new Date(b.created_at) - +new Date(a.created_at);
-      });
+      const discoveryCfg = discoveryPrefsQ.data?.config;
+      const discoveryPrefsRaw = discoveryPrefsQ.data?.prefs ?? null;
+      const discoveryPrefs = discoveryCfg ? resolveEffectiveDiscoveryPrefs(discoveryPrefsRaw, discoveryCfg) : discoveryPrefsRaw;
+      if (tab === "foryou" && discoveryCfg && isModuleRolloutEnabled(discoveryCfg, "feed") && discoveryPrefs) {
+        const parsed = parseStoredContentScope(typeof discoveryPrefs.content_scope === "string" ? discoveryPrefs.content_scope : null);
+        const authorCountries = new Map<string, string | null | undefined>();
+        for (const [id, prof] of Object.entries(profiles)) {
+          authorCountries.set(id, prof?.countryCode ?? null);
+        }
+        list = rankFeedPosts(list, {
+          userPrefs: discoveryPrefs,
+          adminConfig: discoveryCfg,
+          discoveryCountry: resolveDiscoveryCountry({
+            discoveryCountryCode: discoveryPrefs.discovery_country_code,
+            adminDefaultCountry: discoveryCfg.defaultCountryCode,
+          }),
+          contentScope: parsed.view,
+          friendIds: [...friendIds],
+          ownUserId: meId,
+        }, authorCountries);
+      } else {
+        list.sort((a, b) => {
+          const af = friendIds.has(a.owner_id) ? 1 : 0;
+          const bf = friendIds.has(b.owner_id) ? 1 : 0;
+          if (af !== bf) return bf - af;
+          return +new Date(b.created_at) - +new Date(a.created_at);
+        });
+      }
     }
     // Search filter (text / #hashtag / @username)
     const q = query.trim().toLowerCase();
@@ -466,7 +507,7 @@ function FeedPage() {
     }
 
     return list;
-  }, [posts, tab, friendIds, meId, prefs.hideMedia, prefs.mutedKeywords, prefs.mutedHashtags, prefs.sortOverride, query, profiles]);
+  }, [posts, tab, friendIds, meId, prefs.hideMedia, prefs.mutedKeywords, prefs.mutedHashtags, prefs.sortOverride, query, profiles, discoveryPrefsQ.data]);
 
   // Autocomplete suggestions for the search bar
   type SearchSuggestion = { kind: "hashtag" | "user"; value: string; label: string; sub?: string };
@@ -1199,6 +1240,10 @@ function FeedPage() {
                   );
                 })}
               </div>
+
+              {tab === "foryou" && feedPersonalizationLabel && (
+                <p className="mt-3 px-1 text-[11px] font-medium text-muted-foreground">{feedPersonalizationLabel}</p>
+              )}
 
               <div className="mt-4 min-w-0 space-y-4">
                 {tab === "saved" ? (() => {

@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build && node scripts/fix-vercel-tslib.mjs",
+    "build": "node --max-old-space-size=8192 ./node_modules/vite/bin/vite.js build && node scripts/fix-vercel-tslib.mjs",
+    "build:prod": "npm run build",
+    "verify:seo": "node scripts/verify-live-seo.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",

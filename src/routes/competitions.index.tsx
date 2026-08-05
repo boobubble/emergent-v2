@@ -17,17 +17,15 @@ import { AdminCompetitionManageDialog } from "@/components/competitions/AdminCom
 import { useMyRoles } from "@/lib/use-my-role";
 import { useAuth } from "@/lib/auth-store";
 import { Button } from "@/components/ui/button";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/competitions/")({
-  head: () => ({
-    meta: [
-      { title: "Community Competitions — Live, Trending & Upcoming" },
-      { name: "description", content: "Discover live competitions, join tournaments, vote for your favorite nominees, and win prizes across every category." },
-      { property: "og:title", content: "Community Competitions" },
-      { property: "og:description", content: "Vote, join, and win in community competitions." },
-      { property: "og:type", content: "website" },
-    ],
-  }),
+  loader: () => loadRouteSeo(
+    "/competitions",
+    "Community Competitions — Live, Trending & Upcoming",
+    "Discover live competitions, join tournaments, vote for your favorite nominees, and win prizes across every category.",
+  ),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: CompetitionsIndex,
 });
 

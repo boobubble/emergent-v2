@@ -47,25 +47,61 @@ import { isNavigableSlug } from "@/lib/route-slug";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  loadDynamicRouteSeo,
+  headFromRouteSeo,
+  buildCompetitionSeoVars,
+  buildCompetitionFallbackJsonLd,
+  competitionOgImage,
+  loadSeoSiteContext,
+} from "@/lib/seo";
 
-
-const SITE = "https://holo-chat-quest.lovable.app";
 
 export const Route = createFileRoute("/competitions/$slug")({
   loader: async ({ params }) => {
     if (!isNavigableSlug(params.slug)) throw notFound();
+    const { origin, siteName } = await loadSeoSiteContext();
     const data = await getCompetitionBySlug({ data: { slug: params.slug } });
     if (!data?.competition) throw notFound();
     const canonical = (data.competition as any).slug as string | undefined;
     if (canonical && canonical !== params.slug) {
       throw redirect({ to: "/competitions/$slug", params: { slug: canonical }, replace: true });
     }
-    return data;
+    const slug = canonical ?? params.slug;
+    const c = data.competition as Record<string, unknown>;
+    const url = `${origin}/competitions/${slug}`;
+    const title = `${c.name} — Competition`;
+    const description = (String(c.description ?? "Join and vote in this community competition.")).slice(0, 155);
+    const ogImage = competitionOgImage(origin, slug, c.status === "completed");
+    const seoData = await loadDynamicRouteSeo({
+      templatePath: "/competitions/$slug",
+      instancePath: `/competitions/${slug}`,
+      vars: buildCompetitionSeoVars({ competition: c, slug, siteName, origin }),
+      fallback: {
+        title,
+        description,
+        ogTitle: title,
+        ogDescription: description,
+        twitterTitle: title,
+        twitterDescription: description,
+        ogImage,
+        twitterImage: ogImage,
+        canonical: url,
+      },
+      fallbackJsonLd: buildCompetitionFallbackJsonLd({
+        name: String(c.name ?? "Competition"),
+        description,
+        startAt: c.start_at as string | undefined,
+        endAt: c.end_at as string | undefined,
+        status: c.status as string | undefined,
+        image: ogImage,
+        url,
+      }),
+    });
+    return { ...data, seoData };
   },
-  head: ({ params, loaderData }) => {
-    const c = loaderData?.competition as any;
-    const url = `${SITE}/competitions/${params.slug}`;
-    if (!c) {
+  head: ({ loaderData }) => {
+    if (!loaderData?.competition) {
       return {
         meta: [
           { title: "Competition not found" },
@@ -73,48 +109,7 @@ export const Route = createFileRoute("/competitions/$slug")({
         ],
       };
     }
-    const title = `${c.name} — Competition`;
-    const description = (c.description ?? "Join and vote in this community competition.").slice(0, 155);
-    // Dynamic OG share card (SVG) — reflects live leader / vote count / countdown
-    const ogImage = `${SITE}/api/public/og/competition/${params.slug}${c.status === "completed" ? "?variant=winner" : ""}`;
-    const img = ogImage;
-    const meta: any[] = [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "article" },
-      { property: "og:url", content: url },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: title },
-      { name: "twitter:description", content: description },
-      { property: "og:image", content: img },
-      { name: "twitter:image", content: img },
-    ];
-    return {
-      meta,
-      links: [{ rel: "canonical", href: url }],
-      scripts: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Event",
-            name: c.name,
-            description,
-            startDate: c.start_at,
-            endDate: c.end_at,
-            eventStatus:
-              c.status === "live" ? "https://schema.org/EventScheduled"
-              : c.status === "completed" ? "https://schema.org/EventCompleted"
-              : "https://schema.org/EventScheduled",
-            eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
-            image: img ? [img] : undefined,
-            url,
-          }),
-        },
-      ],
-    };
+    return headFromRouteSeo(loaderData.seoData);
   },
   component: CompetitionDetail,
   notFoundComponent: () => (
@@ -331,7 +326,9 @@ function CompetitionDetail() {
       : !c.show_live_counts;
   const votingOpen = enableVoting && c.status === "live" && !(c.auto_close_voting !== false && new Date(c.end_at).getTime() < Date.now());
 
-  const url = `${SITE}/competitions/${c.slug}`;
+  const url = typeof window !== "undefined"
+    ? `${window.location.origin}/competitions/${c.slug}`
+    : `/competitions/${c.slug}`;
 
 
   const handleShare = async () => {

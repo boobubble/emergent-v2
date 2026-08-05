@@ -18,6 +18,12 @@ import {
 import { buildChatroomDiscoverySections, rankDiscoverableChannels } from "@/lib/discovery/ranking";
 import { encodeStoredContentScope, parseStoredContentScope } from "@/lib/discovery/content-scope";
 import type { DiscoveryContext, UserDiscoveryPrefs } from "@/lib/discovery/types";
+import {
+  isModuleRolloutEnabled,
+  isPersonalizationActive,
+  resolveEffectiveDiscoveryPrefs,
+  sanitizeDiscoverySave,
+} from "@/lib/discovery/rollout";
 import { withRateLimit } from "@/lib/rate-limit-middleware";
 
 const db = supabaseAdmin as any;
@@ -103,19 +109,20 @@ async function buildContext(
   const { profileCountryCode, profileInterests } = await loadProfileDiscoveryHints(userId);
   const { data: prefsRow } = await db.from("user_discovery_prefs").select("*").eq("user_id", userId).maybeSingle();
   const prefs = mapPrefsRow(prefsRow);
+  const effectivePrefs = resolveEffectiveDiscoveryPrefs(prefs, config);
 
   const discoveryCountry = resolveDiscoveryCountry({
-    discoveryCountryCode: prefs?.discovery_country_code,
+    discoveryCountryCode: effectivePrefs?.discovery_country_code,
     profileCountryCode,
     signupCountryCode: null,
-    detectedCountryCode: prefs?.detected_country_code ?? detectCountryCode(),
+    detectedCountryCode: effectivePrefs?.detected_country_code ?? detectCountryCode(),
     adminDefaultCountry: config.defaultCountryCode,
   });
 
-  const preferredLanguages = prefs?.preferred_languages?.length ? prefs.preferred_languages : config.defaultLanguages;
-  const interests = prefs?.interests?.length ? prefs.interests : profileInterests.length ? profileInterests : config.defaultInterests;
+  const preferredLanguages = effectivePrefs?.preferred_languages?.length ? effectivePrefs.preferred_languages : config.defaultLanguages;
+  const interests = effectivePrefs?.interests?.length ? effectivePrefs.interests : profileInterests.length ? profileInterests : config.defaultInterests;
 
-  const parsedScope = parseStoredContentScope(typeof prefs?.content_scope === "string" ? prefs.content_scope : null);
+  const parsedScope = parseStoredContentScope(typeof effectivePrefs?.content_scope === "string" ? effectivePrefs.content_scope : null);
   let contentScope: DiscoveryContentScope = opts.scope ?? parsedScope.view;
   if (config.discoveryMode === "country_only") contentScope = "my_country";
 
@@ -180,6 +187,18 @@ export const getChatroomDiscovery = createServerFn({ method: "GET" })
       .parse(input ?? {}),
   )
   .handler(async ({ data, context }) => {
+    const config = await loadDiscoveryConfig();
+    if (!isModuleRolloutEnabled(config, "chatrooms")) {
+      const channels = await loadAllChannels();
+      const joined = new Set(data.joinedChannelIds ?? []);
+      const sorted = [...channels].sort((a, b) => b.memberCount - a.memberCount);
+      return {
+        sections: [{ key: "trending" as const, title: "Public Chatrooms", channels: sorted.slice(0, 12) }],
+        recommended: sorted.slice(0, 12),
+        discoveryCountry: config.defaultCountryCode,
+        personalized: false,
+      };
+    }
     const ctx = await buildContext(context.userId, {
       scope: data.scope,
       joinedChannelIds: data.joinedChannelIds,
@@ -187,7 +206,7 @@ export const getChatroomDiscovery = createServerFn({ method: "GET" })
     const channels = await loadAllChannels();
     const sections = buildChatroomDiscoverySections(channels, ctx);
     const recommended = rankDiscoverableChannels(channels, ctx, { module: "chatrooms", limit: 12 }).map((r) => r.item);
-    return { sections, recommended, discoveryCountry: ctx.discoveryCountry };
+    return { sections, recommended, discoveryCountry: ctx.discoveryCountry, personalized: isPersonalizationActive(config) };
   });
 
 const savePrefsSchema = z.object({
@@ -243,6 +262,44 @@ export const saveDiscoveryPrefs = createServerFn({ method: "POST" })
     }
 
     const skip = Boolean(data.skip_with_defaults);
+    if (!skip && !data.dismiss_personalize_prompt && !data.reset_onboarding && !data.reset_preferences) {
+      const sanitized = sanitizeDiscoverySave(
+        {
+          discovery_country_code: data.discovery_country_code,
+          preferred_languages: data.preferred_languages,
+          interests: data.interests,
+          content_scope: data.content_scope,
+          strict_country_isolation: data.strict_country_isolation,
+        },
+        config,
+        cur,
+      );
+      const payload: Record<string, unknown> = {
+        user_id: context.userId,
+        discovery_country_code: sanitized.discovery_country_code,
+        preferred_languages: sanitized.preferred_languages,
+        interests: sanitized.interests,
+        selected_channel_ids: data.selected_channel_ids ?? cur?.selected_channel_ids ?? [],
+        content_scope: encodeStoredContentScope(sanitized.content_scope, sanitized.strict_country_isolation),
+        updated_at: new Date().toISOString(),
+      };
+      if (data.detected_country_code !== undefined) payload.detected_country_code = data.detected_country_code;
+      if (data.complete_onboarding) payload.discovery_onboarding_completed_at = new Date().toISOString();
+      if (data.dismiss_personalize_prompt) payload.personalize_prompt_dismissed_at = new Date().toISOString();
+
+      const { error } = await db.from("user_discovery_prefs").upsert(payload);
+      if (error) throw new Error(error.message);
+
+      const profilePatch: { country_code?: string; interests?: string[] } = {};
+      if (sanitized.discovery_country_code) profilePatch.country_code = sanitized.discovery_country_code;
+      if (sanitized.interests.length) profilePatch.interests = sanitized.interests;
+      if (Object.keys(profilePatch).length) {
+        await supabaseAdmin.from("profiles").update(profilePatch).eq("id", context.userId);
+      }
+
+      return { ok: true, fellBackToGlobal: sanitized.fellBackToGlobal, rejectedPrimary: sanitized.rejectedPrimary };
+    }
+
     const langs = skip ? config.defaultLanguages : (data.preferred_languages ?? cur?.preferred_languages ?? config.defaultLanguages);
     const interests = skip ? config.defaultInterests : (data.interests ?? cur?.interests ?? config.defaultInterests);
     const country = skip
@@ -281,6 +338,25 @@ export const saveDiscoveryPrefs = createServerFn({ method: "POST" })
     }
 
     return { ok: true };
+  });
+
+export const getDiscoveryChatroomMetadataStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth, withRateLimit("api")])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const rooms = await loadDbChatrooms();
+    const total = rooms.length;
+    let audienceScope = 0;
+    let countryCode = 0;
+    let interestSlugs = 0;
+    let languageCodes = 0;
+    for (const r of rooms as Record<string, unknown>[]) {
+      if (r.audience_scope && r.audience_scope !== "global") audienceScope++;
+      if (r.country_code) countryCode++;
+      if (Array.isArray(r.interest_slugs) && r.interest_slugs.length) interestSlugs++;
+      if (Array.isArray(r.language_codes) && r.language_codes.length) languageCodes++;
+    }
+    return { total, audienceScope, countryCode, interestSlugs, languageCodes };
   });
 
 export const resetAllDiscoveryOnboarding = createServerFn({ method: "POST" })

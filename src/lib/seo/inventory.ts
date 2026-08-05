@@ -10,6 +10,10 @@ import {
   type RouteHeadAudit,
   type SeoFieldState,
 } from "./route-head-sources";
+import {
+  getRouteEditMode,
+  type SeoRouteEditMode,
+} from "./edit-form";
 import { labelFromPath } from "./route-registry";
 
 export type SeoInventoryStatus = "configured" | "partial" | "missing";
@@ -30,6 +34,10 @@ export type SeoInventoryRow = {
   status: SeoInventoryStatus;
   pageKey: string | null;
   dbEnabled: boolean | null;
+  editMode: SeoRouteEditMode;
+  hasCustomOverride: boolean;
+  sitemapExcluded: boolean;
+  isNoindex: boolean;
 };
 
 export type SeoInventorySummary = {
@@ -108,6 +116,10 @@ function buildRouteRow(
     status: computeStatus(audit),
     pageKey: page?.page_key ?? catalogEntry?.pageKey ?? null,
     dbEnabled: page?.enabled ?? null,
+    editMode: getRouteEditMode(norm, isDynamic),
+    hasCustomOverride: page?.enabled === true,
+    sitemapExcluded: page?.sitemap_exclude ?? false,
+    isNoindex: page?.noindex ?? audit.indexState === "noindex",
   };
 }
 
@@ -142,6 +154,10 @@ function buildGlobalRow(global: SeoGlobal | null): SeoInventoryRow {
     status: computeStatus(audit),
     pageKey: null,
     dbEnabled: null,
+    editMode: "global",
+    hasCustomOverride: !!global,
+    sitemapExcluded: false,
+    isNoindex: audit.indexState === "noindex",
   };
 }
 

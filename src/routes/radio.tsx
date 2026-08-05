@@ -4,8 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { listWidgets, listAnnouncements } from "@/lib/broadcaster.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Radio, Megaphone } from "lucide-react";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/radio")({
+  loader: () => loadRouteSeo("/radio", "Radio", "Tune in to live radio widgets and community broadcasts."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: RadioDirectory,
 });
 

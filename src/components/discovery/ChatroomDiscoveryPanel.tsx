@@ -1,34 +1,41 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-store";
-import { getChatroomDiscovery } from "@/lib/discovery/functions";
-import type { DiscoveryContentScope } from "@/lib/discovery/config";
-import { DiscoveryScopeSelector } from "@/components/discovery/DiscoveryScopeSelector";
+import { getChatroomDiscovery, getDiscoveryPrefs } from "@/lib/discovery/functions";
+import { isModuleRolloutEnabled } from "@/lib/discovery/rollout";
 
 type Props = {
   joinedChannelIds: string[];
-  scope: DiscoveryContentScope;
-  onScopeChange: (scope: DiscoveryContentScope) => void;
   onSelectChannel: (id: string) => void;
 };
 
-export function ChatroomDiscoveryPanel({ joinedChannelIds, scope, onScopeChange, onSelectChannel }: Props) {
+export function ChatroomDiscoveryPanel({ joinedChannelIds, onSelectChannel }: Props) {
   const { user } = useAuth();
   const fetchDiscovery = useServerFn(getChatroomDiscovery);
+  const fetchPrefs = useServerFn(getDiscoveryPrefs);
 
-  const q = useQuery({
-    queryKey: ["chatroom-discovery", scope, joinedChannelIds.join(",")],
-    queryFn: () => fetchDiscovery({ data: { scope, joinedChannelIds } }),
+  const prefsQ = useQuery({
+    queryKey: ["discovery-prefs"],
+    queryFn: () => fetchPrefs(),
     enabled: Boolean(user && !user.isGuest),
     staleTime: 60_000,
   });
 
-  if (!user || user.isGuest) return null;
+  const chatroomsEnabled = prefsQ.data?.config
+    ? isModuleRolloutEnabled(prefsQ.data.config, "chatrooms")
+    : false;
+
+  const q = useQuery({
+    queryKey: ["chatroom-discovery", joinedChannelIds.join(",")],
+    queryFn: () => fetchDiscovery({ data: { joinedChannelIds } }),
+    enabled: Boolean(user && !user.isGuest && chatroomsEnabled),
+    staleTime: 60_000,
+  });
+
+  if (!user || user.isGuest || !chatroomsEnabled) return null;
 
   return (
     <div className="mb-2 space-y-1">
-      <DiscoveryScopeSelector scope={scope} onScopeChange={onScopeChange} />
-
       {(q.data?.sections ?? []).map((section) => (
         <div key={section.key}>
           <div className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{section.title}</div>

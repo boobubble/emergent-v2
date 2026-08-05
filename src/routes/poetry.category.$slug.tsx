@@ -6,19 +6,21 @@ import { listPoemsByCategory } from "@/lib/mehfil.functions";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { PoemCard } from "@/components/mehfil/PoemCard";
 import { isNavigableSlug } from "@/lib/route-slug";
+import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
+
+function cap(s: string) { return s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()); }
 
 export const Route = createFileRoute("/poetry/category/$slug")({
   loader: ({ params }) => {
     if (!isNavigableSlug(params.slug)) throw notFound();
+    const label = cap(params.slug);
+    return loadRouteSeo(
+      "/poetry/categories",
+      `${label} Poetry · Poetry Hub`,
+      `Read the best ${params.slug.replace(/-/g, " ")} poems from the Poetry Hub community.`,
+    );
   },
-  head: ({ params }) => ({
-    meta: [
-      { title: `${cap(params.slug)} Poetry · Poetry Hub` },
-      { name: "description", content: `Read the best ${params.slug.replace(/-/g, " ")} poems from the Poetry Hub community.` },
-      { property: "og:title", content: `${cap(params.slug)} Poetry · Poetry Hub` },
-      { property: "og:description", content: `Read the best ${params.slug.replace(/-/g, " ")} poems from the Poetry Hub community.` },
-    ],
-  }),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: CategoryPage,
   notFoundComponent: () => (
     <MehfilShell showBack><div className="py-20 text-center text-sm text-muted-foreground">Category not found.</div></MehfilShell>
@@ -27,8 +29,6 @@ export const Route = createFileRoute("/poetry/category/$slug")({
     <MehfilShell showBack><div className="py-20 text-center text-sm text-destructive">Failed to load poems.</div></MehfilShell>
   ),
 });
-
-function cap(s: string) { return s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()); }
 
 function CategoryPage() {
   const { slug } = Route.useParams();

@@ -40,41 +40,60 @@ import {
   Rss,
   DoorOpen,
 } from "lucide-react";
+import {
+  loadDynamicRouteSeo,
+  headFromRouteSeo,
+  buildCommunitySeoVars,
+  loadSeoSiteContext,
+} from "@/lib/seo";
 
 export const Route = createFileRoute("/community/$slug")({
   loader: async ({ params }) => {
     const community = await getCommunityBySlug({ data: { slug: params.slug } });
     if (!community) {
-      // Fall back to slug history — old slugs redirect to the current slug.
       const resolved = await resolveCommunitySlug({ data: { slug: params.slug } });
       if (resolved.slug && resolved.redirected) {
         throw redirect({ to: "/community/$slug", params: { slug: resolved.slug }, replace: true });
       }
       throw notFound();
     }
-    return { community: community as Community };
-  },
-  head: ({ loaderData, params }) => {
-    const c = loaderData?.community;
-    if (!c) return {};
+    const c = community as Community;
+    const slug = c.slug ?? params.slug;
+    const { origin, siteName } = await loadSeoSiteContext();
+    const url = `${origin}/community/${slug}`;
     const title = `${c.name} — Community`;
     const desc = c.description || `Join the ${c.name} community.`;
-    const url = `https://holo-chat-quest.lovable.app/community/${params.slug}`;
     const noIndex = c.visibility === "hidden" || c.visibility === "unlisted";
-    return {
-      meta: [
-        { title },
-        { name: "description", content: desc },
-        ...(noIndex ? [{ name: "robots", content: "noindex,nofollow" }] : []),
-        { property: "og:title", content: title },
-        { property: "og:description", content: desc },
-        { property: "og:type", content: "website" },
-        { property: "og:url", content: url },
-        ...(c.banner_url && !noIndex ? [{ property: "og:image", content: c.banner_url }] : []),
-      ],
-      links: noIndex ? [] : [{ rel: "canonical", href: url }],
-    };
+    const seoData = await loadDynamicRouteSeo({
+      templatePath: "/community/$slug",
+      instancePath: `/community/${slug}`,
+      vars: buildCommunitySeoVars({
+        community: c as unknown as Record<string, unknown>,
+        slug,
+        siteName,
+        origin,
+      }),
+      fallback: {
+        title,
+        description: desc,
+        ogTitle: title,
+        ogDescription: desc,
+        twitterTitle: title,
+        twitterDescription: desc,
+        ogImage: c.banner_url ?? undefined,
+        twitterImage: c.banner_url ?? undefined,
+        canonical: url,
+        noindex: noIndex,
+        nofollow: noIndex,
+        robots: noIndex ? "noindex,nofollow" : undefined,
+      },
+      entityOverride: noIndex
+        ? { noindex: true, nofollow: true, robots: "noindex,nofollow" }
+        : undefined,
+    });
+    return { community: c, seoData };
   },
+  head: ({ loaderData }) => headFromRouteSeo(loaderData?.seoData),
 
   notFoundComponent: () => (
     <div className="grid min-h-screen place-items-center bg-background text-foreground">

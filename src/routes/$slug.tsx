@@ -16,6 +16,13 @@ import { injectHeadingIds } from "@/lib/heading-ids";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Eye } from "lucide-react";
+import {
+  loadDynamicRouteSeo,
+  headFromRouteSeo,
+  buildCmsPageSeoVars,
+  buildCmsFallbackJsonLd,
+  loadSeoSiteContext,
+} from "@/lib/seo";
 
 function redirectReservedSlug(slug: string) {
   const key = slug.toLowerCase();
@@ -84,56 +91,59 @@ export const Route = createFileRoute("/$slug")({
         statusCode: 301,
       });
     }
-    return { page, slug };
+    const { origin, siteName } = await loadSeoSiteContext();
+    const url = `${origin}/${page.slug}`;
+    const title = page.meta_title || page.title;
+    const desc = page.meta_description || page.excerpt || `${page.title} on our community.`;
+    const ogImage = page.og_image || undefined;
+    const keywords = page.meta_keywords || (page.tags?.length ? page.tags.join(", ") : "");
+    const robots = [page.noindex ? "noindex" : "index", page.nofollow ? "nofollow" : "follow"].join(", ");
+    const seoData = await loadDynamicRouteSeo({
+      templatePath: "/$slug",
+      instancePath: `/${page.slug}`,
+      vars: buildCmsPageSeoVars({
+        page: page as unknown as Record<string, unknown>,
+        slug: page.slug,
+        siteName,
+        origin,
+      }),
+      entityOverride: {
+        title: page.meta_title || undefined,
+        description: page.meta_description || undefined,
+        keywords: keywords || undefined,
+        canonical: page.canonical_url || undefined,
+        ogTitle: page.og_title || undefined,
+        ogDescription: page.og_description || undefined,
+        ogImage: page.og_image || undefined,
+        noindex: !!page.noindex,
+        nofollow: !!page.nofollow,
+        robots,
+      },
+      fallback: {
+        title,
+        description: desc,
+        keywords: keywords || undefined,
+        ogTitle: page.og_title || title,
+        ogDescription: page.og_description || desc,
+        ogImage,
+        twitterImage: ogImage,
+        canonical: page.canonical_url || url,
+        robots,
+        noindex: !!page.noindex,
+        nofollow: !!page.nofollow,
+      },
+      fallbackJsonLd: buildCmsFallbackJsonLd({
+        title: page.title,
+        description: desc,
+        url: page.canonical_url || url,
+        publishedAt: page.published_at,
+        image: ogImage,
+      }),
+    });
+    return { page, slug, seoData };
   },
 
-  head: ({ loaderData, params }) => {
-    const p = loaderData?.page;
-    if (!p) return {};
-    const url = `https://holo-chat-quest.lovable.app/${p.slug}`;
-    const title = p.meta_title || p.title;
-    const desc = p.meta_description || p.excerpt || `${p.title} on our community.`;
-    const robots = [p.noindex ? "noindex" : "index", p.nofollow ? "nofollow" : "follow"].join(", ");
-    const ogImage = p.og_image || undefined;
-    const meta: Array<Record<string, string>> = [
-      { title },
-      { name: "description", content: desc },
-      { name: "robots", content: robots },
-      { property: "og:title", content: p.og_title || title },
-      { property: "og:description", content: p.og_description || desc },
-      { property: "og:type", content: "article" },
-      { property: "og:url", content: url },
-    ];
-    const keywords = p.meta_keywords || (p.tags?.length ? p.tags.join(", ") : "");
-    if (keywords) meta.push({ name: "keywords", content: keywords });
-    if (ogImage) {
-      meta.push({ property: "og:image", content: ogImage });
-      meta.push({ name: "twitter:image", content: ogImage });
-    }
-    return {
-      meta,
-      links: [{ rel: "canonical", href: p.canonical_url || url }],
-      scripts: [{
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Article",
-          headline: p.title,
-          description: desc,
-          image: ogImage,
-          datePublished: p.published_at,
-          url,
-          breadcrumb: {
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: "https://holo-chat-quest.lovable.app/" },
-              { "@type": "ListItem", position: 2, name: p.title, item: url },
-            ],
-          },
-        }),
-      }],
-    };
-  },
+  head: ({ loaderData }) => headFromRouteSeo(loaderData?.seoData),
   notFoundComponent: PublicPageNotFound,
   errorComponent: PublicPageError,
   pendingComponent: PublicPageLoading,

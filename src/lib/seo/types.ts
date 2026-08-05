@@ -43,6 +43,9 @@ export type SeoPageRow = {
   twitter_image: string | null;
   robots: string | null;
   json_ld: Record<string, string | number | boolean | null> | null;
+  json_ld_type?: string | null;
+  route_type?: string | null;
+  template_variables?: string[] | null;
   sitemap_priority: number | null;
   sitemap_changefreq: string | null;
   sitemap_exclude: boolean;

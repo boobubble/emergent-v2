@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { supabase } from "@/integrations/supabase/client";
 import { useHomePageMode } from "@/lib/use-home-page-mode";
+import { loadPrivateRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 /**
  * The Welcome page is the primary public landing for auth.
@@ -50,12 +51,7 @@ function LoginRoute() {
 }
 
 export const Route = createFileRoute("/login")({
-  head: () => ({
-    meta: [
-      { title: "Community sign in" },
-      { name: "description", content: "Optional community sign-in page." },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  loader: () => loadPrivateRouteSeo("/login", "Community sign in", "Optional community sign-in page."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: LoginRoute,
 });

@@ -5,12 +5,11 @@ import { useAppSettings } from "@/lib/app-settings";
 import { headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
 
 const HOME_SEO_FALLBACK = {
-  title: "Chat rooms & community",
+  title: "Yaarzo – Chatrooms, Friends and Social Community",
   description:
-    "Public chat rooms, private DMs, file sharing, threaded replies, daily streaks, achievements and game commands like !trivia, !hangman, !roll, !fish and !dig.",
-  ogTitle: "Chat rooms & community",
-  ogDescription:
-    "Hang out in public rooms, DM friends, share files, earn badges, and play games with chat commands.",
+    "Join public chatrooms, make friends, share posts, play games and explore communities on Yaarzo.",
+  ogTitle: "Yaarzo – Chatrooms, Friends and Social Community",
+  ogDescription: "Chat, connect, share and discover communities on Yaarzo.",
 };
 
 export const Route = createFileRoute("/")({

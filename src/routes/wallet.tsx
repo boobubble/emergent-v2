@@ -28,14 +28,11 @@ import {
   type ProviderRow,
   type WalletStats,
 } from "@/lib/wallet";
+import { loadPrivateRouteSeo, headFromRouteSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/wallet")({
-  head: () => ({
-    meta: [
-      { title: "Wallet & Coins Store" },
-      { name: "description", content: "Manage your coins: buy, earn, spend, and track every transaction." },
-    ],
-  }),
+  loader: () => loadPrivateRouteSeo("/wallet", "Wallet & Coins Store", "Manage your coins: buy, earn, spend, and track every transaction."),
+  head: ({ loaderData }) => headFromRouteSeo(loaderData),
   component: WalletPage,
 });
 

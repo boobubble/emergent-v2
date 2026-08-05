@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Flame, Award, PanelLeftOpen, Star, X, MessageSquare } from "lucide-react";
 import { CommunityHub, useHubBadge } from "@/components/chat/CommunityHub";
 import { ChatThemeStore } from "@/components/chat/ChatThemeStore";
@@ -34,6 +36,10 @@ import { ProfilePopupProvider } from "@/lib/profile-popup-context";
 import { ChatProfilePopupHost } from "@/components/chat/ChatProfilePopupHost";
 import { BADGE_MAP } from "@/lib/achievements";
 import { chatVariantFor } from "@/lib/theme-variants";
+import { useAuth } from "@/lib/auth-store";
+import { getDiscoveryPrefs } from "@/lib/discovery/functions";
+import { shouldShowFullScreenDiscovery } from "@/lib/discovery/country";
+import { YaarzoDiscoverySheet } from "@/components/discovery/YaarzoDiscoverySheet";
 
 interface EngageToast { key: number; kind: "buzz" | "streak" | "badge"; title: string; body: string; }
 
@@ -49,7 +55,17 @@ export function ChatApp() {
     typeof window !== "undefined" ? window.matchMedia("(max-width: 768px)").matches : false,
   );
   const [feedbotChip, setFeedbotChip] = useState<{ title: string; body: string } | null>(null);
-  const [discoveryScope, setDiscoveryScope] = useState<"for_you" | "my_country" | "worldwide">("for_you");
+  const [discoveryOpen, setDiscoveryOpen] = useState(false);
+  const discoveryAutoChecked = useRef(false);
+  const { user } = useAuth();
+  const fetchDiscoveryPrefs = useServerFn(getDiscoveryPrefs);
+  const qc = useQueryClient();
+  const discoveryPrefsQ = useQuery({
+    queryKey: ["discovery-prefs"],
+    queryFn: () => fetchDiscoveryPrefs(),
+    enabled: Boolean(user && !user.isGuest),
+    staleTime: 60_000,
+  });
   const hubBadge = useHubBadge(hubOpen);
   useBotEventsNotifier();
 
@@ -71,6 +87,23 @@ export function ChatApp() {
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
+
+  useEffect(() => {
+    const open = () => setDiscoveryOpen(true);
+    window.addEventListener("yaarzo:open-discovery", open);
+    return () => window.removeEventListener("yaarzo:open-discovery", open);
+  }, []);
+
+  useEffect(() => {
+    if (discoveryAutoChecked.current || !discoveryPrefsQ.data || !user || user.isGuest) return;
+    const cfg = discoveryPrefsQ.data.config;
+    const shouldOpen =
+      shouldShowFullScreenDiscovery(discoveryPrefsQ.data.prefs, cfg, {
+        requireAgain: cfg.requireOnboardingAgain,
+      }) && cfg.modules.chatrooms;
+    discoveryAutoChecked.current = true;
+    if (shouldOpen) setDiscoveryOpen(true);
+  }, [discoveryPrefsQ.data, user]);
 
   // Listen for open-hub events dispatched from MembersPanel / anywhere.
   useEffect(() => {
@@ -318,8 +351,6 @@ export function ChatApp() {
                 onOpenLeaderboard={() => setLbOpen(true)}
                 onOpenAchievements={() => setAchOpen(true)}
                 onCollapse={() => setSidebarOpen(false)}
-                discoveryScope={discoveryScope}
-                onDiscoveryScopeChange={setDiscoveryScope}
                 onSelectDiscoveryChannel={(id) => chat.joinRoom(id)}
               />
             </div>
@@ -422,6 +453,14 @@ export function ChatApp() {
           onThemeChange={refreshChatTheme}
         />
         <CommunityHub open={hubOpen} onOpenChange={setHubOpen} isMobile={isMobile} />
+        <YaarzoDiscoverySheet
+          open={discoveryOpen}
+          onOpenChange={setDiscoveryOpen}
+          isMobile={isMobile}
+          onSaved={() => {
+            void qc.invalidateQueries({ queryKey: ["chatroom-discovery"] });
+          }}
+        />
         <ChatProfilePopupHost />
       </div>
 
