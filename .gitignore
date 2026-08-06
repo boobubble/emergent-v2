@@ -43,3 +43,6 @@ dist-ssr
 supabase/.temp/
 
 supabase/.temp/
+
+qa-screenshots/
+test-results/
