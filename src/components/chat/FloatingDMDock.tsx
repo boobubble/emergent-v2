@@ -7,7 +7,6 @@ import { useChat } from "@/lib/chat-store";
 import { isRemoteDmChannel } from "@/lib/dm-utils";
 import { useAuth } from "@/lib/auth-store";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
 import { MessageList } from "./MessageList";
 import { TypingIndicator } from "./TypingIndicator";
 import { useTyping } from "@/lib/use-typing";
@@ -24,7 +23,7 @@ const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
  */
 export function FloatingDMDock() {
   const chat = useChat();
-  const { state, send, dmChannelFor, startDM, setActive } = chat;
+  const { state, send, dmChannelFor, startDM, setActive, markDmRead } = chat;
   const { user: authUser } = useAuth();
   const isMobile = useIsMobile();
 
@@ -127,18 +126,12 @@ export function FloatingDMDock() {
   // Mark DM read whenever a mini window for that peer is open (and on new msgs while open)
   useEffect(() => {
     if (!authUser?.id || open.length === 0) return;
-    const meId = authUser.id;
     open.forEach(peerId => {
       const ch = dmChannelFor(peerId);
-      if (!ch || !isRemoteDmChannel(ch, meId)) return;
-      void supabase
-        .from("dm_reads")
-        .upsert(
-          { user_id: meId, channel_id: ch, last_read_at: new Date().toISOString() },
-          { onConflict: "user_id,channel_id" },
-        );
+      if (!ch || !isRemoteDmChannel(ch, authUser.id)) return;
+      void markDmRead(ch);
     });
-  }, [open, authUser?.id, dmChannelFor, state.messages]);
+  }, [open, authUser?.id, dmChannelFor, state.messages, markDmRead]);
 
   if (isMobile) return null;
   if (!authUser?.id) return null;

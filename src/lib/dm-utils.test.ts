@@ -1,4 +1,7 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   buildDmChannel,
   dmChannelFor,
@@ -11,6 +14,9 @@ import {
   sanitizeChatState,
   sanitizeDmOrder,
 } from "./dm-utils";
+import { markDmConversationRead } from "./dm-read";
+
+const testDir = dirname(fileURLToPath(import.meta.url));
 
 const ME = "550e8400-e29b-41d4-a716-446655440000";
 const PEER = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
@@ -129,5 +135,29 @@ describe("refresh after DM scenarios", () => {
     for (const peer of ["me", "bot-gamebot", "", "not-a-uuid"]) {
       expect(isRemoteDmChannel(dmChannelFor(ME, peer) ?? "", ME)).toBe(false);
     }
+  });
+});
+
+describe("markDmConversationRead validation", () => {
+  it("returns null for invalid user or channel before any DB write", async () => {
+    expect(await markDmConversationRead("me", VALID_CHANNEL)).toBeNull();
+    expect(await markDmConversationRead(ME, "dm:bot-gamebot")).toBeNull();
+  });
+});
+
+describe("post-signup profile popup wiring", () => {
+  it("does not mount CompleteProfileModal in authenticated root layout", () => {
+    const root = readFileSync(resolve(testDir, "../routes/__root.tsx"), "utf8");
+    expect(root).not.toMatch(/<CompleteProfileModal\s*\/>/);
+    expect(root).not.toMatch(/import\s+\{\s*CompleteProfileModal\s*\}/);
+  });
+});
+
+describe("profile edit access preserved", () => {
+  it("keeps CompleteProfileModal component with bio/interests fields", () => {
+    const modal = readFileSync(resolve(testDir, "../components/auth/CompleteProfileModal.tsx"), "utf8");
+    expect(modal).toContain("profile_completed");
+    expect(modal).toContain("aboutMe");
+    expect(modal).toContain("interestsText");
   });
 });

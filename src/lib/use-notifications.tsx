@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { isNavigableSlug } from "@/lib/route-slug";
 import type { User } from "@/lib/chat-types";
+import { DM_CONVERSATION_READ_EVENT } from "@/lib/dm-read";
 
 export interface AppNotification {
   id: string;
@@ -223,6 +224,11 @@ export async function navigateForNotification(
   }
 
   if (n.target_type === "dm") {
+    if (typeof window !== "undefined" && n.target_id && n.actor_id) {
+      window.dispatchEvent(
+        new CustomEvent("palrgo:openMiniDM", { detail: { peerId: n.actor_id } }),
+      );
+    }
     navigate({ to: "/chatroom" });
     return;
   }
@@ -265,6 +271,7 @@ export type NotificationsContextValue = {
   load: () => Promise<void>;
   markAllRead: () => Promise<void>;
   markOne: (id: string) => Promise<void>;
+  markDmChannelRead: (channelId: string) => void;
 };
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
@@ -320,6 +327,26 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     return () => { supabase.removeChannel(ch); };
   }, [meId]);
 
+  const markDmChannelRead = useCallback((channelId: string) => {
+    if (!channelId) return;
+    setItems(prev =>
+      prev.map(i =>
+        !i.read && i.target_type === "dm" && i.target_id === channelId
+          ? { ...i, read: true }
+          : i,
+      ),
+    );
+  }, []);
+
+  useEffect(() => {
+    function onDmRead(e: Event) {
+      const ch = (e as CustomEvent<{ channelId?: string }>).detail?.channelId;
+      if (ch) markDmChannelRead(ch);
+    }
+    window.addEventListener(DM_CONVERSATION_READ_EVENT, onDmRead);
+    return () => window.removeEventListener(DM_CONVERSATION_READ_EVENT, onDmRead);
+  }, [markDmChannelRead]);
+
   const unread = useMemo(() => items.filter(i => !i.read).length, [items]);
 
   const markAllRead = useCallback(async () => {
@@ -342,8 +369,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       load,
       markAllRead,
       markOne,
+      markDmChannelRead,
     }),
-    [meId, items, unread, loaded, load, markAllRead, markOne],
+    [meId, items, unread, loaded, load, markAllRead, markOne, markDmChannelRead],
   );
 
   return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;

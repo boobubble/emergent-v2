@@ -70,6 +70,7 @@ import {
   showDmParticipantError,
   storageKeyForUsername,
 } from "./dm-utils";
+import { markDmConversationRead } from "./dm-read";
 import { removeCorruptedKey } from "./persisted-state-recovery";
 
 export { dmChannelFor } from "./dm-utils";
@@ -465,6 +466,7 @@ interface Ctx {
   dmPeerReadAt: (channelId: string) => number;
   isDmUnread: (peerId: string) => boolean;
   dmUnreadCount: number;
+  markDmRead: (channelId: string) => Promise<void>;
   staffKick: (targetId: string, channelId: string, targetName: string) => void;
   staffLocalMute: (targetId: string, channelId: string, minutes: number, targetName: string) => void;
   pushSystem: (channelId: string, text: string) => void;
@@ -1059,6 +1061,19 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     return () => { cancelled = true; };
   }, [authUserId, state.activeChannel]);
 
+  const markDmRead = useCallback(async (channelId: string) => {
+    if (!authUserId || !isRemoteDmChannel(channelId, authUserId)) return;
+    const result = await markDmConversationRead(authUserId, channelId);
+    if (!result) return;
+    const ts = new Date(result.lastReadAt).getTime();
+    setDmReads(prev => {
+      const ch = { ...(prev[channelId] || {}) };
+      if ((ch[authUserId] ?? 0) >= ts) return prev;
+      ch[authUserId] = ts;
+      return { ...prev, [channelId]: ch };
+    });
+  }, [authUserId]);
+
   // Upsert my read marker when I open a DM or new msgs arrive while viewing
   const lastMsgTsRef = useRef<Record<string, number>>({});
   useEffect(() => {
@@ -1070,19 +1085,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     if (lastMsgTsRef.current[channelId] === latest) return;
     lastMsgTsRef.current[channelId] = latest;
     if (typeof document !== "undefined" && document.hidden) return;
-    const nowIso = new Date().toISOString();
-    void supabase
-      .from("dm_reads")
-      .upsert({ user_id: authUserId, channel_id: channelId, last_read_at: nowIso }, { onConflict: "user_id,channel_id" })
-      .then(() => {
-        // Optimistic local update so own "Seen" reflects without waiting realtime
-        setDmReads(prev => {
-          const ch = { ...(prev[channelId] || {}) };
-          ch[authUserId] = Date.now();
-          return { ...prev, [channelId]: ch };
-        });
-      });
-  }, [authUserId, state.activeChannel, state.messages]);
+    void markDmRead(channelId);
+  }, [authUserId, state.activeChannel, state.messages, markDmRead]);
 
 
 
@@ -1546,7 +1550,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       }
       return badged.state;
     });
-  }, [authUserId, isGuest]);
+    void markDmRead(channelId);
+  }, [authUserId, isGuest, markDmRead]);
 
   const closeDM = useCallback((userId: string) => {
     const channelId = dmChannelFor(authUserId, userId);
@@ -1889,7 +1894,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     })(),
     staffKick,
     staffLocalMute,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom]);
+    markDmRead,
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;

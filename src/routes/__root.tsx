@@ -32,7 +32,6 @@ import { HeadFootScripts } from "@/components/HeadFootScripts";
 import { AdsAutoLoader } from "@/components/AdSlot";
 import { BroadcasterAnnouncementsRunner } from "@/components/broadcaster/BroadcasterAnnouncements";
 import { TrioInvitesListener } from "@/components/chat/TrioInvitesListener";
-import { CompleteProfileModal } from "@/components/auth/CompleteProfileModal";
 import { LicenseGuard } from "@/components/LicenseGuard";
 import { useHomePageMode } from "@/lib/use-home-page-mode";
 import "@/i18n";
@@ -318,7 +317,6 @@ function AuthGate() {
           <AuthenticatedHooks userId={user.id} />
           <BroadcasterAnnouncementsRunner />
           <TrioInvitesListener />
-          <CompleteProfileModal />
           <HeadFootScripts />
           <AdsAutoLoader />
           <SessionConflictBanner />

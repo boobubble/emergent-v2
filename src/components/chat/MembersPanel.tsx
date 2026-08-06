@@ -129,7 +129,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
   const navigate = useNavigate();
-  const { items: notifs, unread: unreadCount, markAllRead, markOne } = useNotifications();
+  const { items: notifs, unread: unreadCount, markAllRead, markOne, markDmChannelRead } = useNotifications();
   const [showAllOffline, setShowAllOffline] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [friendIds, setFriendIds] = useState<string[]>([]);
@@ -191,6 +191,13 @@ export function MembersPanel({ roomId }: { roomId: string }) {
   async function onNotificationActivate(id: string) {
     const n = notifs.find(item => item.id === id);
     if (!n) return;
+
+    if (n.target_type === "dm" && n.target_id && n.actor_id) {
+      markDmChannelRead(n.target_id);
+      openDM(n.actor_id);
+      return;
+    }
+
     await markOne(n.id);
     await navigateForNotification(n, navigate, usersByIdForNotifs);
   }

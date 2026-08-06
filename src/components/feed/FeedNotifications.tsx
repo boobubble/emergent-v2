@@ -12,6 +12,7 @@ import {
   type AppNotification,
   type FeedNotification,
 } from "@/lib/use-notifications";
+import { markDmConversationRead } from "@/lib/dm-read";
 
 export type { AppNotification, FeedNotification };
 
@@ -62,12 +63,17 @@ export function FeedNotificationPanel({
   onOpenFindFriends?: () => void;
 }) {
   const navigate = useNavigate();
-  const { items, unread, markAllRead, markOne } = useNotifications();
+  const { items, unread, markAllRead, markOne, markDmChannelRead } = useNotifications();
 
   const onActivate = useCallback(async (n: AppNotification) => {
-    await markOne(n.id);
+    if (n.target_type === "dm" && n.target_id) {
+      markDmChannelRead(n.target_id);
+      if (meId) void markDmConversationRead(meId, n.target_id);
+    } else {
+      await markOne(n.id);
+    }
     await navigateForNotification(n, navigate, profiles, onOpenFindFriends);
-  }, [markOne, navigate, profiles, onOpenFindFriends]);
+  }, [markOne, markDmChannelRead, meId, navigate, profiles, onOpenFindFriends]);
 
   if (!meId) {
     return (
@@ -116,13 +122,18 @@ export function FeedNotifications({
 }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const { items, unread, markAllRead, markOne } = useNotifications();
+  const { items, unread, markAllRead, markOne, markDmChannelRead } = useNotifications();
 
   const onActivate = useCallback(async (n: AppNotification) => {
-    await markOne(n.id);
+    if (n.target_type === "dm" && n.target_id) {
+      markDmChannelRead(n.target_id);
+      if (meId) void markDmConversationRead(meId, n.target_id);
+    } else {
+      await markOne(n.id);
+    }
     setOpen(false);
     await navigateForNotification(n, navigate, profiles, onOpenFindFriends);
-  }, [markOne, navigate, profiles, onOpenFindFriends]);
+  }, [markOne, markDmChannelRead, meId, navigate, profiles, onOpenFindFriends]);
 
   if (!meId) return null;
 
