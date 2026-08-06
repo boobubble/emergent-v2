@@ -693,6 +693,25 @@
   border: 1px solid color-mix(in oklab, var(--primary) 18%, var(--color-border));
   background: color-mix(in oklab, var(--primary) 6%, var(--color-card));
 }
+.sidebar-radio-volume-popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.35rem);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.55rem;
+  border: 1px solid color-mix(in oklab, var(--primary) 20%, var(--color-border));
+  background: var(--color-card);
+  box-shadow: var(--shadow-soft-2);
+}
+.sidebar-radio-volume-slider {
+  width: 5.5rem;
+  height: 0.2rem;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
 .sidebar-bottom-panel {
   flex-shrink: 0;
 }

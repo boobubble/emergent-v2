@@ -107,6 +107,36 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
 
   const showLocalJoined = roomFilter === "all" || roomFilter === "joined";
   const showLocalPublic = roomFilter === "all" && !user?.isGuest;
+  const discoveryActive = Boolean(user && !user.isGuest && onSelectDiscoveryChannel);
+
+  const sparseSuggestionRooms = useMemo(() => {
+    if (discoveryActive || roomFilter !== "all") return [];
+    if (joinedLocalIds.length > 4 || localRoomIds.length > 4) return [];
+    return uniqueRoomOrder
+      .filter((id) => {
+        const r = state.rooms[id];
+        return r && !r.members.includes("me") && matchesSearch(id);
+      })
+      .slice(0, 4)
+      .map((id) => {
+        const r = state.rooms[id]!;
+        return {
+          id,
+          name: r.name,
+          kind: r.kind as "chat" | "game" | undefined,
+          memberCount: Math.max(onlineCounts[id] ?? 0, r.members.length),
+        };
+      });
+  }, [
+    discoveryActive,
+    roomFilter,
+    joinedLocalIds.length,
+    localRoomIds.length,
+    uniqueRoomOrder,
+    state.rooms,
+    searchQuery,
+    onlineCounts,
+  ]);
 
   const renderRoomItem = (id: string) => {
     const r = state.rooms[id];
@@ -264,8 +294,12 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
             </div>
           )}
 
-          {roomFilter === "all" && joinedLocalIds.length <= 4 && localRoomIds.length <= 4 && (
-            <SidebarSparseSuggestions onGames={() => setActive("games")} />
+          {sparseSuggestionRooms.length > 0 && (
+            <SidebarSparseSuggestions
+              rooms={sparseSuggestionRooms}
+              activeChannelId={state.activeChannel}
+              onSelect={setActive}
+            />
           )}
 
           {showLocalPublic && localRoomIds.filter((id) => !joinedLocalIds.includes(id)).length > 0 && (
@@ -328,11 +362,9 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
         <div className="sidebar-flex-spacer min-h-0 shrink" aria-hidden="true" />
         </div>
 
-        {/* Pinned bottom: radio + utilities + profile */}
-        <div className="sidebar-bottom-panel shrink-0 border-t border-border/40 bg-card/20 px-1.5 pt-1.5 pb-1.5 backdrop-blur-sm">
-          <DjSidebarPlayer className="mb-1.5" />
-
-          <div className="mb-1.5 flex items-center gap-1">
+        {/* Pinned bottom: utilities → radio → profile */}
+        <div className="sidebar-bottom-panel shrink-0 border-t border-border/40 bg-card/20 px-1.5 pt-1 pb-1.5 backdrop-blur-sm">
+          <div className="mb-1 flex items-center gap-1">
             <div className="min-w-0 flex-1">
               <ChatExploreMenu compact />
             </div>
@@ -363,6 +395,8 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
           </div>
+
+          <DjSidebarPlayer className="mb-1" />
 
           {user ? (
             <>
