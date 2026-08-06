@@ -27,7 +27,7 @@ import { FloatingDMDock } from "@/components/chat/FloatingDMDock";
 import { MobileDMMinimizedDock } from "@/components/chat/MobileDMMinimizedDock";
 import { TrioRoomsDock } from "@/components/chat/TrioRoomsDock";
 import { PresenceFeed } from "@/components/chat/PresenceFeed";
-import { DjFooter } from "@/components/chat/DjFooter";
+import { DjPlayerHost } from "@/components/chat/DjFooter";
 import { PollDiscoveryWidget } from "@/components/chat/PollDiscoveryWidget";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileModal, LeaderboardModal, AchievementsModal } from "@/components/chat/Modals";
@@ -337,6 +337,7 @@ export function ChatApp() {
     <ProfilePopupProvider>
     <>
       <div ref={rootRef} data-chat-theme={chatTheme} data-theme-variant={chatVariantFor(chatTheme)} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+        <DjPlayerHost />
         {sidebarOpen && (
           <>
             <button
@@ -432,7 +433,6 @@ export function ChatApp() {
 
                 <div className="chat-composer-footer shrink-0">
                   <MessageInput />
-                  <DjFooter />
                 </div>
               </>
             );

@@ -624,8 +624,9 @@
 }
 @utility premium-nav-item-active {
   color: var(--color-foreground);
-  background: color-mix(in oklab, var(--primary) 14%, transparent);
+  background: color-mix(in oklab, var(--primary) 18%, transparent);
   font-weight: 600;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 22%, transparent);
   &::before {
     content: "";
     position: absolute;
@@ -636,8 +637,70 @@
     height: 60%;
     border-radius: 999px;
     background: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-glow);
   }
+}
+
+/* ── Chat sidebar (compact premium) ── */
+.sidebar-middle {
+  flex: 1 1 0;
+  min-height: 0;
+}
+.sidebar-scroll {
+  flex: 0 1 auto;
+  max-height: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--color-foreground) 14%, transparent) transparent;
+}
+.sidebar-flex-spacer {
+  flex: 1 1 0;
+  min-height: 0;
+}
+.sidebar-section-label {
+  padding: 0.35rem 0.5rem 0.2rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-muted-foreground) 90%, var(--primary) 10%);
+}
+.sidebar-filter-chip {
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
+  background: color-mix(in oklab, var(--color-background) 70%, transparent);
+  padding: 0.2rem 0.55rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-muted-foreground);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.sidebar-filter-chip:hover {
+  color: var(--color-foreground);
+  border-color: color-mix(in oklab, var(--primary) 25%, var(--color-border));
+}
+.sidebar-filter-chip-active {
+  color: var(--color-primary-foreground);
+  background: var(--primary);
+  border-color: color-mix(in oklab, var(--primary) 80%, white 20%);
+}
+.sidebar-room-active {
+  border-radius: 0.75rem;
+}
+.sidebar-search-input {
+  min-height: 2rem;
+}
+.sidebar-radio-mini {
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--primary) 18%, var(--color-border));
+  background: color-mix(in oklab, var(--primary) 6%, var(--color-card));
+}
+.sidebar-bottom-panel {
+  flex-shrink: 0;
+}
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 @utility premium-section-label {
   display: flex;

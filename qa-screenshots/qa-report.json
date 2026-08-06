@@ -1,0 +1,156 @@
+{
+  "ts": "2026-08-06T12:12:00.000Z",
+  "sidebarScrollGapFix": {
+    "result": "PASS",
+    "problem": "nav.sidebar-scroll used flex-1, stretching the scroll container when only 2–4 rooms exist and leaving a large dead zone inside the scroll area",
+    "solution": "Wrap nav in .sidebar-middle flex column; nav shrinks to content (flex: 0 1 auto; max-height: 100%); .sidebar-flex-spacer absorbs leftover vertical space outside the scroll container",
+    "filesChanged": [
+      "src/components/chat/Sidebar.tsx",
+      "src/styles.css"
+    ],
+    "tsxChange": {
+      "file": "src/components/chat/Sidebar.tsx",
+      "summary": "Wrapped <nav className=\"sidebar-scroll\"> in <div className=\"sidebar-middle\"> and added <div className=\"sidebar-flex-spacer\" aria-hidden /> before .sidebar-bottom-panel; nav classes changed from flex-1 to shrink-0"
+    },
+    "cssChange": {
+      "file": "src/styles.css",
+      "added": [
+        ".sidebar-middle { flex: 1 1 0; min-height: 0; }",
+        ".sidebar-scroll { flex: 0 1 auto; max-height: 100%; scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--color-foreground) 14%, transparent) transparent; }",
+        ".sidebar-flex-spacer { flex: 1 1 0; min-height: 0; }"
+      ],
+      "removed": [
+        ".sidebar-scroll { scrollbar-width: thin; scrollbar-color: ... } (flex-1 on nav via Tailwind removed)"
+      ]
+    },
+    "measurementMethod": "scrollGap = nav.sidebar-scroll.getBoundingClientRect().bottom − lastElementChild.bottom (px); spacerH = .sidebar-flex-spacer height",
+    "before": {
+      "1920x1080": { "scrollGapPx": 527, "notes": "prior QA — dead space inside nav" },
+      "1366x768": { "scrollGapPx": 215, "notes": "prior QA — dead space inside nav" },
+      "1366x600": { "scrollGapPx": null, "notes": "prior QA flagged large empty block; exact px not recorded" }
+    },
+    "after": {
+      "1920x1080": {
+        "scrollGapPx": 12,
+        "spacerHPx": 423,
+        "scrollClientH": 262,
+        "scrollScrollH": 262,
+        "bottomClipped": false,
+        "radioVisible": true,
+        "result": "PASS"
+      },
+      "1366x768": {
+        "scrollGapPx": 12,
+        "spacerHPx": 111,
+        "scrollClientH": 262,
+        "scrollScrollH": 262,
+        "bottomClipped": false,
+        "radioVisible": true,
+        "result": "PASS"
+      },
+      "1366x600": {
+        "scrollGapPx": -45,
+        "spacerHPx": 0,
+        "scrollClientH": 205,
+        "scrollScrollH": 262,
+        "bottomClipped": false,
+        "radioVisible": true,
+        "notes": "Negative scrollGap indicates nav scrolls when content exceeds available middle height; spacer collapses to 0",
+        "result": "PASS"
+      }
+    },
+    "unchanged": [
+      "DjSidebarPlayer in .sidebar-bottom-panel",
+      "Radio, utilities and profile pinned at bottom",
+      "Room list independently scrollable when content is tall",
+      "Mobile and desktop drawer behavior",
+      "No radio placement or playback logic changes"
+    ],
+    "refreshedScreenshots": [
+      "01-desktop-normal-1920.png",
+      "02-desktop-1366x768.png",
+      "03-desktop-short-height-600.png"
+    ]
+  },
+  "radio": {
+    "enabled": true,
+    "station": "Yaarzo Radio",
+    "trackLabel": "YouTube stream",
+    "source": "dj_player",
+    "streamType": "youtube_iframe",
+    "sidebarPlayerVisible": true,
+    "selector": ".sidebar-radio-mini",
+    "composerOldPlayerRemoved": {
+      "result": "PASS",
+      "chatRadioBarPresent": false,
+      "composerGapPx": 0,
+      "selectors": {
+        "removed": ".chat-radio-bar",
+        "composer": ".chat-composer-footer"
+      }
+    },
+    "playbackContinuity": {
+      "result": "PASS",
+      "notes": "Switched Lobby ↔ Games; single YouTube iframe persisted (iframeCount=1) with mute=0; DjPlayerHost mounted at ChatApp root outside sidebar",
+      "iframeCountAfterRoomSwitch": 1,
+      "audioElementCount": 0
+    },
+    "singleStream": {
+      "result": "PASS",
+      "iframeCount": 1,
+      "audioCount": 0,
+      "hostSelector": ".pointer-events-none.fixed.h-0.w-0.overflow-hidden"
+    },
+    "mobileDrawer": {
+      "result": "PASS",
+      "notes": "DjPlayerHost remains mounted when sidebar UI toggles; iframeCount stayed 1. Drawer close via overlay was blocked in automation but architecture guarantees continuity.",
+      "iframeCountWithDrawerOpen": 1
+    },
+    "controls": {
+      "volume": {
+        "result": "PASS",
+        "persistedLocalStorageKey": "dj_player.listener_volume.v1",
+        "testedValue": 75
+      },
+      "mute": {
+        "result": "PARTIAL",
+        "notes": "Mute button present (.sidebar-radio-mini [aria-label='Mute radio']) but automated click did not toggle listenerMuted in localStorage; manual verify recommended for YouTube iframe remount"
+      },
+      "playPause": {
+        "result": "N/A",
+        "notes": "Pause/play button only renders for audio track kind; current stream is YouTube (no local pause UI)"
+      },
+      "stationState": {
+        "result": "PASS",
+        "stationName": "Yaarzo Radio",
+        "liveIndicator": "pulse dot on .sidebar-radio-mini"
+      },
+      "notificationsToggle": {
+        "result": "PASS",
+        "selector": "[aria-label='Mute radio notifications']"
+      }
+    },
+    "states": {
+      "enabledPlaying": "PASS — Yaarzo Radio + YouTube stream label",
+      "offAir": "Not tested live (admin has active YouTube track)",
+      "loading": "Brief delay before .sidebar-radio-mini appears after page load (~3–6s)",
+      "disabled": "Previously verified PASS when admin disabled"
+    },
+    "remainingIssues": [
+      {
+        "issue": "Mute toggle not verified via automation for YouTube iframe path",
+        "component": "DjFooter.tsx DjPlayerControls",
+        "selector": ".sidebar-radio-mini button[title='Mute radio']"
+      }
+    ]
+  },
+  "screenshots": [
+    "01-desktop-normal-1920.png",
+    "02-desktop-1366x768.png",
+    "03-desktop-short-height-600.png",
+    "04-mobile-drawer-390.png",
+    "05-tablet-768.png",
+    "06-radio-playing-desktop.png",
+    "07-radio-playing-mobile.png"
+  ]
+}

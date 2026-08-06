@@ -13,6 +13,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useMehfilLabel } from "@/lib/use-mehfil-label";
+import { cn } from "@/lib/utils";
 
 function useShortcuts() {
   const mehfilLabel = useMehfilLabel();
@@ -28,7 +29,7 @@ function useShortcuts() {
   ] as const;
 }
 
-export function ChatExploreMenu() {
+export function ChatExploreMenu({ compact }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const SHORTCUTS = useShortcuts();
   const ref = useRef<HTMLDivElement>(null);
@@ -53,7 +54,10 @@ export function ChatExploreMenu() {
         type="button"
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
-        className="flex min-h-11 w-full items-center gap-2 rounded-full px-2.5 py-1.5 text-sm font-semibold text-foreground transition-colors hover:bg-white/5 lg:min-h-10"
+        className={cn(
+          "flex w-full items-center gap-2 rounded-lg px-2 py-1 text-sm font-semibold text-foreground transition-colors hover:bg-white/5",
+          compact ? "min-h-8 text-[11px]" : "min-h-11 rounded-full px-2.5 py-1.5 lg:min-h-10",
+        )}
         title="Explore more"
       >
         <span className="grid h-6 w-6 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">

@@ -1,16 +1,24 @@
 import { useMemo, useState } from "react";
-import { Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2, Gamepad2, LogIn, UserPlus, Search, X } from "lucide-react";
+import {
+  Settings, LogOut, RotateCcw, Award, Flame, PanelLeftClose, Zap, Trash2, Gamepad2,
+  LogIn, UserPlus, Search, X, Moon, Sun,
+} from "lucide-react";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { useMyRoles } from "@/lib/use-my-role";
 import { useRoomOnlineCounts } from "@/lib/use-room-online-counts";
+import { useBrandingMap } from "@/components/BrandMark";
 import { Avatar } from "./Avatar";
-import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 import { BrandMark, BrandText, useBrandAsset } from "@/components/BrandMark";
 import { ChatExploreMenu } from "./ChatExploreMenu";
-import { ChatroomDiscoveryPanel } from "@/components/discovery/ChatroomDiscoveryPanel";
+import {
+  ChatroomDiscoveryPanel,
+  SidebarSparseSuggestions,
+  type SidebarRoomFilter,
+} from "@/components/discovery/ChatroomDiscoveryPanel";
+import { DjSidebarPlayer } from "./DjFooter";
 import { levelProgress } from "@/lib/ranks";
 
 interface Props {
@@ -21,16 +29,36 @@ interface Props {
   onSelectDiscoveryChannel?: (id: string) => void;
 }
 
+const FILTERS: { id: SidebarRoomFilter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "joined", label: "Joined" },
+  { id: "country", label: "Country" },
+  { id: "interests", label: "Interests" },
+];
+
 export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }: Props) {
   const { state, setActive, createRoom, deleteRoom, reset } = useChat();
   const { logout, user } = useAuth();
   const { openSignIn, openSignUp } = useAuthGate();
   const { isAdmin } = useMyRoles();
+  const branding = useBrandingMap();
+  const chatLogo = useBrandAsset("chat");
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newTopic, setNewTopic] = useState("");
   const [roomSearch, setRoomSearch] = useState("");
-  const chatLogo = useBrandAsset("chat");
+  const [roomFilter, setRoomFilter] = useState<SidebarRoomFilter>("all");
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof document === "undefined") return "dark";
+    return document.documentElement.classList.contains("light") ? "light" : "dark";
+  });
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("palrgo-theme", next);
+    document.documentElement.classList.toggle("light", next === "light");
+  };
 
   const uniqueRoomOrder = useMemo(() => {
     const seen = new Set<string>();
@@ -43,39 +71,42 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
 
   const searchQuery = roomSearch.trim().toLowerCase();
 
-  const chatRoomIds = useMemo(() => {
-    return uniqueRoomOrder.filter((id) => {
-      if (state.rooms[id]?.kind === "game") return false;
-      if (!searchQuery) return true;
-      const r = state.rooms[id];
-      if (!r) return false;
-      return (
-        r.name.toLowerCase().includes(searchQuery) ||
-        r.topic.toLowerCase().includes(searchQuery) ||
-        id.toLowerCase().includes(searchQuery)
-      );
-    });
-  }, [uniqueRoomOrder, state.rooms, searchQuery]);
+  const matchesSearch = (id: string) => {
+    if (!searchQuery) return true;
+    const r = state.rooms[id];
+    if (!r) return false;
+    return (
+      r.name.toLowerCase().includes(searchQuery) ||
+      r.topic.toLowerCase().includes(searchQuery) ||
+      id.toLowerCase().includes(searchQuery)
+    );
+  };
 
-  const gameRoomIds = useMemo(() => {
-    return uniqueRoomOrder.filter((id) => {
-      if (state.rooms[id]?.kind !== "game") return false;
-      if (!searchQuery) return true;
-      const r = state.rooms[id];
-      if (!r) return false;
-      return (
-        r.name.toLowerCase().includes(searchQuery) ||
-        r.topic.toLowerCase().includes(searchQuery) ||
-        id.toLowerCase().includes(searchQuery)
-      );
-    });
-  }, [uniqueRoomOrder, state.rooms, searchQuery]);
+  const matchesFilter = (id: string) => {
+    const r = state.rooms[id];
+    if (!r) return false;
+    if (roomFilter === "joined") return r.members.includes("me");
+    if (roomFilter === "country" || roomFilter === "interests") return false;
+    return true;
+  };
+
+  const localRoomIds = useMemo(() => {
+    return uniqueRoomOrder.filter((id) => matchesSearch(id) && matchesFilter(id));
+  }, [uniqueRoomOrder, searchQuery, roomFilter, state.rooms]);
+
+  const joinedLocalIds = useMemo(
+    () => uniqueRoomOrder.filter((id) => state.rooms[id]?.members.includes("me") && matchesSearch(id)),
+    [uniqueRoomOrder, state.rooms, searchQuery],
+  );
 
   const publicRoomIds = useMemo(
     () => uniqueRoomOrder.filter((id) => state.rooms[id]?.kind !== "game"),
     [uniqueRoomOrder, state.rooms],
   );
   const onlineCounts = useRoomOnlineCounts(publicRoomIds);
+
+  const showLocalJoined = roomFilter === "all" || roomFilter === "joined";
+  const showLocalPublic = roomFilter === "all" && !user?.isGuest;
 
   const renderRoomItem = (id: string) => {
     const r = state.rooms[id];
@@ -85,31 +116,29 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
       <div
         key={id}
         className={cn(
-          "premium-nav-item group/room min-h-11 lg:min-h-10",
-          active && "premium-nav-item-active",
+          "premium-nav-item group/room min-h-8 gap-1.5 px-2 py-1",
+          active && "premium-nav-item-active sidebar-room-active",
         )}
       >
         <button
           onClick={() => setActive(id)}
-          className="flex min-h-11 min-w-0 flex-1 items-center gap-2 truncate bg-transparent p-0 text-left lg:min-h-10"
+          className="flex min-w-0 flex-1 items-center gap-1.5 truncate bg-transparent p-0 text-left"
         >
           {r.kind === "game" ? (
-            <Gamepad2 className={cn("h-3.5 w-3.5 shrink-0", active ? "text-primary" : "text-primary/70")} />
+            <Gamepad2 className={cn("h-3 w-3 shrink-0", active ? "text-primary" : "text-primary/70")} />
           ) : (
-            <span className={cn("text-base leading-none", active ? "text-primary" : "opacity-50")}>
-              #
-            </span>
+            <span className={cn("text-sm leading-none", active ? "text-primary" : "opacity-45")}>#</span>
           )}
-          <span className="truncate">{r.name}</span>
+          <span className="truncate text-[12px]">{r.name}</span>
           {r.dbBacked && (
-            <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-[9px] font-semibold uppercase text-primary">
+            <span className="shrink-0 rounded bg-primary/10 px-1 py-px text-[8px] font-bold uppercase text-primary">
               Live
             </span>
           )}
         </button>
-        <span className="flex items-center gap-1 text-[10px]">
+        <span className="flex shrink-0 items-center gap-1 text-[10px] tabular-nums">
           <span className="chat-online-dot" aria-hidden style={{ width: "0.4rem", height: "0.4rem" }} />
-          <span className="font-semibold opacity-80" title={`${Math.max(onlineCounts[id] ?? 0, r.members.length)} online`}>
+          <span className="font-semibold text-muted-foreground" title={`${Math.max(onlineCounts[id] ?? 0, r.members.length)} online`}>
             {Math.max(onlineCounts[id] ?? 0, r.members.length)}
           </span>
           {isAdmin && (
@@ -123,9 +152,9 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
               }}
               aria-label={`Delete ${r.name}`}
               title="Delete channel (admin)"
-              className="ml-1 grid h-5 w-5 place-items-center rounded-full text-muted-foreground opacity-0 transition hover:bg-destructive/15 hover:text-destructive group-hover/room:opacity-100"
+              className="ml-0.5 grid h-4 w-4 place-items-center rounded-full text-muted-foreground opacity-0 transition hover:bg-destructive/15 hover:text-destructive group-hover/room:opacity-100"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-2.5 w-2.5" />
             </button>
           )}
         </span>
@@ -133,262 +162,299 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
     );
   };
 
+  const subtitle = branding.chat_subtitle ?? "Talk. Play. Connect.";
+
   return (
-    <aside className="flex h-full w-56 shrink-0 flex-col bg-transparent p-1">
-      <div className="flex h-full flex-col premium-floating-sidebar overflow-hidden">
+    <aside className="flex h-full w-[270px] max-w-[290px] shrink-0 flex-col bg-transparent p-1 md:w-[272px]">
+      <div className="flex h-full min-h-0 flex-col premium-floating-sidebar overflow-hidden">
 
-      <div className="flex items-center gap-2 px-2 py-2">
-        <BrandMark
-          slot="chat"
-          alt="Logo"
-          className="h-7 w-7 rounded-lg object-contain"
-          fallback={
-            <div
-              className="grid h-7 w-7 place-items-center rounded-lg text-lg font-bold text-primary-foreground"
-              style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}
-            >
-              P
-            </div>
-          }
-        />
-        {!chatLogo && (
-          <div className="min-w-0 flex-1 leading-tight">
-            <BrandText slot="chat" defaultText="Chat" className="block font-bold text-foreground" alwaysShow />
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Social Chat
-            </div>
-          </div>
-        )}
-        {onCollapse && (
-          <button
-            onClick={onCollapse}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/30 transition-all hover:scale-105 hover:bg-primary hover:text-primary-foreground"
-            title="Hide sidebar"
-            aria-label="Hide sidebar"
-          >
-            <PanelLeftClose className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
-      <nav className="flex-1 space-y-2 overflow-y-auto px-1.5">
-        {user && !user.isGuest && onSelectDiscoveryChannel && (
-          <ChatroomDiscoveryPanel
-            joinedChannelIds={uniqueRoomOrder.filter((id) => state.rooms[id]?.members.includes("me"))}
-            onSelectChannel={onSelectDiscoveryChannel}
-          />
-        )}
-        <div>
-          <SectionLabel
-            title="Public Rooms"
-            action={
-              <button
-                onClick={() => setShowNew(s => !s)}
-                className="text-lg leading-none text-muted-foreground transition-colors hover:text-primary"
-                aria-label="New room"
+        {/* Brand header */}
+        <div className="flex shrink-0 items-center gap-2 border-b border-border/40 px-2.5 py-2">
+          <BrandMark
+            slot="chat"
+            alt="Logo"
+            className="h-7 w-7 rounded-lg object-contain"
+            fallback={
+              <div
+                className="grid h-7 w-7 place-items-center rounded-lg text-sm font-bold text-primary-foreground"
+                style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}
               >
-                +
-              </button>
+                P
+              </div>
             }
           />
-          {showNew && (
-            <div className="mb-2 space-y-1 rounded-2xl border border-border bg-background p-2">
-              <input
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-                placeholder="Room name"
-                className="w-full rounded-lg bg-input px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-              />
-              <input
-                value={newTopic}
-                onChange={e => setNewTopic(e.target.value)}
-                placeholder="Topic"
-                className="w-full rounded-lg bg-input px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-              />
-              <button
-                onClick={() => {
-                  if (newName.trim()) {
-                    createRoom(newName.trim(), newTopic.trim());
-                    setNewName("");
-                    setNewTopic("");
-                    setShowNew(false);
-                  }
-                }}
-                className="min-h-11 w-full rounded-lg bg-primary px-2 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90"
-              >
-                Create
-              </button>
-            </div>
-          )}
-          <div className="relative mb-1.5">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="search"
-              value={roomSearch}
-              onChange={(e) => setRoomSearch(e.target.value)}
-              placeholder="Search rooms…"
-              aria-label="Search rooms"
-              className="min-h-11 w-full rounded-lg border border-border bg-background py-1.5 pl-8 pr-8 text-sm outline-none focus:ring-1 focus:ring-ring lg:min-h-9"
-            />
-            {roomSearch && (
-              <button
-                type="button"
-                onClick={() => setRoomSearch("")}
-                aria-label="Clear room search"
-                className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+          <div className="min-w-0 flex-1 leading-tight">
+            <BrandText slot="chat" defaultText="PakChat" className="block truncate text-[13px] font-bold text-foreground" alwaysShow={!!chatLogo} />
+            {!chatLogo && (
+              <div className="truncate text-[9px] font-medium text-muted-foreground">{subtitle}</div>
             )}
           </div>
-          {chatRoomIds.length === 0 && gameRoomIds.length === 0 ? (
-            <p className="px-2 py-3 text-center text-[11px] text-muted-foreground">
-              {searchQuery ? "No rooms match your search." : "No rooms available."}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {chatRoomIds.length > 0 && (
-                <div className="space-y-0.5">
-                  {gameRoomIds.length > 0 && (
-                    <SectionLabel title="Chat rooms" className="mt-0" />
-                  )}
-                  {chatRoomIds.map(renderRoomItem)}
-                </div>
-              )}
-              {gameRoomIds.length > 0 && (
-                <div className="space-y-0.5">
-                  <SectionLabel title="Games" className="mt-0" />
-                  {gameRoomIds.map(renderRoomItem)}
-                </div>
-              )}
-            </div>
+          {onCollapse && (
+            <button
+              onClick={onCollapse}
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-white/5 hover:text-foreground"
+              title="Hide sidebar"
+              aria-label="Hide sidebar"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </button>
           )}
         </div>
 
-      </nav>
-
-
-
-      <div className="border-t border-border px-1.5 py-1.5">
-        <div className="mb-1 block">
-          <ChatExploreMenu />
-        </div>
-
-
-
-        {user && (
-          <a
-            href="/feed"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mb-1 flex min-h-11 w-full items-center gap-2 rounded-full px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground lg:min-h-10"
-            title="Open achievements & leaderboard in feed"
-          >
-            <Award className="h-4 w-4" /> Achievements
-            <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
-              {state.me.badges?.length ?? 0}
-            </span>
-          </a>
-        )}
-
-        <div className="mb-1">
-          <ThemeToggle />
-        </div>
-
-        {user ? (
-          <>
-            <a
-              href="/account"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative block w-full overflow-hidden rounded-xl border border-border bg-card/60 p-1.5 text-left transition-all hover:border-primary/30 hover:bg-card"
-              title="Open account settings in new tab"
-            >
-              <div className="relative flex items-center gap-1.5">
-                <Avatar user={state.me} size={32} />
-                <div className="min-w-0 flex-1 leading-tight">
-                  <div className="truncate text-sm font-bold text-foreground">{state.me.name}</div>
-                  <div className="mt-0.5 flex items-center gap-1 text-[10px]">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/20 to-fuchsia-500/20 px-1.5 py-0.5 font-bold text-amber-200 ring-1 ring-amber-400/30">
-                      <Zap className="h-2.5 w-2.5" /> Lv {state.me.level}
-                    </span>
-                    {(state.me.streak ?? 0) > 0 && (
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-500/15 px-1.5 py-0.5 font-bold text-rose-300 ring-1 ring-rose-400/30">
-                        <Flame className="h-2.5 w-2.5" />{state.me.streak}d
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <Settings className="h-4 w-4 text-muted-foreground transition group-hover:text-foreground" />
-              </div>
-              {(() => {
-                const lp = levelProgress(state.me.xp ?? 0);
-                return (
-                  <div className="relative mt-1.5">
-                    <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-fuchsia-500 shadow-[0_0_10px_rgba(251,191,36,0.6)] transition-all duration-700"
-                        style={{ width: `${lp.pct}%` }}
-                      />
-                    </div>
-                    <div className="mt-1 flex items-center justify-between text-[9px] font-semibold text-muted-foreground">
-                      <span>{(state.me.xp ?? 0).toLocaleString()} XP</span>
-                      <span>{lp.intoLevel}/{lp.toNext} → Lv {lp.level + 1}</span>
-                    </div>
-                  </div>
-                );
-              })()}
-            </a>
+        {/* Search */}
+        <div className="relative shrink-0 px-2 pt-2">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            value={roomSearch}
+            onChange={(e) => setRoomSearch(e.target.value)}
+            placeholder="Search rooms…"
+            aria-label="Search rooms"
+            className="sidebar-search-input w-full rounded-xl border border-border/60 bg-background/60 py-1.5 pl-8 pr-8 text-[12px] outline-none focus:ring-1 focus:ring-primary/40"
+          />
+          {roomSearch && (
             <button
               type="button"
-              onClick={onOpenProfile}
-              className="mt-0.5 w-full rounded-full px-2.5 py-1 text-[11px] text-muted-foreground hover:bg-white/5 hover:text-foreground"
+              onClick={() => setRoomSearch("")}
+              aria-label="Clear room search"
+              className="absolute right-3 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:text-foreground"
             >
-              Quick edit profile
+              <X className="h-3 w-3" />
             </button>
-            <div className="mt-1 flex gap-1">
-              <button
-                onClick={() => { if (confirm("Reset chat data for this account?")) reset(); }}
-                className="flex min-h-9 flex-1 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-              >
-                <RotateCcw className="h-3 w-3" /> Reset
-              </button>
-              <button
-                onClick={() => { void logout().catch(() => undefined); }}
-                className="flex min-h-9 flex-1 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] text-muted-foreground hover:text-destructive"
-                title={user?.email}
-              >
-                <LogOut className="h-3 w-3" /> Sign out
-              </button>
+          )}
+        </div>
+
+        {/* Filter chips */}
+        <div className="flex shrink-0 gap-1 overflow-x-auto px-2 py-2 scrollbar-none">
+          {FILTERS.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setRoomFilter(id)}
+              className={cn(
+                "sidebar-filter-chip shrink-0",
+                roomFilter === id && "sidebar-filter-chip-active",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Room list — scrolls when tall; spacer below absorbs sparse empty space */}
+        <div className="sidebar-middle flex min-h-0 flex-1 flex-col overflow-hidden">
+        <nav className="sidebar-scroll min-h-0 shrink-0 overflow-y-auto px-1.5 pb-1">
+          {user && !user.isGuest && onSelectDiscoveryChannel && (
+            <ChatroomDiscoveryPanel
+              joinedChannelIds={uniqueRoomOrder.filter((id) => state.rooms[id]?.members.includes("me"))}
+              activeChannelId={state.activeChannel}
+              filter={roomFilter}
+              onSelectChannel={onSelectDiscoveryChannel}
+              localRoomCount={localRoomIds.length}
+              suppressJoinedSection={joinedLocalIds.length > 0}
+            />
+          )}
+
+          {showLocalJoined && joinedLocalIds.length > 0 && (
+            <div className="mb-2">
+              {(roomFilter === "all" || !user || user.isGuest) && (
+                <div className="sidebar-section-label">Joined Channels</div>
+              )}
+              <div className="space-y-0.5">{joinedLocalIds.map(renderRoomItem)}</div>
             </div>
-          </>
-        ) : (
-          <div className="rounded-2xl border border-border bg-card/60 p-3">
-            <p className="mb-2 text-[11px] text-muted-foreground">
-              Sign in to chat, react, DM and earn XP.
+          )}
+
+          {roomFilter === "all" && joinedLocalIds.length <= 4 && localRoomIds.length <= 4 && (
+            <SidebarSparseSuggestions onGames={() => setActive("games")} />
+          )}
+
+          {showLocalPublic && localRoomIds.filter((id) => !joinedLocalIds.includes(id)).length > 0 && (
+            <div className="mb-2">
+              <SectionLabel
+                title="Public Rooms"
+                action={
+                  user && !user.isGuest ? (
+                    <button
+                      onClick={() => setShowNew((s) => !s)}
+                      className="text-base leading-none text-muted-foreground transition-colors hover:text-primary"
+                      aria-label="New room"
+                    >
+                      +
+                    </button>
+                  ) : undefined
+                }
+              />
+              {showNew && (
+                <div className="mb-2 space-y-1 rounded-xl border border-border bg-background/80 p-2">
+                  <input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="Room name"
+                    className="w-full rounded-lg bg-input px-2 py-1 text-[12px] outline-none focus:ring-1 focus:ring-ring"
+                  />
+                  <input
+                    value={newTopic}
+                    onChange={(e) => setNewTopic(e.target.value)}
+                    placeholder="Topic"
+                    className="w-full rounded-lg bg-input px-2 py-1 text-[12px] outline-none focus:ring-1 focus:ring-ring"
+                  />
+                  <button
+                    onClick={() => {
+                      if (newName.trim()) {
+                        createRoom(newName.trim(), newTopic.trim());
+                        setNewName("");
+                        setNewTopic("");
+                        setShowNew(false);
+                      }
+                    }}
+                    className="w-full rounded-lg bg-primary px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90"
+                  >
+                    Create
+                  </button>
+                </div>
+              )}
+              <div className="space-y-0.5">
+                {localRoomIds.filter((id) => !joinedLocalIds.includes(id)).map(renderRoomItem)}
+              </div>
+            </div>
+          )}
+
+          {localRoomIds.length === 0 && roomFilter !== "all" && (
+            <p className="px-2 py-4 text-center text-[11px] text-muted-foreground">
+              No rooms in this filter.
             </p>
-            <div className="flex flex-col gap-1.5">
-              <button
-                type="button"
-                onClick={openSignIn}
-                className="flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90"
-              >
-                <LogIn className="h-3.5 w-3.5" /> Sign in
-              </button>
-              <button
-                type="button"
-                onClick={openSignUp}
-                className="flex w-full items-center justify-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-white/5"
-              >
-                <UserPlus className="h-3.5 w-3.5" /> Create account
-              </button>
+          )}
+        </nav>
+        <div className="sidebar-flex-spacer min-h-0 shrink" aria-hidden="true" />
+        </div>
+
+        {/* Pinned bottom: radio + utilities + profile */}
+        <div className="sidebar-bottom-panel shrink-0 border-t border-border/40 bg-card/20 px-1.5 pt-1.5 pb-1.5 backdrop-blur-sm">
+          <DjSidebarPlayer className="mb-1.5" />
+
+          <div className="mb-1.5 flex items-center gap-1">
+            <div className="min-w-0 flex-1">
+              <ChatExploreMenu compact />
             </div>
+            {user && (
+              <a
+                href="/feed"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-white/5 hover:text-foreground"
+                title="Achievements"
+                aria-label="Achievements"
+              >
+                <Award className="h-4 w-4" />
+                {(state.me.badges?.length ?? 0) > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 rounded-full bg-primary px-1 text-[8px] font-bold text-primary-foreground">
+                    {state.me.badges!.length}
+                  </span>
+                )}
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-white/5 hover:text-foreground"
+              aria-label="Toggle theme"
+              title={theme === "dark" ? "Light mode" : "Dark mode"}
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
           </div>
-        )}
-      </div>
+
+          {user ? (
+            <>
+              <a
+                href="/account"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative block w-full overflow-hidden rounded-xl border border-border/60 bg-card/70 p-2 text-left transition hover:border-primary/30"
+                title="Open account settings"
+              >
+                <div className="flex items-center gap-2">
+                  <Avatar user={state.me} size={34} />
+                  <div className="min-w-0 flex-1 leading-tight">
+                    <div className="truncate text-[12px] font-bold text-foreground">{state.me.name}</div>
+                    <div className="text-[10px] text-emerald-400">Online</div>
+                  </div>
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-400/20 to-fuchsia-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-200 ring-1 ring-amber-400/30">
+                    <Zap className="h-2.5 w-2.5" /> Lv {state.me.level}
+                  </span>
+                  <Settings className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                </div>
+                {(() => {
+                  const lp = levelProgress(state.me.xp ?? 0);
+                  return (
+                    <div className="mt-1.5">
+                      <div className="h-1 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-fuchsia-500 transition-all duration-700"
+                          style={{ width: `${lp.pct}%` }}
+                        />
+                      </div>
+                      <div className="mt-0.5 flex items-center justify-between text-[9px] font-semibold text-muted-foreground">
+                        <span>{lp.intoLevel}/{lp.toNext} XP</span>
+                        {(state.me.streak ?? 0) > 0 && (
+                          <span className="inline-flex items-center gap-0.5 text-rose-300">
+                            <Flame className="h-2.5 w-2.5" />{state.me.streak}d
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </a>
+              <button
+                type="button"
+                onClick={onOpenProfile}
+                className="mt-0.5 w-full rounded-lg px-2 py-0.5 text-[10px] text-muted-foreground hover:bg-white/5 hover:text-foreground"
+              >
+                Quick edit profile
+              </button>
+              <div className="mt-0.5 flex gap-1">
+                <button
+                  onClick={() => { if (confirm("Reset chat data for this account?")) reset(); }}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground"
+                >
+                  <RotateCcw className="h-3 w-3" /> Reset
+                </button>
+                <button
+                  onClick={() => { void logout().catch(() => undefined); }}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1 text-[10px] text-muted-foreground hover:text-destructive"
+                  title={user?.email}
+                >
+                  <LogOut className="h-3 w-3" /> Sign out
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="rounded-xl border border-border/60 bg-card/70 p-2.5">
+              <p className="mb-2 text-[10px] text-muted-foreground">
+                Sign in to chat, react, DM and earn XP.
+              </p>
+              <div className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={openSignIn}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90"
+                >
+                  <LogIn className="h-3.5 w-3.5" /> Sign in
+                </button>
+                <button
+                  type="button"
+                  onClick={openSignUp}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[11px] font-semibold hover:bg-white/5"
+                >
+                  <UserPlus className="h-3.5 w-3.5" /> Create account
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </aside>
-
   );
 }
 
@@ -402,14 +468,11 @@ function SectionLabel({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "mb-0.5 flex items-center justify-between px-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground",
-        className,
-      )}
-    >
+    <div className={cn("sidebar-section-label flex items-center justify-between", className)}>
       <span>{title}</span>
       {action}
     </div>
   );
 }
+
+export { SectionLabel };
