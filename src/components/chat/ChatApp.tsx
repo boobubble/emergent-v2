@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Navigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -40,12 +40,38 @@ import { useAuth } from "@/lib/auth-store";
 import { getDiscoveryPrefs } from "@/lib/discovery/functions";
 import { shouldShowFullScreenDiscovery } from "@/lib/discovery/country";
 import { YaarzoDiscoverySheet } from "@/components/discovery/YaarzoDiscoverySheet";
+import { readSidebarOpenPreference, writeSidebarOpenPreference } from "@/lib/sidebar-prefs";
+import { cn } from "@/lib/utils";
 
 interface EngageToast { key: number; kind: "buzz" | "streak" | "badge"; title: string; body: string; }
+
+/** Isolate sidebar render failures so chat/members/composer keep working. */
+class SidebarPanelBoundary extends Component<{ children: ReactNode; onFail?: () => void }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error("[SidebarPanelBoundary]", error);
+    this.props.onFail?.();
+  }
+
+  render() {
+    if (this.state.failed) return null;
+    return this.props.children;
+  }
+}
 
 export function ChatApp() {
   const chat = useOptionalChat();
   const { mode: homeMode } = useHomePageMode();
+  if (!chat) return <Navigate to={homeMode === "hero" ? "/heropage" : "/welcome"} replace />;
+  return <ChatAppLoaded chat={chat} />;
+}
+
+function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOptionalChat>> }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [lbOpen, setLbOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
@@ -195,30 +221,21 @@ export function ChatApp() {
     const t = window.setTimeout(() => setFeedbotChip(null), 30_000);
     return () => window.clearTimeout(t);
   }, [feedbotChip]);
-  // Persist the user's sidebar open/closed choice across route switches and
-  // browser resizes. Only fall back to auto-collapse on phones when the user
-  // has never expressed a preference.
-  const [sidebarOpen, setSidebarOpenState] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    try {
-      const saved = window.localStorage.getItem("palrgo:sidebarOpen");
-      if (saved === "1") return true;
-      if (saved === "0") return false;
-    } catch {
-      // ignore storage errors (private mode, etc.)
-    }
-    // Default: closed on mobile, open on desktop.
-    return !isMobile;
-  });
-  const setSidebarOpen = (next: boolean) => {
+  // SSR-safe default; hydrate saved preference after mount.
+  const [sidebarOpen, setSidebarOpenState] = useState(true);
+  const sidebarPrefHydrated = useRef(false);
+
+  useEffect(() => {
+    if (sidebarPrefHydrated.current) return;
+    sidebarPrefHydrated.current = true;
+    const mobile = window.matchMedia("(max-width: 768px)").matches;
+    setSidebarOpenState(readSidebarOpenPreference(mobile));
+  }, []);
+
+  const setSidebarOpen = useCallback((next: boolean) => {
     setSidebarOpenState(next);
-    try {
-      window.localStorage.setItem("palrgo:sidebarOpen", next ? "1" : "0");
-    } catch {
-      // ignore
-    }
-  };
+    writeSidebarOpenPreference(next);
+  }, []);
 
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -263,8 +280,6 @@ export function ChatApp() {
       window.removeEventListener("palrgo:badge", onBadge);
     };
   }, []);
-
-  if (!chat) return <Navigate to={homeMode === "hero" ? "/heropage" : "/welcome"} replace />;
 
   const { state, isDM } = chat;
   const { theme: chatTheme, refresh: refreshChatTheme } = useActiveChatTheme();
@@ -339,24 +354,33 @@ export function ChatApp() {
       <div ref={rootRef} data-chat-theme={chatTheme} data-theme-variant={chatVariantFor(chatTheme)} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
         <DjPlayerHost />
         {sidebarOpen && (
-          <>
-            <button
-              type="button"
-              aria-label="Close sidebar"
-              onClick={() => setSidebarOpen(false)}
-              className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
-            />
-            <div className="fixed inset-y-0 left-0 z-40 w-[85vw] max-w-xs shadow-2xl md:static md:z-auto md:w-auto md:max-w-none md:shadow-none">
-              <Sidebar
-                onOpenProfile={() => setProfileOpen(true)}
-                onOpenLeaderboard={() => setLbOpen(true)}
-                onOpenAchievements={() => setAchOpen(true)}
-                onCollapse={() => setSidebarOpen(false)}
-                onSelectDiscoveryChannel={(id) => chat.joinRoom(id)}
-              />
-            </div>
-          </>
+          <button
+            type="button"
+            aria-label="Close sidebar"
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
+          />
         )}
+        <div
+          className={cn(
+            "fixed inset-y-0 left-0 z-40 w-[85vw] max-w-xs shadow-2xl transition-[transform,width,opacity] duration-200 ease-out",
+            "md:static md:z-auto md:shrink-0 md:shadow-none",
+            sidebarOpen
+              ? "translate-x-0 md:w-auto md:max-w-none md:opacity-100"
+              : "-translate-x-full pointer-events-none md:pointer-events-none md:w-0 md:max-w-0 md:translate-x-0 md:overflow-hidden md:opacity-0",
+          )}
+          aria-hidden={!sidebarOpen}
+        >
+          <SidebarPanelBoundary onFail={() => setSidebarOpen(false)}>
+            <Sidebar
+              onOpenProfile={() => setProfileOpen(true)}
+              onOpenLeaderboard={() => setLbOpen(true)}
+              onOpenAchievements={() => setAchOpen(true)}
+              onCollapse={() => setSidebarOpen(false)}
+              onSelectDiscoveryChannel={(id) => chat.joinRoom(id)}
+            />
+          </SidebarPanelBoundary>
+        </div>
         <main className="relative flex h-full min-w-0 flex-1 flex-col">
           {!sidebarOpen && (
             <button

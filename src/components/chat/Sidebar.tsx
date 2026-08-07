@@ -8,10 +8,9 @@ import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { useMyRoles } from "@/lib/use-my-role";
 import { useRoomOnlineCounts } from "@/lib/use-room-online-counts";
-import { useBrandingMap } from "@/components/BrandMark";
+import { BrandText, useBrandingMap } from "@/components/BrandMark";
 import { Avatar } from "./Avatar";
 import { cn } from "@/lib/utils";
-import { BrandMark, BrandText, useBrandAsset } from "@/components/BrandMark";
 import { ChatExploreMenu } from "./ChatExploreMenu";
 import {
   ChatroomDiscoveryPanel,
@@ -42,7 +41,6 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
   const { openSignIn, openSignUp } = useAuthGate();
   const { isAdmin } = useMyRoles();
   const branding = useBrandingMap();
-  const chatLogo = useBrandAsset("chat");
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newTopic, setNewTopic] = useState("");
@@ -103,7 +101,12 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
     () => uniqueRoomOrder.filter((id) => state.rooms[id]?.kind !== "game"),
     [uniqueRoomOrder, state.rooms],
   );
-  const onlineCounts = useRoomOnlineCounts(publicRoomIds);
+  const membersByChannel = useMemo(() => {
+    const map: Record<string, string[] | undefined> = {};
+    for (const id of publicRoomIds) map[id] = state.rooms[id]?.members;
+    return map;
+  }, [publicRoomIds, state.rooms]);
+  const onlineCounts = useRoomOnlineCounts(publicRoomIds, membersByChannel);
 
   const showLocalJoined = roomFilter === "all" || roomFilter === "joined";
   const showLocalPublic = roomFilter === "all" && !user?.isGuest;
@@ -198,35 +201,27 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
     <aside className="flex h-full w-[270px] max-w-[290px] shrink-0 flex-col bg-transparent p-1 md:w-[272px]">
       <div className="flex h-full min-h-0 flex-col premium-floating-sidebar overflow-hidden">
 
-        {/* Brand header */}
-        <div className="flex shrink-0 items-center gap-2 border-b border-border/40 px-2.5 py-2">
-          <BrandMark
-            slot="chat"
-            alt="Logo"
-            className="h-7 w-7 rounded-lg object-contain"
-            fallback={
-              <div
-                className="grid h-7 w-7 place-items-center rounded-lg text-sm font-bold text-primary-foreground"
-                style={{ background: "var(--primary)", boxShadow: "var(--shadow-glow)" }}
-              >
-                P
-              </div>
-            }
-          />
-          <div className="min-w-0 flex-1 leading-tight">
-            <BrandText slot="chat" defaultText="PakChat" className="block truncate text-[13px] font-bold text-foreground" alwaysShow={!!chatLogo} />
-            {!chatLogo && (
-              <div className="truncate text-[9px] font-medium text-muted-foreground">{subtitle}</div>
-            )}
+        {/* Brand header — centered title, collapse overlaid right */}
+        <div className="relative h-[48px] max-h-[48px] min-h-[48px] shrink-0 border-b border-border/40">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 leading-none">
+            <BrandText
+              slot="chat"
+              defaultText="Yaarzo"
+              className="sidebar-brand-title"
+              alwaysShow
+            />
+            <span className="text-[10px] font-normal leading-none text-muted-foreground whitespace-nowrap">
+              {subtitle}
+            </span>
           </div>
           {onCollapse && (
             <button
               onClick={onCollapse}
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-white/5 hover:text-foreground"
+              className="absolute right-2 top-1/2 z-10 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition hover:bg-white/5 hover:text-foreground"
               title="Hide sidebar"
               aria-label="Hide sidebar"
             >
-              <PanelLeftClose className="h-4 w-4" />
+              <PanelLeftClose className="h-3.5 w-3.5" />
             </button>
           )}
         </div>

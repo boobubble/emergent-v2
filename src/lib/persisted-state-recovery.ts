@@ -4,7 +4,7 @@ import { CHAT_STORAGE_KEY_BASE } from "@/lib/dm-utils";
 export type FeatureStoreKey = "chat" | "feed-prefs";
 
 const STORE_PREFIXES: Record<FeatureStoreKey, string[]> = {
-  chat: [CHAT_STORAGE_KEY_BASE, "palrgo:sync:v"],
+  chat: [CHAT_STORAGE_KEY_BASE, "palrgo:sync:v", "palrgo:sidebar"],
   "feed-prefs": ["palrgo:feed-prefs"],
 };
 

@@ -688,6 +688,20 @@
 .sidebar-search-input {
   min-height: 2rem;
 }
+.sidebar-brand-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    color-mix(in oklab, var(--primary) 70%, var(--accent)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 .sidebar-radio-mini {
   border-radius: 0.85rem;
   border: 1px solid color-mix(in oklab, var(--primary) 18%, var(--color-border));
