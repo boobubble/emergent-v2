@@ -72,6 +72,11 @@ const bulkConfigSchema = z.object({
       meta_title_template: z.string().nullable().optional(),
       meta_description_template: z.string().nullable().optional(),
       h1_template: z.string().nullable().optional(),
+      cta_template: z.record(z.string(), z.string()).nullable().optional(),
+      faq_template: z
+        .array(z.object({ q: z.string(), a: z.string() }))
+        .nullable()
+        .optional(),
     })
     .nullable()
     .optional(),
@@ -81,6 +86,17 @@ const bulkConfigSchema = z.object({
   language: z.string().max(16).default("en"),
   noindex: z.boolean().default(false),
   batchSize: z.number().int().min(1).max(100).default(DEFAULT_BULK_BATCH_SIZE),
+  /** Full city catalog for ambiguity detection + nearby blocks (optional). */
+  cityCatalog: z
+    .array(
+      z.object({
+        name: z.string(),
+        slug: z.string(),
+        stateSlug: z.string().nullable().optional(),
+        countrySlug: z.string(),
+      }),
+    )
+    .optional(),
   /** Preview only — do not write. */
   dryRun: z.boolean().default(false),
   /** Required when overwrite touches existing published pages. */
@@ -217,6 +233,7 @@ export const runBulkPageGeneration = createServerFn({ method: "POST" })
       language: data.language,
       noindex: data.noindex,
       batchSize: data.batchSize,
+      cityCatalog: data.cityCatalog,
     };
 
     const annotated = await annotateDuplicates(config, data.duplicateHandling);
@@ -318,6 +335,8 @@ export const runBulkPageGeneration = createServerFn({ method: "POST" })
             secondary_keywords: [] as string[],
             language: data.language,
             intro_content: row.intro_content,
+            faq_content: row.faq_content,
+            cta_content: row.cta_content,
             meta_title: row.meta_title,
             meta_description: row.meta_description,
             noindex: data.noindex,

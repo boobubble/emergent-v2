@@ -17,6 +17,19 @@ export {
 export {
   LAHORE_MAPPING_PLAN,
   URL_STRATEGY_EXAMPLES,
+  CITY_SLUG_POLICY,
   SEO_PRIORITY_BY_TIER,
 } from "./phase4a/taxonomy-data";
 export { validatePhase4aTaxonomy } from "./phase4a/validate-taxonomy";
+export {
+  buildAmbiguousCityIndex,
+  isAmbiguousCity,
+  resolveCityPageSlug,
+  disambiguateCitySlugWithCountry,
+} from "./city-slug-policy";
+export {
+  buildCityPageContextVars,
+  extractContentBlocks,
+  selectRelatedCities,
+  CITY_CONTENT_BLOCKS,
+} from "./city-page-context";

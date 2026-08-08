@@ -60,7 +60,7 @@ export type TemplateSeed = {
   meta_description_template: string;
   intro_template: string;
   content_template: string;
-  cta_template: Record<string, unknown>;
+  cta_template: Record<string, string>;
   faq_template: Array<{ q: string; a: string }>;
   is_default?: boolean;
 };
@@ -73,12 +73,27 @@ export const URL_STRATEGY_EXAMPLES = [
   "/karachi-chat-room",
   "/delhi-chat-room",
   "/mumbai-chat-room",
+  // Same city name in multiple countries → country-qualified slug (Phase 4B.1):
+  "/hyderabad-india-chat-room",
+  "/hyderabad-pakistan-chat-room",
   "/girls-chat-room",
   "/dating-chat-room",
   // later combinations (not generated in 4A):
   "/lahore-girls-chat-room",
   "/karachi-dating-chat-room",
 ] as const;
+
+/**
+ * City page slug policy (Phase 4B.1):
+ * unique city name → `{city}-chat-room`
+ * ambiguous across countries → `{city}-{country}-chat-room`
+ */
+export const CITY_SLUG_POLICY = {
+  uniquePattern: "{city}-chat-room",
+  ambiguousPattern: "{city}-{country}-chat-room",
+  exampleUnique: ["lahore-chat-room", "mumbai-chat-room", "karachi-chat-room"],
+  exampleAmbiguous: ["hyderabad-india-chat-room", "hyderabad-pakistan-chat-room"],
+} as const;
 
 /** Existing Lahore Chat Room mapping plan — do not apply in 4A. */
 export const LAHORE_MAPPING_PLAN = {
@@ -362,28 +377,66 @@ export const TEMPLATES: TemplateSeed[] = [
     meta_title_template: "{primary_keyword} | Free Online Chat on {brand}",
     meta_description_template: "Join free {country} chat rooms on {brand}. Meet people across {country} and chat online anytime in {year}.",
     intro_template: "<p>Welcome to {primary_keyword} on {brand} — a place to meet people across {country}.</p>",
-    content_template: "<p>Chat online with people from {country}. Explore city chat rooms, make friends, and join live conversations on {brand}.</p><p>Popular locations and categories can be linked from this hub as your Pages CMS grows.</p>",
-    cta_template: { label: "Start chatting", href: "/", text: "Join free chat rooms on {brand}" },
+    content_template:
+      "<section data-block=\"intro\"><p>Chat online with people from {country} on {brand}. This country hub is the starting point for city rooms and topic rooms.</p></section>" +
+      "<section data-block=\"location\"><p>Browse conversations connected to {country}. City pages help you narrow the room when you want a more local circle.</p></section>" +
+      "<section data-block=\"how_it_works\"><p>Pick a room, say hello, and keep chatting. Editors can override this scaffold per country without changing the shared template.</p></section>",
+    cta_template: {
+      label: "Start chatting in {country}",
+      href: "/",
+      text: "Join free {country} chat rooms on {brand}",
+    },
     faq_template: [
-      { q: "Is {country} chat free on {brand}?", a: "Yes. You can join {country} chat rooms on {brand} and start talking online." },
-      { q: "Can I chat with people from different cities in {country}?", a: "Yes. Country hubs connect you with people across {country}, and city pages help you find local rooms." },
+      {
+        q: "Is {country} chat free on {brand}?",
+        a: "Yes. You can join {country} chat rooms on {brand} and start talking online without a complicated signup flow.",
+      },
+      {
+        q: "Can I chat with people from different cities in {country}?",
+        a: "Yes. This {country} hub connects you across the country, and city pages help you find more local rooms when you want them.",
+      },
+      {
+        q: "How is this different from a city chat room?",
+        a: "Country pages cover {country} broadly. City pages focus on one place (for example a specific city chat room under {country}).",
+      },
     ],
   },
   {
     name: "City Chat Room",
     slug: "city-chat-room",
-    description: "Scaffold for city chat room SEO pages. Flat URL e.g. /lahore-chat-room",
+    description:
+      "City chat room SEO scaffold. Unique cities use /{city}-chat-room; same name across countries uses /{city}-{country}-chat-room.",
     title_template: "{primary_keyword} | {brand}",
     slug_template: "{city}-chat-room",
     h1_template: "{primary_keyword}",
     meta_title_template: "{primary_keyword} | Free Online Chat on {brand}",
-    meta_description_template: "Join free {city} chat rooms on {brand}. Meet locals from {city}, {state}, {country} and chat online in {year}.",
-    intro_template: "<p>Welcome to {primary_keyword} on {brand}. Meet people from {city} and start chatting online.</p>",
-    content_template: "<p>{city} is one of the places where {brand} users meet to chat, make friends, and join live conversations.</p><p>This page is a scaffold — editors can override intro, FAQ, and body content per city without changing the shared template.</p>",
-    cta_template: { label: "Join {city} chat", href: "/", text: "Start free chat in {city}" },
+    meta_description_template:
+      "Join free {city} chat rooms on {brand}. Meet people connected to {city} in {state}, {country} and chat online in {year}.",
+    intro_template:
+      "<p>Welcome to {primary_keyword} on {brand}. Meet people connected to {city} ({region_label}) and start chatting online.</p>",
+    content_template:
+      "<section data-block=\"location\"><h2>About this {city} hub</h2><p>{location_context}</p><p>{language_note}</p></section>" +
+      "<section data-block=\"nearby\"><h2>Related city chat rooms</h2><p>People exploring {city} often also browse nearby or related rooms in {country}:</p>{nearby_cities_html}</section>" +
+      "<section data-block=\"country_context\"><h2>{country_hub_label}</h2><p>{country_context}</p></section>" +
+      "<section data-block=\"how_it_works\"><h2>How {brand} chat works here</h2><p>Open a room tied to {region_label}, introduce yourself, and talk with people interested in {city}. Editors can override intro, FAQ, CTA, and body sections per city without changing this shared template.</p></section>",
+    cta_template: {
+      label: "Join {city} chat",
+      href: "/",
+      text: "Start free chat connected to {city}, {country}",
+    },
     faq_template: [
-      { q: "How do I join {city} chat rooms?", a: "Open {brand}, pick a chat room, and start messaging people interested in {city}." },
-      { q: "Is {primary_keyword} free?", a: "Yes. {brand} offers free online chat rooms for {city}." },
+      {
+        q: "How do I join {city} chat rooms on {brand}?",
+        a: "Open {brand}, choose a room related to {city} in {state}, {country}, and start messaging.",
+      },
+      {
+        q: "Is {primary_keyword} free?",
+        a: "Yes. {brand} offers free online chat rooms for people connected to {city}.",
+      },
+      {
+        q: "What other rooms pair well with {city}?",
+        a: "Try related rooms such as {nearby_cities}, or open the {country_hub_label} hub for a wider {country} audience.",
+      },
     ],
     is_default: true,
   },
