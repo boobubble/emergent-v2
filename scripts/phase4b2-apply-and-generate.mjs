@@ -7,17 +7,10 @@
  * Usage:
  *   npx tsx scripts/phase4b2-apply-and-generate.mjs --check-connection
  *   npx tsx scripts/phase4b2-apply-and-generate.mjs --apply-templates-only
+ *   npx tsx scripts/phase4b2-apply-and-generate.mjs --verify-only
  *   npx tsx scripts/phase4b2-apply-and-generate.mjs --all
  *
- * --all flow:
- *   1) verify DB connection
- *   2) snapshot templates + Lahore + custom_pages count
- *   3) apply 20260808130000_pages_cms_phase4b1_templates.sql
- *   4) verify templates (IDs retained, CTA/FAQ present, no duplicates)
- *   5) verify Lahore + custom_pages count unchanged by migration
- *   6) spawn live-template preview; gate on Ready=27 / Existing=1
- *   7) spawn generate (validated domain logic + privileged DB writes)
- *   8) post-generate verification report
+ * Prefer --verify-only after generation already succeeded (never re-inserts).
  */
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -60,6 +53,7 @@ const env = loadEnv();
 const dbUrl = env.SUPABASE_DB_URL || env.DATABASE_URL;
 const checkOnly = args.has("--check-connection");
 const applyOnly = args.has("--apply-templates-only");
+const verifyOnly = args.has("--verify-only");
 const runAll = args.has("--all");
 
 function connectionReport() {
@@ -105,8 +99,20 @@ async function main() {
 
     if (checkOnly) return;
 
+    if (verifyOnly) {
+      console.log("=== Read-only verification (no inserts) ===");
+      const verify = spawnSync(
+        "npx",
+        ["tsx", "scripts/phase4b2-verify-only.mjs"],
+        { cwd: root, encoding: "utf8", env: process.env, maxBuffer: 20_000_000 },
+      );
+      process.stdout.write(verify.stdout || "");
+      process.stderr.write(verify.stderr || "");
+      process.exit(verify.status ?? 1);
+    }
+
     if (!applyOnly && !runAll) {
-      console.log("Nothing to do. Use --check-connection | --apply-templates-only | --all");
+      console.log("Nothing to do. Use --check-connection | --apply-templates-only | --verify-only | --all");
       return;
     }
 

@@ -890,18 +890,27 @@ async function main() {
 
     const createdSlugs = createdRows.map((r) => r.slug);
     let publishedForSitemap = [];
-    if (writeSb) {
-      const { data } = await writeSb.from("custom_pages").select("slug,updated_at,published_at,noindex,status").eq("status", "published");
-      publishedForSitemap = data || [];
-    } else if (sql) {
-      publishedForSitemap = await sql`SELECT slug, updated_at, published_at, noindex, status FROM public.custom_pages WHERE status = 'published'`;
+    let sitemapEntries = [];
+    let sitemapLeak = [];
+    let sitemapError = null;
+    try {
+      if (writeSb) {
+        const { data } = await writeSb.from("custom_pages").select("slug,updated_at,published_at,noindex,status").eq("status", "published");
+        publishedForSitemap = data || [];
+      } else if (sql) {
+        publishedForSitemap = await sql`SELECT slug, updated_at, published_at, noindex, status FROM public.custom_pages WHERE status = 'published'`;
+      }
+      sitemapEntries = customPageSitemapEntries(
+        (publishedForSitemap || []).filter((p) => !p.noindex),
+        new Set(),
+        { canonical_domain: "https://yaarzo.com" },
+      );
+      sitemapLeak = sitemapEntries.filter((e) => createdSlugs.some((s) => e.loc.endsWith("/" + s)));
+    } catch (e) {
+      // Generation itself succeeded; do not fail the whole run on post-check formatting bugs.
+      sitemapError = e instanceof Error ? e.message : String(e);
+      console.error("WARN: post-generation sitemap check failed:", sitemapError);
     }
-    const sitemapEntries = customPageSitemapEntries(
-      (publishedForSitemap || []).filter((p) => !p.noindex),
-      new Set(),
-      { canonical_domain: "https://yaarzo.com" },
-    );
-    const sitemapLeak = sitemapEntries.filter((e) => createdSlugs.some((s) => e.loc.endsWith("/" + s)));
 
     const genReport = {
       mode: "generate",
@@ -927,7 +936,8 @@ async function main() {
       sitemap: {
         published_count: publishedForSitemap?.length ?? 0,
         leaked_phase4b_drafts: sitemapLeak,
-        ok: sitemapLeak.length === 0,
+        ok: sitemapError ? false : sitemapLeak.length === 0,
+        error: sitemapError,
       },
     };
 
