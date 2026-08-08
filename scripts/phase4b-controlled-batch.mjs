@@ -4,14 +4,18 @@
  *
  * Usage:
  *   npx tsx scripts/phase4b-controlled-batch.mjs --preview
- *   npx tsx scripts/phase4b-controlled-batch.mjs --generate
+ *   npx tsx scripts/phase4b-controlled-batch.mjs --preview --live-templates
+ *   npx tsx scripts/phase4b-controlled-batch.mjs --generate --live-templates
  *
  * Auth for --generate (never VITE_/client keys):
  *   1. Prefer SUPABASE_DB_URL / DATABASE_URL for privileged inserts of
  *      already-validated payloads (domain logic still runs in JS first).
  *   2. Else SUPABASE_SERVICE_ROLE_KEY via Supabase admin client.
  *
- * Never overwrites Lahore. Never publishes. Phase 4B.1 = preview only until approved.
+ * --live-templates: use DB page_templates as-is (no seed overlay). Required for Phase 4B.2.
+ * --allow-high-similarity: permit generation when avg similarity is high but < clone threshold.
+ *
+ * Never overwrites Lahore. Never publishes.
  */
 import { createClient } from "@supabase/supabase-js";
 import { createHash } from "node:crypto";
@@ -65,6 +69,8 @@ const dbUrl = env.SUPABASE_DB_URL || env.DATABASE_URL;
 const args = new Set(process.argv.slice(2));
 const doGenerate = args.has("--generate");
 const doPreview = args.has("--preview") || !doGenerate;
+const liveTemplates = args.has("--live-templates");
+const allowHighSimilarity = args.has("--allow-high-similarity");
 
 const PK_CITY_SLUGS = [
   "karachi", "islamabad", "rawalpindi", "faisalabad", "multan",
@@ -191,11 +197,29 @@ async function main() {
 
   const countryKg = kgBySlug["country-chat-room"];
   const cityKg = kgBySlug["city-chat-room"];
-  const countryTpl = mergeTemplate(tplBySlug["country-chat-room"], seedTplBySlug["country-chat-room"]);
-  const cityTpl = mergeTemplate(tplBySlug["city-chat-room"], seedTplBySlug["city-chat-room"]);
-  const categoryTpl = mergeTemplate(tplBySlug["category-chat-room"], seedTplBySlug["category-chat-room"]);
+
+  // Phase 4B.2: --live-templates uses DB rows only (after migration apply).
+  // Phase 4B.1 preview may overlay seed templates before migration is applied.
+  const countryTpl = liveTemplates
+    ? tplBySlug["country-chat-room"]
+    : mergeTemplate(tplBySlug["country-chat-room"], seedTplBySlug["country-chat-room"]);
+  const cityTpl = liveTemplates
+    ? tplBySlug["city-chat-room"]
+    : mergeTemplate(tplBySlug["city-chat-room"], seedTplBySlug["city-chat-room"]);
+  const categoryTpl = liveTemplates
+    ? tplBySlug["category-chat-room"]
+    : mergeTemplate(tplBySlug["category-chat-room"], seedTplBySlug["category-chat-room"]);
   if (!countryKg || !cityKg || !countryTpl || !cityTpl || !categoryTpl) {
     throw new Error("Missing required keyword groups/templates from Phase 4A");
+  }
+  if (liveTemplates) {
+    const cityHasBlocks = /data-block="nearby"/.test(cityTpl.content_template || "");
+    const cityHasCta = !!(cityTpl.cta_template && Object.keys(cityTpl.cta_template).length);
+    if (!cityHasBlocks || !cityHasCta) {
+      throw new Error(
+        "Live DB city template missing Phase 4B.1 content blocks/CTA. Apply template migration first.",
+      );
+    }
   }
 
   const categoryKg = kgBySlug["category-chat-room"] || {
@@ -571,7 +595,8 @@ async function main() {
 
   const previewReport = {
     mode: "preview",
-    phase: "4B.1",
+    phase: liveTemplates ? "4B.2" : "4B.1",
+    template_source: liveTemplates ? "database" : "database+seed_overlay",
     preview_count: annotated.length,
     conflict_counts: {
       Ready: annotated.filter((r) => r.conflictLabel === "Ready").length,
@@ -672,6 +697,12 @@ async function main() {
     console.error("BLOCKED: content still essentially clones — refusing generation.");
     process.exit(3);
   }
+  if (!allowHighSimilarity && avgSim >= 0.8) {
+    console.error(
+      "BLOCKED: average similarity still high. Re-run with --allow-high-similarity only for the approved Phase 4B.2 draft test batch.",
+    );
+    process.exit(3);
+  }
 
   if (!dbUrl && !writeSb) {
     console.error("BLOCKED: need SUPABASE_DB_URL (preferred) or SUPABASE_SERVICE_ROLE_KEY for inserts.");
@@ -709,28 +740,54 @@ async function main() {
     ? postgres(dbUrl, { max: 1, prepare: false, ssl: "require" })
     : null;
 
+  if (sql && (categoryKg._ephemeral || !kgBySlug["category-chat-room"])) {
+    const upserted = await sql`
+      INSERT INTO public.page_keyword_groups (
+        name, slug, primary_pattern, secondary_patterns, title_pattern, meta_title_pattern,
+        meta_description_pattern, h1_pattern, slug_pattern, is_active, updated_at
+      ) VALUES (
+        'Category Chat Room', 'category-chat-room', '{category} Room',
+        ARRAY['{category} rooms', 'free {category}']::text[],
+        '{primary_keyword} | {brand}', '{primary_keyword} | {brand}',
+        'Explore {category} on {brand}. Chat online, meet people, and join free rooms in {year}.',
+        '{primary_keyword}', '{category}-room', true, now()
+      )
+      ON CONFLICT (slug) DO UPDATE SET
+        name = EXCLUDED.name,
+        primary_pattern = EXCLUDED.primary_pattern,
+        is_active = true,
+        updated_at = now()
+      RETURNING id, slug
+    `;
+    categoryKgId = upserted[0].id;
+  }
+
   async function insertValidated(payload) {
     // Reuse Phase 2 domain fields; privileged write only.
     if (sql) {
-      const rows = await sql`
-        INSERT INTO public.custom_pages (
-          slug, title, content, status, featured, layout, sidebar_left, sidebar_right,
-          page_type, country_id, state_id, city_id, category_id, keyword_group_id, template_id,
-          h1, primary_keyword, secondary_keywords, language, intro_content, faq_content, cta_content,
-          meta_title, meta_description, noindex, nofollow, content_status, seo_score,
-          internal_link_count, published_at, updated_at
-        ) VALUES (
-          ${payload.slug}, ${payload.title}, ${payload.content}, ${payload.status}, false, 'boxed', 'none', 'none',
-          ${payload.page_type}, ${payload.country_id}, ${payload.state_id}, ${payload.city_id}, ${payload.category_id},
-          ${payload.keyword_group_id}, ${payload.template_id},
-          ${payload.h1}, ${payload.primary_keyword}, ${payload.secondary_keywords}::text[], ${payload.language},
-          ${payload.intro_content}, ${sql.json(payload.faq_content)}, ${sql.json(payload.cta_content)},
-          ${payload.meta_title}, ${payload.meta_description}, ${payload.noindex}, false,
-          ${payload.content_status}, ${payload.seo_score}, 0, null, ${payload.updated_at}
-        )
-        RETURNING id, slug, status, page_type, noindex, content_status, seo_score, internal_link_count
-      `;
-      return { data: rows[0], error: null };
+      try {
+        const rows = await sql`
+          INSERT INTO public.custom_pages (
+            slug, title, content, status, featured, layout, sidebar_left, sidebar_right,
+            page_type, country_id, state_id, city_id, category_id, keyword_group_id, template_id,
+            h1, primary_keyword, secondary_keywords, language, intro_content, faq_content, cta_content,
+            meta_title, meta_description, noindex, nofollow, content_status, seo_score,
+            internal_link_count, published_at, updated_at
+          ) VALUES (
+            ${payload.slug}, ${payload.title}, ${payload.content}, ${payload.status}, false, 'boxed', 'none', 'none',
+            ${payload.page_type}, ${payload.country_id}, ${payload.state_id}, ${payload.city_id}, ${payload.category_id},
+            ${payload.keyword_group_id}, ${payload.template_id},
+            ${payload.h1}, ${payload.primary_keyword}, ${sql.array(payload.secondary_keywords ?? [])}::text[], ${payload.language},
+            ${payload.intro_content}, ${sql.json(payload.faq_content ?? null)}, ${sql.json(payload.cta_content ?? null)},
+            ${payload.meta_title}, ${payload.meta_description}, ${payload.noindex}, false,
+            ${payload.content_status}, ${payload.seo_score}, 0, null, ${payload.updated_at}
+          )
+          RETURNING id, slug, status, page_type, noindex, content_status, seo_score, internal_link_count
+        `;
+        return { data: rows[0], error: null };
+      } catch (e) {
+        return { data: null, error: e };
+      }
     }
     const { data, error } = await writeSb.from("custom_pages").insert(payload).select("id,slug,status,page_type,noindex,content_status,seo_score,internal_link_count").single();
     return { data, error };

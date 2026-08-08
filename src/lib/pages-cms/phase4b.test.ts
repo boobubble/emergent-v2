@@ -343,4 +343,44 @@ describe("Phase 4B controlled generation rules", () => {
     );
     expect(isAmbiguousCity({ name: "Lahore", slug: "lahore" }, idx)).toBe(false);
   });
+
+  it("never emits bare hyderabad-chat-room when both countries are present", () => {
+    const locs = [
+      {
+        countryId: "11111111-1111-1111-1111-111111111111",
+        countryName: "Pakistan",
+        countrySlug: "pakistan",
+        stateId: "22222222-2222-2222-2222-222222222222",
+        stateName: "Sindh",
+        stateSlug: "sindh",
+        cityId: "33333333-3333-3333-3333-333333333333",
+        cityName: "Hyderabad",
+        citySlug: "hyderabad",
+      },
+      {
+        countryId: "44444444-4444-4444-4444-444444444444",
+        countryName: "India",
+        countrySlug: "india",
+        stateId: "55555555-5555-5555-5555-555555555555",
+        stateName: "Telangana",
+        stateSlug: "telangana",
+        cityId: "66666666-6666-6666-6666-666666666666",
+        cityName: "Hyderabad",
+        citySlug: "hyderabad",
+      },
+    ];
+    const rows = expandBulkPreviews({
+      page_type: "city",
+      brand: "Yaarzo",
+      locations: locs,
+      keywordGroup: cityKg,
+      template: cityTpl,
+      cityCatalog: catalog,
+      language: "en",
+      noindex: true,
+      status: "draft",
+    });
+    expect(rows.every((r) => r.slug !== "hyderabad-chat-room")).toBe(true);
+    expect(rows.every((r) => r.slug.includes("-india-") || r.slug.includes("-pakistan-"))).toBe(true);
+  });
 });
