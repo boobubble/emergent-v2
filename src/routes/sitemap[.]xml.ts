@@ -7,7 +7,7 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async () => {
         const xml = await buildPublicSitemapXml();
         return new Response(xml, {
-          headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" },
+          headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
         });
       },
     },
