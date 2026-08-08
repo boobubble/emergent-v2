@@ -22,6 +22,7 @@ import { banUser, muteUser } from "@/lib/moderation.functions";
 import { recordProfileView } from "@/lib/use-profile-views";
 import { FriendActionButton, useSocialGraph } from "@/lib/use-social-graph";
 import { FollowWriterButton } from "@/components/mehfil/FollowWriterButton";
+import { useAuthGate } from "@/lib/auth-gate";
 import type { Role } from "@/lib/chat-types";
 import type { ProfileCloseReason } from "@/lib/profile-popup-context";
 
@@ -68,6 +69,7 @@ export function ProfilePopup({
   };
   const { state, startDM, staffKick } = useChat();
   const social = useSocialGraph();
+  const { requireAuth } = useAuthGate();
   const { isIgnored, toggleIgnoreUser } = useIgnore();
   const { user: authUser } = useAuth();
   const { profiles } = useRemoteProfiles();
@@ -316,9 +318,11 @@ export function ProfilePopup({
           <div className="flex items-center gap-2 border-t border-border bg-card px-4 py-3">
             <button
               onClick={() => {
-                const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
-                if (isMobile) startDM(userId);
-                else window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId: userId } }));
+                requireAuth(() => {
+                  const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+                  if (isMobile) startDM(userId);
+                  else window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId: userId } }));
+                });
               }}
               className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground hover:opacity-90"
             >
@@ -345,9 +349,11 @@ export function ProfilePopup({
               <button
                 type="button"
                 onClick={() => {
-                  void social.unblockUser(realId).then((res) => {
-                    if (res.ok) toast.success("Unblocked");
-                    else toast.error(res.error);
+                  requireAuth(() => {
+                    void social.unblockUser(realId).then((res) => {
+                      if (res.ok) toast.success("Unblocked");
+                      else toast.error(res.error);
+                    });
                   });
                 }}
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card hover:bg-white/5"
@@ -359,9 +365,11 @@ export function ProfilePopup({
               <button
                 type="button"
                 onClick={() => {
-                  void social.blockUser(realId).then((res) => {
-                    if (res.ok) toast.success("User blocked");
-                    else toast.error(res.error);
+                  requireAuth(() => {
+                    void social.blockUser(realId).then((res) => {
+                      if (res.ok) toast.success("User blocked");
+                      else toast.error(res.error);
+                    });
                   });
                 }}
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20"

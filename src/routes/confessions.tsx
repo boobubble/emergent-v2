@@ -27,6 +27,7 @@ import {
   type ConfessionReactionType,
 } from "@/lib/confessions-config";
 import { useAuth } from "@/lib/auth-store";
+import { useAuthGate } from "@/lib/auth-gate";
 
 export const Route = createFileRoute("/confessions")({
   loader: () => loadRouteSeo("/confessions", "Confessions", "A safe space to share secrets and connect anonymously."),
@@ -170,6 +171,7 @@ function EmptyState({ onCompose }: { onCompose: () => void }) {
 
 /* =================== Composer =================== */
 function Composer({ cfg, onPosted }: { cfg: ConfessionsConfig; onPosted: () => void }) {
+  const { requireAuth } = useAuthGate();
   const enabledKinds = (Object.keys(cfg.kinds) as ConfessionKind[]).filter((k) => cfg.kinds[k]);
   const enabledModes = (Object.keys(cfg.anonymousModes) as ConfessionDisplayMode[]).filter((m) => cfg.anonymousModes[m]);
   const [kind, setKind] = useState<ConfessionKind>(enabledKinds[0] ?? "text");
@@ -303,7 +305,7 @@ function Composer({ cfg, onPosted }: { cfg: ConfessionsConfig; onPosted: () => v
         </div>
       )}
 
-      <Button onClick={() => mut.mutate()} disabled={mut.isPending || (kind === "poll" ? !pollQ : !text.trim())} className="w-full gap-1.5">
+      <Button onClick={() => requireAuth(() => mut.mutate())} disabled={mut.isPending || (kind === "poll" ? !pollQ : !text.trim())} className="w-full gap-1.5">
         {mut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         {cfg.moderation.approvalRequired ? "Submit for review" : "Post confession"}
       </Button>
@@ -313,6 +315,7 @@ function Composer({ cfg, onPosted }: { cfg: ConfessionsConfig; onPosted: () => v
 
 /* =================== Card =================== */
 function ConfessionCard({ item, cfg, viewerIsAuthor }: { item: any; cfg: ConfessionsConfig; viewerIsAuthor: boolean }) {
+  const { requireAuth } = useAuthGate();
   const [showReplies, setShowReplies] = useState(false);
   const fetchSettings = useServerFn(getAllSettings);
   const { data: settings } = useQuery({ queryKey: ["app-settings"], queryFn: () => fetchSettings({}) });
@@ -379,7 +382,7 @@ function ConfessionCard({ item, cfg, viewerIsAuthor }: { item: any; cfg: Confess
             return (
               <button
                 key={r}
-                onClick={() => reactMut.mutate(r)}
+                onClick={() => requireAuth(() => reactMut.mutate(r))}
                 className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
                   active ? "border-primary bg-primary/10 text-primary" : "border-border bg-card hover:bg-accent"
                 }`}
@@ -448,6 +451,7 @@ function ModBtn({ children, onClick, danger }: { children: React.ReactNode; onCl
 
 /* =================== Replies =================== */
 function RepliesPanel({ confessionId, cfg }: { confessionId: string; cfg: ConfessionsConfig }) {
+  const { requireAuth } = useAuthGate();
   const fetchReplies = useServerFn(listReplies);
   const post = useServerFn(createReply);
   const qc = useQueryClient();
@@ -484,7 +488,7 @@ function RepliesPanel({ confessionId, cfg }: { confessionId: string; cfg: Confes
               <input type="checkbox" checked={anon} onChange={(e) => setAnon(e.target.checked)} /> Anon
             </label>
           )}
-          <Button size="sm" disabled={mut.isPending || !text.trim()} onClick={() => mut.mutate()}>
+          <Button size="sm" disabled={mut.isPending || !text.trim()} onClick={() => requireAuth(() => mut.mutate())}>
             {mut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>

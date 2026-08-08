@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
+import { useAuthGate } from "@/lib/auth-gate";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
 import { AnimatedEmojiPicker, stickerUrl } from "./AnimatedEmojiPicker";
@@ -20,7 +21,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { TypingIndicator } from "./TypingIndicator";
 import { VOICE_NOTES_DEFAULTS, maxDurationForChannel, type VoiceNotesConfig } from "@/lib/voice-notes-config";
-import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
 
 
 const COMMANDS = [
@@ -32,7 +32,7 @@ const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 export function MessageInput() {
   const { send, state, replyingTo, setReplyingTo, pushSystem, wipeChannel } = useChat();
   const { user } = useAuth();
-  const [authPopup, setAuthPopup] = useState<AuthPopup>(null);
+  const { requireAuth } = useAuthGate();
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
   const { typers, sendTyping } = useTyping(state.activeChannel, me, !!me);
   const [text, setText] = useState("");
@@ -206,30 +206,37 @@ export function MessageInput() {
 
   function submit() {
     if (!text.trim() && !attachment) return;
-    if (!user || user.isGuest) {
-      setAuthPopup("signin");
-      return;
-    }
-    const trimmed = text.trim();
-    if (/^\/clearcache\b/i.test(trimmed)) {
-      setText(""); setAttachment(null); setAttachError("");
-      void handleClearCache();
-      return;
-    }
-    if (/^\/(clear|delete)\b/i.test(trimmed)) {
-      setText(""); setAttachment(null); setAttachError("");
-      void handleClearChannel();
-      return;
-    }
-    const outgoing = autoMentionUsernames(text);
-    send(outgoing, { attachment: attachment || undefined, replyToId: replyingTo?.id });
-    // Fire-and-forget earn call — server enforces cooldown + daily cap.
-    if (me) {
-      earnChat({ data: { channelId: state.activeChannel, isReply: !!replyingTo } }).catch(() => {});
-    }
-    setText("");
-    setAttachment(null);
-    setAttachError("");
+    requireAuth(() => {
+      const trimmed = text.trim();
+      if (/^\/clearcache\b/i.test(trimmed)) {
+        setText(""); setAttachment(null); setAttachError("");
+        void handleClearCache();
+        return;
+      }
+      if (/^\/(clear|delete)\b/i.test(trimmed)) {
+        setText(""); setAttachment(null); setAttachError("");
+        void handleClearChannel();
+        return;
+      }
+      const outgoing = autoMentionUsernames(text);
+      send(outgoing, { attachment: attachment || undefined, replyToId: replyingTo?.id });
+      // Fire-and-forget earn call — server enforces cooldown + daily cap.
+      if (me) {
+        earnChat({ data: { channelId: state.activeChannel, isReply: !!replyingTo } }).catch(() => {});
+      }
+      setText("");
+      setAttachment(null);
+      setAttachError("");
+    });
+  }
+
+  function sendAsAuthed(
+    body: string,
+    opts?: { attachment?: Attachment; replyToId?: string },
+  ) {
+    requireAuth(() => {
+      send(body, opts);
+    });
   }
 
 
@@ -293,7 +300,6 @@ export function MessageInput() {
 
   return (
     <div className="min-w-0 overflow-x-hidden px-2 py-1 sm:px-6 sm:py-0">
-      <AuthDialogs popup={authPopup} setPopup={setAuthPopup} />
       {replyingTo && (
         <div className="mb-2 flex min-h-11 items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
           <Reply className="h-4 w-4 shrink-0 text-primary" />
@@ -354,7 +360,7 @@ export function MessageInput() {
         <div className="mb-2">
           <AnimatedEmojiPicker
             onPick={(s) => {
-              send("", {
+              sendAsAuthed("", {
                 attachment: {
                   kind: "image",
                   name: `${s.name}.gif`,
@@ -373,7 +379,7 @@ export function MessageInput() {
         <div className="mb-2">
           <GiphyPicker
             onPick={(g) => {
-              send(g.pageUrl, { replyToId: replyingTo?.id });
+              sendAsAuthed(g.pageUrl, { replyToId: replyingTo?.id });
               setShowGiphy(false);
             }}
           />
@@ -383,7 +389,7 @@ export function MessageInput() {
         <div className="mb-2">
           <YoutubePicker
             onPick={(url) => {
-              send(url, { replyToId: replyingTo?.id });
+              sendAsAuthed(url, { replyToId: replyingTo?.id });
               setShowYoutube(false);
             }}
           />
@@ -394,7 +400,7 @@ export function MessageInput() {
           maxSeconds={voiceMax}
           onClose={() => setShowVoice(false)}
           onSend={(a) => {
-            send("", { attachment: a, replyToId: replyingTo?.id });
+            sendAsAuthed("", { attachment: a, replyToId: replyingTo?.id });
             setShowVoice(false);
           }}
         />

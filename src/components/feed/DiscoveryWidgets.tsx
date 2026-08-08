@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/chat/Avatar";
 import { PremiumCard } from "@/components/feed/SideWidgets";
 import type { User } from "@/lib/chat-types";
+import { useAuthGate } from "@/lib/auth-gate";
 
 /* ──────────────────────────── Helpers ──────────────────────────── */
 
@@ -20,6 +21,7 @@ function isDemoUser(u: User): boolean {
 const PROMO_BADGES = ["Verified", "VIP", "Creator", "Top"] as const;
 
 export function PromotedPostsWidget({ profiles }: { profiles: Record<string, User> }) {
+  const { requireAuth } = useAuthGate();
   const [following, setFollowing] = useState<Record<string, boolean>>({});
 
   const promoted = useMemo(() => {
@@ -29,21 +31,36 @@ export function PromotedPostsWidget({ profiles }: { profiles: Record<string, Use
       .slice(0, 3);
   }, [profiles]);
 
-  async function follow(targetId: string) {
+  function follow(targetId: string) {
     if (following[targetId]) return;
-    setFollowing((s) => ({ ...s, [targetId]: true }));
-    try {
-      const { data: auth } = await supabase.auth.getUser();
-      const meId = auth.user?.id;
-      if (!meId || meId === targetId) return;
-      await supabase.from("friendships").insert({
-        sender_id: meId,
-        receiver_id: targetId,
-        status: "pending",
-      } as any);
-    } catch {
-      /* ignore */
-    }
+    requireAuth(() => {
+      void (async () => {
+        setFollowing((s) => ({ ...s, [targetId]: true }));
+        try {
+          const { data: auth } = await supabase.auth.getUser();
+          const meId = auth.user?.id;
+          if (!meId || meId === targetId) {
+            setFollowing((s) => {
+              const next = { ...s };
+              delete next[targetId];
+              return next;
+            });
+            return;
+          }
+          await supabase.from("friendships").insert({
+            sender_id: meId,
+            receiver_id: targetId,
+            status: "pending",
+          } as any);
+        } catch {
+          setFollowing((s) => {
+            const next = { ...s };
+            delete next[targetId];
+            return next;
+          });
+        }
+      })();
+    });
   }
 
   return (
@@ -138,6 +155,7 @@ export function FeaturedMembersWidget({
   meId: string;
   profiles: Record<string, User>;
 }) {
+  const { requireAuth } = useAuthGate();
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const featured = useMemo(() => {
     return Object.values(profiles)
@@ -146,14 +164,27 @@ export function FeaturedMembersWidget({
       .slice(0, 4);
   }, [profiles, meId]);
 
-  async function follow(targetId: string) {
-    if (!meId || following[targetId]) return;
-    setFollowing((s) => ({ ...s, [targetId]: true }));
-    await supabase.from("friendships").insert({
-      sender_id: meId,
-      receiver_id: targetId,
-      status: "pending",
-    } as any);
+  function follow(targetId: string) {
+    if (following[targetId]) return;
+    requireAuth(() => {
+      if (!meId) return;
+      void (async () => {
+        setFollowing((s) => ({ ...s, [targetId]: true }));
+        try {
+          await supabase.from("friendships").insert({
+            sender_id: meId,
+            receiver_id: targetId,
+            status: "pending",
+          } as any);
+        } catch {
+          setFollowing((s) => {
+            const next = { ...s };
+            delete next[targetId];
+            return next;
+          });
+        }
+      })();
+    });
   }
 
   return (

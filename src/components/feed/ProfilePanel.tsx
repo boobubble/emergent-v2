@@ -13,6 +13,7 @@ import { UserCompetitionShowcase } from "@/components/competitions/UserCompetiti
 import { ProfileMehfilSection } from "@/components/mehfil/ProfileMehfilSection";
 import { FriendActionButton, useSocialGraph } from "@/lib/use-social-graph";
 import { FollowWriterButton } from "@/components/mehfil/FollowWriterButton";
+import { useAuthGate } from "@/lib/auth-gate";
 
 export function ProfilePanel({ username, onBack }: { username: string; onBack: () => void }) {
   return (
@@ -27,6 +28,7 @@ function ProfilePanelInner({ username, onBack }: { username: string; onBack: () 
   const { profiles } = useRemoteProfiles();
   const { state, startDM } = useChat();
   const social = useSocialGraph();
+  const { requireAuth } = useAuthGate();
 
   const userFromProfiles = Object.values(profiles).find(u => u.name.toLowerCase() === username.toLowerCase());
   const userFromChat = Object.values(state.users).find(u => u.name.toLowerCase() === username.toLowerCase());
@@ -71,8 +73,10 @@ function ProfilePanelInner({ username, onBack }: { username: string; onBack: () 
                 <button
                   onClick={() => {
                     if (!dmTargetId) return;
-                    startDM(dmTargetId);
-                    navigate({ to: "/" });
+                    requireAuth(() => {
+                      startDM(dmTargetId);
+                      navigate({ to: "/" });
+                    });
                   }}
                   disabled={!dmTargetId}
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
@@ -88,9 +92,11 @@ function ProfilePanelInner({ username, onBack }: { username: string; onBack: () 
                 {!user.isBot && (social.getRelation(user.id) === "blocked_out" ? (
                   <button
                     onClick={() => {
-                      void social.unblockUser(user.id).then((res) => {
-                        if (res.ok) toast.success("Unblocked");
-                        else toast.error(res.error);
+                      requireAuth(() => {
+                        void social.unblockUser(user.id).then((res) => {
+                          if (res.ok) toast.success("Unblocked");
+                          else toast.error(res.error);
+                        });
                       });
                     }}
                     className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold hover:bg-white/5"
@@ -100,9 +106,11 @@ function ProfilePanelInner({ username, onBack }: { username: string; onBack: () 
                 ) : (
                   <button
                     onClick={() => {
-                      void social.blockUser(user.id).then((res) => {
-                        if (res.ok) toast.success("User blocked");
-                        else toast.error(res.error);
+                      requireAuth(() => {
+                        void social.blockUser(user.id).then((res) => {
+                          if (res.ok) toast.success("User blocked");
+                          else toast.error(res.error);
+                        });
                       });
                     }}
                     className="inline-flex items-center gap-2 rounded-full border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm font-semibold text-destructive hover:bg-destructive/20"

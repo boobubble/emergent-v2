@@ -1151,22 +1151,9 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       }
     }
     if (isGuest) {
-      const isCmdGuest = trimmed.startsWith("!") || /^\/(mute|kick)\b/i.test(trimmed);
-      const hasLink = /\b(https?:\/\/|www\.)\S+/i.test(trimmed) || /\b[\w-]+\.(com|net|org|io|co|app|dev|me|gg|xyz|info|link|site)\b/i.test(trimmed);
-      const reason = isCmdGuest
-        ? "🚫 Guests can't command bots — sign up to play and use commands."
-        : hasLink
-          ? "🚫 Guests can't post links — sign up to share links."
-          : null;
-      if (reason) {
-        setState(s => {
-          const ch = channelOverride || s.activeChannel;
-          const sys: Message = { id: uid(), channelId: ch, authorId: "bot-gamebot", text: reason, ts: Date.now(), kind: "system" };
-          return { ...s, messages: { ...s.messages, [ch]: [...(s.messages[ch] || []), sys] } };
-        });
-        setReplyingTo(null);
-        return;
-      }
+      // Public browse mode: never create local or remote messages.
+      // MessageInput / AuthGate must open sign-in instead.
+      return;
     }
     type Outgoing = { id: string; channelId: string; text: string; kind: string; attachment: Attachment | null; replyToId: string | null };
     const outgoingRemotes: Outgoing[] = [];
@@ -1499,11 +1486,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   }, [authUserId, isGuest]);
 
   const startDM = useCallback((userId: string) => {
-    if (isGuest) {
-      showDmParticipantError("🚫 Guest users cannot send DMs. Sign up to message users.");
-      if (typeof window !== "undefined") {
-        alert("Guest users not allowed DM. Sign up to message users.");
-      }
+    if (isGuest || !authUserId) {
+      // Public browse / unauthenticated: UI must open AuthGate — never start a DM session.
       return;
     }
     if (isLocalBotPeerId(userId)) {

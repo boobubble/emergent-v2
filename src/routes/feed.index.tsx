@@ -287,6 +287,10 @@ function FeedPage() {
   }, [query, runUniversalSearch]);
 
   const focusComposer = () => {
+    if (!user) {
+      openSignIn();
+      return;
+    }
     setView("feed");
     setTimeout(() => {
       const ta = document.querySelector<HTMLTextAreaElement>('textarea[placeholder^="What\u2019s on your mind"], textarea[placeholder^="What\'s on your mind"]');

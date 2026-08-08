@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BarChart3, CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { FeedPost } from "@/lib/feed-types";
+import { useAuthGate } from "@/lib/auth-gate";
 
 const VOTE_KEY = (postId: string) => `feed-poll-vote:${postId}`;
 
@@ -26,6 +27,7 @@ function normalizeVotes(raw: Record<string, number> | undefined | null): Record<
 }
 
 export function PollBlock({ post }: { post: FeedPost }) {
+  const { requireAuth } = useAuthGate();
   const poll = post.poll;
   const [votes, setVotes] = useState<Record<string, number>>(() => normalizeVotes(poll?.votes));
   const [voted, setVoted] = useState<number | null>(() => readVoted(post.id));
@@ -57,6 +59,13 @@ export function PollBlock({ post }: { post: FeedPost }) {
   if (!poll) return null;
 
   async function castVote(idx: number) {
+    if (voted !== null || busy) return;
+    requireAuth(() => {
+      void castVoteAuthed(idx);
+    });
+  }
+
+  async function castVoteAuthed(idx: number) {
     if (voted !== null || busy) return;
     setBusy(true);
     const prevVotes = { ...votes };

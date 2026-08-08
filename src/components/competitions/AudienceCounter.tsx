@@ -16,7 +16,7 @@ export function AudienceCounter({ competitionId }: { competitionId: string }) {
 
   useEffect(() => {
     if (!competitionId) return;
-    const key = user?.id ?? `guest-${Math.random().toString(36).slice(2, 10)}`;
+    const key = user?.id ?? `visitor-${Math.random().toString(36).slice(2, 10)}`;
     const channel = supabase.channel(`comp-presence:${competitionId}`, {
       config: { presence: { key } },
     });

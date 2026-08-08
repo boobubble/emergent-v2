@@ -41,6 +41,7 @@ import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { GlobalErrorMonitoring } from "@/components/GlobalErrorMonitoring";
 import { logger } from "@/lib/logger";
 import { isPublicCmsSlugPath } from "@/lib/route-slug";
+import { isPublicPath as isPublicPathBase, isReadOnlyPublicAppPath } from "@/lib/public-routes";
 
 import appCss from "../styles.css?url";
 
@@ -183,43 +184,8 @@ function RootComponent() {
   );
 }
 
-// Paths an unauthenticated visitor can reach directly (no AuthScreen takeover).
-const PUBLIC_PATH_PREFIXES = ["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/p/", "/api/", "/lovable/", "/installer"];
-const PUBLIC_EXACT = new Set(["/welcome", "/heropage", "/login", "/reset-password", "/banned", "/installer"]);
-// Publicly readable app routes — guests may view content, but individual
-// write actions (like, comment, vote, follow, join, publish, edit, delete)
-// must gate themselves via `useAuthGate().requireAuth(...)`. Never redirect
-// guests away from these paths.
-const READ_ONLY_PUBLIC_APP_PREFIXES = [
-  "/feed",
-  "/chatroom",
-  "/chatrooms",
-  "/confessions",
-  "/battle-hub",
-  "/leaderboard",
-  "/poetry",
-  "/mehfil",
-  "/competitions",
-  "/u",
-  "/pages",
-  "/communities",
-  "/community",
-  "/invite",
-  "/trust",
-  "/pricing",
-  "/hall-of-fame",
-];
-
-
-function isReadOnlyPublicAppPath(pathname: string) {
-  return READ_ONLY_PUBLIC_APP_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
-}
-
 function isPublicPath(pathname: string) {
-  if (isPublicCmsSlugPath(pathname)) return true;
-  if (isReadOnlyPublicAppPath(pathname)) return true;
-  if (PUBLIC_EXACT.has(pathname)) return true;
-  return PUBLIC_PATH_PREFIXES.some((p) => pathname.startsWith(p));
+  return isPublicPathBase(pathname, { isPublicCmsSlugPath });
 }
 
 function hasStoredAuthSession() {

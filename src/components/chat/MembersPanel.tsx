@@ -5,6 +5,7 @@ import { useHubBadge } from "./CommunityHub";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
+import { useAuthGate } from "@/lib/auth-gate";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -127,6 +128,7 @@ function MemberRow({
 export function MembersPanel({ roomId }: { roomId: string }) {
   const { state, startDM, closeDM, dmChannelFor, isDmUnread, dmUnreadCount } = useChat();
   const { user: authUser } = useAuth();
+  const { requireAuth } = useAuthGate();
   const { profiles } = useRemoteProfiles();
   const navigate = useNavigate();
   const { items: notifs, unread: unreadCount, markAllRead, markOne, markDmChannelRead } = useNotifications();
@@ -140,11 +142,13 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   const openDM = (id: string) => {
     if (!id || id === "me") return;
-    if (isMobile) {
-      startDM(id);
-    } else if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId: id } }));
-    }
+    requireAuth(() => {
+      if (isMobile) {
+        startDM(id);
+      } else if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("palrgo:openMiniDM", { detail: { peerId: id } }));
+      }
+    });
   };
 
   type BotMode = "auto" | "split" | "merged";
