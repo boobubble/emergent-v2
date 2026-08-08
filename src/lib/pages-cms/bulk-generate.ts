@@ -58,6 +58,13 @@ export type BulkGenerateConfig = {
   batchSize?: number;
 };
 
+export type BulkConflictLabel =
+  | "Ready"
+  | "Existing Page"
+  | "Reserved Route"
+  | "Redirect Conflict"
+  | "Invalid";
+
 export type BulkPreviewRow = {
   title: string;
   slug: string;
@@ -81,9 +88,23 @@ export type BulkPreviewRow = {
   template_id: string | null;
   page_type: CmsPageType;
   duplicateStatus: "ok" | "skip" | "suffix" | "overwrite_metadata" | "overwrite_template";
+  conflictLabel?: BulkConflictLabel;
   conflictSlug?: string;
   existingId?: string;
 };
+
+export function conflictLabelFromSources(
+  sources: string[],
+  duplicateStatus: BulkPreviewRow["duplicateStatus"],
+): BulkConflictLabel {
+  if (sources.includes("reserved")) return "Reserved Route";
+  if (sources.includes("redirect")) return "Redirect Conflict";
+  if (sources.includes("custom_page") || duplicateStatus === "skip" || duplicateStatus.startsWith("overwrite")) {
+    return "Existing Page";
+  }
+  if (duplicateStatus === "ok" || duplicateStatus === "suffix") return "Ready";
+  return "Invalid";
+}
 
 export function buildPrimaryKeyword(pattern: string, vars: TemplateVars): string {
   return renderTemplate(pattern || "{city} chat room", vars).trim();
@@ -108,7 +129,7 @@ export function buildBulkVars(
 export function previewBulkRow(
   config: BulkGenerateConfig,
   loc: BulkLocationInput,
-): Omit<BulkPreviewRow, "duplicateStatus" | "conflictSlug" | "existingId"> {
+): Omit<BulkPreviewRow, "duplicateStatus" | "conflictLabel" | "conflictSlug" | "existingId"> {
   const kg = config.keywordGroup;
   const category = config.category ?? null;
   const provisional = buildTemplateVars({
@@ -162,7 +183,7 @@ export function previewBulkRow(
   };
 }
 
-export function expandBulkPreviews(config: BulkGenerateConfig): Array<Omit<BulkPreviewRow, "duplicateStatus" | "conflictSlug" | "existingId">> {
+export function expandBulkPreviews(config: BulkGenerateConfig): Array<Omit<BulkPreviewRow, "duplicateStatus" | "conflictLabel" | "conflictSlug" | "existingId">> {
   return config.locations.map((loc) => previewBulkRow(config, loc));
 }
 

@@ -171,6 +171,18 @@ import { Route as PoetryLeaderboardRouteImport } from './routes/poetry.leaderboa
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as AuthenticatedSettingsDiscoveryRouteImport } from './routes/_authenticated.settings.discovery'
 import { Route as AuthenticatedSettingsPrivacyRouteImport } from './routes/_authenticated.settings.privacy'
+import { Route as AdminPagesIndexRouteImport } from './routes/admin.pages.index'
+import { Route as AdminPagesAllRouteImport } from './routes/admin.pages.all'
+import { Route as AdminPagesBulkRouteImport } from './routes/admin.pages.bulk'
+import { Route as AdminPagesCategoriesRouteImport } from './routes/admin.pages.categories'
+import { Route as AdminPagesCitiesRouteImport } from './routes/admin.pages.cities'
+import { Route as AdminPagesCountriesRouteImport } from './routes/admin.pages.countries'
+import { Route as AdminPagesImportExportRouteImport } from './routes/admin.pages.import-export'
+import { Route as AdminPagesKeywordGroupsRouteImport } from './routes/admin.pages.keyword-groups'
+import { Route as AdminPagesRedirectsRouteImport } from './routes/admin.pages.redirects'
+import { Route as AdminPagesSeoAuditRouteImport } from './routes/admin.pages.seo-audit'
+import { Route as AdminPagesStatesRouteImport } from './routes/admin.pages.states'
+import { Route as AdminPagesTemplatesRouteImport } from './routes/admin.pages.templates'
 import { Route as AdminSystemDatabaseRouteImport } from './routes/admin.system.database'
 import { Route as AdminSystemJobsRouteImport } from './routes/admin.system.jobs'
 import { Route as AdminSystemQueueRouteImport } from './routes/admin.system.queue'
@@ -1028,6 +1040,66 @@ const AuthenticatedSettingsPrivacyRoute =
     path: '/settings/privacy',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AdminPagesIndexRoute = AdminPagesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
+const AdminPagesAllRoute = AdminPagesAllRouteImport.update({
+  id: '/all',
+  path: '/all',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
+const AdminPagesBulkRoute = AdminPagesBulkRouteImport.update({
+  id: '/bulk',
+  path: '/bulk',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
+const AdminPagesCategoriesRoute = AdminPagesCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
+const AdminPagesCitiesRoute = AdminPagesCitiesRouteImport.update({
+  id: '/cities',
+  path: '/cities',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
+const AdminPagesCountriesRoute = AdminPagesCountriesRouteImport.update({
+  id: '/countries',
+  path: '/countries',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
+const AdminPagesImportExportRoute = AdminPagesImportExportRouteImport.update({
+  id: '/import-export',
+  path: '/import-export',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
+const AdminPagesKeywordGroupsRoute = AdminPagesKeywordGroupsRouteImport.update({
+  id: '/keyword-groups',
+  path: '/keyword-groups',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
+const AdminPagesRedirectsRoute = AdminPagesRedirectsRouteImport.update({
+  id: '/redirects',
+  path: '/redirects',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
+const AdminPagesSeoAuditRoute = AdminPagesSeoAuditRouteImport.update({
+  id: '/seo-audit',
+  path: '/seo-audit',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
+const AdminPagesStatesRoute = AdminPagesStatesRouteImport.update({
+  id: '/states',
+  path: '/states',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
+const AdminPagesTemplatesRoute = AdminPagesTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
 const AdminSystemDatabaseRoute = AdminSystemDatabaseRouteImport.update({
   id: '/database',
   path: '/database',
@@ -1336,7 +1408,7 @@ export interface FileRoutesByFullPath {
   '/admin/mehfil': typeof AdminMehfilRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
-  '/admin/pages': typeof AdminPagesRoute
+  '/admin/pages': typeof AdminPagesRouteWithChildren
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -1403,6 +1475,17 @@ export interface FileRoutesByFullPath {
   '/poetry/': typeof PoetryIndexRoute
   '/settings/discovery': typeof AuthenticatedSettingsDiscoveryRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
+  '/admin/pages/all': typeof AdminPagesAllRoute
+  '/admin/pages/bulk': typeof AdminPagesBulkRoute
+  '/admin/pages/categories': typeof AdminPagesCategoriesRoute
+  '/admin/pages/cities': typeof AdminPagesCitiesRoute
+  '/admin/pages/countries': typeof AdminPagesCountriesRoute
+  '/admin/pages/import-export': typeof AdminPagesImportExportRoute
+  '/admin/pages/keyword-groups': typeof AdminPagesKeywordGroupsRoute
+  '/admin/pages/redirects': typeof AdminPagesRedirectsRoute
+  '/admin/pages/seo-audit': typeof AdminPagesSeoAuditRoute
+  '/admin/pages/states': typeof AdminPagesStatesRoute
+  '/admin/pages/templates': typeof AdminPagesTemplatesRoute
   '/admin/system/database': typeof AdminSystemDatabaseRoute
   '/admin/system/jobs': typeof AdminSystemJobsRoute
   '/admin/system/queue': typeof AdminSystemQueueRoute
@@ -1429,6 +1512,7 @@ export interface FileRoutesByFullPath {
   '/competitions/$slug/recap': typeof CompetitionsSlugRecapRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
+  '/admin/pages/': typeof AdminPagesIndexRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1536,7 +1620,6 @@ export interface FileRoutesByTo {
   '/admin/mehfil': typeof AdminMehfilRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
-  '/admin/pages': typeof AdminPagesRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -1602,6 +1685,17 @@ export interface FileRoutesByTo {
   '/poetry': typeof PoetryIndexRoute
   '/settings/discovery': typeof AuthenticatedSettingsDiscoveryRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
+  '/admin/pages/all': typeof AdminPagesAllRoute
+  '/admin/pages/bulk': typeof AdminPagesBulkRoute
+  '/admin/pages/categories': typeof AdminPagesCategoriesRoute
+  '/admin/pages/cities': typeof AdminPagesCitiesRoute
+  '/admin/pages/countries': typeof AdminPagesCountriesRoute
+  '/admin/pages/import-export': typeof AdminPagesImportExportRoute
+  '/admin/pages/keyword-groups': typeof AdminPagesKeywordGroupsRoute
+  '/admin/pages/redirects': typeof AdminPagesRedirectsRoute
+  '/admin/pages/seo-audit': typeof AdminPagesSeoAuditRoute
+  '/admin/pages/states': typeof AdminPagesStatesRoute
+  '/admin/pages/templates': typeof AdminPagesTemplatesRoute
   '/admin/system/database': typeof AdminSystemDatabaseRoute
   '/admin/system/jobs': typeof AdminSystemJobsRoute
   '/admin/system/queue': typeof AdminSystemQueueRoute
@@ -1628,6 +1722,7 @@ export interface FileRoutesByTo {
   '/competitions/$slug/recap': typeof CompetitionsSlugRecapRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
+  '/admin/pages': typeof AdminPagesIndexRoute
   '/community/$slug': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -1740,7 +1835,7 @@ export interface FileRoutesById {
   '/admin/mehfil': typeof AdminMehfilRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/modules': typeof AdminModulesRoute
-  '/admin/pages': typeof AdminPagesRoute
+  '/admin/pages': typeof AdminPagesRouteWithChildren
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/poll-widget': typeof AdminPollWidgetRoute
   '/admin/popups': typeof AdminPopupsRoute
@@ -1807,6 +1902,17 @@ export interface FileRoutesById {
   '/poetry/': typeof PoetryIndexRoute
   '/_authenticated/settings/discovery': typeof AuthenticatedSettingsDiscoveryRoute
   '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
+  '/admin/pages/all': typeof AdminPagesAllRoute
+  '/admin/pages/bulk': typeof AdminPagesBulkRoute
+  '/admin/pages/categories': typeof AdminPagesCategoriesRoute
+  '/admin/pages/cities': typeof AdminPagesCitiesRoute
+  '/admin/pages/countries': typeof AdminPagesCountriesRoute
+  '/admin/pages/import-export': typeof AdminPagesImportExportRoute
+  '/admin/pages/keyword-groups': typeof AdminPagesKeywordGroupsRoute
+  '/admin/pages/redirects': typeof AdminPagesRedirectsRoute
+  '/admin/pages/seo-audit': typeof AdminPagesSeoAuditRoute
+  '/admin/pages/states': typeof AdminPagesStatesRoute
+  '/admin/pages/templates': typeof AdminPagesTemplatesRoute
   '/admin/system/database': typeof AdminSystemDatabaseRoute
   '/admin/system/jobs': typeof AdminSystemJobsRoute
   '/admin/system/queue': typeof AdminSystemQueueRoute
@@ -1833,6 +1939,7 @@ export interface FileRoutesById {
   '/competitions/$slug/recap': typeof CompetitionsSlugRecapRoute
   '/mehfil/category/$slug': typeof MehfilCategorySlugRoute
   '/poetry/category/$slug': typeof PoetryCategorySlugRoute
+  '/admin/pages/': typeof AdminPagesIndexRoute
   '/community/$slug/': typeof CommunitySlugIndexRoute
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
@@ -2012,6 +2119,17 @@ export interface FileRouteTypes {
     | '/poetry/'
     | '/settings/discovery'
     | '/settings/privacy'
+    | '/admin/pages/all'
+    | '/admin/pages/bulk'
+    | '/admin/pages/categories'
+    | '/admin/pages/cities'
+    | '/admin/pages/countries'
+    | '/admin/pages/import-export'
+    | '/admin/pages/keyword-groups'
+    | '/admin/pages/redirects'
+    | '/admin/pages/seo-audit'
+    | '/admin/pages/states'
+    | '/admin/pages/templates'
     | '/admin/system/database'
     | '/admin/system/jobs'
     | '/admin/system/queue'
@@ -2038,6 +2156,7 @@ export interface FileRouteTypes {
     | '/competitions/$slug/recap'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
+    | '/admin/pages/'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -2145,7 +2264,6 @@ export interface FileRouteTypes {
     | '/admin/mehfil'
     | '/admin/moderation'
     | '/admin/modules'
-    | '/admin/pages'
     | '/admin/performance'
     | '/admin/poll-widget'
     | '/admin/popups'
@@ -2211,6 +2329,17 @@ export interface FileRouteTypes {
     | '/poetry'
     | '/settings/discovery'
     | '/settings/privacy'
+    | '/admin/pages/all'
+    | '/admin/pages/bulk'
+    | '/admin/pages/categories'
+    | '/admin/pages/cities'
+    | '/admin/pages/countries'
+    | '/admin/pages/import-export'
+    | '/admin/pages/keyword-groups'
+    | '/admin/pages/redirects'
+    | '/admin/pages/seo-audit'
+    | '/admin/pages/states'
+    | '/admin/pages/templates'
     | '/admin/system/database'
     | '/admin/system/jobs'
     | '/admin/system/queue'
@@ -2237,6 +2366,7 @@ export interface FileRouteTypes {
     | '/competitions/$slug/recap'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
+    | '/admin/pages'
     | '/community/$slug'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -2415,6 +2545,17 @@ export interface FileRouteTypes {
     | '/poetry/'
     | '/_authenticated/settings/discovery'
     | '/_authenticated/settings/privacy'
+    | '/admin/pages/all'
+    | '/admin/pages/bulk'
+    | '/admin/pages/categories'
+    | '/admin/pages/cities'
+    | '/admin/pages/countries'
+    | '/admin/pages/import-export'
+    | '/admin/pages/keyword-groups'
+    | '/admin/pages/redirects'
+    | '/admin/pages/seo-audit'
+    | '/admin/pages/states'
+    | '/admin/pages/templates'
     | '/admin/system/database'
     | '/admin/system/jobs'
     | '/admin/system/queue'
@@ -2441,6 +2582,7 @@ export interface FileRouteTypes {
     | '/competitions/$slug/recap'
     | '/mehfil/category/$slug'
     | '/poetry/category/$slug'
+    | '/admin/pages/'
     | '/community/$slug/'
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
@@ -3680,6 +3822,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsPrivacyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/admin/pages/': {
+      id: '/admin/pages/'
+      path: '/'
+      fullPath: '/admin/pages/'
+      preLoaderRoute: typeof AdminPagesIndexRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
+    '/admin/pages/all': {
+      id: '/admin/pages/all'
+      path: '/all'
+      fullPath: '/admin/pages/all'
+      preLoaderRoute: typeof AdminPagesAllRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
+    '/admin/pages/bulk': {
+      id: '/admin/pages/bulk'
+      path: '/bulk'
+      fullPath: '/admin/pages/bulk'
+      preLoaderRoute: typeof AdminPagesBulkRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
+    '/admin/pages/categories': {
+      id: '/admin/pages/categories'
+      path: '/categories'
+      fullPath: '/admin/pages/categories'
+      preLoaderRoute: typeof AdminPagesCategoriesRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
+    '/admin/pages/cities': {
+      id: '/admin/pages/cities'
+      path: '/cities'
+      fullPath: '/admin/pages/cities'
+      preLoaderRoute: typeof AdminPagesCitiesRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
+    '/admin/pages/countries': {
+      id: '/admin/pages/countries'
+      path: '/countries'
+      fullPath: '/admin/pages/countries'
+      preLoaderRoute: typeof AdminPagesCountriesRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
+    '/admin/pages/import-export': {
+      id: '/admin/pages/import-export'
+      path: '/import-export'
+      fullPath: '/admin/pages/import-export'
+      preLoaderRoute: typeof AdminPagesImportExportRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
+    '/admin/pages/keyword-groups': {
+      id: '/admin/pages/keyword-groups'
+      path: '/keyword-groups'
+      fullPath: '/admin/pages/keyword-groups'
+      preLoaderRoute: typeof AdminPagesKeywordGroupsRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
+    '/admin/pages/redirects': {
+      id: '/admin/pages/redirects'
+      path: '/redirects'
+      fullPath: '/admin/pages/redirects'
+      preLoaderRoute: typeof AdminPagesRedirectsRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
+    '/admin/pages/seo-audit': {
+      id: '/admin/pages/seo-audit'
+      path: '/seo-audit'
+      fullPath: '/admin/pages/seo-audit'
+      preLoaderRoute: typeof AdminPagesSeoAuditRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
+    '/admin/pages/states': {
+      id: '/admin/pages/states'
+      path: '/states'
+      fullPath: '/admin/pages/states'
+      preLoaderRoute: typeof AdminPagesStatesRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
+    '/admin/pages/templates': {
+      id: '/admin/pages/templates'
+      path: '/templates'
+      fullPath: '/admin/pages/templates'
+      preLoaderRoute: typeof AdminPagesTemplatesRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
     '/admin/system/database': {
       id: '/admin/system/database'
       path: '/database'
@@ -3976,6 +4202,40 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AdminPagesRouteChildren {
+  AdminPagesAllRoute: typeof AdminPagesAllRoute
+  AdminPagesBulkRoute: typeof AdminPagesBulkRoute
+  AdminPagesCategoriesRoute: typeof AdminPagesCategoriesRoute
+  AdminPagesCitiesRoute: typeof AdminPagesCitiesRoute
+  AdminPagesCountriesRoute: typeof AdminPagesCountriesRoute
+  AdminPagesImportExportRoute: typeof AdminPagesImportExportRoute
+  AdminPagesKeywordGroupsRoute: typeof AdminPagesKeywordGroupsRoute
+  AdminPagesRedirectsRoute: typeof AdminPagesRedirectsRoute
+  AdminPagesSeoAuditRoute: typeof AdminPagesSeoAuditRoute
+  AdminPagesStatesRoute: typeof AdminPagesStatesRoute
+  AdminPagesTemplatesRoute: typeof AdminPagesTemplatesRoute
+  AdminPagesIndexRoute: typeof AdminPagesIndexRoute
+}
+
+const AdminPagesRouteChildren: AdminPagesRouteChildren = {
+  AdminPagesAllRoute: AdminPagesAllRoute,
+  AdminPagesBulkRoute: AdminPagesBulkRoute,
+  AdminPagesCategoriesRoute: AdminPagesCategoriesRoute,
+  AdminPagesCitiesRoute: AdminPagesCitiesRoute,
+  AdminPagesCountriesRoute: AdminPagesCountriesRoute,
+  AdminPagesImportExportRoute: AdminPagesImportExportRoute,
+  AdminPagesKeywordGroupsRoute: AdminPagesKeywordGroupsRoute,
+  AdminPagesRedirectsRoute: AdminPagesRedirectsRoute,
+  AdminPagesSeoAuditRoute: AdminPagesSeoAuditRoute,
+  AdminPagesStatesRoute: AdminPagesStatesRoute,
+  AdminPagesTemplatesRoute: AdminPagesTemplatesRoute,
+  AdminPagesIndexRoute: AdminPagesIndexRoute,
+}
+
+const AdminPagesRouteWithChildren = AdminPagesRoute._addFileChildren(
+  AdminPagesRouteChildren,
+)
+
 interface AdminSystemRouteChildren {
   AdminSystemDatabaseRoute: typeof AdminSystemDatabaseRoute
   AdminSystemJobsRoute: typeof AdminSystemJobsRoute
@@ -4063,7 +4323,7 @@ interface AdminRouteChildren {
   AdminMehfilRoute: typeof AdminMehfilRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminModulesRoute: typeof AdminModulesRoute
-  AdminPagesRoute: typeof AdminPagesRoute
+  AdminPagesRoute: typeof AdminPagesRouteWithChildren
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPollWidgetRoute: typeof AdminPollWidgetRoute
   AdminPopupsRoute: typeof AdminPopupsRoute
@@ -4154,7 +4414,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMehfilRoute: AdminMehfilRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminModulesRoute: AdminModulesRoute,
-  AdminPagesRoute: AdminPagesRoute,
+  AdminPagesRoute: AdminPagesRouteWithChildren,
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPollWidgetRoute: AdminPollWidgetRoute,
   AdminPopupsRoute: AdminPopupsRoute,

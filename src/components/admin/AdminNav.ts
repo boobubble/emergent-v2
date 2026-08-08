@@ -93,7 +93,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/confessions", label: "Confessions",  icon: MessageSquareHeart, keywords: ["confess", "anonymous", "secrets", "community"] },
       { to: "/admin/stickers",    label: "Stickers & Emojis", icon: Sparkles,      keywords: ["stickers", "sticker", "emoji", "emojis", "animated", "gif", "webp", "apng", "upload", "custom", "pack"] },
       { to: "/broadcaster",      label: "Broadcaster Studio", icon: Disc3,         keywords: ["broadcaster", "studio", "music", "dj", "rj", "player", "radio", "live", "audio", "stream", "youtube", "widgets", "queue", "mic", "schedule", "announcements"] },
-      { to: "/admin/pages",       label: "Custom Pages", icon: FileText,      keywords: ["cms", "landing"] },
+      { to: "/admin/pages",       label: "Pages", icon: FileText,      keywords: ["cms", "landing", "custom pages", "seo pages"] },
       { to: "/admin/competitions", label: "Competitions", icon: Trophy, keywords: ["competitions", "voting", "contest", "winners", "rewards", "category", "categories", "feed", "bot", "announcements", "analytics", "stats", "metrics"] },
       { to: "/admin/mehfil", label: "Poetry Hub (Poetry)", icon: ScrollText, keywords: ["mehfil", "poetry", "poem", "verse", "writer", "battle", "hall of fame"] },
       { to: "/admin/community-verification", label: "Community Verification", icon: ShieldAlert, keywords: ["community", "verification", "verified", "official", "partner", "trusted", "badges", "trust"] },

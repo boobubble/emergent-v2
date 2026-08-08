@@ -69,9 +69,67 @@ export const listPages = createServerFn({ method: "GET" })
 
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    return buildPaginatedResult(rows ?? [], total, page, pageSize);
+
+    const hydrated = await hydratePageTaxonomyLabels(sb, rows ?? []);
+    return buildPaginatedResult(hydrated, total, page, pageSize);
   });
 
+type ListPageRow = {
+  id: string;
+  slug: string;
+  title: string;
+  [key: string]: string | number | boolean | null | string[] | undefined;
+};
+
+async function hydratePageTaxonomyLabels(
+  sb: Awaited<ReturnType<typeof getSupabaseAdmin>>,
+  rows: ListPageRow[],
+): Promise<ListPageRow[]> {
+  if (!rows.length) return rows;
+  const uniq = (key: string) =>
+    [...new Set(rows.map((r) => r[key]).filter((v): v is string => typeof v === "string" && !!v))];
+
+  const [countries, states, cities, categories, templates, keywordGroups] = await Promise.all([
+    uniq("country_id").length
+      ? sb.from("page_countries").select("id,name").in("id", uniq("country_id"))
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    uniq("state_id").length
+      ? sb.from("page_states").select("id,name").in("id", uniq("state_id"))
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    uniq("city_id").length
+      ? sb.from("page_cities").select("id,name").in("id", uniq("city_id"))
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    uniq("category_id").length
+      ? sb.from("page_categories").select("id,name").in("id", uniq("category_id"))
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    uniq("template_id").length
+      ? sb.from("page_templates").select("id,name").in("id", uniq("template_id"))
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    uniq("keyword_group_id").length
+      ? sb.from("page_keyword_groups").select("id,name").in("id", uniq("keyword_group_id"))
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+  ]);
+
+  const map = (arr: { id: string; name: string }[] | null | undefined) =>
+    new Map((arr ?? []).map((r) => [r.id, r.name]));
+
+  const cMap = map(countries.data as { id: string; name: string }[] | null);
+  const sMap = map(states.data as { id: string; name: string }[] | null);
+  const cityMap = map(cities.data as { id: string; name: string }[] | null);
+  const catMap = map(categories.data as { id: string; name: string }[] | null);
+  const tMap = map(templates.data as { id: string; name: string }[] | null);
+  const kgMap = map(keywordGroups.data as { id: string; name: string }[] | null);
+
+  return rows.map((r) => ({
+    ...r,
+    country_name: r.country_id ? cMap.get(String(r.country_id)) ?? null : null,
+    state_name: r.state_id ? sMap.get(String(r.state_id)) ?? null : null,
+    city_name: r.city_id ? cityMap.get(String(r.city_id)) ?? null : null,
+    category_name: r.category_id ? catMap.get(String(r.category_id)) ?? null : null,
+    template_name: r.template_id ? tMap.get(String(r.template_id)) ?? null : null,
+    keyword_group_name: r.keyword_group_id ? kgMap.get(String(r.keyword_group_id)) ?? null : null,
+  }));
+}
 export const getPage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
@@ -223,6 +281,49 @@ export const syncPageInternalLinkCount = createServerFn({ method: "POST" })
       refreshJsonCache: data.refreshJsonCache ?? true,
     });
     return { ok: true, internal_link_count: count };
+  });
+
+export const listPageHistory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
+  .inputValidator((input) => z.object({ pageId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { data: rows, error } = await (await getSupabaseAdmin())
+      .from("page_history")
+      .select("id,action,snapshot,changed_by,created_at")
+      .eq("page_id", data.pageId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const listPageInternalLinks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
+  .inputValidator((input) => z.object({ pageId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const sb = await getSupabaseAdmin();
+    const [{ data: outgoing }, { data: incoming }, { data: page }] = await Promise.all([
+      sb.from("page_internal_links")
+        .select("id,anchor_text,target_url,target_page_id,link_type,created_at")
+        .eq("page_id", data.pageId)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      sb.from("page_internal_links")
+        .select("id,anchor_text,target_url,page_id,link_type,created_at")
+        .eq("target_page_id", data.pageId)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      sb.from("custom_pages").select("internal_link_count,internal_links_json").eq("id", data.pageId).maybeSingle(),
+    ]);
+    return {
+      outgoing: outgoing ?? [],
+      incoming: incoming ?? [],
+      internal_link_count: page?.internal_link_count ?? 0,
+      /** Cache only — not editable. */
+      internal_links_json: page?.internal_links_json ?? null,
+    };
   });
 
 // ===== Import / Export =====

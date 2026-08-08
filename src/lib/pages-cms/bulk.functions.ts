@@ -6,6 +6,7 @@ import { withRateLimit } from "@/lib/rate-limit-middleware";
 import { findSlugConflicts } from "./slug-conflicts";
 import {
   chunkArray,
+  conflictLabelFromSources,
   DEFAULT_BULK_BATCH_SIZE,
   expandBulkPreviews,
   previewBulkRow,
@@ -16,6 +17,7 @@ import {
 import { cmsPageStatusSchema, cmsPageTypeSchema } from "./schemas";
 import { deriveContentStatus, computeSeoScore } from "./template-engine";
 import type { DuplicateHandling } from "./types";
+import { BULK_SAFE_SYNC_LIMIT } from "./dashboard.functions";
 
 async function assertAdmin(userId: string) {
   const { data, error } = await supabaseAdmin
@@ -81,6 +83,8 @@ const bulkConfigSchema = z.object({
   batchSize: z.number().int().min(1).max(100).default(DEFAULT_BULK_BATCH_SIZE),
   /** Preview only — do not write. */
   dryRun: z.boolean().default(false),
+  /** Required when overwrite touches existing published pages. */
+  confirmOverwritePublished: z.boolean().default(false),
 });
 
 async function annotateDuplicates(
@@ -96,14 +100,19 @@ async function annotateDuplicates(
     let attempt = 0;
     let action: BulkPreviewRow["duplicateStatus"] = "ok";
     let existingId: string | undefined;
+    let sourceLabels: string[] = [];
 
     while (attempt < 20) {
       const conflicts = await findSlugConflicts(supabaseAdmin, slug);
       const localTaken = usedSlugs.has(slug);
       if (!conflicts.length && !localTaken) {
         action = attempt === 0 ? "ok" : "suffix";
+        sourceLabels = attempt === 0 ? [] : ["suffix"];
         break;
       }
+      sourceLabels = localTaken
+        ? ["custom_page"]
+        : conflicts.map((c) => c.source);
       const resolved = resolveBulkDuplicate(
         handling,
         localTaken ? [{ source: "custom_page" }] : conflicts,
@@ -125,6 +134,7 @@ async function annotateDuplicates(
       ...row,
       slug,
       duplicateStatus: action,
+      conflictLabel: conflictLabelFromSources(sourceLabels, action),
       existingId,
       conflictSlug: action !== "ok" ? row.slug : undefined,
     });
@@ -151,6 +161,24 @@ export const previewBulkPages = createServerFn({ method: "POST" })
       batchSize: data.batchSize,
     };
     const rows = await annotateDuplicates(config, data.duplicateHandling);
+    if (rows.length > BULK_SAFE_SYNC_LIMIT) {
+      return {
+        rows,
+        summary: {
+          total: rows.length,
+          ok: rows.filter((r) => r.duplicateStatus === "ok" || r.duplicateStatus === "suffix").length,
+          skip: rows.filter((r) => r.duplicateStatus === "skip").length,
+          overwrite: rows.filter((r) =>
+            r.duplicateStatus === "overwrite_metadata" || r.duplicateStatus === "overwrite_template"
+          ).length,
+        },
+        blocked: true,
+        safeLimit: BULK_SAFE_SYNC_LIMIT,
+        blockReason:
+          `This job exceeds the current safe synchronous batch limit (${BULK_SAFE_SYNC_LIMIT}). ` +
+          "Generate in smaller batches or enable background job processing later.",
+      };
+    }
     return {
       rows,
       summary: {
@@ -161,6 +189,9 @@ export const previewBulkPages = createServerFn({ method: "POST" })
           r.duplicateStatus === "overwrite_metadata" || r.duplicateStatus === "overwrite_template"
         ).length,
       },
+      blocked: false,
+      safeLimit: BULK_SAFE_SYNC_LIMIT,
+      blockReason: null as string | null,
     };
   });
 
@@ -190,6 +221,33 @@ export const runBulkPageGeneration = createServerFn({ method: "POST" })
 
     const annotated = await annotateDuplicates(config, data.duplicateHandling);
 
+    if (annotated.length > BULK_SAFE_SYNC_LIMIT) {
+      throw new Error(
+        `This job exceeds the current safe synchronous batch limit (${BULK_SAFE_SYNC_LIMIT}). ` +
+          "Generate in smaller batches or enable background job processing later.",
+      );
+    }
+
+    const overwriteIds = annotated
+      .filter((r) =>
+        (r.duplicateStatus === "overwrite_metadata" || r.duplicateStatus === "overwrite_template") &&
+        r.existingId,
+      )
+      .map((r) => r.existingId!) ;
+    if (overwriteIds.length && !data.dryRun) {
+      const { data: publishedRows } = await supabaseAdmin
+        .from("custom_pages")
+        .select("id,status")
+        .in("id", overwriteIds)
+        .eq("status", "published");
+      if ((publishedRows?.length ?? 0) > 0 && !data.confirmOverwritePublished) {
+        throw new Error(
+          "You are about to modify existing published pages. Existing URLs/content may be affected. " +
+            "Set confirmOverwritePublished after explicit confirmation.",
+        );
+      }
+    }
+
     if (data.dryRun) {
       return {
         ok: true,
@@ -201,6 +259,7 @@ export const runBulkPageGeneration = createServerFn({ method: "POST" })
         skipped: annotated.filter((r) => r.duplicateStatus === "skip").length,
         failed: 0,
         errors: [] as { slug: string; error: string }[],
+        safeLimit: BULK_SAFE_SYNC_LIMIT,
       };
     }
 
