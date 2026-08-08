@@ -5224,6 +5224,7 @@ export type Database = {
           meta_title_pattern: string | null
           name: string
           primary_pattern: string
+          secondary_patterns: string[]
           slug: string
           slug_pattern: string | null
           title_pattern: string | null
@@ -5238,6 +5239,7 @@ export type Database = {
           meta_title_pattern?: string | null
           name: string
           primary_pattern?: string
+          secondary_patterns?: string[]
           slug: string
           slug_pattern?: string | null
           title_pattern?: string | null
@@ -5252,6 +5254,7 @@ export type Database = {
           meta_title_pattern?: string | null
           name?: string
           primary_pattern?: string
+          secondary_patterns?: string[]
           slug?: string
           slug_pattern?: string | null
           title_pattern?: string | null
@@ -5383,6 +5386,8 @@ export type Database = {
           meta_title_template: string | null
           name: string
           slug: string
+          slug_template: string | null
+          title_template: string | null
           updated_at: string
         }
         Insert: {
@@ -5400,6 +5405,8 @@ export type Database = {
           meta_title_template?: string | null
           name: string
           slug: string
+          slug_template?: string | null
+          title_template?: string | null
           updated_at?: string
         }
         Update: {
@@ -5417,6 +5424,8 @@ export type Database = {
           meta_title_template?: string | null
           name?: string
           slug?: string
+          slug_template?: string | null
+          title_template?: string | null
           updated_at?: string
         }
         Relationships: []
