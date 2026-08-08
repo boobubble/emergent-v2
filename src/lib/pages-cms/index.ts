@@ -14,3 +14,9 @@ export {
   deleteSavedPageFilter,
   BULK_SAFE_SYNC_LIMIT,
 } from "./dashboard.functions";
+export {
+  LAHORE_MAPPING_PLAN,
+  URL_STRATEGY_EXAMPLES,
+  SEO_PRIORITY_BY_TIER,
+} from "./phase4a/taxonomy-data";
+export { validatePhase4aTaxonomy } from "./phase4a/validate-taxonomy";
