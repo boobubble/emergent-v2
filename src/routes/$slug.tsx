@@ -13,6 +13,7 @@ import {
 
 import { sanitizeHtml } from "@/lib/pages-io";
 import { injectHeadingIds } from "@/lib/heading-ids";
+import { resolvePublicCmsH1 } from "@/lib/pages-cms/public-page-ssr";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Eye } from "lucide-react";
@@ -148,7 +149,9 @@ export const Route = createFileRoute("/$slug")({
   head: ({ loaderData }) => headFromRouteSeo(loaderData?.seoData),
   notFoundComponent: PublicPageNotFound,
   errorComponent: PublicPageError,
-  pendingComponent: PublicPageLoading,
+  // Do NOT set pendingComponent here: it wraps the match in Suspense and caused
+  // crawlers to receive only the "Loading page…" fallback in the initial HTML
+  // (H1/body lived only in dehydrated JSON). Client navigations still wait on the loader.
   component: PublicPage,
 });
 
@@ -157,23 +160,26 @@ function PublicPage() {
   const loaderData = Route.useLoaderData();
   const fetchPage = useServerFn(getPublishedPage);
 
-  const slugMatchesLoader = publishedPageMatchesSlug(loaderData.page, slug);
+  const loaderPage = loaderData.page as PublicCmsPage;
+  const slugMatchesLoader = publishedPageMatchesSlug(loaderPage, slug);
 
   const pageQuery = useQuery({
     queryKey: customPageQueryKey(slug),
     queryFn: () => fetchPage({ data: { slug } }),
-    initialData: slugMatchesLoader ? loaderData.page : undefined,
-    staleTime: 0,
+    initialData: slugMatchesLoader ? loaderPage : undefined,
+    // Prefer stable loader HTML for SSR/crawlers; background freshness via invalidate.
+    staleTime: 60_000,
     gcTime: 5 * 60_000,
     refetchOnWindowFocus: false,
   });
 
-  if (!slugMatchesLoader || pageQuery.isPending) {
-    return <PublicPageLoading />;
-  }
+  // Mirror poetry.$slug: always prefer matching loader data so SSR emits H1 + body.
+  const page =
+    (pageQuery.data && publishedPageMatchesSlug(pageQuery.data, slug)
+      ? (pageQuery.data as PublicCmsPage)
+      : null) ?? (slugMatchesLoader ? loaderPage : null);
 
-  const page = pageQuery.data;
-  if (!page || !publishedPageMatchesSlug(page, slug)) {
+  if (!page) {
     return <PublicPageLoading />;
   }
 
@@ -230,7 +236,7 @@ function PublicPageView({ page }: { page: PublicCmsPage }) {
               <span>{page.title}</span>
             </nav>
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
-              {page.h1?.trim() || page.title}
+              {resolvePublicCmsH1(page)}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
               {(page.tags ?? []).map((t: string) => <Badge key={t} variant="secondary" className="text-[10px]">#{t}</Badge>)}
