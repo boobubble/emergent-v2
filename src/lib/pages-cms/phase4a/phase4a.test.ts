@@ -54,6 +54,17 @@ describe("Phase 4A taxonomy data quality", () => {
     expect(seoPriorityFor(lahore)).toBe(90);
   });
 
+  it("plans India Punjab slug rename without recreating the row", () => {
+    // Source uses canonical slug; migration renames Phase 1 punjab-in → punjab in place.
+    expect(INDIA_STATES.find((s) => s.name === "Punjab")?.slug).toBe("punjab");
+    expect(INDIA_STATES.filter((s) => s.name === "Punjab")).toHaveLength(1);
+  });
+
+  it("uses a single City Chat Room template slug (reuses Phase 1 default via rename)", () => {
+    expect(TEMPLATES.filter((t) => /city chat room/i.test(t.name))).toHaveLength(1);
+    expect(TEMPLATES.find((t) => t.name === "City Chat Room")?.slug).toBe("city-chat-room");
+  });
+
   it("does not propose auto-saving Lahore custom_pages mapping in 4A", () => {
     expect(LAHORE_MAPPING_PLAN.slug).toBe("lahore-chat-room");
     expect(LAHORE_MAPPING_PLAN.proposed.page_type).toBe("city");

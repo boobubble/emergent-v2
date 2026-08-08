@@ -5,6 +5,14 @@
 -- Does NOT insert or update custom_pages.
 -- Does NOT generate SEO pages.
 -- Lahore Chat Room custom_pages row remains untouched.
+--
+-- Phase 1 reuse contract:
+--   * Preserve existing taxonomy row IDs (UPSERT / slug rename only).
+--   * India Punjab: rename slug punjab-in → punjab (same ID).
+--   * Categories girls-chat / dating-chat: reparent under chat-rooms (same IDs).
+--   * Keyword group city-chat-room: update in place (same ID).
+--   * Template default-city-chat-room: rename slug → city-chat-room (same ID),
+--     then UPSERT content so there is exactly one City Chat Room template.
 -- =============================================================================
 
 -- Additive schema for keyword secondary patterns + template title/slug scaffolds
@@ -15,13 +23,84 @@ ALTER TABLE public.page_templates
   ADD COLUMN IF NOT EXISTS title_template TEXT,
   ADD COLUMN IF NOT EXISTS slug_template TEXT;
 
--- Normalize legacy India Punjab slug (unique is per-country; prefer "punjab")
+-- ---------------------------------------------------------------------------
+-- PREFLIGHT: fail on ambiguous Phase 1 taxonomy before any writes
+-- ---------------------------------------------------------------------------
+DO $$
+DECLARE
+  india_id UUID;
+  v_count INTEGER;
+  v_detail TEXT;
+BEGIN
+  SELECT id INTO india_id FROM public.page_countries WHERE slug = 'india';
+
+  -- India must not already have BOTH punjab-in and punjab (would be two Punjabs)
+  IF india_id IS NOT NULL THEN
+    SELECT count(*) INTO v_count
+    FROM public.page_states
+    WHERE country_id = india_id AND slug IN ('punjab', 'punjab-in');
+    IF v_count > 1 THEN
+      RAISE EXCEPTION
+        'Phase 4A preflight failed: India has % Punjab slug variants (punjab / punjab-in). Resolve manually before apply.',
+        v_count;
+    END IF;
+
+    -- Semantic duplicate states by normalized name within India
+    SELECT string_agg(name || ' (' || cnt || ')', ', ') INTO v_detail
+    FROM (
+      SELECT lower(name) AS n, max(name) AS name, count(*) AS cnt
+      FROM public.page_states
+      WHERE country_id = india_id
+      GROUP BY lower(name)
+      HAVING count(*) > 1
+    ) d;
+    IF v_detail IS NOT NULL THEN
+      RAISE EXCEPTION 'Phase 4A preflight failed: India duplicate state names: %', v_detail;
+    END IF;
+  END IF;
+
+  -- Template collision: both default-city-chat-room and city-chat-room already exist
+  SELECT count(*) INTO v_count
+  FROM public.page_templates
+  WHERE slug IN ('default-city-chat-room', 'city-chat-room');
+  IF v_count > 1 THEN
+    RAISE EXCEPTION
+      'Phase 4A preflight failed: both default-city-chat-room and city-chat-room templates exist. Resolve before apply.';
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------------------
+-- India Punjab: preserve existing ID, rename slug punjab-in → punjab
+-- ---------------------------------------------------------------------------
+-- Production Phase 1 row example:
+--   id = acd5044a-8bb6-48b2-87b2-493853a6d311, slug = punjab-in
+-- After this UPDATE the same ID becomes slug = punjab.
+-- No DELETE/recreate. FK refs (page_cities.state_id / custom_pages.state_id) stay valid.
 UPDATE public.page_states s
-SET slug = 'punjab', updated_at = now()
+SET
+  slug = 'punjab',
+  name = 'Punjab',
+  is_active = true,
+  seo_enabled = true,
+  updated_at = now()
 FROM public.page_countries c
 WHERE s.country_id = c.id
   AND c.slug = 'india'
   AND s.slug = 'punjab-in';
+
+-- ---------------------------------------------------------------------------
+-- City Chat Room template: preserve existing ID, rename default → city-chat-room
+-- ---------------------------------------------------------------------------
+-- Production Phase 1 row example:
+--   id = e2d0ed75-5a4c-4c86-948b-beab44dddde5, slug = default-city-chat-room
+-- After rename, UPSERT on city-chat-room updates the SAME row (one canonical template).
+UPDATE public.page_templates
+SET
+  slug = 'city-chat-room',
+  name = 'City Chat Room',
+  updated_at = now()
+WHERE slug = 'default-city-chat-room'
+  AND NOT EXISTS (SELECT 1 FROM public.page_templates WHERE slug = 'city-chat-room');
 
 -- Countries (already seeded; keep idempotent)
 INSERT INTO public.page_countries (name, slug, iso_code, language, sort_order, is_active, seo_enabled)
@@ -57,6 +136,8 @@ ON CONFLICT (country_id, slug) DO UPDATE SET
   updated_at = now();
 
 -- India states / UTs
+-- After Punjab rename above, INSERT ... ON CONFLICT (country_id, slug) updates the
+-- existing India Punjab row (same ID) instead of creating a second Punjab.
 INSERT INTO public.page_states (country_id, name, slug, sort_order, is_active, seo_enabled, language)
 SELECT c.id, v.name, v.slug, v.sort_order, true, true, 'en'
 FROM public.page_countries c
@@ -106,7 +187,7 @@ ON CONFLICT (country_id, slug) DO UPDATE SET
   seo_enabled = true,
   updated_at = now();
 
--- Cities (Pakistan)
+-- Cities (Pakistan) — ON CONFLICT (country_id, slug) reuses Phase 1 cities
 
 INSERT INTO public.page_cities (country_id, state_id, name, slug, alt_names, seo_priority, sort_order, is_active, seo_enabled)
 SELECT c.id, s.id, v.name, v.slug, v.alt_names, v.seo_priority, v.sort_order, true, true
@@ -913,7 +994,7 @@ ON CONFLICT (country_id, slug) DO UPDATE SET
   updated_at = now();
 
 
--- Categories (root + children). Nest legacy flat girls/dating under Chat Rooms.
+-- Categories (root + children). Reuse Phase 1 Chat Rooms / Girls Chat / Dating Chat IDs.
 INSERT INTO public.page_categories (name, slug, description, sort_order, is_active, seo_enabled)
 VALUES ('Chat Rooms', 'chat-rooms', 'Root chat room category for SEO pages', 1, true, true)
 ON CONFLICT (slug) DO UPDATE SET
@@ -1108,7 +1189,7 @@ ON CONFLICT (slug) DO UPDATE SET
   updated_at = now();
 
 
--- Keyword groups
+-- Keyword groups — city-chat-room UPSERT reuses Phase 1 ID
 
 INSERT INTO public.page_keyword_groups (
   name, slug, primary_pattern, secondary_patterns,
@@ -1251,7 +1332,7 @@ ON CONFLICT (slug) DO UPDATE SET
 
 
 -- Templates (scaffolds only — no page generation)
--- Keep legacy default-city-chat-room in sync with city-chat-room content, then add named templates.
+-- city-chat-room row was renamed from default-city-chat-room above (same ID).
 
 INSERT INTO public.page_templates (
   name, slug, description,
@@ -1409,14 +1490,98 @@ ON CONFLICT (slug) DO UPDATE SET
   updated_at = now();
 
 
--- Align legacy seed template slug with Phase 4A city template (do not delete; keep both if desired)
-UPDATE public.page_templates
-SET
-  title_template = COALESCE(title_template, '{primary_keyword} | {brand}'),
-  slug_template = COALESCE(slug_template, '{city}-chat-room'),
-  updated_at = now()
-WHERE slug = 'default-city-chat-room';
-
--- Ensure only one default template
+-- Ensure only one default template (city-chat-room)
 UPDATE public.page_templates SET is_default = false WHERE slug <> 'city-chat-room';
 UPDATE public.page_templates SET is_default = true WHERE slug = 'city-chat-room';
+
+-- ---------------------------------------------------------------------------
+-- POSTFLIGHT: refuse ambiguous taxonomy after seed
+-- ---------------------------------------------------------------------------
+DO $$
+DECLARE
+  v_detail TEXT;
+  v_count INTEGER;
+BEGIN
+  -- No leftover India punjab-in
+  SELECT count(*) INTO v_count
+  FROM public.page_states s
+  JOIN public.page_countries c ON c.id = s.country_id
+  WHERE c.slug = 'india' AND s.slug = 'punjab-in';
+  IF v_count > 0 THEN
+    RAISE EXCEPTION 'Phase 4A postflight failed: India still has slug punjab-in';
+  END IF;
+
+  -- Exactly one India Punjab
+  SELECT count(*) INTO v_count
+  FROM public.page_states s
+  JOIN public.page_countries c ON c.id = s.country_id
+  WHERE c.slug = 'india' AND lower(s.name) = 'punjab';
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'Phase 4A postflight failed: India Punjab count = % (expected 1)', v_count;
+  END IF;
+
+  -- No default-city-chat-room left; exactly one city-chat-room template
+  SELECT count(*) INTO v_count FROM public.page_templates WHERE slug = 'default-city-chat-room';
+  IF v_count > 0 THEN
+    RAISE EXCEPTION 'Phase 4A postflight failed: default-city-chat-room still exists';
+  END IF;
+  SELECT count(*) INTO v_count FROM public.page_templates WHERE slug = 'city-chat-room';
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'Phase 4A postflight failed: city-chat-room template count = %', v_count;
+  END IF;
+
+  -- Semantic duplicate states (country + normalized name)
+  SELECT string_agg(c.slug || ':' || d.name || '(' || d.cnt || ')', ', ') INTO v_detail
+  FROM (
+    SELECT country_id, lower(name) AS n, max(name) AS name, count(*) AS cnt
+    FROM public.page_states
+    GROUP BY country_id, lower(name)
+    HAVING count(*) > 1
+  ) d
+  JOIN public.page_countries c ON c.id = d.country_id;
+  IF v_detail IS NOT NULL THEN
+    RAISE EXCEPTION 'Phase 4A postflight failed: duplicate states: %', v_detail;
+  END IF;
+
+  -- Semantic duplicate cities (country + normalized name) — Hyderabad IN vs PK is OK
+  SELECT string_agg(c.slug || ':' || d.name || '(' || d.cnt || ')', ', ') INTO v_detail
+  FROM (
+    SELECT country_id, lower(name) AS n, max(name) AS name, count(*) AS cnt
+    FROM public.page_cities
+    GROUP BY country_id, lower(name)
+    HAVING count(*) > 1
+  ) d
+  JOIN public.page_countries c ON c.id = d.country_id;
+  IF v_detail IS NOT NULL THEN
+    RAISE EXCEPTION 'Phase 4A postflight failed: duplicate cities: %', v_detail;
+  END IF;
+
+  -- Duplicate category / keyword / template slugs (unique constraints should prevent; assert anyway)
+  SELECT string_agg(slug || '(' || cnt || ')', ', ') INTO v_detail
+  FROM (SELECT slug, count(*) AS cnt FROM public.page_categories GROUP BY slug HAVING count(*) > 1) x;
+  IF v_detail IS NOT NULL THEN
+    RAISE EXCEPTION 'Phase 4A postflight failed: duplicate categories: %', v_detail;
+  END IF;
+
+  SELECT string_agg(slug || '(' || cnt || ')', ', ') INTO v_detail
+  FROM (SELECT slug, count(*) AS cnt FROM public.page_keyword_groups GROUP BY slug HAVING count(*) > 1) x;
+  IF v_detail IS NOT NULL THEN
+    RAISE EXCEPTION 'Phase 4A postflight failed: duplicate keyword groups: %', v_detail;
+  END IF;
+
+  SELECT string_agg(slug || '(' || cnt || ')', ', ') INTO v_detail
+  FROM (SELECT slug, count(*) AS cnt FROM public.page_templates GROUP BY slug HAVING count(*) > 1) x;
+  IF v_detail IS NOT NULL THEN
+    RAISE EXCEPTION 'Phase 4A postflight failed: duplicate templates: %', v_detail;
+  END IF;
+
+  -- Girls/Dating must be children of Chat Rooms
+  IF EXISTS (
+    SELECT 1 FROM public.page_categories child
+    JOIN public.page_categories root ON root.slug = 'chat-rooms'
+    WHERE child.slug IN ('girls-chat', 'dating-chat')
+      AND child.parent_id IS DISTINCT FROM root.id
+  ) THEN
+    RAISE EXCEPTION 'Phase 4A postflight failed: girls-chat/dating-chat not reparented under chat-rooms';
+  END IF;
+END $$;
