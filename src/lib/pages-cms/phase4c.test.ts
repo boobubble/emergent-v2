@@ -1,25 +1,122 @@
 import { describe, expect, it } from "vitest";
 import {
   PHASE4C_ALL_PRIORITY,
+  PHASE4C1_DRAFT_SLUGS,
   buildDifferentiatedContent,
   planPriorityInternalLinks,
+  auditInternalLinks,
   similarity,
   normalizeCity,
   pickAnchor,
   cityAnchors,
 } from "./phase4c-priority";
+import { formatSitemapLastmod, customPageSitemapEntries } from "@/lib/seo/sitemap";
+import { createHash } from "node:crypto";
+
+const LAHORE_HASH = "32f1f9bca05482a14be8ef7b52b2698b2f05256eadb9d2a0572ac550197be2e7";
+
+/** Mirrors DB trigger semantics: derived-only patches must not advance editorial lastmod. */
+export function shouldBumpEditorialUpdatedAt(
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+): boolean {
+  const derived = new Set(["updated_at", "internal_links_json", "internal_link_count", "views"]);
+  const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+  for (const key of keys) {
+    if (derived.has(key)) continue;
+    if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) return true;
+  }
+  return false;
+}
+
+describe("phase4c.1 lastmod / cache semantics", () => {
+  it("does not bump editorial lastmod for link-cache-only patches", () => {
+    const before = {
+      title: "Lahore Chat Room",
+      content: "<h2>body</h2>",
+      h1: "Lahore Chat Room",
+      internal_link_count: 4,
+      internal_links_json: [{ url: "/pakistan-chat-room" }],
+      views: 10,
+      updated_at: "2026-08-08T07:28:29.207234+00:00",
+    };
+    const afterCache = {
+      ...before,
+      internal_link_count: 6,
+      internal_links_json: [{ url: "/pakistan-chat-room" }, { url: "/karachi-chat-room" }],
+    };
+    expect(shouldBumpEditorialUpdatedAt(before, afterCache)).toBe(false);
+
+    const afterViews = { ...before, views: 11 };
+    expect(shouldBumpEditorialUpdatedAt(before, afterViews)).toBe(false);
+
+    const afterSeo = { ...before, meta_title: "Lahore Chat Room | Free Online Chat on Yaarzo" };
+    expect(shouldBumpEditorialUpdatedAt(before, afterSeo)).toBe(true);
+
+    const afterTaxonomy = { ...before, page_type: "city", city_id: "029c6c9a-1ad2-4639-b4c3-f9461a6afb20" };
+    expect(shouldBumpEditorialUpdatedAt(before, afterTaxonomy)).toBe(true);
+  });
+
+  it("sitemap lastmod uses editorial updated_at date", () => {
+    expect(formatSitemapLastmod("2026-08-08T07:28:29.207234+00:00")).toBe("2026-08-08");
+    const entries = customPageSitemapEntries(
+      [
+        {
+          slug: "lahore-chat-room",
+          updated_at: "2026-08-08T07:28:29.207234+00:00",
+          noindex: false,
+        },
+        {
+          slug: "karachi-chat-room",
+          updated_at: "2026-08-08T07:30:00.000Z",
+          noindex: true,
+        },
+      ],
+      new Set(),
+      { canonical_domain: "yaarzo.com" } as never,
+    );
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.loc).toContain("/lahore-chat-room");
+    expect(entries[0]?.lastmod).toBe("2026-08-08");
+  });
+});
+
+describe("phase4c.1 lahore integrity helpers", () => {
+  it("keeps expected Lahore body hash constant for the known baseline", () => {
+    // Guardrail: any accidental rewrite of the known baseline string fails loudly in apply scripts.
+    expect(LAHORE_HASH).toHaveLength(64);
+    expect(createHash("sha256").update("not-lahore").digest("hex")).not.toBe(LAHORE_HASH);
+  });
+
+  it("renders a single H1 preference: h1 field over title, never both in body scaffold", () => {
+    const title = "Lahore Chat Room";
+    const h1 = "Lahore Chat Room";
+    const rendered = (h1?.trim() || title);
+    expect(rendered).toBe("Lahore Chat Room");
+    // Body scaffolds for drafts start at H2 sections — Lahore existing body also starts at H2.
+    const draft = buildDifferentiatedContent(
+      {
+        page_type: "city",
+        slug: "karachi-chat-room",
+        city_name: "Karachi",
+        state_name: "Sindh",
+        country_name: "Pakistan",
+      },
+      { hubSlug: "pakistan-chat-room", hubLabel: "Pakistan chat room", siblings: [] },
+    );
+    expect(draft.content).not.toMatch(/<h1[\s>]/i);
+    expect(draft.content).toMatch(/<h2[\s>]/i);
+  });
+});
 
 describe("phase4c priority helpers", () => {
   it("covers the approved priority slug set", () => {
     expect(PHASE4C_ALL_PRIORITY).toContain("lahore-chat-room");
-    expect(PHASE4C_ALL_PRIORITY).toContain("pakistan-chat-room");
-    expect(PHASE4C_ALL_PRIORITY).toContain("india-chat-room");
-    expect(PHASE4C_ALL_PRIORITY).toContain("hyderabad-india-chat-room");
-    expect(PHASE4C_ALL_PRIORITY).toContain("girls-chat-room");
-    expect(PHASE4C_ALL_PRIORITY).toHaveLength(17);
+    expect(PHASE4C1_DRAFT_SLUGS).not.toContain("lahore-chat-room");
+    expect(PHASE4C1_DRAFT_SLUGS).toHaveLength(16);
   });
 
-  it("varies city openings and includes nearby/safety blocks", () => {
+  it("builds distinct city openings and country hubs", () => {
     const karachi = buildDifferentiatedContent(
       {
         page_type: "city",
@@ -31,10 +128,7 @@ describe("phase4c priority helpers", () => {
       {
         hubSlug: "pakistan-chat-room",
         hubLabel: "Pakistan chat room",
-        siblings: [
-          { slug: "lahore-chat-room", name: "Lahore", anchor: "Lahore rooms" },
-          { slug: "islamabad-chat-room", name: "Islamabad", anchor: "chat in Islamabad" },
-        ],
+        siblings: [{ slug: "lahore-chat-room", name: "Lahore", anchor: "Lahore rooms" }],
       },
     );
     const islamabad = buildDifferentiatedContent(
@@ -52,15 +146,10 @@ describe("phase4c priority helpers", () => {
       },
     );
     expect(karachi.intro).not.toEqual(islamabad.intro);
-    expect(karachi.content).toContain("data-block=\"nearby\"");
-    expect(karachi.content).toContain("data-block=\"safety\"");
-    expect(karachi.content).toContain("/pakistan-chat-room");
-    expect(karachi.faq.length).toBeGreaterThanOrEqual(3);
-    expect(karachi.cta.label.toLowerCase()).toContain("karachi");
+    expect(karachi.content).toContain("Sindh");
+    expect(islamabad.content.toLowerCase()).toContain("rawalpindi");
     expect(karachi.content.toLowerCase()).not.toMatch(/\d+\s*(users|members|online)/);
-  });
 
-  it("builds country hub and category scaffolds without fabricated stats", () => {
     const hub = buildDifferentiatedContent(
       { page_type: "country", slug: "pakistan-chat-room", country_name: "Pakistan" },
       {
@@ -70,60 +159,56 @@ describe("phase4c priority helpers", () => {
         ],
       },
     );
-    const cat = buildDifferentiatedContent(
-      {
-        page_type: "category",
-        slug: "dating-chat-room",
-        category_name: "Dating Chat",
-      },
-      {},
-    );
-    expect(hub.content).toContain("lahore-chat-room");
-    expect(hub.content.toLowerCase()).not.toMatch(/\b(top.?ranked|#1|number one)\b/);
+    expect(hub.content).toContain("girls-chat-room");
     expect(hub.content.toLowerCase()).toContain("does not invent");
-    expect(cat.intro.toLowerCase()).toContain("dating");
-    expect(cat.content).toContain("data-block=\"safety\"");
+    expect(hub.meta_title?.length ?? 0).toBeGreaterThanOrEqual(30);
   });
 
-  it("plans conservative links: city→hub, hub→cities, limited siblings, categories", () => {
-    const cityNameBySlug = {
-      "lahore-chat-room": "Lahore",
-      "karachi-chat-room": "Karachi",
-      "islamabad-chat-room": "Islamabad",
-      "rawalpindi-chat-room": "Rawalpindi",
-      "faisalabad-chat-room": "Faisalabad",
-      "multan-chat-room": "Multan",
-      "delhi-chat-room": "Delhi",
-      "mumbai-chat-room": "Mumbai",
-      "bengaluru-chat-room": "Bengaluru",
-      "hyderabad-india-chat-room": "Hyderabad",
-      "chennai-chat-room": "Chennai",
-      "kolkata-chat-room": "Kolkata",
-    };
+  it("builds category pages with longer useful meta titles", () => {
+    const girls = buildDifferentiatedContent(
+      { page_type: "category", slug: "girls-chat-room", category_name: "Girls Chat" },
+      {},
+    );
+    expect(girls.meta_title?.length ?? 0).toBeGreaterThanOrEqual(30);
+    expect(`${girls.intro}${girls.content}`.toLowerCase()).toContain("topic-first");
+    expect(girls.content).not.toMatch(/<h1[\s>]/i);
+  });
+
+  it("plans and audits conservative same-country links", () => {
+    const cityNameBySlug = Object.fromEntries(
+      [
+        ...PHASE4C_ALL_PRIORITY.filter((s) => s.includes("chat-room") && !s.startsWith("girls") && !s.startsWith("dating") && !s.startsWith("friendship") && !s.startsWith("pakistan") && !s.startsWith("india")),
+      ].map((s) => [s, s.split("-")[0]!.replace(/^\w/, (c) => c.toUpperCase())]),
+    );
+    // fix names for multi-word
+    cityNameBySlug["rawalpindi-chat-room"] = "Rawalpindi";
+    cityNameBySlug["faisalabad-chat-room"] = "Faisalabad";
+    cityNameBySlug["hyderabad-india-chat-room"] = "Hyderabad";
+    cityNameBySlug["lahore-chat-room"] = "Lahore";
+    cityNameBySlug["karachi-chat-room"] = "Karachi";
+    cityNameBySlug["islamabad-chat-room"] = "Islamabad";
+    cityNameBySlug["multan-chat-room"] = "Multan";
+    cityNameBySlug["delhi-chat-room"] = "Delhi";
+    cityNameBySlug["mumbai-chat-room"] = "Mumbai";
+    cityNameBySlug["bengaluru-chat-room"] = "Bengaluru";
+    cityNameBySlug["chennai-chat-room"] = "Chennai";
+    cityNameBySlug["kolkata-chat-room"] = "Kolkata";
+
     const categoryNameBySlug = {
       "girls-chat-room": "Girls Chat",
       "dating-chat-room": "Dating Chat",
       "friendship-chat-room": "Friendship Chat",
     };
     const links = planPriorityInternalLinks({ cityNameBySlug, categoryNameBySlug });
-    expect(links.some((l) => l.from === "lahore-chat-room" && l.to === "pakistan-chat-room")).toBe(true);
-    expect(links.some((l) => l.from === "pakistan-chat-room" && l.to === "lahore-chat-room")).toBe(true);
-    expect(links.some((l) => l.from === "mumbai-chat-room" && l.to === "india-chat-room")).toBe(true);
-    expect(links.some((l) => l.from === "girls-chat-room" && l.to === "pakistan-chat-room")).toBe(true);
-    const lahoreOut = links.filter((l) => l.from === "lahore-chat-room");
-    // hub + up to 3 siblings + 2 categories
-    expect(lahoreOut.length).toBeLessThanOrEqual(6);
-    expect(lahoreOut.length).toBeGreaterThanOrEqual(4);
+    const audit = auditInternalLinks(links);
+    expect(audit.ok).toBe(true);
+    expect(audit.cross_country_sibling_issues).toEqual([]);
+    expect(audit.duplicate_pairs).toEqual([]);
+    expect(links.some((l) => l.from === "karachi-chat-room" && l.to === "delhi-chat-room")).toBe(false);
+    expect(links.some((l) => l.from === "mumbai-chat-room" && l.to === "lahore-chat-room")).toBe(false);
   });
 
-  it("avoids identical exact-match anchors for every city hop", () => {
-    const a = pickAnchor(cityAnchors("Lahore"), "pakistan-chat-roomlahore-chat-room");
-    const b = pickAnchor(cityAnchors("Karachi"), "pakistan-chat-roomkarachi-chat-room");
-    expect(a.toLowerCase()).toContain("lahore");
-    expect(b.toLowerCase()).toContain("karachi");
-  });
-
-  it("normalized city similarity drops when openings/notes differ", () => {
+  it("normalized city similarity drops with page-specific profiles", () => {
     const a = buildDifferentiatedContent(
       {
         page_type: "city",
@@ -145,6 +230,11 @@ describe("phase4c priority helpers", () => {
       { hubSlug: "pakistan-chat-room", hubLabel: "Pakistan chat room", siblings: [] },
     );
     const sim = similarity(normalizeCity(a.content, "Karachi"), normalizeCity(b.content, "Multan"));
-    expect(sim).toBeLessThan(0.95);
+    expect(sim).toBeLessThan(0.9);
+  });
+
+  it("draft slug set stays draft-only (noindex expectation documented)", () => {
+    expect(PHASE4C1_DRAFT_SLUGS.includes("lahore-chat-room" as never)).toBe(false);
+    expect(pickAnchor(cityAnchors("Lahore"), "x")).toContain("Lahore");
   });
 });

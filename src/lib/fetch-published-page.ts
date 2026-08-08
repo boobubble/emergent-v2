@@ -30,6 +30,8 @@ export type PublishedCustomPage = {
   og_description: string | null;
   og_image: string | null;
   canonical_url: string | null;
+  /** Optional CMS H1; public renderer prefers this over title when set. */
+  h1: string | null;
   noindex: boolean;
   nofollow: boolean;
   views: number;
@@ -57,7 +59,7 @@ function logPublishedPageFetch(meta: {
 }
 
 const PAGE_SELECT =
-  "id,slug,title,content,excerpt,tags,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,noindex,nofollow,views,published_at";
+  "id,slug,title,content,excerpt,tags,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,h1,noindex,nofollow,views,published_at";
 
 async function loadPublishedRow(
   sb: PublishedPageDbClient,

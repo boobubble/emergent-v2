@@ -226,7 +226,9 @@ function PublicPageView({ page }: { page: PublishedCustomPage }) {
               <span className="mx-1">/</span>
               <span>{page.title}</span>
             </nav>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">{page.title}</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
+              {page.h1?.trim() || page.title}
+            </h1>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
               {(page.tags ?? []).map((t: string) => <Badge key={t} variant="secondary" className="text-[10px]">#{t}</Badge>)}
             </div>

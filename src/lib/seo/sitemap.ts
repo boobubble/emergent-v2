@@ -72,7 +72,11 @@ export type CustomPageSitemapRow = {
   noindex?: boolean | null;
 };
 
-/** Published CMS pages at /{custom_pages.slug}; excludes redirect source slugs. */
+/** Published CMS pages at /{custom_pages.slug}; excludes redirect source slugs.
+ * lastmod uses custom_pages.updated_at (editorial lastmod). Cache-only refreshes
+ * of internal_links_json / internal_link_count / views do not advance updated_at
+ * after Phase 4C.1 trigger (custom_pages_set_updated_at).
+ */
 export function customPageSitemapEntries(
   pages: CustomPageSitemapRow[],
   redirectFromSlugs: Set<string>,

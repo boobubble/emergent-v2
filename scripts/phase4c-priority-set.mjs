@@ -536,8 +536,7 @@ async function refreshLinkCache(db, pageId) {
     await db.sql`
       UPDATE public.custom_pages SET
         internal_link_count = ${links.length},
-        internal_links_json = ${db.sql.json(links)},
-        updated_at = now()
+        internal_links_json = ${db.sql.json(links)}
       WHERE id = ${pageId}::uuid
     `;
     return links.length;
@@ -554,7 +553,6 @@ async function refreshLinkCache(db, pageId) {
     .update({
       internal_link_count: links.length,
       internal_links_json: links,
-      updated_at: new Date().toISOString(),
     })
     .eq("id", pageId);
   if (e2) throw e2;

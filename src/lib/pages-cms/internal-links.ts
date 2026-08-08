@@ -17,9 +17,10 @@ export async function recalculateInternalLinkCount(
   if (error) throw new Error(error.message);
 
   const count = links?.length ?? 0;
+  // Do NOT set updated_at here. custom_pages trigger preserves editorial lastmod
+  // when only internal_link_count / internal_links_json (derived cache) change.
   const patch: Record<string, unknown> = {
     internal_link_count: count,
-    updated_at: new Date().toISOString(),
   };
   if (opts?.refreshJsonCache) {
     patch.internal_links_json = links ?? [];
