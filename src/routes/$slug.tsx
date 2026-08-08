@@ -24,6 +24,8 @@ import {
   loadSeoSiteContext,
 } from "@/lib/seo";
 
+type PublicCmsPage = PublishedCustomPage & { publicHtml?: string };
+
 function redirectReservedSlug(slug: string) {
   const key = slug.toLowerCase();
   if (key === "rooms" || key === "messages") {
@@ -178,8 +180,9 @@ function PublicPage() {
   return <PublicPageView key={`${page.id}:${page.slug}`} page={page} />;
 }
 
-function PublicPageView({ page }: { page: PublishedCustomPage }) {
-  const safeHtml = sanitizeHtml(injectHeadingIds(page.content));
+function PublicPageView({ page }: { page: PublicCmsPage }) {
+  const rawHtml = page.publicHtml ?? page.content;
+  const safeHtml = sanitizeHtml(injectHeadingIds(rawHtml));
 
   const layout = (page.layout ?? "boxed") as "full" | "boxed";
   const leftSidebar = (page.sidebar_left ?? "none") as "none" | "ads" | "feed";

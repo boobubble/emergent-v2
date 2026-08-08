@@ -1,6 +1,11 @@
 import { slugifyPageSlug } from "@/lib/page-slug";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import {
+  composePublicCmsHtml,
+  extractRelativeCmsHrefSlugs,
+  filterUnpublishedCmsLinks,
+} from "@/lib/pages-cms/public-links";
 
 /** Supabase client surface for public CMS page reads. */
 export type PublishedPageDbClient = SupabaseClient<Database>;
@@ -18,6 +23,7 @@ export type PublishedCustomPage = {
   slug: string;
   title: string;
   content: string;
+  intro_content: string | null;
   excerpt: string | null;
   tags: string[];
   layout: string | null;
@@ -59,7 +65,7 @@ function logPublishedPageFetch(meta: {
 }
 
 const PAGE_SELECT =
-  "id,slug,title,content,excerpt,tags,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,h1,noindex,nofollow,views,published_at";
+  "id,slug,title,content,intro_content,excerpt,tags,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,h1,noindex,nofollow,views,published_at";
 
 async function loadPublishedRow(
   sb: PublishedPageDbClient,
@@ -97,6 +103,39 @@ async function resolveRedirectTarget(
   }
 
   return null;
+}
+
+/**
+ * Among candidate path slugs, return those that exist on custom_pages but are not published.
+ * Used to suppress public HTML links to draft-only CMS URLs.
+ */
+export async function listUnpublishedCustomPageSlugsAmong(
+  sb: PublishedPageDbClient,
+  candidateSlugs: string[],
+): Promise<string[]> {
+  const uniq = [...new Set(candidateSlugs.map((s) => s.trim().toLowerCase()).filter(Boolean))];
+  if (!uniq.length) return [];
+  const { data, error } = await sb
+    .from("custom_pages")
+    .select("slug,status")
+    .in("slug", uniq)
+    .neq("status", "published");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => r.slug);
+}
+
+/** Display HTML for a published CMS page: intro+content with draft-target links unwrapped. */
+export async function buildPublicCmsPageHtml(
+  sb: PublishedPageDbClient,
+  page: Pick<PublishedCustomPage, "intro_content" | "content">,
+): Promise<string> {
+  const raw = composePublicCmsHtml({
+    intro: page.intro_content,
+    content: page.content,
+  });
+  const candidates = extractRelativeCmsHrefSlugs(raw);
+  const unpublished = await listUnpublishedCustomPageSlugsAmong(sb, candidates);
+  return filterUnpublishedCmsLinks(raw, unpublished);
 }
 
 /**

@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { isReservedSlug } from "@/lib/reserved-routes";
 import { slugify, slugifyPageSlug, validatePageSlug, assertUniquePageSlug } from "@/lib/page-slug";
-import { fetchPublishedPageBySlug } from "@/lib/fetch-published-page";
+import { fetchPublishedPageBySlug, buildPublicCmsPageHtml } from "@/lib/fetch-published-page";
 import { withRateLimit } from "./rate-limit-middleware";
 import { findSlugConflicts } from "@/lib/pages-cms/slug-conflicts";
 import {
@@ -471,7 +471,10 @@ export const getPublishedPage = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ slug: z.string().min(1).max(120) }).parse(input))
   .handler(async ({ data }) => {
     const sb = await getSupabaseAdmin();
-    return fetchPublishedPageBySlug(sb, data.slug);
+    const page = await fetchPublishedPageBySlug(sb, data.slug);
+    if (!page) return null;
+    const publicHtml = await buildPublicCmsPageHtml(sb, page);
+    return { ...page, publicHtml };
   });
 
 export const listPublishedPages = createServerFn({ method: "GET" })
