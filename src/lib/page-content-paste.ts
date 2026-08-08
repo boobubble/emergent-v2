@@ -1,9 +1,13 @@
 /**
  * Paste/save normalization for CMS page content (TipTap HTML).
  * Preserves semantic headings while stripping unsafe markup from Word, Docs, and HTML sources.
+ *
+ * DOMPurify is loaded lazily: a static import of isomorphic-dompurify can resolve to the
+ * window-only browser build during SSR and throw while evaluating this module, which
+ * blanked /$slug server HTML (loader JSON only).
  */
-import DOMPurify from "isomorphic-dompurify";
 import { PAGE_CTA_CLASSES } from "./page-cta";
+import { sanitizeHtmlFallback } from "./sanitize-html-fallback";
 
 const ALLOWED_TAGS = [
   "h1", "h2", "h3", "h4", "h5", "h6",
@@ -50,7 +54,29 @@ const FORBID_ATTR = [
   "style", "background", "xmlns", "xmlns:x", "x:str", "x:bool",
 ];
 
+type PurifyApi = {
+  sanitize: (dirty: string, cfg?: Record<string, unknown>) => string;
+  addHook: (name: string, fn: (...args: never[]) => void) => void;
+  isSupported?: boolean;
+};
+
+let purifyApi: PurifyApi | null | undefined;
 let pageContentSanitizerHooksInstalled = false;
+
+function loadPurifyApi(): PurifyApi | null {
+  if (purifyApi !== undefined) return purifyApi;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require("isomorphic-dompurify") as PurifyApi | { default: PurifyApi };
+    purifyApi = typeof (mod as PurifyApi).sanitize === "function"
+      ? (mod as PurifyApi)
+      : (mod as { default: PurifyApi }).default;
+    return purifyApi;
+  } catch {
+    purifyApi = null;
+    return null;
+  }
+}
 
 function filterAllowedClasses(classValue: string): string {
   return classValue
@@ -62,9 +88,11 @@ function filterAllowedClasses(classValue: string): string {
 /** Install DOMPurify hooks once for class allow-list and external link rel. */
 export function ensurePageContentSanitizerHooks(): void {
   if (pageContentSanitizerHooksInstalled) return;
+  const DOMPurify = loadPurifyApi();
+  if (!DOMPurify) return;
   pageContentSanitizerHooksInstalled = true;
 
-  DOMPurify.addHook("uponSanitizeAttribute", (_node, data) => {
+  DOMPurify.addHook("uponSanitizeAttribute", ((_node: Element, data: { attrName: string; attrValue?: string; keepAttr?: boolean }) => {
     if (data.attrName !== "class") return;
     const filtered = filterAllowedClasses(data.attrValue ?? "");
     if (filtered) {
@@ -72,16 +100,16 @@ export function ensurePageContentSanitizerHooks(): void {
     } else {
       data.keepAttr = false;
     }
-  });
+  }) as never);
 
-  DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+  DOMPurify.addHook("afterSanitizeAttributes", ((node: Element) => {
     if (node.tagName !== "A") return;
     if (node.getAttribute("target") !== "_blank") return;
     const parts = new Set((node.getAttribute("rel") ?? "").split(/\s+/).filter(Boolean));
     parts.add("noopener");
     parts.add("noreferrer");
     node.setAttribute("rel", [...parts].join(" "));
-  });
+  }) as never);
 }
 
 export function createPageContentPurifyConfig() {
@@ -104,6 +132,10 @@ export type PageContentNormalizeResult = {
 };
 
 export function sanitizePageContentHtml(html: string): string {
+  const DOMPurify = loadPurifyApi();
+  if (!DOMPurify) {
+    return sanitizeHtmlFallback(html ?? "");
+  }
   return DOMPurify.sanitize(html ?? "", createPageContentPurifyConfig());
 }
 

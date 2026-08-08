@@ -81,8 +81,28 @@ export default defineConfig({
         maxParallelFileOps: 2,
       },
     },
+    plugins: [
+      {
+        // isomorphic-dompurify's package "default"/"browser" export is window-only
+        // and throws during SSR module evaluation. Force the Node/jsdom entry for
+        // any SSR resolve so /$slug can render real HTML (not an empty <!--$!--> slot).
+        name: "yaarzo-isomorphic-dompurify-node-ssr",
+        enforce: "pre",
+        resolveId(id, _importer, options) {
+          if (id !== "isomorphic-dompurify") return null;
+          if (!options?.ssr) return null;
+          return path.resolve(
+            __dirname,
+            "node_modules/isomorphic-dompurify/dist/index.mjs",
+          );
+        },
+      },
+    ],
     ssr: {
-      noExternal: ["tslib"],
+      noExternal: ["tslib", "isomorphic-dompurify", "dompurify"],
+      resolve: {
+        conditions: ["node", "import", "module", "default"],
+      },
     },
     resolve: {
       alias: [srcAlias],

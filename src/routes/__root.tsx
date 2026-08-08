@@ -223,7 +223,9 @@ function isPublicPath(pathname: string) {
 }
 
 function hasStoredAuthSession() {
-  if (typeof window === "undefined") return true;
+  // On the server there is no localStorage — do not pretend a session exists
+  // (that forced AuthGate into the "restore session" branch for some paths).
+  if (typeof window === "undefined") return false;
   try {
     for (let i = 0; i < window.localStorage.length; i++) {
       const key = window.localStorage.key(i) ?? "";

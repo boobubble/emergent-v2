@@ -282,19 +282,15 @@ export function detectFormatFromName(name: string): ExportFormat {
   return "txt";
 }
 
-// Robust runtime HTML sanitizer for rendering CMS content publicly.
-// Uses DOMPurify to prevent XSS across all known vectors (unquoted attrs,
-// SVG onload, vbscript:, <object>/<embed>, nested obfuscation, etc.).
-import DOMPurify from "isomorphic-dompurify";
-import { ALLOWED_TAGS, ALLOWED_ATTR, createPageContentPurifyConfig } from "./page-content-paste";
+// Public CMS HTML sanitizer.
+//
+// IMPORTANT: Do not statically import isomorphic-dompurify from this module.
+// Vite SSR can resolve its browser entry, which throws during module evaluation
+// and leaves /$slug as an empty <!--$!--> client boundary (loader JSON only,
+// no real <h1>/<article>/<a>). Use the DOM-free allowlist sanitizer for public
+// render so SSR and hydration share identical markup.
+import { sanitizeHtmlFallback } from "./sanitize-html-fallback";
 
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html ?? "", {
-    ...createPageContentPurifyConfig(),
-    FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form", "input"],
-    FORBID_ATTR: [
-      "onclick", "ondblclick", "onmousedown", "onmouseup", "onkeydown", "onkeyup", "onkeypress",
-      "onload", "onerror", "onfocus", "onblur", "onchange", "onsubmit", "style",
-    ],
-  });
+  return sanitizeHtmlFallback(html ?? "");
 }
