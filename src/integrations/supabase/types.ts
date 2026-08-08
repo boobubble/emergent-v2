@@ -529,16 +529,21 @@ export type Database = {
       chatrooms: {
         Row: {
           age_restricted: boolean
+          allowed_country_codes: string[]
           archived_at: string | null
+          audience_scope: string
           avatar_url: string | null
           background_image_url: string | null
           category: string | null
           community_id: string | null
+          country_code: string | null
           cover_image_url: string | null
           created_at: string
           description: string | null
           featured: boolean
           id: string
+          interest_slugs: string[]
+          language_codes: string[]
           member_count: number
           name: string
           owner_id: string
@@ -551,16 +556,21 @@ export type Database = {
         }
         Insert: {
           age_restricted?: boolean
+          allowed_country_codes?: string[]
           archived_at?: string | null
+          audience_scope?: string
           avatar_url?: string | null
           background_image_url?: string | null
           category?: string | null
           community_id?: string | null
+          country_code?: string | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
           featured?: boolean
           id?: string
+          interest_slugs?: string[]
+          language_codes?: string[]
           member_count?: number
           name: string
           owner_id: string
@@ -573,16 +583,21 @@ export type Database = {
         }
         Update: {
           age_restricted?: boolean
+          allowed_country_codes?: string[]
           archived_at?: string | null
+          audience_scope?: string
           avatar_url?: string | null
           background_image_url?: string | null
           category?: string | null
           community_id?: string | null
+          country_code?: string | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
           featured?: boolean
           id?: string
+          interest_slugs?: string[]
+          language_codes?: string[]
           member_count?: number
           name?: string
           owner_id?: string
@@ -602,6 +617,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      client_error_logs: {
+        Row: {
+          app_version: string | null
+          browser: string | null
+          build_version: string | null
+          component_stack: string | null
+          created_at: string
+          device: string | null
+          id: string
+          message: string
+          metadata: Json
+          os: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          route: string | null
+          screen: string | null
+          severity: string
+          stack: string | null
+          url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_version?: string | null
+          browser?: string | null
+          build_version?: string | null
+          component_stack?: string | null
+          created_at?: string
+          device?: string | null
+          id?: string
+          message: string
+          metadata?: Json
+          os?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          route?: string | null
+          screen?: string | null
+          severity?: string
+          stack?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_version?: string | null
+          browser?: string | null
+          build_version?: string | null
+          component_stack?: string | null
+          created_at?: string
+          device?: string | null
+          id?: string
+          message?: string
+          metadata?: Json
+          os?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          route?: string | null
+          screen?: string | null
+          severity?: string
+          stack?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       coin_feature_flags: {
         Row: {
@@ -2117,13 +2195,26 @@ export type Database = {
         Row: {
           canonical_url: string | null
           category: string | null
+          category_id: string | null
+          city_id: string | null
           content: string
+          content_status: string | null
+          country_id: string | null
           created_at: string
           created_by: string | null
+          cta_content: Json | null
           excerpt: string | null
+          faq_content: Json | null
           featured: boolean
+          h1: string | null
+          hub_page_id: string | null
           id: string
+          internal_link_count: number
+          internal_links_json: Json | null
+          intro_content: string | null
           is_cornerstone: boolean
+          keyword_group_id: string | null
+          language: string
           layout: string
           link_priority: number
           meta_description: string | null
@@ -2134,13 +2225,21 @@ export type Database = {
           og_description: string | null
           og_image: string | null
           og_title: string | null
+          page_type: string | null
+          parent_page_id: string | null
+          primary_keyword: string | null
           published_at: string | null
+          scheduled_at: string | null
           schema_jsonld: Json | null
+          secondary_keywords: string[]
+          seo_score: number
           sidebar_left: string
           sidebar_right: string
           slug: string
+          state_id: string | null
           status: string
           tags: string[]
+          template_id: string | null
           title: string
           updated_at: string
           views: number
@@ -2148,13 +2247,26 @@ export type Database = {
         Insert: {
           canonical_url?: string | null
           category?: string | null
+          category_id?: string | null
+          city_id?: string | null
           content?: string
+          content_status?: string | null
+          country_id?: string | null
           created_at?: string
           created_by?: string | null
+          cta_content?: Json | null
           excerpt?: string | null
+          faq_content?: Json | null
           featured?: boolean
+          h1?: string | null
+          hub_page_id?: string | null
           id?: string
+          internal_link_count?: number
+          internal_links_json?: Json | null
+          intro_content?: string | null
           is_cornerstone?: boolean
+          keyword_group_id?: string | null
+          language?: string
           layout?: string
           link_priority?: number
           meta_description?: string | null
@@ -2165,13 +2277,21 @@ export type Database = {
           og_description?: string | null
           og_image?: string | null
           og_title?: string | null
+          page_type?: string | null
+          parent_page_id?: string | null
+          primary_keyword?: string | null
           published_at?: string | null
+          scheduled_at?: string | null
           schema_jsonld?: Json | null
+          secondary_keywords?: string[]
+          seo_score?: number
           sidebar_left?: string
           sidebar_right?: string
           slug: string
+          state_id?: string | null
           status?: string
           tags?: string[]
+          template_id?: string | null
           title?: string
           updated_at?: string
           views?: number
@@ -2179,13 +2299,26 @@ export type Database = {
         Update: {
           canonical_url?: string | null
           category?: string | null
+          category_id?: string | null
+          city_id?: string | null
           content?: string
+          content_status?: string | null
+          country_id?: string | null
           created_at?: string
           created_by?: string | null
+          cta_content?: Json | null
           excerpt?: string | null
+          faq_content?: Json | null
           featured?: boolean
+          h1?: string | null
+          hub_page_id?: string | null
           id?: string
+          internal_link_count?: number
+          internal_links_json?: Json | null
+          intro_content?: string | null
           is_cornerstone?: boolean
+          keyword_group_id?: string | null
+          language?: string
           layout?: string
           link_priority?: number
           meta_description?: string | null
@@ -2196,18 +2329,83 @@ export type Database = {
           og_description?: string | null
           og_image?: string | null
           og_title?: string | null
+          page_type?: string | null
+          parent_page_id?: string | null
+          primary_keyword?: string | null
           published_at?: string | null
+          scheduled_at?: string | null
           schema_jsonld?: Json | null
+          secondary_keywords?: string[]
+          seo_score?: number
           sidebar_left?: string
           sidebar_right?: string
           slug?: string
+          state_id?: string | null
           status?: string
           tags?: string[]
+          template_id?: string | null
           title?: string
           updated_at?: string
           views?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "custom_pages_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "page_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_pages_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "page_cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_pages_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "page_countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_pages_hub_page_id_fkey"
+            columns: ["hub_page_id"]
+            isOneToOne: false
+            referencedRelation: "custom_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_pages_keyword_group_id_fkey"
+            columns: ["keyword_group_id"]
+            isOneToOne: false
+            referencedRelation: "page_keyword_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_pages_parent_page_id_fkey"
+            columns: ["parent_page_id"]
+            isOneToOne: false
+            referencedRelation: "custom_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_pages_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "page_states"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_pages_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "page_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       custom_stickers: {
         Row: {
@@ -3713,6 +3911,33 @@ export type Database = {
         }
         Relationships: []
       }
+      interest_tags: {
+        Row: {
+          active: boolean
+          created_at: string
+          emoji: string | null
+          label: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          emoji?: string | null
+          label: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          emoji?: string | null
+          label?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       internal_link_clicks: {
         Row: {
           anchor_text: string | null
@@ -4508,6 +4733,532 @@ export type Database = {
         }
         Relationships: []
       }
+      page_bulk_jobs: {
+        Row: {
+          config: Json
+          created_at: string
+          created_by: string | null
+          created_count: number
+          error_count: number
+          errors: Json | null
+          finished_at: string | null
+          id: string
+          name: string
+          page_type: string | null
+          skipped_count: number
+          started_at: string | null
+          status: string
+          total_rows: number
+          updated_at: string
+          updated_count: number
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          created_count?: number
+          error_count?: number
+          errors?: Json | null
+          finished_at?: string | null
+          id?: string
+          name: string
+          page_type?: string | null
+          skipped_count?: number
+          started_at?: string | null
+          status?: string
+          total_rows?: number
+          updated_at?: string
+          updated_count?: number
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          created_count?: number
+          error_count?: number
+          errors?: Json | null
+          finished_at?: string | null
+          id?: string
+          name?: string
+          page_type?: string | null
+          skipped_count?: number
+          started_at?: string | null
+          status?: string
+          total_rows?: number
+          updated_at?: string
+          updated_count?: number
+        }
+        Relationships: []
+      }
+      page_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          hub_page_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          parent_id: string | null
+          seo_enabled: boolean
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          hub_page_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          parent_id?: string | null
+          seo_enabled?: boolean
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          hub_page_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          parent_id?: string | null
+          seo_enabled?: boolean
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_categories_hub_page_fk"
+            columns: ["hub_page_id"]
+            isOneToOne: false
+            referencedRelation: "custom_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "page_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_cities: {
+        Row: {
+          alt_names: string[]
+          country_id: string
+          created_at: string
+          hub_page_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          population: number | null
+          seo_enabled: boolean
+          seo_priority: number
+          slug: string
+          sort_order: number
+          state_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          alt_names?: string[]
+          country_id: string
+          created_at?: string
+          hub_page_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          population?: number | null
+          seo_enabled?: boolean
+          seo_priority?: number
+          slug: string
+          sort_order?: number
+          state_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alt_names?: string[]
+          country_id?: string
+          created_at?: string
+          hub_page_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          population?: number | null
+          seo_enabled?: boolean
+          seo_priority?: number
+          slug?: string
+          sort_order?: number
+          state_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_cities_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "page_countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_cities_hub_page_fk"
+            columns: ["hub_page_id"]
+            isOneToOne: false
+            referencedRelation: "custom_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_cities_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "page_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_cms_settings: {
+        Row: {
+          bulk_default_status: string
+          default_language: string
+          default_template_id: string | null
+          id: number
+          settings: Json
+          updated_at: string
+        }
+        Insert: {
+          bulk_default_status?: string
+          default_language?: string
+          default_template_id?: string | null
+          id?: number
+          settings?: Json
+          updated_at?: string
+        }
+        Update: {
+          bulk_default_status?: string
+          default_language?: string
+          default_template_id?: string | null
+          id?: number
+          settings?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_cms_settings_default_template_id_fkey"
+            columns: ["default_template_id"]
+            isOneToOne: false
+            referencedRelation: "page_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_countries: {
+        Row: {
+          created_at: string
+          hub_page_id: string | null
+          id: string
+          is_active: boolean
+          iso_code: string | null
+          language: string
+          name: string
+          seo_enabled: boolean
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hub_page_id?: string | null
+          id?: string
+          is_active?: boolean
+          iso_code?: string | null
+          language?: string
+          name: string
+          seo_enabled?: boolean
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hub_page_id?: string | null
+          id?: string
+          is_active?: boolean
+          iso_code?: string | null
+          language?: string
+          name?: string
+          seo_enabled?: boolean
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_countries_hub_page_fk"
+            columns: ["hub_page_id"]
+            isOneToOne: false
+            referencedRelation: "custom_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_history: {
+        Row: {
+          action: string
+          changed_by: string | null
+          created_at: string
+          id: string
+          page_id: string
+          snapshot: Json | null
+        }
+        Insert: {
+          action: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          page_id: string
+          snapshot?: Json | null
+        }
+        Update: {
+          action?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          page_id?: string
+          snapshot?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_history_page_fk"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "custom_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_internal_link_rules: {
+        Row: {
+          anchor_pattern: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          max_links_per_page: number
+          name: string
+          priority: number
+          source_category_id: string | null
+          source_city_id: string | null
+          source_country_id: string | null
+          source_page_type: string | null
+          source_state_id: string | null
+          target_internal_link_id: string | null
+          target_page_id: string | null
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          anchor_pattern?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_links_per_page?: number
+          name: string
+          priority?: number
+          source_category_id?: string | null
+          source_city_id?: string | null
+          source_country_id?: string | null
+          source_page_type?: string | null
+          source_state_id?: string | null
+          target_internal_link_id?: string | null
+          target_page_id?: string | null
+          target_type?: string
+          updated_at?: string
+        }
+        Update: {
+          anchor_pattern?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_links_per_page?: number
+          name?: string
+          priority?: number
+          source_category_id?: string | null
+          source_city_id?: string | null
+          source_country_id?: string | null
+          source_page_type?: string | null
+          source_state_id?: string | null
+          target_internal_link_id?: string | null
+          target_page_id?: string | null
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_internal_link_rules_source_category_id_fkey"
+            columns: ["source_category_id"]
+            isOneToOne: false
+            referencedRelation: "page_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_internal_link_rules_source_city_id_fkey"
+            columns: ["source_city_id"]
+            isOneToOne: false
+            referencedRelation: "page_cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_internal_link_rules_source_country_id_fkey"
+            columns: ["source_country_id"]
+            isOneToOne: false
+            referencedRelation: "page_countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_internal_link_rules_source_state_id_fkey"
+            columns: ["source_state_id"]
+            isOneToOne: false
+            referencedRelation: "page_states"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_internal_link_rules_target_internal_link_id_fkey"
+            columns: ["target_internal_link_id"]
+            isOneToOne: false
+            referencedRelation: "internal_link_targets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_internal_link_rules_target_page_fk"
+            columns: ["target_page_id"]
+            isOneToOne: false
+            referencedRelation: "custom_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_internal_links: {
+        Row: {
+          anchor_text: string
+          created_at: string
+          id: string
+          internal_link_target_id: string | null
+          is_manual: boolean
+          page_id: string
+          rule_id: string | null
+          sort_order: number
+          target_page_id: string | null
+          target_url: string
+          updated_at: string
+        }
+        Insert: {
+          anchor_text: string
+          created_at?: string
+          id?: string
+          internal_link_target_id?: string | null
+          is_manual?: boolean
+          page_id: string
+          rule_id?: string | null
+          sort_order?: number
+          target_page_id?: string | null
+          target_url: string
+          updated_at?: string
+        }
+        Update: {
+          anchor_text?: string
+          created_at?: string
+          id?: string
+          internal_link_target_id?: string | null
+          is_manual?: boolean
+          page_id?: string
+          rule_id?: string | null
+          sort_order?: number
+          target_page_id?: string | null
+          target_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_internal_links_internal_link_target_id_fkey"
+            columns: ["internal_link_target_id"]
+            isOneToOne: false
+            referencedRelation: "internal_link_targets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_internal_links_page_fk"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "custom_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_internal_links_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "page_internal_link_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_internal_links_target_page_fk"
+            columns: ["target_page_id"]
+            isOneToOne: false
+            referencedRelation: "custom_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_keyword_groups: {
+        Row: {
+          created_at: string
+          h1_pattern: string | null
+          id: string
+          is_active: boolean
+          meta_description_pattern: string | null
+          meta_title_pattern: string | null
+          name: string
+          primary_pattern: string
+          slug: string
+          slug_pattern: string | null
+          title_pattern: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          h1_pattern?: string | null
+          id?: string
+          is_active?: boolean
+          meta_description_pattern?: string | null
+          meta_title_pattern?: string | null
+          name: string
+          primary_pattern?: string
+          slug: string
+          slug_pattern?: string | null
+          title_pattern?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          h1_pattern?: string | null
+          id?: string
+          is_active?: boolean
+          meta_description_pattern?: string | null
+          meta_title_pattern?: string | null
+          name?: string
+          primary_pattern?: string
+          slug?: string
+          slug_pattern?: string | null
+          title_pattern?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       page_redirects: {
         Row: {
           created_at: string
@@ -4526,6 +5277,147 @@ export type Database = {
           from_slug?: string
           id?: string
           to_slug?: string
+        }
+        Relationships: []
+      }
+      page_saved_filters: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          filter_json: Json
+          id: string
+          is_shared: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          filter_json?: Json
+          id?: string
+          is_shared?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          filter_json?: Json
+          id?: string
+          is_shared?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      page_states: {
+        Row: {
+          country_id: string
+          created_at: string
+          hub_page_id: string | null
+          id: string
+          is_active: boolean
+          language: string
+          name: string
+          seo_enabled: boolean
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          country_id: string
+          created_at?: string
+          hub_page_id?: string | null
+          id?: string
+          is_active?: boolean
+          language?: string
+          name: string
+          seo_enabled?: boolean
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          country_id?: string
+          created_at?: string
+          hub_page_id?: string | null
+          id?: string
+          is_active?: boolean
+          language?: string
+          name?: string
+          seo_enabled?: boolean
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_states_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "page_countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_states_hub_page_fk"
+            columns: ["hub_page_id"]
+            isOneToOne: false
+            referencedRelation: "custom_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_templates: {
+        Row: {
+          content_template: string | null
+          created_at: string
+          cta_template: Json | null
+          description: string | null
+          faq_template: Json | null
+          h1_template: string | null
+          id: string
+          intro_template: string | null
+          is_active: boolean
+          is_default: boolean
+          meta_description_template: string | null
+          meta_title_template: string | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          content_template?: string | null
+          created_at?: string
+          cta_template?: Json | null
+          description?: string | null
+          faq_template?: Json | null
+          h1_template?: string | null
+          id?: string
+          intro_template?: string | null
+          is_active?: boolean
+          is_default?: boolean
+          meta_description_template?: string | null
+          meta_title_template?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          content_template?: string | null
+          created_at?: string
+          cta_template?: Json | null
+          description?: string | null
+          faq_template?: Json | null
+          h1_template?: string | null
+          id?: string
+          intro_template?: string | null
+          is_active?: boolean
+          is_default?: boolean
+          meta_description_template?: string | null
+          meta_title_template?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -5609,40 +6501,172 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_global: {
+        Row: {
+          author: string | null
+          baidu_verification: string | null
+          bing_verification: string | null
+          canonical_domain: string | null
+          default_description: string | null
+          default_keywords: string | null
+          default_og_image: string | null
+          default_title: string | null
+          facebook_app_id: string | null
+          google_verification: string | null
+          id: number
+          language: string | null
+          robots: string | null
+          site_name: string | null
+          site_tagline: string | null
+          theme_color: string | null
+          twitter_card: string | null
+          twitter_creator: string | null
+          twitter_site: string | null
+          updated_at: string
+          updated_by: string | null
+          yandex_verification: string | null
+        }
+        Insert: {
+          author?: string | null
+          baidu_verification?: string | null
+          bing_verification?: string | null
+          canonical_domain?: string | null
+          default_description?: string | null
+          default_keywords?: string | null
+          default_og_image?: string | null
+          default_title?: string | null
+          facebook_app_id?: string | null
+          google_verification?: string | null
+          id?: number
+          language?: string | null
+          robots?: string | null
+          site_name?: string | null
+          site_tagline?: string | null
+          theme_color?: string | null
+          twitter_card?: string | null
+          twitter_creator?: string | null
+          twitter_site?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          yandex_verification?: string | null
+        }
+        Update: {
+          author?: string | null
+          baidu_verification?: string | null
+          bing_verification?: string | null
+          canonical_domain?: string | null
+          default_description?: string | null
+          default_keywords?: string | null
+          default_og_image?: string | null
+          default_title?: string | null
+          facebook_app_id?: string | null
+          google_verification?: string | null
+          id?: number
+          language?: string | null
+          robots?: string | null
+          site_name?: string | null
+          site_tagline?: string | null
+          theme_color?: string | null
+          twitter_card?: string | null
+          twitter_creator?: string | null
+          twitter_site?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          yandex_verification?: string | null
+        }
+        Relationships: []
+      }
       seo_settings: {
         Row: {
+          auto_discovered: boolean
+          canonical_url: string | null
           description: string | null
+          enabled: boolean
+          is_dynamic: boolean
+          json_ld: Json | null
+          json_ld_type: string | null
           keywords: string | null
+          label: string | null
+          nofollow: boolean
+          noindex: boolean
           og_description: string | null
           og_image: string | null
           og_title: string | null
           page_key: string
+          robots: string | null
+          route_path: string | null
+          route_type: string | null
+          sitemap_changefreq: string | null
+          sitemap_exclude: boolean
+          sitemap_priority: number | null
+          template_variables: Json | null
           title: string | null
           twitter_card: string | null
+          twitter_description: string | null
+          twitter_image: string | null
+          twitter_title: string | null
           updated_at: string
           updated_by: string | null
         }
         Insert: {
+          auto_discovered?: boolean
+          canonical_url?: string | null
           description?: string | null
+          enabled?: boolean
+          is_dynamic?: boolean
+          json_ld?: Json | null
+          json_ld_type?: string | null
           keywords?: string | null
+          label?: string | null
+          nofollow?: boolean
+          noindex?: boolean
           og_description?: string | null
           og_image?: string | null
           og_title?: string | null
           page_key: string
+          robots?: string | null
+          route_path?: string | null
+          route_type?: string | null
+          sitemap_changefreq?: string | null
+          sitemap_exclude?: boolean
+          sitemap_priority?: number | null
+          template_variables?: Json | null
           title?: string | null
           twitter_card?: string | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
+          auto_discovered?: boolean
+          canonical_url?: string | null
           description?: string | null
+          enabled?: boolean
+          is_dynamic?: boolean
+          json_ld?: Json | null
+          json_ld_type?: string | null
           keywords?: string | null
+          label?: string | null
+          nofollow?: boolean
+          noindex?: boolean
           og_description?: string | null
           og_image?: string | null
           og_title?: string | null
           page_key?: string
+          robots?: string | null
+          route_path?: string | null
+          route_type?: string | null
+          sitemap_changefreq?: string | null
+          sitemap_exclude?: boolean
+          sitemap_priority?: number | null
+          template_variables?: Json | null
           title?: string | null
           twitter_card?: string | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -6146,6 +7170,45 @@ export type Database = {
           ip_address?: unknown
           last_seen?: string
           user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_discovery_prefs: {
+        Row: {
+          content_scope: string
+          detected_country_code: string | null
+          discovery_country_code: string | null
+          discovery_onboarding_completed_at: string | null
+          interests: string[]
+          personalize_prompt_dismissed_at: string | null
+          preferred_languages: string[]
+          selected_channel_ids: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_scope?: string
+          detected_country_code?: string | null
+          discovery_country_code?: string | null
+          discovery_onboarding_completed_at?: string | null
+          interests?: string[]
+          personalize_prompt_dismissed_at?: string | null
+          preferred_languages?: string[]
+          selected_channel_ids?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_scope?: string
+          detected_country_code?: string | null
+          discovery_country_code?: string | null
+          discovery_onboarding_completed_at?: string | null
+          interests?: string[]
+          personalize_prompt_dismissed_at?: string | null
+          preferred_languages?: string[]
+          selected_channel_ids?: string[]
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -7380,7 +8443,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      email_queue_dispatch: { Args: never; Returns: undefined }
       engagement_score: {
         Args: { _id: string; _type: string; _weights: Json }
         Returns: number

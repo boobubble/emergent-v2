@@ -4,13 +4,15 @@
 export type PageLayout = "full" | "boxed";
 export type SidebarMode = "none" | "ads" | "feed";
 
+export type PageStatus = "draft" | "scheduled" | "published" | "archived";
+
 export interface PageRecord {
   slug: string;
   title: string;
   content: string;
   excerpt?: string | null;
   tags?: string[];
-  status?: "draft" | "published";
+  status?: PageStatus;
   featured?: boolean;
   layout?: PageLayout;
   sidebar_left?: SidebarMode;
@@ -24,6 +26,22 @@ export interface PageRecord {
   canonical_url?: string | null;
   noindex?: boolean;
   nofollow?: boolean;
+  // Optional CMS extensions (JSON export/import)
+  page_type?: string | null;
+  country?: string | null;
+  state?: string | null;
+  city?: string | null;
+  category?: string | null;
+  template?: string | null;
+  primary_keyword?: string | null;
+  secondary_keywords?: string[];
+  language?: string | null;
+  h1?: string | null;
+  country_id?: string | null;
+  state_id?: string | null;
+  city_id?: string | null;
+  category_id?: string | null;
+  template_id?: string | null;
 }
 
 export type ExportFormat = "json" | "xml" | "html" | "md" | "txt";
@@ -95,7 +113,7 @@ export function parseImport(format: ExportFormat, raw: string): PageRecord[] {
         slug: pick(b, "slug"),
         title: pick(b, "title"),
         layout: (pick(b, "layout") as PageLayout) || "boxed",
-        status: (pick(b, "status") as "draft" | "published") || "draft",
+        status: normalizeStatus(pick(b, "status")),
         meta_description: pick(b, "meta_description") || null,
         content: pickCdata(b, "content") || "",
       }));
@@ -117,7 +135,7 @@ export function parseImport(format: ExportFormat, raw: string): PageRecord[] {
         slug: meta.slug || "page",
         title: (meta.title || "Page").replace(/^"|"$/g, ""),
         layout: (meta.layout as PageLayout) || "boxed",
-        status: (meta.status as "draft" | "published") || "draft",
+        status: normalizeStatus(meta.status),
         content: markdownToHtml(body),
       });
     }).filter((p) => p.title && p.slug);
@@ -142,6 +160,13 @@ export function parseImport(format: ExportFormat, raw: string): PageRecord[] {
   }).filter((p) => p.title);
 }
 
+const VALID_STATUSES = new Set(["draft", "scheduled", "published", "archived"]);
+
+function normalizeStatus(status: unknown): PageStatus {
+  if (typeof status === "string" && VALID_STATUSES.has(status)) return status as PageStatus;
+  return "draft";
+}
+
 function normalize(p: Partial<PageRecord>): PageRecord {
   return {
     slug: String(p.slug ?? "page"),
@@ -152,7 +177,7 @@ function normalize(p: Partial<PageRecord>): PageRecord {
     sidebar_left: p.sidebar_left ?? "none",
     sidebar_right: p.sidebar_right ?? "none",
     tags: Array.isArray(p.tags) ? p.tags.slice(0, 20).map(String) : [],
-    status: p.status === "published" ? "published" : "draft",
+    status: normalizeStatus(p.status),
     featured: !!p.featured,
     meta_title: p.meta_title ?? null,
     meta_description: p.meta_description ?? null,
@@ -163,6 +188,21 @@ function normalize(p: Partial<PageRecord>): PageRecord {
     canonical_url: p.canonical_url ?? null,
     noindex: !!p.noindex,
     nofollow: !!p.nofollow,
+    page_type: p.page_type ?? null,
+    country: p.country ?? null,
+    state: p.state ?? null,
+    city: p.city ?? null,
+    category: p.category ?? null,
+    template: p.template ?? null,
+    primary_keyword: p.primary_keyword ?? null,
+    secondary_keywords: Array.isArray(p.secondary_keywords) ? p.secondary_keywords.map(String) : [],
+    language: p.language ?? null,
+    h1: p.h1 ?? null,
+    country_id: p.country_id ?? null,
+    state_id: p.state_id ?? null,
+    city_id: p.city_id ?? null,
+    category_id: p.category_id ?? null,
+    template_id: p.template_id ?? null,
   };
 }
 

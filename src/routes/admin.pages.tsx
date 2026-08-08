@@ -92,7 +92,11 @@ function PagesAdmin() {
 
   const pagesQ = useQuery({
     queryKey: ["admin", "pages", q],
-    queryFn: () => fetchList({ data: { q: q || undefined } }),
+    queryFn: async () => {
+      const res = await fetchList({ data: { search: q || undefined, page: 1, pageSize: 50 } });
+      // Phase 2 listPages returns { rows, total, page, pageSize, totalPages }
+      return Array.isArray(res) ? res : (res?.rows ?? []);
+    },
     staleTime: 30_000,
   });
   const redirectsQ = useQuery({
