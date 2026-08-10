@@ -19,6 +19,8 @@ import { buildCustomPageWriteRow } from "@/lib/pages-cms/page-write";
 import { resolveCmsSeoSource } from "@/lib/pages-cms/seo-source";
 import { deriveContentStatus, computeSeoScore } from "@/lib/pages-cms/template-engine";
 import { recalculateInternalLinkCount } from "@/lib/pages-cms/internal-links";
+import { syncRelatedChatRoomsToInternalLinks } from "@/lib/pages-cms/related-chat-rooms-sync";
+import { parseRelatedChatRoomsConfig } from "@/lib/pages-cms/related-chat-rooms-config";
 
 export { slugify } from "@/lib/page-slug";
 export { isPubliclyVisibleStatus };
@@ -229,6 +231,15 @@ export const savePage = createServerFn({ method: "POST" })
           { onConflict: "from_slug" },
         );
       }
+      // Keep page_internal_links graph in sync with manual Related Chat Rooms picks.
+      if (data.related_chat_rooms !== undefined) {
+        await syncRelatedChatRoomsToInternalLinks(
+          sb,
+          data.id,
+          parseRelatedChatRoomsConfig(data.related_chat_rooms),
+          { sourceSlug: slug },
+        );
+      }
       await sb.from("page_history").insert({
         page_id: data.id,
         action: "update",
@@ -252,6 +263,14 @@ export const savePage = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    if (data.related_chat_rooms !== undefined) {
+      await syncRelatedChatRoomsToInternalLinks(
+        sb,
+        ins.id,
+        parseRelatedChatRoomsConfig(data.related_chat_rooms),
+        { sourceSlug: slug },
+      );
+    }
     await sb.from("page_history").insert({
       page_id: ins.id,
       action: "create",
@@ -260,7 +279,6 @@ export const savePage = createServerFn({ method: "POST" })
     } as never);
     return { ok: true, id: ins.id, slug, content_status, seo_score };
   });
-
 export const deletePage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))

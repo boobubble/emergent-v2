@@ -1,7 +1,11 @@
 /**
  * Related Chat Rooms presentation config (Settings tab).
  * Stored on custom_pages.related_chat_rooms — not in content.
- * page_internal_links remains the canonical relationship source for auto-fill.
+ * Fields: auto_fill, items[{ target_page_id, label, enabled, sort_order }].
+ *
+ * Canonical relationship graph remains page_internal_links.
+ * On page save, enabled manual targets are upserted into page_internal_links
+ * (no duplicate rows) via syncRelatedChatRoomsToInternalLinks.
  */
 
 import { z } from "zod";

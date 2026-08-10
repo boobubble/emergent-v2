@@ -48,3 +48,8 @@ export {
   type RelatedChatRoomsConfig,
   type RelatedChatRoomItem,
 } from "./related-chat-rooms-config";
+export {
+  planRelatedChatRoomsInternalLinkSync,
+  internalLinkCoversTarget,
+  syncRelatedChatRoomsToInternalLinks,
+} from "./related-chat-rooms-sync";
