@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronRight, Plus, Trash2, Hash, Gamepad2 } from "lucide-react";
 import { useAdminSetting } from "@/lib/use-admin-setting";
+import { updateSetting } from "@/lib/admin.functions";
 import { listGames } from "@/lib/games-registry";
 import type { RoomGameConfig } from "@/lib/chat-types";
 import { GUEST_CHAT_DEFAULTS, GUEST_CHAT_SETTING_KEY, type GuestChatConfig } from "@/lib/guest-chat-config";
@@ -245,10 +249,28 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
 
 
 function GuestChatSettings() {
-  const { values, set, save, saving } = useAdminSetting<GuestChatConfig>(
+  const { values, set, patch, save, saving } = useAdminSetting<GuestChatConfig>(
     GUEST_CHAT_SETTING_KEY,
     GUEST_CHAT_DEFAULTS,
   );
+  const qc = useQueryClient();
+  const saveSetting = useServerFn(updateSetting);
+
+  async function persistEnabled(nextEnabled: boolean) {
+    const next = { ...values, enabled: nextEnabled };
+    patch(next);
+    try {
+      await saveSetting({ data: { key: GUEST_CHAT_SETTING_KEY, value: next } });
+      toast.success(nextEnabled ? "Guest Chat enabled" : "Guest Chat disabled");
+      void qc.invalidateQueries({ queryKey: ["admin-settings-full"] });
+      void qc.invalidateQueries({ queryKey: ["admin-settings"] });
+      void qc.invalidateQueries({ queryKey: ["guest-chat-public-config"] });
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to save Guest Chat");
+      // Revert local toggle on failure.
+      set("enabled", values.enabled);
+    }
+  }
 
   return (
     <section className="mb-6">
@@ -261,7 +283,7 @@ function GuestChatSettings() {
         <ToggleRow
           label="Guest Chat"
           checked={Boolean(values.enabled)}
-          onChange={(v) => set("enabled", v)}
+          onChange={(v) => { void persistEnabled(v); }}
         />
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -319,7 +341,13 @@ function GuestChatSettings() {
           </div>
         </div>
         <div className="flex justify-end">
-          <Button onClick={() => save()} disabled={saving}>
+          <Button
+            onClick={() => {
+              save();
+              void qc.invalidateQueries({ queryKey: ["guest-chat-public-config"] });
+            }}
+            disabled={saving}
+          >
             {saving ? "Saving…" : "Save Guest Chat"}
           </Button>
         </div>

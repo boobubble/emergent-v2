@@ -181,8 +181,18 @@ describe("no auth-guest regression", () => {
     expect(ctx).toMatch(/navigateToLobby/);
     expect(ctx).toMatch(/navigate\(\{\s*to:\s*["']\/chatroom["']/);
     expect(ctx).toMatch(/clearGuestChatSession/);
+    // AppSettings.guest_chat is the live source of truth for public UIs.
+    expect(ctx).toMatch(/hasSettingRow/);
+    expect(ctx).toMatch(/GUEST_CHAT_SETTING_KEY/);
     // Login/landing public surfaces must mount GuestChatProvider.
     expect(root).toMatch(/if\s*\(!readOnlyApp\)\s*\{[\s\S]*GuestChatProvider/);
+  });
+
+  it("Admin Guest Chat toggle persists enabled immediately", () => {
+    const src = readFileSync(resolve(srcRoot, "routes/admin.chatrooms.tsx"), "utf8");
+    expect(src).toMatch(/persistEnabled/);
+    expect(src).toMatch(/guest-chat-public-config/);
+    expect(src).toMatch(/updateSetting/);
   });
 
   it("MessageList shows GUEST badge for ephemeral visitors", () => {

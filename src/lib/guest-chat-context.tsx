@@ -1,5 +1,5 @@
 /**
- * Ephemeral guest chat session context for public /chatroom.
+ * Ephemeral guest chat session context for public /chatroom + login/landing.
  * Clears automatically when a real user signs in.
  */
 
@@ -15,7 +15,7 @@ import {
 } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-store";
 import { useAppSettings } from "@/lib/app-settings";
 import {
@@ -59,30 +59,54 @@ const GuestChatContext = createContext<GuestChatApi | null>(null);
 
 export function GuestChatProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const { raw } = useAppSettings();
+  const { raw, ready: settingsReady } = useAppSettings();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const fetchPublic = useServerFn(getGuestChatPublicConfig);
   const startFn = useServerFn(startGuestChatSession);
   const navigateToLobbyAfterStartRef = useRef(false);
 
-  const mergedFromSettings = useMemo(
-    () => mergeGuestChatConfig((raw as Record<string, unknown> | null)?.[GUEST_CHAT_SETTING_KEY]),
-    [raw],
-  );
+  const settingRaw = (raw as Record<string, unknown> | null)?.[GUEST_CHAT_SETTING_KEY];
+  const hasSettingRow =
+    settingsReady && Object.prototype.hasOwnProperty.call(raw ?? {}, GUEST_CHAT_SETTING_KEY);
 
   const publicQ = useQuery({
     queryKey: ["guest-chat-public-config"],
     queryFn: () => fetchPublic(),
-    staleTime: 30_000,
-    enabled: !user,
+    staleTime: 10_000,
+    refetchOnWindowFocus: true,
+    // AppSettings is the live source once loaded; server fn only bootstraps.
+    enabled: !user && !hasSettingRow,
   });
 
+  // Keep public cache aligned when AppSettings (realtime) receives guest_chat updates.
+  useEffect(() => {
+    if (!hasSettingRow) return;
+    const merged = mergeGuestChatConfig(settingRaw);
+    qc.setQueryData(["guest-chat-public-config"], {
+      enabled: merged.enabled,
+      namePrefix: merged.namePrefix,
+      nicknameMinLength: merged.nicknameMinLength,
+      nicknameMaxLength: merged.nicknameMaxLength,
+      messageCooldownSec: merged.messageCooldownSec,
+      maxMessageLength: merged.maxMessageLength,
+    });
+  }, [hasSettingRow, settingRaw, qc]);
+
   const config: GuestChatConfig = useMemo(() => {
+    // Single source of truth: app_settings.guest_chat.
+    // Prefer client AppSettings (anon-readable + realtime) when loaded;
+    // fall back to service-role public server fn only before settings arrive.
+    if (hasSettingRow) return mergeGuestChatConfig(settingRaw);
     if (publicQ.data) {
-      return mergeGuestChatConfig({ ...GUEST_CHAT_DEFAULTS, ...publicQ.data, enabled: publicQ.data.enabled });
+      return mergeGuestChatConfig({
+        ...GUEST_CHAT_DEFAULTS,
+        ...publicQ.data,
+        enabled: publicQ.data.enabled,
+      });
     }
-    return mergedFromSettings;
-  }, [publicQ.data, mergedFromSettings]);
+    return GUEST_CHAT_DEFAULTS;
+  }, [hasSettingRow, settingRaw, publicQ.data]);
 
   const [session, setSession] = useState<GuestChatClientSession | null>(() => readGuestChatSession());
   const [nicknameDialogOpen, setNicknameDialogOpen] = useState(false);
@@ -140,7 +164,6 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
       const goLobby = navigateToLobbyAfterStartRef.current;
       navigateToLobbyAfterStartRef.current = false;
       if (goLobby) {
-        // ChatProvider defaults activeChannel to "lobby" on public /chatroom.
         void navigate({ to: "/chatroom" });
       }
     } catch (e: unknown) {
@@ -152,9 +175,11 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
     }
   }, [startFn, navigate]);
 
+  const configReady = Boolean(user) || hasSettingRow || publicQ.isFetched || publicQ.isError;
+
   const api = useMemo<GuestChatApi>(() => ({
     config,
-    configReady: Boolean(user) || publicQ.isFetched || Boolean(raw),
+    configReady,
     enabled: config.enabled && !user,
     session,
     isGuestChatting: Boolean(!user && session && config.enabled),
@@ -166,7 +191,7 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
     starting,
     error,
   }), [
-    config, publicQ.isFetched, raw, user, session, nicknameDialogOpen,
+    config, configReady, user, session, nicknameDialogOpen,
     openNicknameDialog, closeNicknameDialog, startWithNickname, endGuestChat, starting, error,
   ]);
 
@@ -187,12 +212,12 @@ export function useGuestChat(): GuestChatApi {
       session: null,
       isGuestChatting: false,
       nicknameDialogOpen: false,
-  openNicknameDialog: (_opts?: OpenGuestNicknameOptions) => {},
-  closeNicknameDialog: () => {},
-  startWithNickname: async () => {},
-  endGuestChat: () => {},
-  starting: false,
-  error: null,
+      openNicknameDialog: (_opts?: OpenGuestNicknameOptions) => {},
+      closeNicknameDialog: () => {},
+      startWithNickname: async () => {},
+      endGuestChat: () => {},
+      starting: false,
+      error: null,
     };
   }
   return ctx;
