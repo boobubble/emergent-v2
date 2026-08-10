@@ -106,7 +106,7 @@ function makeDoc(seed: {
             row.type = v;
           },
           get type() {
-            return row.type;
+            return row.type ?? "";
           },
           set rel(v: string) {
             row.rel = v;
