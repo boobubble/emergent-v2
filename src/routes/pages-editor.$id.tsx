@@ -45,6 +45,12 @@ import {
   listPageTemplates,
 } from "@/lib/pages-cms/taxonomy.functions";
 import {
+  defaultRelatedChatRoomsConfig,
+  parseRelatedChatRoomsConfig,
+  type RelatedChatRoomsConfig,
+} from "@/lib/pages-cms/related-chat-rooms-config";
+import { RelatedChatRoomsSettingsCard } from "@/components/admin/pages/RelatedChatRoomsSettingsCard";
+import {
   slugifyPageSlug,
   validatePageSlug,
   pageSlugPreviewHost,
@@ -103,6 +109,7 @@ type PageRow = {
   seo_score: number | null;
   internal_link_count: number | null;
   scheduled_at: string | null;
+  related_chat_rooms: RelatedChatRoomsConfig;
 };
 
 function emptyPage(): PageRow {
@@ -121,6 +128,7 @@ function emptyPage(): PageRow {
     faq_content: "", cta_content: "",
     content_status: null, seo_score: null, internal_link_count: null,
     scheduled_at: null,
+    related_chat_rooms: defaultRelatedChatRoomsConfig(),
   };
 }
 
@@ -192,6 +200,8 @@ function mapServerRow(data: Record<string, unknown>): PageRow {
     faq_content: fieldToText(data.faq_content),
     cta_content: fieldToText(data.cta_content),
     language: (data.language as string | null) ?? "en",
+    related_chat_rooms:
+      parseRelatedChatRoomsConfig(data.related_chat_rooms) ?? defaultRelatedChatRoomsConfig(),
   };
 }
 
@@ -504,6 +514,7 @@ function PageEditor() {
         faq_content: textToJsonField(row.faq_content),
         cta_content: textToJsonField(row.cta_content),
         scheduled_at: row.scheduled_at,
+        related_chat_rooms: row.related_chat_rooms,
       };
       const saved = await save({ data: payload }) as {
         id?: string;
@@ -1252,6 +1263,17 @@ function PageEditor() {
               <p className="mt-1 text-[11px] text-muted-foreground">Comma separated (max 20).</p>
             </SidebarCard>
 
+            <SidebarCard icon={<Link2 className="h-4 w-4" />} title="Related Chat Rooms">
+              <RelatedChatRoomsSettingsCard
+                pageId={row.id || null}
+                pageSlug={row.slug}
+                pageType={row.page_type}
+                countryId={row.country_id}
+                value={row.related_chat_rooms}
+                onChange={(next) => update("related_chat_rooms", next)}
+              />
+            </SidebarCard>
+
             <SidebarCard icon={<Settings2 className="h-4 w-4" />} title="Page attributes">
               <div className="space-y-3 text-sm">
                 <div>
@@ -1440,12 +1462,12 @@ function sameDraft(a: PageRow, b: PageRow): boolean {
     "page_type", "country_id", "state_id", "city_id", "category_id",
     "keyword_group_id", "template_id", "h1", "primary_keyword",
     "secondary_keywords", "language", "intro_content", "faq_content", "cta_content",
-    "scheduled_at",
+    "scheduled_at", "related_chat_rooms",
   ];
   for (const k of keys) {
     const av = a?.[k]; const bv = b?.[k];
-    if (Array.isArray(av) || Array.isArray(bv)) {
-      if (JSON.stringify(av ?? []) !== JSON.stringify(bv ?? [])) return false;
+    if (k === "related_chat_rooms" || Array.isArray(av) || Array.isArray(bv) || (av && typeof av === "object") || (bv && typeof bv === "object")) {
+      if (JSON.stringify(av ?? null) !== JSON.stringify(bv ?? null)) return false;
     } else if ((av ?? "") !== (bv ?? "")) {
       return false;
     }

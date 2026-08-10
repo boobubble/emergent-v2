@@ -40,3 +40,11 @@ export {
   RELATED_CHAT_ROOMS_HEADING,
   type RelatedChatRoomLink,
 } from "./related-chat-rooms";
+export {
+  parseRelatedChatRoomsConfig,
+  defaultRelatedChatRoomsConfig,
+  relatedChatRoomsConfigSchema,
+  newRelatedChatRoomItemId,
+  type RelatedChatRoomsConfig,
+  type RelatedChatRoomItem,
+} from "./related-chat-rooms-config";

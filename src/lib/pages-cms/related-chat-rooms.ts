@@ -1,7 +1,12 @@
 /**
  * Related Chat Rooms — public selection from page_internal_links (+ safe fill).
  *
- * Canonical source: outgoing `page_internal_links` rows.
+ * Canonical relationship source: outgoing `page_internal_links` rows.
+ * Optional presentation overlay: custom_pages.related_chat_rooms
+ *   1) manual enabled items (admin order + labels)
+ *   2) page_internal_links (when auto_fill)
+ *   3) same-country / category fallback (when auto_fill)
+ *
  * Only published, indexable destinations render. Same-country geo preference;
  * never leak city↔city (or geo) across countries.
  */
@@ -11,6 +16,10 @@ import type { Database } from "@/integrations/supabase/types";
 import { pagePublicPath, slugifyPageSlug } from "@/lib/page-slug";
 import { isPubliclyVisibleStatus } from "@/lib/pages-cms/schemas";
 import { pickAnchor, cityAnchors, countryAnchors, categoryAnchors } from "@/lib/pages-cms/phase4c-priority";
+import {
+  parseRelatedChatRoomsConfig,
+  type RelatedChatRoomsConfig,
+} from "@/lib/pages-cms/related-chat-rooms-config";
 
 export const RELATED_CHAT_ROOMS_MAX = 8;
 export const RELATED_CHAT_ROOMS_HEADING = "Explore Related Chat Rooms";
@@ -30,6 +39,7 @@ export type RelatedRoomSourcePage = {
   title?: string | null;
   page_type?: string | null;
   country_id?: string | null;
+  related_chat_rooms?: unknown;
 };
 
 export type RelatedRoomTargetPage = {
@@ -108,18 +118,14 @@ export function isCrossCountryGeoLeak(
   const sourceCountry = source.country_id?.trim() || null;
   if (!sourceCountry) return false;
   const sourceType = (source.page_type || "").toLowerCase();
-  // Only enforce for geographically scoped source pages.
   if (!GEO_PAGE_TYPES.has(sourceType) && sourceType !== "") return false;
-  // Category sources without geo type may link multiple countries.
   if (sourceType === "category") return false;
 
   const targetCountry = target.country_id?.trim() || null;
   if (!targetCountry || targetCountry === sourceCountry) return false;
 
   const targetType = (target.page_type || "").toLowerCase();
-  // Categories are global hubs — allowed from a geo page.
   if (targetType === "category") return false;
-  // Other-country geo destinations (hubs/cities/states) are leaks.
   return GEO_PAGE_TYPES.has(targetType);
 }
 
@@ -150,7 +156,6 @@ export function labelForRelatedTarget(
     cleanRelatedLabel(target.title || "") ||
     cleanRelatedLabel(target.slug.replace(/-/g, " "));
 
-  // Prefer short readable title; optionally vary when falling back.
   if (kind === "city") {
     const city = base.replace(/\s+chat(\s+room)?$/i, "").trim() || base;
     return pickAnchor(cityAnchors(city), salt || target.slug);
@@ -168,12 +173,14 @@ export function labelForRelatedTarget(
 type RankedCandidate = RelatedChatRoomLink & {
   sortOrder: number;
   linkPriority: number;
+  fromManual: boolean;
 };
 
 function toLink(
   target: RelatedRoomTargetPage,
   label: string,
   sortOrder: number,
+  fromManual: boolean,
 ): RankedCandidate {
   const kind = classifyRelatedRoomKind(target.page_type);
   const slug = slugifyPageSlug(target.slug) || target.slug;
@@ -184,31 +191,40 @@ function toLink(
     kind,
     sortOrder,
     linkPriority: target.link_priority ?? 0,
+    fromManual,
   };
 }
 
 /**
  * Pure selector: build up to `max` related room links.
- * Prefer internal-link rows, then same-country / category fill candidates.
+ * Manual config items first (admin order), then internal links, then fill.
  */
 export function selectRelatedChatRooms(input: {
   source: RelatedRoomSourcePage;
   links: RelatedRoomInternalLink[];
   targetsById: Map<string, RelatedRoomTargetPage>;
   targetsBySlug: Map<string, RelatedRoomTargetPage>;
-  /** Optional published pages used only to fill remaining slots. */
   fillCandidates?: RelatedRoomTargetPage[];
+  config?: RelatedChatRoomsConfig | null;
   max?: number;
 }): RelatedChatRoomLink[] {
   const max = Math.min(Math.max(input.max ?? RELATED_CHAT_ROOMS_MAX, 0), RELATED_CHAT_ROOMS_MAX);
   if (max === 0) return [];
+
+  const config = input.config ?? parseRelatedChatRoomsConfig(input.source.related_chat_rooms);
+  const autoFill = config == null ? true : config.auto_fill !== false;
 
   const selfSlug = (slugifyPageSlug(input.source.slug) || input.source.slug).toLowerCase();
   const selfId = input.source.id;
   const seen = new Set<string>();
   const picked: RankedCandidate[] = [];
 
-  const tryAdd = (target: RelatedRoomTargetPage | undefined, label: string, sortOrder: number) => {
+  const tryAdd = (
+    target: RelatedRoomTargetPage | undefined,
+    label: string,
+    sortOrder: number,
+    fromManual: boolean,
+  ) => {
     if (!target || picked.length >= max) return;
     if (!isPublicRelatedTarget(target)) return;
     if (target.id === selfId) return;
@@ -216,13 +232,49 @@ export function selectRelatedChatRooms(input: {
     if (!slug || slug === selfSlug) return;
     if (seen.has(slug)) return;
     if (isCrossCountryGeoLeak(input.source, target)) return;
-    // Never emit /p/ or empty hrefs
     const href = pagePublicPath(slug);
     if (!href.startsWith("/") || href.startsWith("/p/")) return;
 
     seen.add(slug);
-    picked.push(toLink(target, label, sortOrder));
+    picked.push(toLink(target, label, sortOrder, fromManual));
   };
+
+  const manualItems = config?.items ?? [];
+  let usedManual = false;
+  if (manualItems.length) {
+    const ordered = [...manualItems]
+      .filter((item) => item.enabled !== false)
+      .sort((a, b) => a.sort_order - b.sort_order);
+    for (const item of ordered) {
+      const target = input.targetsById.get(item.target_page_id);
+      if (!target) continue;
+      usedManual = true;
+      const manualLabel =
+        cleanRelatedLabel(item.label || "") ||
+        cleanRelatedLabel(target.title || "") ||
+        cleanRelatedLabel(target.h1 || "");
+      tryAdd(
+        target,
+        manualLabel ||
+          labelForRelatedTarget(
+            target,
+            null,
+            `${input.source.slug}:manual:${target.slug}`,
+          ),
+        item.sort_order,
+        true,
+      );
+    }
+  }
+
+  if (!autoFill) {
+    return picked.slice(0, max).map(({ slug, href, label, kind }) => ({
+      slug,
+      href,
+      label,
+      kind,
+    }));
+  }
 
   const sortedLinks = [...input.links].sort(
     (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
@@ -236,11 +288,11 @@ export function selectRelatedChatRooms(input: {
     const bySlug = slug ? input.targetsBySlug.get(slug.toLowerCase()) : undefined;
     const target = byId || bySlug;
     if (!target) continue;
-    // Prefer resolved page slug over URL in case of redirects / casing.
     tryAdd(
       target,
       labelForRelatedTarget(target, link.anchor_text, `${input.source.slug}:${target.slug}`),
-      link.sort_order ?? 0,
+      100 + (link.sort_order ?? 0),
+      false,
     );
   }
 
@@ -259,18 +311,20 @@ export function selectRelatedChatRooms(input: {
         target,
         labelForRelatedTarget(target, null, `${input.source.slug}:fill:${target.slug}`),
         1000 + (target.link_priority ?? 0),
+        false,
       );
       if (picked.length >= max) break;
     }
   }
 
-  // Stable preference: country → city → category → other, then sort_order.
-  picked.sort((a, b) => {
-    const kr = kindRank(a.kind) - kindRank(b.kind);
-    if (kr !== 0) return kr;
-    if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
-    return a.label.localeCompare(b.label);
-  });
+  if (!usedManual) {
+    picked.sort((a, b) => {
+      const kr = kindRank(a.kind) - kindRank(b.kind);
+      if (kr !== 0) return kr;
+      if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+      return a.label.localeCompare(b.label);
+    });
+  }
 
   return picked.slice(0, max).map(({ slug, href, label, kind }) => ({
     slug,
@@ -285,11 +339,7 @@ type Sb = SupabaseClient<Database>;
 const TARGET_SELECT =
   "id,slug,title,h1,status,noindex,page_type,country_id,link_priority";
 
-/**
- * Load related chat rooms for a published Custom Page (SSR-safe).
- * Uses page_internal_links as the primary source; fills remaining slots from
- * same-country published geo pages + published category hubs.
- */
+/** Load related chat rooms for a published Custom Page (SSR-safe). */
 export async function loadRelatedChatRoomsForPage(
   sb: Sb,
   page: { id: string; slug: string },
@@ -299,11 +349,13 @@ export async function loadRelatedChatRoomsForPage(
 
   const { data: sourceRow, error: sourceErr } = await sb
     .from("custom_pages")
-    .select("id,slug,title,page_type,country_id")
+    .select("id,slug,title,page_type,country_id,related_chat_rooms")
     .eq("id", page.id)
     .maybeSingle();
   if (sourceErr) throw new Error(sourceErr.message);
   if (!sourceRow) return [];
+
+  const config = parseRelatedChatRoomsConfig(sourceRow.related_chat_rooms);
 
   const source: RelatedRoomSourcePage = {
     id: sourceRow.id,
@@ -311,6 +363,7 @@ export async function loadRelatedChatRoomsForPage(
     title: sourceRow.title,
     page_type: sourceRow.page_type,
     country_id: sourceRow.country_id,
+    related_chat_rooms: sourceRow.related_chat_rooms,
   };
 
   const { data: linkRows, error: linkErr } = await sb
@@ -323,7 +376,10 @@ export async function loadRelatedChatRoomsForPage(
 
   const links = (linkRows ?? []) as RelatedRoomInternalLink[];
   const targetIds = [
-    ...new Set(links.map((l) => l.target_page_id).filter(Boolean) as string[]),
+    ...new Set([
+      ...(links.map((l) => l.target_page_id).filter(Boolean) as string[]),
+      ...(config?.items.map((i) => i.target_page_id) ?? []),
+    ]),
   ];
   const targetSlugs = [
     ...new Set(
@@ -358,24 +414,28 @@ export async function loadRelatedChatRoomsForPage(
     }
   }
 
-  // Fill pool: published + indexable; filter same-country geo / categories in memory.
-  const { data: fillRows, error: fillErr } = await sb
-    .from("custom_pages")
-    .select(TARGET_SELECT)
-    .eq("status", "published")
-    .eq("noindex", false)
-    .neq("id", page.id)
-    .in("page_type", ["country", "hub", "city", "state", "category"])
-    .order("link_priority", { ascending: false })
-    .limit(80);
-  if (fillErr) throw new Error(fillErr.message);
+  const autoFill = config == null ? true : config.auto_fill !== false;
+  let fillCandidates: RelatedRoomTargetPage[] = [];
 
-  const fillCandidates = ((fillRows ?? []) as RelatedRoomTargetPage[]).filter((row) => {
-    const kind = classifyRelatedRoomKind(row.page_type);
-    if (kind === "category") return true;
-    if (!source.country_id) return kind === "country" || kind === "city";
-    return row.country_id === source.country_id;
-  });
+  if (autoFill) {
+    const { data: fillRows, error: fillErr } = await sb
+      .from("custom_pages")
+      .select(TARGET_SELECT)
+      .eq("status", "published")
+      .eq("noindex", false)
+      .neq("id", page.id)
+      .in("page_type", ["country", "hub", "city", "state", "category"])
+      .order("link_priority", { ascending: false })
+      .limit(80);
+    if (fillErr) throw new Error(fillErr.message);
+
+    fillCandidates = ((fillRows ?? []) as RelatedRoomTargetPage[]).filter((row) => {
+      const kind = classifyRelatedRoomKind(row.page_type);
+      if (kind === "category") return true;
+      if (!source.country_id) return kind === "country" || kind === "city";
+      return row.country_id === source.country_id;
+    });
+  }
 
   return selectRelatedChatRooms({
     source,
@@ -383,6 +443,7 @@ export async function loadRelatedChatRoomsForPage(
     targetsById,
     targetsBySlug,
     fillCandidates,
+    config,
     max,
   });
 }

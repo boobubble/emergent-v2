@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { CmsContentStatus, CmsPageStatus, CmsPageType } from "./types";
+import { relatedChatRoomsConfigSchema } from "./related-chat-rooms-config";
 
 export const CMS_PAGE_STATUSES = ["draft", "scheduled", "published", "archived"] as const satisfies readonly CmsPageStatus[];
 export const CMS_CONTENT_STATUSES = ["empty", "partial", "complete"] as const satisfies readonly CmsContentStatus[];
@@ -101,6 +102,7 @@ export const pageSaveSchema = z.object({
   scheduled_at: z.string().max(40).nullable().optional(),
   parent_page_id: uuidOpt,
   hub_page_id: uuidOpt,
+  related_chat_rooms: relatedChatRoomsConfigSchema.nullable().optional(),
 });
 
 export type PageSaveInput = z.infer<typeof pageSaveSchema>;

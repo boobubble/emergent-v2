@@ -327,6 +327,45 @@ export const listPageInternalLinks = createServerFn({ method: "GET" })
     };
   });
 
+/** Published + indexable Custom Pages for Related Chat Rooms target picker. */
+export const listRelatedChatRoomTargets = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
+  .inputValidator((input) =>
+    z.object({
+      excludePageId: z.string().uuid().optional(),
+      q: z.string().max(80).optional(),
+      limit: z.number().int().min(1).max(200).default(100),
+    }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const sb = await getSupabaseAdmin();
+    let q = sb
+      .from("custom_pages")
+      .select("id,slug,title,h1,page_type,country_id")
+      .eq("status", "published")
+      .eq("noindex", false)
+      .order("title", { ascending: true })
+      .limit(data.limit);
+    if (data.excludePageId) q = q.neq("id", data.excludePageId);
+    const term = data.q?.trim();
+    if (term) {
+      const safe = term.replace(/[%_,]/g, "");
+      if (safe) q = q.or(`title.ilike.%${safe}%,slug.ilike.%${safe}%`);
+    }
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      title: r.title,
+      h1: r.h1,
+      page_type: r.page_type,
+      country_id: r.country_id,
+      href: `/${r.slug}`,
+    }));
+  });
+
 // ===== Import / Export =====
 export const exportPages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.write")])

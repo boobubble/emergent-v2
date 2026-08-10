@@ -77,6 +77,9 @@ export function buildCustomPageWriteRow(
   if (data.template_id !== undefined) row.template_id = data.template_id;
   if (data.parent_page_id !== undefined) row.parent_page_id = data.parent_page_id;
   if (data.hub_page_id !== undefined) row.hub_page_id = data.hub_page_id;
+  if (data.related_chat_rooms !== undefined) {
+    row.related_chat_rooms = data.related_chat_rooms;
+  }
 
   return { row, slug, content_status, seo_score };
 }

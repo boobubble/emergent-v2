@@ -2229,6 +2229,7 @@ export type Database = {
           parent_page_id: string | null
           primary_keyword: string | null
           published_at: string | null
+          related_chat_rooms: Json | null
           scheduled_at: string | null
           schema_jsonld: Json | null
           secondary_keywords: string[]
@@ -2281,6 +2282,7 @@ export type Database = {
           parent_page_id?: string | null
           primary_keyword?: string | null
           published_at?: string | null
+          related_chat_rooms?: Json | null
           scheduled_at?: string | null
           schema_jsonld?: Json | null
           secondary_keywords?: string[]
@@ -2333,6 +2335,7 @@ export type Database = {
           parent_page_id?: string | null
           primary_keyword?: string | null
           published_at?: string | null
+          related_chat_rooms?: Json | null
           scheduled_at?: string | null
           schema_jsonld?: Json | null
           secondary_keywords?: string[]
