@@ -12,7 +12,7 @@ export type RouteHeadAudit = {
 };
 
 const ROOT_FALLBACK: RouteHeadAudit = {
-  source: "__root.tsx defaults (+ DynamicBrandHead runtime)",
+  source: "__root.tsx static shell defaults (DynamicBrandHead = brand chrome only)",
   title: "available",
   description: "available",
   canonical: "missing",

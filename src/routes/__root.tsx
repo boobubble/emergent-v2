@@ -110,8 +110,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
-    // Static SSR defaults — <DynamicBrandHead /> overrides these at runtime
-    // with values from app_settings.whitelabel / branding once loaded.
+    // Static SSR shell defaults only. Page SEO (title, description, robots,
+    // canonical, OG/Twitter) is owned by each route's head() via
+    // headFromRouteSeo / createSeoRouteHead. DynamicBrandHead applies brand
+    // chrome (favicon, theme-color, verification) and must not overwrite SEO.
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },

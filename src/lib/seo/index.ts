@@ -7,6 +7,11 @@ export * from "./sitemap";
 
 export { createSeoRouteHead, seoFallback } from "./route-head";
 export {
+  applyBrandChromeToDocument,
+  readRouteOwnedSeo,
+  ROUTE_OWNED_SEO_KEYS,
+} from "./dynamic-brand-chrome";
+export {
   loadRouteSeo,
   loadRouteSeoWithDefaults,
   loadPrivateRouteSeo,
