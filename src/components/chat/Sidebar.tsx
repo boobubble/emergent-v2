@@ -506,7 +506,7 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
                     {guestChat.enabled && (
                       <button
                         type="button"
-                        onClick={guestChat.openNicknameDialog}
+                        onClick={() => guestChat.openNicknameDialog()}
                         className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary hover:bg-primary/15"
                       >
                         Chat as Guest

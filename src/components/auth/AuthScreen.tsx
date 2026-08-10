@@ -8,6 +8,8 @@ import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
 import { LiveCommunityBackground } from "@/components/auth/LiveCommunityBackground";
+import { ContinueAsGuestButton } from "@/components/auth/ContinueAsGuestButton";
+import { GuestNicknameDialog } from "@/components/chat/GuestNicknameDialog";
 
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
@@ -117,12 +119,14 @@ export function AuthScreen() {
               {signupCfg.disabledMessage}
             </div>
           )}
+          <ContinueAsGuestButton variant="auth-screen" includeDialog={false} />
           </div>
 
         </div>
         <FeedbackShowcase surface="signup" />
       </div>
 
+      <GuestNicknameDialog />
       <AuthDialogs popup={popup} setPopup={setPopup} signupEnabled={signupAvailable} />
     </LiveCommunityBackground>
   );

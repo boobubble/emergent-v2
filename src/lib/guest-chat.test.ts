@@ -168,6 +168,23 @@ describe("no auth-guest regression", () => {
     expect(src).toMatch(/GUEST_LOBBY_CHANNEL_ID/);
   });
 
+  it("AuthScreen offers Continue as Guest via ephemeral guest system", () => {
+    const auth = readFileSync(resolve(srcRoot, "components/auth/AuthScreen.tsx"), "utf8");
+    const btn = readFileSync(resolve(srcRoot, "components/auth/ContinueAsGuestButton.tsx"), "utf8");
+    const ctx = readFileSync(resolve(srcRoot, "lib/guest-chat-context.tsx"), "utf8");
+    const root = readFileSync(resolve(srcRoot, "routes/__root.tsx"), "utf8");
+    expect(auth).toMatch(/ContinueAsGuestButton/);
+    expect(auth).toMatch(/GuestNicknameDialog/);
+    expect(btn).toMatch(/Continue as Guest/);
+    expect(btn).toMatch(/navigateToLobby:\s*true/);
+    expect(btn).not.toMatch(/signInAnonymously|loginAsGuest/);
+    expect(ctx).toMatch(/navigateToLobby/);
+    expect(ctx).toMatch(/navigate\(\{\s*to:\s*["']\/chatroom["']/);
+    expect(ctx).toMatch(/clearGuestChatSession/);
+    // Login/landing public surfaces must mount GuestChatProvider.
+    expect(root).toMatch(/if\s*\(!readOnlyApp\)\s*\{[\s\S]*GuestChatProvider/);
+  });
+
   it("MessageList shows GUEST badge for ephemeral visitors", () => {
     const src = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
     expect(src).toMatch(/>\s*Guest\s*</);

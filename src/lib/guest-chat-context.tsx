@@ -9,9 +9,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-store";
@@ -33,6 +35,11 @@ import {
   startGuestChatSession,
 } from "@/lib/guest-chat.functions";
 
+export interface OpenGuestNicknameOptions {
+  /** After a successful ephemeral session start, go to /chatroom with Lobby. */
+  navigateToLobby?: boolean;
+}
+
 export interface GuestChatApi {
   config: GuestChatConfig;
   configReady: boolean;
@@ -40,7 +47,7 @@ export interface GuestChatApi {
   session: GuestChatClientSession | null;
   isGuestChatting: boolean;
   nicknameDialogOpen: boolean;
-  openNicknameDialog: () => void;
+  openNicknameDialog: (opts?: OpenGuestNicknameOptions) => void;
   closeNicknameDialog: () => void;
   startWithNickname: (nickname: string) => Promise<void>;
   endGuestChat: () => void;
@@ -53,8 +60,10 @@ const GuestChatContext = createContext<GuestChatApi | null>(null);
 export function GuestChatProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { raw } = useAppSettings();
+  const navigate = useNavigate();
   const fetchPublic = useServerFn(getGuestChatPublicConfig);
   const startFn = useServerFn(startGuestChatSession);
+  const navigateToLobbyAfterStartRef = useRef(false);
 
   const mergedFromSettings = useMemo(
     () => mergeGuestChatConfig((raw as Record<string, unknown> | null)?.[GUEST_CHAT_SETTING_KEY]),
@@ -86,6 +95,7 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
     clearGuestChatSession();
     setSession(null);
     setNicknameDialogOpen(false);
+    navigateToLobbyAfterStartRef.current = false;
   }, [user]);
 
   // If admin disables guest chat, drop local session.
@@ -96,15 +106,20 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
     setSession(null);
   }, [config.enabled, session]);
 
-  const openNicknameDialog = useCallback(() => {
+  const openNicknameDialog = useCallback((opts?: OpenGuestNicknameOptions) => {
     setError(null);
+    navigateToLobbyAfterStartRef.current = Boolean(opts?.navigateToLobby);
     setNicknameDialogOpen(true);
   }, []);
-  const closeNicknameDialog = useCallback(() => setNicknameDialogOpen(false), []);
+  const closeNicknameDialog = useCallback(() => {
+    navigateToLobbyAfterStartRef.current = false;
+    setNicknameDialogOpen(false);
+  }, []);
 
   const endGuestChat = useCallback(() => {
     clearGuestChatSession();
     setSession(null);
+    navigateToLobbyAfterStartRef.current = false;
     setNicknameDialogOpen(false);
   }, []);
 
@@ -122,6 +137,12 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
       writeGuestChatSession(next);
       setSession(next);
       setNicknameDialogOpen(false);
+      const goLobby = navigateToLobbyAfterStartRef.current;
+      navigateToLobbyAfterStartRef.current = false;
+      if (goLobby) {
+        // ChatProvider defaults activeChannel to "lobby" on public /chatroom.
+        void navigate({ to: "/chatroom" });
+      }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Could not start guest chat.";
       setError(msg);
@@ -129,7 +150,7 @@ export function GuestChatProvider({ children }: { children: ReactNode }) {
     } finally {
       setStarting(false);
     }
-  }, [startFn]);
+  }, [startFn, navigate]);
 
   const api = useMemo<GuestChatApi>(() => ({
     config,
@@ -166,12 +187,12 @@ export function useGuestChat(): GuestChatApi {
       session: null,
       isGuestChatting: false,
       nicknameDialogOpen: false,
-      openNicknameDialog: () => {},
-      closeNicknameDialog: () => {},
-      startWithNickname: async () => {},
-      endGuestChat: () => {},
-      starting: false,
-      error: null,
+  openNicknameDialog: (_opts?: OpenGuestNicknameOptions) => {},
+  closeNicknameDialog: () => {},
+  startWithNickname: async () => {},
+  endGuestChat: () => {},
+  starting: false,
+  error: null,
     };
   }
   return ctx;

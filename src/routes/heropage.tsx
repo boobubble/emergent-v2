@@ -8,6 +8,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
+import { GuestNicknameDialog } from "@/components/chat/GuestNicknameDialog";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { HeroSection as HeroSectionBlock } from "@/components/landing/sections/HeroSection";
@@ -546,6 +547,7 @@ function HeroHomepage() {
 
       <LandingFooter brandName={cfg.brandName} />
 
+      <GuestNicknameDialog />
       <AuthDialogs popup={popup} setPopup={setPopup} />
     </div>
   );
