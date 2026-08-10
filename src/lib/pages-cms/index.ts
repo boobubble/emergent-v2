@@ -33,3 +33,10 @@ export {
   selectRelatedCities,
   CITY_CONTENT_BLOCKS,
 } from "./city-page-context";
+export {
+  selectRelatedChatRooms,
+  loadRelatedChatRoomsForPage,
+  RELATED_CHAT_ROOMS_MAX,
+  RELATED_CHAT_ROOMS_HEADING,
+  type RelatedChatRoomLink,
+} from "./related-chat-rooms";

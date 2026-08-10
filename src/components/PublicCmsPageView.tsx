@@ -5,12 +5,17 @@
 import { sanitizeHtml } from "@/lib/pages-io";
 import { injectHeadingIds } from "@/lib/heading-ids";
 import { resolvePublicCmsH1 } from "@/lib/pages-cms/public-page-ssr";
+import { RelatedChatRooms } from "@/components/RelatedChatRooms";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Eye } from "lucide-react";
 import type { PublishedCustomPage } from "@/lib/fetch-published-page";
+import type { RelatedChatRoomLink } from "@/lib/pages-cms/related-chat-rooms";
 
-export type PublicCmsPage = PublishedCustomPage & { publicHtml?: string };
+export type PublicCmsPage = PublishedCustomPage & {
+  publicHtml?: string;
+  relatedChatRooms?: RelatedChatRoomLink[] | null;
+};
 
 export function PublicCmsPageView({ page }: { page: PublicCmsPage }) {
   const rawHtml = page.publicHtml ?? page.content;
@@ -78,6 +83,9 @@ export function PublicCmsPageView({ page }: { page: PublicCmsPage }) {
               className="custom-page-content prose prose-sm dark:prose-invert mt-6 max-w-none"
               dangerouslySetInnerHTML={{ __html: safeHtml }}
             />
+
+            {/* Outside custom_pages.content — reusable SSR links from page_internal_links */}
+            <RelatedChatRooms links={page.relatedChatRooms} />
           </article>
 
           {hasRight && <PageSidebar mode={rightSidebar} side="right" />}
