@@ -51,5 +51,7 @@ export {
 export {
   planRelatedChatRoomsInternalLinkSync,
   internalLinkCoversTarget,
+  isRelatedChatRoomsOwnedLink,
   syncRelatedChatRoomsToInternalLinks,
+  RELATED_CHAT_ROOMS_LINK_SOURCE,
 } from "./related-chat-rooms-sync";

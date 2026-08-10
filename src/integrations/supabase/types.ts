@@ -5217,6 +5217,7 @@ export type Database = {
           page_id: string
           rule_id: string | null
           sort_order: number
+          source: string | null
           target_page_id: string | null
           target_url: string
           updated_at: string
@@ -5230,6 +5231,7 @@ export type Database = {
           page_id: string
           rule_id?: string | null
           sort_order?: number
+          source?: string | null
           target_page_id?: string | null
           target_url: string
           updated_at?: string
@@ -5243,6 +5245,7 @@ export type Database = {
           page_id?: string
           rule_id?: string | null
           sort_order?: number
+          source?: string | null
           target_page_id?: string | null
           target_url?: string
           updated_at?: string

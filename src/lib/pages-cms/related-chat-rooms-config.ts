@@ -4,8 +4,8 @@
  * Fields: auto_fill, items[{ target_page_id, label, enabled, sort_order }].
  *
  * Canonical relationship graph remains page_internal_links.
- * On page save, enabled manual targets are upserted into page_internal_links
- * (no duplicate rows) via syncRelatedChatRoomsToInternalLinks.
+ * On page save, syncRelatedChatRoomsToInternalLinks reconciles rows with
+ * source='related_chat_rooms' only (insert missing, remove stale, keep matches).
  */
 
 import { z } from "zod";
