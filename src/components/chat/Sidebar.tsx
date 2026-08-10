@@ -6,6 +6,9 @@ import {
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
+import { useGuestChat } from "@/lib/guest-chat-context";
+import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { GuestNicknameDialog } from "@/components/chat/GuestNicknameDialog";
 import { useMyRoles } from "@/lib/use-my-role";
 import { useRoomOnlineCounts } from "@/lib/use-room-online-counts";
 import { BrandText, useBrandingMap } from "@/components/BrandMark";
@@ -38,9 +41,18 @@ const FILTERS: { id: SidebarRoomFilter; label: string }[] = [
 export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }: Props) {
   const { state, setActive, createRoom, deleteRoom, reset } = useChat();
   const { logout, user } = useAuth();
-  const { openSignIn, openSignUp } = useAuthGate();
+  const { openSignIn, openSignUp, requireAuth } = useAuthGate();
+  const guestChat = useGuestChat();
   const { isAdmin } = useMyRoles();
   const branding = useBrandingMap();
+
+  const selectRoom = (id: string) => {
+    if (!user && id !== GUEST_LOBBY_CHANNEL_ID) {
+      requireAuth();
+      return;
+    }
+    setActive(id);
+  };
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newTopic, setNewTopic] = useState("");
@@ -154,7 +166,7 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
         )}
       >
         <button
-          onClick={() => setActive(id)}
+          onClick={() => selectRoom(id)}
           className="flex min-w-0 flex-1 items-center gap-1.5 truncate bg-transparent p-0 text-left"
         >
           {r.kind === "game" ? (
@@ -293,7 +305,7 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
             <SidebarSparseSuggestions
               rooms={sparseSuggestionRooms}
               activeChannelId={state.activeChannel}
-              onSelect={setActive}
+              onSelect={selectRoom}
             />
           )}
 
@@ -460,25 +472,63 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
             </>
           ) : (
             <div className="rounded-xl border border-border/60 bg-card/70 p-2.5">
-              <p className="mb-2 text-[10px] text-muted-foreground">
-                Sign in to chat, react, DM and earn XP.
-              </p>
-              <div className="flex flex-col gap-1">
-                <button
-                  type="button"
-                  onClick={openSignIn}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90"
-                >
-                  <LogIn className="h-3.5 w-3.5" /> Sign in
-                </button>
-                <button
-                  type="button"
-                  onClick={openSignUp}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[11px] font-semibold hover:bg-white/5"
-                >
-                  <UserPlus className="h-3.5 w-3.5" /> Create account
-                </button>
-              </div>
+              <GuestNicknameDialog />
+              {guestChat.isGuestChatting ? (
+                <>
+                  <p className="mb-2 text-[10px] text-muted-foreground">
+                    Chatting as <span className="font-semibold text-foreground">{guestChat.session?.displayName}</span> in Lobby only.
+                  </p>
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      onClick={openSignIn}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90"
+                    >
+                      <LogIn className="h-3.5 w-3.5" /> Sign in to unlock all
+                    </button>
+                    <button
+                      type="button"
+                      onClick={guestChat.endGuestChat}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[11px] font-semibold hover:bg-white/5"
+                    >
+                      End guest chat
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="mb-2 text-[10px] text-muted-foreground">
+                    {guestChat.enabled
+                      ? "Chat in Lobby as a guest, or sign in for full access."
+                      : "Sign in to chat, react, DM and earn XP."}
+                  </p>
+                  <div className="flex flex-col gap-1">
+                    {guestChat.enabled && (
+                      <button
+                        type="button"
+                        onClick={guestChat.openNicknameDialog}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary hover:bg-primary/15"
+                      >
+                        Chat as Guest
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={openSignIn}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90"
+                    >
+                      <LogIn className="h-3.5 w-3.5" /> Sign in
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openSignUp}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[11px] font-semibold hover:bg-white/5"
+                    >
+                      <UserPlus className="h-3.5 w-3.5" /> Create account
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

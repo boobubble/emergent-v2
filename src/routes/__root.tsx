@@ -17,6 +17,7 @@ import { SocialGraphProvider } from "@/lib/use-social-graph";
 import { NotificationsProvider } from "@/lib/use-notifications";
 import { IgnoreProvider } from "@/lib/ignore-store";
 import { AppSettingsProvider } from "@/lib/app-settings";
+import { GuestChatProvider } from "@/lib/guest-chat-context";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 
 import { useEffect } from "react";
@@ -189,9 +190,7 @@ function isPublicPath(pathname: string) {
 }
 
 function hasStoredAuthSession() {
-  // On the server there is no localStorage — do not pretend a session exists
-  // (that forced AuthGate into the "restore session" branch for some paths).
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") return true;
   try {
     for (let i = 0; i < window.localStorage.length; i++) {
       const key = window.localStorage.key(i) ?? "";
@@ -278,6 +277,7 @@ function AuthGate() {
 
   return (
     <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
+      <GuestChatProvider>
       <SocialGraphProvider>
       <NotificationsProvider>
       <FeedPrefsProvider>
@@ -298,6 +298,7 @@ function AuthGate() {
       </FeedPrefsProvider>
       </NotificationsProvider>
       </SocialGraphProvider>
+      </GuestChatProvider>
     </ChatProvider>
   );
 }
@@ -316,6 +317,7 @@ function PublicOutlet({ readOnlyApp }: { readOnlyApp: boolean }) {
   if (!readOnlyApp) return content;
   return (
     <ChatProvider username="__public__" authUserId={null} isGuest>
+      <GuestChatProvider>
       <SocialGraphProvider>
       <NotificationsProvider>
       <FeedPrefsProvider>
@@ -323,6 +325,7 @@ function PublicOutlet({ readOnlyApp }: { readOnlyApp: boolean }) {
       </FeedPrefsProvider>
       </NotificationsProvider>
       </SocialGraphProvider>
+      </GuestChatProvider>
     </ChatProvider>
   );
 }

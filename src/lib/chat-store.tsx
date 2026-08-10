@@ -865,13 +865,19 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     }
   }, [state.rooms]);
 
-  // Fetch existing remote messages for lobby + the active remote channel
+  // Fetch existing remote messages for lobby + the active remote channel.
+  // Public browse (authUserId=null) may read Lobby only (anon SELECT policy).
   useEffect(() => {
-    if (!authUserId) return;
     let cancelled = false;
-    const channelsToFetch = new Set<string>(["lobby", "games"]);
-    if (isRemoteChannel(state.activeChannel, authUserId) && !channelsToFetch.has(state.activeChannel)) {
-      channelsToFetch.add(state.activeChannel);
+    const channelsToFetch = new Set<string>();
+    if (!authUserId) {
+      channelsToFetch.add("lobby");
+    } else {
+      channelsToFetch.add("lobby");
+      channelsToFetch.add("games");
+      if (isRemoteChannel(state.activeChannel, authUserId) && !channelsToFetch.has(state.activeChannel)) {
+        channelsToFetch.add(state.activeChannel);
+      }
     }
     (async () => {
       for (const ch of channelsToFetch) {
@@ -884,7 +890,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         if (error) {
           console.error("messages fetch failed", ch, error);
           rtLog("error", "fetch-failed", `${ch}: ${error.message}`);
-          if (!cancelled && !fetchErrorsShown.current.has(ch)) {
+          if (!cancelled && authUserId && !fetchErrorsShown.current.has(ch)) {
             fetchErrorsShown.current.add(ch);
             setState(s => {
               const sys: Message = {
@@ -928,13 +934,15 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     return () => { cancelled = true; };
   }, [authUserId, state.activeChannel, resyncTick]);
 
-  // Realtime subscription to new messages (RLS scopes us to lobby + our DMs)
+  // Realtime subscription to new messages (RLS scopes us to lobby + our DMs).
+  // Public browse also subscribes to Lobby inserts (anon SELECT policy).
   useEffect(() => {
-    if (!authUserId) return;
     const channel = supabase
       .channel(`palrgo-messages-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
         const row = payload.new as Parameters<typeof rowToMessage>[0];
+        // Public visitors only receive Lobby messages.
+        if (!authUserId && row.channel_id !== "lobby") return;
         if (seenRemoteMsgIds.current.has(row.id)) return;
         seenRemoteMsgIds.current.add(row.id);
         const msg = rowToMessage(row, authUserId);

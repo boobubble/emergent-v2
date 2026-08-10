@@ -6,6 +6,10 @@ import { toast } from "sonner";
 import { useChat } from "@/lib/chat-store";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
+import { useGuestChat } from "@/lib/guest-chat-context";
+import { sendGuestLobbyMessage } from "@/lib/guest-chat.functions";
+import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { isBotCommandOrAction } from "@/lib/guest-nickname";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
 import { AnimatedEmojiPicker, stickerUrl } from "./AnimatedEmojiPicker";
@@ -21,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { TypingIndicator } from "./TypingIndicator";
 import { VOICE_NOTES_DEFAULTS, maxDurationForChannel, type VoiceNotesConfig } from "@/lib/voice-notes-config";
+import { GuestNicknameDialog } from "./GuestNicknameDialog";
 
 
 const COMMANDS = [
@@ -33,6 +38,8 @@ export function MessageInput() {
   const { send, state, replyingTo, setReplyingTo, pushSystem, wipeChannel } = useChat();
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
+  const guestChat = useGuestChat();
+  const sendGuest = useServerFn(sendGuestLobbyMessage);
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
   const { typers, sendTyping } = useTyping(state.activeChannel, me, !!me);
   const [text, setText] = useState("");
@@ -204,10 +211,65 @@ export function MessageInput() {
     return out;
   }
 
+  async function submitGuestLobby(plain: string) {
+    if (!guestChat.session) {
+      guestChat.openNicknameDialog();
+      return;
+    }
+    if (state.activeChannel !== GUEST_LOBBY_CHANNEL_ID) {
+      requireAuth();
+      return;
+    }
+    if (isBotCommandOrAction(plain)) {
+      requireAuth();
+      return;
+    }
+    if (attachment) {
+      requireAuth();
+      return;
+    }
+    try {
+      await sendGuest({
+        data: {
+          visitorId: guestChat.session.visitorId,
+          channelId: GUEST_LOBBY_CHANNEL_ID,
+          text: plain,
+        },
+      });
+      setText("");
+      setAttachment(null);
+      setAttachError("");
+      setReplyingTo(null);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to send";
+      if (msg === "GUEST_BOT_BLOCKED" || /sign up|sign in|login/i.test(msg)) {
+        requireAuth();
+        return;
+      }
+      if (/disabled/i.test(msg)) {
+        guestChat.endGuestChat();
+        toast.error("Guest chat is currently disabled.");
+        return;
+      }
+      toast.error(msg);
+    }
+  }
+
   function submit() {
     if (!text.trim() && !attachment) return;
+    const trimmed = text.trim();
+
+    // Ephemeral guest Lobby path — never creates auth/profile.
+    if (!user && guestChat.isGuestChatting) {
+      void submitGuestLobby(trimmed);
+      return;
+    }
+    if (!user && guestChat.enabled && state.activeChannel === GUEST_LOBBY_CHANNEL_ID && !attachment && !isBotCommandOrAction(trimmed)) {
+      guestChat.openNicknameDialog();
+      return;
+    }
+
     requireAuth(() => {
-      const trimmed = text.trim();
       if (/^\/clearcache\b/i.test(trimmed)) {
         setText(""); setAttachment(null); setAttachError("");
         void handleClearCache();
@@ -220,7 +282,6 @@ export function MessageInput() {
       }
       const outgoing = autoMentionUsernames(text);
       send(outgoing, { attachment: attachment || undefined, replyToId: replyingTo?.id });
-      // Fire-and-forget earn call — server enforces cooldown + daily cap.
       if (me) {
         earnChat({ data: { channelId: state.activeChannel, isReply: !!replyingTo } }).catch(() => {});
       }
@@ -234,6 +295,7 @@ export function MessageInput() {
     body: string,
     opts?: { attachment?: Attachment; replyToId?: string },
   ) {
+    // Media / stickers / gif / voice always require a real account.
     requireAuth(() => {
       send(body, opts);
     });
@@ -300,6 +362,7 @@ export function MessageInput() {
 
   return (
     <div className="min-w-0 overflow-x-hidden px-2 py-1 sm:px-6 sm:py-0">
+      <GuestNicknameDialog />
       {replyingTo && (
         <div className="mb-2 flex min-h-11 items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
           <Reply className="h-4 w-4 shrink-0 text-primary" />
@@ -434,19 +497,25 @@ export function MessageInput() {
       ) : (
       <div className="chat-composer-glow group relative flex min-w-0 items-end gap-0.5 rounded-3xl border border-border bg-card/60 pb-0 pl-2 pt-2 pr-1 shadow-sm backdrop-blur-md transition-all sm:gap-1 sm:pl-4 sm:pr-2">
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
-        <button onClick={() => fileRef.current?.click()} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Attach file" aria-label="Attach file">
+        <button onClick={() => requireAuth(() => fileRef.current?.click())} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Attach file" aria-label="Attach file">
           <Paperclip className="h-5 w-5" />
         </button>
-        <button onClick={() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !"))} className="mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary sm:grid" title="Command" aria-label="Insert command">
+        <button onClick={() => requireAuth(() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !")))} className="mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary sm:grid" title="Command" aria-label="Insert command">
           <Sparkles className="h-5 w-5" />
         </button>
-        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={replyingTo ? "Write your reply…" : "Message — try !help or @mention"} className="max-h-[140px] min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm" />
-        <button onClick={() => { setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Animated stickers" aria-label="Animated stickers">
+        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={
+          guestChat.isGuestChatting && state.activeChannel === GUEST_LOBBY_CHANNEL_ID
+            ? `Message as ${guestChat.session?.displayName ?? "Guest"}…`
+            : !user && guestChat.enabled
+              ? "Message Lobby as Guest, or sign in…"
+              : replyingTo ? "Write your reply…" : "Message — try !help or @mention"
+        } className="max-h-[140px] min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm" />
+        <button onClick={() => requireAuth(() => { setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); })} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Animated stickers" aria-label="Animated stickers">
           <Sticker className="h-5 w-5" />
         </button>
         {media.giphy.enabled && (
           <button
-            onClick={() => { setShowGiphy(s => !s); setShowEmoji(false); setShowStickers(false); setShowYoutube(false); }}
+            onClick={() => requireAuth(() => { setShowGiphy(s => !s); setShowEmoji(false); setShowStickers(false); setShowYoutube(false); })}
             className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-fuchsia-400"
             title="Share a GIF"
             aria-label="Share a GIF"
@@ -456,7 +525,7 @@ export function MessageInput() {
         )}
         {media.youtube.enabled && (
           <button
-            onClick={() => { setShowYoutube(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); }}
+            onClick={() => requireAuth(() => { setShowYoutube(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); })}
             className="mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-red-500 sm:grid"
             title="Share a YouTube video"
             aria-label="Share a YouTube video"
@@ -466,7 +535,7 @@ export function MessageInput() {
         )}
         {voiceCfg.enabled && (
           <button
-            onClick={() => { setShowVoice(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }}
+            onClick={() => requireAuth(() => { setShowVoice(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); })}
             className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-red-400"
             title={`Voice note (max ${voiceMax}s)`}
             aria-label="Voice note"

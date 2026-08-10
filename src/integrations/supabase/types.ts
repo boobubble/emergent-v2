@@ -4604,6 +4604,67 @@ export type Database = {
         }
         Relationships: []
       }
+
+      guest_chat_sessions: {
+        Row: {
+          visitor_id: string
+          nickname: string
+          display_name: string
+          created_at: string
+          expires_at: string
+          last_message_at: string | null
+          last_message_hash: string | null
+        }
+        Insert: {
+          visitor_id: string
+          nickname: string
+          display_name: string
+          created_at?: string
+          expires_at: string
+          last_message_at?: string | null
+          last_message_hash?: string | null
+        }
+        Update: {
+          visitor_id?: string
+          nickname?: string
+          display_name?: string
+          created_at?: string
+          expires_at?: string
+          last_message_at?: string | null
+          last_message_hash?: string | null
+        }
+        Relationships: []
+      }
+      guest_chat_messages: {
+        Row: {
+          id: string
+          channel_id: string
+          visitor_id: string
+          display_name: string
+          text: string
+          created_at: string
+          expires_at: string
+        }
+        Insert: {
+          id?: string
+          channel_id?: string
+          visitor_id: string
+          display_name: string
+          text: string
+          created_at?: string
+          expires_at: string
+        }
+        Update: {
+          id?: string
+          channel_id?: string
+          visitor_id?: string
+          display_name?: string
+          text?: string
+          created_at?: string
+          expires_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachment: Json | null

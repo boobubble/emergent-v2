@@ -14,6 +14,8 @@ import { ChevronRight, Plus, Trash2, Hash, Gamepad2 } from "lucide-react";
 import { useAdminSetting } from "@/lib/use-admin-setting";
 import { listGames } from "@/lib/games-registry";
 import type { RoomGameConfig } from "@/lib/chat-types";
+import { GUEST_CHAT_DEFAULTS, GUEST_CHAT_SETTING_KEY, type GuestChatConfig } from "@/lib/guest-chat-config";
+
 
 export const Route = createFileRoute("/admin/chatrooms")({ component: ChatroomsHub });
 
@@ -241,6 +243,91 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
 
 
 
+
+function GuestChatSettings() {
+  const { values, set, save, saving } = useAdminSetting<GuestChatConfig>(
+    GUEST_CHAT_SETTING_KEY,
+    GUEST_CHAT_DEFAULTS,
+  );
+
+  return (
+    <section className="mb-6">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Guest Chat</h2>
+      <div className="space-y-4 rounded-xl border border-border bg-card p-5">
+        <p className="text-xs text-muted-foreground">
+          When enabled, logged-out visitors can chat in Lobby only with a temporary nickname (e.g. Guest-Arman).
+          No account, profile, wallet, or bot interaction is created. Default is OFF.
+        </p>
+        <ToggleRow
+          label="Guest Chat"
+          checked={Boolean(values.enabled)}
+          onChange={(v) => set("enabled", v)}
+        />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="gc-prefix">Guest Name Prefix</Label>
+            <Input
+              id="gc-prefix"
+              value={values.namePrefix}
+              onChange={(e) => set("namePrefix", e.target.value)}
+              placeholder="Guest-"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="gc-cool">Guest Message Cooldown (sec)</Label>
+            <Input
+              id="gc-cool"
+              type="number"
+              min={1}
+              max={120}
+              value={values.messageCooldownSec}
+              onChange={(e) => set("messageCooldownSec", Number(e.target.value) || 3)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="gc-min">Guest Nickname Min Length</Label>
+            <Input
+              id="gc-min"
+              type="number"
+              min={1}
+              max={32}
+              value={values.nicknameMinLength}
+              onChange={(e) => set("nicknameMinLength", Number(e.target.value) || 2)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="gc-max">Guest Nickname Max Length</Label>
+            <Input
+              id="gc-max"
+              type="number"
+              min={2}
+              max={32}
+              value={values.nicknameMaxLength}
+              onChange={(e) => set("nicknameMaxLength", Number(e.target.value) || 16)}
+            />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="gc-mlen">Guest Max Message Length</Label>
+            <Input
+              id="gc-mlen"
+              type="number"
+              min={40}
+              max={2000}
+              value={values.maxMessageLength}
+              onChange={(e) => set("maxMessageLength", Number(e.target.value) || 280)}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <Button onClick={() => save()} disabled={saving}>
+            {saving ? "Saving…" : "Save Guest Chat"}
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ChatroomsHub() {
   const items = flattenAdminNav().filter((i) =>
     ["/admin/moderation", "/admin/bots", "/admin/filters"].includes(i.to),
@@ -261,6 +348,8 @@ function ChatroomsHub() {
       </div>
 
       <ChannelsManager />
+
+      <GuestChatSettings />
 
       <section className="mb-6">
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Chatroom settings</h2>

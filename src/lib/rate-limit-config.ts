@@ -23,4 +23,6 @@ export const DEFAULT_LIMITS: Record<string, RateLimitDef> = {
   "upload.banner":         { limit: 10,  window: 300 },
   "follow":                { limit: 30,  window: 60 },
   "api":                   { limit: 120, window: 60 },
+  "guest_chat.message":   { limit: 20,  window: 60 },
+  "guest_chat.session":   { limit: 8,   window: 300 },
 };

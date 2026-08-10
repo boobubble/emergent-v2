@@ -14,6 +14,9 @@ import { linkify } from "@/lib/linkify";
 import { MediaEmbed } from "./MediaEmbed";
 import { VoiceNoteBubble } from "./VoiceNoteBubble";
 import { useDmUrlMask } from "@/lib/dm-url-mask";
+import { useGuestLobbyFeed } from "@/lib/use-guest-lobby-feed";
+import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { useGuestChat } from "@/lib/guest-chat-context";
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.mime?.startsWith("audio/")) {
@@ -118,18 +121,36 @@ function ReplyButton({ onClick }: { onClick: () => void }) {
 export function MessageList({ channelId }: { channelId: string }) {
   const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt, replyingTo } = useChat();
   const { isIgnored } = useIgnore();
+  const { isGuestChatting, session } = useGuestChat();
+  const guestFeed = useGuestLobbyFeed(true);
   const maskDmUrls = useDmUrlMask();
   const isDmChan = isDM(channelId);
   const applyMask = (authorId: string, text: string) =>
     isDmChan && authorId !== "me" ? maskDmUrls(text) : text;
-  const allMsgs = channelMessages(channelId);
+  const baseMsgs = channelMessages(channelId);
+  const allMsgs = useMemo(() => {
+    if (channelId !== GUEST_LOBBY_CHANNEL_ID) return baseMsgs;
+    const merged = [...baseMsgs, ...guestFeed.messages];
+    const seen = new Set<string>();
+    return merged
+      .filter((m) => {
+        if (seen.has(m.id)) return false;
+        seen.add(m.id);
+        return true;
+      })
+      .sort((a, b) => a.ts - b.ts);
+  }, [baseMsgs, guestFeed.messages, channelId]);
+  const usersById = useMemo(
+    () => ({ ...state.users, ...guestFeed.users }),
+    [state.users, guestFeed.users],
+  );
   const msgs = useMemo(
     () => allMsgs.filter(m => {
-      const u = state.users[m.authorId];
-      if (!u || m.authorId === "me") return true;
+      const u = usersById[m.authorId];
+      if (!u || m.authorId === "me" || m.authorId.startsWith("visitor_")) return true;
       return !isIgnored(m.authorId, u.isBot);
     }),
-    [allMsgs, state.users, isIgnored],
+    [allMsgs, usersById, isIgnored],
   );
   const peerReadAt = isDM(channelId) ? dmPeerReadAt(channelId) : 0;
   const lastSeenMeId = useMemo(() => {
@@ -144,11 +165,11 @@ export function MessageList({ channelId }: { channelId: string }) {
     }
     const hasLaterHuman = msgs.slice(lastMeIdx + 1).some(m => {
       if (m.authorId === "me") return false;
-      const u = state.users[m.authorId];
-      return u && !u.isBot;
+      const u = usersById[m.authorId];
+      return u && !u.isBot && !u.isGuest;
     });
     return hasLaterHuman ? msgs[lastMeIdx].id : null;
-  }, [msgs, state.users, isDM, channelId, peerReadAt]);
+  }, [msgs, usersById, isDM, channelId, peerReadAt]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -189,9 +210,42 @@ export function MessageList({ channelId }: { channelId: string }) {
       )}
       <div className="space-y-3">
         {groups.map((g, gi) => {
-          const author = state.users[g[0].authorId];
+          const author = usersById[g[0].authorId];
           if (!author) return null;
-          const isMe = author.id === "me";
+          const isEphemeralGuest = Boolean(author.isGuest || author.id.startsWith("visitor_"));
+          const isOwnGuest = Boolean(isGuestChatting && session && author.id === session.visitorId);
+          const isMe = author.id === "me" || isOwnGuest;
+
+          if (isEphemeralGuest) {
+            return (
+              <div key={gi} className={`group flex gap-2.5 ${isOwnGuest ? "flex-row-reverse" : ""}`}>
+                <Avatar user={author} size={28} />
+                <div className={`min-w-0 flex-1 ${isOwnGuest ? "flex flex-col items-end" : ""}`}>
+                  <div className="mb-1 flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-foreground">{author.name}</span>
+                    <span className="rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight text-muted-foreground">
+                      Guest
+                    </span>
+                    <Time ts={g[0].ts} />
+                  </div>
+                  <div className={`flex flex-col gap-1 ${isOwnGuest ? "items-end" : ""}`}>
+                    {g.map((m) => (
+                      <div
+                        key={m.id}
+                        className={
+                          isOwnGuest
+                            ? "max-w-[min(80%,20rem)] rounded-2xl rounded-tr-md bg-primary/90 px-3 py-2 text-xs font-medium text-primary-foreground"
+                            : "max-w-[min(80%,20rem)] rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 text-xs leading-snug text-foreground/90"
+                        }
+                      >
+                        <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          }
 
           if (isMe) {
             return (
