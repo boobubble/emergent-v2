@@ -1,6 +1,5 @@
 import { ArrowRight, Hash, LogIn, Mic, Send, Sparkles, UserPlus } from "lucide-react";
 import type { AuthPopup } from "@/components/auth/AuthScreen";
-import { ContinueAsGuestButton } from "@/components/auth/ContinueAsGuestButton";
 import type { HeroConfig } from "@/lib/hero-page-config";
 import { SectionShell } from "../ui/SectionShell";
 
@@ -107,7 +106,6 @@ export function HeroSection({
               <LogIn className="h-4 w-4 shrink-0" />
               {cfg.ctaLoginLabel}
             </button>
-            <ContinueAsGuestButton variant="hero" includeDialog={false} />
           </div>
         </div>
 

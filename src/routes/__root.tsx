@@ -314,8 +314,8 @@ function PublicOutlet({ readOnlyApp }: { readOnlyApp: boolean }) {
       <RealtimeDebugOverlay />
     </>
   );
-  // GuestChatProvider on all public surfaces so login/landing can offer
-  // ephemeral "Continue as Guest" without anonymous Supabase auth.
+  // GuestChatProvider on all public surfaces so login/auth popups can offer
+  // ephemeral "Login as Guest" without anonymous Supabase auth.
   if (!readOnlyApp) {
     return <GuestChatProvider>{content}</GuestChatProvider>;
   }

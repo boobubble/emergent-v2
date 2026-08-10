@@ -15,8 +15,6 @@ import {
   type LandingConfessionItem, type LandingBlogPost, type LandingActivity,
 } from "@/lib/landing-config";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
-import { ContinueAsGuestButton } from "@/components/auth/ContinueAsGuestButton";
-import { GuestNicknameDialog } from "@/components/chat/GuestNicknameDialog";
 import { useAuth } from "@/lib/auth-store";
 import { headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
 
@@ -369,7 +367,6 @@ function LandingPage() {
                     className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3.5 text-sm font-bold text-white backdrop-blur hover:bg-white/[0.08]">
                 ✨ {cfg.secondaryCtaLabel}
               </button>
-              <ContinueAsGuestButton variant="landing" includeDialog={false} />
             </div>
 
 
@@ -1061,7 +1058,6 @@ function LandingPage() {
           </div>
         </div>
       </footer>
-      <GuestNicknameDialog />
       <AuthDialogs popup={authPopup} setPopup={setAuthPopup} />
     </div>
   );

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
@@ -15,7 +14,6 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronRight, Plus, Trash2, Hash, Gamepad2 } from "lucide-react";
 import { useAdminSetting } from "@/lib/use-admin-setting";
-import { updateSetting } from "@/lib/admin.functions";
 import { listGames } from "@/lib/games-registry";
 import type { RoomGameConfig } from "@/lib/chat-types";
 import { GUEST_CHAT_DEFAULTS, GUEST_CHAT_SETTING_KEY, type GuestChatConfig } from "@/lib/guest-chat-config";
@@ -249,26 +247,22 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
 
 
 function GuestChatSettings() {
-  const { values, set, patch, save, saving } = useAdminSetting<GuestChatConfig>(
+  const { values, set, patch, save, saveAsync, saving } = useAdminSetting<GuestChatConfig>(
     GUEST_CHAT_SETTING_KEY,
     GUEST_CHAT_DEFAULTS,
   );
   const qc = useQueryClient();
-  const saveSetting = useServerFn(updateSetting);
 
   async function persistEnabled(nextEnabled: boolean) {
-    const next = { ...values, enabled: nextEnabled };
+    const next: GuestChatConfig = { ...values, enabled: nextEnabled };
     patch(next);
     try {
-      await saveSetting({ data: { key: GUEST_CHAT_SETTING_KEY, value: next } });
-      toast.success(nextEnabled ? "Guest Chat enabled" : "Guest Chat disabled");
-      void qc.invalidateQueries({ queryKey: ["admin-settings-full"] });
-      void qc.invalidateQueries({ queryKey: ["admin-settings"] });
+      // Pass explicit payload so we never save a stale enabled=false closure.
+      await saveAsync(next);
       void qc.invalidateQueries({ queryKey: ["guest-chat-public-config"] });
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to save Guest Chat");
-      // Revert local toggle on failure.
-      set("enabled", values.enabled);
+      set("enabled", Boolean(values.enabled));
     }
   }
 
@@ -279,6 +273,7 @@ function GuestChatSettings() {
         <p className="text-xs text-muted-foreground">
           When enabled, logged-out visitors can chat in Lobby only with a temporary nickname (e.g. Guest-Arman).
           No account, profile, wallet, or bot interaction is created. Default is OFF.
+          The Guest Chat switch saves immediately.
         </p>
         <ToggleRow
           label="Guest Chat"
@@ -341,13 +336,7 @@ function GuestChatSettings() {
           </div>
         </div>
         <div className="flex justify-end">
-          <Button
-            onClick={() => {
-              save();
-              void qc.invalidateQueries({ queryKey: ["guest-chat-public-config"] });
-            }}
-            disabled={saving}
-          >
+          <Button onClick={() => save()} disabled={saving}>
             {saving ? "Saving…" : "Save Guest Chat"}
           </Button>
         </div>

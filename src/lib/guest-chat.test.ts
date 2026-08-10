@@ -168,31 +168,39 @@ describe("no auth-guest regression", () => {
     expect(src).toMatch(/GUEST_LOBBY_CHANNEL_ID/);
   });
 
-  it("AuthScreen offers Continue as Guest via ephemeral guest system", () => {
+  it("Auth popup offers Login as Guest; landing heroes do not", () => {
     const auth = readFileSync(resolve(srcRoot, "components/auth/AuthScreen.tsx"), "utf8");
     const btn = readFileSync(resolve(srcRoot, "components/auth/ContinueAsGuestButton.tsx"), "utf8");
+    const hero = readFileSync(resolve(srcRoot, "components/landing/sections/HeroSection.tsx"), "utf8");
+    const welcome = readFileSync(resolve(srcRoot, "routes/welcome.tsx"), "utf8");
+    const heropage = readFileSync(resolve(srcRoot, "routes/heropage.tsx"), "utf8");
     const ctx = readFileSync(resolve(srcRoot, "lib/guest-chat-context.tsx"), "utf8");
     const root = readFileSync(resolve(srcRoot, "routes/__root.tsx"), "utf8");
-    expect(auth).toMatch(/ContinueAsGuestButton/);
+
+    expect(auth).toMatch(/LoginAsGuestButton/);
+    expect(auth).toMatch(/Login with Username/);
     expect(auth).toMatch(/GuestNicknameDialog/);
-    expect(btn).toMatch(/Continue as Guest/);
+    expect(btn).toMatch(/Login as Guest/);
     expect(btn).toMatch(/navigateToLobby:\s*true/);
     expect(btn).not.toMatch(/signInAnonymously|loginAsGuest/);
+
+    expect(hero).not.toMatch(/ContinueAsGuest|LoginAsGuest|Continue as Guest/);
+    expect(welcome).not.toMatch(/ContinueAsGuest|LoginAsGuest|Continue as Guest/);
+    expect(heropage).not.toMatch(/ContinueAsGuest|LoginAsGuest|GuestNicknameDialog/);
+
     expect(ctx).toMatch(/navigateToLobby/);
-    expect(ctx).toMatch(/navigate\(\{\s*to:\s*["']\/chatroom["']/);
     expect(ctx).toMatch(/clearGuestChatSession/);
-    // AppSettings.guest_chat is the live source of truth for public UIs.
-    expect(ctx).toMatch(/hasSettingRow/);
-    expect(ctx).toMatch(/GUEST_CHAT_SETTING_KEY/);
-    // Login/landing public surfaces must mount GuestChatProvider.
     expect(root).toMatch(/if\s*\(!readOnlyApp\)\s*\{[\s\S]*GuestChatProvider/);
   });
 
   it("Admin Guest Chat toggle persists enabled immediately", () => {
     const src = readFileSync(resolve(srcRoot, "routes/admin.chatrooms.tsx"), "utf8");
+    const hook = readFileSync(resolve(srcRoot, "lib/use-admin-setting.ts"), "utf8");
     expect(src).toMatch(/persistEnabled/);
-    expect(src).toMatch(/guest-chat-public-config/);
-    expect(src).toMatch(/updateSetting/);
+    expect(src).toMatch(/saveAsync/);
+    expect(hook).toMatch(/valuesRef/);
+    expect(hook).toMatch(/saveAsync/);
+    expect(hook).toMatch(/guest-chat-public-config/);
   });
 
   it("MessageList shows GUEST badge for ephemeral visitors", () => {

@@ -8,8 +8,9 @@ import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
 import { LiveCommunityBackground } from "@/components/auth/LiveCommunityBackground";
-import { ContinueAsGuestButton } from "@/components/auth/ContinueAsGuestButton";
+import { LoginAsGuestButton } from "@/components/auth/ContinueAsGuestButton";
 import { GuestNicknameDialog } from "@/components/chat/GuestNicknameDialog";
+import { useGuestChat } from "@/lib/guest-chat-context";
 
 
 function UsernameHint({ status }: { status: UsernameStatus }) {
@@ -40,6 +41,7 @@ export function AuthDialogs({
 }) {
   return (
     <>
+      <GuestNicknameDialog />
       <SignInDialog
         open={popup === "signin"}
         onOpenChange={(v) => setPopup(v ? "signin" : null)}
@@ -119,14 +121,12 @@ export function AuthScreen() {
               {signupCfg.disabledMessage}
             </div>
           )}
-          <ContinueAsGuestButton variant="auth-screen" includeDialog={false} />
           </div>
 
         </div>
         <FeedbackShowcase surface="signup" />
       </div>
 
-      <GuestNicknameDialog />
       <AuthDialogs popup={popup} setPopup={setPopup} signupEnabled={signupAvailable} />
     </LiveCommunityBackground>
   );
@@ -137,6 +137,7 @@ export function AuthScreen() {
 function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: boolean; onOpenChange: (v: boolean) => void; onForgot: () => void; onSwitchSignup: () => void }) {
   const { login } = useAuth();
   const brand = useBrand();
+  const guestChat = useGuestChat();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -171,12 +172,24 @@ function SignInDialog({ open, onOpenChange, onForgot, onSwitchSignup }: { open: 
           </div>
           {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
           <button disabled={busy} type="submit" className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" style={{ background: "var(--gradient-accent, var(--primary))" }}>
-            {busy ? "..." : "Sign in"}
+            {busy ? "..." : "Login with Username"}
           </button>
         </form>
+
+        {guestChat.enabled && (
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">OR</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            <LoginAsGuestButton onBeforeOpen={() => onOpenChange(false)} />
+          </div>
+        )}
+
         <div className="text-center text-xs text-muted-foreground">
           New here?{" "}
-          <button onClick={onSwitchSignup} className="font-semibold text-primary hover:underline">Create an account</button>
+          <button type="button" onClick={onSwitchSignup} className="font-semibold text-primary hover:underline">Create an account</button>
         </div>
       </DialogContent>
     </Dialog>
