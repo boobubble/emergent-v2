@@ -17,7 +17,6 @@ import { SocialGraphProvider } from "@/lib/use-social-graph";
 import { NotificationsProvider } from "@/lib/use-notifications";
 import { IgnoreProvider } from "@/lib/ignore-store";
 import { AppSettingsProvider } from "@/lib/app-settings";
-import { GuestChatProvider } from "@/lib/guest-chat-context";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 
 import { useEffect } from "react";
@@ -279,7 +278,6 @@ function AuthGate() {
 
   return (
     <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
-      <GuestChatProvider>
       <SocialGraphProvider>
       <NotificationsProvider>
       <FeedPrefsProvider>
@@ -300,7 +298,6 @@ function AuthGate() {
       </FeedPrefsProvider>
       </NotificationsProvider>
       </SocialGraphProvider>
-      </GuestChatProvider>
     </ChatProvider>
   );
 }
@@ -316,14 +313,13 @@ function PublicOutlet({ readOnlyApp }: { readOnlyApp: boolean }) {
       <RealtimeDebugOverlay />
     </>
   );
-  // GuestChatProvider on all public surfaces so login/auth popups can offer
-  // ephemeral "Login as Guest" without anonymous Supabase auth.
+  // GuestChatProvider lives on AuthGateProvider so AuthDialogs and chat share
+  // one guest session (login popup + /chatroom sidebar).
   if (!readOnlyApp) {
-    return <GuestChatProvider>{content}</GuestChatProvider>;
+    return content;
   }
   return (
     <ChatProvider username="__public__" authUserId={null} isGuest>
-      <GuestChatProvider>
       <SocialGraphProvider>
       <NotificationsProvider>
       <FeedPrefsProvider>
@@ -331,7 +327,6 @@ function PublicOutlet({ readOnlyApp }: { readOnlyApp: boolean }) {
       </FeedPrefsProvider>
       </NotificationsProvider>
       </SocialGraphProvider>
-      </GuestChatProvider>
     </ChatProvider>
   );
 }

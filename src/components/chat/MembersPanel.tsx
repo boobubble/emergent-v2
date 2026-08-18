@@ -348,12 +348,12 @@ export function MembersPanel({ roomId }: { roomId: string }) {
           <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuLabel>Direct messages</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {state.dmOrder.length === 0 ? (
+            {(state.dmOrder ?? []).length === 0 ? (
               <div className="px-2 py-3 text-xs text-muted-foreground">
                 No conversations yet. Click a member to start one.
               </div>
             ) : (
-              state.dmOrder.map(uid => {
+              (state.dmOrder ?? []).map(uid => {
                 const u = state.users[uid];
                 if (!u) return null;
                 return (
@@ -616,7 +616,7 @@ export function MembersPanel({ roomId }: { roomId: string }) {
                 return (usersById[a]?.name || profiles[a]?.name || "").localeCompare(usersById[b]?.name || profiles[b]?.name || "");
               })
               .map((id) => {
-                const activeInRoom = isOnline(id) && room.members.includes(id);
+                const activeInRoom = isOnline(id) && (room.members?.includes(id) ?? false);
                 return (
                   <div
                     key={id}

@@ -324,6 +324,12 @@ function ensureBots(state: State): State {
   };
   roomOrder = roomOrder.filter(id => !isRemovedGameRoom(id));
   Object.keys(rooms).forEach(id => { if (isRemovedGameRoom(id)) delete rooms[id]; });
+  Object.keys(rooms).forEach(id => {
+    const r = rooms[id];
+    if (r && !Array.isArray(r.members)) {
+      rooms[id] = { ...r, members: ["me"] };
+    }
+  });
   // Make sure every seeded room exists (handles older cached state without "games")
   SEED_ROOMS.forEach(seedRoom => {
     if (!rooms[seedRoom.id]) {
@@ -331,9 +337,10 @@ function ensureBots(state: State): State {
       if (!roomOrder.includes(seedRoom.id)) roomOrder.push(seedRoom.id);
     }
     const r = rooms[seedRoom.id];
-    const missingBots = SEED_BOTS.map(b => b.id).filter(id => !r.members.includes(id));
-    if (missingBots.length) {
-      rooms[seedRoom.id] = { ...r, members: [...r.members, ...missingBots] };
+    const members = Array.isArray(r.members) ? r.members : [];
+    const missingBots = SEED_BOTS.map(b => b.id).filter(id => !members.includes(id));
+    if (missingBots.length || !Array.isArray(r.members)) {
+      rooms[seedRoom.id] = { ...r, members: [...members, ...missingBots] };
     }
   });
   return { ...state, users, rooms, roomOrder };
@@ -377,10 +384,11 @@ function load(username: string): State {
 
 // Re-evaluate badges for "me", returning new state with badge updates and any new badge ids
 function applyBadges(s: State): { state: State; newBadges: string[] } {
-  const me = s.users.me;
+  const me = s.users?.me;
+  if (!me) return { state: s, newBadges: [] };
   const ctx = {
-    roomsJoined: Object.values(s.rooms).filter(r => r.members.includes("me")).length,
-    dmsStarted: s.dmOrder.length,
+    roomsJoined: Object.values(s.rooms || {}).filter(r => r?.members?.includes("me")).length,
+    dmsStarted: Array.isArray(s.dmOrder) ? s.dmOrder.length : 0,
   };
   const merged = { ...me, badges: evaluateBadges(me, ctx) };
   const prev = new Set(me.badges ?? []);
@@ -405,7 +413,8 @@ interface StreakResult {
 
 function applyDailyStreak(s: State): StreakResult {
   const today = todayKey();
-  const me = s.users.me;
+  const me = s.users?.me;
+  if (!me) return { state: s, gained: 0, newStreak: 0, rewarded: false };
   const last = me.lastActiveDay;
   if (last === today) return { state: s, gained: 0, newStreak: me.streak ?? 0, rewarded: false };
   let streak = 1;
@@ -759,9 +768,9 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         let roomsChanged = false;
         for (const rid of Object.keys(nextRooms)) {
           const r = nextRooms[rid];
-          const missing = botIds.filter(b => !r.members.includes(b));
+          const missing = botIds.filter(b => !(r.members ?? []).includes(b));
           if (missing.length) {
-            nextRooms[rid] = { ...r, members: [...r.members, ...missing] };
+            nextRooms[rid] = { ...r, members: [...(r.members ?? []), ...missing] };
             roomsChanged = true;
           }
         }
@@ -1744,24 +1753,29 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const syncAdminChannels = useCallback((channels: AdminChannelInput[]) => {
     setState(s => {
       const rooms = { ...s.rooms };
-      let roomOrder = [...s.roomOrder];
-      const validIds = new Set(channels.map(c => c.id));
+      let roomOrder = [...(s.roomOrder ?? [])];
+      const validIds = new Set(channels.map(c => c?.id).filter((id): id is string => typeof id === "string" && !!id));
       // Add or update admin-managed rooms
       for (const c of channels) {
+        if (!c || typeof c.id !== "string" || !c.id) continue;
+        const name = typeof c.name === "string" && c.name.trim() ? c.name : c.id;
         const kind = c.kind ?? "chat";
         const existing = rooms[c.id];
         if (existing) {
           rooms[c.id] = {
             ...existing,
-            name: c.name,
-            topic: c.topic || existing.topic,
+            name,
+            topic: c.topic || existing.topic || "",
             kind,
             game: kind === "game" ? normalizeRoomGameConfig(c.game) : undefined,
+            members: Array.isArray(existing.members)
+              ? existing.members
+              : ["me", ...SEED_BOTS.map(b => b.id)],
           };
         } else {
           rooms[c.id] = {
             id: c.id,
-            name: c.name,
+            name,
             topic: c.topic || "",
             members: ["me", ...SEED_BOTS.map(b => b.id)],
             roles: { me: "member", "bot-gamebot": "owner" },
@@ -1872,7 +1886,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     dmUnreadCount: (() => {
       if (!authUserId) return 0;
       let n = 0;
-      for (const peerId of state.dmOrder) {
+      for (const peerId of state.dmOrder ?? []) {
         if (!isUuid(peerId)) continue;
         const ch = dmChannelFor(authUserId, peerId);
         if (!ch || !isRemoteDmChannel(ch, authUserId)) continue;

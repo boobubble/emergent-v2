@@ -159,6 +159,7 @@ describe("no auth-guest regression", () => {
     expect(src).toMatch(/sendGuestLobbyMessage/);
     expect(src).toMatch(/isBotCommandOrAction/);
     expect(src).toMatch(/requireAuth/);
+    expect(src).toMatch(/openNicknameDialog/);
     expect(src).not.toMatch(/signInAnonymously/);
   });
 
@@ -179,7 +180,6 @@ describe("no auth-guest regression", () => {
 
     expect(auth).toMatch(/LoginAsGuestButton/);
     expect(auth).toMatch(/Login with Username/);
-    expect(auth).toMatch(/GuestNicknameDialog/);
     expect(btn).toMatch(/Login as Guest/);
     expect(btn).toMatch(/navigateToLobby:\s*true/);
     expect(btn).not.toMatch(/signInAnonymously|loginAsGuest/);
@@ -190,7 +190,17 @@ describe("no auth-guest regression", () => {
 
     expect(ctx).toMatch(/navigateToLobby/);
     expect(ctx).toMatch(/clearGuestChatSession/);
-    expect(root).toMatch(/if\s*\(!readOnlyApp\)\s*\{[\s\S]*GuestChatProvider/);
+
+    const gate = readFileSync(resolve(srcRoot, "lib/auth-gate.tsx"), "utf8");
+    expect(gate).toMatch(/GuestChatProvider/);
+    expect(gate).toMatch(/GuestNicknameDialog/);
+    const providerIdx = gate.indexOf("<GuestChatProvider>");
+    const dialogsIdx = gate.indexOf("<AuthDialogs");
+    const nickIdx = gate.indexOf("<GuestNicknameDialog");
+    expect(providerIdx).toBeGreaterThan(-1);
+    expect(dialogsIdx).toBeGreaterThan(providerIdx);
+    expect(nickIdx).toBeGreaterThan(providerIdx);
+    expect(root).not.toMatch(/<GuestChatProvider>/);
   });
 
   it("Admin Guest Chat toggle persists enabled immediately", () => {

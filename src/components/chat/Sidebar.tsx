@@ -8,7 +8,6 @@ import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { useGuestChat } from "@/lib/guest-chat-context";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
-import { GuestNicknameDialog } from "@/components/chat/GuestNicknameDialog";
 import { useMyRoles } from "@/lib/use-my-role";
 import { useRoomOnlineCounts } from "@/lib/use-room-online-counts";
 import { BrandText, useBrandingMap } from "@/components/BrandMark";
@@ -86,8 +85,8 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
     const r = state.rooms[id];
     if (!r) return false;
     return (
-      r.name.toLowerCase().includes(searchQuery) ||
-      r.topic.toLowerCase().includes(searchQuery) ||
+      (r.name || "").toLowerCase().includes(searchQuery) ||
+      (r.topic || "").toLowerCase().includes(searchQuery) ||
       id.toLowerCase().includes(searchQuery)
     );
   };
@@ -95,7 +94,7 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
   const matchesFilter = (id: string) => {
     const r = state.rooms[id];
     if (!r) return false;
-    if (roomFilter === "joined") return r.members.includes("me");
+    if (roomFilter === "joined") return r.members?.includes("me") ?? false;
     if (roomFilter === "country" || roomFilter === "interests") return false;
     return true;
   };
@@ -105,7 +104,7 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
   }, [uniqueRoomOrder, searchQuery, roomFilter, state.rooms]);
 
   const joinedLocalIds = useMemo(
-    () => uniqueRoomOrder.filter((id) => state.rooms[id]?.members.includes("me") && matchesSearch(id)),
+    () => uniqueRoomOrder.filter((id) => state.rooms[id]?.members?.includes("me") && matchesSearch(id)),
     [uniqueRoomOrder, state.rooms, searchQuery],
   );
 
@@ -130,7 +129,7 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
     return uniqueRoomOrder
       .filter((id) => {
         const r = state.rooms[id];
-        return r && !r.members.includes("me") && matchesSearch(id);
+        return r && !r.members?.includes("me") && matchesSearch(id);
       })
       .slice(0, 4)
       .map((id) => {
@@ -472,7 +471,6 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
             </>
           ) : (
             <div className="rounded-xl border border-border/60 bg-card/70 p-2.5">
-              <GuestNicknameDialog />
               {guestChat.isGuestChatting ? (
                 <>
                   <p className="mb-2 text-[10px] text-muted-foreground">

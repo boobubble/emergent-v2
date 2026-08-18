@@ -10,6 +10,8 @@ import {
 } from "react";
 import { useAuth } from "@/lib/auth-store";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
+import { GuestChatProvider } from "@/lib/guest-chat-context";
+import { GuestNicknameDialog } from "@/components/chat/GuestNicknameDialog";
 
 /**
  * Generic authentication gate.
@@ -139,8 +141,11 @@ export function AuthGateProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthGateContext.Provider value={api}>
-      {children}
-      <AuthDialogs popup={popup} setPopup={handleSetPopup} />
+      <GuestChatProvider>
+        {children}
+        <AuthDialogs popup={popup} setPopup={handleSetPopup} />
+        <GuestNicknameDialog />
+      </GuestChatProvider>
     </AuthGateContext.Provider>
   );
 }

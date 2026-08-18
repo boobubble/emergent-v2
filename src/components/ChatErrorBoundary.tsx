@@ -32,6 +32,15 @@ export class ChatErrorBoundary extends Component<Props, State> {
     }
   }
 
+  handleRetry = () => {
+    try {
+      this.props.onRecover?.();
+    } catch (recoverErr) {
+      console.error("[ChatErrorBoundary] recovery failed", recoverErr);
+    }
+    this.setState({ error: null });
+  };
+
   render() {
     if (this.state.error) {
       if (this.props.fallback) return this.props.fallback;
@@ -39,6 +48,13 @@ export class ChatErrorBoundary extends Component<Props, State> {
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-muted-foreground">
           <p className="font-medium text-foreground">Chat unavailable</p>
           <p className="mt-1">Something went wrong loading messages. The rest of the app should still work.</p>
+          <button
+            type="button"
+            onClick={this.handleRetry}
+            className="mt-3 inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Try again
+          </button>
         </div>
       );
     }

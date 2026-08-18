@@ -9,7 +9,6 @@ import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-co
 import { FeedbackShowcase } from "@/components/feedback/FeedbackShowcase";
 import { LiveCommunityBackground } from "@/components/auth/LiveCommunityBackground";
 import { LoginAsGuestButton } from "@/components/auth/ContinueAsGuestButton";
-import { GuestNicknameDialog } from "@/components/chat/GuestNicknameDialog";
 import { useGuestChat } from "@/lib/guest-chat-context";
 
 
@@ -41,7 +40,6 @@ export function AuthDialogs({
 }) {
   return (
     <>
-      <GuestNicknameDialog />
       <SignInDialog
         open={popup === "signin"}
         onOpenChange={(v) => setPopup(v ? "signin" : null)}

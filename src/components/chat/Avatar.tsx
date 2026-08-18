@@ -8,7 +8,7 @@ function borderColor(user: User): string {
 }
 
 export function Avatar({ user, size = 36, square = true }: { user: User; size?: number; square?: boolean }) {
-  const initials = user.name.slice(0, 2).toUpperCase();
+  const initials = (user.name || "?").slice(0, 2).toUpperCase();
   const hasImg = !!user.avatarUrl;
   const ring = borderColor(user);
   return (

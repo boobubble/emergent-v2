@@ -55,7 +55,7 @@ function toUser(p: RemoteProfile, presentIds: Set<string>, nowMs: number): User 
           : "offline";
   return {
     id: p.id,
-    name: p.username,
+    name: p.username || "User",
     avatarColor: p.avatar_color,
     avatarUrl: p.avatar_url ?? undefined,
     status,

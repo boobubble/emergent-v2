@@ -25,7 +25,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { TypingIndicator } from "./TypingIndicator";
 import { VOICE_NOTES_DEFAULTS, maxDurationForChannel, type VoiceNotesConfig } from "@/lib/voice-notes-config";
-import { GuestNicknameDialog } from "./GuestNicknameDialog";
 
 
 const COMMANDS = [
@@ -362,7 +361,6 @@ export function MessageInput() {
 
   return (
     <div className="min-w-0 overflow-x-hidden px-2 py-1 sm:px-6 sm:py-0">
-      <GuestNicknameDialog />
       {replyingTo && (
         <div className="mb-2 flex min-h-11 items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
           <Reply className="h-4 w-4 shrink-0 text-primary" />

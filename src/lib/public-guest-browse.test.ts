@@ -49,6 +49,27 @@ vi.mock("@/components/auth/AuthScreen", () => ({
     }),
 }));
 
+vi.mock("@/lib/guest-chat-context", () => ({
+  GuestChatProvider: ({ children }: { children: ReactNode }) => children,
+  useGuestChat: () => ({
+    enabled: false,
+    configReady: true,
+    session: null,
+    isGuestChatting: false,
+    nicknameDialogOpen: false,
+    openNicknameDialog: () => {},
+    closeNicknameDialog: () => {},
+    startWithNickname: async () => {},
+    endGuestChat: () => {},
+    starting: false,
+    error: null,
+  }),
+}));
+
+vi.mock("@/components/chat/GuestNicknameDialog", () => ({
+  GuestNicknameDialog: () => null,
+}));
+
 import * as authStoreMock from "@/lib/auth-store";
 
 const setMockUser = (authStoreMock as unknown as {
