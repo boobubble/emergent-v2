@@ -1112,12 +1112,13 @@ function FeedPage() {
               <div className="feed-section-label">Explore</div>
               <SideLink to="/chatroom" iconSrc={chatroomIcon} label="Chatrooms" />
               <SideNavLink to="/hall-of-fame" icon={Crown} label="Hall of Fame" color="text-amber-400" />
-              <SideNavLink to="/communities" icon={Globe} label="Communities" color="text-emerald-400" />
+              {appSettings.modules.communities && (
+                <SideNavLink to="/communities" icon={Globe} label="Communities" color="text-emerald-400" />
+              )}
               <SideNavLink to="/feedback" icon={MessageSquare} label="Community Forum" color="text-blue-400" />
 
               <SideNavLink to="/poetry" icon={PenLine} label={mehfilLabel} color="text-fuchsia-400" />
               <SideNavLink to="/reels" icon={Film} label="Reels" badge="Soon" color="text-pink-400" />
-              <SideNavLink to="/pages" icon={FileText} label="Pages" badge="Soon" color="text-cyan-400" />
               <SideNavLink to="/groups" icon={Users2} label="Groups" badge="Soon" color="text-indigo-400" />
               <SideItem onClick={() => setView("findFriends")} active={view === "findFriends"} icon={Users} label="Find Friends" color="text-teal-400" />
 
@@ -1432,7 +1433,9 @@ function FeedPage() {
           { label: "Competitions", icon: Trophy, color: "from-amber-400 to-yellow-500", onClick: () => navigate({ to: "/competitions" }) },
           { label: "Battle Hub", icon: Radio, color: "from-rose-500 to-red-500", onClick: () => navigate({ to: "/battle-hub" }) },
           { label: mehfilLabel, icon: PenLine, color: "from-fuchsia-500 to-purple-500", onClick: () => navigate({ to: "/poetry" }) },
-          { label: "Communities", icon: Globe, color: "from-emerald-500 to-teal-500", onClick: () => navigate({ to: "/communities" }) },
+          ...(appSettings.modules.communities
+            ? [{ label: "Communities", icon: Globe, color: "from-emerald-500 to-teal-500", onClick: () => navigate({ to: "/communities" }) }]
+            : []),
           { label: "Daily Chest", icon: Gift, color: "from-rose-500 to-fuchsia-500", onClick: () => setView("dailyChest") },
           { label: "Daily Spin", icon: Sparkles, color: "from-violet-500 to-purple-500", onClick: () => setView("spin") },
           { label: "Shop", icon: Coins, color: "from-emerald-500 to-green-500", onClick: () => setView("shop") },

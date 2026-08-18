@@ -46,9 +46,13 @@ import {
   buildCommunitySeoVars,
   loadSeoSiteContext,
 } from "@/lib/seo";
+import { isCommunitiesModuleEnabled } from "@/lib/module-flags.server";
 
 export const Route = createFileRoute("/community/$slug")({
   loader: async ({ params }) => {
+    const enabled = await isCommunitiesModuleEnabled();
+    if (!enabled) throw notFound();
+
     const community = await getCommunityBySlug({ data: { slug: params.slug } });
     if (!community) {
       const resolved = await resolveCommunitySlug({ data: { slug: params.slug } });

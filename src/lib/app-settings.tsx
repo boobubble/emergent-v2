@@ -1,9 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { CORE_MODULE_DEFAULTS } from "@/lib/module-flags";
 
 export type LayoutPriority = "chatrooms_first" | "feed_first";
 
 export interface ModulesFlags {
+  communities: boolean;
+  blog: boolean;
+  pages: boolean;
   wallet: boolean;
   gif: boolean;
   badges: boolean;
@@ -31,6 +35,23 @@ export interface ModulesFlags {
   smartQualificationLive: boolean;
 }
 
+export const DEFAULT_MODULE_FLAGS: ModulesFlags = {
+  communities: CORE_MODULE_DEFAULTS.communities,
+  blog: CORE_MODULE_DEFAULTS.blog,
+  pages: CORE_MODULE_DEFAULTS.pages,
+  wallet: true, gif: true, badges: true, games: true, feed: true,
+  reactions: true, voice: false, ai: true, emojis: true, streaks: true,
+  referrals: false, notifications: true,
+  competitionMemes: true, nomineeMemeTagging: true, trendingMemeSection: true,
+  funZone: true, funZoneMemes: true, funZoneFanArts: true, funZonePosters: true, funZoneFanEdits: true,
+  battleRecap: true, autoAwards: true,
+  smartQualification: true, smartQualificationApproval: false, smartQualificationLive: true,
+};
+
+export function mergeModuleFlags(input: unknown): ModulesFlags {
+  return { ...DEFAULT_MODULE_FLAGS, ...((input as Partial<ModulesFlags>) || {}) };
+}
+
 interface AppSettings {
   layoutPriority: LayoutPriority;
   modules: ModulesFlags;
@@ -41,15 +62,7 @@ interface AppSettings {
 
 const DEFAULTS: { layoutPriority: LayoutPriority; modules: ModulesFlags } = {
   layoutPriority: "chatrooms_first",
-  modules: {
-    wallet: true, gif: true, badges: true, games: true, feed: true,
-    reactions: true, voice: false, ai: true, emojis: true, streaks: true,
-    referrals: false, notifications: true,
-    competitionMemes: true, nomineeMemeTagging: true, trendingMemeSection: true,
-    funZone: true, funZoneMemes: true, funZoneFanArts: true, funZonePosters: true, funZoneFanEdits: true,
-    battleRecap: true, autoAwards: true,
-    smartQualification: true, smartQualificationApproval: false, smartQualificationLive: true,
-  },
+  modules: DEFAULT_MODULE_FLAGS,
 };
 
 const Ctx = createContext<AppSettings | null>(null);
@@ -99,7 +112,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppSettings>(() => {
     const lp = (raw.layout_priority as LayoutPriority) || DEFAULTS.layoutPriority;
-    const modules = { ...DEFAULTS.modules, ...((raw.modules as Partial<ModulesFlags>) || {}) };
+    const modules = mergeModuleFlags(raw.modules);
     return { layoutPriority: lp, modules, raw, ready, refresh: load };
   }, [raw, ready]);
 

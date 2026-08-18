@@ -241,6 +241,7 @@ function OrkutTopBar({
 }) {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
+  const { modules } = useAppSettings();
 
   const goHome = () => {
     navigate({ to: "/feed" });
@@ -252,7 +253,7 @@ function OrkutTopBar({
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
-  const goCommunities = () => navigate({ to: "/groups" });
+  const goCommunities = () => navigate({ to: "/communities" });
 
   return (
     <header className="orkut-navbar sticky top-0 z-30 text-white shadow-[0_2px_0_rgba(0,0,0,0.08)]">
@@ -301,7 +302,7 @@ function OrkutTopBar({
           <TopLink icon={Smile} label="profile" onClick={() => onOpenProfile(username)} />
           <TopLink icon={ScrollText} label="scrapbook" onClick={goScrapbook} />
           <TopLink icon={Users} label="friends" onClick={onOpenFindFriends} />
-          <TopLink icon={Star} label="communities" onClick={goCommunities} />
+          {modules.communities && <TopLink icon={Star} label="communities" onClick={goCommunities} />}
           <TopLink icon={MessageCircle} label="messages" onClick={onOpenMessages} />
           <TopLink icon={MessagesSquare} label="chatrooms" onClick={() => navigate({ to: "/chatroom" })} />
         </div>
@@ -474,6 +475,7 @@ function OrkutQuickLinks({
 }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { modules } = useAppSettings();
   const scrollToScrapbook = () => {
     if (typeof window === "undefined") return;
     const el = document.querySelector('[data-orkut-scrapbook]') as HTMLElement | null;
@@ -484,7 +486,7 @@ function OrkutQuickLinks({
     { icon: ScrollText, label: "scrapbook", onClick: scrollToScrapbook },
     { icon: ImageIcon, label: "photos", onClick: scrollToScrapbook },
     { icon: Users, label: "friends", onClick: onFindFriends },
-    { icon: Star, label: "communities", onClick: () => navigate({ to: "/groups" }) },
+    ...(modules.communities ? [{ icon: Star, label: "communities", onClick: () => navigate({ to: "/communities" }) }] : []),
     { icon: MessageCircle, label: "messages", onClick: onMessages },
     { icon: MessagesSquare, label: "chatrooms", onClick: () => navigate({ to: "/chatroom" }) },
     { icon: Palette, label: "themes", onClick: onThemes },

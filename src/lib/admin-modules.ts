@@ -3,7 +3,7 @@ import {
   MessageSquare, Gamepad2, Wallet, ImageIcon, Sparkles, Award,
   Smile, Mic, Bell, Flame, UserPlus, Heart, Laugh, Trophy, Tag,
   Palette, Camera, Film, PartyPopper, Sparkle, ScrollText,
-  Zap, ShieldCheck, Radio,
+  Zap, ShieldCheck, Radio, Globe, BookText, FileText,
 } from "lucide-react";
 
 export interface ModuleDef {
@@ -15,6 +15,9 @@ export interface ModuleDef {
 }
 
 export const MODULE_REGISTRY: ModuleDef[] = [
+  { key: "communities",  label: "Communities",   description: "Public communities directory and community routes.", icon: Globe, group: "social" },
+  { key: "blog",         label: "Blog",          description: "Public blog navigation and routes (kept disabled for now).", icon: BookText, group: "social" },
+  { key: "pages",        label: "Pages",         description: "Public Pages module (kept disabled for now).", icon: FileText, group: "social" },
   { key: "feed",         label: "Social Feed",   description: "Posts, comments and timeline.",         icon: MessageSquare, group: "social" },
   { key: "games",        label: "Games",         description: "In-app mini games and competitions.",   icon: Gamepad2,      group: "engagement" },
   { key: "wallet",       label: "Wallet",        description: "Coins, balance and transactions.",      icon: Wallet,        group: "system" },

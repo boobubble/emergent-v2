@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -6,6 +6,7 @@ import {
   listPublicCommunities,
   searchCommunities,
   getDiscoveryStats,
+  getMyCommunity,
 } from "@/lib/community.functions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,14 +20,24 @@ import {
   Briefcase, Mic, Radio, Heart, Globe, MapPin,
 } from "lucide-react";
 import { loadRouteSeo, headFromRouteSeo } from "@/lib/seo";
+import { useAuthGate } from "@/lib/auth-gate";
+import { useAuth } from "@/lib/auth-store";
+import { toast } from "sonner";
+import { isCommunitiesModuleEnabled } from "@/lib/module-flags.server";
 
 export const Route = createFileRoute("/communities")({
-  loader: () => loadRouteSeo(
-    "/communities",
-    "Discover Communities — BooBubble",
-    "Find and join creator communities: gaming, music, tech, art, sports and more. Live chat, feed, competitions and radio.",
-  ),
-  head: ({ loaderData }) => headFromRouteSeo(loaderData),
+  loader: async () => {
+    const enabled = await isCommunitiesModuleEnabled();
+    const seoData = await loadRouteSeo(
+      "/communities",
+      enabled ? "Discover Communities — BooBubble" : "Communities Unavailable — BooBubble",
+      enabled
+        ? "Find and join creator communities: gaming, music, tech, art, sports and more. Live chat, feed, competitions and radio."
+        : "Communities are currently unavailable.",
+    );
+    return { enabled, seoData };
+  },
+  head: ({ loaderData }) => headFromRouteSeo(loaderData?.seoData),
   component: DiscoveryPage,
 });
 
@@ -50,14 +61,30 @@ const CATEGORIES = [
 type SortMode = "trending" | "newest" | "members" | "active";
 
 function DiscoveryPage() {
+  const { enabled } = Route.useLoaderData();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortMode>("trending");
   const [category, setCategory] = useState<string | null>(null);
   const [featuredOnly, setFeaturedOnly] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { requireAuth } = useAuthGate();
 
   const listFn = useServerFn(listPublicCommunities);
   const searchFn = useServerFn(searchCommunities);
   const statsFn = useServerFn(getDiscoveryStats);
+  const myCommunityFn = useServerFn(getMyCommunity);
+
+  const onCreateCommunity = () => {
+    requireAuth(async () => {
+      const mine = await myCommunityFn();
+      if (mine?.slug) {
+        navigate({ to: "/community/$slug/dashboard", params: { slug: mine.slug } });
+        return;
+      }
+      toast.message("Community creation panel is not available yet.");
+    });
+  };
 
   const trimmed = query.trim();
   const isSearching = trimmed.length >= 2;
@@ -85,6 +112,19 @@ function DiscoveryPage() {
 
   const featuredIds = useMemo(() => new Set((featured ?? []).map((c: any) => c.id)), [featured]);
 
+  if (!enabled) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background px-4 text-foreground">
+        <div className="max-w-xl rounded-xl border bg-card p-8 text-center">
+          <h1 className="text-2xl font-bold">Communities are currently unavailable</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Please check back later. Community data and settings are preserved.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-background text-foreground">
       {/* Hero */}
@@ -101,6 +141,11 @@ function DiscoveryPage() {
             <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
               Trending creator communities with live chat, feeds, competitions and radio.
             </p>
+            <div className="mt-4">
+              <Button variant="outline" onClick={onCreateCommunity}>
+                {user ? "Open my community dashboard" : "Sign in to create a community"}
+              </Button>
+            </div>
           </div>
 
           {/* Search */}
