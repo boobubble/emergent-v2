@@ -67,12 +67,34 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    load();
-    const channel = supabase
-      .channel(`app_settings_changes:${Math.random().toString(36).slice(2)}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "app_settings" }, () => load())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const supabaseConfigured = Boolean(
+      import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    );
+    if (!supabaseConfigured) {
+      // Keep the app booting (show defaults) even if Supabase client env
+      // wasn't inlined into this build.
+      setReady(true);
+      return;
+    }
+
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      void load().catch((e) => {
+        console.error("[app-settings] load failed", e);
+        setReady(true);
+      });
+      channel = supabase
+        .channel(`app_settings_changes:${Math.random().toString(36).slice(2)}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "app_settings" }, () => load())
+        .subscribe();
+    } catch (e) {
+      console.error("[app-settings] realtime subscribe failed", e);
+      setReady(true);
+    }
+    return () => {
+      if (!channel) return;
+      try { supabase.removeChannel(channel); } catch { /* ignore */ }
+    };
   }, []);
 
   const value = useMemo<AppSettings>(() => {

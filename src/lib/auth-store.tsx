@@ -222,6 +222,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Safety net: guarantee `ready` flips even if getSession hangs or throws.
     const readyTimer = window.setTimeout(markReady, 3000);
 
+    const supabaseConfigured = Boolean(
+      import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    );
+    // If the client bundle was built without public Supabase env, do not
+    // touch the Supabase proxy. Otherwise it throws during mount and the
+    // entire app falls into AppErrorBoundary (application section crash).
+    if (!supabaseConfigured) {
+      markReady();
+      return () => {
+        cancelled = true;
+        window.clearTimeout(readyTimer);
+      };
+    }
+
     let unsubscribe: (() => void) | null = null;
 
     try {
@@ -234,22 +248,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       markReady();
     }
 
-supabase.auth.getSession()
-  .then(({ data }) => {
-    applySession(data.session);
-  })
-  .catch((e) => {
-    console.warn("getSession failed", e);
-  })
-  .finally(() => {
-    markReady();
-  });
+    try {
+      void supabase.auth.getSession()
+        .then(({ data }) => {
+          applySession(data.session);
+        })
+        .catch((e) => {
+          console.warn("getSession failed", e);
+        })
+        .finally(() => {
+          markReady();
+        });
+    } catch (e) {
+      // Proxy throws synchronously when public env is missing from the client bundle.
+      console.warn("getSession failed", e);
+      markReady();
+    }
 
-return () => {
-  cancelled = true;
-  window.clearTimeout(readyTimer);
-  unsubscribe?.();
-};
+    return () => {
+      cancelled = true;
+      window.clearTimeout(readyTimer);
+      unsubscribe?.();
+    };
   }, []);
 
   // Re-fetch own username on tab focus so a rename made elsewhere reflects quickly.

@@ -12,7 +12,7 @@ import { loadEnv } from "vite";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const srcAlias = { find: /^@\/(.*)$/, replacement: path.resolve(__dirname, "src") + "/$1" };
 
-/** Supabase vars mirrored from VITE_* when server names are absent. */
+/** Public Supabase vars. Mirror VITE_* ↔ server names so the client bundle can inline them. */
 const SUPABASE_ENV_KEYS = [
   "SUPABASE_URL",
   "SUPABASE_PUBLISHABLE_KEY",
@@ -22,20 +22,36 @@ const SUPABASE_ENV_KEYS = [
   "VITE_SUPABASE_PROJECT_ID",
 ] as const;
 
+function firstEnv(env: Record<string, string>, ...keys: string[]): string {
+  for (const key of keys) {
+    const value = (env[key] || process.env[key] || "").trim();
+    if (value) return value;
+  }
+  return "";
+}
+
 function applySupabaseEnvAliases(env: Record<string, string>) {
-  if (!env.SUPABASE_URL && env.VITE_SUPABASE_URL) {
-    env.SUPABASE_URL = env.VITE_SUPABASE_URL;
+  const url = firstEnv(env, "VITE_SUPABASE_URL", "SUPABASE_URL");
+  const key = firstEnv(env, "VITE_SUPABASE_PUBLISHABLE_KEY", "SUPABASE_PUBLISHABLE_KEY");
+  const projectId = firstEnv(env, "VITE_SUPABASE_PROJECT_ID", "SUPABASE_PROJECT_ID");
+
+  if (url) {
+    env.SUPABASE_URL = url;
+    env.VITE_SUPABASE_URL = url;
   }
-  if (!env.SUPABASE_PUBLISHABLE_KEY && env.VITE_SUPABASE_PUBLISHABLE_KEY) {
-    env.SUPABASE_PUBLISHABLE_KEY = env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (key) {
+    env.SUPABASE_PUBLISHABLE_KEY = key;
+    env.VITE_SUPABASE_PUBLISHABLE_KEY = key;
   }
-  if (!env.SUPABASE_PROJECT_ID && env.VITE_SUPABASE_PROJECT_ID) {
-    env.SUPABASE_PROJECT_ID = env.VITE_SUPABASE_PROJECT_ID;
+  if (projectId) {
+    env.SUPABASE_PROJECT_ID = projectId;
+    env.VITE_SUPABASE_PROJECT_ID = projectId;
   }
-  for (const key of SUPABASE_ENV_KEYS) {
-    const value = env[key]?.trim();
-    if (value && process.env[key] === undefined) {
-      process.env[key] = value;
+
+  for (const name of SUPABASE_ENV_KEYS) {
+    const value = env[name]?.trim();
+    if (value && process.env[name] === undefined) {
+      process.env[name] = value;
     }
   }
 }
@@ -44,6 +60,16 @@ function applySupabaseEnvAliases(env: Record<string, string>) {
 // (SUPABASE_* ← VITE_*) exist for dev, build, and Nitro bundling.
 const env = loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "");
 applySupabaseEnvAliases(env);
+
+const clientSupabaseUrl = firstEnv(env, "VITE_SUPABASE_URL", "SUPABASE_URL");
+const clientSupabaseKey = firstEnv(env, "VITE_SUPABASE_PUBLISHABLE_KEY", "SUPABASE_PUBLISHABLE_KEY");
+const clientEnvDefine: Record<string, string> = {};
+if (clientSupabaseUrl) {
+  clientEnvDefine["import.meta.env.VITE_SUPABASE_URL"] = JSON.stringify(clientSupabaseUrl);
+}
+if (clientSupabaseKey) {
+  clientEnvDefine["import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY"] = JSON.stringify(clientSupabaseKey);
+}
 
 // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
 // This entry is fetch-shaped and works for both the Cloudflare-module preset (used inside
@@ -75,6 +101,7 @@ export default defineConfig({
   } as Record<string, unknown>,
   vite: {
     envDir: process.cwd(),
+    define: clientEnvDefine,
     build: {
       sourcemap: false,
       rollupOptions: {
