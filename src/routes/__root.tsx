@@ -190,6 +190,12 @@ function isPublicPath(pathname: string) {
   return isPublicPathBase(pathname, { isPublicCmsSlugPath });
 }
 
+function isCommunityNonChatPath(pathname: string) {
+  if (pathname === "/communities") return true;
+  if (!pathname.startsWith("/community/")) return false;
+  return !pathname.includes("/chatrooms");
+}
+
 function hasStoredAuthSession() {
   if (typeof window === "undefined") return true;
   try {
@@ -211,6 +217,30 @@ function AuthenticatedHooks({ userId }: { userId: string }) {
   return null;
 }
 
+function AuthenticatedShell({ children }: { children: React.ReactNode }) {
+  return (
+    <SocialGraphProvider>
+      <NotificationsProvider>
+        <FeedPrefsProvider>
+          <IgnoreProvider>
+            <BroadcasterAnnouncementsRunner />
+            <TrioInvitesListener />
+            <HeadFootScripts />
+            <AdsAutoLoader />
+            <SessionConflictBanner />
+            <FaviconSwitcher />
+            <SubscriptionGate />
+            <LicenseGuard />
+            {children}
+            <Sonner />
+            <RealtimeDebugOverlay />
+          </IgnoreProvider>
+        </FeedPrefsProvider>
+      </NotificationsProvider>
+    </SocialGraphProvider>
+  );
+}
+
 function AuthGate() {
   const { user, ready, loggingOut } = useAuth();
   const location = useLocation();
@@ -228,7 +258,7 @@ function AuthGate() {
   }
 
   if (!user && isPublicPath(path)) {
-    return <PublicOutlet readOnlyApp={isReadOnlyPublicAppPath(path)} />;
+    return <PublicOutlet pathname={path} readOnlyApp={isReadOnlyPublicAppPath(path)} />;
   }
 
   // No stored session at all → send guests to landing immediately.
@@ -255,7 +285,7 @@ function AuthGate() {
 
   if (!user) {
     // Public, self-contained routes (landing, login, password reset, public post pages) render normally.
-    if (isPublicPath(path)) return <PublicOutlet readOnlyApp={isReadOnlyPublicAppPath(path)} />;
+    if (isPublicPath(path)) return <PublicOutlet pathname={path} readOnlyApp={isReadOnlyPublicAppPath(path)} />;
     // Wait for the home_page setting before redirecting so guests don't get
     // briefly sent to /welcome while the admin-selected mode is still loading.
     if (!homeReady) {
@@ -276,33 +306,24 @@ function AuthGate() {
   }
 
 
+  const requireChatProvider = !isCommunityNonChatPath(path);
+  const content = (
+    <AuthenticatedShell>
+      <AuthenticatedHooks userId={user.id} />
+      <Outlet />
+    </AuthenticatedShell>
+  );
+  if (!requireChatProvider) {
+    return content;
+  }
   return (
     <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
-      <SocialGraphProvider>
-      <NotificationsProvider>
-      <FeedPrefsProvider>
-        <IgnoreProvider>
-          <AuthenticatedHooks userId={user.id} />
-          <BroadcasterAnnouncementsRunner />
-          <TrioInvitesListener />
-          <HeadFootScripts />
-          <AdsAutoLoader />
-          <SessionConflictBanner />
-          <FaviconSwitcher />
-          <SubscriptionGate />
-          <LicenseGuard />
-          <Outlet />
-          <Sonner />
-          <RealtimeDebugOverlay />
-        </IgnoreProvider>
-      </FeedPrefsProvider>
-      </NotificationsProvider>
-      </SocialGraphProvider>
+      {content}
     </ChatProvider>
   );
 }
 
-function PublicOutlet({ readOnlyApp }: { readOnlyApp: boolean }) {
+function PublicOutlet({ readOnlyApp, pathname }: { readOnlyApp: boolean; pathname: string }) {
   const content = (
     <>
       <HeadFootScripts />
@@ -315,7 +336,8 @@ function PublicOutlet({ readOnlyApp }: { readOnlyApp: boolean }) {
   );
   // GuestChatProvider lives on AuthGateProvider so AuthDialogs and chat share
   // one guest session (login popup + /chatroom sidebar).
-  if (!readOnlyApp) {
+  const requireChatProvider = readOnlyApp && !isCommunityNonChatPath(pathname);
+  if (!requireChatProvider) {
     return content;
   }
   return (

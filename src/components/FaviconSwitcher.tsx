@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useChat } from "@/lib/chat-store";
+import { useOptionalChat } from "@/lib/chat-store";
 import { useBrandingMap } from "@/components/BrandMark";
 
 const DEFAULT_BLUE = "/favicon-blue.png";
@@ -16,9 +16,10 @@ function setFavicon(href: string) {
 }
 
 export function FaviconSwitcher() {
-  const { dmUnreadCount, state } = useChat();
+  const chat = useOptionalChat();
   const branding = useBrandingMap();
-  const activeId = state.activeChannel;
+  const dmUnreadCount = chat?.dmUnreadCount ?? 0;
+  const activeId = chat?.state.activeChannel;
 
   useEffect(() => {
     const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");

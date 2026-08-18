@@ -31,4 +31,26 @@ describe("communities module gating wiring", () => {
     expect(communityFns).toContain("privacy === \"password\" || privacy === \"invite_password\"");
     expect(communityFns).toContain("privacy === \"private\"");
   });
+
+  it("/communities does not depend on ChatProvider", () => {
+    const rootRoute = read("routes/__root.tsx");
+    expect(rootRoute).toContain("function isCommunityNonChatPath");
+    expect(rootRoute).toContain("const requireChatProvider = readOnlyApp && !isCommunityNonChatPath(pathname)");
+    expect(rootRoute).toContain("const requireChatProvider = !isCommunityNonChatPath(path)");
+  });
+
+  it("/chatroom still remains chat-provider-backed", () => {
+    const rootRoute = read("routes/__root.tsx");
+    expect(rootRoute).toContain("if (pathname === \"/communities\") return true;");
+    expect(rootRoute).toContain("if (!pathname.startsWith(\"/community/\")) return false;");
+    expect(rootRoute).toContain("return !pathname.includes(\"/chatrooms\");");
+  });
+
+  it("authenticated and public community routes remain routable", () => {
+    const rootRoute = read("routes/__root.tsx");
+    const communityRoute = read("routes/community.$slug.tsx");
+    expect(rootRoute).toContain("return <PublicOutlet pathname={path} readOnlyApp={isReadOnlyPublicAppPath(path)} />;");
+    expect(communityRoute).toContain("component: CommunityLayout");
+    expect(communityRoute).toContain("createFileRoute(\"/community/$slug\")");
+  });
 });
