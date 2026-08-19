@@ -177,6 +177,7 @@ import { Route as AdminPagesBulkRouteImport } from './routes/admin.pages.bulk'
 import { Route as AdminPagesCategoriesRouteImport } from './routes/admin.pages.categories'
 import { Route as AdminPagesCitiesRouteImport } from './routes/admin.pages.cities'
 import { Route as AdminPagesCountriesRouteImport } from './routes/admin.pages.countries'
+import { Route as AdminPagesFooterLinksRouteImport } from './routes/admin.pages.footer-links'
 import { Route as AdminPagesImportExportRouteImport } from './routes/admin.pages.import-export'
 import { Route as AdminPagesKeywordGroupsRouteImport } from './routes/admin.pages.keyword-groups'
 import { Route as AdminPagesRedirectsRouteImport } from './routes/admin.pages.redirects'
@@ -1070,6 +1071,11 @@ const AdminPagesCountriesRoute = AdminPagesCountriesRouteImport.update({
   path: '/countries',
   getParentRoute: () => AdminPagesRoute,
 } as any)
+const AdminPagesFooterLinksRoute = AdminPagesFooterLinksRouteImport.update({
+  id: '/footer-links',
+  path: '/footer-links',
+  getParentRoute: () => AdminPagesRoute,
+} as any)
 const AdminPagesImportExportRoute = AdminPagesImportExportRouteImport.update({
   id: '/import-export',
   path: '/import-export',
@@ -1480,6 +1486,7 @@ export interface FileRoutesByFullPath {
   '/admin/pages/categories': typeof AdminPagesCategoriesRoute
   '/admin/pages/cities': typeof AdminPagesCitiesRoute
   '/admin/pages/countries': typeof AdminPagesCountriesRoute
+  '/admin/pages/footer-links': typeof AdminPagesFooterLinksRoute
   '/admin/pages/import-export': typeof AdminPagesImportExportRoute
   '/admin/pages/keyword-groups': typeof AdminPagesKeywordGroupsRoute
   '/admin/pages/redirects': typeof AdminPagesRedirectsRoute
@@ -1690,6 +1697,7 @@ export interface FileRoutesByTo {
   '/admin/pages/categories': typeof AdminPagesCategoriesRoute
   '/admin/pages/cities': typeof AdminPagesCitiesRoute
   '/admin/pages/countries': typeof AdminPagesCountriesRoute
+  '/admin/pages/footer-links': typeof AdminPagesFooterLinksRoute
   '/admin/pages/import-export': typeof AdminPagesImportExportRoute
   '/admin/pages/keyword-groups': typeof AdminPagesKeywordGroupsRoute
   '/admin/pages/redirects': typeof AdminPagesRedirectsRoute
@@ -1907,6 +1915,7 @@ export interface FileRoutesById {
   '/admin/pages/categories': typeof AdminPagesCategoriesRoute
   '/admin/pages/cities': typeof AdminPagesCitiesRoute
   '/admin/pages/countries': typeof AdminPagesCountriesRoute
+  '/admin/pages/footer-links': typeof AdminPagesFooterLinksRoute
   '/admin/pages/import-export': typeof AdminPagesImportExportRoute
   '/admin/pages/keyword-groups': typeof AdminPagesKeywordGroupsRoute
   '/admin/pages/redirects': typeof AdminPagesRedirectsRoute
@@ -2124,6 +2133,7 @@ export interface FileRouteTypes {
     | '/admin/pages/categories'
     | '/admin/pages/cities'
     | '/admin/pages/countries'
+    | '/admin/pages/footer-links'
     | '/admin/pages/import-export'
     | '/admin/pages/keyword-groups'
     | '/admin/pages/redirects'
@@ -2334,6 +2344,7 @@ export interface FileRouteTypes {
     | '/admin/pages/categories'
     | '/admin/pages/cities'
     | '/admin/pages/countries'
+    | '/admin/pages/footer-links'
     | '/admin/pages/import-export'
     | '/admin/pages/keyword-groups'
     | '/admin/pages/redirects'
@@ -2550,6 +2561,7 @@ export interface FileRouteTypes {
     | '/admin/pages/categories'
     | '/admin/pages/cities'
     | '/admin/pages/countries'
+    | '/admin/pages/footer-links'
     | '/admin/pages/import-export'
     | '/admin/pages/keyword-groups'
     | '/admin/pages/redirects'
@@ -3864,6 +3876,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPagesCountriesRouteImport
       parentRoute: typeof AdminPagesRoute
     }
+    '/admin/pages/footer-links': {
+      id: '/admin/pages/footer-links'
+      path: '/footer-links'
+      fullPath: '/admin/pages/footer-links'
+      preLoaderRoute: typeof AdminPagesFooterLinksRouteImport
+      parentRoute: typeof AdminPagesRoute
+    }
     '/admin/pages/import-export': {
       id: '/admin/pages/import-export'
       path: '/import-export'
@@ -4208,6 +4227,7 @@ interface AdminPagesRouteChildren {
   AdminPagesCategoriesRoute: typeof AdminPagesCategoriesRoute
   AdminPagesCitiesRoute: typeof AdminPagesCitiesRoute
   AdminPagesCountriesRoute: typeof AdminPagesCountriesRoute
+  AdminPagesFooterLinksRoute: typeof AdminPagesFooterLinksRoute
   AdminPagesImportExportRoute: typeof AdminPagesImportExportRoute
   AdminPagesKeywordGroupsRoute: typeof AdminPagesKeywordGroupsRoute
   AdminPagesRedirectsRoute: typeof AdminPagesRedirectsRoute
@@ -4223,6 +4243,7 @@ const AdminPagesRouteChildren: AdminPagesRouteChildren = {
   AdminPagesCategoriesRoute: AdminPagesCategoriesRoute,
   AdminPagesCitiesRoute: AdminPagesCitiesRoute,
   AdminPagesCountriesRoute: AdminPagesCountriesRoute,
+  AdminPagesFooterLinksRoute: AdminPagesFooterLinksRoute,
   AdminPagesImportExportRoute: AdminPagesImportExportRoute,
   AdminPagesKeywordGroupsRoute: AdminPagesKeywordGroupsRoute,
   AdminPagesRedirectsRoute: AdminPagesRedirectsRoute,
