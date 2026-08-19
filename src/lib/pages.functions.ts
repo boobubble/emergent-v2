@@ -599,7 +599,15 @@ export const deleteRedirect = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// ===== Footer Links (public) =====
+// ===== Footer Links (public, grouped) =====
+export const FOOTER_GROUPS = ["quick_links", "famous_chat_rooms", "popular_chat_rooms"] as const;
+export type FooterGroup = (typeof FOOTER_GROUPS)[number];
+export const FOOTER_GROUP_LABELS: Record<FooterGroup, string> = {
+  quick_links: "Quick Links",
+  famous_chat_rooms: "Famous Chat Rooms",
+  popular_chat_rooms: "Popular Chat Rooms",
+};
+
 export const getFooterLinks = createServerFn({ method: "GET" })
   .handler(async () => {
     const sb = await getSupabaseAdmin();
@@ -609,17 +617,23 @@ export const getFooterLinks = createServerFn({ method: "GET" })
       .eq("status", "published")
       .eq("show_in_footer", true)
       .not("published_at", "is", null)
+      .in("footer_group", [...FOOTER_GROUPS])
       .order("footer_order", { ascending: true })
       .order("title", { ascending: true })
-      .limit(10);
-    if (error) return [];
-    return (rows ?? []).map((r) => ({
-      slug: r.slug,
-      title: r.title,
-      href: `/${r.slug}`,
-      footer_order: r.footer_order,
-      footer_group: r.footer_group,
-    }));
+      .limit(30);
+    if (error) return { quick_links: [], famous_chat_rooms: [], popular_chat_rooms: [] };
+    const grouped: Record<FooterGroup, { slug: string; title: string; href: string }[]> = {
+      quick_links: [],
+      famous_chat_rooms: [],
+      popular_chat_rooms: [],
+    };
+    for (const r of rows ?? []) {
+      const g = r.footer_group as FooterGroup;
+      if (g && grouped[g] && grouped[g].length < 10) {
+        grouped[g].push({ slug: r.slug, title: r.title, href: `/${r.slug}` });
+      }
+    }
+    return grouped;
   });
 
 // ===== Admin Footer Links Manager =====
@@ -646,6 +660,7 @@ export const updateFooterPages = createServerFn({ method: "POST" })
         id: z.string().uuid(),
         show_in_footer: z.boolean(),
         footer_order: z.number().int().min(0),
+        footer_group: z.enum(["quick_links", "famous_chat_rooms", "popular_chat_rooms"]).nullable(),
       })),
     }).parse(input),
   )
@@ -655,7 +670,11 @@ export const updateFooterPages = createServerFn({ method: "POST" })
     for (const u of data.updates) {
       const { error } = await sb
         .from("custom_pages")
-        .update({ show_in_footer: u.show_in_footer, footer_order: u.footer_order })
+        .update({
+          show_in_footer: u.show_in_footer,
+          footer_order: u.footer_order,
+          footer_group: u.footer_group,
+        })
         .eq("id", u.id);
       if (error) throw new Error(error.message);
     }

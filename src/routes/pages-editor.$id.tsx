@@ -1269,16 +1269,29 @@ function PageEditor() {
                   <AdminToggle checked={!!row.show_in_footer} onCheckedChange={(v) => update("show_in_footer", v)} />
                 </label>
                 {row.show_in_footer && (
-                  <div>
-                    <Label className="text-xs">Footer order</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      className="h-8"
-                      value={row.footer_order}
-                      onChange={(e) => update("footer_order", parseInt(e.target.value, 10) || 0)}
-                    />
-                  </div>
+                  <>
+                    <div>
+                      <Label className="text-xs">Footer section</Label>
+                      <Select value={row.footer_group || "quick_links"} onValueChange={(v) => update("footer_group", v)}>
+                        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="quick_links">Quick Links</SelectItem>
+                          <SelectItem value="famous_chat_rooms">Famous Chat Rooms</SelectItem>
+                          <SelectItem value="popular_chat_rooms">Popular Chat Rooms</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Footer order</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        className="h-8"
+                        value={row.footer_order}
+                        onChange={(e) => update("footer_order", parseInt(e.target.value, 10) || 0)}
+                      />
+                    </div>
+                  </>
                 )}
               </div>
             </SidebarCard>

@@ -18,7 +18,6 @@ import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
 import { useAuth } from "@/lib/auth-store";
 import { headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
 import { CmsFooterLinks } from "@/components/CmsFooterLinks";
-import { StaticFooterColumns } from "@/components/footer/StaticFooterColumns";
 
 interface LandingStats {
   members: number; online: number; activeRooms: number;
@@ -1018,7 +1017,7 @@ function LandingPage() {
       {/* ───────── Footer ───────── */}
       <footer className="border-t border-white/5 bg-[#06060f]">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-[1.5fr_repeat(6,1fr)]">
+          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-[1.5fr_repeat(5,1fr)]">
             <div>
               <div className="flex items-center gap-2.5">
                 <span className="grid h-9 w-9 place-items-center rounded-xl text-base" style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>💬</span>
@@ -1039,7 +1038,6 @@ function LandingPage() {
               </div>
             ))}
             <CmsFooterLinks />
-            <StaticFooterColumns />
             <div>
               <div className="text-sm font-bold text-white">Follow Us</div>
               <div className="mt-3 flex items-center gap-2">
