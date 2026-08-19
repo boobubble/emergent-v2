@@ -2206,6 +2206,8 @@ export type Database = {
           excerpt: string | null
           faq_content: Json | null
           featured: boolean
+          footer_group: string | null
+          footer_order: number
           h1: string | null
           hub_page_id: string | null
           id: string
@@ -2234,6 +2236,7 @@ export type Database = {
           schema_jsonld: Json | null
           secondary_keywords: string[]
           seo_score: number
+          show_in_footer: boolean
           sidebar_left: string
           sidebar_right: string
           slug: string
@@ -2259,6 +2262,8 @@ export type Database = {
           excerpt?: string | null
           faq_content?: Json | null
           featured?: boolean
+          footer_group?: string | null
+          footer_order?: number
           h1?: string | null
           hub_page_id?: string | null
           id?: string
@@ -2287,6 +2292,7 @@ export type Database = {
           schema_jsonld?: Json | null
           secondary_keywords?: string[]
           seo_score?: number
+          show_in_footer?: boolean
           sidebar_left?: string
           sidebar_right?: string
           slug: string
@@ -2312,6 +2318,8 @@ export type Database = {
           excerpt?: string | null
           faq_content?: Json | null
           featured?: boolean
+          footer_group?: string | null
+          footer_order?: number
           h1?: string | null
           hub_page_id?: string | null
           id?: string
@@ -2340,6 +2348,7 @@ export type Database = {
           schema_jsonld?: Json | null
           secondary_keywords?: string[]
           seo_score?: number
+          show_in_footer?: boolean
           sidebar_left?: string
           sidebar_right?: string
           slug?: string

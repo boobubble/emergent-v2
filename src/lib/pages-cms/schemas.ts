@@ -103,6 +103,10 @@ export const pageSaveSchema = z.object({
   parent_page_id: uuidOpt,
   hub_page_id: uuidOpt,
   related_chat_rooms: relatedChatRoomsConfigSchema.nullable().optional(),
+  // Footer visibility (independent of featured)
+  show_in_footer: z.boolean().default(false),
+  footer_order: z.number().int().min(0).default(0),
+  footer_group: z.string().max(60).nullable().optional(),
 });
 
 export type PageSaveInput = z.infer<typeof pageSaveSchema>;

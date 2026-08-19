@@ -17,6 +17,7 @@ import {
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
 import { useAuth } from "@/lib/auth-store";
 import { headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
+import { CmsFooterLinks } from "@/components/CmsFooterLinks";
 
 interface LandingStats {
   members: number; online: number; activeRooms: number;
@@ -1036,6 +1037,7 @@ function LandingPage() {
                 </ul>
               </div>
             ))}
+            <CmsFooterLinks />
             <div>
               <div className="text-sm font-bold text-white">Follow Us</div>
               <div className="mt-3 flex items-center gap-2">

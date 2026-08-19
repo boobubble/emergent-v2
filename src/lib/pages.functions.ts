@@ -41,7 +41,7 @@ async function assertAdmin(userId: string) {
 }
 
 const LIST_SELECT =
-  "id,slug,title,excerpt,tags,status,featured,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,noindex,nofollow,views,created_at,updated_at,published_at,page_type,country_id,state_id,city_id,category_id,keyword_group_id,template_id,h1,primary_keyword,secondary_keywords,language,content_status,seo_score,internal_link_count,scheduled_at";
+  "id,slug,title,excerpt,tags,status,featured,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,noindex,nofollow,views,created_at,updated_at,published_at,page_type,country_id,state_id,city_id,category_id,keyword_group_id,template_id,h1,primary_keyword,secondary_keywords,language,content_status,seo_score,internal_link_count,scheduled_at,show_in_footer,footer_order,footer_group";
 
 // ===== Admin list (server-side pagination / filters / sort) =====
 export const listPages = createServerFn({ method: "GET" })
@@ -596,6 +596,69 @@ export const deleteRedirect = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const { error } = await (await getSupabaseAdmin()).from("page_redirects").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ===== Footer Links (public) =====
+export const getFooterLinks = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const sb = await getSupabaseAdmin();
+    const { data: rows, error } = await sb
+      .from("custom_pages")
+      .select("slug,title,footer_order,footer_group")
+      .eq("status", "published")
+      .eq("show_in_footer", true)
+      .not("published_at", "is", null)
+      .order("footer_order", { ascending: true })
+      .order("title", { ascending: true })
+      .limit(10);
+    if (error) return [];
+    return (rows ?? []).map((r) => ({
+      slug: r.slug,
+      title: r.title,
+      href: `/${r.slug}`,
+      footer_order: r.footer_order,
+      footer_group: r.footer_group,
+    }));
+  });
+
+// ===== Admin Footer Links Manager =====
+export const listFooterPages = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const sb = await getSupabaseAdmin();
+    const { data: rows, error } = await sb
+      .from("custom_pages")
+      .select("id,slug,title,status,show_in_footer,footer_order,footer_group")
+      .eq("status", "published")
+      .order("footer_order", { ascending: true })
+      .order("title", { ascending: true });
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const updateFooterPages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
+  .inputValidator((input) =>
+    z.object({
+      updates: z.array(z.object({
+        id: z.string().uuid(),
+        show_in_footer: z.boolean(),
+        footer_order: z.number().int().min(0),
+      })),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const sb = await getSupabaseAdmin();
+    for (const u of data.updates) {
+      const { error } = await sb
+        .from("custom_pages")
+        .update({ show_in_footer: u.show_in_footer, footer_order: u.footer_order })
+        .eq("id", u.id);
+      if (error) throw new Error(error.message);
+    }
     return { ok: true };
   });
 

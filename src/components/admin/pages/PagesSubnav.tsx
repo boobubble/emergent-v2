@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, List, Globe2, Map, MapPin, Tags, KeyRound, LayoutTemplate,
-  Wand2, Link2, SearchCheck, Download, ArrowRightLeft, FileText,
+  Wand2, Link2, SearchCheck, Download, ArrowRightLeft, FileText, PanelBottom,
 } from "lucide-react";
 
 export const PAGES_NAV = [
@@ -19,6 +19,7 @@ export const PAGES_NAV = [
   { to: "/admin/pages/seo-audit", label: "SEO Audit", icon: SearchCheck, end: false as boolean },
   { to: "/admin/pages/import-export", label: "Import / Export", icon: Download, end: false as boolean },
   { to: "/admin/pages/redirects", label: "Redirects", icon: ArrowRightLeft, end: false as boolean },
+  { to: "/admin/pages/footer-links", label: "Footer Links", icon: PanelBottom, end: false as boolean },
 ] as const;
 
 export function PagesSubnav() {

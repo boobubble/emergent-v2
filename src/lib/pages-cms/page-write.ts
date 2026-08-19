@@ -4,7 +4,7 @@ import { slugifyPageSlug } from "@/lib/page-slug";
 
 /** Build the DB write payload. Never trusts client-supplied derived fields. */
 export function buildCustomPageWriteRow(
-  data: PageSaveInput,
+  data: Omit<PageSaveInput, "show_in_footer" | "footer_order" | "footer_group"> & Partial<Pick<PageSaveInput, "show_in_footer" | "footer_order" | "footer_group">>,
   opts: { userId: string; previousPublishedAt?: string | null },
 ) {
   const slug = slugifyPageSlug(data.slug);
@@ -80,6 +80,9 @@ export function buildCustomPageWriteRow(
   if (data.related_chat_rooms !== undefined) {
     row.related_chat_rooms = data.related_chat_rooms;
   }
+  if ((data as Record<string, unknown>).show_in_footer !== undefined) row.show_in_footer = data.show_in_footer;
+  if ((data as Record<string, unknown>).footer_order !== undefined) row.footer_order = data.footer_order;
+  if ((data as Record<string, unknown>).footer_group !== undefined) row.footer_group = data.footer_group ?? null;
 
   return { row, slug, content_status, seo_score };
 }

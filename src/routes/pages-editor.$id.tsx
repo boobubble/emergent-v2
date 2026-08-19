@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Save, ExternalLink, Eye, Settings2, Tag, Star,
   Calendar, FileText, Cloud, CloudOff, ShieldCheck, Info,
-  X, Plus, Link2, History, MapPin, KeyRound, Braces, RefreshCw,
+  X, Plus, Link2, History, MapPin, KeyRound, Braces, RefreshCw, PanelBottom,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,6 +110,9 @@ type PageRow = {
   internal_link_count: number | null;
   scheduled_at: string | null;
   related_chat_rooms: RelatedChatRoomsConfig;
+  show_in_footer: boolean;
+  footer_order: number;
+  footer_group: string | null;
 };
 
 function emptyPage(): PageRow {
@@ -127,6 +130,7 @@ function emptyPage(): PageRow {
     language: "en", intro_content: null,
     faq_content: "", cta_content: "",
     content_status: null, seo_score: null, internal_link_count: null,
+    show_in_footer: false, footer_order: 0, footer_group: null,
     scheduled_at: null,
     related_chat_rooms: defaultRelatedChatRoomsConfig(),
   };
@@ -515,6 +519,9 @@ function PageEditor() {
         cta_content: textToJsonField(row.cta_content),
         scheduled_at: row.scheduled_at,
         related_chat_rooms: row.related_chat_rooms,
+        show_in_footer: row.show_in_footer,
+        footer_order: row.footer_order,
+        footer_group: row.footer_group,
       };
       const saved = await save({ data: payload }) as {
         id?: string;
@@ -1255,6 +1262,27 @@ function PageEditor() {
               </label>
             </SidebarCard>
 
+            <SidebarCard icon={<PanelBottom className="h-4 w-4" />} title="Footer">
+              <div className="space-y-3">
+                <label className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Show in footer</span>
+                  <AdminToggle checked={!!row.show_in_footer} onCheckedChange={(v) => update("show_in_footer", v)} />
+                </label>
+                {row.show_in_footer && (
+                  <div>
+                    <Label className="text-xs">Footer order</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      className="h-8"
+                      value={row.footer_order}
+                      onChange={(e) => update("footer_order", parseInt(e.target.value, 10) || 0)}
+                    />
+                  </div>
+                )}
+              </div>
+            </SidebarCard>
+
             <SidebarCard icon={<Tag className="h-4 w-4" />} title="Tags">
               <TagsInput
                 value={row.tags ?? []}
@@ -1463,6 +1491,7 @@ function sameDraft(a: PageRow, b: PageRow): boolean {
     "keyword_group_id", "template_id", "h1", "primary_keyword",
     "secondary_keywords", "language", "intro_content", "faq_content", "cta_content",
     "scheduled_at", "related_chat_rooms",
+    "show_in_footer", "footer_order", "footer_group",
   ];
   for (const k of keys) {
     const av = a?.[k]; const bv = b?.[k];
