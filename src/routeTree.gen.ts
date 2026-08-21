@@ -61,6 +61,7 @@ import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
 import { Route as AdminAuthBackgroundRouteImport } from './routes/admin.auth-background'
 import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
+import { Route as AdminAvatarSafetyRouteImport } from './routes/admin.avatar-safety'
 import { Route as AdminBackupRouteImport } from './routes/admin.backup'
 import { Route as AdminBoobubbleRouteImport } from './routes/admin.boobubble'
 import { Route as AdminBotEventsRouteImport } from './routes/admin.bot-events'
@@ -613,6 +614,11 @@ const AdminErrorLogsRoute = AdminErrorLogsRouteImport.update({
 const AdminExportRoute = AdminExportRouteImport.update({
   id: '/export',
   path: '/export',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAvatarSafetyRoute = AdminAvatarSafetyRouteImport.update({
+  id: '/avatar-safety',
+  path: '/avatar-safety',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFeedModerationRoute = AdminFeedModerationRouteImport.update({
@@ -1408,6 +1414,7 @@ export interface FileRoutesByFullPath {
   '/admin/email': typeof AdminEmailRoute
   '/admin/error-logs': typeof AdminErrorLogsRoute
   '/admin/export': typeof AdminExportRoute
+  '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
@@ -1623,6 +1630,7 @@ export interface FileRoutesByTo {
   '/admin/email': typeof AdminEmailRoute
   '/admin/error-logs': typeof AdminErrorLogsRoute
   '/admin/export': typeof AdminExportRoute
+  '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
@@ -1841,6 +1849,7 @@ export interface FileRoutesById {
   '/admin/email': typeof AdminEmailRoute
   '/admin/error-logs': typeof AdminErrorLogsRoute
   '/admin/export': typeof AdminExportRoute
+  '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
@@ -2061,6 +2070,7 @@ export interface FileRouteTypes {
     | '/admin/email'
     | '/admin/error-logs'
     | '/admin/export'
+    | '/admin/avatar-safety'
     | '/admin/feed-moderation'
     | '/admin/feed-themes'
     | '/admin/feedback'
@@ -2276,6 +2286,7 @@ export interface FileRouteTypes {
     | '/admin/email'
     | '/admin/error-logs'
     | '/admin/export'
+    | '/admin/avatar-safety'
     | '/admin/feed-moderation'
     | '/admin/feed-themes'
     | '/admin/feedback'
@@ -2493,6 +2504,7 @@ export interface FileRouteTypes {
     | '/admin/email'
     | '/admin/error-logs'
     | '/admin/export'
+    | '/admin/avatar-safety'
     | '/admin/feed-moderation'
     | '/admin/feed-themes'
     | '/admin/feedback'
@@ -3263,6 +3275,13 @@ declare module '@tanstack/react-router' {
       path: '/export'
       fullPath: '/admin/export'
       preLoaderRoute: typeof AdminExportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/avatar-safety': {
+      id: '/admin/avatar-safety'
+      path: '/avatar-safety'
+      fullPath: '/admin/avatar-safety'
+      preLoaderRoute: typeof AdminAvatarSafetyRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/feed-moderation': {
@@ -4365,6 +4384,7 @@ interface AdminRouteChildren {
   AdminEmailRoute: typeof AdminEmailRoute
   AdminErrorLogsRoute: typeof AdminErrorLogsRoute
   AdminExportRoute: typeof AdminExportRoute
+  AdminAvatarSafetyRoute: typeof AdminAvatarSafetyRoute
   AdminFeedModerationRoute: typeof AdminFeedModerationRoute
   AdminFeedThemesRoute: typeof AdminFeedThemesRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
@@ -4457,6 +4477,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEmailRoute: AdminEmailRoute,
   AdminErrorLogsRoute: AdminErrorLogsRoute,
   AdminExportRoute: AdminExportRoute,
+  AdminAvatarSafetyRoute: AdminAvatarSafetyRoute,
   AdminFeedModerationRoute: AdminFeedModerationRoute,
   AdminFeedThemesRoute: AdminFeedThemesRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,

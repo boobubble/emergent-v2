@@ -58,13 +58,41 @@ export function AccountPanel() {
 
   const onPickAvatar = (file: File) => {
     if (file.size > 2_000_000) { alert("Image too large (max 2MB)"); return; }
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const dataUrl = String(reader.result);
-      updateMe({ avatarUrl: dataUrl });
-      if (auth?.id) await supabase.from("profiles").update({ avatar_url: dataUrl }).eq("id", auth.id);
-    };
-    reader.readAsDataURL(file);
+    void (async () => {
+      if (!auth?.id) {
+        const reader = new FileReader();
+        reader.onload = () => updateMe({ avatarUrl: String(reader.result) });
+        reader.readAsDataURL(file);
+        return;
+      }
+      try {
+        const ext = (file.type.split("/")[1] || "png").replace(/[^a-z0-9]/gi, "") || "png";
+        const path = `${auth.id}/avatar-${Date.now()}.${ext}`;
+        const up = await supabase.storage.from("avatars").upload(path, file, { contentType: file.type, upsert: true });
+        if (up.error) throw up.error;
+        const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+        const url = pub.publicUrl;
+        updateMe({ avatarUrl: url });
+        await supabase.from("profiles").update({
+          avatar_url: url,
+          avatar_moderation_status: "pending",
+          avatar_moderation_reason: "scanning",
+        } as never).eq("id", auth.id);
+        const { moderateMyAvatar } = await import("@/lib/avatar-moderation.functions");
+        const result = await moderateMyAvatar({ data: { avatarUrl: url } });
+        if (result.status === "rejected" || result.status === "needs_review") {
+          updateMe({ avatarUrl: "" });
+          alert(
+            result.status === "rejected"
+              ? "That profile picture was blocked by safety checks. Please choose another image."
+              : "Your profile picture is under review and is hidden until approved.",
+          );
+        }
+      } catch (e) {
+        console.error(e);
+        alert(e instanceof Error ? e.message : "Could not upload avatar");
+      }
+    })();
   };
 
   const save = async () => {

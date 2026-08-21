@@ -495,7 +495,7 @@ export const listUsersWithRoles = createServerFn({ method: "GET" })
     await assertAdmin(context.userId);
     let query = supabaseAdmin
       .from("profiles")
-      .select("id, username, avatar_url, created_at, last_seen, xp, level")
+      .select("id, username, avatar_url, avatar_quarantine_url, avatar_moderation_status, avatar_moderation_reason, avatar_moderated_at, allow_social_feature, created_at, last_seen, xp, level")
       .order("created_at", { ascending: false })
       .limit(200);
     if (data.q) query = query.ilike("username", `%${data.q}%`);

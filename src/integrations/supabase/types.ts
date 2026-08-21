@@ -5881,6 +5881,11 @@ export type Database = {
           allow_social_feature: boolean
           avatar_color: string
           avatar_url: string | null
+          avatar_moderation_status: string
+          avatar_moderation_reason: string | null
+          avatar_moderated_at: string | null
+          avatar_moderated_by: string | null
+          avatar_quarantine_url: string | null
           bio: string | null
           birthday: string | null
           city: string | null
@@ -5932,6 +5937,11 @@ export type Database = {
           allow_social_feature?: boolean
           avatar_color?: string
           avatar_url?: string | null
+          avatar_moderation_status?: string
+          avatar_moderation_reason?: string | null
+          avatar_moderated_at?: string | null
+          avatar_moderated_by?: string | null
+          avatar_quarantine_url?: string | null
           bio?: string | null
           birthday?: string | null
           city?: string | null
@@ -5983,6 +5993,11 @@ export type Database = {
           allow_social_feature?: boolean
           avatar_color?: string
           avatar_url?: string | null
+          avatar_moderation_status?: string
+          avatar_moderation_reason?: string | null
+          avatar_moderated_at?: string | null
+          avatar_moderated_by?: string | null
+          avatar_quarantine_url?: string | null
           bio?: string | null
           birthday?: string | null
           city?: string | null
@@ -6026,6 +6041,42 @@ export type Database = {
           username?: string
           wallet_frozen?: boolean
           xp?: number
+        }
+        Relationships: []
+      }
+      profile_image_moderation_logs: {
+        Row: {
+          id: string
+          user_id: string
+          avatar_url: string | null
+          action: string
+          reason: string | null
+          moderator_id: string | null
+          source: string
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          avatar_url?: string | null
+          action: string
+          reason?: string | null
+          moderator_id?: string | null
+          source?: string
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          avatar_url?: string | null
+          action?: string
+          reason?: string | null
+          moderator_id?: string | null
+          source?: string
+          metadata?: Json
+          created_at?: string
         }
         Relationships: []
       }

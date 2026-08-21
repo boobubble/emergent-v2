@@ -104,9 +104,21 @@ export function CompleteProfileModal() {
         city: city.trim().slice(0, 80) || null,
         interests,
       };
-      if (avatar_url) update.avatar_url = avatar_url;
+      if (avatar_url) {
+        update.avatar_url = avatar_url;
+        update.avatar_moderation_status = "pending";
+        update.avatar_moderation_reason = "scanning";
+      }
       const { error } = await supabase.from("profiles").update(update as never).eq("id", user.id);
       if (error) throw error;
+      if (avatar_url) {
+        try {
+          const { moderateMyAvatar } = await import("@/lib/avatar-moderation.functions");
+          await moderateMyAvatar({ data: { avatarUrl: avatar_url } });
+        } catch (modErr) {
+          console.error("avatar moderation failed", modErr);
+        }
+      }
       markSkipped(user.id);
       setOpen(false);
     } catch (e) {

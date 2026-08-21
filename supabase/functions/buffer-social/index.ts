@@ -737,7 +737,9 @@ async function createSignupPost(
   // Always re-read profile at execution time (never trust stale queued media).
   const { data: profile } = await admin
     .from("profiles")
-    .select("id, username, display_name, avatar_url, allow_social_feature, is_private, created_at")
+    .select(
+      "id, username, display_name, avatar_url, allow_social_feature, is_private, created_at, avatar_moderation_status",
+    )
     .eq("id", userId)
     .maybeSingle();
 
@@ -798,12 +800,24 @@ async function createSignupPost(
   const displayName = profile.display_name?.trim() || username;
   const profileUrl = `${base}/u/${encodeURIComponent(username)}`;
 
+  // CRITICAL: only approved avatars may be sent to Buffer.
+  const moderationStatus = String(profile.avatar_moderation_status ?? "none");
+  const avatarAllowedForBuffer = moderationStatus === "approved";
   const resolved = resolveSocialMedia({
-    avatarUrl: profile.avatar_url,
+    avatarUrl: avatarAllowedForBuffer ? profile.avatar_url : null,
     defaultMediaUrl: settings.default_media_url,
   });
   const mediaUrl = resolved.mediaUrl;
-  const mediaSource = resolved.mediaSource;
+  const mediaSource = resolved.mediaSource === "user_avatar"
+    ? "user_avatar"
+    : resolved.mediaSource === "default_image"
+      ? "default_image"
+      : "none";
+  const mediaMeta = {
+    media_source: mediaSource,
+    avatar_moderation_status: moderationStatus,
+    avatar_used_for_buffer: avatarAllowedForBuffer && mediaSource === "user_avatar",
+  };
 
   const mode = shareMode(settings.publishing_mode ?? "queue");
   const results: Array<Record<string, unknown>> = [];
@@ -832,7 +846,7 @@ async function createSignupPost(
         status: "failed",
         error_message: "channel_queue_paused",
         queue_id: queueId,
-        metadata: { media_source: mediaSource },
+        metadata: mediaMeta,
       });
       results.push({ platform, ok: false, error: "channel_queue_paused" });
       continue;
@@ -848,7 +862,7 @@ async function createSignupPost(
         status: "failed",
         error_message: "channel_disconnected",
         queue_id: queueId,
-        metadata: { media_source: mediaSource },
+        metadata: mediaMeta,
       });
       results.push({ platform, ok: false, error: "channel_disconnected" });
       continue;
@@ -867,7 +881,7 @@ async function createSignupPost(
         status: "failed",
         error_message: err,
         queue_id: queueId,
-        metadata: { media_source: "none" },
+        metadata: { ...mediaMeta, media_source: "none" },
       });
       results.push({ platform, ok: false, error: err, mediaSource: "none" });
       continue;
@@ -894,7 +908,7 @@ async function createSignupPost(
         status: mode === "shareNow" ? "published" : "queued",
         published_at: mode === "shareNow" ? new Date().toISOString() : null,
         queue_id: queueId,
-        metadata: { media_source: mediaSource },
+        metadata: mediaMeta,
       });
       results.push({
         platform,
@@ -914,7 +928,7 @@ async function createSignupPost(
         status: "failed",
         error_message: posted.error,
         queue_id: queueId,
-        metadata: { media_source: mediaSource },
+        metadata: mediaMeta,
       });
       results.push({ platform, ok: false, error: posted.error, mediaSource });
     }
@@ -1006,24 +1020,32 @@ async function processQueue(
       break;
     }
 
-    // Avatar settle: if profile has no public avatar yet and we have not already
-    // retried once for settle, wait once more (~60s) before falling back to default.
-    // Signup never waits; this only delays queue drain.
-    if (item.last_error !== "avatar_settle_retry") {
+    // Avatar upload settle + moderation wait (non-blocking for signup).
+    // Unapproved avatars are never sent to Buffer (see createSignupPost gate).
+    {
+      const lastErr = String(item.last_error ?? "");
+      const modWaitN = lastErr.startsWith("avatar_moderation_wait_")
+        ? Number(lastErr.replace("avatar_moderation_wait_", "")) || 0
+        : 0;
+
       const { data: settleProfile } = await admin
         .from("profiles")
-        .select("avatar_url, created_at, allow_social_feature")
+        .select("avatar_url, created_at, allow_social_feature, avatar_moderation_status")
         .eq("id", item.user_id)
         .maybeSingle();
 
-      if (
-        settleProfile?.allow_social_feature !== false &&
-        !validPublicMediaUrl(settleProfile?.avatar_url) &&
-        settleProfile?.created_at
-      ) {
+      if (settleProfile?.allow_social_feature !== false && settleProfile?.created_at) {
         const ageMs = Date.now() - new Date(settleProfile.created_at).getTime();
-        // Only defer once for newly created profiles (within 15 minutes of signup)
-        if (ageMs < 15 * 60 * 1000) {
+        const withinModWindow = ageMs < 10 * 60 * 1000;
+
+        // Upload still settling (no public URL yet) — one short defer
+        if (
+          lastErr !== "avatar_settle_retry" &&
+          !lastErr.startsWith("avatar_moderation_wait_") &&
+          !validPublicMediaUrl(settleProfile.avatar_url) &&
+          settleProfile.avatar_moderation_status !== "approved" &&
+          ageMs < 15 * 60 * 1000
+        ) {
           await admin
             .from("social_post_queue")
             .update({
@@ -1033,6 +1055,25 @@ async function processQueue(
             })
             .eq("id", item.id);
           outcomes.push({ id: item.id, deferred: "avatar_settle_retry" });
+          continue;
+        }
+
+        // Moderation still pending — wait ~2 minutes, max ~10 minutes from signup
+        if (
+          settleProfile.avatar_moderation_status === "pending" &&
+          withinModWindow &&
+          modWaitN < 5
+        ) {
+          const nextWait = modWaitN + 1;
+          await admin
+            .from("social_post_queue")
+            .update({
+              status: "pending",
+              last_error: `avatar_moderation_wait_${nextWait}`,
+              next_attempt_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(),
+            })
+            .eq("id", item.id);
+          outcomes.push({ id: item.id, deferred: `avatar_moderation_wait_${nextWait}` });
           continue;
         }
       }

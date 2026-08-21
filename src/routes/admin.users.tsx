@@ -22,14 +22,17 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X, KeyRound, Copy, Coins } from "lucide-react";
+import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X, KeyRound, Copy, Coins, ImageIcon } from "lucide-react";
 import {
   getMyRoles, listUsersWithRoles, setUserRole,
   banUser, unbanUser, deleteUser, updateUserUsername, adminResetUserPassword, adminGrantCoins,
 } from "@/lib/admin.functions";
-
-
-
+import {
+  adminApproveAvatar,
+  adminDisableSocialFeaturing,
+  adminRejectAvatar,
+  adminRemoveProfilePicture,
+} from "@/lib/avatar-moderation.functions";
 export const Route = createFileRoute("/admin/users")({ component: UsersPage });
 
 type ManagedRole = "super_admin" | "admin" | "moderator" | "dj" | "rj";
@@ -86,7 +89,22 @@ function UsersPage() {
   const [coinTarget, setCoinTarget] = useState<{ user_id: string; username: string } | null>(null);
   const [coinAmount, setCoinAmount] = useState("100");
   const [coinReason, setCoinReason] = useState("");
+  const [avatarTarget, setAvatarTarget] = useState<{
+    id: string;
+    username: string | null;
+    avatar_url: string | null;
+    avatar_quarantine_url?: string | null;
+    avatar_moderation_status?: string | null;
+    avatar_moderation_reason?: string | null;
+    avatar_moderated_at?: string | null;
+    allow_social_feature?: boolean | null;
+  } | null>(null);
+  const [removeAvatarConfirm, setRemoveAvatarConfirm] = useState(false);
 
+  const approveAvatarFn = useServerFn(adminApproveAvatar);
+  const rejectAvatarFn = useServerFn(adminRejectAvatar);
+  const removeAvatarFn = useServerFn(adminRemoveProfilePicture);
+  const disableSocialFn = useServerFn(adminDisableSocialFeaturing);
 
 
   const myRoles = useQuery({ queryKey: ["my-roles"], queryFn: () => myRolesFn() });
@@ -155,6 +173,32 @@ function UsersPage() {
       setCoinReason("");
       invalidate();
     },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const avatarApproveMut = useMutation({
+    mutationFn: (userId: string) => approveAvatarFn({ data: { userId } }),
+    onSuccess: () => { toast.success("Avatar approved"); setAvatarTarget(null); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const avatarRejectMut = useMutation({
+    mutationFn: (userId: string) => rejectAvatarFn({ data: { userId, reason: "admin_rejected" } }),
+    onSuccess: () => { toast.success("Avatar rejected"); setAvatarTarget(null); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const avatarRemoveMut = useMutation({
+    mutationFn: (userId: string) => removeAvatarFn({ data: { userId } }),
+    onSuccess: () => {
+      toast.success("Profile picture removed");
+      setRemoveAvatarConfirm(false);
+      setAvatarTarget(null);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const socialDisableMut = useMutation({
+    mutationFn: (userId: string) => disableSocialFn({ data: { userId, allow: false } }),
+    onSuccess: () => { toast.success("Social featuring disabled"); setAvatarTarget(null); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -368,6 +412,25 @@ function UsersPage() {
                           title="Send coins"
                         >
                           <Coins className="h-3.5 w-3.5 text-amber-500" />
+                        </Button>
+                        <Button
+                          size="sm" variant="outline"
+                          title="Profile image moderation"
+                          onClick={() => {
+                            setAvatarTarget({
+                              id: u.id,
+                              username: u.username,
+                              avatar_url: u.avatar_url,
+                              avatar_quarantine_url: (u as { avatar_quarantine_url?: string | null }).avatar_quarantine_url ?? null,
+                              avatar_moderation_status: (u as { avatar_moderation_status?: string | null }).avatar_moderation_status ?? "none",
+                              avatar_moderation_reason: (u as { avatar_moderation_reason?: string | null }).avatar_moderation_reason ?? null,
+                              avatar_moderated_at: (u as { avatar_moderated_at?: string | null }).avatar_moderated_at ?? null,
+                              allow_social_feature: (u as { allow_social_feature?: boolean | null }).allow_social_feature ?? null,
+                            });
+                            setRemoveAvatarConfirm(false);
+                          }}
+                        >
+                          <ImageIcon className="h-3.5 w-3.5" />
                         </Button>
 
                         {isSuperAdmin && (
@@ -599,6 +662,83 @@ function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Profile Image Moderation */}
+      <Dialog open={!!avatarTarget} onOpenChange={(o) => { if (!o) { setAvatarTarget(null); setRemoveAvatarConfirm(false); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Profile Image Moderation</DialogTitle>
+            <DialogDescription>
+              @{avatarTarget?.username ?? "user"} — only approved avatars can be sent to Buffer.
+            </DialogDescription>
+          </DialogHeader>
+          {avatarTarget && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-16 w-16 rounded-xl">
+                  <AvatarImage
+                    src={(avatarTarget.avatar_url || avatarTarget.avatar_quarantine_url) ?? undefined}
+                    className="object-cover"
+                  />
+                  <AvatarFallback>{avatarTarget.username?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
+                </Avatar>
+                <div className="space-y-1 text-sm">
+                  <Badge variant="outline">{avatarTarget.avatar_moderation_status ?? "none"}</Badge>
+                  <p className="text-xs text-muted-foreground">
+                    {avatarTarget.avatar_moderation_reason || "No reason"}
+                  </p>
+                  {avatarTarget.avatar_moderated_at && (
+                    <p className="text-[11px] text-muted-foreground">
+                      {new Date(avatarTarget.avatar_moderated_at).toLocaleString()}
+                    </p>
+                  )}
+                  {avatarTarget.allow_social_feature === false && (
+                    <p className="text-[11px] text-muted-foreground">Social featuring: disabled</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="secondary" disabled={avatarApproveMut.isPending}
+                  onClick={() => avatarApproveMut.mutate(avatarTarget.id)}>
+                  Approve Image
+                </Button>
+                <Button size="sm" variant="outline" disabled={avatarRejectMut.isPending}
+                  onClick={() => avatarRejectMut.mutate(avatarTarget.id)}>
+                  Reject Image
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setRemoveAvatarConfirm(true)}>
+                  Remove Profile Picture
+                </Button>
+                <Button size="sm" variant="ghost" disabled={socialDisableMut.isPending}
+                  onClick={() => socialDisableMut.mutate(avatarTarget.id)}>
+                  Disable Social Featuring
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={removeAvatarConfirm} onOpenChange={setRemoveAvatarConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove profile picture?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove this user&apos;s profile picture? The user&apos;s account, posts,
+              messages and other profile data will not be deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={avatarRemoveMut.isPending}
+              onClick={() => avatarTarget && avatarRemoveMut.mutate(avatarTarget.id)}
+            >
+              Remove Profile Picture
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
 
 

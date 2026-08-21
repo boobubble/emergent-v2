@@ -123,6 +123,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/safety",             label: "Safety Review",     icon: ShieldAlert, keywords: ["safety", "moderation", "auto", "detection", "harmful", "illegal", "extremist", "violence", "threats", "keywords", "flagged"] },
       { to: "/admin/abuse-protection",   label: "Abuse Protection",  icon: ShieldAlert, keywords: ["rate limit", "abuse", "spam", "throttle", "flood", "429", "bans", "temporary", "restrictions", "offenders"] },
       { to: "/admin/feed-moderation",    label: "Feed Moderation",   icon: ShieldAlert, keywords: ["feed", "queue", "reports", "ai", "images", "nudity", "posts", "comments", "spam", "duplicates"] },
+      { to: "/admin/avatar-safety",      label: "Avatar Safety",     icon: ShieldAlert, keywords: ["avatar", "profile picture", "image", "moderation", "nudity", "nsfw", "pending", "review"] },
       { to: "/admin/trust-safety",       label: "Trust & Safety",    icon: Shield,      keywords: ["trust", "safety", "dm", "privacy", "message requests", "bad words", "url filter", "violations", "penalties", "unlock", "level", "score"] },
 
     ],
