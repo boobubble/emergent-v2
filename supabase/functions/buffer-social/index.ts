@@ -390,6 +390,7 @@ async function getChannelsAndSync(
 async function createBufferPost(
   apiKey: string,
   opts: {
+    platform?: string;
     channelId: string;
     text: string;
     mediaUrl?: string | null;
@@ -400,6 +401,13 @@ async function createBufferPost(
     ? `, assets: [{ image: { url: ${JSON.stringify(opts.mediaUrl)} } }]`
     : "";
 
+  const platform = (opts.platform === "twitter" ? "x" : opts.platform) ?? "";
+  // Instagram requires service-specific metadata; do not send this for other platforms.
+  const platformMetadata =
+    platform === "instagram"
+      ? `metadata: { instagram: { type: post, shouldShareToFeed: true } }`
+      : "";
+
   const mutation = `
     mutation CreatePost {
       createPost(input: {
@@ -408,6 +416,7 @@ async function createBufferPost(
         schedulingType: automatic
         mode: ${opts.mode}
         ${assets}
+        ${platformMetadata}
       }) {
         ... on PostActionSuccess {
           post { id text dueAt status }
@@ -580,6 +589,7 @@ async function createTestPost(
     }
 
     const posted = await createBufferPost(apiKey, {
+      platform,
       channelId: ch.buffer_channel_id,
       text,
       mediaUrl,
@@ -865,6 +875,7 @@ async function createSignupPost(
 
     // Facebook / X: text-only if no media; otherwise attach resolved image
     const posted = await createBufferPost(apiKey, {
+      platform,
       channelId: ch.buffer_channel_id,
       text: caption,
       mediaUrl,
@@ -1117,6 +1128,7 @@ async function retryLog(
     `🎉 A new member just joined Yaarzo!\nhttps://yaarzo.com\n#Yaarzo #Community #Chat`;
 
   const posted = await createBufferPost(apiKey, {
+    platform: typeof log.platform === "string" ? log.platform : undefined,
     channelId: log.buffer_channel_id,
     text: caption,
     mediaUrl: validPublicMediaUrl(log.media_url)
