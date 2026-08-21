@@ -207,6 +207,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
   const [country, setCountry] = useState("");
   const [phone, setPhone] = useState("");
   const [avatarDataUrl, setAvatarDataUrl] = useState("");
+  const [allowSocialFeature, setAllowSocialFeature] = useState(false);
   const [err, setErr] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
@@ -241,6 +242,7 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
         const k = email.trim().toLowerCase();
         if (avatarDataUrl) sessionStorage.setItem(`pending-avatar:${k}`, avatarDataUrl);
         sessionStorage.setItem(`pending-welcome:${k}`, "1");
+        sessionStorage.setItem(`pending-social-feature:${k}`, allowSocialFeature ? "1" : "0");
       } catch { /* ignore */ }
       await signup(email, password, username.trim(), gender, {
         birthday: birthday || undefined,
@@ -325,6 +327,18 @@ function SignUpDialog({ open, onOpenChange, onSwitchSignin }: { open: boolean; o
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} maxLength={100} required className="w-full rounded-lg bg-input px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring" placeholder="••••••" />
             <PasswordStrength value={password} />
           </div>
+          <label className="flex items-start gap-2 rounded-lg border border-border bg-card/50 p-3 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={allowSocialFeature}
+              onChange={(e) => setAllowSocialFeature(e.target.checked)}
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-primary"
+            />
+            <span>
+              <span className="block font-semibold text-foreground">Allow Yaarzo to feature my public profile on Yaarzo social media</span>
+              Yaarzo may share your public username, avatar, and profile link on Yaarzo’s Facebook, X, TikTok, or Instagram. You can change this later in Privacy settings.
+            </span>
+          </label>
           {err && <div className="rounded-lg bg-destructive/15 px-3 py-2 text-xs text-destructive">{err}</div>}
           {info && <div className="rounded-lg bg-primary/15 px-3 py-2 text-xs text-primary">{info}</div>}
           <button disabled={busy || usernameStatus.state !== "ok"} type="submit" className="w-full rounded-full px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" style={{ background: "var(--gradient-accent, var(--primary))" }}>

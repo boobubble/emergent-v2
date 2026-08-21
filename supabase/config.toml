@@ -1,1 +1,5 @@
 project_id = "aofjhfsecwsrcvvvcfcy"
+
+[functions.buffer-social]
+# Custom auth: admin JWT or x-social-hook-secret (cron). Do not rely on gateway JWT alone.
+verify_jwt = false

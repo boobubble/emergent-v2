@@ -6,7 +6,7 @@ import {
   Rocket, Flame, Radio, Trophy, Youtube, Disc3, MessageSquareHeart, Vote,
   Bug, Home, Wand2, Database, ScrollText, History, Bell, MousePointerClick, Mail,
   PowerOff, RefreshCw, Gift, Download, Languages, Link2, UserPlus, PhoneCall, Crown,
-  ListOrdered, HardDrive,
+  ListOrdered, HardDrive, Share2,
 } from "lucide-react";
 
 export interface AdminLeaf {
@@ -74,6 +74,7 @@ export const ADMIN_NAV: AdminGroup[] = [
       { to: "/admin/ai-chatbots",  label: "AI Chat Bots", icon: Sparkles, keywords: ["ai", "openrouter", "gpt", "gemini", "claude", "auto reply", "assistant"] },
       { to: "/admin/boobubble",    label: "AI Assistant", icon: Sparkles, keywords: ["assistant", "official", "verified", "welcome", "system", "bot", "boobubble"] },
       { to: "/admin/feedbot",      label: "FeedBot",            icon: Megaphone, keywords: ["feedbot", "bot", "announcements", "system", "feed", "auto", "digest", "summary"] },
+      { to: "/admin/social-automation", label: "Social Automation", icon: Share2, keywords: ["buffer", "facebook", "twitter", "x", "tiktok", "instagram", "social", "auto post", "signup"] },
       { to: "/admin/calls",        label: "Call Settings", icon: PhoneCall, keywords: ["calls", "voice", "video", "audio", "livekit", "agora", "group call", "trio", "billing", "coins", "provider"] },
       { to: "/admin/voice-notes",  label: "Voice Notes",   icon: PhoneCall, keywords: ["voice", "note", "mic", "recording", "audio", "lobby", "dm", "trio", "duration"] },
     ],

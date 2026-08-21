@@ -11,6 +11,10 @@ import {
   listMessageRequests, respondMessageRequest,
   getTrustScore,
 } from "@/lib/trust-safety.functions";
+import {
+  getMySocialFeaturePref,
+  setMySocialFeaturePref,
+} from "@/lib/social-automation.functions";
 import { Shield, MailWarning, Compass } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings/privacy")({
@@ -31,10 +35,13 @@ function PrivacySettings() {
   const scoreFn = useServerFn(getTrustScore);
   const reqFn = useServerFn(listMessageRequests);
   const respondFn = useServerFn(respondMessageRequest);
+  const getSocialFn = useServerFn(getMySocialFeaturePref);
+  const setSocialFn = useServerFn(setMySocialFeaturePref);
 
   const priv = useQuery({ queryKey: ["dm-privacy"], queryFn: () => getFn() });
   const score = useQuery({ queryKey: ["trust-score"], queryFn: () => scoreFn() });
   const requests = useQuery({ queryKey: ["dm-requests"], queryFn: () => reqFn() });
+  const socialPref = useQuery({ queryKey: ["social-feature-pref"], queryFn: () => getSocialFn() });
 
   const choose = async (v: "everyone"|"friends"|"nobody") => {
     try { await setFn({ data: { who_can_dm: v } }); toast.success("Updated"); qc.invalidateQueries({ queryKey: ["dm-privacy"] }); }
@@ -43,6 +50,15 @@ function PrivacySettings() {
   const setRequests = async (allow: boolean) => {
     try { await setFn({ data: { who_can_dm: priv.data?.who_can_dm ?? "everyone", allow_message_requests: allow } }); qc.invalidateQueries({ queryKey: ["dm-privacy"] }); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+  };
+  const setSocialFeature = async (allow: boolean) => {
+    try {
+      await setSocialFn({ data: { allow_social_feature: allow } });
+      toast.success("Updated");
+      qc.invalidateQueries({ queryKey: ["social-feature-pref"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
   };
   const respond = async (id: string, action: "accept"|"decline"|"block") => {
     try { await respondFn({ data: { id, action } }); qc.invalidateQueries({ queryKey: ["dm-requests"] }); }
@@ -77,6 +93,27 @@ function PrivacySettings() {
                 <p className="text-xs text-muted-foreground">First message from a non-friend goes to a Requests inbox until you accept.</p>
               </div>
               <AdminToggle checked={priv.data.allow_message_requests ?? true} onCheckedChange={setRequests} />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Yaarzo social featuring</CardTitle></CardHeader>
+        <CardContent>
+          {socialPref.isLoading && <Skeleton className="h-16 w-full" />}
+          {socialPref.data && (
+            <div className="flex items-center justify-between gap-4 rounded-lg border bg-card p-3">
+              <div>
+                <div className="text-sm font-medium">Allow Yaarzo to feature my public profile on Yaarzo social media</div>
+                <p className="text-xs text-muted-foreground">
+                  When enabled, Yaarzo may share your public username, avatar, and profile link on Yaarzo’s Facebook, X, TikTok, or Instagram accounts. Turn this off anytime.
+                </p>
+              </div>
+              <AdminToggle
+                checked={socialPref.data.allow_social_feature}
+                onCheckedChange={setSocialFeature}
+              />
             </div>
           )}
         </CardContent>

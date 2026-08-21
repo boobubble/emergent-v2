@@ -81,6 +81,21 @@ async function fetchUsername(userId: string, fallbackEmail?: string): Promise<st
   return fallbackEmail?.split("@")[0] || "user";
 }
 
+async function flushPendingSocialFeature(userId: string, email?: string) {
+  if (!email) return;
+  const key = `pending-social-feature:${email.toLowerCase()}`;
+  let flag: string | null = null;
+  try { flag = sessionStorage.getItem(key); } catch { return; }
+  if (flag === null) return;
+  try {
+    const allow = flag !== "0";
+    await supabase.from("profiles").update({ allow_social_feature: allow }).eq("id", userId);
+    try { sessionStorage.removeItem(key); } catch { /* ignore */ }
+  } catch (e) {
+    console.error("social feature pref flush failed", e);
+  }
+}
+
 async function flushPendingAvatar(userId: string, email?: string) {
   if (!email) return;
   const key = `pending-avatar:${email.toLowerCase()}`;
@@ -174,7 +189,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     function hydrateProfileBackground(session: Session) {
       const u = session.user;
       const email = u.email ?? undefined;
-      void flushPendingAvatar(u.id, email).then(() => publishWelcomePost(u.id, email));
+      void flushPendingAvatar(u.id, email)
+        .then(() => flushPendingSocialFeature(u.id, email))
+        .then(() => publishWelcomePost(u.id, email));
       void import("@/lib/sound-prefs").then((m) => m.hydrateSoundPrefsFromServer());
       void (async () => {
         try {

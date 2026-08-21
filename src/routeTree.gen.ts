@@ -122,6 +122,7 @@ import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminSetupWizardRouteImport } from './routes/admin.setup-wizard'
 import { Route as AdminSignupAccessRouteImport } from './routes/admin.signup-access'
+import { Route as AdminSocialAutomationRouteImport } from './routes/admin.social-automation'
 import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
 import { Route as AdminStaffPermissionsRouteImport } from './routes/admin.staff-permissions'
@@ -214,6 +215,7 @@ import { Route as PoetryCategorySlugRouteImport } from './routes/poetry.category
 import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/public/hooks/feedbot-dispatch'
 import { Route as ApiPublicHooksFeedbotSummaryRouteImport } from './routes/api/public/hooks/feedbot-summary'
 import { Route as ApiPublicHooksLicenseRevalidateRouteImport } from './routes/api/public/hooks/license-revalidate'
+import { Route as ApiPublicHooksSocialDispatchRouteImport } from './routes/api/public/hooks/social-dispatch'
 import { Route as ApiPublicLicenseActivateRouteImport } from './routes/api/public/license/activate'
 import { Route as ApiPublicLicenseCheckRouteImport } from './routes/api/public/license/check'
 import { Route as ApiPublicLicenseDeactivateRouteImport } from './routes/api/public/license/deactivate'
@@ -793,6 +795,11 @@ const AdminSignupAccessRoute = AdminSignupAccessRouteImport.update({
   path: '/signup-access',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSocialAutomationRoute = AdminSocialAutomationRouteImport.update({
+  id: '/social-automation',
+  path: '/social-automation',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSocialFeedRoute = AdminSocialFeedRouteImport.update({
   id: '/social-feed',
   path: '/social-feed',
@@ -1262,6 +1269,12 @@ const ApiPublicHooksLicenseRevalidateRoute =
     path: '/api/public/hooks/license-revalidate',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSocialDispatchRoute =
+  ApiPublicHooksSocialDispatchRouteImport.update({
+    id: '/api/public/hooks/social-dispatch',
+    path: '/api/public/hooks/social-dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicLicenseActivateRoute =
   ApiPublicLicenseActivateRouteImport.update({
     id: '/api/public/license/activate',
@@ -1431,6 +1444,7 @@ export interface FileRoutesByFullPath {
   '/admin/seo': typeof AdminSeoRoute
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/signup-access': typeof AdminSignupAccessRoute
+  '/admin/social-automation': typeof AdminSocialAutomationRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -1524,6 +1538,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
+  '/api/public/hooks/social-dispatch': typeof ApiPublicHooksSocialDispatchRoute
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
@@ -1643,6 +1658,7 @@ export interface FileRoutesByTo {
   '/admin/seo': typeof AdminSeoRoute
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/signup-access': typeof AdminSignupAccessRoute
+  '/admin/social-automation': typeof AdminSocialAutomationRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -1735,6 +1751,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
+  '/api/public/hooks/social-dispatch': typeof ApiPublicHooksSocialDispatchRoute
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
@@ -1860,6 +1877,7 @@ export interface FileRoutesById {
   '/admin/seo': typeof AdminSeoRoute
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/signup-access': typeof AdminSignupAccessRoute
+  '/admin/social-automation': typeof AdminSocialAutomationRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -1953,6 +1971,7 @@ export interface FileRoutesById {
   '/api/public/hooks/feedbot-dispatch': typeof ApiPublicHooksFeedbotDispatchRoute
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
+  '/api/public/hooks/social-dispatch': typeof ApiPublicHooksSocialDispatchRoute
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
@@ -2078,6 +2097,7 @@ export interface FileRouteTypes {
     | '/admin/seo'
     | '/admin/setup-wizard'
     | '/admin/signup-access'
+    | '/admin/social-automation'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -2171,6 +2191,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
+    | '/api/public/hooks/social-dispatch'
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
@@ -2290,6 +2311,7 @@ export interface FileRouteTypes {
     | '/admin/seo'
     | '/admin/setup-wizard'
     | '/admin/signup-access'
+    | '/admin/social-automation'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -2382,6 +2404,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
+    | '/api/public/hooks/social-dispatch'
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
@@ -2506,6 +2529,7 @@ export interface FileRouteTypes {
     | '/admin/seo'
     | '/admin/setup-wizard'
     | '/admin/signup-access'
+    | '/admin/social-automation'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -2599,6 +2623,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/feedbot-dispatch'
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
+    | '/api/public/hooks/social-dispatch'
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
@@ -2689,6 +2714,7 @@ export interface RootRouteChildren {
   ApiPublicHooksFeedbotDispatchRoute: typeof ApiPublicHooksFeedbotDispatchRoute
   ApiPublicHooksFeedbotSummaryRoute: typeof ApiPublicHooksFeedbotSummaryRoute
   ApiPublicHooksLicenseRevalidateRoute: typeof ApiPublicHooksLicenseRevalidateRoute
+  ApiPublicHooksSocialDispatchRoute: typeof ApiPublicHooksSocialDispatchRoute
   ApiPublicLicenseActivateRoute: typeof ApiPublicLicenseActivateRoute
   ApiPublicLicenseCheckRoute: typeof ApiPublicLicenseCheckRoute
   ApiPublicLicenseDeactivateRoute: typeof ApiPublicLicenseDeactivateRoute
@@ -3491,6 +3517,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSignupAccessRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/social-automation': {
+      id: '/admin/social-automation'
+      path: '/social-automation'
+      fullPath: '/admin/social-automation'
+      preLoaderRoute: typeof AdminSocialAutomationRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/social-feed': {
       id: '/admin/social-feed'
       path: '/social-feed'
@@ -4135,6 +4168,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLicenseRevalidateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/social-dispatch': {
+      id: '/api/public/hooks/social-dispatch'
+      path: '/api/public/hooks/social-dispatch'
+      fullPath: '/api/public/hooks/social-dispatch'
+      preLoaderRoute: typeof ApiPublicHooksSocialDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/license/activate': {
       id: '/api/public/license/activate'
       path: '/api/public/license/activate'
@@ -4361,6 +4401,7 @@ interface AdminRouteChildren {
   AdminSeoRoute: typeof AdminSeoRoute
   AdminSetupWizardRoute: typeof AdminSetupWizardRoute
   AdminSignupAccessRoute: typeof AdminSignupAccessRoute
+  AdminSocialAutomationRoute: typeof AdminSocialAutomationRoute
   AdminSocialFeedRoute: typeof AdminSocialFeedRoute
   AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
   AdminStaffPermissionsRoute: typeof AdminStaffPermissionsRoute
@@ -4452,6 +4493,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSeoRoute: AdminSeoRoute,
   AdminSetupWizardRoute: AdminSetupWizardRoute,
   AdminSignupAccessRoute: AdminSignupAccessRoute,
+  AdminSocialAutomationRoute: AdminSocialAutomationRoute,
   AdminSocialFeedRoute: AdminSocialFeedRoute,
   AdminSocialLayoutRoute: AdminSocialLayoutRoute,
   AdminStaffPermissionsRoute: AdminStaffPermissionsRoute,
@@ -4652,6 +4694,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksFeedbotDispatchRoute: ApiPublicHooksFeedbotDispatchRoute,
   ApiPublicHooksFeedbotSummaryRoute: ApiPublicHooksFeedbotSummaryRoute,
   ApiPublicHooksLicenseRevalidateRoute: ApiPublicHooksLicenseRevalidateRoute,
+  ApiPublicHooksSocialDispatchRoute: ApiPublicHooksSocialDispatchRoute,
   ApiPublicLicenseActivateRoute: ApiPublicLicenseActivateRoute,
   ApiPublicLicenseCheckRoute: ApiPublicLicenseCheckRoute,
   ApiPublicLicenseDeactivateRoute: ApiPublicLicenseDeactivateRoute,
@@ -4663,13 +4706,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

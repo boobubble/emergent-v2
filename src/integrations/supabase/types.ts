@@ -5878,6 +5878,7 @@ export type Database = {
           about_me: string | null
           active_chat_theme: string | null
           active_feed_theme: string | null
+          allow_social_feature: boolean
           avatar_color: string
           avatar_url: string | null
           bio: string | null
@@ -5928,6 +5929,7 @@ export type Database = {
           about_me?: string | null
           active_chat_theme?: string | null
           active_feed_theme?: string | null
+          allow_social_feature?: boolean
           avatar_color?: string
           avatar_url?: string | null
           bio?: string | null
@@ -5978,6 +5980,7 @@ export type Database = {
           about_me?: string | null
           active_chat_theme?: string | null
           active_feed_theme?: string | null
+          allow_social_feature?: boolean
           avatar_color?: string
           avatar_url?: string | null
           bio?: string | null
