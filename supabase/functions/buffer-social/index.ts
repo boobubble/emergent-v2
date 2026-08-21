@@ -250,7 +250,9 @@ function normalizePlatform(service: string): string {
   if (s === "twitter" || s === "x") return "x";
   if (s === "facebook" || s === "facebookPage" || s === "fb") return "facebook";
   if (s === "tiktok") return "tiktok";
-  if (s === "instagram" || s === "instagramBusiness") return "instagram";
+  if (s === "instagram" || s === "instagrambusiness" || s === "instagram_business" || s === "instagramBusiness") {
+    return "instagram";
+  }
   if (s === "linkedin" || s === "linkedinPage") return "linkedin";
   if (s === "threads") return "threads";
   if (s === "youtube") return "youtube";
@@ -479,10 +481,12 @@ async function createTestPost(
   const forceMode = body.mode === "shareNow" ? "shareNow" : "addToQueue";
   const useMode = body.forcePublishingMode ? mode : forceMode;
 
-  const mediaUrl =
-    typeof body.mediaUrl === "string" && body.mediaUrl.startsWith("https://")
-      ? body.mediaUrl
-      : settings.default_media_url;
+  const resolved = resolveSocialMedia({
+    explicitMediaUrl: typeof body.mediaUrl === "string" ? body.mediaUrl : null,
+    defaultMediaUrl: settings.default_media_url,
+  });
+  const mediaUrl = resolved.mediaUrl;
+  const mediaSource = resolved.mediaSource === "explicit" ? "explicit" : resolved.mediaSource === "default_image" ? "default_image" : "none";
 
   if (channelIds.length === 0) {
     return { ok: false, error: "Select at least one channel", results: [] };
@@ -493,22 +497,38 @@ async function createTestPost(
     .select("*")
     .in("buffer_channel_id", channelIds);
 
+  // Pre-check Instagram / TikTok when no media available
+  const selectedPlatforms = (channels ?? []).map((c: any) =>
+    c.platform === "twitter" ? "x" : c.platform,
+  );
+  const needsMedia =
+    selectedPlatforms.includes("tiktok") || selectedPlatforms.includes("instagram");
+  if (needsMedia && !mediaUrl) {
+    return {
+      ok: false,
+      error: "Set a Default Yaarzo Social Image before testing Instagram or TikTok.",
+      results: [],
+    };
+  }
+
   const results: Array<Record<string, unknown>> = [];
 
   for (const ch of channels ?? []) {
+    const platform = ch.platform === "twitter" ? "x" : ch.platform;
     const meta = (ch.metadata ?? {}) as Record<string, unknown>;
     if (meta.queuePaused) {
       const log = await insertLog(admin, {
         event_type: "test_post",
-        platform: ch.platform,
+        platform,
         buffer_channel_id: ch.buffer_channel_id,
         caption: text,
         media_url: mediaUrl,
         status: "failed",
         error_message: "Channel queue is paused",
+        metadata: { media_source: mediaSource },
       });
       results.push({
-        platform: ch.platform,
+        platform,
         channelId: ch.buffer_channel_id,
         ok: false,
         error: "Channel queue is paused",
@@ -519,18 +539,41 @@ async function createTestPost(
     if (meta.disconnected) {
       const log = await insertLog(admin, {
         event_type: "test_post",
-        platform: ch.platform,
+        platform,
         buffer_channel_id: ch.buffer_channel_id,
         caption: text,
         media_url: mediaUrl,
         status: "failed",
         error_message: "Channel disconnected",
+        metadata: { media_source: mediaSource },
       });
       results.push({
-        platform: ch.platform,
+        platform,
         channelId: ch.buffer_channel_id,
         ok: false,
         error: "Channel disconnected",
+        logId: log?.id,
+      });
+      continue;
+    }
+
+    if (platformRequiresMedia(platform) && !mediaUrl) {
+      const err = mediaRequiredError(platform);
+      const log = await insertLog(admin, {
+        event_type: "test_post",
+        platform,
+        buffer_channel_id: ch.buffer_channel_id,
+        caption: text,
+        media_url: null,
+        status: "failed",
+        error_message: err,
+        metadata: { media_source: "none" },
+      });
+      results.push({
+        platform,
+        channelId: ch.buffer_channel_id,
+        ok: false,
+        error: err,
         logId: log?.id,
       });
       continue;
@@ -546,39 +589,43 @@ async function createTestPost(
     if (posted.ok) {
       const log = await insertLog(admin, {
         event_type: "test_post",
-        platform: ch.platform,
+        platform,
         buffer_channel_id: ch.buffer_channel_id,
         buffer_post_id: posted.postId,
         caption: text,
         media_url: mediaUrl,
         status: useMode === "shareNow" ? "published" : "queued",
         published_at: useMode === "shareNow" ? new Date().toISOString() : null,
+        metadata: { media_source: mediaSource },
       });
       results.push({
-        platform: ch.platform,
+        platform,
         channelId: ch.buffer_channel_id,
         ok: true,
         postId: posted.postId,
         dueAt: posted.dueAt,
         status: useMode === "shareNow" ? "published" : "queued",
         logId: log?.id,
+        mediaSource,
       });
     } else {
       const log = await insertLog(admin, {
         event_type: "test_post",
-        platform: ch.platform,
+        platform,
         buffer_channel_id: ch.buffer_channel_id,
         caption: text,
         media_url: mediaUrl,
         status: "failed",
         error_message: posted.error,
+        metadata: { media_source: mediaSource },
       });
       results.push({
-        platform: ch.platform,
+        platform,
         channelId: ch.buffer_channel_id,
         ok: false,
         error: posted.error,
         logId: log?.id,
+        mediaSource,
       });
     }
   }
@@ -597,8 +644,70 @@ function renderTemplate(
     .replaceAll("{{profile_url}}", vars.profile_url);
 }
 
-function isPublicHttps(url: string | null | undefined): url is string {
-  return !!url && url.startsWith("https://") && !url.includes("token=") && !/[?&]sig=/.test(url);
+type MediaSource = "user_avatar" | "default_image" | "none" | "explicit";
+
+/** Public HTTPS media only — never data/blob/localhost/signed/temp paths. */
+function validPublicMediaUrl(url: string | null | undefined): url is string {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith("data:") || lower.startsWith("blob:")) return false;
+  if (!lower.startsWith("https://")) return false;
+  try {
+    const u = new URL(trimmed);
+    if (u.protocol !== "https:") return false;
+    const host = u.hostname.toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".local")) {
+      return false;
+    }
+    // Reject obvious signed / temporary query tokens without logging them
+    if (u.searchParams.has("token") || u.searchParams.has("sig") || u.searchParams.has("X-Amz-Signature")) {
+      return false;
+    }
+    if (/[?&](token|sig|signature|X-Amz-Signature)=/i.test(trimmed)) return false;
+    // Reject raw storage object paths (not full public URLs)
+    if (!host.includes(".") && !host.includes(":")) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function resolveSocialMedia(opts: {
+  avatarUrl?: string | null;
+  defaultMediaUrl?: string | null;
+  explicitMediaUrl?: string | null;
+}): { mediaUrl: string | null; mediaSource: MediaSource } {
+  if (validPublicMediaUrl(opts.explicitMediaUrl)) {
+    return { mediaUrl: opts.explicitMediaUrl, mediaSource: "explicit" };
+  }
+  if (validPublicMediaUrl(opts.avatarUrl)) {
+    return { mediaUrl: opts.avatarUrl, mediaSource: "user_avatar" };
+  }
+  if (validPublicMediaUrl(opts.defaultMediaUrl)) {
+    return { mediaUrl: opts.defaultMediaUrl, mediaSource: "default_image" };
+  }
+  return { mediaUrl: null, mediaSource: "none" };
+}
+
+/** Platforms that must not be posted without an image. */
+function platformRequiresMedia(platform: string): boolean {
+  const p = platform === "twitter" ? "x" : platform;
+  return p === "tiktok" || p === "instagram";
+}
+
+const TIKTOK_MEDIA_REQUIRED_ERROR =
+  "TikTok requires media and no valid avatar or default media URL is available.";
+
+const INSTAGRAM_MEDIA_REQUIRED_ERROR =
+  "Instagram requires media and no valid avatar or default media URL is available.";
+
+function mediaRequiredError(platform: string): string {
+  const p = platform === "twitter" ? "x" : platform;
+  if (p === "tiktok") return TIKTOK_MEDIA_REQUIRED_ERROR;
+  if (p === "instagram") return INSTAGRAM_MEDIA_REQUIRED_ERROR;
+  return "Media required and no valid avatar or default media URL is available.";
 }
 
 async function createSignupPost(
@@ -615,9 +724,10 @@ async function createSignupPost(
     return { ok: false, skipped: true, reason: "social_signup_disabled" };
   }
 
+  // Always re-read profile at execution time (never trust stale queued media).
   const { data: profile } = await admin
     .from("profiles")
-    .select("id, username, display_name, avatar_url, allow_social_feature, is_private")
+    .select("id, username, display_name, avatar_url, allow_social_feature, is_private, created_at")
     .eq("id", userId)
     .maybeSingle();
 
@@ -629,6 +739,7 @@ async function createSignupPost(
       status: "failed",
       error_message: "user_profile_unavailable",
       queue_id: queueId,
+      metadata: { media_source: "none" },
     });
     return { ok: false, error: "user_profile_unavailable" };
   }
@@ -641,6 +752,7 @@ async function createSignupPost(
       status: "skipped",
       error_message: "social_feature_not_allowed",
       queue_id: queueId,
+      metadata: { media_source: "none" },
     });
     return { ok: true, skipped: true, reason: "social_feature_not_allowed" };
   }
@@ -654,6 +766,7 @@ async function createSignupPost(
       status: "skipped",
       error_message: "user_banned",
       queue_id: queueId,
+      metadata: { media_source: "none" },
     });
     return { ok: true, skipped: true, reason: "user_banned" };
   }
@@ -675,12 +788,12 @@ async function createSignupPost(
   const displayName = profile.display_name?.trim() || username;
   const profileUrl = `${base}/u/${encodeURIComponent(username)}`;
 
-  let mediaUrl: string | null = null;
-  if (isPublicHttps(profile.avatar_url)) {
-    mediaUrl = profile.avatar_url;
-  } else if (isPublicHttps(settings.default_media_url)) {
-    mediaUrl = settings.default_media_url;
-  }
+  const resolved = resolveSocialMedia({
+    avatarUrl: profile.avatar_url,
+    defaultMediaUrl: settings.default_media_url,
+  });
+  const mediaUrl = resolved.mediaUrl;
+  const mediaSource = resolved.mediaSource;
 
   const mode = shareMode(settings.publishing_mode ?? "queue");
   const results: Array<Record<string, unknown>> = [];
@@ -709,6 +822,7 @@ async function createSignupPost(
         status: "failed",
         error_message: "channel_queue_paused",
         queue_id: queueId,
+        metadata: { media_source: mediaSource },
       });
       results.push({ platform, ok: false, error: "channel_queue_paused" });
       continue;
@@ -724,11 +838,32 @@ async function createSignupPost(
         status: "failed",
         error_message: "channel_disconnected",
         queue_id: queueId,
+        metadata: { media_source: mediaSource },
       });
       results.push({ platform, ok: false, error: "channel_disconnected" });
       continue;
     }
 
+    // TikTok / Instagram: require media; isolate failure from other platforms
+    if (platformRequiresMedia(platform) && !mediaUrl) {
+      const err = mediaRequiredError(platform);
+      await insertLog(admin, {
+        event_type: "new_signup",
+        user_id: userId,
+        platform,
+        buffer_channel_id: ch.buffer_channel_id,
+        caption,
+        media_url: null,
+        status: "failed",
+        error_message: err,
+        queue_id: queueId,
+        metadata: { media_source: "none" },
+      });
+      results.push({ platform, ok: false, error: err, mediaSource: "none" });
+      continue;
+    }
+
+    // Facebook / X: text-only if no media; otherwise attach resolved image
     const posted = await createBufferPost(apiKey, {
       channelId: ch.buffer_channel_id,
       text: caption,
@@ -748,8 +883,15 @@ async function createSignupPost(
         status: mode === "shareNow" ? "published" : "queued",
         published_at: mode === "shareNow" ? new Date().toISOString() : null,
         queue_id: queueId,
+        metadata: { media_source: mediaSource },
       });
-      results.push({ platform, ok: true, postId: posted.postId, status: mode === "shareNow" ? "published" : "queued" });
+      results.push({
+        platform,
+        ok: true,
+        postId: posted.postId,
+        status: mode === "shareNow" ? "published" : "queued",
+        mediaSource,
+      });
     } else {
       await insertLog(admin, {
         event_type: "new_signup",
@@ -761,12 +903,13 @@ async function createSignupPost(
         status: "failed",
         error_message: posted.error,
         queue_id: queueId,
+        metadata: { media_source: mediaSource },
       });
-      results.push({ platform, ok: false, error: posted.error });
+      results.push({ platform, ok: false, error: posted.error, mediaSource });
     }
   }
 
-  return { ok: results.some((r) => r.ok), results };
+  return { ok: results.some((r) => r.ok), results, mediaSource };
 }
 
 async function checkRateLimits(
@@ -850,6 +993,38 @@ async function processQueue(
         .eq("id", item.id);
       outcomes.push({ id: item.id, deferred: rate.reason });
       break;
+    }
+
+    // Avatar settle: if profile has no public avatar yet and we have not already
+    // retried once for settle, wait once more (~60s) before falling back to default.
+    // Signup never waits; this only delays queue drain.
+    if (item.last_error !== "avatar_settle_retry") {
+      const { data: settleProfile } = await admin
+        .from("profiles")
+        .select("avatar_url, created_at, allow_social_feature")
+        .eq("id", item.user_id)
+        .maybeSingle();
+
+      if (
+        settleProfile?.allow_social_feature !== false &&
+        !validPublicMediaUrl(settleProfile?.avatar_url) &&
+        settleProfile?.created_at
+      ) {
+        const ageMs = Date.now() - new Date(settleProfile.created_at).getTime();
+        // Only defer once for newly created profiles (within 15 minutes of signup)
+        if (ageMs < 15 * 60 * 1000) {
+          await admin
+            .from("social_post_queue")
+            .update({
+              status: "pending",
+              last_error: "avatar_settle_retry",
+              next_attempt_at: new Date(Date.now() + 60 * 1000).toISOString(),
+            })
+            .eq("id", item.id);
+          outcomes.push({ id: item.id, deferred: "avatar_settle_retry" });
+          continue;
+        }
+      }
     }
 
     await admin
@@ -944,7 +1119,11 @@ async function retryLog(
   const posted = await createBufferPost(apiKey, {
     channelId: log.buffer_channel_id,
     text: caption,
-    mediaUrl: isPublicHttps(log.media_url) ? log.media_url : settings.default_media_url,
+    mediaUrl: validPublicMediaUrl(log.media_url)
+      ? log.media_url
+      : validPublicMediaUrl(settings.default_media_url)
+        ? settings.default_media_url
+        : null,
     mode,
   });
 

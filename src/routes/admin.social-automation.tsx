@@ -90,7 +90,7 @@ function SocialAutomationPage() {
   } | null;
 
   const platformChannels = useMemo(() => {
-    const order = ["facebook", "x", "tiktok", "instagram"];
+    const order = ["facebook", "instagram", "x", "tiktok"];
     const byPlatform = new Map<string, typeof channels>();
     for (const ch of channels) {
       const p = ch.platform === "twitter" ? "x" : ch.platform;
@@ -157,6 +157,10 @@ function SocialAutomationPage() {
         },
       }),
     onSuccess: (r: any) => {
+      if (r?.error && !r?.results?.length) {
+        toast.error(r.error);
+        return;
+      }
       const results = (r?.results ?? []) as Array<{ platform: string; ok: boolean; error?: string }>;
       if (!results.length) {
         toast.error(r?.error ?? "No results");
@@ -170,6 +174,20 @@ function SocialAutomationPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const runTestPost = () => {
+    const selectedMeta = channels.filter((c) =>
+      selectedChannels.includes(c.buffer_channel_id),
+    );
+    const wantsMediaPlatform = selectedMeta.some(
+      (c) => c.platform === "tiktok" || c.platform === "instagram",
+    );
+    if (wantsMediaPlatform && !settings?.default_media_url) {
+      toast.error("Set a Default Yaarzo Social Image before testing Instagram or TikTok.");
+      return;
+    }
+    testPostMut.mutate();
+  };
 
   const saveSettingsMut = useMutation({
     mutationFn: (patch: Record<string, unknown>) => saveSettings({ data: patch as any }),
@@ -226,7 +244,7 @@ function SocialAutomationPage() {
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <AdminPageHeader
         title="Social Automation"
-        description="Publish selected new-member activity to Yaarzo’s Buffer channels (Facebook, X, TikTok). Instagram-ready."
+        description="Publish selected new-member activity to Yaarzo’s Buffer channels (Instagram, X, TikTok; Facebook available but can stay OFF)."
       />
 
       {/* Buffer Connection */}
@@ -297,10 +315,13 @@ function SocialAutomationPage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {platformChannels.flatMap(({ platform, channels: list }) => {
-                if (list.length === 0 && platform === "instagram") {
+                // Show Not Connected only when Buffer has not returned this platform yet.
+                if (list.length === 0 && (platform === "instagram" || platform === "facebook" || platform === "x" || platform === "tiktok")) {
+                  // Prefer showing Instagram placeholder when missing; still show others if none synced at all handled above.
+                  if (platform !== "instagram") return [];
                   return [
                     <div
-                      key="instagram-placeholder"
+                      key="instagram-not-connected"
                       className="rounded-xl border border-dashed border-border p-4 opacity-70"
                     >
                       <div className="text-sm font-semibold">Instagram</div>
@@ -392,7 +413,15 @@ function SocialAutomationPage() {
             <Label>Test Social Post — select channels</Label>
             <div className="flex flex-wrap gap-4">
               {channels
-                .filter((c) => ["facebook", "x", "twitter", "tiktok"].includes(c.platform))
+                .filter((c) =>
+                  ["facebook", "instagram", "x", "twitter", "tiktok"].includes(c.platform),
+                )
+                .sort((a, b) => {
+                  const order = ["facebook", "instagram", "x", "twitter", "tiktok"];
+                  const pa = a.platform === "twitter" ? "x" : a.platform;
+                  const pb = b.platform === "twitter" ? "x" : b.platform;
+                  return order.indexOf(pa) - order.indexOf(pb);
+                })
                 .map((ch) => {
                   const p = ch.platform === "twitter" ? "x" : ch.platform;
                   return (
@@ -415,7 +444,7 @@ function SocialAutomationPage() {
               className="font-mono text-xs"
             />
             <Button
-              onClick={() => testPostMut.mutate()}
+              onClick={() => runTestPost()}
               disabled={testPostMut.isPending || selectedChannels.length === 0}
             >
               <Send className="mr-2 h-4 w-4" />
@@ -423,6 +452,8 @@ function SocialAutomationPage() {
             </Button>
             <p className="text-xs text-muted-foreground">
               Sends one Buffer createPost per selected channel with mode <code>addToQueue</code>.
+              Uses the Default Yaarzo Social Image automatically (required for Instagram and TikTok).
+              Facebook can stay unselected while you test Instagram + X + TikTok.
             </p>
           </div>
         </CardContent>
@@ -437,7 +468,7 @@ function SocialAutomationPage() {
           <p className="text-xs text-muted-foreground">
             Variables: {"{{display_name}}"}, {"{{username}}"}, {"{{profile_url}}"}
           </p>
-          {["facebook", "x", "tiktok", "instagram"].map((platform) => (
+          {["facebook", "instagram", "x", "tiktok"].map((platform) => (
             <div key={platform} className="space-y-2">
               <Label>{PLATFORM_LABEL[platform] ?? platform}</Label>
               <Textarea
@@ -515,7 +546,7 @@ function SocialAutomationPage() {
             </select>
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Default media URL (HTTPS public)</Label>
+            <Label>Default Yaarzo Social Image</Label>
             <Input
               placeholder="https://…/social-media/yaarzo-welcome.png"
               defaultValue={settings?.default_media_url ?? ""}
@@ -525,6 +556,9 @@ function SocialAutomationPage() {
                 })
               }
             />
+            <p className="text-xs text-muted-foreground">
+              Used when a member has no public profile image. Required for TikTok fallback.
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label>Site base URL</Label>

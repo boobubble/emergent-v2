@@ -119,7 +119,7 @@ INSERT INTO public.social_caption_templates (platform, template) VALUES
 ),
 (
   'instagram',
-  E'🎉 {{display_name}} just joined Yaarzo!\nSay hello to our newest community member 👋\n{{profile_url}}\n#Yaarzo #NewMember #Community'
+  E'🎉 {{display_name}} just joined Yaarzo!\nSay hello to our newest community member 👋\n💬 Meet {{display_name}}:\n{{profile_url}}\n#Yaarzo #NewMember #Chat #Community #MakeFriends'
 )
 ON CONFLICT (platform) DO NOTHING;
 
