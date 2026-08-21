@@ -20,6 +20,8 @@ import {
   setSocialChannelEnabled,
   updateSocialAutomationSettings,
   updateSocialCaptionTemplate,
+  clearSuccessfulSocialLogs,
+  deleteFailedSocialLog,
 } from "@/lib/social-automation.functions";
 
 export const Route = createFileRoute("/admin/social-automation")({
@@ -46,6 +48,8 @@ function SocialAutomationPage() {
   const saveSettings = useServerFn(updateSocialAutomationSettings);
   const setChannel = useServerFn(setSocialChannelEnabled);
   const saveTemplate = useServerFn(updateSocialCaptionTemplate);
+  const clearSuccessfulFn = useServerFn(clearSuccessfulSocialLogs);
+  const deleteFailedFn = useServerFn(deleteFailedSocialLog);
 
   const stateQ = useQuery({
     queryKey: ["social-automation"],
@@ -225,6 +229,32 @@ function SocialAutomationPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const clearSuccessfulMut = useMutation({
+    mutationFn: () => clearSuccessfulFn({}),
+    onSuccess: (r: any) => {
+      toast.success(`Cleared ${r?.deleted ?? 0} successful log${(r?.deleted ?? 0) === 1 ? "" : "s"}`);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteFailedMut = useMutation({
+    mutationFn: (logId: string) => deleteFailedFn({ data: { logId } }),
+    onSuccess: () => {
+      toast.success("Failed log deleted");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteFailedWithConfirm = (logId: string) => {
+    const ok = window.confirm(
+      "Delete this failed social post log? This cannot be undone.",
+    );
+    if (!ok) return;
+    deleteFailedMut.mutate(logId);
+  };
+
   const saveTemplateMut = useMutation({
     mutationFn: (p: { platform: string; template: string }) => saveTemplate({ data: p }),
     onSuccess: () => toast.success("Template saved"),
@@ -239,6 +269,11 @@ function SocialAutomationPage() {
 
   const recentLogs = (stateQ.data?.recentLogs ?? []) as Array<any>;
   const failedLogs = (stateQ.data?.failedLogs ?? []) as Array<any>;
+  const counters = (stateQ.data?.counters ?? {
+    todaySuccessful: 0,
+    failed: 0,
+    pendingQueue: 0,
+  }) as { todaySuccessful: number; failed: number; pendingQueue: number };
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
@@ -574,13 +609,52 @@ function SocialAutomationPage() {
         </CardContent>
       </Card>
 
+      {/* Summary counters */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-border bg-card px-4 py-3">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Today Successful
+          </div>
+          <div className="mt-1 text-2xl font-semibold tabular-nums text-emerald-600">
+            {counters.todaySuccessful}
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card px-4 py-3">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Failed
+          </div>
+          <div className="mt-1 text-2xl font-semibold tabular-nums text-destructive">
+            {counters.failed}
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card px-4 py-3">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Pending Queue
+          </div>
+          <div className="mt-1 text-2xl font-semibold tabular-nums">
+            {counters.pendingQueue}
+          </div>
+        </div>
+      </div>
+
       {/* Recent Posts */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
           <CardTitle className="text-base">Recent Posts</CardTitle>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={clearSuccessfulMut.isPending}
+            onClick={() => clearSuccessfulMut.mutate()}
+          >
+            Clear Successful
+          </Button>
         </CardHeader>
         <CardContent>
-          <LogsTable rows={recentLogs} onRetry={(id) => retryMut.mutate(id)} />
+          <p className="mb-3 text-xs text-muted-foreground">
+            Showing up to 20 latest rows. Successful (queued/published) entries hide after 24 hours.
+          </p>
+          <LogsTable rows={recentLogs} />
         </CardContent>
       </Card>
 
@@ -592,7 +666,15 @@ function SocialAutomationPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <LogsTable rows={failedLogs} onRetry={(id) => retryMut.mutate(id)} showRetry />
+          <p className="mb-3 text-xs text-muted-foreground">
+            Failed rows stay until Retry succeeds or you Delete the log. Delete does not affect users, profiles, Buffer, or the internal feed.
+          </p>
+          <LogsTable
+            rows={failedLogs}
+            onRetry={(id) => retryMut.mutate(id)}
+            onDelete={deleteFailedWithConfirm}
+            showActions
+          />
         </CardContent>
       </Card>
     </div>
@@ -617,11 +699,13 @@ function StatusPill({ ok, label }: { ok: boolean | null; label: string }) {
 function LogsTable({
   rows,
   onRetry,
-  showRetry,
+  onDelete,
+  showActions,
 }: {
   rows: Array<any>;
-  onRetry: (id: string) => void;
-  showRetry?: boolean;
+  onRetry?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  showActions?: boolean;
 }) {
   if (!rows.length) {
     return <p className="text-sm text-muted-foreground">No posts yet.</p>;
@@ -637,7 +721,7 @@ function LogsTable({
             <th className="py-2 pr-3 font-medium">Status</th>
             <th className="py-2 pr-3 font-medium">Created</th>
             <th className="py-2 pr-3 font-medium">Error</th>
-            {showRetry && <th className="py-2 font-medium">Retry</th>}
+            {showActions && <th className="py-2 font-medium">Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -676,13 +760,24 @@ function LogsTable({
                 <td className="max-w-[220px] truncate py-2 pr-3 text-xs text-destructive">
                   {row.error_message ?? ""}
                 </td>
-                {showRetry && (
+                {showActions && (
                   <td className="py-2">
-                    {row.status === "failed" && row.buffer_channel_id && (
-                      <Button size="sm" variant="outline" onClick={() => onRetry(row.id)}>
-                        Retry
-                      </Button>
-                    )}
+                    <div className="flex flex-wrap gap-1">
+                      {row.status === "failed" && row.buffer_channel_id && onRetry && (
+                        <Button size="sm" variant="outline" onClick={() => onRetry(row.id)}>
+                          Retry
+                        </Button>
+                      )}
+                      {row.status === "failed" && onDelete && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => onDelete(row.id)}
+                        >
+                          Delete
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 )}
               </tr>

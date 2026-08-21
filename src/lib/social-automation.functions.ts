@@ -124,28 +124,78 @@ export const getSocialAutomationState = createServerFn({ method: "GET" })
     await assertAdmin(context.userId);
     const db = socialDb();
 
-    const [settingsRes, channelsRes, templatesRes, logsRes, failedRes, queueRes] =
-      await Promise.all([
-        db.from("social_automation_settings").select("*").eq("id", true).maybeSingle(),
-        db.from("social_channels").select("*").order("platform"),
-        db.from("social_caption_templates").select("*").order("platform"),
-        db
-          .from("social_post_logs")
-          .select("*, profiles:user_id(username, display_name)")
-          .order("created_at", { ascending: false })
-          .limit(50),
-        db
-          .from("social_post_logs")
-          .select("*, profiles:user_id(username, display_name)")
-          .eq("status", "failed")
-          .order("created_at", { ascending: false })
-          .limit(50),
-        db
-          .from("social_post_queue")
-          .select("*, profiles:user_id(username, display_name)")
-          .order("created_at", { ascending: false })
-          .limit(30),
-      ]);
+    const cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    const dayStartIso = dayStart.toISOString();
+
+    const [
+      settingsRes,
+      channelsRes,
+      templatesRes,
+      logsRes,
+      failedRes,
+      queueRes,
+      todayOkRes,
+      failedCountRes,
+      pendingQueueRes,
+    ] = await Promise.all([
+      db.from("social_automation_settings").select("*").eq("id", true).maybeSingle(),
+      db.from("social_channels").select("*").order("platform"),
+      db.from("social_caption_templates").select("*").order("platform"),
+      // Fetch a window, then apply 24h successful-hide + max 20 in memory
+      db
+        .from("social_post_logs")
+        .select("*, profiles:user_id(username, display_name)")
+        .order("created_at", { ascending: false })
+        .limit(100),
+      db
+        .from("social_post_logs")
+        .select("*, profiles:user_id(username, display_name)")
+        .eq("status", "failed")
+        .order("created_at", { ascending: false })
+        .limit(100),
+      db
+        .from("social_post_queue")
+        .select("*, profiles:user_id(username, display_name)")
+        .order("created_at", { ascending: false })
+        .limit(30),
+      db
+        .from("social_post_logs")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["queued", "published"])
+        .gte("created_at", dayStartIso),
+      db
+        .from("social_post_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "failed"),
+      db
+        .from("social_post_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending"),
+    ]);
+
+    const rawRecent = ((logsRes as { data: any }).data ?? []) as Array<{
+      status?: string;
+      created_at?: string;
+    }>;
+    const recentLogs = rawRecent
+      .filter((row) => {
+        // Failed rows are managed in Failed Posts until Retry/Delete
+        if (row.status === "failed") return false;
+        if (row.status === "queued" || row.status === "published") {
+          if (!row.created_at) return false;
+          return new Date(row.created_at).getTime() >= new Date(cutoff24h).getTime();
+        }
+        return true;
+      })
+      .slice(0, 20);
+
+    const counters = {
+      todaySuccessful: (todayOkRes as { count?: number | null }).count ?? 0,
+      failed: (failedCountRes as { count?: number | null }).count ?? 0,
+      pendingQueue: (pendingQueueRes as { count?: number | null }).count ?? 0,
+    };
 
     const settings = (settingsRes as { data: any }).data;
     // Never return hook_secret to the client
@@ -158,9 +208,10 @@ export const getSocialAutomationState = createServerFn({ method: "GET" })
         },
         channels: (channelsRes as { data: any }).data ?? [],
         templates: (templatesRes as { data: any }).data ?? [],
-        recentLogs: (logsRes as { data: any }).data ?? [],
+        recentLogs,
         failedLogs: (failedRes as { data: any }).data ?? [],
         queue: (queueRes as { data: any }).data ?? [],
+        counters,
         bufferKeyConfigured: Boolean(process.env.BUFFER_API_KEY?.trim()),
         // Note: Edge Function reads Deno secret; this only reflects Nitro env if also set.
         note: "BUFFER_API_KEY must be set as a Supabase Edge Function secret.",
@@ -171,12 +222,49 @@ export const getSocialAutomationState = createServerFn({ method: "GET" })
       settings: null,
       channels: (channelsRes as { data: any }).data ?? [],
       templates: (templatesRes as { data: any }).data ?? [],
-      recentLogs: (logsRes as { data: any }).data ?? [],
+      recentLogs,
       failedLogs: (failedRes as { data: any }).data ?? [],
       queue: (queueRes as { data: any }).data ?? [],
+      counters,
       bufferKeyConfigured: Boolean(process.env.BUFFER_API_KEY?.trim()),
       note: "BUFFER_API_KEY must be set as a Supabase Edge Function secret.",
     };
+  });
+
+/** Admin: remove successful (queued/published) logs from the admin list / DB. */
+export const clearSuccessfulSocialLogs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const db = socialDb();
+    const { error, count } = await db
+      .from("social_post_logs")
+      .delete({ count: "exact" })
+      .in("status", ["queued", "published"]);
+    if (error) throw new Error(error.message ?? "Clear failed");
+    return { ok: true, deleted: count ?? 0 };
+  });
+
+/** Admin: delete a single failed social_post_logs row only. */
+export const deleteFailedSocialLog = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
+  .inputValidator((input) => z.object({ logId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const db = socialDb();
+    const { data: row, error: fetchErr } = await db
+      .from("social_post_logs")
+      .select("id, status")
+      .eq("id", data.logId)
+      .maybeSingle();
+    if (fetchErr) throw new Error(fetchErr.message ?? "Lookup failed");
+    if (!row) throw new Error("Log not found");
+    if (row.status !== "failed") {
+      throw new Error("Only failed social post logs can be deleted here");
+    }
+    const { error } = await db.from("social_post_logs").delete().eq("id", data.logId);
+    if (error) throw new Error(error.message ?? "Delete failed");
+    return { ok: true };
   });
 
 export const updateSocialAutomationSettings = createServerFn({ method: "POST" })
