@@ -218,6 +218,7 @@ import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/
 import { Route as ApiPublicHooksFeedbotSummaryRouteImport } from './routes/api/public/hooks/feedbot-summary'
 import { Route as ApiPublicHooksLicenseRevalidateRouteImport } from './routes/api/public/hooks/license-revalidate'
 import { Route as ApiPublicHooksSocialDispatchRouteImport } from './routes/api/public/hooks/social-dispatch'
+import { Route as ApiPublicSocialOauthPlatformCallbackRouteImport } from './routes/api/public/social-oauth.$platform.callback'
 import { Route as ApiPublicLicenseActivateRouteImport } from './routes/api/public/license/activate'
 import { Route as ApiPublicLicenseCheckRouteImport } from './routes/api/public/license/check'
 import { Route as ApiPublicLicenseDeactivateRouteImport } from './routes/api/public/license/deactivate'
@@ -1287,6 +1288,12 @@ const ApiPublicHooksSocialDispatchRoute =
     path: '/api/public/hooks/social-dispatch',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSocialOauthPlatformCallbackRoute =
+  ApiPublicSocialOauthPlatformCallbackRouteImport.update({
+    id: '/api/public/social-oauth/$platform/callback',
+    path: '/api/public/social-oauth/$platform/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicLicenseActivateRoute =
   ApiPublicLicenseActivateRouteImport.update({
     id: '/api/public/license/activate',
@@ -1553,6 +1560,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
   '/api/public/hooks/social-dispatch': typeof ApiPublicHooksSocialDispatchRoute
+  '/api/public/social-oauth/$platform/callback': typeof ApiPublicSocialOauthPlatformCallbackRoute
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
@@ -1768,6 +1776,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
   '/api/public/hooks/social-dispatch': typeof ApiPublicHooksSocialDispatchRoute
+  '/api/public/social-oauth/$platform/callback': typeof ApiPublicSocialOauthPlatformCallbackRoute
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
@@ -1990,6 +1999,7 @@ export interface FileRoutesById {
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
   '/api/public/hooks/social-dispatch': typeof ApiPublicHooksSocialDispatchRoute
+  '/api/public/social-oauth/$platform/callback': typeof ApiPublicSocialOauthPlatformCallbackRoute
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
@@ -2212,6 +2222,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
     | '/api/public/hooks/social-dispatch'
+    | '/api/public/social-oauth/$platform/callback'
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
@@ -2427,6 +2438,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
     | '/api/public/hooks/social-dispatch'
+    | '/api/public/social-oauth/$platform/callback'
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
@@ -2648,6 +2660,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
     | '/api/public/hooks/social-dispatch'
+    | '/api/public/social-oauth/$platform/callback'
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
@@ -2739,6 +2752,7 @@ export interface RootRouteChildren {
   ApiPublicHooksFeedbotSummaryRoute: typeof ApiPublicHooksFeedbotSummaryRoute
   ApiPublicHooksLicenseRevalidateRoute: typeof ApiPublicHooksLicenseRevalidateRoute
   ApiPublicHooksSocialDispatchRoute: typeof ApiPublicHooksSocialDispatchRoute
+  ApiPublicSocialOauthPlatformCallbackRoute: typeof ApiPublicSocialOauthPlatformCallbackRoute
   ApiPublicLicenseActivateRoute: typeof ApiPublicLicenseActivateRoute
   ApiPublicLicenseCheckRoute: typeof ApiPublicLicenseCheckRoute
   ApiPublicLicenseDeactivateRoute: typeof ApiPublicLicenseDeactivateRoute
@@ -4213,6 +4227,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSocialDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/social-oauth/$platform/callback': {
+      id: '/api/public/social-oauth/$platform/callback'
+      path: '/api/public/social-oauth/$platform/callback'
+      fullPath: '/api/public/social-oauth/$platform/callback'
+      preLoaderRoute: typeof ApiPublicSocialOauthPlatformCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/license/activate': {
       id: '/api/public/license/activate'
       path: '/api/public/license/activate'
@@ -4737,6 +4758,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksFeedbotSummaryRoute: ApiPublicHooksFeedbotSummaryRoute,
   ApiPublicHooksLicenseRevalidateRoute: ApiPublicHooksLicenseRevalidateRoute,
   ApiPublicHooksSocialDispatchRoute: ApiPublicHooksSocialDispatchRoute,
+  ApiPublicSocialOauthPlatformCallbackRoute: ApiPublicSocialOauthPlatformCallbackRoute,
   ApiPublicLicenseActivateRoute: ApiPublicLicenseActivateRoute,
   ApiPublicLicenseCheckRoute: ApiPublicLicenseCheckRoute,
   ApiPublicLicenseDeactivateRoute: ApiPublicLicenseDeactivateRoute,

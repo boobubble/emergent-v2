@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, Loader2, SkipForward, XCircle } from "lucide-react";
+import { CheckCircle2, Circle, ExternalLink, Loader2, SkipForward, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { listSocialManualPosts, updateSocialManualStatus, type ManualInboxCard } from "@/lib/social-manual.functions";
@@ -18,6 +19,19 @@ import {
   SocialManualShareModal,
   type SocialManualShareTarget,
 } from "@/components/admin/SocialManualShareModal";
+import { DuplicatePublishDialog } from "@/components/admin/DuplicatePublishDialog";
+import { getSocialConnectionsState } from "@/lib/social-connections.functions";
+import {
+  API_PUBLISH_PLATFORMS,
+  isReadyToPublish,
+  youtubeStudioUrl,
+  type ApiPublishPlatform,
+  type SocialConnectionPublic,
+} from "@/lib/social-connections";
+import {
+  publishSocialManualAllConnected,
+  publishSocialManualPost,
+} from "@/lib/social-publish.functions";
 
 const FILTERS: { id: ManualInboxFilter; label: string }[] = [
   { id: "all", label: "All" },
@@ -30,13 +44,33 @@ export function SocialManualPostsInbox() {
   const qc = useQueryClient();
   const listFn = useServerFn(listSocialManualPosts);
   const updateFn = useServerFn(updateSocialManualStatus);
+  const getConn = useServerFn(getSocialConnectionsState);
+  const publishFn = useServerFn(publishSocialManualPost);
+  const publishAllFn = useServerFn(publishSocialManualAllConnected);
   const [filter, setFilter] = useState<ManualInboxFilter>("all");
   const [share, setShare] = useState<SocialManualShareTarget | null>(null);
+  const [dup, setDup] = useState<
+    | { kind: "one"; feedPostId: string; platform: ApiPublishPlatform; label: string }
+    | { kind: "all"; feedPostId: string; label: string }
+    | null
+  >(null);
 
   const q = useQuery({
     queryKey: ["social-manual-posts", filter],
     queryFn: () => listFn({ data: { filter } }),
   });
+  const connQ = useQuery({
+    queryKey: ["social-connections"],
+    queryFn: () => getConn(),
+  });
+
+  const connections = useMemo(() => {
+    const map = new Map<string, SocialConnectionPublic>();
+    for (const c of (connQ.data?.connections ?? []) as SocialConnectionPublic[]) {
+      map.set(c.platform, c);
+    }
+    return map;
+  }, [connQ.data?.connections]);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["social-manual-posts"] });
@@ -53,13 +87,87 @@ export function SocialManualPostsInbox() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const publishMut = useMutation({
+    mutationFn: (p: { feedPostId: string; platform: ApiPublishPlatform; force?: boolean }) =>
+      publishFn({ data: p }),
+    onSuccess: (r, vars) => {
+      if (r.ok) {
+        toast.success(`${MANUAL_PLATFORM_LABEL[vars.platform]} published`);
+        invalidate();
+        return;
+      }
+      if (r.reason === "already_posted") {
+        setDup({
+          kind: "one",
+          feedPostId: vars.feedPostId,
+          platform: vars.platform,
+          label: MANUAL_PLATFORM_LABEL[vars.platform],
+        });
+        return;
+      }
+      toast.error(r.error ?? "Publish failed");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const publishAllMut = useMutation({
+    mutationFn: (p: { feedPostId: string; force?: boolean }) => publishAllFn({ data: p }),
+    onSuccess: (r) => {
+      let posted = 0;
+      let already = 0;
+      for (const row of r.results as Array<{ platform: string; ok?: boolean; reason?: string; skipped?: string; error?: string }>) {
+        const name = MANUAL_PLATFORM_LABEL[row.platform as ManualSocialPlatform] ?? row.platform;
+        if (row.ok) {
+          posted += 1;
+          toast.success(`${name} published`);
+        } else if (row.reason === "already_posted") {
+          already += 1;
+        } else if (row.skipped === "not_connected") {
+          /* skip silently */
+        } else {
+          toast.error(`${name}: ${row.error ?? "Failed"}`);
+        }
+      }
+      if (already && posted === 0) {
+        toast.message("Already posted on connected platforms — use Retry if you want to publish again.");
+      }
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const requestPublish = (feedPostId: string, platform: ApiPublishPlatform, status: string) => {
+    if (status === "posted") {
+      setDup({ kind: "one", feedPostId, platform, label: MANUAL_PLATFORM_LABEL[platform] });
+      return;
+    }
+    publishMut.mutate({ feedPostId, platform });
+  };
+
+  const requestPublishAll = (post: ManualInboxCard) => {
+    const already = API_PUBLISH_PLATFORMS.filter((p) => {
+      const conn = connections.get(p);
+      return isReadyToPublish(conn) && post.manual[p].status === "posted";
+    });
+    if (already.length) {
+      setDup({
+        kind: "all",
+        feedPostId: post.feed_post_id,
+        label: already.map((p) => MANUAL_PLATFORM_LABEL[p]).join(", "),
+      });
+      return;
+    }
+    publishAllMut.mutate({ feedPostId: post.feed_post_id });
+  };
+
   const posts = (q.data?.posts ?? []) as ManualInboxCard[];
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         Distribution inbox for existing Yaarzo welcome feed posts. Instagram, X, and TikTok stay automatic via Buffer.
-        Facebook, Pinterest, Bluesky, and YouTube are prepared here from the same post — not a new caption.
+        Facebook, Pinterest, and Bluesky use Post Now when connected. YouTube stays manual in Studio.
       </p>
 
       <div className="flex flex-wrap gap-2">
@@ -98,6 +206,8 @@ export function SocialManualPostsInbox() {
           <WelcomeDistributionCard
             key={post.feed_post_id}
             post={post}
+            connections={connections}
+            publishing={publishMut.isPending || publishAllMut.isPending}
             onShare={(platform) =>
               setShare({
                 payload: post,
@@ -109,6 +219,10 @@ export function SocialManualPostsInbox() {
             onSkip={(platform) =>
               skipMut.mutate({ feedPostId: post.feed_post_id, platform })
             }
+            onPublish={(platform) =>
+              requestPublish(post.feed_post_id, platform, post.manual[platform].status)
+            }
+            onPublishAll={() => requestPublishAll(post)}
           />
         ))}
       </div>
@@ -116,6 +230,7 @@ export function SocialManualPostsInbox() {
       {share && (
         <SocialManualShareModal
           target={share}
+          connections={connections}
           onClose={() => setShare(null)}
           onStatusChange={() => {
             invalidate();
@@ -123,23 +238,57 @@ export function SocialManualPostsInbox() {
           }}
         />
       )}
+
+      <DuplicatePublishDialog
+        open={!!dup}
+        payload={dup}
+        title={
+          dup?.kind === "all"
+            ? `Already posted to ${dup.label}. Keep those live posts, or publish again?`
+            : `Already posted to ${dup?.label ?? ""}. Keep the existing post, or publish again?`
+        }
+        onDismiss={() => setDup(null)}
+        onKeepExisting={(current) => {
+          setDup(null);
+          if (current.kind === "all") {
+            publishAllMut.mutate({ feedPostId: current.feedPostId, force: false });
+          }
+        }}
+        onPublishAgain={(current) => {
+          setDup(null);
+          if (current.kind === "one") {
+            publishMut.mutate({ feedPostId: current.feedPostId, platform: current.platform, force: true });
+          } else {
+            publishAllMut.mutate({ feedPostId: current.feedPostId, force: true });
+          }
+        }}
+      />
     </div>
   );
 }
 
 function WelcomeDistributionCard({
   post,
+  connections,
+  publishing,
   onShare,
   onSkip,
+  onPublish,
+  onPublishAll,
 }: {
   post: ManualInboxCard;
+  connections: Map<string, SocialConnectionPublic>;
+  publishing: boolean;
   onShare: (platform: ManualSocialPlatform) => void;
   onSkip: (platform: ManualSocialPlatform) => void;
+  onPublish: (platform: ApiPublishPlatform) => void;
+  onPublishAll: () => void;
 }) {
   const created = useMemo(
     () => (post.created_at ? new Date(post.created_at).toLocaleString() : ""),
     [post.created_at],
   );
+  const anyConnected = API_PUBLISH_PLATFORMS.some((p) => isReadyToPublish(connections.get(p)));
 
   return (
     <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -156,6 +305,11 @@ function WelcomeDistributionCard({
           <div className="text-xs text-muted-foreground">@{post.username}</div>
           <div className="text-[11px] text-muted-foreground/80">{created}</div>
         </div>
+        {anyConnected && (
+          <Button size="sm" disabled={publishing} onClick={onPublishAll}>
+            Publish to All Connected
+          </Button>
+        )}
       </header>
 
       <p className="mt-4 whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/95">
@@ -187,27 +341,51 @@ function WelcomeDistributionCard({
           <div className="mt-2 space-y-2">
             {MANUAL_PLATFORMS.map((p) => {
               const row = post.manual[p];
+              const conn = connections.get(p);
               return (
-                <div key={p} className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span>{MANUAL_PLATFORM_LABEL[p]}</span>
-                    <ManualBadge status={row.status} />
+                <div key={p} className="space-y-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span>{MANUAL_PLATFORM_LABEL[p]}</span>
+                      <ManualBadge status={row.status} />
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      <PlatformAction
+                        platform={p}
+                        connection={conn}
+                        ready={isReadyToPublish(conn)}
+                        publishing={publishing}
+                        onPublish={() => onPublish(p as ApiPublishPlatform)}
+                        onShare={() => onShare(p)}
+                      />
+                      {row.status === "not_posted" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-[11px]"
+                          onClick={() => onSkip(p)}
+                        >
+                          Skip
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => onShare(p)}>
-                      {row.status === "posted" ? "View" : "Share"}
-                    </Button>
-                    {row.status === "not_posted" && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 px-2 text-[11px]"
-                        onClick={() => onSkip(p)}
-                      >
-                        Skip
-                      </Button>
-                    )}
-                  </div>
+                  {row.last_error && row.status !== "posted" && (
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-[11px] text-destructive">{row.last_error}</p>
+                      {p !== "youtube" && isReadyToPublish(conn) && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-[11px]"
+                          disabled={publishing}
+                          onClick={() => onPublish(p as ApiPublishPlatform)}
+                        >
+                          Retry
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -215,6 +393,71 @@ function WelcomeDistributionCard({
         </div>
       </div>
     </article>
+  );
+}
+
+function PlatformAction({
+  platform,
+  connection,
+  ready,
+  publishing,
+  onPublish,
+  onShare,
+}: {
+  platform: ManualSocialPlatform;
+  connection?: SocialConnectionPublic;
+  ready: boolean;
+  publishing: boolean;
+  onPublish: () => void;
+  onShare: () => void;
+}) {
+  if (platform === "youtube") {
+    return (
+      <>
+        <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" asChild>
+          <a href={youtubeStudioUrl()} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="mr-1 h-3 w-3" /> Open Studio
+          </a>
+        </Button>
+        <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" onClick={onShare}>
+          Copy
+        </Button>
+      </>
+    );
+  }
+  if (ready) {
+    return (
+      <>
+        <Button size="sm" className="h-7 px-2 text-[11px]" disabled={publishing} onClick={onPublish}>
+          Post Now
+        </Button>
+        <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={onShare}>
+          Preview
+        </Button>
+      </>
+    );
+  }
+  const label =
+    platform === "facebook" && (connection?.status === "pending" || connection?.status === "connected")
+      ? "Select Page"
+      : platform === "pinterest" && connection?.status === "connected"
+        ? "Select Board"
+        : platform === "facebook"
+          ? "Connect Facebook"
+          : platform === "pinterest"
+            ? "Connect Pinterest"
+            : "Connect Bluesky";
+  return (
+    <>
+      <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" asChild>
+        <Link to="/admin/social-automation" search={{ tab: "connections" }}>
+          {label}
+        </Link>
+      </Button>
+      <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" onClick={onShare}>
+        Preview
+      </Button>
+    </>
   );
 }
 

@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Copy, ExternalLink, Image as ImageIcon, CheckCircle2, SkipForward,
 } from "lucide-react";
@@ -25,6 +26,15 @@ import {
   type ManualPlatformStatus,
   type ManualSocialPlatform,
 } from "@/lib/social-manual-distribution";
+import { DuplicatePublishDialog } from "@/components/admin/DuplicatePublishDialog";
+import { getSocialConnectionsState } from "@/lib/social-connections.functions";
+import {
+  isReadyToPublish,
+  youtubeStudioUrl,
+  type ApiPublishPlatform,
+  type SocialConnectionPublic,
+} from "@/lib/social-connections";
+import { publishSocialManualPost } from "@/lib/social-publish.functions";
 
 export type SocialManualShareTarget = {
   payload: ManualSharePayload;
@@ -44,21 +54,39 @@ async function copyText(label: string, value: string) {
 
 export function SocialManualShareModal({
   target,
+  connections,
   onClose,
   onStatusChange,
 }: {
   target: SocialManualShareTarget;
+  connections?: Map<string, SocialConnectionPublic>;
   onClose: () => void;
   onStatusChange?: () => void;
 }) {
   const updateStatus = useServerFn(updateSocialManualStatus);
+  const getConn = useServerFn(getSocialConnectionsState);
+  const publishFn = useServerFn(publishSocialManualPost);
   const { payload, platform } = target;
   const [publishedUrl, setPublishedUrl] = useState(target.publishedUrl ?? "");
   const [boardName, setBoardName] = useState("");
+  const [dupOpen, setDupOpen] = useState(false);
+
+  const connQ = useQuery({
+    queryKey: ["social-connections"],
+    queryFn: () => getConn(),
+    enabled: !connections,
+  });
+
+  const conn =
+    connections?.get(platform) ??
+    ((connQ.data?.connections ?? []) as SocialConnectionPublic[]).find((c) => c.platform === platform) ??
+    null;
+  const ready = isReadyToPublish(conn);
 
   useEffect(() => {
     setPublishedUrl(target.publishedUrl ?? "");
     setBoardName("");
+    setDupOpen(false);
   }, [payload.feed_post_id, platform, target.publishedUrl]);
 
   const mut = useMutation({
@@ -78,7 +106,31 @@ export function SocialManualShareModal({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const openUrl = platformOpenUrl(platform, payload, boardName);
+  const publishMut = useMutation({
+    mutationFn: (force?: boolean) =>
+      publishFn({
+        data: {
+          feedPostId: payload.feed_post_id,
+          platform: platform as ApiPublishPlatform,
+          force,
+        },
+      }),
+    onSuccess: (r) => {
+      if (r.ok) {
+        toast.success(`${MANUAL_PLATFORM_LABEL[platform]} published`);
+        onStatusChange?.();
+        return;
+      }
+      if (r.reason === "already_posted") {
+        setDupOpen(true);
+        return;
+      }
+      toast.error(r.error ?? "Publish failed");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const openUrl = platform === "youtube" ? youtubeStudioUrl() : platformOpenUrl(platform, payload, boardName);
   const caption = payload.caption;
   const blueskyText = payload.bluesky_text;
 
@@ -86,9 +138,11 @@ export function SocialManualShareModal({
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Prepare {MANUAL_PLATFORM_LABEL[platform]} post</DialogTitle>
+          <DialogTitle>
+            {platform === "youtube" ? "YouTube Community Post" : `Share to ${MANUAL_PLATFORM_LABEL[platform]}`}
+          </DialogTitle>
           <DialogDescription>
-            Uses the existing Yaarzo welcome feed post. Opening {MANUAL_PLATFORM_LABEL[platform]} does not mark it posted.
+            Uses the existing Yaarzo welcome feed post. Opening or previewing does not mark it posted.
           </DialogDescription>
         </DialogHeader>
 
@@ -134,7 +188,7 @@ export function SocialManualShareModal({
                 placeholder="e.g. Yaarzo Community"
               />
               <p className="text-[11px] text-muted-foreground">
-                Pinterest has no API in this phase. Copy the board name when creating the pin.
+                Pins use the connected default Yaarzo board. You can still copy fields if you post manually.
               </p>
             </div>
           </FieldBlock>
@@ -161,7 +215,7 @@ export function SocialManualShareModal({
             <CopyRow label="Text" value={caption} />
             <CopyRow label="URL" value={payload.profile_url} />
             <p className="text-[11px] text-muted-foreground">
-              YouTube is manual only in this phase. If Community Posts are unavailable on the channel, skip this post.
+              YouTube Community Posts are manual only. Copy the text and open Studio — Yaarzo does not automate the browser.
             </p>
           </FieldBlock>
         )}
@@ -176,13 +230,40 @@ export function SocialManualShareModal({
               <ImageIcon className="mr-1.5 h-3.5 w-3.5" /> Open Image
             </Button>
           )}
-          <Button
-            size="sm"
-            onClick={() => window.open(openUrl, "_blank", "noopener,noreferrer")}
-          >
-            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-            Open {platform === "youtube" ? "YouTube Studio" : MANUAL_PLATFORM_LABEL[platform]}
-          </Button>
+          {platform === "youtube" ? (
+            <Button size="sm" asChild>
+              <a href={youtubeStudioUrl()} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Open YouTube Studio
+              </a>
+            </Button>
+          ) : ready ? (
+            <Button
+              size="sm"
+              disabled={publishMut.isPending}
+              onClick={() => {
+                if (target.status === "posted") setDupOpen(true);
+                else publishMut.mutate(false);
+              }}
+            >
+              Post Now
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline" asChild>
+              <Link to="/admin/social-automation" search={{ tab: "connections" }}>
+                Connect {MANUAL_PLATFORM_LABEL[platform]}
+              </Link>
+            </Button>
+          )}
+          {platform !== "youtube" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => window.open(openUrl, "_blank", "noopener,noreferrer")}
+            >
+              <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+              Open {MANUAL_PLATFORM_LABEL[platform]}
+            </Button>
+          )}
         </div>
 
         <div className="space-y-1.5">
@@ -221,6 +302,17 @@ export function SocialManualShareModal({
             </Button>
           )}
         </div>
+        <DuplicatePublishDialog
+          open={dupOpen}
+          payload={true}
+          title={`Already posted to ${MANUAL_PLATFORM_LABEL[platform]}. Keep the existing post, or publish again?`}
+          onDismiss={() => setDupOpen(false)}
+          onKeepExisting={() => setDupOpen(false)}
+          onPublishAgain={() => {
+            setDupOpen(false);
+            publishMut.mutate(true);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -25,13 +25,26 @@ import {
 } from "@/lib/social-automation.functions";
 import { SocialAutomationTabs, type SocialAutomationTab } from "@/components/admin/SocialAutomationTabs";
 import { SocialManualPostsInbox } from "@/components/admin/SocialManualPostsInbox";
+import { SocialConnectionsPanel } from "@/components/admin/SocialConnectionsPanel";
 
 export const Route = createFileRoute("/admin/social-automation")({
-  validateSearch: (s: Record<string, unknown>): { tab: SocialAutomationTab } => ({
+  validateSearch: (s: Record<string, unknown>): {
+    tab: SocialAutomationTab;
+    oauth_ok?: string;
+    oauth_error?: string;
+    facebook_pages?: string;
+  } => ({
     tab:
-      s.tab === "auto" || s.tab === "manual" || s.tab === "settings" || s.tab === "overview"
+      s.tab === "auto" ||
+      s.tab === "manual" ||
+      s.tab === "settings" ||
+      s.tab === "overview" ||
+      s.tab === "connections"
         ? s.tab
         : "overview",
+    ...(typeof s.oauth_ok === "string" ? { oauth_ok: s.oauth_ok } : {}),
+    ...(typeof s.oauth_error === "string" ? { oauth_error: s.oauth_error } : {}),
+    ...(typeof s.facebook_pages === "string" ? { facebook_pages: s.facebook_pages } : {}),
   }),
   component: SocialAutomationPage,
 });
@@ -50,7 +63,7 @@ const PLATFORM_LABEL: Record<string, string> = {
 };
 
 function SocialAutomationPage() {
-  const { tab } = Route.useSearch();
+  const { tab, oauth_ok, oauth_error, facebook_pages } = Route.useSearch();
   const qc = useQueryClient();
   const getState = useServerFn(getSocialAutomationState);
   const bufferAction = useServerFn(bufferSocialAction);
@@ -288,11 +301,18 @@ function SocialAutomationPage() {
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <AdminPageHeader
         title="Social Automation"
-        description="One Yaarzo welcome feed post is the source of truth. Instagram, X, and TikTok publish automatically via Buffer. Facebook, Pinterest, Bluesky, and YouTube are prepared from the same post."
+        description="One Yaarzo welcome feed post is the source of truth. Instagram, X, and TikTok publish automatically via Buffer. Facebook, Pinterest, and Bluesky can publish in one click after you connect accounts. YouTube Community Posts stay manual."
       />
       <SocialAutomationTabs active={tab} />
 
       {tab === "manual" && <SocialManualPostsInbox />}
+      {tab === "connections" && (
+        <SocialConnectionsPanel
+          oauthOk={oauth_ok}
+          oauthError={oauth_error}
+          facebookPagesFlag={facebook_pages}
+        />
+      )}
 
       {tab === "overview" && (
         <Card>
@@ -305,7 +325,7 @@ function SocialAutomationPage() {
             </p>
             <ul className="list-disc space-y-1 pl-5">
               <li><span className="font-medium text-foreground">Auto:</span> Instagram, X, TikTok continue through the existing Buffer queue.</li>
-              <li><span className="font-medium text-foreground">Manual:</span> Facebook, Pinterest, Bluesky, YouTube appear in Manual Posts for staff to prepare and mark posted.</li>
+              <li><span className="font-medium text-foreground">Manual / one-click:</span> Facebook, Pinterest, and Bluesky publish from Connections after you click Post Now. YouTube Community Posts stay manual in Studio.</li>
               <li>Members without social featuring consent stay on the Yaarzo feed only.</li>
             </ul>
           </CardContent>

@@ -1,12 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
-export type SocialAutomationTab = "overview" | "auto" | "manual" | "settings";
+export type SocialAutomationTab = "overview" | "auto" | "manual" | "connections" | "settings";
 
 const TABS: { id: SocialAutomationTab; label: string; to: "/admin/social-automation" | "/admin/social-manual-posts"; search?: { tab: SocialAutomationTab } }[] = [
   { id: "overview", label: "Overview", to: "/admin/social-automation", search: { tab: "overview" } },
   { id: "auto", label: "Auto Posts", to: "/admin/social-automation", search: { tab: "auto" } },
   { id: "manual", label: "Manual Posts", to: "/admin/social-manual-posts" },
+  { id: "connections", label: "Connections", to: "/admin/social-automation", search: { tab: "connections" } },
   { id: "settings", label: "Settings", to: "/admin/social-automation", search: { tab: "settings" } },
 ];
 

@@ -66,6 +66,8 @@ type DistRow = {
   published_url: string | null;
   posted_at: string | null;
   posted_by: string | null;
+  external_post_id: string | null;
+  last_error: string | null;
 };
 
 type LogRow = {
@@ -95,17 +97,23 @@ export type ManualInboxCard = ManualSharePayload & {
   auto: Record<AutoSocialPlatform, { status: AutoLogStatus; label: string; published: boolean }>;
   manual: Record<
     ManualSocialPlatform,
-    { status: ManualPlatformStatus; published_url: string | null; posted_at: string | null }
+    {
+      status: ManualPlatformStatus;
+      published_url: string | null;
+      posted_at: string | null;
+      external_post_id: string | null;
+      last_error: string | null;
+    }
   >;
   completion: ManualInboxFilter;
 };
 
 function emptyManualStatus(): ManualInboxCard["manual"] {
   return {
-    facebook: { status: "not_posted", published_url: null, posted_at: null },
-    pinterest: { status: "not_posted", published_url: null, posted_at: null },
-    bluesky: { status: "not_posted", published_url: null, posted_at: null },
-    youtube: { status: "not_posted", published_url: null, posted_at: null },
+    facebook: { status: "not_posted", published_url: null, posted_at: null, external_post_id: null, last_error: null },
+    pinterest: { status: "not_posted", published_url: null, posted_at: null, external_post_id: null, last_error: null },
+    bluesky: { status: "not_posted", published_url: null, posted_at: null, external_post_id: null, last_error: null },
+    youtube: { status: "not_posted", published_url: null, posted_at: null, external_post_id: null, last_error: null },
   };
 }
 
@@ -244,7 +252,7 @@ export const listSocialManualPosts = createServerFn({ method: "GET" })
         .in("id", ownerIds),
       db
         .from("social_manual_distribution")
-        .select("id, feed_post_id, user_id, platform, status, published_url, posted_at, posted_by")
+        .select("id, feed_post_id, user_id, platform, status, published_url, posted_at, posted_by, external_post_id, last_error")
         .in(
           "feed_post_id",
           posts.map((p) => p.id),
@@ -283,6 +291,8 @@ export const listSocialManualPosts = createServerFn({ method: "GET" })
           status: row.status,
           published_url: row.published_url,
           posted_at: row.posted_at,
+          external_post_id: row.external_post_id,
+          last_error: row.last_error,
         };
       }
       if (distRows.length === 0) {
@@ -342,7 +352,7 @@ export const getSocialManualSharePayload = createServerFn({ method: "POST" })
 
     const { data: distRaw } = await db
       .from("social_manual_distribution")
-      .select("id, feed_post_id, user_id, platform, status, published_url, posted_at, posted_by")
+      .select("id, feed_post_id, user_id, platform, status, published_url, posted_at, posted_by, external_post_id, last_error")
       .eq("feed_post_id", payload.feed_post_id);
     const { data: logsRaw } = await db
       .from("social_post_logs")
@@ -359,6 +369,8 @@ export const getSocialManualSharePayload = createServerFn({ method: "POST" })
         status: row.status,
         published_url: row.published_url,
         posted_at: row.posted_at,
+        external_post_id: row.external_post_id,
+        last_error: row.last_error,
       };
     }
 
