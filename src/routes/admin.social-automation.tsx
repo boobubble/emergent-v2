@@ -23,8 +23,16 @@ import {
   clearSuccessfulSocialLogs,
   deleteFailedSocialLog,
 } from "@/lib/social-automation.functions";
+import { SocialAutomationTabs, type SocialAutomationTab } from "@/components/admin/SocialAutomationTabs";
+import { SocialManualPostsInbox } from "@/components/admin/SocialManualPostsInbox";
 
 export const Route = createFileRoute("/admin/social-automation")({
+  validateSearch: (s: Record<string, unknown>): { tab: SocialAutomationTab } => ({
+    tab:
+      s.tab === "auto" || s.tab === "manual" || s.tab === "settings" || s.tab === "overview"
+        ? s.tab
+        : "overview",
+  }),
   component: SocialAutomationPage,
 });
 
@@ -42,6 +50,7 @@ const PLATFORM_LABEL: Record<string, string> = {
 };
 
 function SocialAutomationPage() {
+  const { tab } = Route.useSearch();
   const qc = useQueryClient();
   const getState = useServerFn(getSocialAutomationState);
   const bufferAction = useServerFn(bufferSocialAction);
@@ -279,10 +288,32 @@ function SocialAutomationPage() {
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <AdminPageHeader
         title="Social Automation"
-        description="Publish selected new-member activity to Yaarzo’s Buffer channels (Instagram, X, TikTok; Facebook available but can stay OFF)."
+        description="One Yaarzo welcome feed post is the source of truth. Instagram, X, and TikTok publish automatically via Buffer. Facebook, Pinterest, Bluesky, and YouTube are prepared from the same post."
       />
+      <SocialAutomationTabs active={tab} />
+
+      {tab === "manual" && <SocialManualPostsInbox />}
+
+      {tab === "overview" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">How distribution works</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              When a member joins, Yaarzo creates a single Welcome feed post. That post is reused everywhere — there is no separate social composer.
+            </p>
+            <ul className="list-disc space-y-1 pl-5">
+              <li><span className="font-medium text-foreground">Auto:</span> Instagram, X, TikTok continue through the existing Buffer queue.</li>
+              <li><span className="font-medium text-foreground">Manual:</span> Facebook, Pinterest, Bluesky, YouTube appear in Manual Posts for staff to prepare and mark posted.</li>
+              <li>Members without social featuring consent stay on the Yaarzo feed only.</li>
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Buffer Connection */}
+      {(tab === "overview" || tab === "auto") && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -336,8 +367,10 @@ function SocialAutomationPage() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Connected Channels */}
+      {tab === "auto" && (
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Connected Channels</CardTitle>
@@ -422,8 +455,10 @@ function SocialAutomationPage() {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* New Member Auto Posting */}
+      {(tab === "auto" || tab === "settings") && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -493,8 +528,11 @@ function SocialAutomationPage() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Caption Templates */}
+      {tab === "settings" && (
+      <>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Caption Templates</CardTitle>
@@ -608,8 +646,11 @@ function SocialAutomationPage() {
           </div>
         </CardContent>
       </Card>
+      </>
+      )}
 
       {/* Summary counters */}
+      {tab === "overview" && (
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-border bg-card px-4 py-3">
           <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -636,8 +677,11 @@ function SocialAutomationPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Recent Posts */}
+      {tab === "auto" && (
+      <>
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
           <CardTitle className="text-base">Recent Posts</CardTitle>
@@ -677,6 +721,8 @@ function SocialAutomationPage() {
           />
         </CardContent>
       </Card>
+      </>
+      )}
     </div>
   );
 }
@@ -736,14 +782,16 @@ function LogsTable({
                 : row.event_type === "test_post"
                   ? "Test Post"
                   : row.event_type;
-            const statusIcon =
-              row.status === "queued" || row.status === "published"
-                ? "✅"
-                : row.status === "failed"
-                  ? "❌"
-                  : row.status === "skipped"
-                    ? "⏭"
-                    : "";
+            const desc =
+              row.status === "published"
+                ? { icon: "✅", label: "Published" }
+                : row.status === "queued"
+                  ? { icon: "⏳", label: "Queued in Buffer" }
+                  : row.status === "failed"
+                    ? { icon: "❌", label: "Failed" }
+                    : row.status === "skipped"
+                      ? { icon: "⏭", label: "Skipped" }
+                      : { icon: "", label: String(row.status ?? "") };
             return (
               <tr key={row.id} className="border-b border-border/60">
                 <td className="py-2 pr-3">{user}</td>
@@ -751,8 +799,8 @@ function LogsTable({
                 <td className="py-2 pr-3">
                   {PLATFORM_LABEL[row.platform] ?? row.platform}
                 </td>
-                <td className="py-2 pr-3 capitalize">
-                  {row.status} {statusIcon}
+                <td className="py-2 pr-3">
+                  {desc.label} {desc.icon}
                 </td>
                 <td className="py-2 pr-3 text-xs text-muted-foreground">
                   {row.created_at ? new Date(row.created_at).toLocaleString() : "—"}

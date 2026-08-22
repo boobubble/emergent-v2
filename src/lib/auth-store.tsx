@@ -152,6 +152,7 @@ async function publishWelcomePost(userId: string, email?: string) {
       slug: `welcome-${prof.username}`.toLowerCase(),
       media_urls: media,
       privacy: "public",
+      category: "new_member",
     });
 
     if (error) throw error;

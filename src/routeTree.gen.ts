@@ -124,6 +124,7 @@ import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminSetupWizardRouteImport } from './routes/admin.setup-wizard'
 import { Route as AdminSignupAccessRouteImport } from './routes/admin.signup-access'
 import { Route as AdminSocialAutomationRouteImport } from './routes/admin.social-automation'
+import { Route as AdminSocialManualPostsRouteImport } from './routes/admin.social-manual-posts'
 import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
 import { Route as AdminStaffPermissionsRouteImport } from './routes/admin.staff-permissions'
@@ -806,6 +807,11 @@ const AdminSocialAutomationRoute = AdminSocialAutomationRouteImport.update({
   path: '/social-automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSocialManualPostsRoute = AdminSocialManualPostsRouteImport.update({
+  id: '/social-manual-posts',
+  path: '/social-manual-posts',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSocialFeedRoute = AdminSocialFeedRouteImport.update({
   id: '/social-feed',
   path: '/social-feed',
@@ -1452,6 +1458,7 @@ export interface FileRoutesByFullPath {
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/signup-access': typeof AdminSignupAccessRoute
   '/admin/social-automation': typeof AdminSocialAutomationRoute
+  '/admin/social-manual-posts': typeof AdminSocialManualPostsRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -1667,6 +1674,7 @@ export interface FileRoutesByTo {
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/signup-access': typeof AdminSignupAccessRoute
   '/admin/social-automation': typeof AdminSocialAutomationRoute
+  '/admin/social-manual-posts': typeof AdminSocialManualPostsRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -1887,6 +1895,7 @@ export interface FileRoutesById {
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/signup-access': typeof AdminSignupAccessRoute
   '/admin/social-automation': typeof AdminSocialAutomationRoute
+  '/admin/social-manual-posts': typeof AdminSocialManualPostsRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
@@ -2108,6 +2117,7 @@ export interface FileRouteTypes {
     | '/admin/setup-wizard'
     | '/admin/signup-access'
     | '/admin/social-automation'
+    | '/admin/social-manual-posts'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -2323,6 +2333,7 @@ export interface FileRouteTypes {
     | '/admin/setup-wizard'
     | '/admin/signup-access'
     | '/admin/social-automation'
+    | '/admin/social-manual-posts'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -2542,6 +2553,7 @@ export interface FileRouteTypes {
     | '/admin/setup-wizard'
     | '/admin/signup-access'
     | '/admin/social-automation'
+    | '/admin/social-manual-posts'
     | '/admin/social-feed'
     | '/admin/social-layout'
     | '/admin/staff-permissions'
@@ -3543,6 +3555,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSocialAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/social-manual-posts': {
+      id: '/admin/social-manual-posts'
+      path: '/social-manual-posts'
+      fullPath: '/admin/social-manual-posts'
+      preLoaderRoute: typeof AdminSocialManualPostsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/social-feed': {
       id: '/admin/social-feed'
       path: '/social-feed'
@@ -4422,6 +4441,7 @@ interface AdminRouteChildren {
   AdminSetupWizardRoute: typeof AdminSetupWizardRoute
   AdminSignupAccessRoute: typeof AdminSignupAccessRoute
   AdminSocialAutomationRoute: typeof AdminSocialAutomationRoute
+  AdminSocialManualPostsRoute: typeof AdminSocialManualPostsRoute
   AdminSocialFeedRoute: typeof AdminSocialFeedRoute
   AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
   AdminStaffPermissionsRoute: typeof AdminStaffPermissionsRoute
@@ -4515,6 +4535,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSetupWizardRoute: AdminSetupWizardRoute,
   AdminSignupAccessRoute: AdminSignupAccessRoute,
   AdminSocialAutomationRoute: AdminSocialAutomationRoute,
+  AdminSocialManualPostsRoute: AdminSocialManualPostsRoute,
   AdminSocialFeedRoute: AdminSocialFeedRoute,
   AdminSocialLayoutRoute: AdminSocialLayoutRoute,
   AdminStaffPermissionsRoute: AdminStaffPermissionsRoute,

@@ -12,6 +12,7 @@ import { REACTION_EMOJI, REACTION_ORDER, type FeedPost, type FeedComment, type F
 import { postSlug } from "@/lib/post-slug";
 import { isNavigableSlug } from "@/lib/route-slug";
 import { ShareModal, type SharePayload } from "@/components/feed/ShareModal";
+import { FeedShareExternallyMenu } from "@/components/feed/FeedShareExternallyMenu";
 import { PollBlock } from "@/components/feed/PollBlock";
 import type { User } from "@/lib/chat-types";
 import { NameEmojiBadge } from "@/lib/name-emoji";
@@ -346,6 +347,7 @@ export const PostCard = memo(function PostCard({
             <span className="capitalize tracking-wide">{post.privacy}</span>
           </div>
         </div>
+        <div className="flex shrink-0 items-center">
         {post.owner_id === meId ? (
           <button onClick={del} className="grid min-h-11 min-w-11 place-items-center rounded-full text-muted-foreground/80 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200 sm:min-h-8 sm:min-w-8" aria-label="Delete">
             <Trash2 className="h-4 w-4" />
@@ -368,6 +370,8 @@ export const PostCard = memo(function PostCard({
             <Flag className="h-4 w-4" />
           </button>
         )}
+        <FeedShareExternallyMenu post={post} />
+        </div>
       </header>
 
       {post.text && <p className={`mt-4 whitespace-pre-wrap text-foreground/95 ${compact ? "text-[14px] leading-[1.6]" : "text-[15.5px] leading-[1.65]"}`}>{renderText(post.text)}</p>}
