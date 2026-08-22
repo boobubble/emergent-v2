@@ -222,6 +222,12 @@ export function SocialConnectionsPanel({
                     <>
                       <dt className="text-muted-foreground">Page</dt>
                       <dd>{c.page_name || "Not selected"}</dd>
+                      {env?.facebookGraphApiVersion && (
+                        <>
+                          <dt className="text-muted-foreground">Graph API</dt>
+                          <dd>{env.facebookGraphApiVersion}</dd>
+                        </>
+                      )}
                     </>
                   )}
                   {c.platform === "pinterest" && (

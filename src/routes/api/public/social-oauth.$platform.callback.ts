@@ -43,7 +43,7 @@ export const Route = createFileRoute("/api/public/social-oauth/$platform/callbac
               facebook_pages: result.needsPageSelection ? "1" : "0",
             });
           }
-          await completePinterestOauth(code, consumed.verifier, consumed.adminUserId);
+          await completePinterestOauth(code, consumed.adminUserId);
           return redirectConnections({ oauth_ok: "pinterest" });
         } catch (e) {
           const message = e instanceof Error ? e.message : "OAuth failed";

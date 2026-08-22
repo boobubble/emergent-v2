@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { withRateLimit } from "./rate-limit-middleware";
 import {
   API_PUBLISH_PLATFORMS,
+  assertWelcomePostExternallyPublishable,
   shouldConfirmDuplicate,
   type ApiPublishPlatform,
 } from "./social-connections";
@@ -47,6 +48,7 @@ async function loadPublishContext(feedPostId: string) {
   if (postErr) throw new Error(postErr.message ?? "Lookup failed");
   if (!post) throw new Error("Feed post not found");
   if (!isWelcomeFeedPost(post)) throw new Error("This is not a Yaarzo welcome feed post");
+  assertWelcomePostExternallyPublishable(post);
 
   const { data: profile } = await db()
     .from("profiles")

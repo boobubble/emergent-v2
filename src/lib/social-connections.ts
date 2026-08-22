@@ -86,6 +86,131 @@ export function youtubeStudioUrl(): string {
   return "https://studio.youtube.com/";
 }
 
+export const DEFAULT_FACEBOOK_GRAPH_API_VERSION = "v26.0";
+export const DEFAULT_BLUESKY_PDS = "https://bsky.social";
+export const DEFAULT_OAUTH_RETURN_PATH = "/admin/social-automation?tab=connections";
+
+/** Graph version is a public API path segment, not a secret. */
+export function facebookGraphApiVersion(env: NodeJS.ProcessEnv = process.env): string {
+  const raw = env.FACEBOOK_GRAPH_API_VERSION?.trim() || "";
+  if (/^v\d+(\.\d+)?$/.test(raw)) return raw;
+  return DEFAULT_FACEBOOK_GRAPH_API_VERSION;
+}
+
+export type OauthStateRecord = {
+  state: string;
+  platform: string;
+  expires_at: string;
+  admin_user_id: string;
+  return_path?: string | null;
+  code_verifier_ciphertext?: string | null;
+};
+
+/**
+ * In-memory model of DELETE … WHERE state AND platform RETURNING *.
+ * A matching row is removed exactly once; a second claim returns null.
+ */
+export function claimOauthStateRow(
+  rows: OauthStateRecord[],
+  state: string,
+  platform: string,
+): OauthStateRecord | null {
+  const idx = rows.findIndex((r) => r.state === state && r.platform === platform);
+  if (idx < 0) return null;
+  const [claimed] = rows.splice(idx, 1);
+  return claimed ?? null;
+}
+
+export function finalizeOauthStateClaim(
+  row: OauthStateRecord | null,
+  expectedPlatform: string,
+  nowMs = Date.now(),
+): { adminUserId: string; returnPath: string; verifierCiphertext: string } {
+  if (!row) throw new Error("Invalid OAuth state");
+  if (row.platform !== expectedPlatform) throw new Error("Invalid OAuth state");
+  if (!row.admin_user_id) throw new Error("Invalid OAuth state");
+  if (new Date(row.expires_at).getTime() < nowMs) throw new Error("OAuth state expired");
+  return {
+    adminUserId: row.admin_user_id,
+    returnPath: row.return_path || DEFAULT_OAUTH_RETURN_PATH,
+    verifierCiphertext: typeof row.code_verifier_ciphertext === "string" ? row.code_verifier_ciphertext : "",
+  };
+}
+
+export function pinterestAuthorizeSearchParams(opts: {
+  clientId: string;
+  redirectUri: string;
+  state: string;
+  scope?: string;
+}): URLSearchParams {
+  return new URLSearchParams({
+    client_id: opts.clientId,
+    redirect_uri: opts.redirectUri,
+    response_type: "code",
+    scope: opts.scope || "boards:read,pins:write,user_accounts:read",
+    state: opts.state,
+  });
+}
+
+export function pinterestTokenExchangeParams(opts: { code: string; redirectUri: string }): URLSearchParams {
+  return new URLSearchParams({
+    grant_type: "authorization_code",
+    code: opts.code,
+    redirect_uri: opts.redirectUri,
+  });
+}
+
+export function assertWelcomePostExternallyPublishable(post: { privacy?: string | null }): void {
+  if (post.privacy !== "public") {
+    throw new Error("Only public welcome posts can be published externally");
+  }
+}
+
+function ipv4Octets(host: string): [number, number, number, number] | null {
+  if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null;
+  const parts = host.split(".").map((p) => Number(p));
+  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
+  return [parts[0], parts[1], parts[2], parts[3]];
+}
+
+function isUnsafeBlueskyHost(hostname: string): boolean {
+  const host = hostname.trim().toLowerCase().replace(/\.$/, "").replace(/^\[|\]$/g, "");
+  if (!host) return true;
+  if (host === "localhost" || host.endsWith(".localhost") || host === "localhost.localdomain") return true;
+  if (host.endsWith(".local") || host.endsWith(".internal") || host.endsWith(".lan") || host.endsWith(".home")) {
+    return true;
+  }
+  if (host === "::1" || host === "0:0:0:0:0:0:0:1") return true;
+  const v4mapped = host.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i);
+  if (v4mapped) return isUnsafeBlueskyHost(v4mapped[1]);
+  const oct = ipv4Octets(host);
+  if (oct) {
+    const [a, b] = oct;
+    if (a === 0 || a === 10 || a === 127) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true;
+  }
+  return false;
+}
+
+/** HTTPS public PDS only. Empty/missing input uses the official default. */
+export function normalizeBlueskyPds(raw?: string | null): string {
+  const trimmed = (raw ?? "").trim();
+  if (!trimmed) return DEFAULT_BLUESKY_PDS;
+  let url: URL;
+  try {
+    url = new URL(trimmed);
+  } catch {
+    throw new Error("Invalid Bluesky PDS URL");
+  }
+  if (url.protocol !== "https:") throw new Error("Bluesky PDS must use HTTPS");
+  if (url.username || url.password) throw new Error("Bluesky PDS host is not allowed");
+  if (isUnsafeBlueskyHost(url.hostname)) throw new Error("Bluesky PDS host is not allowed");
+  return url.origin;
+}
+
 export const EMPTY_YOUTUBE_CONNECTION: SocialConnectionPublic = {
   platform: "youtube",
   status: "disconnected",

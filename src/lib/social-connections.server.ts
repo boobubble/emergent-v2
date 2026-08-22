@@ -3,13 +3,17 @@ import {
   decryptSocialSecret,
   encryptSocialSecret,
   newOauthState,
-  newPkceVerifier,
-  pkceChallenge,
   socialTokenEncryptionConfigured,
 } from "./social-token-crypto.server";
 import {
+  DEFAULT_OAUTH_RETURN_PATH,
   EMPTY_YOUTUBE_CONNECTION,
+  facebookGraphApiVersion,
   facebookMessage,
+  finalizeOauthStateClaim,
+  normalizeBlueskyPds,
+  pinterestAuthorizeSearchParams,
+  pinterestTokenExchangeParams,
   sanitizeConnection,
   type SocialConnectionPublic,
 } from "./social-connections";
@@ -19,8 +23,6 @@ import { shortenForBluesky } from "./social-manual-distribution";
 function db(): any {
   return supabaseAdmin;
 }
-
-const FB_VERSION = "v21.0";
 
 export type TokenBlob = {
   access_token?: string;
@@ -136,14 +138,13 @@ export async function createOauthState(opts: {
     throw new Error("Token encryption key is not configured (SOCIAL_TOKEN_ENC_KEY).");
   }
   const state = newOauthState();
-  const verifier = newPkceVerifier();
   const expires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
   const { error } = await db().from("social_oauth_states").insert({
     platform: opts.platform,
     state,
-    code_verifier_ciphertext: encryptSocialSecret(verifier),
+    code_verifier_ciphertext: null,
     admin_user_id: opts.adminUserId,
-    return_path: opts.returnPath || "/admin/social-automation?tab=connections",
+    return_path: opts.returnPath || DEFAULT_OAUTH_RETURN_PATH,
     expires_at: expires,
   });
   if (error) throw new Error(error.message);
@@ -159,20 +160,15 @@ export async function createOauthState(opts: {
     });
     return {
       state,
-      authorizeUrl: `https://www.facebook.com/${FB_VERSION}/dialog/oauth?${params.toString()}`,
+      authorizeUrl: `https://www.facebook.com/${facebookGraphApiVersion()}/dialog/oauth?${params.toString()}`,
     };
   }
 
   const { id } = pinterestApp();
-  const challenge = pkceChallenge(verifier);
-  const params = new URLSearchParams({
-    client_id: id,
-    redirect_uri: oauthCallbackUrl("pinterest"),
-    response_type: "code",
-    scope: "boards:read,pins:write,user_accounts:read",
+  const params = pinterestAuthorizeSearchParams({
+    clientId: id,
+    redirectUri: oauthCallbackUrl("pinterest"),
     state,
-    code_challenge: challenge,
-    code_challenge_method: "S256",
   });
   return {
     state,
@@ -181,26 +177,27 @@ export async function createOauthState(opts: {
 }
 
 export async function consumeOauthState(state: string, platform: string) {
-  const { data } = await db()
+  if (!state?.trim() || !platform?.trim()) throw new Error("Invalid OAuth state");
+  const { data, error } = await db()
     .from("social_oauth_states")
-    .select("*")
+    .delete()
     .eq("state", state)
     .eq("platform", platform)
+    .select("state, platform, expires_at, admin_user_id, return_path, code_verifier_ciphertext")
     .maybeSingle();
-  await db().from("social_oauth_states").delete().eq("state", state);
-  if (!data) throw new Error("Invalid OAuth state");
-  if (new Date(data.expires_at).getTime() < Date.now()) throw new Error("OAuth state expired");
+  if (error) throw new Error(error.message);
+  const claimed = finalizeOauthStateClaim(data, platform);
   let verifier = "";
-  if (data.code_verifier_ciphertext) {
+  if (claimed.verifierCiphertext) {
     try {
-      verifier = decryptSocialSecret(data.code_verifier_ciphertext);
+      verifier = decryptSocialSecret(claimed.verifierCiphertext);
     } catch {
       verifier = "";
     }
   }
   return {
-    adminUserId: data.admin_user_id as string,
-    returnPath: (data.return_path as string) || "/admin/social-automation?tab=connections",
+    adminUserId: claimed.adminUserId,
+    returnPath: claimed.returnPath,
     verifier,
   };
 }
@@ -208,7 +205,7 @@ export async function consumeOauthState(state: string, platform: string) {
 export async function completeFacebookOauth(code: string, adminUserId: string) {
   const { id, secret } = facebookApp();
   const redirect = oauthCallbackUrl("facebook");
-  const tokenUrl = new URL(`https://graph.facebook.com/${FB_VERSION}/oauth/access_token`);
+  const tokenUrl = new URL(`https://graph.facebook.com/${facebookGraphApiVersion()}/oauth/access_token`);
   tokenUrl.searchParams.set("client_id", id);
   tokenUrl.searchParams.set("client_secret", secret);
   tokenUrl.searchParams.set("redirect_uri", redirect);
@@ -219,7 +216,7 @@ export async function completeFacebookOauth(code: string, adminUserId: string) {
     throw new Error(shortJson.error?.message || "Facebook token exchange failed");
   }
 
-  const llUrl = new URL(`https://graph.facebook.com/${FB_VERSION}/oauth/access_token`);
+  const llUrl = new URL(`https://graph.facebook.com/${facebookGraphApiVersion()}/oauth/access_token`);
   llUrl.searchParams.set("grant_type", "fb_exchange_token");
   llUrl.searchParams.set("client_id", id);
   llUrl.searchParams.set("client_secret", secret);
@@ -234,7 +231,7 @@ export async function completeFacebookOauth(code: string, adminUserId: string) {
   const expiresAt = llJson.expires_in ? Date.now() + llJson.expires_in * 1000 : null;
 
   const meRes = await fetch(
-    `https://graph.facebook.com/${FB_VERSION}/me?fields=id,name&access_token=${encodeURIComponent(userToken)}`,
+    `https://graph.facebook.com/${facebookGraphApiVersion()}/me?fields=id,name&access_token=${encodeURIComponent(userToken)}`,
   );
   const me = (await meRes.json()) as { id?: string; name?: string };
 
@@ -285,7 +282,7 @@ export async function fetchFacebookPages(userToken: string): Promise<
   Array<{ id: string; name: string; access_token: string }>
 > {
   const res = await fetch(
-    `https://graph.facebook.com/${FB_VERSION}/me/accounts?fields=id,name,access_token&access_token=${encodeURIComponent(userToken)}`,
+    `https://graph.facebook.com/${facebookGraphApiVersion()}/me/accounts?fields=id,name,access_token&access_token=${encodeURIComponent(userToken)}`,
   );
   const json = (await res.json()) as {
     data?: Array<{ id: string; name: string; access_token: string }>;
@@ -325,15 +322,13 @@ export async function selectFacebookPage(pageId: string, adminUserId: string) {
   });
 }
 
-export async function completePinterestOauth(code: string, verifier: string, adminUserId: string) {
+export async function completePinterestOauth(code: string, adminUserId: string) {
   const { id, secret } = pinterestApp();
   const basic = Buffer.from(`${id}:${secret}`).toString("base64");
-  const body = new URLSearchParams({
-    grant_type: "authorization_code",
+  const body = pinterestTokenExchangeParams({
     code,
-    redirect_uri: oauthCallbackUrl("pinterest"),
+    redirectUri: oauthCallbackUrl("pinterest"),
   });
-  if (verifier) body.set("code_verifier", verifier);
   const tokenRes = await fetch("https://api.pinterest.com/v5/oauth/token", {
     method: "POST",
     headers: {
@@ -452,7 +447,7 @@ export async function connectBlueskySession(opts: {
   pds?: string;
   adminUserId: string;
 }) {
-  const pds = (opts.pds?.trim() || "https://bsky.social").replace(/\/$/, "");
+  const pds = normalizeBlueskyPds(opts.pds);
   const res = await fetch(`${pds}/xrpc/com.atproto.server.createSession`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -495,6 +490,7 @@ export async function connectBlueskySession(opts: {
 
 async function refreshBluesky(row: Record<string, unknown>): Promise<TokenBlob> {
   const blob = parseTokenBlob(row);
+  if (blob.pds) blob.pds = normalizeBlueskyPds(blob.pds);
   if (!blob.refresh_token || !blob.pds) return blob;
   const res = await fetch(`${blob.pds}/xrpc/com.atproto.server.refreshSession`, {
     method: "POST",
@@ -550,7 +546,7 @@ export async function checkConnectionHealth(platform: "facebook" | "pinterest" |
       const pageId = row.page_id as string | null;
       if (!token || !pageId) throw new Error("Facebook Page is not selected");
       const res = await fetch(
-        `https://graph.facebook.com/${FB_VERSION}/${encodeURIComponent(pageId)}?fields=id,name&access_token=${encodeURIComponent(token)}`,
+        `https://graph.facebook.com/${facebookGraphApiVersion()}/${encodeURIComponent(pageId)}?fields=id,name&access_token=${encodeURIComponent(token)}`,
       );
       const json = (await res.json()) as { error?: { message?: string } };
       if (!res.ok) throw new Error(json.error?.message || "Facebook health check failed");
@@ -618,7 +614,7 @@ export async function publishFacebook(input: PublishInput): Promise<PublishOk> {
       published: "true",
       access_token: token,
     });
-    const res = await fetch(`https://graph.facebook.com/${FB_VERSION}/${encodeURIComponent(pageId)}/photos`, {
+    const res = await fetch(`https://graph.facebook.com/${facebookGraphApiVersion()}/${encodeURIComponent(pageId)}/photos`, {
       method: "POST",
       body,
     });
@@ -638,7 +634,7 @@ export async function publishFacebook(input: PublishInput): Promise<PublishOk> {
     link: input.profileUrl,
     access_token: token,
   });
-  const res = await fetch(`https://graph.facebook.com/${FB_VERSION}/${encodeURIComponent(pageId)}/feed`, {
+  const res = await fetch(`https://graph.facebook.com/${facebookGraphApiVersion()}/${encodeURIComponent(pageId)}/feed`, {
     method: "POST",
     body: feed,
   });
@@ -690,6 +686,7 @@ export async function publishBluesky(input: PublishInput): Promise<PublishOk> {
   if (!row || row.status !== "connected") throw new Error("Bluesky is not connected");
   const blob = await refreshBluesky(row);
   if (!blob.access_token || !blob.did || !blob.pds) throw new Error("Bluesky is not connected");
+  blob.pds = normalizeBlueskyPds(blob.pds);
   const text = shortenForBluesky(input.caption, input.profileUrl);
 
   let embed: Record<string, unknown> | undefined;
@@ -759,5 +756,6 @@ export function envFlags() {
     oauthBaseUrl: publicSiteBase(),
     facebookRedirectUri: oauthCallbackUrl("facebook"),
     pinterestRedirectUri: oauthCallbackUrl("pinterest"),
+    facebookGraphApiVersion: facebookGraphApiVersion(),
   };
 }
