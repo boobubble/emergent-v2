@@ -67,6 +67,7 @@ CROSS JOIN (
   SELECT unnest(ARRAY['facebook','pinterest','bluesky','youtube']) AS platform
 ) plat
 WHERE pr.allow_social_feature = true
+  AND p.privacy = 'public'
   AND (
     p.category = 'new_member'
     OR p.slug LIKE 'welcome-%'
@@ -74,6 +75,7 @@ WHERE pr.allow_social_feature = true
 ON CONFLICT (feed_post_id, platform) DO NOTHING;
 
 -- Auto-add future welcome feed posts to the manual inbox when the member consented.
+-- SECURITY DEFINER: never trust caller-supplied _user_id; verify the post row.
 CREATE OR REPLACE FUNCTION public.social_manual_seed_for_welcome_post(_post_id uuid, _user_id uuid)
 RETURNS void
 LANGUAGE plpgsql
@@ -81,18 +83,37 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
+  _owner_id uuid;
   _allowed boolean;
 BEGIN
-  SELECT allow_social_feature INTO _allowed
-  FROM public.profiles
-  WHERE id = _user_id;
+  -- Resolve from posts. Do not insert from an arbitrary _user_id.
+  SELECT p.owner_id
+    INTO _owner_id
+  FROM public.posts p
+  WHERE p.id = _post_id
+    AND p.owner_id IS NOT NULL
+    AND p.owner_id = _user_id
+    AND p.privacy = 'public'
+    AND (
+      p.category = 'new_member'
+      OR p.slug LIKE 'welcome-%'
+    );
+
+  IF _owner_id IS NULL THEN
+    RETURN;
+  END IF;
+
+  SELECT pr.allow_social_feature
+    INTO _allowed
+  FROM public.profiles pr
+  WHERE pr.id = _owner_id;
 
   IF _allowed IS NOT TRUE THEN
     RETURN;
   END IF;
 
   INSERT INTO public.social_manual_distribution (feed_post_id, user_id, platform, status)
-  SELECT _post_id, _user_id, plat, 'not_posted'
+  SELECT _post_id, _owner_id, plat, 'not_posted'
   FROM unnest(ARRAY['facebook','pinterest','bluesky','youtube']) AS plat
   ON CONFLICT (feed_post_id, platform) DO NOTHING;
 EXCEPTION WHEN OTHERS THEN
@@ -117,6 +138,22 @@ EXCEPTION WHEN OTHERS THEN
   RETURN NEW;
 END;
 $$;
+
+COMMENT ON FUNCTION public.social_manual_seed_for_welcome_post(uuid, uuid) IS
+  'Internal-only SECURITY DEFINER helper. Seeds manual distribution rows for a verified public welcome feed post whose owner consented. Not executable by clients.';
+
+COMMENT ON FUNCTION public.trg_social_manual_on_welcome_post() IS
+  'Internal trigger helper. Invokes social_manual_seed_for_welcome_post after welcome feed post insert. Not executable by clients.';
+
+REVOKE ALL ON FUNCTION public.social_manual_seed_for_welcome_post(uuid, uuid)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.social_manual_seed_for_welcome_post(uuid, uuid)
+  TO service_role;
+
+REVOKE ALL ON FUNCTION public.trg_social_manual_on_welcome_post()
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.trg_social_manual_on_welcome_post()
+  TO service_role;
 
 DROP TRIGGER IF EXISTS trg_social_manual_on_welcome_post ON public.posts;
 CREATE TRIGGER trg_social_manual_on_welcome_post
