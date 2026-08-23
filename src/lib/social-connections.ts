@@ -160,6 +160,30 @@ export function pinterestTokenExchangeParams(opts: { code: string; redirectUri: 
   });
 }
 
+export const PINTEREST_PRODUCTION_API_BASE = "https://api.pinterest.com";
+export const PINTEREST_SANDBOX_API_BASE = "https://api-sandbox.pinterest.com";
+
+export function pinterestApiMode(env: NodeJS.ProcessEnv = process.env): "sandbox" | "production" {
+  return env.PINTEREST_API_MODE?.trim().toLowerCase() === "sandbox" ? "sandbox" : "production";
+}
+
+export function pinterestApiBase(env: NodeJS.ProcessEnv = process.env): string {
+  return pinterestApiMode(env) === "sandbox" ? PINTEREST_SANDBOX_API_BASE : PINTEREST_PRODUCTION_API_BASE;
+}
+
+export function pinterestApiUrl(path: string, env: NodeJS.ProcessEnv = process.env): string {
+  const base = pinterestApiBase(env).replace(/\/$/, "");
+  const suffix = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${suffix}`;
+}
+
+export function shouldAutoCreatePinterestSandboxBoard(
+  mode: "sandbox" | "production",
+  boardCount: number,
+): boolean {
+  return mode === "sandbox" && boardCount === 0;
+}
+
 export function assertWelcomePostExternallyPublishable(post: { privacy?: string | null }): void {
   if (post.privacy !== "public") {
     throw new Error("Only public welcome posts can be published externally");

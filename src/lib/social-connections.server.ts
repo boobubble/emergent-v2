@@ -13,8 +13,11 @@ import {
   finalizeOauthStateClaim,
   normalizeBlueskyPds,
   pinterestAuthorizeSearchParams,
+  pinterestApiUrl,
+  pinterestApiMode,
   pinterestTokenExchangeParams,
   sanitizeConnection,
+  shouldAutoCreatePinterestSandboxBoard,
   type SocialConnectionPublic,
 } from "./social-connections";
 import { shortenForBluesky } from "./social-manual-distribution";
@@ -329,7 +332,7 @@ export async function completePinterestOauth(code: string, adminUserId: string) 
     code,
     redirectUri: oauthCallbackUrl("pinterest"),
   });
-  const tokenRes = await fetch("https://api.pinterest.com/v5/oauth/token", {
+  const tokenRes = await fetch(pinterestApiUrl("/v5/oauth/token"), {
     method: "POST",
     headers: {
       Authorization: `Basic ${basic}`,
@@ -352,12 +355,15 @@ export async function completePinterestOauth(code: string, adminUserId: string) 
     refresh_token: tokenJson.refresh_token,
     expires_at: tokenJson.expires_in ? Date.now() + tokenJson.expires_in * 1000 : null,
   };
-  const acctRes = await fetch("https://api.pinterest.com/v5/user_account", {
+  const acctRes = await fetch(pinterestApiUrl("/v5/user_account"), {
     headers: { Authorization: `Bearer ${blob.access_token}` },
   });
   const acct = (await acctRes.json()) as { username?: string; id?: string };
   const boards = await fetchPinterestBoards(blob.access_token);
-  const defaultBoard = boards[0] ?? null;
+  let defaultBoard = boards[0] ?? null;
+  if (shouldAutoCreatePinterestSandboxBoard(pinterestApiMode(), boards.length)) {
+    defaultBoard = await createPinterestSandboxDemoBoard(blob.access_token);
+  }
   await upsertConnection("pinterest", {
     status: "connected",
     account_id: acct.id ?? acct.username ?? null,
@@ -381,7 +387,7 @@ export async function completePinterestOauth(code: string, adminUserId: string) 
 }
 
 export async function fetchPinterestBoards(accessToken: string): Promise<Array<{ id: string; name: string }>> {
-  const res = await fetch("https://api.pinterest.com/v5/boards?page_size=50", {
+  const res = await fetch(pinterestApiUrl("/v5/boards?page_size=50"), {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   const json = (await res.json()) as {
@@ -392,13 +398,31 @@ export async function fetchPinterestBoards(accessToken: string): Promise<Array<{
   return json.items ?? [];
 }
 
+async function createPinterestSandboxDemoBoard(accessToken: string): Promise<{ id: string; name: string }> {
+  const res = await fetch(pinterestApiUrl("/v5/boards"), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: "Yaarzo Sandbox Demo",
+      description: "Sandbox board for the Yaarzo Pinterest API integration review demo",
+      privacy: "PUBLIC",
+    }),
+  });
+  const json = (await res.json()) as { id?: string; name?: string; message?: string };
+  if (!res.ok || !json.id) throw new Error(json.message || "Failed to create Pinterest sandbox board");
+  return { id: json.id, name: json.name || "Yaarzo Sandbox Demo" };
+}
+
 export async function refreshPinterestTokenIfNeeded(row: Record<string, unknown>): Promise<TokenBlob> {
   const blob = parseTokenBlob(row);
   if (!blob.refresh_token) return blob;
   if (blob.expires_at && blob.expires_at - 60_000 > Date.now()) return blob;
   const { id, secret } = pinterestApp();
   const basic = Buffer.from(`${id}:${secret}`).toString("base64");
-  const res = await fetch("https://api.pinterest.com/v5/oauth/token", {
+  const res = await fetch(pinterestApiUrl("/v5/oauth/token"), {
     method: "POST",
     headers: {
       Authorization: `Basic ${basic}`,
@@ -559,7 +583,7 @@ export async function checkConnectionHealth(platform: "facebook" | "pinterest" |
     } else if (platform === "pinterest") {
       const blob = await refreshPinterestTokenIfNeeded(row);
       if (!blob.access_token) throw new Error("Pinterest is not connected");
-      const res = await fetch("https://api.pinterest.com/v5/user_account", {
+      const res = await fetch(pinterestApiUrl("/v5/user_account"), {
         headers: { Authorization: `Bearer ${blob.access_token}` },
       });
       if (!res.ok) throw new Error("Pinterest health check failed");
@@ -661,7 +685,7 @@ export async function publishPinterest(input: PublishInput): Promise<PublishOk> 
   if (!blob.access_token) throw new Error("Pinterest is not connected");
   const boardId = row.default_board_id as string | null;
   if (!boardId) throw new Error("Select a default Pinterest board first");
-  const res = await fetch("https://api.pinterest.com/v5/pins", {
+  const res = await fetch(pinterestApiUrl("/v5/pins"), {
     method: "POST",
     headers: {
       Authorization: `Bearer ${blob.access_token}`,
@@ -763,5 +787,6 @@ export function envFlags() {
     facebookRedirectUri: oauthCallbackUrl("facebook"),
     pinterestRedirectUri: oauthCallbackUrl("pinterest"),
     facebookGraphApiVersion: facebookGraphApiVersion(),
+    pinterestApiMode: pinterestApiMode(),
   };
 }

@@ -250,6 +250,14 @@ export function SocialConnectionsPanel({
                 {c.last_error && c.platform !== "youtube" && (
                   <p className="text-xs text-destructive">{c.last_error}</p>
                 )}
+                {c.platform === "pinterest" && env?.pinterestApiMode === "sandbox" && (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5">
+                    <div className="text-[11px] font-semibold text-amber-800">Pinterest Sandbox Mode</div>
+                    <p className="text-[11px] text-amber-800/90">
+                      Test Pins are created using Pinterest API Sandbox and are not production publishing.
+                    </p>
+                  </div>
+                )}
                 {c.platform === "youtube" ? (
                   <Button size="sm" asChild>
                     <a href={youtubeStudioUrl()} target="_blank" rel="noopener noreferrer">

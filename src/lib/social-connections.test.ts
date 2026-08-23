@@ -12,9 +12,13 @@ import {
   finalizeOauthStateClaim,
   isReadyToPublish,
   normalizeBlueskyPds,
+  pinterestApiBase,
+  pinterestApiMode,
+  pinterestApiUrl,
   pinterestAuthorizeSearchParams,
   pinterestTokenExchangeParams,
   sanitizeConnection,
+  shouldAutoCreatePinterestSandboxBoard,
   shouldConfirmDuplicate,
   type OauthStateRecord,
   type SocialConnectionPublic,
@@ -167,6 +171,42 @@ const pinTok = pinterestTokenExchangeParams({
 });
 assert(pinTok.get("grant_type") === "authorization_code", "pinterest token grant");
 assert(!pinTok.has("code_verifier"), "pinterest token exchange has no PKCE verifier");
+
+assert(pinterestApiMode({}) === "production", "production is default when PINTEREST_API_MODE is absent");
+assert(pinterestApiMode({ PINTEREST_API_MODE: "" }) === "production", "empty mode is production");
+assert(pinterestApiMode({ PINTEREST_API_MODE: "prod" }) === "production", "invalid mode is production");
+assert(pinterestApiMode({ PINTEREST_API_MODE: "sandbox" }) === "sandbox", "sandbox mode");
+assert(pinterestApiMode({ PINTEREST_API_MODE: "SANDBOX" }) === "sandbox", "sandbox mode is case-insensitive");
+assert(pinterestApiBase({}) === "https://api.pinterest.com", "production API base");
+assert(
+  pinterestApiBase({ PINTEREST_API_MODE: "sandbox" }) === "https://api-sandbox.pinterest.com",
+  "sandbox API base",
+);
+const sandboxEnv = { PINTEREST_API_MODE: "sandbox" };
+assert(
+  pinterestApiUrl("/v5/oauth/token", sandboxEnv) === "https://api-sandbox.pinterest.com/v5/oauth/token",
+  "OAuth token endpoint respects sandbox",
+);
+assert(
+  pinterestApiUrl("/v5/boards?page_size=50", sandboxEnv) ===
+    "https://api-sandbox.pinterest.com/v5/boards?page_size=50",
+  "boards endpoint respects sandbox",
+);
+assert(
+  pinterestApiUrl("/v5/pins", sandboxEnv) === "https://api-sandbox.pinterest.com/v5/pins",
+  "Pin create endpoint respects sandbox",
+);
+assert(
+  pinterestApiUrl("/v5/oauth/token", {}) === "https://api.pinterest.com/v5/oauth/token",
+  "OAuth token endpoint stays production by default",
+);
+assert(
+  pinterestApiUrl("/v5/pins", {}) === "https://api.pinterest.com/v5/pins",
+  "Pin create stays production by default",
+);
+assert(shouldAutoCreatePinterestSandboxBoard("sandbox", 0) === true, "sandbox with no boards bootstraps");
+assert(shouldAutoCreatePinterestSandboxBoard("sandbox", 1) === false, "sandbox keeps existing boards");
+assert(shouldAutoCreatePinterestSandboxBoard("production", 0) === false, "production never auto-creates a board");
 
 assert(normalizeBlueskyPds(undefined) === DEFAULT_BLUESKY_PDS, "default PDS");
 assert(normalizeBlueskyPds("") === DEFAULT_BLUESKY_PDS, "empty PDS");
