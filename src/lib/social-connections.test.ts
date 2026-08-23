@@ -152,6 +152,13 @@ const pinAuth = pinterestAuthorizeSearchParams({
   state: "st",
 });
 assert(pinAuth.get("response_type") === "code", "pinterest response_type=code");
+const pinScopes = (pinAuth.get("scope") ?? "").split(",");
+assert(pinScopes.includes("boards:read"), "pinterest requests boards:read");
+assert(pinScopes.includes("boards:write"), "pinterest requests boards:write");
+assert(pinScopes.includes("pins:read"), "pinterest requests pins:read");
+assert(pinScopes.includes("pins:write"), "pinterest requests pins:write");
+assert(pinScopes.includes("user_accounts:read"), "pinterest requests user_accounts:read");
+assert(pinScopes.length === 5, "pinterest requests exactly the five documented scopes");
 assert(!pinAuth.has("code_challenge"), "pinterest auth has no PKCE challenge");
 assert(!pinAuth.has("code_challenge_method"), "pinterest auth has no PKCE method");
 const pinTok = pinterestTokenExchangeParams({

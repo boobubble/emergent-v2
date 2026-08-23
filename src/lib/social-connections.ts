@@ -147,7 +147,7 @@ export function pinterestAuthorizeSearchParams(opts: {
     client_id: opts.clientId,
     redirect_uri: opts.redirectUri,
     response_type: "code",
-    scope: opts.scope || "boards:read,pins:write,user_accounts:read",
+    scope: opts.scope || "boards:read,boards:write,pins:read,pins:write,user_accounts:read",
     state: opts.state,
   });
 }
