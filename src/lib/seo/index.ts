@@ -44,6 +44,12 @@ export {
   buildHomeJsonLd,
 } from "./home-page";
 export {
+  ALTERNATE_HOMEPAGE_PATHS,
+  ALTERNATE_HOMEPAGE_ROBOTS,
+  applyAlternateHomepageRobots,
+  isAlternateHomepagePath,
+} from "./alternate-homepage";
+export {
   buildCompetitionFallbackJsonLd,
   buildPoetryFallbackJsonLd,
   buildFeedPostFallbackJsonLd,

@@ -1,3 +1,4 @@
+import { ALTERNATE_HOMEPAGE_PATHS } from "./alternate-homepage";
 import type { SeoGlobal, SeoPageRow } from "./types";
 import { formatCanonicalUrl, normalizePublicPath, siteOrigin } from "./resolve-seo";
 
@@ -52,6 +53,7 @@ export function isSitemapEligibleRoutePath(path: string): boolean {
   if (!normalized) return false;
   if (SITEMAP_REDIRECT_ALIASES.has(normalized)) return false;
   if (SITEMAP_THIN_SSR_PATHS.has(normalized)) return false;
+  if (ALTERNATE_HOMEPAGE_PATHS.has(normalized)) return false;
   for (const prefix of SITEMAP_PRIVATE_PREFIXES) {
     if (normalized === prefix || normalized.startsWith(`${prefix}/`)) return false;
   }

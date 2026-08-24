@@ -34,7 +34,7 @@ const EXACT: Record<string, RouteHeadAudit> = {
     title: "available",
     description: "available",
     canonical: "missing",
-    indexState: "index",
+    indexState: "noindex",
     jsonLd: "missing",
   },
   "/heropage": {
@@ -42,7 +42,7 @@ const EXACT: Record<string, RouteHeadAudit> = {
     title: "available",
     description: "available",
     canonical: "missing",
-    indexState: "index",
+    indexState: "noindex",
     jsonLd: "missing",
   },
   "/feed": {

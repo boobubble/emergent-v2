@@ -64,6 +64,7 @@ describe("homepage SEO head", () => {
     expect(ogType?.content).toBe("website");
     expect(ogImage?.content).toBe("https://yaarzo.com/og/yaarzo-share.png");
     expect(twitterCard?.content).toBe("summary_large_image");
+    expect(head.meta.find((m) => m.name === "robots")?.content).toBe("index, follow");
   });
 
   it("emits one valid WebSite + Organization JSON-LD graph", () => {

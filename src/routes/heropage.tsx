@@ -22,7 +22,7 @@ import {
   type HeroConfig, type HeroSection, type HeroShowcaseItem,
   type FamousChatroom, type LiveUserCard,
 } from "@/lib/hero-page-config";
-import { headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
+import { applyAlternateHomepageRobots, headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
 
 const HEROPAGE_SEO_FALLBACK = {
   title: `${HERO_DEFAULTS.brandName} — ${HERO_DEFAULTS.headline}`,
@@ -32,8 +32,17 @@ const HEROPAGE_SEO_FALLBACK = {
 };
 
 export const Route = createFileRoute("/heropage")({
-  loader: () => loadRouteSeoWithDefaults("/heropage", HEROPAGE_SEO_FALLBACK),
-  head: ({ loaderData }) => headFromRouteSeo(loaderData),
+  loader: async () => {
+    const data = await loadRouteSeoWithDefaults("/heropage", HEROPAGE_SEO_FALLBACK);
+    return { ...data, seo: applyAlternateHomepageRobots(data.seo) };
+  },
+  head: ({ loaderData }) => {
+    if (!loaderData?.seo) return headFromRouteSeo(loaderData);
+    return headFromRouteSeo({
+      ...loaderData,
+      seo: applyAlternateHomepageRobots(loaderData.seo),
+    });
+  },
   component: HeroHomepage,
 });
 

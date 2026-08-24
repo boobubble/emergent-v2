@@ -16,7 +16,7 @@ import {
 } from "@/lib/landing-config";
 import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
 import { useAuth } from "@/lib/auth-store";
-import { headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
+import { applyAlternateHomepageRobots, headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
 import { CmsFooterLinks } from "@/components/CmsFooterLinks";
 
 interface LandingStats {
@@ -55,9 +55,15 @@ const WELCOME_SEO_FALLBACK = {
 };
 
 export const Route = createFileRoute("/welcome")({
-  loader: () => loadRouteSeoWithDefaults("/welcome", WELCOME_SEO_FALLBACK),
+  loader: async () => {
+    const data = await loadRouteSeoWithDefaults("/welcome", WELCOME_SEO_FALLBACK);
+    return { ...data, seo: applyAlternateHomepageRobots(data.seo) };
+  },
   head: ({ loaderData }) => {
-    const base = headFromRouteSeo(loaderData);
+    const data = loaderData?.seo
+      ? { ...loaderData, seo: applyAlternateHomepageRobots(loaderData.seo) }
+      : loaderData;
+    const base = headFromRouteSeo(data);
     const description = loaderData?.seo.description ?? WELCOME_SEO_FALLBACK.description;
     const url = loaderData?.seo.canonical;
     const siteName = loaderData?.global?.site_name?.trim() || "Yaarzo";

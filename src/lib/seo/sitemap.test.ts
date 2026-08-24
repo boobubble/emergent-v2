@@ -76,7 +76,7 @@ describe("staticSitemapEntries date safety", () => {
     const entries = staticSitemapEntries(
       [
         {
-          route_path: "/welcome",
+          route_path: "/feed",
           updated_at: new Date("2026-08-05T00:00:00Z") as unknown as string,
           is_dynamic: false,
           sitemap_exclude: false,
@@ -125,6 +125,12 @@ describe("sitemap quality guards", () => {
           sitemap_exclude: false,
           noindex: false,
         } as never,
+        {
+          route_path: "/heropage",
+          is_dynamic: false,
+          sitemap_exclude: false,
+          noindex: false,
+        } as never,
       ],
       customPages: [
         { slug: "live-page", status: "published", noindex: false },
@@ -145,9 +151,35 @@ describe("sitemap quality guards", () => {
     expect(locs.some((loc) => loc.endsWith("/find-friends"))).toBe(false);
     expect(locs.some((loc) => loc.endsWith("/games"))).toBe(false);
     expect(locs.some((loc) => loc.endsWith("/leaderboard"))).toBe(false);
+    expect(locs.some((loc) => loc.endsWith("/welcome"))).toBe(false);
+    expect(locs.some((loc) => loc.endsWith("/heropage"))).toBe(false);
     expect(locs).toContain("https://yaarzo.com/live-page");
     expect(locs.some((loc) => loc.endsWith("/draft-page"))).toBe(false);
     expect(locs.some((loc) => loc.endsWith("/hidden-page"))).toBe(false);
+  });
+
+  it("never treats /welcome or /heropage as sitemap-eligible even if seo_settings re-adds them", () => {
+    expect(isSitemapEligibleRoutePath("/welcome")).toBe(false);
+    expect(isSitemapEligibleRoutePath("/heropage")).toBe(false);
+    expect(isSitemapEligibleRoutePath("/")).toBe(true);
+    const entries = staticSitemapEntries(
+      [
+        {
+          route_path: "/welcome",
+          is_dynamic: false,
+          sitemap_exclude: false,
+          noindex: false,
+        } as never,
+        {
+          route_path: "/heropage",
+          is_dynamic: false,
+          sitemap_exclude: false,
+          noindex: false,
+        } as never,
+      ],
+      global,
+    );
+    expect(entries).toEqual([]);
   });
 
   it("never treats /chatrooms as sitemap-eligible even if seo_settings re-adds it", () => {
@@ -183,6 +215,8 @@ describe("sitemap quality guards", () => {
     expect(txt).toContain("Allow: /");
     expect(txt).toContain("Disallow: /api/");
     expect(txt).not.toContain("Disallow: /admin");
+    expect(txt).not.toContain("Disallow: /welcome");
+    expect(txt).not.toContain("Disallow: /heropage");
     expect(txt).toContain("Sitemap: https://yaarzo.com/sitemap.xml");
   });
 });
