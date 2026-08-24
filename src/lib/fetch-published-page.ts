@@ -3,9 +3,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import {
   composePublicCmsHtml,
-  extractRelativeCmsHrefSlugs,
+  extractPublicCmsHrefSlugs,
   filterUnpublishedCmsLinks,
 } from "@/lib/pages-cms/public-links";
+import { rewriteCmsHtml } from "@/lib/pages-cms/content-quality";
 
 /** Supabase client surface for public CMS page reads. */
 export type PublishedPageDbClient = SupabaseClient<Database>;
@@ -105,37 +106,33 @@ async function resolveRedirectTarget(
   return null;
 }
 
-/**
- * Among candidate path slugs, return those that exist on custom_pages but are not published.
- * Used to suppress public HTML links to draft-only CMS URLs.
- */
-export async function listUnpublishedCustomPageSlugsAmong(
+/** Among candidate path slugs, return matching custom_pages rows (any status). */
+export async function listCustomPageStatusesAmong(
   sb: PublishedPageDbClient,
   candidateSlugs: string[],
-): Promise<string[]> {
+): Promise<Array<{ slug: string; status: string }>> {
   const uniq = [...new Set(candidateSlugs.map((s) => s.trim().toLowerCase()).filter(Boolean))];
   if (!uniq.length) return [];
-  const { data, error } = await sb
-    .from("custom_pages")
-    .select("slug,status")
-    .in("slug", uniq)
-    .neq("status", "published");
+  const { data, error } = await sb.from("custom_pages").select("slug,status").in("slug", uniq);
   if (error) throw new Error(error.message);
-  return (data ?? []).map((r) => r.slug);
+  return (data ?? []) as Array<{ slug: string; status: string }>;
 }
 
 /** Display HTML for a published CMS page: intro+content with draft-target links unwrapped. */
 export async function buildPublicCmsPageHtml(
   sb: PublishedPageDbClient,
-  page: Pick<PublishedCustomPage, "intro_content" | "content">,
+  page: Pick<PublishedCustomPage, "intro_content" | "content" | "h1">,
 ): Promise<string> {
   const raw = composePublicCmsHtml({
     intro: page.intro_content,
     content: page.content,
   });
-  const candidates = extractRelativeCmsHrefSlugs(raw);
-  const unpublished = await listUnpublishedCustomPageSlugsAmong(sb, candidates);
-  return filterUnpublishedCmsLinks(raw, unpublished);
+  const candidates = extractPublicCmsHrefSlugs(raw);
+  const rows = await listCustomPageStatusesAmong(sb, candidates);
+  const unpublished = rows.filter((r) => r.status !== "published").map((r) => r.slug);
+  const published = rows.filter((r) => r.status === "published").map((r) => r.slug);
+  const filtered = filterUnpublishedCmsLinks(raw, unpublished);
+  return rewriteCmsHtml(filtered, { h1: page.h1, publishedSlugs: published });
 }
 
 /**

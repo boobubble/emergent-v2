@@ -138,6 +138,37 @@ describe("derived fields on save", () => {
     expect(row.page_type).toBe("city");
   });
 
+  it("stores null for self-canonical and host-prefixed overrides", () => {
+    const base = {
+      slug: "usa-chat-room",
+      title: "USA Chat Room",
+      content: "<p>hello</p>",
+      status: "draft" as const,
+      featured: false,
+      layout: "boxed" as const,
+      sidebar_left: "none" as const,
+      sidebar_right: "none" as const,
+      noindex: false,
+      nofollow: false,
+      tags: [],
+    };
+    const self = buildCustomPageWriteRow(
+      { ...base, canonical_url: "https://yaarzo.com/usa-chat-room" },
+      { userId: "00000000-0000-0000-0000-000000000001" },
+    );
+    expect(self.row.canonical_url).toBeNull();
+    const prefixed = buildCustomPageWriteRow(
+      { ...base, canonical_url: "yaarzo.com/usa-chat-room" },
+      { userId: "00000000-0000-0000-0000-000000000001" },
+    );
+    expect(prefixed.row.canonical_url).toBeNull();
+    const other = buildCustomPageWriteRow(
+      { ...base, canonical_url: "https://yaarzo.com/uk-chat-room" },
+      { userId: "00000000-0000-0000-0000-000000000001" },
+    );
+    expect(other.row.canonical_url).toBe("https://yaarzo.com/uk-chat-room");
+  });
+
   it("defaults new pages to page_type static", () => {
     const { row } = buildCustomPageWriteRow(
       {

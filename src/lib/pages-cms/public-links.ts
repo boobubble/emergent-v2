@@ -5,10 +5,24 @@
 const RELATIVE_PAGE_HREF =
   /href\s*=\s*(["'])\/([a-z0-9][a-z0-9-]*)\/?\1/gi;
 
+const PUBLIC_CMS_HREF =
+  /href\s*=\s*(["'])(?:https?:\/\/(?:www\.)?yaarzo\.com)?\/([a-z0-9][a-z0-9-]*)\/?\1/gi;
+
 /** Collect single-segment relative href targets from HTML (`/foo-bar`). */
 export function extractRelativeCmsHrefSlugs(html: string): string[] {
   const found = new Set<string>();
   const re = new RegExp(RELATIVE_PAGE_HREF.source, "gi");
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html || ""))) {
+    if (m[2]) found.add(m[2].toLowerCase());
+  }
+  return [...found];
+}
+
+/** Relative + yaarzo.com absolute single-segment href slugs. */
+export function extractPublicCmsHrefSlugs(html: string): string[] {
+  const found = new Set<string>();
+  const re = new RegExp(PUBLIC_CMS_HREF.source, "gi");
   let m: RegExpExecArray | null;
   while ((m = re.exec(html || ""))) {
     if (m[2]) found.add(m[2].toLowerCase());

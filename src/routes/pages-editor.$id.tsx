@@ -58,7 +58,10 @@ import {
   PageSlugValidationError,
 } from "@/lib/page-slug";
 import { normalizePageContentForSave } from "@/lib/page-content-paste";
-import { DEFAULT_PAGE_CTA_DEFAULTS } from "@/lib/page-cta";
+import {
+  evaluatePageQuality,
+  qualityStatusBadgeVariant,
+} from "@/lib/pages-cms/content-quality";
 import { useAuth } from "@/lib/auth-store";
 import { getMyRoles } from "@/lib/admin.functions";
 
@@ -414,6 +417,34 @@ function PageEditor() {
   const update = <K extends keyof PageRow>(k: K, v: PageRow[K]) =>
     setRow((r) => ({ ...r, [k]: v }));
 
+  const quality = useMemo(
+    () =>
+      evaluatePageQuality({
+        slug: row.slug,
+        title: row.title,
+        h1: row.h1,
+        meta_title: row.meta_title,
+        meta_description: row.meta_description,
+        canonical_url: row.canonical_url,
+        content: row.content,
+        intro_content: row.intro_content,
+        tags: row.tags,
+        noindex: row.noindex,
+      }),
+    [
+      row.slug,
+      row.title,
+      row.h1,
+      row.meta_title,
+      row.meta_description,
+      row.canonical_url,
+      row.content,
+      row.intro_content,
+      row.tags,
+      row.noindex,
+    ],
+  );
+
   useEffect(() => {
     if (!hydrated.current) return;
     if (skipNextSave.current) { skipNextSave.current = false; return; }
@@ -733,8 +764,26 @@ function PageEditor() {
                 <Badge variant="outline" className="text-[10px]">
                   SEO Score: {row.seo_score ?? "—"}
                 </Badge>
-                <span className="text-[10px] text-muted-foreground">(computed on save)</span>
+                <Badge variant={qualityStatusBadgeVariant(quality.status)} className="text-[10px]">
+                  Quality: {quality.status}
+                </Badge>
+                <span className="text-[10px] text-muted-foreground">(SEO score on save · quality live, does not block publish)</span>
               </div>
+              {quality.warnings.length > 0 && (
+                <Alert className="mb-4">
+                  <AlertTitle className="text-xs">CMS quality warnings</AlertTitle>
+                  <AlertDescription>
+                    <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[11px] text-muted-foreground">
+                      {quality.warnings.map((w) => (
+                        <li key={w.code}>
+                          {w.severity === "critical" ? "Critical: " : ""}
+                          {w.message}
+                        </li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <RichTextEditor
                 value={row.content}
@@ -876,7 +925,7 @@ function PageEditor() {
                   </div>
                   <div className="sm:col-span-2">
                     <Label className="text-xs">Canonical URL</Label>
-                    <Input value={row.canonical_url ?? ""} maxLength={500} onChange={(e) => update("canonical_url", e.target.value)} placeholder="https://example.com/page" />
+                    <Input value={row.canonical_url ?? ""} maxLength={500} onChange={(e) => update("canonical_url", e.target.value)} placeholder="Leave blank to use https://yaarzo.com/{slug}" />
                   </div>
                   <div className="flex flex-wrap items-center gap-5">
                     <label className="inline-flex items-center gap-2 text-xs">

@@ -221,12 +221,12 @@ const CITY_PROFILES: Record<string, CityProfile> = {
     opening:
       "This is the India Hyderabad chat room (country-qualified slug) — not the Pakistan Hyderabad page. Use it for Telangana/India metro chat only.",
     regionBlurb:
-      "Hyderabad (India) is under Telangana in the Pages CMS. The slug hyderabad-india-chat-room exists so both countries can keep clear URLs.",
+      "This is the India Hyderabad hub in Telangana — not Hyderabad in Pakistan. The country-qualified URL keeps the two cities distinct.",
     languages: "English, Hindi, Telugu, and other languages appear depending on the room.",
     topics: ["food and festivals", "campus and IT chat", "travel across South India", "weekend plans"],
     faqExtra: {
       q: "Why does the slug say hyderabad-india?",
-      a: "Because Hyderabad exists in more than one country in the taxonomy. This page is the India city hub only.",
+      a: "Because Hyderabad exists in more than one country. This page is the India city hub only.",
     },
     cta: { label: "Join Hyderabad chat", text: "Start free India Hyderabad rooms on Yaarzo" },
   },
@@ -308,7 +308,7 @@ function buildCountryHub(
     ? `<p>City pages (Lahore, Karachi, Islamabad, and others) narrow the conversation. This hub does not invent audience sizes — it explains how Pakistan pages relate and points you to rooms that already exist.</p>`
     : isIn
       ? `<p>City pages (Delhi, Mumbai, Bengaluru, Hyderabad India, and others) narrow the conversation. This hub stays India-only for local siblings and links topic categories when interest matters more than city.</p>`
-      : `<p>This page introduces free online chat rooms connected to ${country} and points to city rooms in the Pages CMS.</p>`;
+      : `<p>This page introduces free online chat rooms connected to ${country} and points to city rooms on Yaarzo.</p>`;
 
   const community = isPk
     ? `<p>Pakistan rooms commonly mix English and Urdu, with Punjabi and other languages depending on the city page. Be respectful, skip spam, and leave any room that feels unsafe.</p>`
@@ -358,7 +358,7 @@ function buildCountryHub(
         },
         {
           q: "Why is Hyderabad labeled India in the slug?",
-          a: "Hyderabad exists in more than one country in taxonomy. hyderabad-india-chat-room is the India city page only.",
+          a: "Hyderabad exists in more than one country. This page is the India city hub only.",
         },
         {
           q: "Is India chat free on Yaarzo?",
@@ -524,7 +524,7 @@ function buildCityPage(
 
   const content =
     `<section data-block="location"><h2>About this ${city} hub</h2>` +
-    `<p>${profile?.regionBlurb || `${city} is listed under ${state || "its region"} in ${country} in the Yaarzo Pages taxonomy.`}</p>` +
+    `<p>${profile?.regionBlurb || `${city} is in ${state || "its region"}, ${country}.`}</p>` +
     `<p>${profile?.languages || `Conversations connected to ${city} are commonly in English and other languages used across ${country}.`}</p></section>` +
     `<section data-block="topics"><h2>Conversation ideas for ${city}</h2>` +
     `<p>Examples of chat directions people use on this hub (not rankings or traffic claims):</p><ul>${topicList}</ul></section>` +

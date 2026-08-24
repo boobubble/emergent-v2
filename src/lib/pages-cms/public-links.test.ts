@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   composePublicCmsHtml,
+  extractPublicCmsHrefSlugs,
   extractRelativeCmsHrefSlugs,
   filterUnpublishedCmsLinks,
 } from "./public-links";
@@ -30,6 +31,14 @@ describe("filterUnpublishedCmsLinks", () => {
         `<a href="/delhi-chat-room">D</a><a href="https://yaarzo.com/x">ext</a><a href="/feed">Feed</a>`,
       ),
     ).toEqual(expect.arrayContaining(["delhi-chat-room", "feed"]));
+  });
+
+  it("extracts yaarzo.com absolute href slugs for public sanitization", () => {
+    expect(
+      extractPublicCmsHrefSlugs(
+        `<a href="/delhi-chat-room">D</a><a href="https://yaarzo.com/food-chat-room">Food</a><a href="https://www.yaarzo.com/chatrooms">Rooms</a>`,
+      ),
+    ).toEqual(expect.arrayContaining(["delhi-chat-room", "food-chat-room", "chatrooms"]));
   });
 });
 

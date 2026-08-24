@@ -98,7 +98,7 @@ export function buildCityPageContextVars(input: CityPageContextInput): Record<st
     : `other cities across ${input.countryName}`;
   const nearbyHtml = nearbyNames.length
     ? `<ul>${nearbyNames.map((n) => `<li>${n} chat room</li>`).join("")}</ul>`
-    : `<p>More ${input.countryName} city chat rooms can be linked here as the Pages CMS grows.</p>`;
+    : `<p>More ${input.countryName} city chat rooms can be linked here on Yaarzo.</p>`;
 
   const vars: Record<string, string> = {
     brand,
@@ -124,8 +124,8 @@ export function buildCityPageContextVars(input: CityPageContextInput): Record<st
   vars.country_context = fill(countryTpl, vars);
 
   vars.location_context = input.stateName
-    ? `${input.cityName} is listed under ${input.stateName} in ${input.countryName} in the Yaarzo Pages taxonomy.`
-    : `${input.cityName} is listed under ${input.countryName} in the Yaarzo Pages taxonomy.`;
+    ? `${input.cityName} is in ${input.stateName}, ${input.countryName}.`
+    : `${input.cityName} is in ${input.countryName}.`;
 
   // Optional page-level overrides (editors / future generation flags)
   const o = input.overrides;

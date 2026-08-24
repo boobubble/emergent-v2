@@ -1,6 +1,12 @@
 import { deriveContentStatus, computeSeoScore } from "./template-engine";
 import type { PageSaveInput } from "./schemas";
 import { slugifyPageSlug } from "@/lib/page-slug";
+import { normalizeStoredCanonical } from "./content-quality";
+
+function trimOrNull(value?: string | null): string | null {
+  const trimmed = (value ?? "").trim();
+  return trimmed ? trimmed : null;
+}
 
 /** Build the DB write payload. Never trusts client-supplied derived fields. */
 export function buildCustomPageWriteRow(
@@ -44,13 +50,13 @@ export function buildCustomPageWriteRow(
     layout: data.layout,
     sidebar_left: data.sidebar_left,
     sidebar_right: data.sidebar_right,
-    meta_title: data.meta_title ?? null,
-    meta_description: data.meta_description ?? null,
+    meta_title: trimOrNull(data.meta_title),
+    meta_description: trimOrNull(data.meta_description),
     meta_keywords: data.meta_keywords ?? null,
     og_title: data.og_title ?? null,
     og_description: data.og_description ?? null,
     og_image: data.og_image ?? null,
-    canonical_url: data.canonical_url ?? null,
+    canonical_url: normalizeStoredCanonical(slug, data.canonical_url),
     noindex: data.noindex,
     nofollow: data.nofollow,
     h1: data.h1 ?? null,
