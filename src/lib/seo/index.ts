@@ -27,6 +27,16 @@ export {
   DEFAULT_SITE_ORIGIN,
 } from "./resolve-seo";
 export {
+  HOME_SEO_TITLE,
+  HOME_SEO_DESCRIPTION,
+  HOME_SEO_CANONICAL,
+  HOME_SEO_H1,
+  HOME_SEO_FALLBACK,
+  homeRouteHead,
+  applyHomepageSeo,
+  buildHomeJsonLd,
+} from "./home-page";
+export {
   buildCompetitionFallbackJsonLd,
   buildPoetryFallbackJsonLd,
   buildFeedPostFallbackJsonLd,

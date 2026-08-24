@@ -21,6 +21,10 @@ describe("public routes — logged-out browse allowlist", () => {
     expect(isPublicPath("/confessions")).toBe(true);
   });
 
+  it("treats the homepage as public so SSR can emit crawlable HTML", () => {
+    expect(isPublicPath("/")).toBe(true);
+  });
+
   it("does not treat private settings as public", () => {
     expect(isPublicPath("/settings")).toBe(false);
     expect(isReadOnlyPublicAppPath("/settings")).toBe(false);

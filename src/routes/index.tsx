@@ -1,40 +1,41 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { ChatApp } from "@/components/chat/ChatApp";
+import { HomeSeoContent } from "@/components/home/HomeSeoContent";
 import { RouteErrorBoundary } from "@/components/AppErrorBoundary";
 import { useAppSettings } from "@/lib/app-settings";
-import { headFromRouteSeo, loadRouteSeoWithDefaults } from "@/lib/seo";
-
-const HOME_SEO_FALLBACK = {
-  title: "Yaarzo – Chatrooms, Friends and Social Community",
-  description:
-    "Join public chatrooms, make friends, share posts, play games and explore communities on Yaarzo.",
-  ogTitle: "Yaarzo – Chatrooms, Friends and Social Community",
-  ogDescription: "Chat, connect, share and discover communities on Yaarzo.",
-};
+import { useAuth } from "@/lib/auth-store";
+import { loadRouteSeoWithDefaults } from "@/lib/seo";
+import { HOME_SEO_FALLBACK, homeRouteHead } from "@/lib/seo/home-page";
 
 export const Route = createFileRoute("/")({
+  // Homepage <head> is owned by homeRouteHead() (not seo_settings / root shell).
   loader: () => loadRouteSeoWithDefaults("/", HOME_SEO_FALLBACK),
-  head: ({ loaderData }) => headFromRouteSeo(loaderData),
+  head: ({ loaderData }) => homeRouteHead(loaderData),
   component: HomeRouter,
 });
 
 function HomeRouter() {
-  const { layoutPriority, ready } = useAppSettings();
-  // Wait for settings before deciding home target so feed_first users
-  // aren't briefly dropped into the chatroom while settings load.
-  if (!ready) {
+  const { user } = useAuth();
+  const { layoutPriority, ready: settingsReady } = useAppSettings();
+  // SSR and the first client paint always render HomeSeoContent so crawlers
+  // and hydration see the same HTML. Authenticated ChatApp mounts after.
+  const [showApp, setShowApp] = useState(false);
+
+  useEffect(() => {
+    setShowApp(Boolean(user));
+  }, [user]);
+
+  if (showApp && user) {
+    if (settingsReady && layoutPriority === "feed_first") {
+      return <Navigate to="/feed" replace />;
+    }
     return (
-      <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">
-        <p>Loading…</p>
-      </div>
+      <RouteErrorBoundary section="Chatrooms" featureStore="chat">
+        <ChatApp />
+      </RouteErrorBoundary>
     );
   }
-  if (layoutPriority === "feed_first") {
-    return <Navigate to="/feed" replace />;
-  }
-  return (
-    <RouteErrorBoundary section="Chatrooms" featureStore="chat">
-      <ChatApp />
-    </RouteErrorBoundary>
-  );
+
+  return <HomeSeoContent />;
 }

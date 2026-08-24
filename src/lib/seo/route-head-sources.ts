@@ -13,8 +13,8 @@ export type RouteHeadAudit = {
 
 const ROOT_FALLBACK: RouteHeadAudit = {
   source: "__root.tsx static shell defaults (DynamicBrandHead = brand chrome only)",
-  title: "available",
-  description: "available",
+  title: "missing",
+  description: "missing",
   canonical: "missing",
   indexState: "index",
   jsonLd: "missing",
@@ -22,12 +22,12 @@ const ROOT_FALLBACK: RouteHeadAudit = {
 
 const EXACT: Record<string, RouteHeadAudit> = {
   "/": {
-    source: "routes/index.tsx head()",
+    source: "routes/index.tsx head() via homeRouteHead",
     title: "available",
     description: "available",
-    canonical: "missing",
+    canonical: "available",
     indexState: "index",
-    jsonLd: "missing",
+    jsonLd: "available",
   },
   "/welcome": {
     source: "routes/welcome.tsx head()",

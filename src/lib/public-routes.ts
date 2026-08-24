@@ -20,6 +20,7 @@ export const PUBLIC_PATH_PREFIXES = [
 ] as const;
 
 export const PUBLIC_EXACT = new Set([
+  "/", // crawlable homepage: AuthGate must not SSR "Loading…"
   "/welcome",
   "/heropage",
   "/login",
