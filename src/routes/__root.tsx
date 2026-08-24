@@ -41,7 +41,7 @@ import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { GlobalErrorMonitoring } from "@/components/GlobalErrorMonitoring";
 import { logger } from "@/lib/logger";
 import { isPublicCmsSlugPath } from "@/lib/route-slug";
-import { isPublicPath as isPublicPathBase, isReadOnlyPublicAppPath } from "@/lib/public-routes";
+import { isPublicPath as isPublicPathBase, isReadOnlyPublicAppPath, isPrivateUtilityPath } from "@/lib/public-routes";
 
 import appCss from "../styles.css?url";
 
@@ -255,6 +255,9 @@ function AuthGate() {
 
   // No stored session at all → send guests to landing immediately.
   if (!ready && !hasStoredSession) {
+    if (isPrivateUtilityPath(path)) {
+      return <Navigate to="/login" replace />;
+    }
     if (!homeReady) {
       return (
         <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">
@@ -280,6 +283,9 @@ function AuthGate() {
     if (isPublicPath(path)) return <PublicOutlet pathname={path} readOnlyApp={isReadOnlyPublicAppPath(path)} />;
     // Wait for the home_page setting before redirecting so guests don't get
     // briefly sent to /welcome while the admin-selected mode is still loading.
+    if (isPrivateUtilityPath(path)) {
+      return <Navigate to="/login" replace />;
+    }
     if (!homeReady) {
       return (
         <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">

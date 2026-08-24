@@ -1,5 +1,6 @@
 import { getPublicSeoForPath } from "@/lib/seo.functions";
 import { createSeoRouteHead, seoFallback } from "@/lib/seo/route-head";
+import { notFoundSeoHead } from "@/lib/seo/not-found";
 import { resolvePageSeo, safeJsonLd, siteOrigin, type EntitySeoOverride } from "@/lib/seo/resolve-seo";
 import { loadSeoGlobal } from "@/lib/seo/load-global";
 import type { ResolvedSeo, SeoGlobal } from "@/lib/seo/types";
@@ -154,9 +155,7 @@ export async function loadDynamicRouteSeo(input: DynamicRouteSeoInput): Promise<
 
 export function headFromRouteSeo(loaderData?: RouteSeoLoaderData | null) {
   if (!loaderData?.seo) {
-    return createSeoRouteHead(
-      resolvePageSeo(null, null, { routePath: "/", fallback: seoFallback("App") }),
-    );
+    return notFoundSeoHead();
   }
   return createSeoRouteHead(loaderData.seo, loaderData.global);
 }

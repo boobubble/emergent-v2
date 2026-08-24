@@ -8,11 +8,10 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { withRateLimit } from "./rate-limit-middleware";
 import { auditSeoHealth } from "@/lib/seo/health";
 import {
+  assemblePublicSitemapEntries,
   buildRobotsTxt,
   buildSitemapXml,
   staticSitemapEntries,
-  customPageSitemapEntries,
-  mergeSitemapEntries,
 } from "@/lib/seo/sitemap";
 import {
   buildRouteCatalog,
@@ -404,15 +403,17 @@ export async function buildPublicSitemapXml(): Promise<string> {
     loadGlobal(),
     loadPages(),
     sb.from("custom_pages")
-      .select("slug,updated_at,published_at,noindex")
+      .select("slug,updated_at,published_at,noindex,status")
       .eq("status", "published"),
     sb.from("page_redirects").select("from_slug"),
   ]);
   const redirectFromSlugs = new Set((redirectsRes.data ?? []).map((r) => r.from_slug));
-  const entries = mergeSitemapEntries(
-    staticSitemapEntries(seoPages, global),
-    customPageSitemapEntries(customPagesRes.data ?? [], redirectFromSlugs, global),
-  );
+  const entries = assemblePublicSitemapEntries({
+    seoPages,
+    customPages: customPagesRes.data ?? [],
+    redirectFromSlugs,
+    global,
+  });
   return buildSitemapXml(entries);
 }
 

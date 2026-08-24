@@ -28,7 +28,6 @@ import {
   buildPoetrySeoVars,
   buildPoetryFallbackJsonLd,
   loadSeoSiteContext,
-  DEFAULT_SITE_ORIGIN,
 } from "@/lib/seo";
 
 const FONT_SIZES = [16, 18, 20, 22, 24, 26, 28] as const;
@@ -90,10 +89,11 @@ export const Route = createFileRoute("/poetry/$slug")({
   },
   head: ({ loaderData }) => {
     if (!loaderData?.poem) {
-      const origin = loaderData?.origin ?? DEFAULT_SITE_ORIGIN;
       return {
-        meta: [{ title: "Poem not found · Poetry Hub" }, { name: "robots", content: "noindex" }],
-        links: [{ rel: "canonical", href: `${origin}/poetry/unknown` }],
+        meta: [
+          { title: "Poem not found · Poetry Hub" },
+          { name: "robots", content: "noindex, follow" },
+        ],
       };
     }
     return headFromRouteSeo(loaderData.seoData);

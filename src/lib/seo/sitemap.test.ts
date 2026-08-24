@@ -1,7 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
+  assemblePublicSitemapEntries,
+  buildRobotsTxt,
   customPageSitemapEntries,
   formatSitemapLastmod,
+  isSitemapEligibleRoutePath,
+  requiredHubSitemapEntries,
   staticSitemapEntries,
 } from "./sitemap";
 
@@ -82,5 +86,103 @@ describe("staticSitemapEntries date safety", () => {
       { canonical_domain: "https://yaarzo.com" } as never,
     );
     expect(entries[0].lastmod).toBe("2026-08-05");
+  });
+});
+
+describe("sitemap quality guards", () => {
+  const global = { canonical_domain: "https://yaarzo.com" } as never;
+
+  it("keeps required hubs, homepage trailing slash, and excludes redirect aliases", () => {
+    const xmlEntries = assemblePublicSitemapEntries({
+      seoPages: [
+        {
+          route_path: "/chatrooms",
+          is_dynamic: false,
+          sitemap_exclude: false,
+          noindex: false,
+        } as never,
+        {
+          route_path: "/find-friends",
+          is_dynamic: false,
+          sitemap_exclude: false,
+          noindex: false,
+        } as never,
+        {
+          route_path: "/games",
+          is_dynamic: false,
+          sitemap_exclude: false,
+          noindex: false,
+        } as never,
+        {
+          route_path: "/leaderboard",
+          is_dynamic: false,
+          sitemap_exclude: false,
+          noindex: false,
+        } as never,
+        {
+          route_path: "/welcome",
+          is_dynamic: false,
+          sitemap_exclude: false,
+          noindex: false,
+        } as never,
+      ],
+      customPages: [
+        { slug: "live-page", status: "published", noindex: false },
+        { slug: "draft-page", status: "draft", noindex: false },
+        { slug: "hidden-page", status: "published", noindex: true },
+      ],
+      redirectFromSlugs: new Set(),
+      global,
+    });
+    const locs = xmlEntries.map((e) => e.loc);
+    expect(locs).toContain("https://yaarzo.com/");
+    expect(locs).not.toContain("https://yaarzo.com");
+    expect(locs).toContain("https://yaarzo.com/chatroom");
+    expect(locs).toContain("https://yaarzo.com/communities");
+    expect(locs).toContain("https://yaarzo.com/competitions");
+    expect(locs).toContain("https://yaarzo.com/poetry");
+    expect(locs.some((loc) => loc.endsWith("/chatrooms"))).toBe(false);
+    expect(locs.some((loc) => loc.endsWith("/find-friends"))).toBe(false);
+    expect(locs.some((loc) => loc.endsWith("/games"))).toBe(false);
+    expect(locs.some((loc) => loc.endsWith("/leaderboard"))).toBe(false);
+    expect(locs).toContain("https://yaarzo.com/live-page");
+    expect(locs.some((loc) => loc.endsWith("/draft-page"))).toBe(false);
+    expect(locs.some((loc) => loc.endsWith("/hidden-page"))).toBe(false);
+  });
+
+  it("never treats /chatrooms as sitemap-eligible even if seo_settings re-adds it", () => {
+    expect(isSitemapEligibleRoutePath("/chatrooms")).toBe(false);
+    const entries = staticSitemapEntries(
+      [
+        {
+          route_path: "/chatrooms",
+          is_dynamic: false,
+          sitemap_exclude: false,
+          noindex: false,
+        } as never,
+      ],
+      global,
+    );
+    expect(entries).toEqual([]);
+  });
+
+  it("always emits required hub locs including homepage slash", () => {
+    const locs = requiredHubSitemapEntries(global).map((e) => e.loc);
+    expect(locs[0]).toBe("https://yaarzo.com/");
+    expect(locs).toEqual([
+      "https://yaarzo.com/",
+      "https://yaarzo.com/chatroom",
+      "https://yaarzo.com/communities",
+      "https://yaarzo.com/competitions",
+      "https://yaarzo.com/poetry",
+    ]);
+  });
+
+  it("adds a safe /api/ crawl exclusion without blocking public pages or /admin", () => {
+    const txt = buildRobotsTxt("https://yaarzo.com", { robots: "index, follow" } as never);
+    expect(txt).toContain("Allow: /");
+    expect(txt).toContain("Disallow: /api/");
+    expect(txt).not.toContain("Disallow: /admin");
+    expect(txt).toContain("Sitemap: https://yaarzo.com/sitemap.xml");
   });
 });

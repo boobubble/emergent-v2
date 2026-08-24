@@ -23,7 +23,7 @@ function redirectReservedSlug(slug: string) {
   if (key === "rooms" || key === "messages") {
     throw redirect({ to: "/chatroom", replace: true });
   }
-  if (["auth", "login", "register", "signup", "logout"].includes(key)) {
+  if (["auth", "login", "register", "signup", "logout", "settings", "notifications"].includes(key)) {
     throw redirect({ to: "/login", replace: true });
   }
   throw redirect({ to: "/welcome", replace: true });
@@ -121,7 +121,7 @@ export const Route = createFileRoute("/$slug")({
         ogDescription: page.og_description || desc,
         ogImage,
         twitterImage: ogImage,
-        canonical: page.canonical_url || url,
+        canonical: url,
         robots,
         noindex: !!page.noindex,
         nofollow: !!page.nofollow,
@@ -129,7 +129,7 @@ export const Route = createFileRoute("/$slug")({
       fallbackJsonLd: buildCmsFallbackJsonLd({
         title: page.title,
         description: desc,
-        url: page.canonical_url || url,
+        url,
         publishedAt: page.published_at,
         image: ogImage,
       }),

@@ -20,8 +20,10 @@ import { useThemeMode, type ThemeMode } from "@/lib/use-theme-mode";
 
 import { useAdminMode } from "@/lib/admin-mode";
 import { APP_VERSION } from "@/lib/app-version";
+import { adminRouteHead } from "@/lib/seo/admin-head";
 
 export const Route = createFileRoute("/admin")({
+  head: adminRouteHead,
   component: AdminLayout,
 });
 

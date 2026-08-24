@@ -7,6 +7,13 @@ export * from "./sitemap";
 
 export { createSeoRouteHead, seoFallback } from "./route-head";
 export {
+  NOT_FOUND_SEO_TITLE,
+  NOT_FOUND_ROBOTS,
+  notFoundSeo,
+  notFoundSeoHead,
+} from "./not-found";
+export { ADMIN_ROBOTS, ADMIN_SEO_TITLE, adminRouteHead } from "./admin-head";
+export {
   applyBrandChromeToDocument,
   readRouteOwnedSeo,
   ROUTE_OWNED_SEO_KEYS,

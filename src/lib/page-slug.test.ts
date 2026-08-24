@@ -292,7 +292,7 @@ describe("seo runtime", () => {
       { routePath: "/", fallback: { title: "Home Fallback" }, routeDefaultsOnly: true },
     );
     expect(resolved.title).toBe("Home Fallback");
-    expect(resolved.canonical).toBe("https://example.com");
+    expect(resolved.canonical).toBe("https://example.com/");
   });
 
   it("entity override beats template", () => {
@@ -359,6 +359,40 @@ describe("seo runtime", () => {
     expect(
       buildCanonicalUrl("https://example.com", "/competitions/foo", "https://example.com/competitions/foo?ref=abc"),
     ).toBe("https://example.com/competitions/foo");
+  });
+
+  it("normalizes legacy host-without-scheme and path-only CMS canonicals", () => {
+    const origin = "https://yaarzo.com";
+    expect(buildCanonicalUrl(origin, "/delhi-chat-room", "yaarzo.com/delhi-chat-room")).toBe(
+      "https://yaarzo.com/delhi-chat-room",
+    );
+    expect(buildCanonicalUrl(origin, "/delhi-chat-room", "/delhi-chat-room")).toBe(
+      "https://yaarzo.com/delhi-chat-room",
+    );
+    expect(buildCanonicalUrl(origin, "/delhi-chat-room", "https://yaarzo.com/delhi-chat-room")).toBe(
+      "https://yaarzo.com/delhi-chat-room",
+    );
+    expect(buildCanonicalUrl(origin, "/foo", "yaarzo.com/foo")).toBe("https://yaarzo.com/foo");
+    expect(buildCanonicalUrl(origin, "/foo", "/foo")).toBe("https://yaarzo.com/foo");
+    expect(buildCanonicalUrl(origin, "/foo", "https://yaarzo.com/foo")).toBe("https://yaarzo.com/foo");
+  });
+
+  it("ignores title-text canonical overrides and lovable hosts", () => {
+    expect(
+      buildCanonicalUrl(
+        "https://yaarzo.com",
+        "/multan-chat-room",
+        "Multan chat room | Free Online Chat on Yaarzo",
+      ),
+    ).toBe("https://yaarzo.com/multan-chat-room");
+    expect(
+      buildCanonicalUrl("https://yaarzo.com", "/missing", "https://holo-chat-quest.lovable.app/missing"),
+    ).toBe("https://yaarzo.com/missing");
+  });
+
+  it("uses a trailing slash only for the homepage canonical", () => {
+    expect(buildCanonicalUrl("https://yaarzo.com", "/")).toBe("https://yaarzo.com/");
+    expect(buildCanonicalUrl("https://yaarzo.com", "/chatroom")).toBe("https://yaarzo.com/chatroom");
   });
 
   it("excludes private pages from sitemap", () => {

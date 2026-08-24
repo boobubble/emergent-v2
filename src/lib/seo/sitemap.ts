@@ -1,5 +1,5 @@
 import type { SeoGlobal, SeoPageRow } from "./types";
-import { siteOrigin } from "./resolve-seo";
+import { formatCanonicalUrl, normalizePublicPath, siteOrigin } from "./resolve-seo";
 
 export type SitemapEntry = {
   loc: string;
@@ -7,6 +7,56 @@ export type SitemapEntry = {
   changefreq?: string;
   priority?: number;
 };
+
+/** Redirect-only aliases that must never appear in sitemap.xml. */
+export const SITEMAP_REDIRECT_ALIASES = new Set(["/chatrooms", "/mehfil"]);
+
+/** App shells whose crawlable HTML is too thin/generic for sitemap inclusion. */
+export const SITEMAP_THIN_SSR_PATHS = new Set(["/find-friends", "/games", "/leaderboard"]);
+
+const SITEMAP_PRIVATE_PREFIXES = [
+  "/admin",
+  "/api",
+  "/auth",
+  "/login",
+  "/account",
+  "/settings",
+  "/notifications",
+  "/reset-password",
+  "/signup",
+  "/wallet",
+  "/messages",
+  "/banned",
+] as const;
+
+const UNINDEXABLE_CMS_STATUSES = new Set(["draft", "archived", "private", "hidden"]);
+
+export const SITEMAP_REQUIRED_HUBS: Array<{
+  path: string;
+  changefreq: string;
+  priority: number;
+}> = [
+  { path: "/", changefreq: "daily", priority: 1.0 },
+  { path: "/chatroom", changefreq: "daily", priority: 0.9 },
+  { path: "/communities", changefreq: "weekly", priority: 0.8 },
+  { path: "/competitions", changefreq: "weekly", priority: 0.8 },
+  { path: "/poetry", changefreq: "weekly", priority: 0.8 },
+];
+
+export function sitemapLoc(origin: string, path: string): string {
+  return formatCanonicalUrl(origin, path);
+}
+
+export function isSitemapEligibleRoutePath(path: string): boolean {
+  const normalized = normalizePublicPath(path);
+  if (!normalized) return false;
+  if (SITEMAP_REDIRECT_ALIASES.has(normalized)) return false;
+  if (SITEMAP_THIN_SSR_PATHS.has(normalized)) return false;
+  for (const prefix of SITEMAP_PRIVATE_PREFIXES) {
+    if (normalized === prefix || normalized.startsWith(`${prefix}/`)) return false;
+  }
+  return true;
+}
 
 /**
  * Normalize timestamps from Supabase REST (ISO strings) or postgres.js (Date)
@@ -46,10 +96,21 @@ export function buildSitemapXml(entries: SitemapEntry[]): string {
 }
 
 export function buildRobotsTxt(origin: string, global: SeoGlobal | null, sitemapPath = "/sitemap.xml"): string {
-  const lines = ["User-agent: *", `Allow: /`];
+  const lines = ["User-agent: *", "Allow: /", "Disallow: /api/"];
   if (global?.robots?.includes("noindex")) lines.push("Disallow: /");
-  lines.push("", `Sitemap: ${origin}${sitemapPath}`);
+  lines.push("", `Sitemap: ${origin.replace(/\/$/, "")}${sitemapPath}`);
   return lines.join("\n");
+}
+
+export function requiredHubSitemapEntries(global: SeoGlobal | null): SitemapEntry[] {
+  const origin = siteOrigin(global);
+  const today = new Date().toISOString().slice(0, 10);
+  return SITEMAP_REQUIRED_HUBS.map((hub) => ({
+    loc: sitemapLoc(origin, hub.path),
+    lastmod: today,
+    changefreq: hub.changefreq,
+    priority: hub.priority,
+  }));
 }
 
 export function staticSitemapEntries(pages: SeoPageRow[], global: SeoGlobal | null): SitemapEntry[] {
@@ -57,8 +118,9 @@ export function staticSitemapEntries(pages: SeoPageRow[], global: SeoGlobal | nu
   const today = new Date().toISOString().slice(0, 10);
   return pages
     .filter((p) => !p.is_dynamic && !p.sitemap_exclude && !p.noindex && p.route_path)
+    .filter((p) => isSitemapEligibleRoutePath(p.route_path as string))
     .map((p) => ({
-      loc: `${origin}${p.route_path === "/" ? "" : p.route_path}`,
+      loc: sitemapLoc(origin, p.route_path as string),
       lastmod: formatSitemapLastmod(p.updated_at as string | Date | null | undefined, today),
       changefreq: p.sitemap_changefreq ?? "weekly",
       priority: p.sitemap_priority ?? 0.5,
@@ -70,6 +132,7 @@ export type CustomPageSitemapRow = {
   updated_at?: string | Date | null;
   published_at?: string | Date | null;
   noindex?: boolean | null;
+  status?: string | null;
 };
 
 /** Published CMS pages at /{custom_pages.slug}; excludes redirect source slugs.
@@ -85,13 +148,31 @@ export function customPageSitemapEntries(
   const origin = siteOrigin(global);
   const today = new Date().toISOString().slice(0, 10);
   return pages
-    .filter((p) => p.slug && !p.noindex && !redirectFromSlugs.has(p.slug))
+    .filter((p) => {
+      if (!p.slug || p.noindex || redirectFromSlugs.has(p.slug)) return false;
+      if (p.status && p.status !== "published") return false;
+      if (p.status && UNINDEXABLE_CMS_STATUSES.has(p.status)) return false;
+      return true;
+    })
     .map((p) => ({
-      loc: `${origin}/${p.slug}`,
+      loc: sitemapLoc(origin, `/${p.slug}`),
       lastmod: formatSitemapLastmod(p.updated_at ?? p.published_at, today),
       changefreq: "weekly",
       priority: 0.6,
     }));
+}
+
+export function assemblePublicSitemapEntries(input: {
+  seoPages: SeoPageRow[];
+  customPages: CustomPageSitemapRow[];
+  redirectFromSlugs: Set<string>;
+  global: SeoGlobal | null;
+}): SitemapEntry[] {
+  return mergeSitemapEntries(
+    requiredHubSitemapEntries(input.global),
+    staticSitemapEntries(input.seoPages, input.global),
+    customPageSitemapEntries(input.customPages, input.redirectFromSlugs, input.global),
+  );
 }
 
 export function mergeSitemapEntries(...groups: SitemapEntry[][]): SitemapEntry[] {

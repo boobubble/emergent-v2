@@ -29,6 +29,16 @@ export const PUBLIC_EXACT = new Set([
   "/installer",
 ]);
 
+/** Private utility routes that must not bounce guests to an indexable marketing page. */
+export function isPrivateUtilityPath(pathname: string): boolean {
+  return (
+    pathname === "/settings"
+    || pathname.startsWith("/settings/")
+    || pathname === "/notifications"
+    || pathname.startsWith("/notifications/")
+  );
+}
+
 /**
  * Publicly readable app routes — visitors may view content, but individual
  * write actions must gate themselves via `useAuthGate().requireAuth(...)`.

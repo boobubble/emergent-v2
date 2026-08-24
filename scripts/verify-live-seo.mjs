@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env node
-const DEFAULT_BASE = process.env.SEO_VERIFY_BASE || "https://holo-chat-quest.lovable.app";
+const DEFAULT_BASE = process.env.SEO_VERIFY_BASE || "https://yaarzo.com";
 const TEMPLATE_VAR_RE = /\{\{[a-z_][a-z0-9_]*\}\}|\{[a-z_][a-z0-9_]*\}/gi;
 function parseArgs(argv){const out={base:DEFAULT_BASE,routes:["/feed","/competitions","/login"],slugRoutes:{}};for(let i=2;i<argv.length;i++){const a=argv[i];if(a==="--base"&&argv[++i])out.base=argv[i].replace(/\/$/,"");else if(a==="--routes"&&argv[++i])out.routes=argv[i].split(",").map(r=>r.trim()).filter(Boolean);else if(a==="--competition-slug"&&argv[++i])out.slugRoutes.competition=argv[i];else if(a==="--community-slug"&&argv[++i])out.slugRoutes.community=argv[i];else if(a==="--poetry-slug"&&argv[++i])out.slugRoutes.poetry=argv[i];else if(a==="--username"&&argv[++i])out.slugRoutes.profile=argv[i];}return out;}
 function decodeHtml(s){return s.replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"');}

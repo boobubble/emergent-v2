@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, notFound } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-store";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
@@ -21,28 +21,7 @@ export const Route = createFileRoute("/u/$username")({
     const slug = profile?.username ?? username;
     const url = `${origin}/u/${slug}`;
 
-    if (!profile) {
-      const seoData = await loadDynamicRouteSeo({
-        templatePath: "/u/$username",
-        instancePath: `/u/${username}`,
-        vars: buildProfileSeoVars({
-          profile: {},
-          username,
-          siteName,
-          origin,
-        }),
-        fallback: {
-          title: `@${username}`,
-          description: "User profile",
-          noindex: true,
-          nofollow: true,
-          robots: "noindex, nofollow",
-          canonical: url,
-        },
-        entityOverride: { noindex: true, nofollow: true, robots: "noindex, nofollow" },
-      });
-      return { seoData };
-    }
+    if (!profile) throw notFound();
 
     const name = profile.display_name || profile.username;
     const isPrivate = profile.is_private === true;

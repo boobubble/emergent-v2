@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   isPublicPath,
   isReadOnlyPublicAppPath,
+  isPrivateUtilityPath,
   READ_ONLY_PUBLIC_APP_PREFIXES,
 } from "./public-routes";
 
@@ -29,6 +30,14 @@ describe("public routes — logged-out browse allowlist", () => {
     expect(isPublicPath("/settings")).toBe(false);
     expect(isReadOnlyPublicAppPath("/settings")).toBe(false);
     expect(isReadOnlyPublicAppPath("/admin")).toBe(false);
+  });
+
+  it("classifies settings and notifications as private utility routes", () => {
+    expect(isPrivateUtilityPath("/settings")).toBe(true);
+    expect(isPrivateUtilityPath("/settings/privacy")).toBe(true);
+    expect(isPrivateUtilityPath("/notifications")).toBe(true);
+    expect(isPrivateUtilityPath("/login")).toBe(false);
+    expect(isPrivateUtilityPath("/welcome")).toBe(false);
   });
 
   it("covers every required public browse surface from the audit", () => {

@@ -1,10 +1,57 @@
 import type { ResolvedSeo, SeoGlobal, SeoPageRow } from "./types";
 import { stripUnresolvedTemplateVars } from "./meta-builder";
 
+export const DEFAULT_SITE_ORIGIN = "https://yaarzo.com";
+
 export function normalizePublicPath(path: string): string {
   if (!path || path === "/") return "/";
   const trimmed = path.replace(/\?.*$/, "").replace(/#.*$/, "").replace(/\/+$/, "");
   return trimmed.startsWith("/") ? trimmed || "/" : `/${trimmed}`;
+}
+
+const HOST_WITHOUT_SCHEME_RE = /^(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:\/|$)/i;
+const VALID_CANONICAL_PATH_RE = /^\/(?:[A-Za-z0-9._~-]+(?:\/[A-Za-z0-9._~-]+)*)?$/;
+const BARE_SLUG_RE = /^[A-Za-z0-9._~-]+(?:\/[A-Za-z0-9._~-]+)*$/;
+
+export function isLegacyLovableHost(hostname: string): boolean {
+  const host = hostname.trim().toLowerCase();
+  return host === "lovable.app" || host.endsWith(".lovable.app");
+}
+
+/** Homepage loc/canonical uses a trailing slash; all other paths do not. */
+export function formatCanonicalUrl(origin: string, path: string): string {
+  const base = origin.replace(/\/$/, "");
+  const normalized = normalizePublicPath(path);
+  return normalized === "/" ? `${base}/` : `${base}${normalized}`;
+}
+
+function apexHost(hostname: string): string {
+  return hostname.trim().toLowerCase().replace(/^www\./, "");
+}
+
+function originHostname(origin: string): string {
+  try {
+    const href = origin.includes("://") ? origin : `https://${origin}`;
+    return apexHost(new URL(href).hostname);
+  } catch {
+    return "";
+  }
+}
+
+function isImplausibleCanonicalOverride(raw: string): boolean {
+  const value = raw.trim();
+  if (!value) return true;
+  if (/\s/.test(value) || value.includes("|")) return true;
+  return false;
+}
+
+function coerceCanonicalOverride(raw: string): string {
+  const value = raw.trim();
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("/")) return value;
+  if (HOST_WITHOUT_SCHEME_RE.test(value)) return `https://${value}`;
+  if (BARE_SLUG_RE.test(value)) return `/${value}`;
+  return value;
 }
 
 export function buildCanonicalUrl(
@@ -12,20 +59,24 @@ export function buildCanonicalUrl(
   path: string,
   override?: string | null,
 ): string {
-  const base = origin.replace(/\/$/, "");
-  if (override?.trim()) {
-    try {
-      const url = new URL(override.trim(), base);
-      url.search = "";
-      url.hash = "";
-      const normalized = url.pathname.replace(/\/+$/, "") || "/";
-      return `${url.origin}${normalized === "/" ? "" : normalized}`;
-    } catch {
-      // fall through to generated canonical
-    }
+  const base = (origin || DEFAULT_SITE_ORIGIN).replace(/\/$/, "");
+  const generated = formatCanonicalUrl(base, path);
+  if (!override?.trim() || isImplausibleCanonicalOverride(override)) return generated;
+
+  try {
+    const url = new URL(coerceCanonicalOverride(override), `${base}/`);
+    url.search = "";
+    url.hash = "";
+    if (isLegacyLovableHost(url.hostname)) return generated;
+    const siteHost = originHostname(base);
+    const overrideHost = apexHost(url.hostname);
+    if (siteHost && overrideHost && overrideHost !== siteHost) return generated;
+    const pathname = url.pathname.replace(/\/+$/, "") || "/";
+    if (pathname !== "/" && !VALID_CANONICAL_PATH_RE.test(pathname)) return generated;
+    return formatCanonicalUrl(base, pathname);
+  } catch {
+    return generated;
   }
-  const normalized = normalizePublicPath(path);
-  return `${base}${normalized === "/" ? "" : normalized}`;
 }
 
 export type EntitySeoOverride = Partial<{
@@ -45,13 +96,18 @@ export type EntitySeoOverride = Partial<{
   jsonLd: Record<string, string | number | boolean | null> | null;
 }>;
 
-export const DEFAULT_SITE_ORIGIN = "https://holo-chat-quest.lovable.app";
-
 export function siteOrigin(global: SeoGlobal | null | undefined): string {
   const domain = global?.canonical_domain?.trim();
   if (!domain) return DEFAULT_SITE_ORIGIN;
-  if (domain.startsWith("http")) return domain.replace(/\/$/, "");
-  return `https://${domain.replace(/\/$/, "")}`;
+  const origin = domain.startsWith("http")
+    ? domain.replace(/\/$/, "")
+    : `https://${domain.replace(/\/$/, "")}`;
+  try {
+    if (isLegacyLovableHost(new URL(origin).hostname)) return DEFAULT_SITE_ORIGIN;
+  } catch {
+    return DEFAULT_SITE_ORIGIN;
+  }
+  return origin;
 }
 
 export function applyTemplate(template: string, vars: Record<string, string>): string {

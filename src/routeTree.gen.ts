@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SplatRouteImport } from './routes/$'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AccountRouteImport } from './routes/account'
@@ -124,9 +125,9 @@ import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminSetupWizardRouteImport } from './routes/admin.setup-wizard'
 import { Route as AdminSignupAccessRouteImport } from './routes/admin.signup-access'
 import { Route as AdminSocialAutomationRouteImport } from './routes/admin.social-automation'
-import { Route as AdminSocialManualPostsRouteImport } from './routes/admin.social-manual-posts'
 import { Route as AdminSocialFeedRouteImport } from './routes/admin.social-feed'
 import { Route as AdminSocialLayoutRouteImport } from './routes/admin.social-layout'
+import { Route as AdminSocialManualPostsRouteImport } from './routes/admin.social-manual-posts'
 import { Route as AdminStaffPermissionsRouteImport } from './routes/admin.staff-permissions'
 import { Route as AdminStickersRouteImport } from './routes/admin.stickers'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
@@ -218,7 +219,6 @@ import { Route as ApiPublicHooksFeedbotDispatchRouteImport } from './routes/api/
 import { Route as ApiPublicHooksFeedbotSummaryRouteImport } from './routes/api/public/hooks/feedbot-summary'
 import { Route as ApiPublicHooksLicenseRevalidateRouteImport } from './routes/api/public/hooks/license-revalidate'
 import { Route as ApiPublicHooksSocialDispatchRouteImport } from './routes/api/public/hooks/social-dispatch'
-import { Route as ApiPublicSocialOauthPlatformCallbackRouteImport } from './routes/api/public/social-oauth.$platform.callback'
 import { Route as ApiPublicLicenseActivateRouteImport } from './routes/api/public/license/activate'
 import { Route as ApiPublicLicenseCheckRouteImport } from './routes/api/public/license/check'
 import { Route as ApiPublicLicenseDeactivateRouteImport } from './routes/api/public/license/deactivate'
@@ -229,10 +229,16 @@ import { Route as CommunitySlugChatroomsRoomSlugRouteImport } from './routes/com
 import { Route as CompetitionsSlugFunTypeRouteImport } from './routes/competitions.$slug.fun.$type'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicOgCompetitionSlugRouteImport } from './routes/api/public/og/competition.$slug'
+import { Route as ApiPublicSocialOauthPlatformCallbackRouteImport } from './routes/api/public/social-oauth.$platform.callback'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplatRoute = SplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlugRoute = SlugRouteImport.update({
@@ -489,6 +495,11 @@ const AdminAutomationRoute = AdminAutomationRouteImport.update({
   path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAvatarSafetyRoute = AdminAvatarSafetyRouteImport.update({
+  id: '/avatar-safety',
+  path: '/avatar-safety',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBackupRoute = AdminBackupRouteImport.update({
   id: '/backup',
   path: '/backup',
@@ -616,11 +627,6 @@ const AdminErrorLogsRoute = AdminErrorLogsRouteImport.update({
 const AdminExportRoute = AdminExportRouteImport.update({
   id: '/export',
   path: '/export',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAvatarSafetyRoute = AdminAvatarSafetyRouteImport.update({
-  id: '/avatar-safety',
-  path: '/avatar-safety',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFeedModerationRoute = AdminFeedModerationRouteImport.update({
@@ -808,11 +814,6 @@ const AdminSocialAutomationRoute = AdminSocialAutomationRouteImport.update({
   path: '/social-automation',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSocialManualPostsRoute = AdminSocialManualPostsRouteImport.update({
-  id: '/social-manual-posts',
-  path: '/social-manual-posts',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminSocialFeedRoute = AdminSocialFeedRouteImport.update({
   id: '/social-feed',
   path: '/social-feed',
@@ -821,6 +822,11 @@ const AdminSocialFeedRoute = AdminSocialFeedRouteImport.update({
 const AdminSocialLayoutRoute = AdminSocialLayoutRouteImport.update({
   id: '/social-layout',
   path: '/social-layout',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSocialManualPostsRoute = AdminSocialManualPostsRouteImport.update({
+  id: '/social-manual-posts',
+  path: '/social-manual-posts',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminStaffPermissionsRoute = AdminStaffPermissionsRouteImport.update({
@@ -1288,12 +1294,6 @@ const ApiPublicHooksSocialDispatchRoute =
     path: '/api/public/hooks/social-dispatch',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicSocialOauthPlatformCallbackRoute =
-  ApiPublicSocialOauthPlatformCallbackRouteImport.update({
-    id: '/api/public/social-oauth/$platform/callback',
-    path: '/api/public/social-oauth/$platform/callback',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicLicenseActivateRoute =
   ApiPublicLicenseActivateRouteImport.update({
     id: '/api/public/license/activate',
@@ -1350,9 +1350,16 @@ const ApiPublicOgCompetitionSlugRoute =
     path: '/api/public/og/competition/$slug',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSocialOauthPlatformCallbackRoute =
+  ApiPublicSocialOauthPlatformCallbackRouteImport.update({
+    id: '/api/public/social-oauth/$platform/callback',
+    path: '/api/public/social-oauth/$platform/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/$slug': typeof SlugRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
@@ -1402,6 +1409,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bot-events': typeof AdminBotEventsRoute
@@ -1427,7 +1435,6 @@ export interface FileRoutesByFullPath {
   '/admin/email': typeof AdminEmailRoute
   '/admin/error-logs': typeof AdminErrorLogsRoute
   '/admin/export': typeof AdminExportRoute
-  '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
@@ -1465,9 +1472,9 @@ export interface FileRoutesByFullPath {
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/signup-access': typeof AdminSignupAccessRoute
   '/admin/social-automation': typeof AdminSocialAutomationRoute
-  '/admin/social-manual-posts': typeof AdminSocialManualPostsRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
+  '/admin/social-manual-posts': typeof AdminSocialManualPostsRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
@@ -1560,7 +1567,6 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
   '/api/public/hooks/social-dispatch': typeof ApiPublicHooksSocialDispatchRoute
-  '/api/public/social-oauth/$platform/callback': typeof ApiPublicSocialOauthPlatformCallbackRoute
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
@@ -1571,9 +1577,11 @@ export interface FileRoutesByFullPath {
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/community/$slug/chatrooms/': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
+  '/api/public/social-oauth/$platform/callback': typeof ApiPublicSocialOauthPlatformCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/$slug': typeof SlugRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
@@ -1620,6 +1628,7 @@ export interface FileRoutesByTo {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bot-events': typeof AdminBotEventsRoute
@@ -1645,7 +1654,6 @@ export interface FileRoutesByTo {
   '/admin/email': typeof AdminEmailRoute
   '/admin/error-logs': typeof AdminErrorLogsRoute
   '/admin/export': typeof AdminExportRoute
-  '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
@@ -1682,9 +1690,9 @@ export interface FileRoutesByTo {
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/signup-access': typeof AdminSignupAccessRoute
   '/admin/social-automation': typeof AdminSocialAutomationRoute
-  '/admin/social-manual-posts': typeof AdminSocialManualPostsRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
+  '/admin/social-manual-posts': typeof AdminSocialManualPostsRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
@@ -1776,7 +1784,6 @@ export interface FileRoutesByTo {
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
   '/api/public/hooks/social-dispatch': typeof ApiPublicHooksSocialDispatchRoute
-  '/api/public/social-oauth/$platform/callback': typeof ApiPublicSocialOauthPlatformCallbackRoute
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
@@ -1787,11 +1794,13 @@ export interface FileRoutesByTo {
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/community/$slug/chatrooms': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
+  '/api/public/social-oauth/$platform/callback': typeof ApiPublicSocialOauthPlatformCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/$': typeof SplatRoute
   '/$slug': typeof SlugRoute
   '/account': typeof AccountRoute
   '/achievements': typeof AchievementsRoute
@@ -1841,6 +1850,7 @@ export interface FileRoutesById {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
   '/admin/bot-events': typeof AdminBotEventsRoute
@@ -1866,7 +1876,6 @@ export interface FileRoutesById {
   '/admin/email': typeof AdminEmailRoute
   '/admin/error-logs': typeof AdminErrorLogsRoute
   '/admin/export': typeof AdminExportRoute
-  '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/feed-moderation': typeof AdminFeedModerationRoute
   '/admin/feed-themes': typeof AdminFeedThemesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
@@ -1904,9 +1913,9 @@ export interface FileRoutesById {
   '/admin/setup-wizard': typeof AdminSetupWizardRoute
   '/admin/signup-access': typeof AdminSignupAccessRoute
   '/admin/social-automation': typeof AdminSocialAutomationRoute
-  '/admin/social-manual-posts': typeof AdminSocialManualPostsRoute
   '/admin/social-feed': typeof AdminSocialFeedRoute
   '/admin/social-layout': typeof AdminSocialLayoutRoute
+  '/admin/social-manual-posts': typeof AdminSocialManualPostsRoute
   '/admin/staff-permissions': typeof AdminStaffPermissionsRoute
   '/admin/stickers': typeof AdminStickersRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
@@ -1999,7 +2008,6 @@ export interface FileRoutesById {
   '/api/public/hooks/feedbot-summary': typeof ApiPublicHooksFeedbotSummaryRoute
   '/api/public/hooks/license-revalidate': typeof ApiPublicHooksLicenseRevalidateRoute
   '/api/public/hooks/social-dispatch': typeof ApiPublicHooksSocialDispatchRoute
-  '/api/public/social-oauth/$platform/callback': typeof ApiPublicSocialOauthPlatformCallbackRoute
   '/api/public/license/activate': typeof ApiPublicLicenseActivateRoute
   '/api/public/license/check': typeof ApiPublicLicenseCheckRoute
   '/api/public/license/deactivate': typeof ApiPublicLicenseDeactivateRoute
@@ -2010,11 +2018,13 @@ export interface FileRoutesById {
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/community/$slug/chatrooms/': typeof CommunitySlugChatroomsIndexRoute
   '/api/public/og/competition/$slug': typeof ApiPublicOgCompetitionSlugRoute
+  '/api/public/social-oauth/$platform/callback': typeof ApiPublicSocialOauthPlatformCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$'
     | '/$slug'
     | '/account'
     | '/achievements'
@@ -2064,6 +2074,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/avatar-safety'
     | '/admin/backup'
     | '/admin/boobubble'
     | '/admin/bot-events'
@@ -2089,7 +2100,6 @@ export interface FileRouteTypes {
     | '/admin/email'
     | '/admin/error-logs'
     | '/admin/export'
-    | '/admin/avatar-safety'
     | '/admin/feed-moderation'
     | '/admin/feed-themes'
     | '/admin/feedback'
@@ -2127,9 +2137,9 @@ export interface FileRouteTypes {
     | '/admin/setup-wizard'
     | '/admin/signup-access'
     | '/admin/social-automation'
-    | '/admin/social-manual-posts'
     | '/admin/social-feed'
     | '/admin/social-layout'
+    | '/admin/social-manual-posts'
     | '/admin/staff-permissions'
     | '/admin/stickers'
     | '/admin/subscriptions'
@@ -2222,7 +2232,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
     | '/api/public/hooks/social-dispatch'
-    | '/api/public/social-oauth/$platform/callback'
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
@@ -2233,9 +2242,11 @@ export interface FileRouteTypes {
     | '/lovable/email/queue/process'
     | '/community/$slug/chatrooms/'
     | '/api/public/og/competition/$slug'
+    | '/api/public/social-oauth/$platform/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$'
     | '/$slug'
     | '/account'
     | '/achievements'
@@ -2282,6 +2293,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/avatar-safety'
     | '/admin/backup'
     | '/admin/boobubble'
     | '/admin/bot-events'
@@ -2307,7 +2319,6 @@ export interface FileRouteTypes {
     | '/admin/email'
     | '/admin/error-logs'
     | '/admin/export'
-    | '/admin/avatar-safety'
     | '/admin/feed-moderation'
     | '/admin/feed-themes'
     | '/admin/feedback'
@@ -2344,9 +2355,9 @@ export interface FileRouteTypes {
     | '/admin/setup-wizard'
     | '/admin/signup-access'
     | '/admin/social-automation'
-    | '/admin/social-manual-posts'
     | '/admin/social-feed'
     | '/admin/social-layout'
+    | '/admin/social-manual-posts'
     | '/admin/staff-permissions'
     | '/admin/stickers'
     | '/admin/subscriptions'
@@ -2438,7 +2449,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
     | '/api/public/hooks/social-dispatch'
-    | '/api/public/social-oauth/$platform/callback'
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
@@ -2449,10 +2459,12 @@ export interface FileRouteTypes {
     | '/lovable/email/queue/process'
     | '/community/$slug/chatrooms'
     | '/api/public/og/competition/$slug'
+    | '/api/public/social-oauth/$platform/callback'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/$'
     | '/$slug'
     | '/account'
     | '/achievements'
@@ -2502,6 +2514,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/avatar-safety'
     | '/admin/backup'
     | '/admin/boobubble'
     | '/admin/bot-events'
@@ -2527,7 +2540,6 @@ export interface FileRouteTypes {
     | '/admin/email'
     | '/admin/error-logs'
     | '/admin/export'
-    | '/admin/avatar-safety'
     | '/admin/feed-moderation'
     | '/admin/feed-themes'
     | '/admin/feedback'
@@ -2565,9 +2577,9 @@ export interface FileRouteTypes {
     | '/admin/setup-wizard'
     | '/admin/signup-access'
     | '/admin/social-automation'
-    | '/admin/social-manual-posts'
     | '/admin/social-feed'
     | '/admin/social-layout'
+    | '/admin/social-manual-posts'
     | '/admin/staff-permissions'
     | '/admin/stickers'
     | '/admin/subscriptions'
@@ -2660,7 +2672,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/feedbot-summary'
     | '/api/public/hooks/license-revalidate'
     | '/api/public/hooks/social-dispatch'
-    | '/api/public/social-oauth/$platform/callback'
     | '/api/public/license/activate'
     | '/api/public/license/check'
     | '/api/public/license/deactivate'
@@ -2671,11 +2682,13 @@ export interface FileRouteTypes {
     | '/lovable/email/queue/process'
     | '/community/$slug/chatrooms/'
     | '/api/public/og/competition/$slug'
+    | '/api/public/social-oauth/$platform/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  SplatRoute: typeof SplatRoute
   SlugRoute: typeof SlugRoute
   AccountRoute: typeof AccountRoute
   AchievementsRoute: typeof AchievementsRoute
@@ -2752,7 +2765,6 @@ export interface RootRouteChildren {
   ApiPublicHooksFeedbotSummaryRoute: typeof ApiPublicHooksFeedbotSummaryRoute
   ApiPublicHooksLicenseRevalidateRoute: typeof ApiPublicHooksLicenseRevalidateRoute
   ApiPublicHooksSocialDispatchRoute: typeof ApiPublicHooksSocialDispatchRoute
-  ApiPublicSocialOauthPlatformCallbackRoute: typeof ApiPublicSocialOauthPlatformCallbackRoute
   ApiPublicLicenseActivateRoute: typeof ApiPublicLicenseActivateRoute
   ApiPublicLicenseCheckRoute: typeof ApiPublicLicenseCheckRoute
   ApiPublicLicenseDeactivateRoute: typeof ApiPublicLicenseDeactivateRoute
@@ -2760,6 +2772,7 @@ export interface RootRouteChildren {
   ApiPublicLicenseVerifyRoute: typeof ApiPublicLicenseVerifyRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   ApiPublicOgCompetitionSlugRoute: typeof ApiPublicOgCompetitionSlugRoute
+  ApiPublicSocialOauthPlatformCallbackRoute: typeof ApiPublicSocialOauthPlatformCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2769,6 +2782,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$slug': {
@@ -3128,6 +3148,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/avatar-safety': {
+      id: '/admin/avatar-safety'
+      path: '/avatar-safety'
+      fullPath: '/admin/avatar-safety'
+      preLoaderRoute: typeof AdminAvatarSafetyRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/backup': {
       id: '/admin/backup'
       path: '/backup'
@@ -3301,13 +3328,6 @@ declare module '@tanstack/react-router' {
       path: '/export'
       fullPath: '/admin/export'
       preLoaderRoute: typeof AdminExportRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/avatar-safety': {
-      id: '/admin/avatar-safety'
-      path: '/avatar-safety'
-      fullPath: '/admin/avatar-safety'
-      preLoaderRoute: typeof AdminAvatarSafetyRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/feed-moderation': {
@@ -3569,13 +3589,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSocialAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/social-manual-posts': {
-      id: '/admin/social-manual-posts'
-      path: '/social-manual-posts'
-      fullPath: '/admin/social-manual-posts'
-      preLoaderRoute: typeof AdminSocialManualPostsRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/social-feed': {
       id: '/admin/social-feed'
       path: '/social-feed'
@@ -3588,6 +3601,13 @@ declare module '@tanstack/react-router' {
       path: '/social-layout'
       fullPath: '/admin/social-layout'
       preLoaderRoute: typeof AdminSocialLayoutRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/social-manual-posts': {
+      id: '/admin/social-manual-posts'
+      path: '/social-manual-posts'
+      fullPath: '/admin/social-manual-posts'
+      preLoaderRoute: typeof AdminSocialManualPostsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/staff-permissions': {
@@ -4227,13 +4247,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSocialDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/social-oauth/$platform/callback': {
-      id: '/api/public/social-oauth/$platform/callback'
-      path: '/api/public/social-oauth/$platform/callback'
-      fullPath: '/api/public/social-oauth/$platform/callback'
-      preLoaderRoute: typeof ApiPublicSocialOauthPlatformCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/license/activate': {
       id: '/api/public/license/activate'
       path: '/api/public/license/activate'
@@ -4302,6 +4315,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/og/competition/$slug'
       fullPath: '/api/public/og/competition/$slug'
       preLoaderRoute: typeof ApiPublicOgCompetitionSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/social-oauth/$platform/callback': {
+      id: '/api/public/social-oauth/$platform/callback'
+      path: '/api/public/social-oauth/$platform/callback'
+      fullPath: '/api/public/social-oauth/$platform/callback'
+      preLoaderRoute: typeof ApiPublicSocialOauthPlatformCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -4399,6 +4419,7 @@ interface AdminRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminAuthBackgroundRoute: typeof AdminAuthBackgroundRoute
   AdminAutomationRoute: typeof AdminAutomationRoute
+  AdminAvatarSafetyRoute: typeof AdminAvatarSafetyRoute
   AdminBackupRoute: typeof AdminBackupRoute
   AdminBoobubbleRoute: typeof AdminBoobubbleRoute
   AdminBotEventsRoute: typeof AdminBotEventsRoute
@@ -4424,7 +4445,6 @@ interface AdminRouteChildren {
   AdminEmailRoute: typeof AdminEmailRoute
   AdminErrorLogsRoute: typeof AdminErrorLogsRoute
   AdminExportRoute: typeof AdminExportRoute
-  AdminAvatarSafetyRoute: typeof AdminAvatarSafetyRoute
   AdminFeedModerationRoute: typeof AdminFeedModerationRoute
   AdminFeedThemesRoute: typeof AdminFeedThemesRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
@@ -4462,9 +4482,9 @@ interface AdminRouteChildren {
   AdminSetupWizardRoute: typeof AdminSetupWizardRoute
   AdminSignupAccessRoute: typeof AdminSignupAccessRoute
   AdminSocialAutomationRoute: typeof AdminSocialAutomationRoute
-  AdminSocialManualPostsRoute: typeof AdminSocialManualPostsRoute
   AdminSocialFeedRoute: typeof AdminSocialFeedRoute
   AdminSocialLayoutRoute: typeof AdminSocialLayoutRoute
+  AdminSocialManualPostsRoute: typeof AdminSocialManualPostsRoute
   AdminStaffPermissionsRoute: typeof AdminStaffPermissionsRoute
   AdminStickersRoute: typeof AdminStickersRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
@@ -4493,6 +4513,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminAuthBackgroundRoute: AdminAuthBackgroundRoute,
   AdminAutomationRoute: AdminAutomationRoute,
+  AdminAvatarSafetyRoute: AdminAvatarSafetyRoute,
   AdminBackupRoute: AdminBackupRoute,
   AdminBoobubbleRoute: AdminBoobubbleRoute,
   AdminBotEventsRoute: AdminBotEventsRoute,
@@ -4518,7 +4539,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEmailRoute: AdminEmailRoute,
   AdminErrorLogsRoute: AdminErrorLogsRoute,
   AdminExportRoute: AdminExportRoute,
-  AdminAvatarSafetyRoute: AdminAvatarSafetyRoute,
   AdminFeedModerationRoute: AdminFeedModerationRoute,
   AdminFeedThemesRoute: AdminFeedThemesRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
@@ -4556,9 +4576,9 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSetupWizardRoute: AdminSetupWizardRoute,
   AdminSignupAccessRoute: AdminSignupAccessRoute,
   AdminSocialAutomationRoute: AdminSocialAutomationRoute,
-  AdminSocialManualPostsRoute: AdminSocialManualPostsRoute,
   AdminSocialFeedRoute: AdminSocialFeedRoute,
   AdminSocialLayoutRoute: AdminSocialLayoutRoute,
+  AdminSocialManualPostsRoute: AdminSocialManualPostsRoute,
   AdminStaffPermissionsRoute: AdminStaffPermissionsRoute,
   AdminStickersRoute: AdminStickersRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
@@ -4682,6 +4702,7 @@ const GamesRouteWithChildren = GamesRoute._addFileChildren(GamesRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  SplatRoute: SplatRoute,
   SlugRoute: SlugRoute,
   AccountRoute: AccountRoute,
   AchievementsRoute: AchievementsRoute,
@@ -4758,7 +4779,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksFeedbotSummaryRoute: ApiPublicHooksFeedbotSummaryRoute,
   ApiPublicHooksLicenseRevalidateRoute: ApiPublicHooksLicenseRevalidateRoute,
   ApiPublicHooksSocialDispatchRoute: ApiPublicHooksSocialDispatchRoute,
-  ApiPublicSocialOauthPlatformCallbackRoute: ApiPublicSocialOauthPlatformCallbackRoute,
   ApiPublicLicenseActivateRoute: ApiPublicLicenseActivateRoute,
   ApiPublicLicenseCheckRoute: ApiPublicLicenseCheckRoute,
   ApiPublicLicenseDeactivateRoute: ApiPublicLicenseDeactivateRoute,
@@ -4766,7 +4786,19 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLicenseVerifyRoute: ApiPublicLicenseVerifyRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   ApiPublicOgCompetitionSlugRoute: ApiPublicOgCompetitionSlugRoute,
+  ApiPublicSocialOauthPlatformCallbackRoute:
+    ApiPublicSocialOauthPlatformCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
