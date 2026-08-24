@@ -6,6 +6,7 @@ import {
   headFromRouteSeo,
   buildProfileSeoVars,
   loadSeoSiteContext,
+  notFoundSeoHead,
 } from "@/lib/seo";
 
 export const Route = createFileRoute("/u/$username")({
@@ -54,9 +55,22 @@ export const Route = createFileRoute("/u/$username")({
     });
     return { seoData };
   },
-  head: ({ loaderData }) => headFromRouteSeo(loaderData?.seoData),
+  head: ({ loaderData }) =>
+    loaderData?.seoData ? headFromRouteSeo(loaderData.seoData) : notFoundSeoHead(),
+  notFoundComponent: MissingProfileNotFound,
   component: UserProfileRedirect,
 });
+
+function MissingProfileNotFound() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-background px-4 text-foreground">
+      <div className="max-w-md text-center">
+        <h1 className="text-3xl font-bold tracking-tight">Page not found</h1>
+        <p className="mt-2 text-sm text-muted-foreground">This profile is not available.</p>
+      </div>
+    </div>
+  );
+}
 
 function UserProfileRedirect() {
   const { username } = Route.useParams();

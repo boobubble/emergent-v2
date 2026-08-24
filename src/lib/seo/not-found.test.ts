@@ -39,5 +39,6 @@ describe("404 SEO template", () => {
     const profileSrc = readFileSync(resolve(process.cwd(), "src/routes/u.$username.tsx"), "utf8");
     expect(slugSrc).toContain("if (!page) throw notFound()");
     expect(profileSrc).toContain("if (!profile) throw notFound()");
+    expect(profileSrc).toContain("notFoundComponent: MissingProfileNotFound");
   });
 });
