@@ -79,19 +79,37 @@ export function HomepagePage() {
           </div>
           <Row label="Enable landing page" description="Master toggle for the public homepage." checked={values.enabled} onChange={(v) => set("enabled", v)} />
           <Row
-            label="Use demo data on home page"
-            description="When ON the homepage shows the curated demo content below. When OFF it pulls live chatrooms, posts, polls and top members from your community."
+            label="Homepage data mode"
+            description="OFF = REAL production data from Yaarzo. ON = DEMO PREVIEW using the curated sample content below. Live mode never falls back to demo names or posts."
             checked={values.useDemoData}
             onChange={(v) => set("useDemoData", v)}
           />
+          <p className="text-xs text-muted-foreground">
+            {values.useDemoData ? "Current: DEMO PREVIEW" : "Current: REAL"}
+          </p>
         </CardContent>
       </Card>
+
+      {!values.useDemoData && (
+      <Card>
+        <CardContent className="space-y-4 p-5">
+          <div className="text-sm font-semibold">Live section sources</div>
+          <p className="text-xs text-muted-foreground">When REAL mode is on, each toggle pulls that section from Yaarzo. Off hides the section’s cards (empty state) instead of showing demo content.</p>
+          <Row label="Trending Posts — Live" checked={values.trendingPostsUseLive} onChange={(v) => set("trendingPostsUseLive", v)} />
+          <Row label="Discussions — Live" checked={values.discussionsUseLive} onChange={(v) => set("discussionsUseLive", v)} />
+          <Row label="Featured Members — Live" checked={values.featuredMembersUseLive} onChange={(v) => set("featuredMembersUseLive", v)} />
+          <Row label="Recent Confessions — Live" checked={values.recentConfessionsUseLive} onChange={(v) => set("recentConfessionsUseLive", v)} />
+          <Row label="Blog — Live" checked={values.blogPostsUseLive} onChange={(v) => set("blogPostsUseLive", v)} />
+          <Row label="Recent Activity — Live" checked={values.activitiesUseLive} onChange={(v) => set("activitiesUseLive", v)} />
+        </CardContent>
+      </Card>
+      )}
 
       {/* Demo stats */}
       <Card>
         <CardContent className="space-y-3 p-5">
           <div className="text-sm font-semibold">Demo stat values</div>
-          <p className="text-xs text-muted-foreground">Shown on the stat strip in demo mode, and as fallbacks for the messages-sent / games-played counters in live mode.</p>
+          <p className="text-xs text-muted-foreground">Shown on the stat strip in DEMO PREVIEW only. REAL mode uses verified member, online, room, and public post counts. Messages-sent and games-played are hidden in REAL mode because Yaarzo has no verified live counter for them.</p>
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="Members">
               <Input type="number" min={0} value={values.demoStats.members}

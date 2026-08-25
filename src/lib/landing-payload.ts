@@ -29,9 +29,9 @@ export interface LandingPayload {
   stats: LandingStats;
   chatrooms: LandingChatroom[];
   topMembers: LandingTopMember[];
-  feedPost: LandingDemoFeedPost;
-  poll: LandingDemoPoll;
-  confession: LandingDemoConfession;
+  feedPost: LandingDemoFeedPost | null;
+  poll: LandingDemoPoll | null;
+  confession: LandingDemoConfession | null;
   trendingPosts: LandingTrendingPost[];
   discussions: LandingDiscussion[];
   featuredMembers: LandingFeaturedMember[];

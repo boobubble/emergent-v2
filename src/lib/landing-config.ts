@@ -111,7 +111,11 @@ export interface LandingActivity {
 export interface LandingConfig {
   enabled: boolean;
 
-  /** When true the homepage shows admin-curated demo data instead of live community data. */
+  /**
+   * Homepage data mode. `false` (production default) = REAL public Yaarzo data.
+   * `true` = admin DEMO PREVIEW using the curated demo arrays below.
+   * Live mode never falls back to those demo arrays.
+   */
   useDemoData: boolean;
 
   // Hero
@@ -132,7 +136,7 @@ export interface LandingConfig {
   showGameCount: boolean;
   showGrowth: boolean;
   growthLabel: string;
-  /** Demo-mode stat values shown on the stat strip. Real-mode falls back to these when live counts are zero. */
+  /** Demo-mode stat values. Live mode uses verified counts only and does not fall back here. */
   demoStats: LandingDemoStats;
   /** Back-compat aliases — keep so old saved settings continue to work. */
   fallbackMessagesSent: number;
@@ -143,7 +147,7 @@ export interface LandingConfig {
   games: LandingGameCard[];
   missions: LandingMissionCard[];
 
-  // Demo content (also acts as fallback when DB has none)
+  // Demo content used only when `useDemoData` is true (admin preview).
   demoChatrooms: LandingChatroom[];
   demoTopMembers: LandingTopMember[];
   demoFeedPost: LandingDemoFeedPost;
@@ -192,7 +196,7 @@ export interface LandingConfig {
 
 export const LANDING_DEFAULTS: LandingConfig = {
   enabled: true,
-  useDemoData: true,
+  useDemoData: false,
 
   heroEyebrow: "A live social community",
   heroTitle: "Join The Ultimate",
@@ -293,7 +297,7 @@ export const LANDING_DEFAULTS: LandingConfig = {
     { user: "Neha Reddy",    ago: "3 hr ago",   text: "Daily streak: 30 days 🔥 The grind is real!", likes: 389, comments: 54, tag: "#streak" },
     { user: "Vikram Joshi",  ago: "4 hr ago",   text: "Anyone else loving the new emoji effects? 🎉✨", likes: 312, comments: 48, tag: "#feature" },
   ],
-  trendingPostsUseLive: false,
+  trendingPostsUseLive: true,
 
   discussions: [
     { topic: "Best strategies for the new Fish Game?", room: "Gaming Lounge", author: "Karan",  replies: 47,  last: "2 min ago",  hot: true },
@@ -302,7 +306,7 @@ export const LANDING_DEFAULTS: LandingConfig = {
     { topic: "Drop your favorite playlist below 🎵",   room: "Music Room",    author: "Tanya",  replies: 124, last: "2 hr ago" },
     { topic: "Coding bootcamp — share your roadmap!",  room: "College Chat",  author: "Riya",   replies: 56,  last: "3 hr ago" },
   ],
-  discussionsUseLive: false,
+  discussionsUseLive: true,
 
   featuredMembers: [
     { name: "Aanya Sharma", role: "Top Creator",    xp: 4820, badges: "👑 🔥 🏆", gradient: "from-purple-500/30 to-pink-500/20" },
@@ -310,7 +314,7 @@ export const LANDING_DEFAULTS: LandingConfig = {
     { name: "Meera Nair",   role: "Game Champion",  xp: 3890, badges: "🎮 🏆 🔥", gradient: "from-amber-500/30 to-orange-500/20" },
     { name: "Yash Patel",   role: "Streak Master",  xp: 3650, badges: "🔥 ⚡ 🌟", gradient: "from-emerald-500/30 to-teal-500/20" },
   ],
-  featuredMembersUseLive: false,
+  featuredMembersUseLive: true,
 
   recentConfessions: [
     { alias: "Kitten #07",    emoji: "🐱", ago: "8 min ago",  text: "That cute boy from the Mumbai chat asked for my number… I'm not okay 😳💕", reacts: 482 },
@@ -320,14 +324,14 @@ export const LANDING_DEFAULTS: LandingConfig = {
     { alias: "Panda #23",     emoji: "🐼", ago: "2 hr ago",   text: "He called me 'cutie' in the lobby and I screamed into my pillow 🥹🔥", reacts: 412 },
     { alias: "Cherry #88",    emoji: "🍒", ago: "3 hr ago",   text: "Voice room with him last night >>> any date I've ever been on 🎙️💋", reacts: 634 },
   ],
-  recentConfessionsUseLive: false,
+  recentConfessionsUseLive: true,
 
   blogPosts: [
     { tag: "Guide",     read: "5 min read", title: "How to Build a 100-Day Streak Without Burning Out", excerpt: "Practical habits and tools our top members use to stay consistent every single day.", author: "Editorial Team", date: "Jun 2",  gradient: "from-purple-600/40 to-blue-600/30",  emoji: "🔥", href: "/blog" },
     { tag: "Spotlight", read: "8 min read", title: "Meet the Mods: The People Behind Our Best Chatrooms", excerpt: "An inside look at the volunteers keeping our community safe, fun, and welcoming.",     author: "Sneha Iyer",    date: "May 30", gradient: "from-pink-600/40 to-amber-600/30",   emoji: "🛡️", href: "/blog" },
     { tag: "Update",    read: "3 min read", title: "What's New This Month: Voice Rooms, Emoji Effects & More",      excerpt: "A full roundup of the features we shipped in May plus a sneak peek at what's coming next.",        author: "Product Team",  date: "May 28", gradient: "from-emerald-600/40 to-teal-600/30", emoji: "🚀", href: "/blog" },
   ],
-  blogPostsUseLive: false,
+  blogPostsUseLive: true,
 
   activities: [
     { who: "Amit",  action: "joined",            target: "India Chat",       ago: "just now", emoji: "💬", tint: "from-blue-500/30 to-cyan-500/20",     accent: "text-cyan-200",    href: "/" },
@@ -339,7 +343,7 @@ export const LANDING_DEFAULTS: LandingConfig = {
     { who: "Yash",  action: "created room",      target: "Late Night Vibes", ago: "25m ago",  emoji: "🌙", tint: "from-indigo-500/30 to-violet-500/20", accent: "text-indigo-200",  href: "/" },
     { who: "Riya",  action: "leveled up to",     target: "Level 12",         ago: "32m ago",  emoji: "⭐", tint: "from-yellow-500/30 to-amber-500/20",  accent: "text-yellow-200",  href: "/leaderboard" },
   ],
-  activitiesUseLive: false,
+  activitiesUseLive: true,
 
 
   referralHeadline: "Invite Friends & Earn",

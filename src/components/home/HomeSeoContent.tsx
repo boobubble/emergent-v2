@@ -57,8 +57,23 @@ const NAV_LINKS = [
   { label: "Poetry", href: "/poetry" },
 ] as const;
 
+function EmptyHint({ children, href, cta }: { children: string; href: string; cta: string }) {
+  return (
+    <div className="mt-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-6 text-center">
+      <p className="text-sm text-white/65">{children}</p>
+      <a
+        href={href}
+        className="mt-3 inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-bold text-purple-200 hover:bg-white/[0.08]"
+      >
+        {cta}
+      </a>
+    </div>
+  );
+}
+
 export type HomeSeoContentProps = {
   cfg?: LandingConfig;
+  source?: LandingPayload["source"];
   stats?: LandingStats;
   chatrooms?: LandingPayload["chatrooms"];
   topMembers?: LandingPayload["topMembers"];
@@ -70,6 +85,7 @@ export type HomeSeoContentProps = {
   featuredMembers?: LandingPayload["featuredMembers"];
   recentConfessions?: LandingPayload["recentConfessions"];
   blogPosts?: LandingPayload["blogPosts"];
+  activities?: LandingPayload["activities"];
   theme?: "dark" | "light";
   menuOpen?: boolean;
   pollChoice?: number | null;
@@ -87,6 +103,7 @@ export type HomeSeoContentProps = {
  */
 export function HomeSeoContent({
   cfg = LANDING_DEFAULTS,
+  source,
   stats,
   chatrooms,
   topMembers,
@@ -98,6 +115,7 @@ export function HomeSeoContent({
   featuredMembers,
   recentConfessions,
   blogPosts,
+  activities,
   theme = "dark",
   menuOpen = false,
   pollChoice = null,
@@ -109,25 +127,24 @@ export function HomeSeoContent({
   poetryExtra,
 }: HomeSeoContentProps) {
   const brand = usePublicDisplayName();
-  const resolvedStats: LandingStats = stats ?? {
-    members: cfg.demoStats.members,
-    online: cfg.demoStats.online,
-    activeRooms: cfg.demoStats.activeRooms,
-    messagesSent: cfg.demoStats.messagesSent,
-    feedPosts: cfg.demoStats.feedPosts,
-    gamesPlayed: cfg.demoStats.gamesPlayed,
-  };
-  const rooms = chatrooms ?? cfg.demoChatrooms;
-  const members = topMembers ?? cfg.demoTopMembers;
-  const post = feedPost ?? cfg.demoFeedPost;
-  const pollData = poll ?? cfg.demoPoll;
-  const confessionData = confession ?? cfg.demoConfession;
-  const trending = trendingPosts ?? cfg.trendingPosts;
-  const discussionItems = discussions ?? cfg.discussions;
-  const featured = featuredMembers ?? cfg.featuredMembers;
-  const confessions = recentConfessions ?? cfg.recentConfessions;
-  const blogs = blogPosts ?? cfg.blogPosts;
-  const pollTotal = pollData.options.reduce((s, o) => s + (o.votes || 0), 0) || 1;
+  const isDemo = (source ?? (cfg.useDemoData ? "demo" : "live")) === "demo";
+  const resolvedStats = stats ?? (isDemo
+    ? { ...cfg.demoStats }
+    : { members: 0, online: 0, activeRooms: 0, messagesSent: 0, feedPosts: 0, gamesPlayed: 0 });
+  const rooms = chatrooms ?? (isDemo ? cfg.demoChatrooms : []);
+  const members = topMembers ?? (isDemo ? cfg.demoTopMembers : []);
+  const post = feedPost !== undefined ? feedPost : isDemo ? cfg.demoFeedPost : null;
+  const pollData = poll !== undefined ? poll : isDemo ? cfg.demoPoll : null;
+  const confessionData = confession !== undefined ? confession : isDemo ? cfg.demoConfession : null;
+  const trending = trendingPosts ?? (isDemo ? cfg.trendingPosts : []);
+  const discussionItems = discussions ?? (isDemo ? cfg.discussions : []);
+  const featured = featuredMembers ?? (isDemo ? cfg.featuredMembers : []);
+  const confessions = recentConfessions ?? (isDemo ? cfg.recentConfessions : []);
+  const blogs = blogPosts ?? (isDemo ? cfg.blogPosts : []);
+  const activityItems = activities ?? (isDemo ? cfg.activities : []);
+  const pollTotal = pollData?.options.reduce((s, o) => s + (o.votes || 0), 0) || 1;
+  const heroFaces = (isDemo ? ["Amit", "Pooja", "Rahul", "Neha"] : members.map((m) => m.username)).slice(0, 4);
+  while (heroFaces.length < 4) heroFaces.push("Y");
 
   return (
     <div
@@ -273,8 +290,8 @@ export function HomeSeoContent({
 
               <div className="mt-6 flex items-center gap-3">
                 <div className="flex -space-x-2">
-                  {["Amit", "Pooja", "Rahul", "Neha"].map((n) => (
-                    <PillAvatar key={n} name={n} size={32} />
+                  {heroFaces.map((n, i) => (
+                    <PillAvatar key={`${n}-${i}`} name={n} size={32} />
                   ))}
                 </div>
                 <span className="text-xs text-white/65 sm:text-sm">{cfg.heroSocialProof}</span>
@@ -298,11 +315,11 @@ export function HomeSeoContent({
                 <StatCell icon={Users} tint="#a78bfa" label="Members" value={fmtCount(resolvedStats.members)} />
                 <StatCell icon={Activity} tint="#34d399" label="Online Now" value={fmtCount(resolvedStats.online)} pulse />
                 <StatCell icon={MessageCircle} tint="#60a5fa" label="Active Chatrooms" value={fmtCount(resolvedStats.activeRooms)} />
-                {cfg.showMessageCount && (
+                {cfg.showMessageCount && isDemo && (
                   <StatCell icon={MessageSquare} tint="#22d3ee" label="Messages Sent" value={fmtCount(resolvedStats.messagesSent)} />
                 )}
                 <StatCell icon={Newspaper} tint="#f472b6" label="Feed Posts" value={fmtCount(resolvedStats.feedPosts)} />
-                {cfg.showGameCount && (
+                {cfg.showGameCount && isDemo && (
                   <StatCell icon={Gamepad2} tint="#fbbf24" label="Games Played" value={fmtCount(resolvedStats.gamesPlayed)} />
                 )}
               </div>
@@ -371,7 +388,7 @@ export function HomeSeoContent({
         <Discussions items={discussionItems} />
         <FeaturedMembers members={featured} />
         <RecentConfessions items={confessions} />
-        <CommunityActivity />
+        <CommunityActivity items={activityItems} />
         <CommunityBlog posts={blogs} />
 
         <ExploreCta onSignup={onSignup} />
@@ -454,17 +471,17 @@ function HeroPreview() {
             <div className="mb-3 flex items-center gap-2">
               <span className="grid h-7 w-7 place-items-center rounded-lg text-sm" style={{ background: "linear-gradient(135deg,#f59e0b,#dc2626)" }}>🇮🇳</span>
               <div>
-                <div className="text-[11px] font-bold text-white">India Chat</div>
-                <div className="text-[9px] text-white/50">128 online</div>
+                <div className="text-[11px] font-bold text-white">Live Chat</div>
+                <div className="text-[9px] text-white/50">Online now</div>
               </div>
             </div>
             <div className="space-y-2">
               {[
-                { n: "Amit Sharma", t: "Hello everyone! 👋", ts: "10:30" },
-                { n: "Pooja Singh", t: "Good morning all ☀️", ts: "10:31" },
-                { n: "Rahul Verma", t: "Anyone up for a game?", ts: "10:32" },
-                { n: "Neha Patel", t: "Hey! How's it going?", ts: "10:33" },
-                { n: "Vikram", t: "Let's play Ludo! 🎲", ts: "10:34" },
+                { n: "Member", t: "Hello everyone! 👋", ts: "10:30" },
+                { n: "Friend", t: "Good morning all ☀️", ts: "10:31" },
+                { n: "Guest", t: "Anyone up for a game?", ts: "10:32" },
+                { n: "You", t: "Hey! How's it going?", ts: "10:33" },
+                { n: "Chat", t: "Let's play Ludo! 🎲", ts: "10:34" },
               ].map((m, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <PillAvatar name={m.n} size={22} />
@@ -484,9 +501,9 @@ function HeroPreview() {
             </div>
           </div>
           <div className="p-2.5">
-            <div className="mb-2 text-[9px] font-bold uppercase tracking-wider text-white/50">Online · 128</div>
+            <div className="mb-2 text-[9px] font-bold uppercase tracking-wider text-white/50">Online</div>
             <div className="space-y-1.5">
-              {["Amit Sharma", "Pooja Singh", "Rahul Verma", "Neha Patel", "Vikram", "Aditya", "Kavya"].map((n) => (
+              {["Member", "Friend", "Guest", "You", "Chat", "Room", "Live"].map((n) => (
                 <div key={n} className="flex items-center gap-1.5">
                   <PillAvatar name={n} size={16} />
                   <span className="truncate text-[9px] text-white/70">{n.split(" ")[0]}</span>
@@ -507,8 +524,8 @@ function HeroPreview() {
               <span>📶 📡 🔋</span>
             </div>
             <div className="mt-2 flex items-center gap-1.5">
-              <PillAvatar name="Tara" size={20} />
-              <div className="text-[9px] font-bold text-white">Tara Sparks</div>
+              <PillAvatar name="You" size={20} />
+              <div className="text-[9px] font-bold text-white">You</div>
             </div>
             <div className="mt-1.5 rounded-lg bg-white/[0.05] p-1.5 text-[8px] text-white/70">Going strong! 🚀</div>
             <div className="mt-2 grid grid-cols-4 gap-1">
@@ -646,6 +663,7 @@ function LiveCommunity({
         <div className="space-y-4">
           <WelcomeCard className="p-5">
             <SectionTitle icon="🔥" title="Trending Chatrooms" href="/chatroom" />
+            {rooms.length ? (
             <div className="mt-3 space-y-2.5">
               {rooms.slice(0, 5).map((r, i) => {
                 const thumbs = [
@@ -673,10 +691,16 @@ function LiveCommunity({
                 );
               })}
             </div>
+            ) : (
+              <EmptyHint href="/chatroom" cta="Open chatrooms">
+                Rooms are opening up — jump in and say hello.
+              </EmptyHint>
+            )}
           </WelcomeCard>
 
           <WelcomeCard className="p-5">
             <SectionTitle icon="🏆" title="Top Members" suffix="(This Week)" href="/leaderboard" />
+            {members.length ? (
             <div className="mt-3 space-y-2">
               {members.slice(0, 3).map((u, i) => (
                 <div key={u.username} className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-2.5">
@@ -702,6 +726,11 @@ function LiveCommunity({
                 </div>
               ))}
             </div>
+            ) : (
+              <EmptyHint href="/" cta="Join Free">
+                Be one of the first members to join.
+              </EmptyHint>
+            )}
             <a
               href="/leaderboard"
               className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-white/85 hover:bg-white/[0.06]"
@@ -714,6 +743,7 @@ function LiveCommunity({
         <div className="space-y-4">
           <WelcomeCard className="p-5">
             <SectionTitle icon="📝" title="Latest Feed" href="/feed" />
+            {post ? (
             <article className="mt-3 rounded-xl bg-white/[0.03] p-3">
               <header className="flex items-center gap-2.5">
                 <PillAvatar name={post.username} size={36} />
@@ -728,7 +758,13 @@ function LiveCommunity({
                 <span className="inline-flex items-center gap-1"><MessageSquare className="h-3.5 w-3.5" /> {post.comments}</span>
               </footer>
             </article>
+            ) : (
+              <EmptyHint href="/feed" cta="Open the feed">
+                No public posts yet — start the conversation.
+              </EmptyHint>
+            )}
 
+            {pollData ? (
             <div className="mt-3 rounded-xl bg-white/[0.03] p-3">
               <div className="flex items-center gap-2 text-[11px] text-white/55">
                 <span className="grid h-7 w-7 place-items-center rounded-lg bg-blue-500/20 text-base">📊</span>
@@ -765,11 +801,17 @@ function LiveCommunity({
                 })}
               </div>
               <div className="mt-2.5 flex items-center justify-between text-[10px] text-white/50">
-                <span>{pollTotal} votes · {pollData.daysLeft} days left</span>
+                <span>{pollTotal} votes{pollData.daysLeft > 0 ? ` · ${pollData.daysLeft} days left` : ""}</span>
                 <a href="/feed" className="rounded-md bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-white/15">Vote Now</a>
               </div>
             </div>
+            ) : (
+              <EmptyHint href="/feed" cta="Share a poll">
+                No public polls yet — ask the community something.
+              </EmptyHint>
+            )}
 
+            {confessionData ? (
             <div className="mt-3 rounded-xl bg-white/[0.03] p-3">
               <header className="flex items-center gap-2.5">
                 <span className="grid h-9 w-9 place-items-center rounded-full text-lg" style={{ background: "linear-gradient(135deg,#ec4899,#8b5cf6)" }}>
@@ -782,6 +824,11 @@ function LiveCommunity({
               </header>
               <p className="mt-2 text-[13px] leading-snug text-white/85">{confessionData.text}</p>
             </div>
+            ) : (
+              <EmptyHint href="/confessions" cta="Read confessions">
+                New stories will appear here.
+              </EmptyHint>
+            )}
           </WelcomeCard>
         </div>
 
@@ -845,6 +892,7 @@ function TrendingPosts({ posts }: { posts: LandingPayload["trendingPosts"] }) {
     <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
       <WelcomeCard className="p-5 sm:p-6">
         <SectionTitle icon="🔥" title="Trending Posts" suffix="(Hot right now)" href="/feed" />
+        {posts.length ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((p, i) => (
             <article key={i} className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
@@ -864,6 +912,11 @@ function TrendingPosts({ posts }: { posts: LandingPayload["trendingPosts"] }) {
             </article>
           ))}
         </div>
+        ) : (
+          <EmptyHint href="/feed" cta="Share a post">
+            No public posts yet — start the conversation.
+          </EmptyHint>
+        )}
       </WelcomeCard>
     </section>
   );
@@ -891,9 +944,10 @@ function Discussions({ items }: { items: LandingPayload["discussions"] }) {
     <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
       <WelcomeCard className="p-5 sm:p-6">
         <SectionTitle icon="💬" title="Latest Public Discussions" href="/chatroom" />
+        {items.length ? (
         <div className="mt-4 divide-y divide-white/[0.05]">
           {items.map((d, i) => (
-            <a key={i} href="/feedback" className="flex items-center gap-3 py-3 transition-colors hover:bg-white/[0.02] sm:gap-4">
+            <a key={i} href="/feed" className="flex items-center gap-3 py-3 transition-colors hover:bg-white/[0.02] sm:gap-4">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-base ring-1 ring-white/10">💬</div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-white/90">{d.topic}</p>
@@ -904,6 +958,11 @@ function Discussions({ items }: { items: LandingPayload["discussions"] }) {
             </a>
           ))}
         </div>
+        ) : (
+          <EmptyHint href="/feed" cta="Start a discussion">
+            No public posts yet — start the conversation.
+          </EmptyHint>
+        )}
       </WelcomeCard>
     </section>
   );
@@ -914,6 +973,7 @@ function FeaturedMembers({ members }: { members: LandingPayload["featuredMembers
     <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
       <WelcomeCard className="p-5 sm:p-6">
         <SectionTitle icon="⭐" title="Featured Members" suffix="(Stars of the week)" href="/leaderboard" />
+        {members.length ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {members.map((m) => (
             <div key={m.name} className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${m.gradient} p-4 ring-1 ring-white/10`}>
@@ -931,6 +991,11 @@ function FeaturedMembers({ members }: { members: LandingPayload["featuredMembers
             </div>
           ))}
         </div>
+        ) : (
+          <EmptyHint href="/" cta="Join Free">
+            Be one of the first members to join.
+          </EmptyHint>
+        )}
       </WelcomeCard>
     </section>
   );
@@ -941,6 +1006,7 @@ function RecentConfessions({ items }: { items: LandingPayload["recentConfessions
     <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
       <WelcomeCard className="p-5 sm:p-6">
         <SectionTitle icon="🤫" title="Recent Confessions" suffix="(Anonymous)" href="/confessions" />
+        {items.length ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((c, i) => (
             <div key={i} className="relative overflow-hidden rounded-xl border border-white/[0.07] bg-gradient-to-br from-pink-500/[0.08] via-purple-500/[0.05] to-transparent p-4">
@@ -961,24 +1027,22 @@ function RecentConfessions({ items }: { items: LandingPayload["recentConfessions
             </div>
           ))}
         </div>
+        ) : (
+          <EmptyHint href="/confessions" cta="Share a confession">
+            New stories will appear here.
+          </EmptyHint>
+        )}
       </WelcomeCard>
     </section>
   );
 }
 
-function CommunityActivity() {
-  const items = [
-    { who: "Amit", action: "joined", target: "India Chat", ago: "just now", emoji: "💬", href: "/india-chat-room" },
-    { who: "Pooja", action: "earned", target: "Gold Badge", ago: "2m ago", emoji: "🏆", href: "/achievements" },
-    { who: "Rahul", action: "posted", target: "a new discussion", ago: "5m ago", emoji: "📝", href: "/feed" },
-    { who: "Kabir", action: "won", target: "a Ludo match", ago: "12m ago", emoji: "🎲", href: "/games" },
-    { who: "Yash", action: "created room", target: "Late Night Vibes", ago: "25m ago", emoji: "🌙", href: "/chatroom" },
-    { who: "Riya", action: "leveled up to", target: "Level 12", ago: "32m ago", emoji: "⭐", href: "/leaderboard" },
-  ];
+function CommunityActivity({ items }: { items: LandingPayload["activities"] }) {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
       <WelcomeCard className="p-5 sm:p-6">
         <SectionTitle icon="⚡" title="Latest Community Activity" suffix="(Live feed)" href="/feed" />
+        {items.length ? (
         <ul className="mt-4 divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-white/[0.02]">
           {items.map((a, i) => (
             <li key={i} className="flex items-center gap-3 px-3 py-3 sm:px-4">
@@ -988,12 +1052,17 @@ function CommunityActivity() {
               <div className="min-w-0 flex-1 text-sm leading-snug text-white/85">
                 <span className="font-bold text-white">{a.who}</span>{" "}
                 <span className="text-white/65">{a.action}</span>{" "}
-                <a href={a.href} className="font-semibold text-purple-200 hover:underline">{a.target}</a>
+                <a href={a.href || "/feed"} className="font-semibold text-purple-200 hover:underline">{a.target}</a>
               </div>
               <span className="shrink-0 text-[11px] font-medium text-white/45">{a.ago}</span>
             </li>
           ))}
         </ul>
+        ) : (
+          <EmptyHint href="/" cta="Join Free">
+            Be one of the first members to join.
+          </EmptyHint>
+        )}
       </WelcomeCard>
     </section>
   );
@@ -1003,23 +1072,29 @@ function CommunityBlog({ posts }: { posts: LandingPayload["blogPosts"] }) {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
       <WelcomeCard className="p-5 sm:p-6">
-        <SectionTitle icon="📰" title="Community Blog" suffix="(Stories & guides)" href="/pages" />
+        <SectionTitle icon="📰" title="Community Blog" suffix="(Stories & guides)" href="/blog" />
+        {posts.length ? (
         <div className="mt-4 grid gap-4 lg:grid-cols-3">
           {posts.map((b, i) => (
-            <article key={i} className="overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.02]">
+            <article key={b.href || i} className="overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.02]">
               <div className={`relative h-32 bg-gradient-to-br ${b.gradient}`}>
                 <div className="absolute inset-0 grid place-items-center text-5xl opacity-90">{b.emoji}</div>
               </div>
               <div className="p-4">
                 <h3 className="text-base font-black leading-snug text-white">{b.title}</h3>
                 <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-white/65">{b.excerpt}</p>
-                <a href="/pages" className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-purple-300 hover:text-purple-200">
+                <a href={b.href || "/blog"} className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-purple-300 hover:text-purple-200">
                   Read <ArrowRight className="h-3 w-3" />
                 </a>
               </div>
             </article>
           ))}
         </div>
+        ) : (
+          <EmptyHint href="/blog" cta="Visit the blog">
+            New stories will appear here.
+          </EmptyHint>
+        )}
       </WelcomeCard>
     </section>
   );

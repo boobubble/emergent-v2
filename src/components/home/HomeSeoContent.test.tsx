@@ -57,6 +57,16 @@ describe("HomeSeoContent SSR", () => {
     expect(html).not.toContain('href="/welcome"');
   });
 
+  it("does not emit demo identities or fake live counts on the default SSR homepage", () => {
+    expect(html).not.toContain("Amit Sharma");
+    expect(html).not.toContain("Priya Kapoor");
+    expect(html).not.toContain("Rohan Mehta");
+    expect(html).not.toContain("Tara Sparks");
+    expect(html).toContain("No public posts yet");
+    expect(html).toContain("New stories will appear here");
+    expect(html).toContain('href="/blog"');
+  });
+
   it("renders the welcome visual shell in initial HTML", () => {
     expect(html).toContain("welcome-root");
     expect(html).toContain("hero-dark-preview");

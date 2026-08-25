@@ -3,7 +3,8 @@ import type { AuthPopup } from "@/components/auth/AuthScreen";
 import { HomeSeoContent } from "@/components/home/HomeSeoContent";
 import { WelcomeCard, SectionTitle } from "@/components/home/welcome-primitives";
 import { LANDING_DEFAULTS, type LandingConfig } from "@/lib/landing-config";
-import type { LandingPayload, LandingStats } from "@/lib/landing-payload";
+import { resolveLandingView } from "@/lib/landing-live";
+import type { LandingPayload } from "@/lib/landing-payload";
 
 const MehfilTrendingWidget = lazy(() =>
   import("@/components/feed/MehfilTrendingWidget").then((m) => ({
@@ -34,7 +35,8 @@ function PoetryWidgetIsland() {
 
 /**
  * Client shell around the SSR homepage: theme, live landing data, auth dialogs.
- * First paint still uses LANDING_DEFAULTS so crawlers never wait on fetch.
+ * First paint uses LANDING_DEFAULTS SEO chrome with empty live collections so
+ * crawlers never wait on fetch and never see demo identities in production.
  */
 export function HomeGuestShell() {
   const [data, setData] = useState<LandingPayload | null>(null);
@@ -76,30 +78,25 @@ export function HomeGuestShell() {
   };
 
   const cfg: LandingConfig = data?.config ?? LANDING_DEFAULTS;
-  const stats: LandingStats = data?.stats ?? {
-    members: cfg.demoStats.members,
-    online: cfg.demoStats.online,
-    activeRooms: cfg.demoStats.activeRooms,
-    messagesSent: cfg.demoStats.messagesSent,
-    feedPosts: cfg.demoStats.feedPosts,
-    gamesPlayed: cfg.demoStats.gamesPlayed,
-  };
+  const view = resolveLandingView(cfg, data);
 
   return (
     <>
       <HomeSeoContent
         cfg={cfg}
-        stats={stats}
-        chatrooms={data?.chatrooms ?? cfg.demoChatrooms}
-        topMembers={data?.topMembers ?? cfg.demoTopMembers}
-        feedPost={data?.feedPost ?? cfg.demoFeedPost}
-        poll={data?.poll ?? cfg.demoPoll}
-        confession={data?.confession ?? cfg.demoConfession}
-        trendingPosts={data?.trendingPosts ?? cfg.trendingPosts}
-        discussions={data?.discussions ?? cfg.discussions}
-        featuredMembers={data?.featuredMembers ?? cfg.featuredMembers}
-        recentConfessions={data?.recentConfessions ?? cfg.recentConfessions}
-        blogPosts={data?.blogPosts ?? cfg.blogPosts}
+        source={view.source}
+        stats={view.stats}
+        chatrooms={view.chatrooms}
+        topMembers={view.topMembers}
+        feedPost={view.feedPost}
+        poll={view.poll}
+        confession={view.confession}
+        trendingPosts={view.trendingPosts}
+        discussions={view.discussions}
+        featuredMembers={view.featuredMembers}
+        recentConfessions={view.recentConfessions}
+        blogPosts={view.blogPosts}
+        activities={view.activities}
         theme={theme}
         menuOpen={menuOpen}
         pollChoice={pollChoice}
