@@ -382,7 +382,7 @@ export const LANDING_DEFAULTS: LandingConfig = {
       ],
     },
   ],
-  copyrightOwner: "ChitChat",
+  copyrightOwner: "",
 
   seoTitle: "ChitChat — Join the Active Community",
   seoDescription:

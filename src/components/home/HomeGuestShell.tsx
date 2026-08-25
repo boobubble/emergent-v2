@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import type { AuthPopup } from "@/components/auth/AuthScreen";
-import { CmsFooterLinks } from "@/components/CmsFooterLinks";
 import { HomeSeoContent } from "@/components/home/HomeSeoContent";
 import { WelcomeCard, SectionTitle } from "@/components/home/welcome-primitives";
 import { LANDING_DEFAULTS, type LandingConfig } from "@/lib/landing-config";
@@ -119,7 +118,6 @@ export function HomeGuestShell() {
         onLogin={() => openAuth("signin")}
         onSignup={() => openAuth("signup")}
         onPollChoice={setPollChoice}
-        footerExtra={<CmsFooterLinks />}
         poetryExtra={<PoetryWidgetIsland />}
       />
       {authMounted && (

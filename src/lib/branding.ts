@@ -160,3 +160,55 @@ export function useBrand(): WhiteLabelBrand {
     [raw?.branding, raw?.whitelabel, raw?.general],
   );
 }
+
+const LEGACY_PLACEHOLDER_BRANDS = new Set([
+  "boobubble",
+  "boo bubble",
+  "chitchat",
+  "community",
+  "palrgo",
+  "lovable",
+]);
+
+export function isLegacyPlaceholderBrand(value: string | undefined | null): boolean {
+  const normalized = value?.trim().toLowerCase() ?? "";
+  return !normalized || LEGACY_PLACEHOLDER_BRANDS.has(normalized);
+}
+
+/**
+ * Public chrome name (header/footer). Prefers admin branding text and
+ * `general.site_name`, never leftover white-label placeholders like BooBubble.
+ */
+export function resolvePublicDisplayName(input: {
+  logoText?: string | null;
+  siteName?: string | null;
+  brandName?: string | null;
+  copyrightOwner?: string | null;
+}): string {
+  const siteShort = input.siteName?.split(/[–—]/)[0]?.trim() ?? "";
+  const candidates = [
+    input.logoText,
+    siteShort,
+    input.brandName,
+    input.siteName,
+    input.copyrightOwner,
+  ];
+  for (const candidate of candidates) {
+    const value = candidate?.trim();
+    if (value && !isLegacyPlaceholderBrand(value)) return value;
+  }
+  return "Yaarzo";
+}
+
+export function usePublicDisplayName(): string {
+  const brand = useBrand();
+  return useMemo(
+    () =>
+      resolvePublicDisplayName({
+        logoText: brand.raw?.texts?.logo,
+        siteName: brand.name,
+        brandName: brand.shortName,
+      }),
+    [brand],
+  );
+}

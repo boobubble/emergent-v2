@@ -12,6 +12,7 @@ import type {
   LandingTopMember,
   LandingTrendingPost,
 } from "@/lib/landing-config";
+import { resolvePublicDisplayName } from "@/lib/branding";
 
 export interface LandingStats {
   members: number;
@@ -47,7 +48,5 @@ export const fmtCount = (n: number) =>
       : n.toLocaleString();
 
 export function brandNameFromConfig(cfg: LandingConfig): string {
-  const owner = cfg.copyrightOwner?.trim();
-  if (owner && owner.toLowerCase() !== "chitchat") return owner;
-  return "Yaarzo";
+  return resolvePublicDisplayName({ copyrightOwner: cfg.copyrightOwner });
 }

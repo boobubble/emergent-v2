@@ -124,9 +124,17 @@ describe("public footer component", () => {
   });
 
   it("is integrated in the homepage footer", () => {
-    const home = read("components/home/HomeGuestShell.tsx");
-    expect(home).toContain("CmsFooterLinks");
+    const home = read("components/home/HomeSeoContent.tsx");
+    expect(home).toContain("HomeFooter");
+    expect(home).not.toContain("footerColumns.map");
     expect(home).not.toContain("StaticFooterColumns");
+  });
+
+  it("is integrated in the homepage guest footer", () => {
+    const footer = read("components/home/HomeFooter.tsx");
+    expect(footer).toContain("CmsFooterLinks");
+    expect(footer).toContain("HOME_EXPLORE_LINKS");
+    expect(footer).not.toContain("footerColumns.map");
   });
 
   it("is integrated in landing footer", () => {

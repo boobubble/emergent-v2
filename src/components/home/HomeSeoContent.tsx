@@ -8,7 +8,6 @@ import {
   Gamepad2,
   Gift,
   Heart,
-  Instagram,
   Menu,
   MessageCircle,
   MessageSquare,
@@ -17,14 +16,14 @@ import {
   Rocket,
   Star,
   Sun,
-  Twitter,
   Users,
   X,
-  Youtube,
 } from "lucide-react";
+import { HomeFooter } from "@/components/home/HomeFooter";
 import { HOME_SEO_H1 } from "@/lib/seo/home-page";
 import { LANDING_DEFAULTS, type LandingConfig } from "@/lib/landing-config";
 import { WELCOME_THEME_CSS } from "@/components/home/welcome-theme-css";
+import { usePublicDisplayName } from "@/lib/branding";
 import {
   PillAvatar,
   SectionTitle,
@@ -32,7 +31,6 @@ import {
   WelcomeCard,
 } from "@/components/home/welcome-primitives";
 import {
-  brandNameFromConfig,
   fmtCount,
   type LandingPayload,
   type LandingStats,
@@ -80,7 +78,6 @@ export type HomeSeoContentProps = {
   onLogin?: () => void;
   onSignup?: () => void;
   onPollChoice?: (index: number) => void;
-  footerExtra?: React.ReactNode;
   poetryExtra?: React.ReactNode;
 };
 
@@ -109,10 +106,9 @@ export function HomeSeoContent({
   onLogin,
   onSignup,
   onPollChoice,
-  footerExtra,
   poetryExtra,
 }: HomeSeoContentProps) {
-  const brand = brandNameFromConfig(cfg);
+  const brand = usePublicDisplayName();
   const resolvedStats: LandingStats = stats ?? {
     members: cfg.demoStats.members,
     online: cfg.demoStats.online,
@@ -132,7 +128,6 @@ export function HomeSeoContent({
   const confessions = recentConfessions ?? cfg.recentConfessions;
   const blogs = blogPosts ?? cfg.blogPosts;
   const pollTotal = pollData.options.reduce((s, o) => s + (o.votes || 0), 0) || 1;
-  const year = new Date().getFullYear();
 
   return (
     <div
@@ -431,67 +426,7 @@ export function HomeSeoContent({
         </section>
       </main>
 
-      <footer className="border-t border-white/5 bg-[#06060f]">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-[1.5fr_repeat(5,1fr)]">
-            <div>
-              <div className="flex items-center gap-2.5">
-                <span className="grid h-9 w-9 place-items-center rounded-xl text-base" style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>💬</span>
-                <span className="text-base font-extrabold">{brand}</span>
-              </div>
-              <p className="mt-3 max-w-xs text-sm text-white/55">{cfg.brandTagline}</p>
-            </div>
-            <div>
-              <div className="text-sm font-bold text-white">Explore</div>
-              <ul className="mt-3 space-y-2">
-                <li><a href="/chatroom" className="text-sm text-white/55 hover:text-white">Chatrooms</a></li>
-                <li><a href="/feed" className="text-sm text-white/55 hover:text-white">Feed</a></li>
-                <li><a href="/communities" className="text-sm text-white/55 hover:text-white">Communities</a></li>
-                <li><a href="/competitions" className="text-sm text-white/55 hover:text-white">Competitions</a></li>
-                <li><a href="/poetry" className="text-sm text-white/55 hover:text-white">Poetry</a></li>
-              </ul>
-            </div>
-            {cfg.footerColumns.map((col) => (
-              <div key={col.title}>
-                <div className="text-sm font-bold text-white">{col.title}</div>
-                <ul className="mt-3 space-y-2">
-                  {col.links.map((l) => (
-                    <li key={l.label + l.href}>
-                      <a href={l.href === "/" ? "/chatroom" : l.href} className="text-sm text-white/55 hover:text-white">
-                        {l.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-            {footerExtra}
-            <div>
-              <div className="text-sm font-bold text-white">Follow Us</div>
-              <div className="mt-3 flex items-center gap-2">
-                {[
-                  { Icon: MessageCircle, label: "Discord", color: "bg-indigo-500/20 text-indigo-300" },
-                  { Icon: Instagram, label: "Instagram", color: "bg-pink-500/20 text-pink-300" },
-                  { Icon: Twitter, label: "Twitter", color: "bg-sky-500/20 text-sky-300" },
-                  { Icon: Youtube, label: "YouTube", color: "bg-red-500/20 text-red-300" },
-                ].map(({ Icon, label, color }) => (
-                  <a
-                    key={label}
-                    href="#"
-                    aria-label={label}
-                    className={`grid h-9 w-9 place-items-center rounded-full ${color} transition-transform hover:scale-105`}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="mt-10 border-t border-white/5 pt-6 text-center text-xs text-white/40">
-            © {year} {brand}. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <HomeFooter brandName={brand} tagline={cfg.brandTagline} />
     </div>
   );
 }

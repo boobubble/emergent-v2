@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { renderToString } from "react-dom/server";
 import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HomeSeoContent } from "@/components/home/HomeSeoContent";
 import { HOME_SEO_H1 } from "@/lib/seo/home-page";
 
@@ -14,7 +15,14 @@ function seoCopyHtml(html: string): string {
 }
 
 describe("HomeSeoContent SSR", () => {
-  const html = renderToString(React.createElement(HomeSeoContent));
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const html = renderToString(
+    React.createElement(
+      QueryClientProvider,
+      { client: qc },
+      React.createElement(HomeSeoContent),
+    ),
+  );
 
   it("emits the crawlable H1 without client JavaScript", () => {
     const decoded = html.replace(/&amp;/g, "&");
