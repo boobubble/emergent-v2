@@ -93,7 +93,7 @@ export function StatCell({
             </span>
           )}
         </div>
-        <div className="mt-0.5 truncate text-[9px] font-semibold uppercase tracking-wider text-white/60 sm:mt-1 sm:text-[11px]">
+        <div className="mt-0.5 text-[8px] font-semibold uppercase leading-tight tracking-wider text-white/60 sm:mt-1 sm:truncate sm:text-[11px]">
           {label}
         </div>
       </div>
