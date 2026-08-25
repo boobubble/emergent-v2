@@ -10,7 +10,7 @@ export type SitemapEntry = {
 };
 
 /** Redirect-only aliases that must never appear in sitemap.xml. */
-export const SITEMAP_REDIRECT_ALIASES = new Set(["/chatrooms", "/mehfil"]);
+export const SITEMAP_REDIRECT_ALIASES = new Set(["/chatrooms", "/mehfil", "/welcome"]);
 
 /** App shells whose crawlable HTML is too thin/generic for sitemap inclusion. */
 export const SITEMAP_THIN_SSR_PATHS = new Set(["/find-friends", "/games", "/leaderboard"]);

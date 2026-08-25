@@ -4,9 +4,9 @@ import { HOME_PAGE_KEY, type HomePageMode } from "@/lib/hero-page-config";
 
 /**
  * Lightweight one-shot fetch of the active landing-page mode. Used by
- * AuthGate to decide whether unauthenticated visitors land on /welcome or
- * /heropage. Defaults to "welcome" while loading or on error to preserve
- * existing behavior.
+ * AuthGate to decide whether unauthenticated visitors land on `/` or
+ * /heropage. Defaults to "welcome" (the `/` homepage) while loading or on
+ * error to preserve existing behavior.
  */
 export function useHomePageMode() {
   const [mode, setMode] = useState<HomePageMode>("welcome");

@@ -6,6 +6,7 @@ import { checkDeviceBan, recordDevice } from "@/lib/device.functions";
 import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { HOME_PAGE_KEY, type HomePageMode } from "@/lib/hero-page-config";
+import { landingPathForMode } from "@/lib/landing-path";
 
 async function loadSignupAccess(): Promise<SignupAccessConfig> {
   try {
@@ -166,9 +167,9 @@ async function resolveLandingPath(): Promise<string> {
   try {
     const { data } = await supabase.from("app_settings").select("value").eq("key", HOME_PAGE_KEY).maybeSingle();
     const mode = (data?.value as { mode?: HomePageMode } | null)?.mode;
-    return mode === "hero" ? "/heropage" : "/welcome";
+    return landingPathForMode(mode);
   } catch {
-    return "/welcome";
+    return landingPathForMode("welcome");
   }
 }
 

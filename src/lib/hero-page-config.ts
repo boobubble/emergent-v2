@@ -1,6 +1,6 @@
 /**
  * Hero Homepage configuration. Stored in app_settings under `hero_page`.
- * Separate from /welcome (which has its own demo-focused config).
+ * Separate from the `/` welcome homepage (which has its own demo-focused config).
  *
  * The active default landing page (welcome vs hero) is stored in
  * `app_settings.home_page` as { mode: "welcome" | "hero" }.

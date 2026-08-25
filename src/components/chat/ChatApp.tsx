@@ -67,7 +67,9 @@ class SidebarPanelBoundary extends Component<{ children: ReactNode; onFail?: () 
 export function ChatApp() {
   const chat = useOptionalChat();
   const { mode: homeMode } = useHomePageMode();
-  if (!chat) return <Navigate to={homeMode === "hero" ? "/heropage" : "/welcome"} replace />;
+  // No ChatProvider: send to a page that has one (or heropage). Never `/`,
+  // which would loop when ChatApp is already the homepage shell.
+  if (!chat) return <Navigate to={homeMode === "hero" ? "/heropage" : "/chatroom"} replace />;
   return <ChatAppLoaded chat={chat} />;
 }
 

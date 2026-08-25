@@ -60,7 +60,7 @@ export function HomepagePage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Homepage Manager"
-        description="Edit content shown on the public landing page at /welcome. Live community stats are pulled automatically."
+        description="Edit content shown on the public homepage at /. Live community stats are pulled automatically."
         actions={
           <Button onClick={save} disabled={saving} className="gap-2">
             <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save changes"}
@@ -74,7 +74,7 @@ export function HomepagePage() {
             <Home className="h-5 w-5 text-primary" />
             <div>
               <div className="text-sm font-semibold">Landing page</div>
-              <div className="text-xs text-muted-foreground">Public page available at <code>/welcome</code>.</div>
+              <div className="text-xs text-muted-foreground">Public page available at <code>/</code>.</div>
             </div>
           </div>
           <Row label="Enable landing page" description="Master toggle for the public homepage." checked={values.enabled} onChange={(v) => set("enabled", v)} />
@@ -244,7 +244,7 @@ export function HomepagePage() {
         </CardContent>
       </Card>
 
-      {/* Landing content — SEO metadata lives in SEO Manager (/welcome, /heropage) */}
+      {/* Landing content — SEO metadata for `/` lives in homeRouteHead; /heropage stays in SEO Manager */}
       <Card>
         <CardContent className="space-y-3 p-5">
           <div className="text-sm font-semibold">SEO</div>

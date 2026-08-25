@@ -34,6 +34,7 @@ import { BroadcasterAnnouncementsRunner } from "@/components/broadcaster/Broadca
 import { TrioInvitesListener } from "@/components/chat/TrioInvitesListener";
 import { LicenseGuard } from "@/components/LicenseGuard";
 import { useHomePageMode } from "@/lib/use-home-page-mode";
+import { landingPathForMode } from "@/lib/landing-path";
 import "@/i18n";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import { DynamicBrandHead } from "@/components/DynamicBrandHead";
@@ -239,7 +240,7 @@ function AuthGate() {
   const path = location.pathname;
   const hasStoredSession = hasStoredAuthSession();
   const { mode: homeMode, ready: homeReady } = useHomePageMode();
-  const landingPath = homeMode === "hero" ? "/heropage" : "/welcome";
+  const landingPath = landingPathForMode(homeMode);
 
   if (loggingOut) {
     return (
@@ -282,7 +283,7 @@ function AuthGate() {
     // Public, self-contained routes (landing, login, password reset, public post pages) render normally.
     if (isPublicPath(path)) return <PublicOutlet pathname={path} readOnlyApp={isReadOnlyPublicAppPath(path)} />;
     // Wait for the home_page setting before redirecting so guests don't get
-    // briefly sent to /welcome while the admin-selected mode is still loading.
+    // briefly sent to `/` while the admin-selected mode is still loading.
     if (isPrivateUtilityPath(path)) {
       return <Navigate to="/login" replace />;
     }

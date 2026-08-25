@@ -3,7 +3,7 @@ import type { SeoRouteDefinition } from "./types";
 /** Human labels for known public routes. Auto-sync fills gaps for new routes. */
 export const SEO_ROUTE_CATALOG: SeoRouteDefinition[] = [
   { pageKey: "home", routePath: "/", label: "Home", group: "Core" },
-  { pageKey: "welcome", routePath: "/welcome", label: "Welcome / Landing", group: "Core" },
+  { pageKey: "welcome", routePath: "/welcome", label: "Welcome (redirects to Home)", group: "Core" },
   { pageKey: "heropage", routePath: "/heropage", label: "Hero Page", group: "Core" },
   { pageKey: "feed", routePath: "/feed", label: "Feed", group: "Social" },
   { pageKey: "chatroom", routePath: "/chatroom", label: "Chatrooms", group: "Social" },

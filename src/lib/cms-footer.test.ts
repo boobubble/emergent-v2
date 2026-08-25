@@ -123,10 +123,10 @@ describe("public footer component", () => {
     expect(comp).toContain("if (!hasAny) return null");
   });
 
-  it("is integrated in welcome page", () => {
-    const welcome = read("routes/welcome.tsx");
-    expect(welcome).toContain("CmsFooterLinks");
-    expect(welcome).not.toContain("StaticFooterColumns");
+  it("is integrated in the homepage footer", () => {
+    const home = read("components/home/HomeGuestShell.tsx");
+    expect(home).toContain("CmsFooterLinks");
+    expect(home).not.toContain("StaticFooterColumns");
   });
 
   it("is integrated in landing footer", () => {
