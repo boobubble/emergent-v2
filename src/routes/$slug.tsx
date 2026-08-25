@@ -26,7 +26,7 @@ function redirectReservedSlug(slug: string) {
   if (["auth", "login", "register", "signup", "logout", "settings", "notifications"].includes(key)) {
     throw redirect({ to: "/login", replace: true });
   }
-  throw redirect({ to: "/welcome", replace: true });
+  throw redirect({ to: "/", replace: true });
 }
 
 function PublicPageNotFound() {
@@ -35,8 +35,8 @@ function PublicPageNotFound() {
       <div className="max-w-md text-center">
         <h1 className="text-3xl font-bold tracking-tight">Page not found</h1>
         <p className="mt-2 text-sm text-muted-foreground">This page is not available.</p>
-        <Link to="/welcome" className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
-          Go to welcome
+        <Link to="/" className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+          Go to homepage
         </Link>
       </div>
     </div>

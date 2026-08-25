@@ -9,8 +9,8 @@ export function LandingFooter({ brandName }: { brandName: string }) {
           <CmsFooterLinks />
         </div>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-          <Link to="/welcome" className="underline-offset-4 hover:underline">
-            View classic homepage
+          <Link to="/" className="underline-offset-4 hover:underline">
+            View homepage
           </Link>
           <span className="mx-1">·</span>
           © {new Date().getFullYear()} {brandName}

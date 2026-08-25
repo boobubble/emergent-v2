@@ -30,7 +30,7 @@ const EXACT: Record<string, RouteHeadAudit> = {
     jsonLd: "available",
   },
   "/welcome": {
-    source: "routes/welcome.tsx head()",
+    source: "routes/welcome.tsx beforeLoad() 301 → /",
     title: "available",
     description: "available",
     canonical: "missing",

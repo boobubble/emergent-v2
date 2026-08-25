@@ -51,7 +51,7 @@ function ActivePageToggle() {
                 <Home className="h-4 w-4" /> Welcome Page
               </div>
               <div className="text-xs text-muted-foreground">
-                Classic landing at <code>/welcome</code>.
+                Classic welcome design on the primary homepage at <code>/</code>.
               </div>
             </div>
           </label>

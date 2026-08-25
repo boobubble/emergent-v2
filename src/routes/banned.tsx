@@ -84,10 +84,10 @@ function BannedPage() {
         </p>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-          <Link to="/welcome">
+          <Link to="/">
             <Button variant="outline" size="sm" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Back to landing
+              Back to homepage
             </Button>
           </Link>
           {expired && (
