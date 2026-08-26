@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import "@/styles/tw-animate.css";
 import { useAuth } from "@/lib/auth-store";
 import { useBrand } from "@/lib/branding";
 import { useUsernameCheck, type UsernameStatus } from "@/lib/use-username-check";

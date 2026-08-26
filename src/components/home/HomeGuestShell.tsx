@@ -42,6 +42,8 @@ export function HomeGuestShell() {
   const [data, setData] = useState<LandingPayload | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pollChoice, setPollChoice] = useState<number | null>(null);
+  // SSR + first client paint are always dark so the H1 does not wait on
+  // localStorage theme. Saved light/dark is applied after mount.
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [authPopup, setAuthPopup] = useState<AuthPopup>(null);
   const [authMounted, setAuthMounted] = useState(false);

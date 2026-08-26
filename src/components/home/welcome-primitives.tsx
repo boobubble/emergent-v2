@@ -13,7 +13,7 @@ export function WelcomeCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-white/[0.07] bg-[#10101f]/80 backdrop-blur-xl ${className}`}
+      className={`rounded-2xl border border-white/[0.07] bg-[#10101f]/92 ${className}`}
       style={style}
     >
       {children}

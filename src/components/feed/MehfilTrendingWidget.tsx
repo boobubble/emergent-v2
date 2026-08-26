@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import "@/styles/app-surfaces.css";
 import { isNavigableSlug } from "@/lib/route-slug";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";

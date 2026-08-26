@@ -99,4 +99,24 @@ describe("guest homepage initial graph", () => {
     expect(font).toContain("inter-latin.css");
     expect(font).toContain("scheduleIdle");
   });
+
+  it("guest first-paint CSS excludes chat/feed/theme surfaces", () => {
+    const styles = read("styles.css");
+    const root = read("routes/__root.tsx");
+    expect(styles).not.toContain("gaming_arena");
+    expect(styles).not.toContain("data-feed-theme");
+    expect(styles).not.toContain("data-chat-theme");
+    expect(styles).not.toContain('@import "tw-animate-css"');
+    expect(styles).toContain('@source not "./components/chat"');
+    expect(read("styles/app-surfaces.css")).toContain("gaming_arena");
+    expect(read("styles/app-surfaces.css")).toContain('@import "tw-animate-css"');
+    expect(read("components/app/app-shells.tsx")).toContain('import "@/styles/app-surfaces.css"');
+    expect(root).not.toContain('rel: "stylesheet", href: appCss');
+    expect(root).toContain("HOME_CRITICAL_CSS");
+    expect(root).toContain('rel="preload"');
+    expect(read("components/home/HomeSeoContent.tsx")).not.toContain("text-balance");
+    expect(read("components/home/HomeSeoContent.tsx")).not.toContain("blur-3xl");
+    expect(read("components/home/HomeSeoContent.tsx")).not.toContain("backdrop-blur-xl");
+    expect(read("components/home/welcome-primitives.tsx")).not.toContain("backdrop-blur-xl");
+  });
 });

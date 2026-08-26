@@ -160,13 +160,13 @@ export function HomeSeoContent({
     >
       <style>{WELCOME_THEME_CSS}</style>
 
-      <div className="pointer-events-none fixed inset-0 -z-10 select-none" aria-hidden>
-        <div className="absolute -left-32 top-[-10%] h-[520px] w-[520px] rounded-full opacity-50 blur-3xl" style={{ background: "radial-gradient(closest-side,#8b5cf6,transparent 70%)" }} />
-        <div className="absolute right-[-15%] top-[20%] h-[600px] w-[600px] rounded-full opacity-40 blur-3xl" style={{ background: "radial-gradient(closest-side,#3b82f6,transparent 70%)" }} />
-        <div className="absolute bottom-[-10%] left-1/3 h-[500px] w-[500px] rounded-full opacity-30 blur-3xl" style={{ background: "radial-gradient(closest-side,#ec4899,transparent 70%)" }} />
+      <div className="welcome-aurora pointer-events-none fixed inset-0 -z-10 select-none" aria-hidden>
+        <div className="welcome-orb absolute -left-32 top-[-10%] h-[520px] w-[520px] opacity-50" style={{ background: "radial-gradient(closest-side,#8b5cf6,transparent 70%)" }} />
+        <div className="welcome-orb absolute right-[-15%] top-[20%] h-[600px] w-[600px] opacity-40" style={{ background: "radial-gradient(closest-side,#3b82f6,transparent 70%)" }} />
+        <div className="welcome-orb absolute bottom-[-10%] left-1/3 h-[500px] w-[500px] opacity-30" style={{ background: "radial-gradient(closest-side,#ec4899,transparent 70%)" }} />
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#070713]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#070713]/95">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <a href="/" className="flex shrink-0 items-center gap-2.5">
             <span
@@ -253,7 +253,7 @@ export function HomeSeoContent({
               <p className="text-sm font-semibold tracking-wide text-purple-300">
                 {cfg.heroEyebrow || "Yaarzo"}
               </p>
-              <h1 className="mt-2 text-[32px] font-black leading-[1.08] tracking-tight text-balance sm:text-5xl lg:text-[52px]">
+              <h1 className="mt-2 text-[32px] font-black leading-[1.08] tracking-tight sm:text-5xl lg:text-[52px]">
                 {HOME_SEO_H1.replace("Join Communities", "").trim()}{" "}
                 <span
                   className="bg-clip-text text-transparent"
@@ -271,7 +271,7 @@ export function HomeSeoContent({
                 {cfg.heroBadges.map((b) => (
                   <span
                     key={b}
-                    className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-semibold text-white/80 backdrop-blur"
+                    className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-semibold text-white/80"
                   >
                     {b}
                   </span>
@@ -290,7 +290,7 @@ export function HomeSeoContent({
                 <button
                   type="button"
                   onClick={onSignup}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3.5 text-sm font-bold text-white backdrop-blur hover:bg-white/[0.08]"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3.5 text-sm font-bold text-white hover:bg-white/[0.08]"
                 >
                   ✨ {cfg.secondaryCtaLabel || "Create Account"}
                 </button>
@@ -313,7 +313,7 @@ export function HomeSeoContent({
         {cfg.showStats && (
           <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8" aria-label="Community stats">
             <div
-              className="relative overflow-hidden rounded-3xl border border-white/10 p-2 shadow-[0_30px_80px_-30px_rgba(139,92,246,0.45)] backdrop-blur-2xl sm:p-3"
+              className="relative overflow-hidden rounded-3xl border border-white/10 p-2 shadow-[0_30px_80px_-30px_rgba(139,92,246,0.45)] sm:p-3"
               style={{
                 background:
                   "linear-gradient(135deg,rgba(139,92,246,0.10),rgba(59,130,246,0.06) 50%,rgba(236,72,153,0.08))",
@@ -460,12 +460,12 @@ export function HomeSeoContent({
 function HeroPreview() {
   return (
     <div className="relative hidden min-h-[560px] lg:block">
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute right-0 top-10 h-[420px] w-[420px] rounded-full opacity-60 blur-3xl" style={{ background: "radial-gradient(closest-side,#8b5cf6,transparent 70%)" }} />
-        <div className="absolute bottom-0 left-0 h-[320px] w-[320px] rounded-full opacity-50 blur-3xl" style={{ background: "radial-gradient(closest-side,#3b82f6,transparent 70%)" }} />
+        <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute right-0 top-10 h-[420px] w-[420px] rounded-full opacity-60" style={{ background: "radial-gradient(closest-side,#8b5cf6,transparent 70%)" }} />
+        <div className="absolute bottom-0 left-0 h-[320px] w-[320px] rounded-full opacity-50" style={{ background: "radial-gradient(closest-side,#3b82f6,transparent 70%)" }} />
       </div>
 
-      <div className="hero-dark-preview absolute right-0 top-4 w-[480px] rotate-[-2deg] rounded-2xl border border-white/15 bg-[#0e0e22]/90 shadow-[0_30px_80px_-20px_rgba(139,92,246,0.55)] backdrop-blur-xl">
+      <div className="hero-dark-preview absolute right-0 top-4 w-[480px] rotate-[-2deg] rounded-2xl border border-white/15 bg-[#0e0e22]/90 shadow-[0_30px_80px_-20px_rgba(139,92,246,0.55)]">
         <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2.5">
           <span className="grid h-6 w-6 place-items-center rounded-md text-[11px] font-black text-white" style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>💬</span>
           <span className="text-[11px] font-bold text-white/85">Yaarzo</span>
@@ -558,7 +558,7 @@ function HeroPreview() {
       >
         💬
       </div>
-      <div className="hero-dark-preview absolute bottom-8 right-4 rounded-2xl border border-white/15 bg-[#0e0e22]/90 px-3 py-2 shadow-xl backdrop-blur-xl">
+      <div className="hero-dark-preview absolute bottom-8 right-4 rounded-2xl border border-white/15 bg-[#0e0e22]/90 px-3 py-2 shadow-xl">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
           <span className="text-[10px] font-bold text-white">Connected</span>

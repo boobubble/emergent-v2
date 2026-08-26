@@ -5,6 +5,7 @@
  */
 import { useEffect, useState, type ReactNode } from "react";
 import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
+import "@/styles/app-surfaces.css";
 import { ChatProvider } from "@/lib/chat-store";
 import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { SocialGraphProvider } from "@/lib/use-social-graph";

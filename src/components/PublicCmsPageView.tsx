@@ -3,6 +3,7 @@
  * Uses plain anchors (not router Link) so renderToString works without a router.
  */
 import { sanitizeHtml } from "@/lib/pages-io";
+import "@/styles/app-surfaces.css";
 import { injectHeadingIds } from "@/lib/heading-ids";
 import { resolvePublicCmsH1 } from "@/lib/pages-cms/public-page-ssr";
 import { RelatedChatRooms } from "@/components/RelatedChatRooms";

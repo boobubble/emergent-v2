@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   useLocation,
   Navigate,
   HeadContent,
@@ -13,7 +14,7 @@ import { AuthProvider, useAuth } from "@/lib/auth-store";
 import { AuthGateProvider } from "@/lib/auth-gate";
 import { AppSettingsProvider } from "@/lib/app-settings";
 
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { HeadFootScripts } from "@/components/HeadFootScripts";
 import { AdsAutoLoader } from "@/components/AdSlot";
@@ -30,6 +31,7 @@ import { logger } from "@/lib/logger";
 import { isPublicCmsSlugPath } from "@/lib/route-slug";
 import { isPublicPath as isPublicPathBase, isReadOnlyPublicAppPath, isPrivateUtilityPath } from "@/lib/public-routes";
 import { hasStoredAuthToken } from "@/lib/stored-auth";
+import { HOME_CRITICAL_CSS } from "@/components/home/home-critical-css";
 
 import appCss from "../styles.css?url";
 
@@ -121,7 +123,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", href: "/favicon-blue.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-      { rel: "stylesheet", href: appCss },
     ],
   }),
   shellComponent: RootShell,
@@ -130,10 +131,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+function AppStylesheet() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const initialPath = useRef(pathname);
+  const deferHome = initialPath.current === "/";
+  if (deferHome) {
+    return (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: HOME_CRITICAL_CSS }} />
+        <link rel="preload" href={appCss} as="style" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){var l=document.querySelector('link[rel=\"preload\"][as=\"style\"][href*=\"styles\"]');if(!l)return;function go(){l.rel='stylesheet'}l.addEventListener('load',go);if(l.sheet)go();})();",
+          }}
+        />
+        <noscript>
+          <link rel="stylesheet" href={appCss} />
+        </noscript>
+      </>
+    );
+  }
+  return <link rel="stylesheet" href={appCss} />;
+}
+
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="light">
       <head>
+        <AppStylesheet />
         <HeadContent />
       </head>
       <body>
