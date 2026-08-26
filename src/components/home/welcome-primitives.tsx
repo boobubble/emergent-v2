@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { ChevronRight } from "@/components/home/home-icons";
 import { publicAvatarThumbUrl } from "@/lib/public-avatar";
 
 export function WelcomeCard({

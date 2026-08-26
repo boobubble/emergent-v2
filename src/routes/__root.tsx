@@ -11,33 +11,19 @@ import {
 } from "@tanstack/react-router";
 import { AuthProvider, useAuth } from "@/lib/auth-store";
 import { AuthGateProvider } from "@/lib/auth-gate";
-import { ChatProvider } from "@/lib/chat-store";
-import { FeedPrefsProvider } from "@/lib/feed-prefs";
-import { SocialGraphProvider } from "@/lib/use-social-graph";
-import { NotificationsProvider } from "@/lib/use-notifications";
-import { IgnoreProvider } from "@/lib/ignore-store";
 import { AppSettingsProvider } from "@/lib/app-settings";
-import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
-import { FaviconSwitcher } from "@/components/FaviconSwitcher";
-import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
-import { useBanGuard } from "@/lib/use-ban-guard";
-import { useSessionChangeDetector } from "@/lib/use-session-change-detector";
-import { RealtimeDebugOverlay } from "@/components/RealtimeDebugOverlay";
-import { SessionConflictBanner } from "@/components/SessionConflictBanner";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { HeadFootScripts } from "@/components/HeadFootScripts";
 import { AdsAutoLoader } from "@/components/AdSlot";
-import { BroadcasterAnnouncementsRunner } from "@/components/broadcaster/BroadcasterAnnouncements";
-import { TrioInvitesListener } from "@/components/chat/TrioInvitesListener";
-import { LicenseGuard } from "@/components/LicenseGuard";
+import { SessionConflictBanner } from "@/components/SessionConflictBanner";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { useHomePageMode } from "@/lib/use-home-page-mode";
 import { landingPathForMode } from "@/lib/landing-path";
-import "@/i18n";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import { DynamicBrandHead } from "@/components/DynamicBrandHead";
+import { DeferredInterFont } from "@/components/DeferredInterFont";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { GlobalErrorMonitoring } from "@/components/GlobalErrorMonitoring";
 import { logger } from "@/lib/logger";
@@ -45,6 +31,13 @@ import { isPublicCmsSlugPath } from "@/lib/route-slug";
 import { isPublicPath as isPublicPathBase, isReadOnlyPublicAppPath, isPrivateUtilityPath } from "@/lib/public-routes";
 
 import appCss from "../styles.css?url";
+
+const AuthenticatedAppShell = lazy(() =>
+  import("@/components/app/app-shells").then((m) => ({ default: m.AuthenticatedAppShell })),
+);
+const PublicReadOnlyAppShell = lazy(() =>
+  import("@/components/app/app-shells").then((m) => ({ default: m.PublicReadOnlyAppShell })),
+);
 
 function NotFoundComponent() {
   return (
@@ -130,7 +123,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -166,6 +158,7 @@ function RootComponent() {
         <AppSettingsProvider>
           <LanguageProvider>
             <DynamicBrandHead />
+            <DeferredInterFont />
             <AuthProvider>
               <GlobalErrorMonitoring />
               <AuthGateProvider>
@@ -198,40 +191,6 @@ function hasStoredAuthSession() {
     }
   } catch { /* ignore */ }
   return false;
-}
-
-function AuthenticatedHooks({ userId }: { userId: string }) {
-  // These hooks issue Supabase queries / realtime work and previously caused a
-  // request flood when mounted before auth was settled. They now mount only
-  // after `ready === true` and a valid user exists.
-  usePresenceHeartbeat();
-  useSessionChangeDetector();
-  useBanGuard(userId);
-  return null;
-}
-
-function AuthenticatedShell({ children }: { children: React.ReactNode }) {
-  return (
-    <SocialGraphProvider>
-      <NotificationsProvider>
-        <FeedPrefsProvider>
-          <IgnoreProvider>
-            <BroadcasterAnnouncementsRunner />
-            <TrioInvitesListener />
-            <HeadFootScripts />
-            <AdsAutoLoader />
-            <SessionConflictBanner />
-            <FaviconSwitcher />
-            <SubscriptionGate />
-            <LicenseGuard />
-            {children}
-            <Sonner />
-            <RealtimeDebugOverlay />
-          </IgnoreProvider>
-        </FeedPrefsProvider>
-      </NotificationsProvider>
-    </SocialGraphProvider>
-  );
 }
 
 function AuthGate() {
@@ -306,49 +265,44 @@ function AuthGate() {
 
 
   const requireChatProvider = !isCommunityNonChatPath(path);
-  const content = (
-    <AuthenticatedShell>
-      <AuthenticatedHooks userId={user.id} />
-      <Outlet />
-    </AuthenticatedShell>
-  );
-  if (!requireChatProvider) {
-    return content;
-  }
   return (
-    <ChatProvider username={user.username} authUserId={user.id} isGuest={user.isGuest}>
-      {content}
-    </ChatProvider>
+    <Suspense fallback={null}>
+      <AuthenticatedAppShell
+        username={user.username}
+        authUserId={user.id}
+        isGuest={user.isGuest}
+        requireChat={requireChatProvider}
+      >
+        <Outlet />
+      </AuthenticatedAppShell>
+    </Suspense>
   );
 }
 
-function PublicOutlet({ readOnlyApp, pathname }: { readOnlyApp: boolean; pathname: string }) {
-  const content = (
+function PublicChrome() {
+  return (
     <>
       <HeadFootScripts />
       <AdsAutoLoader />
       <SessionConflictBanner />
       <Outlet />
       <Sonner />
-      <RealtimeDebugOverlay />
     </>
   );
+}
+
+function PublicOutlet({ readOnlyApp, pathname }: { readOnlyApp: boolean; pathname: string }) {
   // GuestChatProvider lives on AuthGateProvider so AuthDialogs and chat share
   // one guest session (login popup + /chatroom sidebar).
   const requireChatProvider = readOnlyApp && !isCommunityNonChatPath(pathname);
   if (!requireChatProvider) {
-    return content;
+    return <PublicChrome />;
   }
   return (
-    <ChatProvider username="__public__" authUserId={null} isGuest>
-      <SocialGraphProvider>
-      <NotificationsProvider>
-      <FeedPrefsProvider>
-        <IgnoreProvider>{content}</IgnoreProvider>
-      </FeedPrefsProvider>
-      </NotificationsProvider>
-      </SocialGraphProvider>
-    </ChatProvider>
+    <Suspense fallback={null}>
+      <PublicReadOnlyAppShell>
+        <PublicChrome />
+      </PublicReadOnlyAppShell>
+    </Suspense>
   );
 }
-

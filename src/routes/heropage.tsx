@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
-import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
+import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthDialogs";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { HeroSection as HeroSectionBlock } from "@/components/landing/sections/HeroSection";

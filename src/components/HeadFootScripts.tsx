@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { scheduleIdle } from "@/lib/schedule-idle";
+import { scheduleAfterInteraction } from "@/lib/schedule-idle";
 
 interface ScriptsConfig {
   enabled: boolean;
@@ -71,7 +71,7 @@ export function HeadFootScripts() {
       apply((data?.value as ScriptsConfig | null) ?? null);
     };
     const onHome = typeof window !== "undefined" && window.location.pathname === "/";
-    if (onHome) cancelIdle = scheduleIdle(() => { void applyFromNetwork(); });
+    if (onHome) cancelIdle = scheduleAfterInteraction(() => { void applyFromNetwork(); }, 8000);
     else void applyFromNetwork();
 
     const channel = supabase

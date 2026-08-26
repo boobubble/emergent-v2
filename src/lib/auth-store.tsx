@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { loginWithIdentifier } from "@/lib/auth.functions";
 import { deleteDemoAccount } from "@/lib/demo-account.functions";
 import { checkDeviceBan, recordDevice } from "@/lib/device.functions";
-import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { HOME_PAGE_KEY, type HomePageMode } from "@/lib/hero-page-config";
 import { landingPathForMode } from "@/lib/landing-path";
@@ -67,6 +66,19 @@ function cacheUsername(userId: string, username: string) {
   } catch {
     /* ignore */
   }
+}
+
+function hasStoredAuthToken() {
+  if (typeof window === "undefined") return false;
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i) ?? "";
+      if (key.startsWith("sb-") && key.endsWith("-auth-token")) return true;
+    }
+  } catch {
+    /* ignore */
+  }
+  return false;
 }
 
 async function fetchUsername(userId: string, fallbackEmail?: string): Promise<string> {
@@ -208,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void import("@/lib/sound-prefs").then((m) => m.hydrateSoundPrefsFromServer());
       void (async () => {
         try {
+          const { getDeviceFingerprint } = await import("@/lib/device-fingerprint");
           const fp = await getDeviceFingerprint();
           if (fp) await recordDevice({ data: { fingerprint: fp, user_agent: navigator.userAgent.slice(0, 500) } });
         } catch (e) { console.warn("device record failed", e); }
@@ -279,16 +292,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      void supabase.auth.getSession()
-        .then(({ data }) => {
-          applySession(data.session);
-        })
-        .catch((e) => {
-          console.warn("getSession failed", e);
-        })
-        .finally(() => {
-          markReady();
-        });
+      const guestHome =
+        typeof window !== "undefined" &&
+        window.location.pathname === "/" &&
+        !hasStoredAuthToken();
+      if (guestHome) {
+        markReady();
+      } else {
+        void supabase.auth.getSession()
+          .then(({ data }) => {
+            applySession(data.session);
+          })
+          .catch((e) => {
+            console.warn("getSession failed", e);
+          })
+          .finally(() => {
+            markReady();
+          });
+      }
     } catch (e) {
       // Proxy throws synchronously when public env is missing from the client bundle.
       console.warn("getSession failed", e);

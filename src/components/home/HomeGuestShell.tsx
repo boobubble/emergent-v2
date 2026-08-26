@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import type { AuthPopup } from "@/components/auth/AuthScreen";
+import type { AuthPopup } from "@/components/auth/AuthDialogs";
 import { HomeSeoContent } from "@/components/home/HomeSeoContent";
 import { WelcomeCard, SectionTitle } from "@/components/home/welcome-primitives";
 import { LANDING_DEFAULTS, type LandingConfig } from "@/lib/landing-config";
@@ -13,7 +13,7 @@ const MehfilTrendingWidget = lazy(() =>
 );
 
 const AuthDialogs = lazy(() =>
-  import("@/components/auth/AuthScreen").then((m) => ({
+  import("@/components/auth/AuthDialogs").then((m) => ({
     default: m.AuthDialogs,
   })),
 );

@@ -95,11 +95,14 @@ describe("legacy guest creation — must stay removed", () => {
   });
 
   it("PublicOutlet wires ChatProvider with authUserId=null (no auth user on browse)", () => {
+    const shells = readSrc("components/app/app-shells.tsx");
+    expect(shells).toMatch(/username="__public__"/);
+    expect(shells).toMatch(/authUserId=\{null\}/);
+    expect(shells).not.toMatch(/GuestAutoSignIn/);
+    expect(shells).not.toMatch(/loginAsGuest/);
     const root = readSrc("routes/__root.tsx");
-    expect(root).toMatch(/username="__public__"/);
-    expect(root).toMatch(/authUserId=\{null\}/);
-    expect(root).not.toMatch(/GuestAutoSignIn/);
-    expect(root).not.toMatch(/loginAsGuest/);
+    expect(root).toMatch(/PublicReadOnlyAppShell/);
+    expect(root).not.toMatch(/from "@\/lib\/chat-store"/);
   });
 
   it("auth-store never marks restored sessions as guests", () => {
@@ -230,6 +233,7 @@ describe("refresh / route-switch invariants (static)", () => {
       "lib/guest-config.ts",
       "lib/chat-store.tsx",
       "routes/__root.tsx",
+      "components/app/app-shells.tsx",
       "components/chat/MessageInput.tsx",
       "routes/feed.index.tsx",
     ];

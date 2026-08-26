@@ -1,4 +1,4 @@
-import { MessageCircle, Instagram, Twitter, Youtube } from "lucide-react";
+import { MessageCircle, Instagram, Twitter, Youtube } from "@/components/home/home-icons";
 import { CmsFooterLinks } from "@/components/CmsFooterLinks";
 
 export const HOME_EXPLORE_LINKS = [

@@ -11,13 +11,32 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/lib/auth-store";
-import type { AuthPopup } from "@/components/auth/AuthScreen";
-import { GuestChatProvider } from "@/lib/guest-chat-context";
-import { GuestNicknameDialog } from "@/components/chat/GuestNicknameDialog";
+import type { AuthPopup } from "@/components/auth/AuthDialogs";
+import { GuestChatProvider, useGuestChat } from "@/lib/guest-chat-context";
 
 const AuthDialogs = lazy(() =>
-  import("@/components/auth/AuthScreen").then((m) => ({ default: m.AuthDialogs })),
+  import("@/components/auth/AuthDialogs").then((m) => ({ default: m.AuthDialogs })),
 );
+
+const GuestNicknameDialog = lazy(() =>
+  import("@/components/chat/GuestNicknameDialog").then((m) => ({
+    default: m.GuestNicknameDialog,
+  })),
+);
+
+function GuestNicknameHost() {
+  const { nicknameDialogOpen } = useGuestChat();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    if (nicknameDialogOpen) setMounted(true);
+  }, [nicknameDialogOpen]);
+  if (!mounted) return null;
+  return (
+    <Suspense fallback={null}>
+      <GuestNicknameDialog />
+    </Suspense>
+  );
+}
 
 /**
  * Generic authentication gate.
@@ -158,7 +177,7 @@ export function AuthGateProvider({ children }: { children: ReactNode }) {
             <AuthDialogs popup={popup} setPopup={handleSetPopup} />
           </Suspense>
         ) : null}
-        <GuestNicknameDialog />
+        <GuestNicknameHost />
       </GuestChatProvider>
     </AuthGateContext.Provider>
   );

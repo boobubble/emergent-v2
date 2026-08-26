@@ -107,12 +107,18 @@ export default defineConfig({
       modulePreload: {
         resolveDependencies(_filename, deps) {
           return deps.filter(
-            (dep) => !/MehfilTrendingWidget|AuthScreen|ChatApp/.test(dep),
+            (dep) => !/MehfilTrendingWidget|AuthScreen|AuthDialogs|ChatApp|app-shells|GuestNicknameDialog/.test(dep),
           );
         },
       },
       rollupOptions: {
         maxParallelFileOps: 2,
+        output: {
+          // Merge tiny Lucide leaves into their importers so guest `/` does
+          // not preload ~20 sub-1KB icon files. Keep below GuestNicknameDialog
+          // (~2KB) so that chunk stays lazy.
+          experimentalMinChunkSize: 700,
+        },
       },
     },
     plugins: [

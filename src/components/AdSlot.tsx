@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { scheduleIdle } from "@/lib/schedule-idle";
+import { scheduleAfterInteraction } from "@/lib/schedule-idle";
 
 export type AdSlotKey = "header" | "sidebar" | "in_feed" | "footer";
 
@@ -125,7 +125,7 @@ export function AdsAutoLoader() {
     if (!cfg.auto_ads) return;
     const run = () => ensureAdsenseLoader(cfg.publisher_id);
     const onHome = typeof window !== "undefined" && window.location.pathname === "/";
-    if (onHome) return scheduleIdle(run);
+    if (onHome) return scheduleAfterInteraction(run, 8000);
     run();
   }, [cfg]);
   return null;

@@ -18,7 +18,7 @@ import {
   Sun,
   Users,
   X,
-} from "lucide-react";
+} from "@/components/home/home-icons";
 import { HomeFooter } from "@/components/home/HomeFooter";
 import { HOME_SEO_H1 } from "@/lib/seo/home-page";
 import { LANDING_DEFAULTS, type LandingConfig } from "@/lib/landing-config";

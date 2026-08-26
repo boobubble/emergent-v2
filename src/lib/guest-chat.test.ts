@@ -170,7 +170,7 @@ describe("no auth-guest regression", () => {
   });
 
   it("Auth popup offers Login as Guest; landing heroes do not", () => {
-    const auth = readFileSync(resolve(srcRoot, "components/auth/AuthScreen.tsx"), "utf8");
+    const auth = readFileSync(resolve(srcRoot, "components/auth/AuthDialogs.tsx"), "utf8");
     const btn = readFileSync(resolve(srcRoot, "components/auth/ContinueAsGuestButton.tsx"), "utf8");
     const hero = readFileSync(resolve(srcRoot, "components/landing/sections/HeroSection.tsx"), "utf8");
     const welcome = readFileSync(resolve(srcRoot, "components/home/HomeSeoContent.tsx"), "utf8");
@@ -196,7 +196,7 @@ describe("no auth-guest regression", () => {
     expect(gate).toMatch(/GuestNicknameDialog/);
     const providerIdx = gate.indexOf("<GuestChatProvider>");
     const dialogsIdx = gate.indexOf("<AuthDialogs");
-    const nickIdx = gate.indexOf("<GuestNicknameDialog");
+    const nickIdx = gate.indexOf("<GuestNicknameHost");
     expect(providerIdx).toBeGreaterThan(-1);
     expect(dialogsIdx).toBeGreaterThan(providerIdx);
     expect(nickIdx).toBeGreaterThan(providerIdx);
