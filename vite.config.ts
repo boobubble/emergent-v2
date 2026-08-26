@@ -113,12 +113,6 @@ export default defineConfig({
       },
       rollupOptions: {
         maxParallelFileOps: 2,
-        output: {
-          // Merge tiny Lucide leaves into their importers so guest `/` does
-          // not preload ~20 sub-1KB icon files. Keep below GuestNicknameDialog
-          // (~2KB) so that chunk stays lazy.
-          experimentalMinChunkSize: 700,
-        },
       },
     },
     plugins: [
