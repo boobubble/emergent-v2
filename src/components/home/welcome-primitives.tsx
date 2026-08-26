@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { ChevronRight, type HomeIcon } from "@/components/home/home-icons";
 import { publicAvatarThumbUrl } from "@/lib/public-avatar";
 
@@ -44,20 +44,12 @@ export function PillAvatar({
   const thumb = original ? publicAvatarThumbUrl(original, Math.ceil(size * 2)) : "";
   const [failed, setFailed] = useState(false);
   const [useOriginal, setUseOriginal] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement | null>(null);
   const showImg = Boolean(original) && !failed;
   const imgSrc = useOriginal || thumb === original ? original : thumb;
   useLayoutEffect(() => {
     setFailed(false);
-    const el = imgRef.current;
-    if (el?.complete && el.naturalWidth > 0) {
-      setLoaded(true);
-      return;
-    }
-    setLoaded(false);
-    if (el?.complete && el.naturalWidth === 0) setFailed(true);
-  }, [imgSrc]);
+    setUseOriginal(false);
+  }, [original]);
   return (
     <div
       className="relative grid shrink-0 place-items-center overflow-hidden rounded-full font-bold text-white ring-2 ring-white/10"
@@ -74,19 +66,16 @@ export function PillAvatar({
       {showImg && (
         <img
           key={imgSrc}
-          ref={imgRef}
           src={imgSrc}
           alt=""
           width={size}
           height={size}
           loading={lazy ? "lazy" : "eager"}
           decoding="async"
-          className={`absolute inset-0 h-full w-full rounded-full object-cover ${loaded ? "opacity-100" : "opacity-0"}`}
-          onLoad={() => setLoaded(true)}
+          className="absolute inset-0 h-full w-full rounded-full object-cover"
           onError={() => {
             if (!useOriginal && thumb && thumb !== original) {
               setUseOriginal(true);
-              setLoaded(false);
               return;
             }
             setFailed(true);

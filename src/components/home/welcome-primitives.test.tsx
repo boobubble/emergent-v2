@@ -14,6 +14,7 @@ describe("PillAvatar", () => {
     expect(html).toContain("<img");
     expect(html).toContain("/storage/v1/render/image/public/avatars/u1/avatar-1787317005596.png");
     expect(html).toContain("width=\"32\"");
+    expect(html).not.toContain("opacity-0");
     expect(html).toContain("D");
   });
 
