@@ -113,9 +113,9 @@ describe("guest homepage initial graph", () => {
     expect(read("components/app/app-shells.tsx")).toContain('import "@/styles/app-surfaces.css"');
     expect(read("components/feed/MehfilTrendingWidget.tsx")).not.toContain("app-surfaces.css");
     expect(styles).toContain("MehfilTrendingWidget.tsx");
-    expect(root).not.toContain('rel: "stylesheet", href: appCss');
     expect(root).toContain("HOME_CRITICAL_CSS");
-    expect(root).toContain('rel="preload"');
+    expect(root).toContain('rel="stylesheet"');
+    expect(root).not.toContain('rel="preload"');
     expect(read("components/home/HomeSeoContent.tsx")).not.toContain("text-balance");
     expect(read("components/home/HomeSeoContent.tsx")).not.toContain("blur-3xl");
     expect(read("components/home/HomeSeoContent.tsx")).not.toContain("backdrop-blur-xl");

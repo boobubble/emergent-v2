@@ -4,7 +4,6 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
-  useRouterState,
   useLocation,
   Navigate,
   HeadContent,
@@ -14,7 +13,7 @@ import { AuthProvider, useAuth } from "@/lib/auth-store";
 import { AuthGateProvider } from "@/lib/auth-gate";
 import { AppSettingsProvider } from "@/lib/app-settings";
 
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { applyAccent, getStoredAccent } from "@/lib/use-accent";
 import { HeadFootScripts } from "@/components/HeadFootScripts";
 import { AdsAutoLoader } from "@/components/AdSlot";
@@ -132,27 +131,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function AppStylesheet() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const initialPath = useRef(pathname);
-  const deferHome = initialPath.current === "/";
-  if (deferHome) {
-    return (
-      <>
-        <style dangerouslySetInnerHTML={{ __html: HOME_CRITICAL_CSS }} />
-        <link rel="preload" href={appCss} as="style" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){var l=document.querySelector('link[rel=\"preload\"][as=\"style\"][href*=\"styles\"]');if(!l)return;function go(){l.rel='stylesheet'}l.addEventListener('load',go);if(l.sheet)go();})();",
-          }}
-        />
-        <noscript>
-          <link rel="stylesheet" href={appCss} />
-        </noscript>
-      </>
-    );
-  }
-  return <link rel="stylesheet" href={appCss} />;
+  // Guest `/` still uses a blocking stylesheet so Tailwind utilities cannot
+  // restyle the H1 after first paint (async CSS produced CLS ~0.94).
+  // The sheet is the reduced guest CSS (~34 KB gzip), not the old 57 KB bundle.
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: HOME_CRITICAL_CSS }} />
+      <link rel="stylesheet" href={appCss} />
+    </>
+  );
 }
 
 function RootShell({ children }: { children: React.ReactNode }) {
