@@ -111,6 +111,8 @@ describe("guest homepage initial graph", () => {
     expect(read("styles/app-surfaces.css")).toContain("gaming_arena");
     expect(read("styles/app-surfaces.css")).toContain('@import "tw-animate-css"');
     expect(read("components/app/app-shells.tsx")).toContain('import "@/styles/app-surfaces.css"');
+    expect(read("components/feed/MehfilTrendingWidget.tsx")).not.toContain("app-surfaces.css");
+    expect(styles).toContain("MehfilTrendingWidget.tsx");
     expect(root).not.toContain('rel: "stylesheet", href: appCss');
     expect(root).toContain("HOME_CRITICAL_CSS");
     expect(root).toContain('rel="preload"');

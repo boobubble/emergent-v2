@@ -14,6 +14,8 @@
 @source not "./components/profile";
 @source not "./components/subscription";
 @source not "./components/community";
+/* Poetry widget is lazy on guest `/`; include only this file so it does not pull app-surfaces.css. */
+@source "./components/feed/MehfilTrendingWidget.tsx";
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
