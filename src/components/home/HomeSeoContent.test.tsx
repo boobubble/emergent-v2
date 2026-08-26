@@ -74,4 +74,15 @@ describe("HomeSeoContent SSR", () => {
     expect(html).toContain("Join Free");
     expect(html).toContain("Login");
   });
+
+  it("keeps Start Exploring copy crawlable without a duplicate signup CTA", () => {
+    expect(html).toContain("Start Exploring Yaarzo");
+    expect(html).toContain("New friends are often one hello away");
+    expect(html).toContain("Browse chatrooms");
+    expect(html).toContain("Ready to Join the Fun?");
+    expect(html).toContain("Create Free Account");
+    expect(html).toContain("Invite Now");
+    expect(html).not.toContain("Join Yaarzo free");
+    expect(html.match(/<h1[\s>]/g)?.length).toBe(1);
+  });
 });

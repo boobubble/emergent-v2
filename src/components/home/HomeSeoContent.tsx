@@ -156,7 +156,7 @@ export function HomeSeoContent({
 
   return (
     <div
-      className={`welcome-root ${theme === "light" ? "welcome-light" : "welcome-dark"} relative min-h-screen overflow-x-hidden bg-[#070713] text-white antialiased`}
+      className={`welcome-root ${theme === "light" ? "welcome-light" : "welcome-dark"} relative min-h-screen overflow-x-hidden antialiased`}
     >
       <style>{WELCOME_THEME_CSS}</style>
 
@@ -166,7 +166,7 @@ export function HomeSeoContent({
         <div className="welcome-orb absolute bottom-[-10%] left-1/3 h-[500px] w-[500px] opacity-30" style={{ background: "radial-gradient(closest-side,#ec4899,transparent 70%)" }} />
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#070713]/95">
+      <header className="sticky top-0 z-40 border-b border-white/5">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <a href="/" className="flex shrink-0 items-center gap-2.5">
             <span
@@ -212,7 +212,7 @@ export function HomeSeoContent({
             <button
               type="button"
               onClick={onSignup}
-              className="rounded-full px-4 py-2 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
+              className="welcome-on-accent rounded-full px-4 py-2 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
               style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 8px 24px -8px rgba(139,92,246,0.7)" }}
             >
               Join Free
@@ -230,7 +230,7 @@ export function HomeSeoContent({
         </div>
 
         {menuOpen && (
-          <div className="border-t border-white/10 bg-[#070713]/95 px-4 pb-4 pt-2 lg:hidden">
+          <div className="welcome-mobile-nav border-t border-white/10 px-4 pb-4 pt-2 lg:hidden">
             <nav aria-label="Mobile" className="grid gap-1">
               {NAV_LINKS.map((l) => (
                 <a
@@ -282,7 +282,7 @@ export function HomeSeoContent({
                 <button
                   type="button"
                   onClick={onSignup}
-                  className="group inline-flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
+                  className="welcome-on-accent group inline-flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.03]"
                   style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", boxShadow: "0 12px 32px -8px rgba(139,92,246,0.65)" }}
                 >
                   <Rocket className="h-4 w-4" /> {cfg.primaryCtaLabel || "Start Chatting"}
@@ -400,7 +400,7 @@ export function HomeSeoContent({
         <CommunityActivity items={activityItems} />
         <CommunityBlog posts={blogs} />
 
-        <ExploreCta onSignup={onSignup} />
+        <ExploreCta />
 
         <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
           <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
@@ -442,7 +442,7 @@ export function HomeSeoContent({
                 <p className="mt-2 text-xs text-white/80">{cfg.referralDescription}</p>
                 <a
                   href="/find-friends"
-                  className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-purple-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-purple-400"
+                  className="welcome-on-accent mt-4 inline-flex items-center gap-2 rounded-2xl bg-purple-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-purple-400"
                 >
                   Invite Now
                 </a>
@@ -525,7 +525,7 @@ function HeroPreview() {
       </div>
 
       <div className="absolute bottom-0 left-[-10px] w-[200px] rotate-[-6deg] rounded-[28px] border border-white/15 bg-[#0a0a1a] p-1.5 shadow-[0_30px_60px_-15px_rgba(59,130,246,0.6)]">
-        <div className="relative overflow-hidden rounded-[22px] bg-[#10101f]">
+        <div className="hero-dark-preview relative overflow-hidden rounded-[22px] bg-[#10101f]">
           <div className="absolute left-1/2 top-1.5 z-10 h-3 w-16 -translate-x-1/2 rounded-full bg-black" />
           <div className="px-2.5 pb-2 pt-5">
             <div className="flex items-center justify-between text-[8px] text-white/60">
@@ -1172,7 +1172,7 @@ function CommunityBlog({ posts }: { posts: LandingPayload["blogPosts"] }) {
   );
 }
 
-function ExploreCta({ onSignup }: { onSignup?: () => void }) {
+function ExploreCta() {
   return (
     <section data-seo-copy className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
       <WelcomeCard className="p-5 sm:p-6">
@@ -1185,15 +1185,7 @@ function ExploreCta({ onSignup }: { onSignup?: () => void }) {
           ready, create a profile, share a post, enter a competition, or publish a few lines
           of poetry. New friends are often one hello away.
         </p>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={onSignup}
-            className="inline-flex items-center justify-center rounded-2xl px-5 py-2.5 text-sm font-bold text-white shadow-lg"
-            style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}
-          >
-            Join Yaarzo free
-          </button>
+        <div className="mt-5">
           <a
             href="/chatroom"
             className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/[0.04] px-5 py-2.5 text-sm font-bold text-white hover:bg-white/[0.08]"

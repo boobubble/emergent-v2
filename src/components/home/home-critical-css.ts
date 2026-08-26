@@ -14,6 +14,9 @@ export const HOME_CRITICAL_CSS = [
   ".welcome-root main>section:first-child>div{max-width:80rem;margin:0 auto;padding:2rem 1rem 3rem;display:grid;gap:2.5rem}",
   ".welcome-root h1{margin:.5rem 0 0;font-size:32px;font-weight:900;line-height:1.08;letter-spacing:-.025em;color:#fff}",
   ".welcome-root h1>span{-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}",
+  ".welcome-light{background:#f5f6fb;color:#0b0b1a}",
+  ".welcome-light h1{color:#0b0b1a}",
+  ".welcome-light header,.welcome-light .welcome-mobile-nav{background:#f5f6fb;border-color:rgba(11,11,26,.1)}",
   ".welcome-aurora{position:fixed;inset:0;z-index:-1;pointer-events:none}",
   ".welcome-orb{position:absolute;border-radius:9999px;pointer-events:none}",
 ].join("");

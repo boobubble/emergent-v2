@@ -235,6 +235,7 @@ describe("landing API sources", () => {
     expect(shell).not.toContain("cfg.demoChatrooms");
     expect(shell).not.toContain("cfg.demoFeedPost");
     expect(shell).toContain('fetch("/api/public/landing")');
+    expect(shell).toContain("palrgo-welcome-theme");
     expect(shell).not.toContain("setInterval");
     expect(shell).not.toContain(".channel(");
     expect(shell).not.toContain("realtime");

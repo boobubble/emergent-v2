@@ -29,7 +29,7 @@ export function HomeFooter({
   tagline: string;
 }) {
   return (
-    <footer className="border-t border-white/5 bg-[#06060f]">
+    <footer className="welcome-footer border-t border-white/5">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-[1.5fr_repeat(5,1fr)]">
           <div>

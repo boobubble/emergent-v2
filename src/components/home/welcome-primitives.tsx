@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ChevronRight, type HomeIcon } from "@/components/home/home-icons";
 import { publicAvatarThumbUrl } from "@/lib/public-avatar";
 
@@ -13,8 +13,12 @@ export function WelcomeCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-white/[0.07] bg-[#10101f]/92 ${className}`}
-      style={style}
+      className={`welcome-card rounded-2xl border border-white/[0.07] ${className}`}
+      style={{
+        background: "var(--home-card)",
+        borderColor: "var(--home-border)",
+        ...style,
+      }}
     >
       {children}
     </div>
@@ -41,13 +45,19 @@ export function PillAvatar({
   const [failed, setFailed] = useState(false);
   const [useOriginal, setUseOriginal] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  useEffect(() => {
-    setFailed(false);
-    setUseOriginal(false);
-    setLoaded(false);
-  }, [original]);
+  const imgRef = useRef<HTMLImageElement | null>(null);
   const showImg = Boolean(original) && !failed;
   const imgSrc = useOriginal || thumb === original ? original : thumb;
+  useLayoutEffect(() => {
+    setFailed(false);
+    const el = imgRef.current;
+    if (el?.complete && el.naturalWidth > 0) {
+      setLoaded(true);
+      return;
+    }
+    setLoaded(false);
+    if (el?.complete && el.naturalWidth === 0) setFailed(true);
+  }, [imgSrc]);
   return (
     <div
       className="relative grid shrink-0 place-items-center overflow-hidden rounded-full font-bold text-white ring-2 ring-white/10"
@@ -64,6 +74,7 @@ export function PillAvatar({
       {showImg && (
         <img
           key={imgSrc}
+          ref={imgRef}
           src={imgSrc}
           alt=""
           width={size}
@@ -75,6 +86,7 @@ export function PillAvatar({
           onError={() => {
             if (!useOriginal && thumb && thumb !== original) {
               setUseOriginal(true);
+              setLoaded(false);
               return;
             }
             setFailed(true);
