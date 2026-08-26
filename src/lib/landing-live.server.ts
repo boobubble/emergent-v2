@@ -39,6 +39,7 @@ type ProfileLite = {
   is_bot?: boolean | null;
   avatar_url?: string | null;
   avatar_moderation_status?: string | null;
+  avatar_moderated_at?: string | null;
 };
 
 type PublicProfileCard = {
@@ -146,7 +147,7 @@ async function loadPublicProfileMap(ownerIds: string[]): Promise<Map<string, Pub
   if (!ids.length) return map;
   let q = supabaseAdmin
     .from("profiles")
-    .select("id, username, is_private, is_bot, avatar_url, avatar_moderation_status")
+    .select("id, username, is_private, is_bot, avatar_url, avatar_moderation_status, avatar_moderated_at")
     .in("id", ids);
   q = applyPublicProfileFilter(q);
   const { data } = await q;
@@ -157,6 +158,7 @@ async function loadPublicProfileMap(ownerIds: string[]): Promise<Map<string, Pub
       avatarUrl: resolvePublicAvatarUrl({
         avatarUrl: p.avatar_url,
         avatarModerationStatus: p.avatar_moderation_status,
+        avatarModeratedAt: p.avatar_moderated_at,
       }),
     });
   }
@@ -166,10 +168,12 @@ async function loadPublicProfileMap(ownerIds: string[]): Promise<Map<string, Pub
 function cardAvatar(row: {
   avatar_url?: string | null;
   avatar_moderation_status?: string | null;
+  avatar_moderated_at?: string | null;
 }): string | undefined {
   return resolvePublicAvatarUrl({
     avatarUrl: row.avatar_url,
     avatarModerationStatus: row.avatar_moderation_status,
+    avatarModeratedAt: row.avatar_moderated_at,
   });
 }
 
@@ -227,7 +231,7 @@ export async function fetchLiveLandingData(
 
   const newProfileQ = () =>
     applyPublicProfileFilter(
-      supabaseAdmin.from("profiles").select("id, username, created_at, is_private, is_bot, xp, level, avatar_url, avatar_moderation_status"),
+      supabaseAdmin.from("profiles").select("id, username, created_at, is_private, is_bot, xp, level, avatar_url, avatar_moderation_status, avatar_moderated_at"),
     )
       .order("created_at", { ascending: false })
       .limit(8);
@@ -324,7 +328,7 @@ export async function fetchLiveLandingData(
       isolate(
         "profiles_top",
         applyPublicProfileFilter(
-          supabaseAdmin.from("profiles").select("id, username, xp, level, created_at, is_private, is_bot, avatar_url, avatar_moderation_status"),
+          supabaseAdmin.from("profiles").select("id, username, xp, level, created_at, is_private, is_bot, avatar_url, avatar_moderation_status, avatar_moderated_at"),
         )
           .order("xp", { ascending: false })
           .limit(8),

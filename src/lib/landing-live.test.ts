@@ -234,6 +234,10 @@ describe("landing API sources", () => {
     expect(shell).toContain("resolveLandingView");
     expect(shell).not.toContain("cfg.demoChatrooms");
     expect(shell).not.toContain("cfg.demoFeedPost");
+    expect(shell).toContain('fetch("/api/public/landing")');
+    expect(shell).not.toContain("setInterval");
+    expect(shell).not.toContain(".channel(");
+    expect(shell).not.toContain("realtime");
   });
 
   it("public avatars use the approved https resolver", () => {
@@ -242,6 +246,7 @@ describe("landing API sources", () => {
     const settings = read("lib/app-settings.tsx");
     expect(server).toContain("resolvePublicAvatarUrl");
     expect(server).toContain("avatar_moderation_status");
+    expect(server).toContain("avatar_moderated_at");
     expect(server).not.toContain("avatar_quarantine_url");
     expect(server).toContain("newProfileQ()");
     expect(server).toContain("avatarUrl: latest.is_anonymous ? undefined");

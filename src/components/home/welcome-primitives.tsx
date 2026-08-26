@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, type HomeIcon } from "@/components/home/home-icons";
 import { publicAvatarThumbUrl } from "@/lib/public-avatar";
 
@@ -41,6 +41,11 @@ export function PillAvatar({
   const [failed, setFailed] = useState(false);
   const [useOriginal, setUseOriginal] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    setFailed(false);
+    setUseOriginal(false);
+    setLoaded(false);
+  }, [original]);
   const showImg = Boolean(original) && !failed;
   const imgSrc = useOriginal || thumb === original ? original : thumb;
   return (
@@ -58,6 +63,7 @@ export function PillAvatar({
       {letter}
       {showImg && (
         <img
+          key={imgSrc}
           src={imgSrc}
           alt=""
           width={size}
