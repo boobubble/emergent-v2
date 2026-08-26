@@ -7,24 +7,11 @@
  * clients depending on whether we need the current viewer's context.
  */
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
+import { createPublicAnonClient } from "@/integrations/supabase/public-anon-client";
 
 function publicClient() {
-  const url = process.env.SUPABASE_URL!;
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-  return createClient<Database>(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
+  return createPublicAnonClient();
 }
 
 function slugify(name: string): string {
@@ -79,7 +66,7 @@ type ProfileLite = { id: string; username: string | null; display_name: string |
 
 async function attachProfiles(userIds: string[]) {
   if (userIds.length === 0) return new Map<string, ProfileLite>();
-  const sb = publicClient();
+  const sb = await publicClient();
   const { data } = await sb.from("profiles").select("id,username,display_name,avatar_url").in("id", userIds);
   const map = new Map<string, ProfileLite>();
   for (const r of (data ?? []) as ProfileLite[]) map.set(r.id, r);
@@ -89,7 +76,7 @@ async function attachProfiles(userIds: string[]) {
 export const listFollowers = createServerFn({ method: "GET" })
   .inputValidator((input: { userId: string; limit?: number }) => input)
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const sb = await publicClient();
     const { data: rows } = await (sb.from as any)("poetry_writer_follows")
       .select("follower_id,created_at")
       .eq("writer_id", data.userId)
@@ -103,7 +90,7 @@ export const listFollowers = createServerFn({ method: "GET" })
 export const listFollowing = createServerFn({ method: "GET" })
   .inputValidator((input: { userId: string; limit?: number }) => input)
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const sb = await publicClient();
     const { data: rows } = await (sb.from as any)("poetry_writer_follows")
       .select("writer_id,created_at")
       .eq("follower_id", data.userId)
@@ -188,7 +175,7 @@ export const listMyCollections = createServerFn({ method: "GET" })
 export const listUserCollections = createServerFn({ method: "GET" })
   .inputValidator((input: { userId: string }) => input)
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const sb = await publicClient();
     const { data: rows } = await (sb.from as any)("poetry_collections")
       .select("id,name,slug,description,cover_url,poem_count,is_public")
       .eq("user_id", data.userId).eq("is_public", true)

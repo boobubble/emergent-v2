@@ -1,7 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { CORE_MODULE_DEFAULTS } from "@/lib/module-flags";
 import { subscribeAuthStateChange } from "@/lib/auth-listener";
+import { hasStoredAuthToken, isGuestHomePath } from "@/lib/stored-auth";
+import { scheduleIdle } from "@/lib/schedule-idle";
 
 export type LayoutPriority = "chatrooms_first" | "feed_first";
 
@@ -76,22 +78,9 @@ export const GUEST_HOME_SETTING_KEYS = [
   "guest_chat",
 ] as const;
 
-function hasStoredAuthSession() {
-  if (typeof window === "undefined") return false;
-  try {
-    for (let i = 0; i < window.localStorage.length; i++) {
-      const key = window.localStorage.key(i) ?? "";
-      if (key.startsWith("sb-") && key.endsWith("-auth-token")) return true;
-    }
-  } catch {
-    /* ignore */
-  }
-  return false;
-}
-
 function shouldLoadFullSettings() {
   if (typeof window === "undefined") return false;
-  if (hasStoredAuthSession()) return true;
+  if (hasStoredAuthToken()) return true;
   return window.location.pathname !== "/";
 }
 
@@ -100,6 +89,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   const load = async (forceFull = false) => {
+    const supabase = await loadBrowserSupabase();
     const full = forceFull || shouldLoadFullSettings();
     let q = supabase.from("app_settings").select("key,value");
     if (!full) q = q.in("key", [...GUEST_HOME_SETTING_KEYS]);
@@ -115,34 +105,53 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     );
     if (!supabaseConfigured) {
-      // Keep the app booting (show defaults) even if Supabase client env
-      // wasn't inlined into this build.
       setReady(true);
       return;
     }
 
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let channel: { unsubscribe?: () => void } | null = null;
     let unsubAuth: (() => void) | undefined;
-    try {
-      void load().catch((e) => {
-        console.error("[app-settings] load failed", e);
+    let cancelIdle: (() => void) | undefined;
+
+    const start = async () => {
+      try {
+        const supabase = await loadBrowserSupabase();
+        void load().catch((e) => {
+          console.error("[app-settings] load failed", e);
+          setReady(true);
+        });
+        unsubAuth = subscribeAuthStateChange((_event, session) => {
+          if (session?.user) void load(true);
+        });
+        try {
+          channel = supabase
+            .channel(`app_settings_changes:${Math.random().toString(36).slice(2)}`)
+            .on("postgres_changes", { event: "*", schema: "public", table: "app_settings" }, () => load())
+            .subscribe();
+        } catch (e) {
+          console.error("[app-settings] realtime subscribe failed", e);
+          setReady(true);
+        }
+      } catch (e) {
+        console.error("[app-settings] realtime subscribe failed", e);
         setReady(true);
-      });
-      unsubAuth = subscribeAuthStateChange((_event, session) => {
-        if (session?.user) void load(true);
-      });
-      channel = supabase
-        .channel(`app_settings_changes:${Math.random().toString(36).slice(2)}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "app_settings" }, () => load())
-        .subscribe();
-    } catch (e) {
-      console.error("[app-settings] realtime subscribe failed", e);
+      }
+    };
+
+    if (isGuestHomePath()) {
       setReady(true);
+      cancelIdle = scheduleIdle(() => { void start(); }, 4000);
+    } else {
+      void start();
     }
+
     return () => {
       unsubAuth?.();
+      cancelIdle?.();
       if (!channel) return;
-      try { supabase.removeChannel(channel); } catch { /* ignore */ }
+      void loadBrowserSupabase().then((supabase) => {
+        try { supabase.removeChannel(channel as Parameters<typeof supabase.removeChannel>[0]); } catch { /* ignore */ }
+      });
     };
   }, []);
 

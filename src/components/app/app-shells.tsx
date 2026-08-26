@@ -3,7 +3,8 @@
  * Lazy-loaded from the root so guest `/` does not download chat, feed, or
  * notification stores before the marketing H1 paints.
  */
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { ChatProvider } from "@/lib/chat-store";
 import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { SocialGraphProvider } from "@/lib/use-social-graph";
@@ -30,6 +31,16 @@ function AuthenticatedHooks({ userId }: { userId: string }) {
   return null;
 }
 
+function useSupabaseReady() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    void loadBrowserSupabase()
+      .then(() => setReady(true))
+      .catch(() => setReady(true));
+  }, []);
+  return ready;
+}
+
 export function AuthenticatedAppShell({
   username,
   authUserId,
@@ -43,6 +54,8 @@ export function AuthenticatedAppShell({
   requireChat: boolean;
   children: ReactNode;
 }) {
+  const ready = useSupabaseReady();
+  if (!ready) return null;
   const inner = (
     <SocialGraphProvider>
       <NotificationsProvider>
@@ -74,6 +87,8 @@ export function AuthenticatedAppShell({
 }
 
 export function PublicReadOnlyAppShell({ children }: { children: ReactNode }) {
+  const ready = useSupabaseReady();
+  if (!ready) return null;
   return (
     <ChatProvider username="__public__" authUserId={null} isGuest>
       <SocialGraphProvider>

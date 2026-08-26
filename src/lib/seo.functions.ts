@@ -4,7 +4,6 @@ import { join } from "node:path";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { logSupabaseEnvPresence } from "@/integrations/supabase/env.server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { withRateLimit } from "./rate-limit-middleware";
 import { auditSeoHealth } from "@/lib/seo/health";
 import {
@@ -63,7 +62,13 @@ function toClientSeoInventoryError(err: unknown): Error {
   return new Error(message || SEO_INVENTORY_GENERIC_ERROR);
 }
 
+async function getSeoAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
 async function assertAdmin(userId: string) {
+  const supabaseAdmin = await getSeoAdmin();
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
@@ -74,6 +79,7 @@ async function assertAdmin(userId: string) {
 }
 
 async function loadStaffPermissions(): Promise<{ manage_seo_settings?: boolean }> {
+  const supabaseAdmin = await getSeoAdmin();
   const { data } = await supabaseAdmin
     .from("app_settings")
     .select("value")
@@ -87,6 +93,7 @@ async function assertSeoRead(userId: string) {
 }
 
 async function assertSeoManage(userId: string) {
+  const supabaseAdmin = await getSeoAdmin();
   const { data: roles, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
@@ -138,10 +145,12 @@ function resolvedToInheritedForm(resolved: ReturnType<typeof resolvePageSeo>): S
 }
 
 async function loadGlobal(): Promise<SeoGlobal | null> {
+  const supabaseAdmin = await getSeoAdmin();
   return loadSeoGlobal(supabaseAdmin as unknown as Parameters<typeof loadSeoGlobal>[0]);
 }
 
 async function loadPages(): Promise<SeoPageRow[]> {
+  const supabaseAdmin = await getSeoAdmin();
   const { data, error } = await supabaseAdmin.from("seo_settings").select("*").order("label").order("page_key");
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as SeoPageRow[];
@@ -208,6 +217,7 @@ export const getSeoManagerState = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getSeoAdmin();
     const [global, pages, discovered] = await Promise.all([
       loadGlobal(),
       loadPages(),
@@ -222,6 +232,7 @@ export const syncSeoRoutes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getSeoAdmin();
     const discovered = readDiscoveredPaths();
     const catalog = buildRouteCatalog(discovered);
     const existing = await loadPages();
@@ -250,6 +261,7 @@ export const upsertSeoGlobal = createServerFn({ method: "POST" })
   .inputValidator((input) => globalSchema.parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getSeoAdmin();
     const { error } = await (supabaseAdmin as any).from("seo_global").upsert({
         id: 1,
         ...data,
@@ -265,6 +277,7 @@ export const upsertSeoPage = createServerFn({ method: "POST" })
   .inputValidator((input) => pageSchema.parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getSeoAdmin();
     const { error } = await (supabaseAdmin as any).from("seo_settings").upsert({
         ...data,
         updated_at: new Date().toISOString(),
@@ -316,6 +329,7 @@ export const getPublicSeoForPath = createServerFn({ method: "POST" })
     routeDefaultsOnly: z.boolean().optional(),
   }).parse(input))
   .handler(async ({ data }) => {
+    const supabaseAdmin = await getSeoAdmin();
     const cacheKey = seoCacheKey({
       routePath: data.routePath,
       templatePath: data.templatePath,
@@ -437,6 +451,7 @@ export const bulkSeoAction = createServerFn({ method: "POST" })
   }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getSeoAdmin();
     const [global, pages] = await Promise.all([loadGlobal(), loadPages()]);
     const targets = data.pageKeys?.length
       ? pages.filter((p) => data.pageKeys!.includes(p.page_key))
@@ -490,6 +505,7 @@ export const aiGenerateSeoField = createServerFn({ method: "POST" })
   }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getSeoAdmin();
     const [global, pages] = await Promise.all([loadGlobal(), loadPages()]);
     const page = pages.find((p) => p.page_key === data.pageKey);
     const label = page?.label ?? data.pageKey;
@@ -538,6 +554,7 @@ export const getSeoTargetsSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
+    const supabaseAdmin = await getSeoAdmin();
     const [rooms, profiles, posts, games] = await Promise.all([
       supabaseAdmin.from("chatrooms").select("id", { count: "exact", head: true }),
       supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
@@ -683,6 +700,7 @@ export const saveSeoEditRecord = createServerFn({ method: "POST" })
   }).parse(input))
   .handler(async ({ data, context }) => {
     await assertSeoManage(context.userId);
+    const supabaseAdmin = await getSeoAdmin();
 
     const catalogEntry = data.routePath
       ? SEO_ROUTE_CATALOG.find((c) => c.routePath === data.routePath)

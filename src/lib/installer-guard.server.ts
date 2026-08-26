@@ -11,7 +11,6 @@
  * env presence, database connectivity, and even trigger destructive schema
  * operations.
  */
-import { createClient } from "@supabase/supabase-js";
 import { getRequest } from "@tanstack/react-start/server";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -43,6 +42,7 @@ async function currentUserIsSuperAdmin(): Promise<boolean> {
   const token = authHeader.slice("Bearer ".length).trim();
   if (!token) return false;
 
+  const { createClient } = await import("@supabase/supabase-js");
   const supabase = createClient<Database>(url, anon, {
     global: { headers: { Authorization: `Bearer ${token}` } },
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },

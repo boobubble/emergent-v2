@@ -3,7 +3,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 import { Trophy, Medal } from "lucide-react";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
@@ -11,6 +10,7 @@ import type { WriterRank } from "@/lib/mehfil-types";
 
 // Server function inline — public read of writer stats.
 export const getMehfilLeaderboard = createServerFn({ method: "GET" }).handler(async () => {
+  const { createClient } = await import("@supabase/supabase-js");
   const url = process.env.SUPABASE_URL!;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
   const sb = createClient(url, key, { auth: { persistSession: false } });

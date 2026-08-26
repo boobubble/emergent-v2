@@ -1,22 +1,24 @@
 import { useEffect } from "react";
-
-const INTER_HREF =
-  "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap";
+import { scheduleIdle } from "@/lib/schedule-idle";
+import interCss from "@/styles/inter-latin.css?url";
 
 /**
- * Inter is not render-blocking. First paint uses the existing system stack in
- * --font-sans; Inter swaps in after the stylesheet arrives.
+ * Inter is not on the guest H1 critical path. First paint uses the system
+ * stack in --font-sans; the self-hosted Inter stylesheet is injected after
+ * idle so Google Fonts is never requested.
  */
 export function DeferredInterFont() {
   useEffect(() => {
-    if (document.querySelector(`link[href="${INTER_HREF}"]`)) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = INTER_HREF;
-    const id = window.requestAnimationFrame(() => {
+    if (document.querySelector(`link[data-yaarzo-inter="1"]`)) return;
+    const cancel = scheduleIdle(() => {
+      if (document.querySelector(`link[data-yaarzo-inter="1"]`)) return;
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = interCss;
+      link.dataset.yaarzoInter = "1";
       document.head.appendChild(link);
-    });
-    return () => window.cancelAnimationFrame(id);
+    }, 2500);
+    return cancel;
   }, []);
   return null;
 }

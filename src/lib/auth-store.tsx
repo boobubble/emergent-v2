@@ -1,14 +1,16 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef, type ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { loginWithIdentifier } from "@/lib/auth.functions";
 import { deleteDemoAccount } from "@/lib/demo-account.functions";
 import { checkDeviceBan, recordDevice } from "@/lib/device.functions";
 import { SIGNUP_ACCESS_DEFAULTS, type SignupAccessConfig } from "@/lib/signup-config";
 import { HOME_PAGE_KEY, type HomePageMode } from "@/lib/hero-page-config";
 import { landingPathForMode } from "@/lib/landing-path";
+import { isGuestHomePath } from "@/lib/stored-auth";
 
 async function loadSignupAccess(): Promise<SignupAccessConfig> {
   try {
+    const supabase = await loadBrowserSupabase();
     const { data } = await supabase.from("app_settings").select("value").eq("key", "signup_access").maybeSingle();
     const v = (data?.value as Partial<SignupAccessConfig> | null) ?? {};
     return { ...SIGNUP_ACCESS_DEFAULTS, ...v };
@@ -16,7 +18,7 @@ async function loadSignupAccess(): Promise<SignupAccessConfig> {
 }
 
 import type { Session } from "@supabase/supabase-js";
-import { subscribeAuthStateChange } from "@/lib/auth-listener";
+import { attachAuthStateChange } from "@/lib/auth-listener";
 
 export interface AuthUser {
   id: string;
@@ -68,20 +70,8 @@ function cacheUsername(userId: string, username: string) {
   }
 }
 
-function hasStoredAuthToken() {
-  if (typeof window === "undefined") return false;
-  try {
-    for (let i = 0; i < window.localStorage.length; i++) {
-      const key = window.localStorage.key(i) ?? "";
-      if (key.startsWith("sb-") && key.endsWith("-auth-token")) return true;
-    }
-  } catch {
-    /* ignore */
-  }
-  return false;
-}
-
 async function fetchUsername(userId: string, fallbackEmail?: string): Promise<string> {
+  const supabase = await loadBrowserSupabase();
   // Poll briefly since the trigger inserts the row asynchronously after signup.
   for (let i = 0; i < 8; i++) {
     const { data } = await supabase.from("profiles").select("username").eq("id", userId).maybeSingle();
@@ -102,6 +92,7 @@ async function flushPendingSocialFeature(userId: string, email?: string) {
   if (flag === null) return;
   try {
     const allow = flag !== "0";
+    const supabase = await loadBrowserSupabase();
     await supabase.from("profiles").update({ allow_social_feature: allow }).eq("id", userId);
     try { sessionStorage.removeItem(key); } catch { /* ignore */ }
   } catch (e) {
@@ -120,6 +111,7 @@ async function flushPendingAvatar(userId: string, email?: string) {
     const blob = await res.blob();
     const ext = (blob.type.split("/")[1] || "png").replace(/[^a-z0-9]/gi, "") || "png";
     const path = `${userId}/avatar-${Date.now()}.${ext}`;
+    const supabase = await loadBrowserSupabase();
     const up = await supabase.storage.from("avatars").upload(path, blob, { contentType: blob.type, upsert: true });
     if (up.error) throw up.error;
     const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
@@ -148,6 +140,7 @@ async function publishWelcomePost(userId: string, email?: string) {
   try { flag = sessionStorage.getItem(key); } catch { return; }
   if (!flag) return;
   try {
+    const supabase = await loadBrowserSupabase();
     const { data: prof } = await supabase
       .from("profiles")
       .select("username, gender, avatar_url")
@@ -177,6 +170,7 @@ async function publishWelcomePost(userId: string, email?: string) {
 
 async function resolveLandingPath(): Promise<string> {
   try {
+    const supabase = await loadBrowserSupabase();
     const { data } = await supabase.from("app_settings").select("value").eq("key", HOME_PAGE_KEY).maybeSingle();
     const mode = (data?.value as { mode?: HomePageMode } | null)?.mode;
     return landingPathForMode(mode);
@@ -185,154 +179,159 @@ async function resolveLandingPath(): Promise<string> {
   }
 }
 
+function userFromSession(session: Session): AuthUser {
+  const u = session.user;
+  const meta = (u.user_metadata ?? {}) as { username?: string; is_demo?: boolean };
+  const isDemo = meta.is_demo === true;
+  const placeholder =
+    getCachedUsername(u.id) ||
+    meta.username?.trim() ||
+    u.email?.split("@")[0] ||
+    "user";
+  return { id: u.id, email: u.email ?? "", username: placeholder, isGuest: false, isDemo };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const loggingOutRef = useRef(false);
+  const lastUidRef = useRef<string | null>(null);
+  const cancelledRef = useRef(false);
+  const listeningRef = useRef<Promise<void> | null>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  const hydrateProfileBackground = useCallback((session: Session) => {
+    const u = session.user;
+    const email = u.email ?? undefined;
+    void flushPendingAvatar(u.id, email)
+      .then(() => flushPendingSocialFeature(u.id, email))
+      .then(() => publishWelcomePost(u.id, email));
+    void import("@/lib/sound-prefs").then((m) => m.hydrateSoundPrefsFromServer());
+    void (async () => {
+      try {
+        const { getDeviceFingerprint } = await import("@/lib/device-fingerprint");
+        const fp = await getDeviceFingerprint();
+        if (fp) await recordDevice({ data: { fingerprint: fp, user_agent: navigator.userAgent.slice(0, 500) } });
+      } catch (e) { console.warn("device record failed", e); }
+    })();
+    void (async () => {
+      try {
+        const username = await fetchUsername(u.id, email);
+        if (cancelledRef.current) return;
+        setUser((prev) => (prev && prev.id === u.id && prev.username !== username
+          ? { ...prev, username }
+          : prev));
+      } catch (e) {
+        console.warn("username hydrate failed", e);
+      }
+    })();
+  }, []);
+
+  const applySession = useCallback((session: Session | null) => {
+    if (cancelledRef.current) return;
+    const uid = session?.user?.id ?? null;
+    if (!session) {
+      if (lastUidRef.current !== null) {
+        lastUidRef.current = null;
+        setUser(null);
+      }
+      return;
+    }
+    if (uid === lastUidRef.current) return;
+    lastUidRef.current = uid;
+    setUser(userFromSession(session));
+    hydrateProfileBackground(session);
+  }, [hydrateProfileBackground]);
+
+  const ensureListening = useCallback(async () => {
+    if (listeningRef.current) return listeningRef.current;
+    listeningRef.current = (async () => {
+      try {
+        const unsub = await attachAuthStateChange((_event, session) => {
+          applySession(session);
+          setReady(true);
+        });
+        unsubscribeRef.current = unsub;
+      } catch (e) {
+        console.warn("[auth-store] onAuthStateChange failed to attach", e);
+      }
+    })();
+    return listeningRef.current;
+  }, [applySession]);
 
   useEffect(() => {
-    let cancelled = false;
-    let lastUid: string | null = null;
+    cancelledRef.current = false;
     let isReady = false;
-
-    // Immediate AuthUser derived purely from the session (no network).
-    function userFromSession(session: Session): AuthUser {
-      const u = session.user;
-      const meta = (u.user_metadata ?? {}) as { username?: string; is_demo?: boolean };
-      const isDemo = meta.is_demo === true;
-      const placeholder =
-        getCachedUsername(u.id) ||
-        meta.username?.trim() ||
-        u.email?.split("@")[0] ||
-        "user";
-      return { id: u.id, email: u.email ?? "", username: placeholder, isGuest: false, isDemo };
-    }
-
-
-    // Background side effects + real username fetch. Never blocks `ready`.
-    function hydrateProfileBackground(session: Session) {
-      const u = session.user;
-      const email = u.email ?? undefined;
-      void flushPendingAvatar(u.id, email)
-        .then(() => flushPendingSocialFeature(u.id, email))
-        .then(() => publishWelcomePost(u.id, email));
-      void import("@/lib/sound-prefs").then((m) => m.hydrateSoundPrefsFromServer());
-      void (async () => {
-        try {
-          const { getDeviceFingerprint } = await import("@/lib/device-fingerprint");
-          const fp = await getDeviceFingerprint();
-          if (fp) await recordDevice({ data: { fingerprint: fp, user_agent: navigator.userAgent.slice(0, 500) } });
-        } catch (e) { console.warn("device record failed", e); }
-      })();
-      void (async () => {
-        try {
-          const username = await fetchUsername(u.id, email);
-          if (cancelled) return;
-          setUser(prev => (prev && prev.id === u.id && prev.username !== username
-            ? { ...prev, username }
-            : prev));
-        } catch (e) {
-          console.warn("username hydrate failed", e);
-        }
-      })();
-    }
-
-    function applySession(session: Session | null) {
-      if (cancelled) return;
-      const uid = session?.user?.id ?? null;
-      if (!session) {
-        if (lastUid !== null) {
-          lastUid = null;
-          setUser(null);
-        }
-        return;
-      }
-      // Same identity (token refresh / repeated INITIAL_SESSION): no re-hydrate.
-      if (uid === lastUid) return;
-      lastUid = uid;
-      setUser(userFromSession(session));
-      hydrateProfileBackground(session);
-    }
-
     function markReady() {
-      if (cancelled || isReady) return;
+      if (cancelledRef.current || isReady) return;
       isReady = true;
       window.clearTimeout(readyTimer);
       setReady(true);
     }
-
-    // Safety net: guarantee `ready` flips even if getSession hangs or throws.
     const readyTimer = window.setTimeout(markReady, 3000);
 
     const supabaseConfigured = Boolean(
       import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     );
-    // If the client bundle was built without public Supabase env, do not
-    // touch the Supabase proxy. Otherwise it throws during mount and the
-    // entire app falls into AppErrorBoundary (application section crash).
     if (!supabaseConfigured) {
       markReady();
       return () => {
-        cancelled = true;
+        cancelledRef.current = true;
         window.clearTimeout(readyTimer);
+        listeningRef.current = null;
+        unsubscribeRef.current?.();
+        unsubscribeRef.current = null;
       };
     }
 
-    let unsubscribe: (() => void) | null = null;
-
-    try {
-      unsubscribe = subscribeAuthStateChange((_event, session) => {
-        applySession(session);
-        markReady();
-      });
-    } catch (e) {
-      console.warn("[auth-store] onAuthStateChange failed to attach", e);
+    if (isGuestHomePath()) {
       markReady();
+      return () => {
+        cancelledRef.current = true;
+        window.clearTimeout(readyTimer);
+        listeningRef.current = null;
+        unsubscribeRef.current?.();
+        unsubscribeRef.current = null;
+      };
     }
 
-    try {
-      const guestHome =
-        typeof window !== "undefined" &&
-        window.location.pathname === "/" &&
-        !hasStoredAuthToken();
-      if (guestHome) {
+    void (async () => {
+      try {
+        await ensureListening();
+        try {
+          const supabase = await loadBrowserSupabase();
+          const { data } = await supabase.auth.getSession();
+          applySession(data.session);
+        } catch (e) {
+          console.warn("getSession failed", e);
+        }
+      } catch (e) {
+        console.warn("getSession failed", e);
+      } finally {
         markReady();
-      } else {
-        void supabase.auth.getSession()
-          .then(({ data }) => {
-            applySession(data.session);
-          })
-          .catch((e) => {
-            console.warn("getSession failed", e);
-          })
-          .finally(() => {
-            markReady();
-          });
       }
-    } catch (e) {
-      // Proxy throws synchronously when public env is missing from the client bundle.
-      console.warn("getSession failed", e);
-      markReady();
-    }
+    })();
 
     return () => {
-      cancelled = true;
+      cancelledRef.current = true;
       window.clearTimeout(readyTimer);
-      unsubscribe?.();
+      listeningRef.current = null;
+      unsubscribeRef.current?.();
+      unsubscribeRef.current = null;
     };
-  }, []);
+  }, [applySession, ensureListening]);
 
-  // Re-fetch own username on tab focus so a rename made elsewhere reflects quickly.
   useEffect(() => {
     if (!user?.id) return;
     const uid = user.id;
     const refetch = async () => {
+      const supabase = await loadBrowserSupabase();
       const { data } = await supabase.from("profiles").select("username").eq("id", uid).maybeSingle();
       const next = data?.username;
       if (!next) return;
       cacheUsername(uid, next);
-      setUser(prev => (prev && prev.id === uid && prev.username !== next ? { ...prev, username: next } : prev));
+      setUser((prev) => (prev && prev.id === uid && prev.username !== next ? { ...prev, username: next } : prev));
     };
     const onVisible = () => { if (document.visibilityState === "visible") void refetch(); };
     window.addEventListener("focus", onVisible);
@@ -343,32 +342,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [user?.id]);
 
-  // Flush demo accounts when the tab closes / page hides so all their
-  // posts/friendships/etc. are wiped even if the user never clicks Logout.
   useEffect(() => {
     if (!user?.isDemo) return;
     const onExit = () => {
-      supabase.auth.getSession().then(({ data }) => {
-        const token = data.session?.access_token;
-        if (!token) return;
-        const body = new Blob([JSON.stringify({ access_token: token })], { type: "application/json" });
-        try {
-          if (navigator.sendBeacon) navigator.sendBeacon("/api/public/demo-cleanup", body);
-          else fetch("/api/public/demo-cleanup", { method: "POST", body, keepalive: true });
-        } catch { /* noop */ }
+      void loadBrowserSupabase().then((supabase) => {
+        supabase.auth.getSession().then(({ data }) => {
+          const token = data.session?.access_token;
+          if (!token) return;
+          const body = new Blob([JSON.stringify({ access_token: token })], { type: "application/json" });
+          try {
+            if (navigator.sendBeacon) navigator.sendBeacon("/api/public/demo-cleanup", body);
+            else fetch("/api/public/demo-cleanup", { method: "POST", body, keepalive: true });
+          } catch { /* noop */ }
+        });
       });
     };
     window.addEventListener("pagehide", onExit);
     return () => window.removeEventListener("pagehide", onExit);
   }, [user?.isDemo]);
 
-
-
-
   const login = useCallback(async (identifier: string, password: string) => {
     const id = identifier.trim();
-    // Refuse login from a banned device.
     try {
+      const { getDeviceFingerprint } = await import("@/lib/device-fingerprint");
       const fp = await getDeviceFingerprint();
       if (fp) {
         const check = await checkDeviceBan({ data: { fingerprint: fp } });
@@ -379,13 +375,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (e) { if (e instanceof Error && e.message.startsWith("This device")) throw e; }
+    await ensureListening();
+    const supabase = await loadBrowserSupabase();
     const res = await loginWithIdentifier({ data: { identifier: id, password } });
     const { error } = await supabase.auth.setSession({
       access_token: res.access_token,
       refresh_token: res.refresh_token,
     });
     if (error) throw new Error(error.message);
-  }, []);
+  }, [ensureListening]);
 
   const signup = useCallback(async (email: string, password: string, username: string, gender: "male" | "female" | "other", extras?: SignupExtras) => {
     email = email.trim();
@@ -396,8 +394,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (letterCount < 2 || letterCount > 10) throw new Error("Username must contain 2 to 10 letters.");
     if (password.length < 6) throw new Error("Password must be at least 6 characters");
     if (!["male", "female", "other"].includes(gender)) throw new Error("Please select a gender");
-    // Refuse signup from a banned device.
     try {
+      const { getDeviceFingerprint } = await import("@/lib/device-fingerprint");
       const fp = await getDeviceFingerprint();
       if (fp) {
         const check = await checkDeviceBan({ data: { fingerprint: fp } });
@@ -419,6 +417,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (trimmed) meta.phone = trimmed;
     }
+    await ensureListening();
+    const supabase = await loadBrowserSupabase();
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -428,29 +428,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     if (error) throw new Error(error.message);
-  }, []);
+  }, [ensureListening]);
 
   const loginWithGoogle = useCallback(async () => {
+    await ensureListening();
+    const supabase = await loadBrowserSupabase();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin },
     });
     if (error) throw new Error(error.message || "Google sign-in failed");
-  }, []);
+  }, [ensureListening]);
 
   const logout = useCallback(async () => {
     if (loggingOutRef.current) return;
     loggingOutRef.current = true;
     setLoggingOut(true);
     try {
-      // Detect demo accounts by their auth metadata flag before we sign out.
+      const supabase = await loadBrowserSupabase();
       let wasDemo = false;
       try {
         const { data } = await supabase.auth.getSession();
         const meta = (data.session?.user?.user_metadata ?? {}) as { is_demo?: boolean };
         wasDemo = Boolean(meta.is_demo);
       } catch { /* ignore */ }
-      // End any Ludo games this user is hosting so other players aren't stuck.
       try {
         const endFn = (window as unknown as { __lovableEndMyLudoGames?: () => Promise<void> }).__lovableEndMyLudoGames;
         if (typeof endFn === "function") await endFn();
@@ -471,6 +472,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUsername = useCallback(async () => {
+    const supabase = await loadBrowserSupabase();
     const { data } = await supabase.auth.getSession();
     const u = data.session?.user;
     if (!u) return;
@@ -478,7 +480,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const next = prof?.username;
     if (!next) return;
     cacheUsername(u.id, next);
-    setUser(prev => prev ? { ...prev, username: next } : prev);
+    setUser((prev) => prev ? { ...prev, username: next } : prev);
   }, []);
 
   const value = useMemo<Ctx>(() => ({ user, ready, loggingOut, login, signup, loginWithGoogle, logout, refreshUsername }), [user, ready, loggingOut, login, signup, loginWithGoogle, logout, refreshUsername]);

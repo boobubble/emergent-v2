@@ -5,7 +5,6 @@ import { resolvePageSeo, safeJsonLd, siteOrigin, type EntitySeoOverride } from "
 import { loadSeoGlobal } from "@/lib/seo/load-global";
 import type { ResolvedSeo, SeoGlobal } from "@/lib/seo/types";
 import { isPrivateAuthRoute, privateRouteDefaultForm } from "@/lib/seo/edit-form";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export type RouteSeoLoaderData = {
   seo: ResolvedSeo;
@@ -109,6 +108,7 @@ export async function loadSeoSiteContext(): Promise<{
   origin: string;
   siteName: string;
 }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const global = await loadSeoGlobal(
     supabaseAdmin as unknown as Parameters<typeof loadSeoGlobal>[0],
   );

@@ -10,9 +10,8 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
+import { createPublicAnonClient } from "@/integrations/supabase/public-anon-client";
 import type {
   MehfilCategory,
   MehfilPoem,
@@ -29,21 +28,7 @@ import { slugifyTitle } from "./mehfil-types";
 // ---------------------------------------------------------------------------
 
 function publicClient() {
-  const url = process.env.SUPABASE_URL!;
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-  return createClient<Database>(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) {
-          h.delete("Authorization");
-        }
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
+  return createPublicAnonClient();
 }
 
 // Lightweight profile fetch — avoids the huge profiles.select(*) explosion.
@@ -56,7 +41,7 @@ type ProfileRow = {
 };
 
 async function attachAuthorsAndCats(
-  sb: ReturnType<typeof publicClient>,
+  sb: Awaited<ReturnType<typeof publicClient>>,
   poems: MehfilPoem[],
 ): Promise<MehfilPoemEnriched[]> {
   if (poems.length === 0) return [];
@@ -115,7 +100,7 @@ async function attachAuthorsAndCats(
 // ---------------------------------------------------------------------------
 
 export const listMehfilCategories = createServerFn({ method: "GET" }).handler(async () => {
-  const sb = publicClient();
+  const sb = await publicClient();
   const { data, error } = await sb
     .from("mehfil_categories")
     .select("*")
@@ -126,7 +111,7 @@ export const listMehfilCategories = createServerFn({ method: "GET" }).handler(as
 });
 
 export const getMehfilHallOfFame = createServerFn({ method: "GET" }).handler(async () => {
-  const sb = publicClient();
+  const sb = await publicClient();
   const { data: rows } = await sb
     .from("mehfil_hall_of_fame")
     .select("*")
@@ -152,7 +137,7 @@ export const getMehfilHallOfFame = createServerFn({ method: "GET" }).handler(asy
 });
 
 export const getMehfilDiscovery = createServerFn({ method: "GET" }).handler(async () => {
-  const sb = publicClient();
+  const sb = await publicClient();
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const baseSelect = () => sb.from("mehfil_poems").select("*").eq("status", "published");
 
@@ -204,7 +189,7 @@ export const getMehfilDiscovery = createServerFn({ method: "GET" }).handler(asyn
 export const listPoemsByCategory = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string; sort?: "new" | "trending" | "top"; limit?: number }) => input)
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const sb = await publicClient();
     const { data: cat, error: cErr } = await sb
       .from("mehfil_categories").select("*").eq("slug", data.slug).maybeSingle();
     if (cErr) throw cErr;
@@ -228,7 +213,7 @@ export const listPoemsByCategory = createServerFn({ method: "GET" })
 export const getPoemBySlug = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string }) => input)
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const sb = await publicClient();
     const { data: poem, error } = await sb
       .from("mehfil_poems").select("*")
       .eq("slug", data.slug).eq("status", "published").maybeSingle();
@@ -244,7 +229,7 @@ export const getPoemBySlug = createServerFn({ method: "GET" })
 export const getMehfilRelated = createServerFn({ method: "GET" })
   .inputValidator((input: { poemId: string; authorId: string; categoryId?: string | null; limit?: number }) => input)
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const sb = await publicClient();
     const limit = Math.min(data.limit ?? 6, 12);
 
     const [moreFromAuthorRes, relatedRes, trendingRes] = await Promise.all([
@@ -275,7 +260,7 @@ export const getMehfilRelated = createServerFn({ method: "GET" })
 export const recordPoemRead = createServerFn({ method: "POST" })
   .inputValidator((input: { poemId: string; sessionKey?: string }) => input)
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const sb = await publicClient();
     const { error } = await sb.rpc("mehfil_record_read", {
       p_poem_id: data.poemId,
       p_session: data.sessionKey ?? undefined,
@@ -287,7 +272,7 @@ export const recordPoemRead = createServerFn({ method: "POST" })
 export const getWriterStats = createServerFn({ method: "GET" })
   .inputValidator((input: { userId: string }) => input)
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const sb = await publicClient();
     const { data: stats } = await sb
       .from("mehfil_writer_stats").select("*").eq("user_id", data.userId).maybeSingle();
     return (stats ?? null) as MehfilWriterStats | null;
@@ -296,7 +281,7 @@ export const getWriterStats = createServerFn({ method: "GET" })
 export const getMehfilProfileSection = createServerFn({ method: "GET" })
   .inputValidator((input: { username: string; limit?: number }) => input)
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const sb = await publicClient();
     const { data: profile } = await sb
       .from("profiles")
       .select("id, username, display_name, avatar_url, country_code")
@@ -587,7 +572,7 @@ export const listMyPoems = createServerFn({ method: "GET" })
 export const getPoemNeighbors = createServerFn({ method: "GET" })
   .inputValidator((input: { poemId: string; publishedAt: string; categoryId?: string | null }) => input)
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const sb = await publicClient();
     const base = () => sb.from("mehfil_poems").select("id,slug,title,published_at,category_id").eq("status", "published");
 
     async function findOne(dir: "prev" | "next", scoped: boolean) {

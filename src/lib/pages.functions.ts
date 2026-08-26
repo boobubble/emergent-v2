@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { isReservedSlug } from "@/lib/reserved-routes";
 import { slugify, slugifyPageSlug, validatePageSlug, assertUniquePageSlug } from "@/lib/page-slug";
 import { fetchPublishedPageBySlug, buildPublicCmsPageHtml } from "@/lib/fetch-published-page";
@@ -31,6 +30,7 @@ async function getSupabaseAdmin() {
 }
 
 async function assertAdmin(userId: string) {
+  const supabaseAdmin = await getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
@@ -544,6 +544,7 @@ export const listPublishedPages = createServerFn({ method: "GET" })
     limit: z.number().min(1).max(50).default(20),
   }).parse(input ?? {}))
   .handler(async ({ data }) => {
+    const supabaseAdmin = await getSupabaseAdmin();
     let q = supabaseAdmin
       .from("custom_pages")
       .select("slug,title,excerpt,tags,og_image,views,published_at")

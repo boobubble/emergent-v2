@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enforceRateLimit, RateLimitError, getClientIp } from "./rate-limit.server";
 import { validateUsername } from "./username-validation";
 import { withRateLimit } from "./rate-limit-middleware";

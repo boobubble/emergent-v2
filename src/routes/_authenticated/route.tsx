@@ -16,7 +16,7 @@
 //
 // Edit freely. This file is only re-injected when deleted entirely.
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
-import { supabase } from '@/integrations/supabase/client'
+import { loadBrowserSupabase } from '@/integrations/supabase/load-browser'
 
 // Lovable's Supabase auth scaffolds use `/auth`; change this if the app uses another sign-in route.
 const SIGN_IN_ROUTE = '/login'
@@ -24,6 +24,7 @@ const SIGN_IN_ROUTE = '/login'
 export const Route = createFileRoute('/_authenticated')({
   ssr: false,
   beforeLoad: async () => {
+    const supabase = await loadBrowserSupabase()
     const { data, error } = await supabase.auth.getUser()
     if (error || !data.user) {
       throw redirect({ to: SIGN_IN_ROUTE })

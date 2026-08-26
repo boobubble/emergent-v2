@@ -1,4 +1,4 @@
-import { clearSessionConflict, useSessionConflict } from "@/lib/use-session-change-detector";
+import { clearSessionConflict, useSessionConflict } from "@/lib/session-conflict";
 
 export function SessionConflictBanner() {
   const { conflict, prevUid, nextUid } = useSessionConflict();

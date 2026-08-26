@@ -1,6 +1,5 @@
 import { useState } from "react";
-import type { LucideIcon } from "lucide-react";
-import { ChevronRight } from "@/components/home/home-icons";
+import { ChevronRight, type HomeIcon } from "@/components/home/home-icons";
 import { publicAvatarThumbUrl } from "@/lib/public-avatar";
 
 export function WelcomeCard({
@@ -87,7 +86,7 @@ export function StatCell({
   tint = "#a78bfa",
   pulse = false,
 }: {
-  icon: LucideIcon;
+  icon: HomeIcon;
   label: string;
   value: string;
   tint?: string;

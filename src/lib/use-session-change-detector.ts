@@ -1,37 +1,17 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { subscribeAuthStateChange } from "@/lib/auth-listener";
 import { rtLog } from "@/lib/realtime-debug";
+import {
+  clearSessionConflict,
+  emitSessionConflict,
+  useSessionConflict,
+} from "@/lib/session-conflict";
 
-// ---------- Session-conflict signal (module-level pub/sub) ----------
-type ConflictState = {
-  conflict: boolean;
-  prevUid: string | null;
-  nextUid: string | null;
-  at: number;
-};
-let conflictState: ConflictState = { conflict: false, prevUid: null, nextUid: null, at: 0 };
-const conflictListeners = new Set<() => void>();
-
-function emitConflict(next: ConflictState) {
-  conflictState = next;
-  conflictListeners.forEach(l => l());
-}
-
-export function useSessionConflict() {
-  return useSyncExternalStore(
-    (cb) => { conflictListeners.add(cb); return () => conflictListeners.delete(cb); },
-    () => conflictState,
-    () => conflictState,
-  );
-}
-
-export function clearSessionConflict() {
-  emitConflict({ conflict: false, prevUid: null, nextUid: null, at: 0 });
-}
+export { clearSessionConflict, useSessionConflict };
 
 // ---------- Live auth identity (for the debug overlay) ----------
 let liveUid: string | null = null;
@@ -97,7 +77,7 @@ export function useSessionChangeDetector() {
           description: "Refreshing realtime connection…",
           duration: 8000,
         });
-        emitConflict({ conflict: true, prevUid: prev, nextUid: next, at: Date.now() });
+        emitSessionConflict({ conflict: true, prevUid: prev, nextUid: next, at: Date.now() });
         nukeRealtime(`auth ${prev.slice(0, 6)}→${next.slice(0, 6)}`);
         queryClient.invalidateQueries();
         void router.invalidate();

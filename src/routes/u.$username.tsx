@@ -1,6 +1,5 @@
 import { createFileRoute, Navigate, notFound } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-store";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   loadDynamicRouteSeo,
   headFromRouteSeo,
@@ -12,6 +11,7 @@ import {
 export const Route = createFileRoute("/u/$username")({
   loader: async ({ params }) => {
     const username = params.username;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { origin, siteName } = await loadSeoSiteContext();
     const { data: profile } = await supabaseAdmin
       .from("profiles")

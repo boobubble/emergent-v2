@@ -107,7 +107,7 @@ export default defineConfig({
       modulePreload: {
         resolveDependencies(_filename, deps) {
           return deps.filter(
-            (dep) => !/MehfilTrendingWidget|AuthScreen|AuthDialogs|ChatApp|app-shells|GuestNicknameDialog/.test(dep),
+            (dep) => !/MehfilTrendingWidget|AuthScreen|AuthDialogs|ChatApp|app-shells|GuestNicknameDialog|supabase-js|i18next|inter-latin|client-eager/.test(dep),
           );
         },
       },
@@ -116,6 +116,25 @@ export default defineConfig({
       },
     },
     plugins: [
+      {
+        name: "yaarzo-client-stub-server-supabase",
+        enforce: "pre",
+        resolveId(id, _importer, options) {
+          if (options?.ssr) return null;
+          const normalized = id.replace(/\\/g, "/");
+          if (
+            normalized === "@/integrations/supabase/client.server"
+            || /\/integrations\/supabase\/client\.server(?:\.ts)?$/.test(normalized)
+          ) {
+            return "\0yaarzo-stub-supabase-admin";
+          }
+          return null;
+        },
+        load(id) {
+          if (id !== "\0yaarzo-stub-supabase-admin") return null;
+          return "export const supabaseAdmin = new Proxy({}, { get() { throw new Error('supabaseAdmin is server-only'); } });";
+        },
+      },
       {
         // isomorphic-dompurify's package "default"/"browser" export is window-only
         // and throws during SSR module evaluation. Force the Node/jsdom entry for

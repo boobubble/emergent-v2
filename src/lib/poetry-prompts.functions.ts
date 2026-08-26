@@ -3,24 +3,11 @@
  * admin CRUD gated by the `admin` role via RLS (SECURITY DEFINER not needed).
  */
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
+import { createPublicAnonClient } from "@/integrations/supabase/public-anon-client";
 
 function publicClient() {
-  const url = process.env.SUPABASE_URL!;
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-  return createClient<Database>(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
+  return createPublicAnonClient();
 }
 
 export interface PoetryPrompt {
@@ -37,7 +24,7 @@ export interface PoetryPrompt {
 
 /** The prompt shown on the Poetry Hub hero right now. */
 export const getTodayPrompt = createServerFn({ method: "GET" }).handler(async () => {
-  const sb = publicClient();
+  const sb = await publicClient();
   const todayIso = new Date().toISOString();
   const today = todayIso.slice(0, 10);
 
@@ -64,7 +51,7 @@ export const getTodayPrompt = createServerFn({ method: "GET" }).handler(async ()
 export const getPromptById = createServerFn({ method: "GET" })
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const sb = await publicClient();
     const { data: row } = await (sb.from as any)("poetry_prompts")
       .select("*").eq("id", data.id).eq("is_active", true).maybeSingle();
     return (row as PoetryPrompt | null) ?? null;

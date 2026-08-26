@@ -29,6 +29,7 @@ import { GlobalErrorMonitoring } from "@/components/GlobalErrorMonitoring";
 import { logger } from "@/lib/logger";
 import { isPublicCmsSlugPath } from "@/lib/route-slug";
 import { isPublicPath as isPublicPathBase, isReadOnlyPublicAppPath, isPrivateUtilityPath } from "@/lib/public-routes";
+import { hasStoredAuthToken } from "@/lib/stored-auth";
 
 import appCss from "../styles.css?url";
 
@@ -121,8 +122,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
     ],
   }),
   shellComponent: RootShell,
@@ -184,13 +183,7 @@ function isCommunityNonChatPath(pathname: string) {
 
 function hasStoredAuthSession() {
   if (typeof window === "undefined") return true;
-  try {
-    for (let i = 0; i < window.localStorage.length; i++) {
-      const key = window.localStorage.key(i) ?? "";
-      if (key.startsWith("sb-") && key.endsWith("-auth-token")) return true;
-    }
-  } catch { /* ignore */ }
-  return false;
+  return hasStoredAuthToken();
 }
 
 function AuthGate() {

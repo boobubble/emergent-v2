@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { HOME_PAGE_KEY, type HomePageMode } from "@/lib/hero-page-config";
 
 /**
@@ -14,8 +14,13 @@ export function useHomePageMode() {
 
   useEffect(() => {
     let cancelled = false;
+    if (typeof window !== "undefined" && window.location.pathname === "/") {
+      setReady(true);
+      return;
+    }
     (async () => {
       try {
+        const supabase = await loadBrowserSupabase();
         const { data } = await supabase
           .from("app_settings")
           .select("value")

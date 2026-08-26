@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AuthScreen } from "@/components/auth/AuthScreen";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { useHomePageMode } from "@/lib/use-home-page-mode";
 import { landingPathForMode } from "@/lib/landing-path";
 import { loadPrivateRouteSeo, headFromRouteSeo } from "@/lib/seo";
@@ -23,6 +23,7 @@ function LoginRoute() {
     let cancel = false;
     (async () => {
       try {
+        const supabase = await loadBrowserSupabase();
         const { data } = await supabase
           .from("app_settings")
           .select("value")

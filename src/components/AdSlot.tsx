@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { scheduleAfterInteraction } from "@/lib/schedule-idle";
 
 export type AdSlotKey = "header" | "sidebar" | "in_feed" | "footer";
@@ -29,13 +29,13 @@ let loaded = false;
 async function loadOnce() {
   if (loaded) return;
   loaded = true;
+  const supabase = await loadBrowserSupabase();
   const { data } = await supabase.from("app_settings").select("key,value").eq("key", "ads").maybeSingle();
   cached = (data?.value as AdsConfig | null) ?? null;
   listeners.forEach((fn) => fn(cached));
-  // realtime updates
   supabase
     .channel("app_settings_ads")
-    .on("postgres_changes", { event: "*", schema: "public", table: "app_settings", filter: "key=eq.ads" }, (payload: any) => {
+    .on("postgres_changes", { event: "*", schema: "public", table: "app_settings", filter: "key=eq.ads" }, (payload: { new?: { value?: AdsConfig | null } }) => {
       cached = (payload.new?.value as AdsConfig | null) ?? null;
       listeners.forEach((fn) => fn(cached));
     })
@@ -45,10 +45,15 @@ async function loadOnce() {
 function useAdsConfig(): AdsConfig | null {
   const [cfg, setCfg] = useState<AdsConfig | null>(cached);
   useEffect(() => {
-    loadOnce();
     const fn = (c: AdsConfig | null) => setCfg(c);
     listeners.add(fn);
-    return () => { listeners.delete(fn); };
+    const onHome = typeof window !== "undefined" && window.location.pathname === "/";
+    const start = () => { void loadOnce(); };
+    const cancel = onHome ? scheduleAfterInteraction(start, 8000) : (start(), () => {});
+    return () => {
+      listeners.delete(fn);
+      cancel();
+    };
   }, []);
   return cfg;
 }
@@ -123,10 +128,8 @@ export function AdsAutoLoader() {
   useEffect(() => {
     if (!cfg?.enabled || cfg.provider !== "adsense" || !cfg.publisher_id) return;
     if (!cfg.auto_ads) return;
-    const run = () => ensureAdsenseLoader(cfg.publisher_id);
-    const onHome = typeof window !== "undefined" && window.location.pathname === "/";
-    if (onHome) return scheduleAfterInteraction(run, 8000);
-    run();
+    // useAdsConfig already defers the ads settings fetch on `/`.
+    ensureAdsenseLoader(cfg.publisher_id);
   }, [cfg]);
   return null;
 }

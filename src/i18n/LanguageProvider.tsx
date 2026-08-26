@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
-import i18n from "./index";
+import { useLocation } from "@tanstack/react-router";
 import { RTL_CODES, DEFAULT_LANG, LANG_STORAGE_KEY } from "./languages";
+import { isGuestHomePath } from "@/lib/stored-auth";
 
 function applyDir(lng: string) {
   if (typeof document === "undefined") return;
@@ -9,20 +10,40 @@ function applyDir(lng: string) {
   document.documentElement.setAttribute("lang", lng);
 }
 
+async function loadI18n() {
+  const mod = await import("./index");
+  return mod.default;
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
+  const pathname = useLocation({ select: (l) => l.pathname });
+
   useEffect(() => {
-    applyDir(i18n.language || DEFAULT_LANG);
-    const onChange = (lng: string) => {
-      applyDir(lng);
-      try { localStorage.setItem(LANG_STORAGE_KEY, lng); } catch { /* noop */ }
+    if (pathname === "/" && isGuestHomePath()) {
+      applyDir(DEFAULT_LANG);
+      return;
+    }
+    let cancelled = false;
+    let off: (() => void) | undefined;
+    void loadI18n().then((i18n) => {
+      if (cancelled) return;
+      applyDir(i18n.language || DEFAULT_LANG);
+      const onChange = (lng: string) => {
+        applyDir(lng);
+        try { localStorage.setItem(LANG_STORAGE_KEY, lng); } catch { /* noop */ }
+      };
+      i18n.on("languageChanged", onChange);
+      off = () => { i18n.off("languageChanged", onChange); };
+    });
+    return () => {
+      cancelled = true;
+      off?.();
     };
-    i18n.on("languageChanged", onChange);
-    return () => { i18n.off("languageChanged", onChange); };
-  }, []);
+  }, [pathname]);
 
   return <>{children}</>;
 }
 
 export function setLanguage(code: string) {
-  return i18n.changeLanguage(code);
+  return loadI18n().then((i18n) => i18n.changeLanguage(code));
 }

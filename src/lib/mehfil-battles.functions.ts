@@ -4,24 +4,11 @@
  * `type='poetry_battle'`.
  */
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import { createPublicAnonClient } from "@/integrations/supabase/public-anon-client";
 import type { MehfilPoem, MehfilPoemEnriched } from "./mehfil-types";
 
 function pub() {
-  const url = process.env.SUPABASE_URL!;
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-  return createClient<Database>(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
+  return createPublicAnonClient();
 }
 
 export interface PoetryBattle {
@@ -46,7 +33,7 @@ export interface PoetryBattle {
 export const listPoetryBattles = createServerFn({ method: "GET" })
   .inputValidator((input: { scope?: "active" | "upcoming" | "ended" | "all" } | undefined) => input ?? { scope: "active" as const })
   .handler(async ({ data }) => {
-    const sb = pub();
+    const sb = await pub();
     let q = sb.from("competitions").select("*").eq("type", "poetry_battle").order("start_at", { ascending: false }).limit(30);
     if (data.scope === "active") q = q.eq("status", "live");
     else if (data.scope === "upcoming") q = q.eq("status", "upcoming");
@@ -66,7 +53,7 @@ export const listPoetryBattles = createServerFn({ method: "GET" })
 export const getPoetryBattle = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string }) => input)
   .handler(async ({ data }) => {
-    const sb = pub();
+    const sb = await pub();
     const { data: b, error } = await sb.from("competitions").select("*").eq("slug", data.slug).eq("type", "poetry_battle").maybeSingle();
     if (error) throw error;
     if (!b) return null;

@@ -16,19 +16,30 @@ describe("supabase client boot — do not crash the application boundary", () =>
     expect(vite).toMatch(/import\.meta\.env\.VITE_SUPABASE_URL/);
     expect(vite).toMatch(/clientEnvDefine/);
     expect(vite).not.toMatch(/SUPABASE_SERVICE_ROLE/);
+    expect(vite).toContain("yaarzo-client-stub-server-supabase");
   });
 
   it("client.ts never reads the service role key", () => {
     const src = read("src/integrations/supabase/client.ts");
-    expect(src).toMatch(/VITE_SUPABASE_URL/);
-    expect(src).toMatch(/VITE_SUPABASE_PUBLISHABLE_KEY/);
     expect(src).not.toMatch(/process\.env\.SUPABASE_SERVICE/);
+    expect(src).not.toMatch(/from ["']@supabase\/supabase-js["']/);
+    expect(src).toContain('import("./client-eager")');
+    const eager = read("src/integrations/supabase/client-eager.ts");
+    expect(eager).toMatch(/VITE_SUPABASE_URL/);
+    expect(eager).toMatch(/VITE_SUPABASE_PUBLISHABLE_KEY/);
+    expect(eager).toContain("createRawBrowserClient");
+    expect(eager).toContain('import("@supabase/supabase-js")');
+    expect(eager).not.toMatch(/import \{ createClient \} from ["']@supabase\/supabase-js["']/);
+    expect(eager).not.toMatch(/process\.env\.SUPABASE_SERVICE/);
   });
 
-  it("AuthProvider catches sync getSession proxy throws", () => {
+  it("AuthProvider loads Supabase on demand and skips guest home", () => {
     const src = read("src/lib/auth-store.tsx");
-    expect(src).toMatch(/try \{[\s\S]*supabase\.auth\.getSession\(\)[\s\S]*\} catch/);
+    expect(src).toContain("loadBrowserSupabase");
+    expect(src).toContain("isGuestHomePath");
+    expect(src).toMatch(/try \{[\s\S]*getSession[\s\S]*\} catch/);
     expect(src).toMatch(/onAuthStateChange failed to attach/);
+    expect(src).not.toContain('from "@/integrations/supabase/client"');
   });
 
   it("AppSettingsProvider catches sync channel subscribe throws", () => {

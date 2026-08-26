@@ -11,23 +11,10 @@
  *   { users: true, mehfil: true, battles: true, categories: true }
  */
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import { createPublicAnonClient } from "@/integrations/supabase/public-anon-client";
 
 function pub() {
-  const url = process.env.SUPABASE_URL!;
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-  return createClient<Database>(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
+  return createPublicAnonClient();
 }
 
 export interface USPoemResult {
@@ -99,7 +86,7 @@ export const universalSearch = createServerFn({ method: "GET" })
     const limit = Math.min(Math.max(data.limit ?? 5, 1), 10);
     const like = `%${q.replace(/[%_]/g, (m) => `\\${m}`)}%`;
 
-    const sb = pub();
+    const sb = await pub();
 
     // Admin toggles
     const { data: srow } = await sb.from("app_settings").select("value").eq("key", "search").maybeSingle();

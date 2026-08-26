@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { scheduleAfterInteraction } from "@/lib/schedule-idle";
 
 interface ScriptsConfig {
@@ -65,29 +65,44 @@ export function HeadFootScripts() {
 
     let cancelIdle: (() => void) | undefined;
     const applyFromNetwork = async () => {
+      const supabase = await loadBrowserSupabase();
       const { data } = await supabase
         .from("app_settings").select("value").eq("key", "scripts").maybeSingle();
       if (!active) return;
       apply((data?.value as ScriptsConfig | null) ?? null);
     };
-    const onHome = typeof window !== "undefined" && window.location.pathname === "/";
-    if (onHome) cancelIdle = scheduleAfterInteraction(() => { void applyFromNetwork(); }, 8000);
-    else void applyFromNetwork();
 
-    const channel = supabase
-      .channel("app_settings_scripts")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "app_settings", filter: "key=eq.scripts" },
-        (payload: any) => apply((payload.new?.value as ScriptsConfig | null) ?? null),
-      )
-      .subscribe();
+    const startRealtime = async () => {
+      const supabase = await loadBrowserSupabase();
+      if (!active) return;
+      const channel = supabase
+        .channel("app_settings_scripts")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "app_settings", filter: "key=eq.scripts" },
+          (payload: { new?: { value?: ScriptsConfig | null } }) => apply((payload.new?.value as ScriptsConfig | null) ?? null),
+        )
+        .subscribe();
+      return () => {
+        try { supabase.removeChannel(channel); } catch { /* ignore */ }
+      };
+    };
+
+    let removeChannel: (() => void) | undefined;
+    const boot = () => {
+      void applyFromNetwork();
+      void startRealtime().then((fn) => { removeChannel = fn; });
+    };
+
+    const onHome = typeof window !== "undefined" && window.location.pathname === "/";
+    if (onHome) cancelIdle = scheduleAfterInteraction(boot, 8000);
+    else boot();
 
     return () => {
       active = false;
       cancelIdle?.();
       clearInjected();
-      supabase.removeChannel(channel);
+      removeChannel?.();
     };
   }, []);
 

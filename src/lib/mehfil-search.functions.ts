@@ -5,23 +5,10 @@
  * `mehfil_categories` tables directly with public read policies.
  */
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import { createPublicAnonClient } from "@/integrations/supabase/public-anon-client";
 
 function pub() {
-  const url = process.env.SUPABASE_URL!;
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-  return createClient<Database>(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
+  return createPublicAnonClient();
 }
 
 export interface MSPoemResult {
@@ -97,7 +84,7 @@ export const mehfilSearch = createServerFn({ method: "GET" })
     const like = `%${q.replace(/[%_]/g, (m) => `\\${m}`)}%`;
     const filter = (data.filter || "all").toLowerCase();
 
-    const sb = pub();
+    const sb = await pub();
     const trending_since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     // Build poem query with filter awareness
@@ -257,7 +244,7 @@ export interface MehfilQuickPanel {
 }
 
 export const getMehfilQuickPanel = createServerFn({ method: "GET" }).handler(async (): Promise<MehfilQuickPanel> => {
-  const sb = pub();
+  const sb = await pub();
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const [topWritersRes, tagRowsRes] = await Promise.all([
