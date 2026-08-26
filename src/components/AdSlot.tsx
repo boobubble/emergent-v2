@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { scheduleIdle } from "@/lib/schedule-idle";
 
 export type AdSlotKey = "header" | "sidebar" | "in_feed" | "footer";
 
@@ -54,6 +55,7 @@ function useAdsConfig(): AdsConfig | null {
 
 function ensureAdsenseLoader(publisherId: string) {
   if (typeof document === "undefined") return;
+  if (document.querySelector('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]')) return;
   if (document.querySelector('script[data-adsense-loader="1"]')) return;
   const s = document.createElement("script");
   s.async = true;
@@ -121,7 +123,10 @@ export function AdsAutoLoader() {
   useEffect(() => {
     if (!cfg?.enabled || cfg.provider !== "adsense" || !cfg.publisher_id) return;
     if (!cfg.auto_ads) return;
-    ensureAdsenseLoader(cfg.publisher_id);
+    const run = () => ensureAdsenseLoader(cfg.publisher_id);
+    const onHome = typeof window !== "undefined" && window.location.pathname === "/";
+    if (onHome) return scheduleIdle(run);
+    run();
   }, [cfg]);
   return null;
 }

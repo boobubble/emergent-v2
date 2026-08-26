@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { ChevronRight, type LucideIcon } from "lucide-react";
+import { publicAvatarThumbUrl } from "@/lib/public-avatar";
 
 export function WelcomeCard({
   className = "",
@@ -23,15 +25,27 @@ export function PillAvatar({
   name,
   size = 32,
   color,
+  src,
+  lazy = true,
 }: {
   name: string;
   size?: number;
   color?: string;
+  /** Public https avatar. Initials render when missing or if the image fails. */
+  src?: string | null;
+  lazy?: boolean;
 }) {
   const letter = (name || "?").trim().charAt(0).toUpperCase();
+  const original = src?.trim() || "";
+  const thumb = original ? publicAvatarThumbUrl(original, Math.ceil(size * 2)) : "";
+  const [failed, setFailed] = useState(false);
+  const [useOriginal, setUseOriginal] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const showImg = Boolean(original) && !failed;
+  const imgSrc = useOriginal || thumb === original ? original : thumb;
   return (
     <div
-      className="grid shrink-0 place-items-center rounded-full font-bold text-white ring-2 ring-white/10"
+      className="relative grid shrink-0 place-items-center overflow-hidden rounded-full font-bold text-white ring-2 ring-white/10"
       style={{
         width: size,
         height: size,
@@ -42,6 +56,25 @@ export function PillAvatar({
       }}
     >
       {letter}
+      {showImg && (
+        <img
+          src={imgSrc}
+          alt=""
+          width={size}
+          height={size}
+          loading={lazy ? "lazy" : "eager"}
+          decoding="async"
+          className={`absolute inset-0 h-full w-full rounded-full object-cover ${loaded ? "opacity-100" : "opacity-0"}`}
+          onLoad={() => setLoaded(true)}
+          onError={() => {
+            if (!useOriginal && thumb && thumb !== original) {
+              setUseOriginal(true);
+              return;
+            }
+            setFailed(true);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import type {
   LandingDemoPoll,
   LandingDiscussion,
   LandingFeaturedMember,
+  LandingNewMember,
   LandingTopMember,
   LandingTrendingPost,
 } from "@/lib/landing-config";
@@ -25,6 +26,7 @@ import {
   publicDisplayName,
   sortActivitiesNewest,
 } from "@/lib/landing-live";
+import { resolvePublicAvatarUrl } from "@/lib/public-avatar";
 
 type ProfileLite = {
   id: string;
@@ -34,6 +36,13 @@ type ProfileLite = {
   created_at?: string;
   is_private?: boolean | null;
   is_bot?: boolean | null;
+  avatar_url?: string | null;
+  avatar_moderation_status?: string | null;
+};
+
+type PublicProfileCard = {
+  username: string;
+  avatarUrl?: string;
 };
 
 type PostLite = {
@@ -84,17 +93,37 @@ async function loadBannedUserIds(): Promise<string[]> {
     .filter((id): id is string => Boolean(id));
 }
 
-async function loadUsernameMap(ownerIds: string[]): Promise<Map<string, string>> {
+async function loadPublicProfileMap(ownerIds: string[]): Promise<Map<string, PublicProfileCard>> {
   const ids = Array.from(new Set(ownerIds.filter(Boolean)));
-  const map = new Map<string, string>();
+  const map = new Map<string, PublicProfileCard>();
   if (!ids.length) return map;
-  let q = supabaseAdmin.from("profiles").select("id, username, is_private, is_bot").in("id", ids);
+  let q = supabaseAdmin
+    .from("profiles")
+    .select("id, username, is_private, is_bot, avatar_url, avatar_moderation_status")
+    .in("id", ids);
   q = applyPublicProfileFilter(q);
   const { data } = await q;
   for (const p of data ?? []) {
-    if (isEligiblePublicProfile(p) && p.username) map.set(p.id, p.username);
+    if (!isEligiblePublicProfile(p) || !p.username) continue;
+    map.set(p.id, {
+      username: p.username,
+      avatarUrl: resolvePublicAvatarUrl({
+        avatarUrl: p.avatar_url,
+        avatarModerationStatus: p.avatar_moderation_status,
+      }),
+    });
   }
   return map;
+}
+
+function cardAvatar(row: {
+  avatar_url?: string | null;
+  avatar_moderation_status?: string | null;
+}): string | undefined {
+  return resolvePublicAvatarUrl({
+    avatarUrl: row.avatar_url,
+    avatarModerationStatus: row.avatar_moderation_status,
+  });
 }
 
 function roomEmoji(name: string): string {
@@ -119,6 +148,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
   recentConfessions: LandingConfessionItem[];
   blogPosts: LandingBlogPost[];
   activities: LandingActivity[];
+  newMembers: LandingNewMember[];
 }> {
   const now = Date.now();
   const nowIso = new Date(now).toISOString();
@@ -137,7 +167,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
 
   const topProfileQ = (limit: number) => {
     let q = applyPublicProfileFilter(
-      supabaseAdmin.from("profiles").select("id, username, xp, level, created_at, is_private, is_bot"),
+      supabaseAdmin.from("profiles").select("id, username, xp, level, created_at, is_private, is_bot, avatar_url, avatar_moderation_status"),
     )
       .order("xp", { ascending: false })
       .limit(limit);
@@ -147,10 +177,10 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
 
   const newProfileQ = () => {
     let q = applyPublicProfileFilter(
-      supabaseAdmin.from("profiles").select("id, username, created_at, is_private, is_bot"),
+      supabaseAdmin.from("profiles").select("id, username, created_at, is_private, is_bot, xp, level, avatar_url, avatar_moderation_status"),
     )
       .order("created_at", { ascending: false })
-      .limit(4);
+      .limit(6);
     if (banFilter) q = q.not("id", "in", banFilter);
     return q;
   };
@@ -247,7 +277,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
           .limit(6)
       : Promise.resolve({ data: [] }),
     cfg.blogPostsUseLive ? fetchPublishedBlogs(now) : Promise.resolve([] as LandingBlogPost[]),
-    cfg.activitiesUseLive ? newProfileQ() : Promise.resolve({ data: [] as ProfileLite[] }),
+    newProfileQ(),
     cfg.activitiesUseLive
       ? applyPublicPostFilter(
           supabaseAdmin
@@ -320,13 +350,14 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
     .map((u) => ({
       username: (u.username as string).trim(),
       xp: (u.xp as number) ?? 0,
+      avatarUrl: cardAvatar(u),
     }));
 
   const eligibleFeed = ((latestPosts.data ?? []) as PostLite[]).filter(
     (row) => isEligiblePublicPost(row) && notBanned(row.owner_id),
   );
   const latest = eligibleFeed[0] ?? null;
-  const feedOwnerMap = await loadUsernameMap(
+  const feedOwnerMap = await loadPublicProfileMap(
     [
       latest && !latest.is_anonymous ? latest.owner_id : null,
       ...((trendingRows.data ?? []) as PostLite[])
@@ -341,17 +372,22 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
     ].filter((id): id is string => Boolean(id)),
   );
 
+  const ownerCard = (ownerId: string | null | undefined, anonymous?: boolean | null) =>
+    anonymous ? undefined : ownerId ? feedOwnerMap.get(ownerId) : undefined;
+
   const feedPost: LandingDemoFeedPost | null = latest
     ? {
         username: publicDisplayName({
           isAnonymous: latest.is_anonymous,
-          username: latest.owner_id ? feedOwnerMap.get(latest.owner_id) : null,
+          username: ownerCard(latest.owner_id, latest.is_anonymous)?.username,
         }),
         ago: formatLandingAgo(latest.created_at, now),
         text: (latest.text ?? "").trim().slice(0, 220),
         likes: latest.reaction_count ?? 0,
         comments: latest.comment_count ?? 0,
         coins: 0,
+        anonymous: Boolean(latest.is_anonymous),
+        avatarUrl: latest.is_anonymous ? undefined : ownerCard(latest.owner_id)?.avatarUrl,
       }
     : null;
 
@@ -391,13 +427,15 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
         .map((r) => ({
           user: publicDisplayName({
             isAnonymous: r.is_anonymous,
-            username: r.owner_id ? feedOwnerMap.get(r.owner_id) : null,
+            username: ownerCard(r.owner_id, r.is_anonymous)?.username,
           }),
           ago: formatLandingAgo(r.created_at, now),
           text: (r.text ?? "").trim().slice(0, 220),
           likes: r.reaction_count ?? 0,
           comments: r.comment_count ?? 0,
           tag: Array.isArray(r.hashtags) && r.hashtags[0] ? `#${r.hashtags[0]}` : "#trending",
+          anonymous: Boolean(r.is_anonymous),
+          avatarUrl: r.is_anonymous ? undefined : ownerCard(r.owner_id)?.avatarUrl,
         }))
     : [];
 
@@ -410,7 +448,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
           room: "Public feed",
           author: publicDisplayName({
             isAnonymous: r.is_anonymous,
-            username: r.owner_id ? feedOwnerMap.get(r.owner_id) : null,
+            username: ownerCard(r.owner_id, r.is_anonymous)?.username,
           }),
           replies: r.comment_count ?? 0,
           last: formatLandingAgo((r.updated_at as string) ?? r.created_at, now),
@@ -422,7 +460,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
     ? ((topUsers.data ?? []) as ProfileLite[])
         .filter((u) => isEligiblePublicProfile(u))
         .slice(0, 4)
-        .map((u, i) => mapLiveFeaturedMember(u, i))
+        .map((u, i) => mapLiveFeaturedMember({ ...u, avatarUrl: cardAvatar(u) }, i))
     : [];
 
   const recentConfessions: LandingConfessionItem[] = cfg.recentConfessionsUseLive
@@ -454,6 +492,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
         tint: "from-blue-500/30 to-cyan-500/20",
         accent: "text-cyan-200",
         href: "/",
+        avatarUrl: cardAvatar(p),
         at: new Date(p.created_at).getTime(),
       });
     }
@@ -462,7 +501,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
       drafts.push({
         who: publicDisplayName({
           isAnonymous: p.is_anonymous,
-          username: p.owner_id ? feedOwnerMap.get(p.owner_id) : null,
+          username: ownerCard(p.owner_id, p.is_anonymous)?.username,
         }),
         action: "posted",
         target: ((p.text as string) ?? "a new update").trim().slice(0, 40) || "a new update",
@@ -471,6 +510,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
         tint: "from-purple-500/30 to-pink-500/20",
         accent: "text-pink-200",
         href: "/feed",
+        avatarUrl: p.is_anonymous ? undefined : ownerCard(p.owner_id)?.avatarUrl,
         at: new Date(p.created_at).getTime(),
       });
     }
@@ -493,6 +533,17 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
     );
   }
 
+  const newMembers: LandingNewMember[] = ((newProfiles.data ?? []) as ProfileLite[])
+    .filter((p) => isEligiblePublicProfile(p) && p.created_at)
+    .slice(0, 6)
+    .map((p) => ({
+      username: p.username!.trim(),
+      ago: formatLandingAgo(p.created_at, now),
+      level: typeof p.level === "number" && Number.isFinite(p.level) ? Math.max(1, Math.floor(p.level)) : 1,
+      xp: p.xp ?? 0,
+      avatarUrl: cardAvatar(p),
+    }));
+
   return {
     stats: {
       members: totalMembers.count ?? 0,
@@ -513,6 +564,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
     recentConfessions,
     blogPosts,
     activities,
+    newMembers,
   };
 }
 
@@ -557,7 +609,7 @@ async function fetchPublishedBlogs(now: number): Promise<LandingBlogPost[]> {
     }>).filter((row) => isEligiblePublicBlog(row, now));
 
     const authorIds = rows.map((r) => r.author_id).filter((id): id is string => Boolean(id));
-    const authors = await loadUsernameMap(authorIds);
+    const authors = await loadPublicProfileMap(authorIds);
 
     return rows.map((row, i) => {
       const cat = Array.isArray(row.categories) ? row.categories[0] : row.categories;
@@ -567,7 +619,7 @@ async function fetchPublishedBlogs(now: number): Promise<LandingBlogPost[]> {
           slug: row.slug,
           meta_description: row.meta_description,
           published_at: row.published_at,
-          author: row.author_id ? authors.get(row.author_id) ?? "" : "",
+          author: row.author_id ? authors.get(row.author_id)?.username ?? "" : "",
           category: cat?.name ?? "Blog",
         },
         i,
@@ -577,5 +629,3 @@ async function fetchPublishedBlogs(now: number): Promise<LandingBlogPost[]> {
     return [];
   }
 }
-
-export { EMPTY_LIVE_STATS };

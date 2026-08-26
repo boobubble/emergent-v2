@@ -181,6 +181,7 @@ describe("demo vs live view resolution", () => {
       recentConfessions: [],
       blogPosts: [],
       activities: [],
+      newMembers: [],
     });
     expect(view.source).toBe("live");
     expect(view.feedPost).toBeNull();
@@ -216,5 +217,21 @@ describe("landing API sources", () => {
     expect(shell).toContain("resolveLandingView");
     expect(shell).not.toContain("cfg.demoChatrooms");
     expect(shell).not.toContain("cfg.demoFeedPost");
+  });
+
+  it("public avatars use the approved https resolver", () => {
+    const server = read("lib/landing-live.server.ts");
+    const gate = read("lib/auth-gate.tsx");
+    const settings = read("lib/app-settings.tsx");
+    expect(server).toContain("resolvePublicAvatarUrl");
+    expect(server).toContain("avatar_moderation_status");
+    expect(server).not.toContain("avatar_quarantine_url");
+    expect(server).toContain("newProfileQ()");
+    expect(server).toContain("avatarUrl: latest.is_anonymous ? undefined");
+    expect(server).toContain("avatarUrl: p.is_anonymous ? undefined");
+    expect(gate).toMatch(/lazy\(\(\) =>/);
+    expect(gate).toContain("AuthDialogs");
+    expect(settings).toContain("GUEST_HOME_SETTING_KEYS");
+    expect(settings).toContain('.in("key"');
   });
 });

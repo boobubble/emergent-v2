@@ -1,5 +1,7 @@
 import {
   createContext,
+  lazy,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -9,9 +11,13 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/lib/auth-store";
-import { AuthDialogs, type AuthPopup } from "@/components/auth/AuthScreen";
+import type { AuthPopup } from "@/components/auth/AuthScreen";
 import { GuestChatProvider } from "@/lib/guest-chat-context";
 import { GuestNicknameDialog } from "@/components/chat/GuestNicknameDialog";
+
+const AuthDialogs = lazy(() =>
+  import("@/components/auth/AuthScreen").then((m) => ({ default: m.AuthDialogs })),
+);
 
 /**
  * Generic authentication gate.
@@ -59,6 +65,7 @@ export function AuthGateProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = Boolean(user);
 
   const [popup, setPopup] = useState<AuthPopup>(null);
+  const [dialogsReady, setDialogsReady] = useState(false);
   const pendingRef = useRef<null | (() => void | Promise<void>)>(null);
   const firedRef = useRef(false);
 
@@ -119,16 +126,19 @@ export function AuthGateProvider({ children }: { children: ReactNode }) {
       return true;
     }
     pendingRef.current = action ?? null;
+    setDialogsReady(true);
     setPopup(opts?.mode === "signup" ? "signup" : "signin");
     return false;
   }, [isAuthenticated]);
 
   const openSignIn = useCallback(() => {
     pendingRef.current = null;
+    setDialogsReady(true);
     setPopup("signin");
   }, []);
   const openSignUp = useCallback(() => {
     pendingRef.current = null;
+    setDialogsReady(true);
     setPopup("signup");
   }, []);
 
@@ -143,7 +153,11 @@ export function AuthGateProvider({ children }: { children: ReactNode }) {
     <AuthGateContext.Provider value={api}>
       <GuestChatProvider>
         {children}
-        <AuthDialogs popup={popup} setPopup={handleSetPopup} />
+        {dialogsReady ? (
+          <Suspense fallback={null}>
+            <AuthDialogs popup={popup} setPopup={handleSetPopup} />
+          </Suspense>
+        ) : null}
         <GuestNicknameDialog />
       </GuestChatProvider>
     </AuthGateContext.Provider>

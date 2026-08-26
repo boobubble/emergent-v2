@@ -64,6 +64,7 @@ describe("HomeSeoContent SSR", () => {
     expect(html).not.toContain("Tara Sparks");
     expect(html).toContain("No public posts yet");
     expect(html).toContain("New stories will appear here");
+    expect(html).toContain("New members will appear here");
     expect(html).toContain('href="/blog"');
   });
 

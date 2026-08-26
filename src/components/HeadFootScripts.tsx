@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { scheduleIdle } from "@/lib/schedule-idle";
 
 interface ScriptsConfig {
   enabled: boolean;
@@ -29,6 +30,13 @@ function inject(html: string, target: HTMLElement, mark: string, atEnd: boolean)
     let el: Node = node;
     if (node.nodeType === 1 && (node as Element).tagName === "SCRIPT") {
       const src = node as HTMLScriptElement;
+      const srcUrl = src.getAttribute("src") || "";
+      if (srcUrl.includes("adsbygoogle.js") && document.querySelector('script[src*="adsbygoogle.js"]')) {
+        continue;
+      }
+      if (srcUrl.includes("googletagmanager.com/gtag/js") && document.querySelector(`script[src="${srcUrl}"]`)) {
+        continue;
+      }
       const s = document.createElement("script");
       for (const attr of Array.from(src.attributes)) s.setAttribute(attr.name, attr.value);
       if (src.textContent) s.textContent = src.textContent;
@@ -55,12 +63,16 @@ export function HeadFootScripts() {
       if (cfg.footer_script) inject(cfg.footer_script, document.body, FOOTER_MARK, true);
     };
 
-    (async () => {
+    let cancelIdle: (() => void) | undefined;
+    const applyFromNetwork = async () => {
       const { data } = await supabase
         .from("app_settings").select("value").eq("key", "scripts").maybeSingle();
       if (!active) return;
       apply((data?.value as ScriptsConfig | null) ?? null);
-    })();
+    };
+    const onHome = typeof window !== "undefined" && window.location.pathname === "/";
+    if (onHome) cancelIdle = scheduleIdle(() => { void applyFromNetwork(); });
+    else void applyFromNetwork();
 
     const channel = supabase
       .channel("app_settings_scripts")
@@ -73,6 +85,7 @@ export function HeadFootScripts() {
 
     return () => {
       active = false;
+      cancelIdle?.();
       clearInjected();
       supabase.removeChannel(channel);
     };

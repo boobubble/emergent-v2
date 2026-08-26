@@ -9,6 +9,7 @@ import type {
   LandingDemoPoll,
   LandingDiscussion,
   LandingFeaturedMember,
+  LandingNewMember,
   LandingTopMember,
   LandingTrendingPost,
 } from "@/lib/landing-config";
@@ -151,7 +152,7 @@ export function mapLiveBlogPost(
 }
 
 export function mapLiveFeaturedMember(
-  row: { username?: string | null; xp?: number | null; level?: number | null },
+  row: { username?: string | null; xp?: number | null; level?: number | null; avatarUrl?: string },
   index: number,
 ): LandingFeaturedMember {
   return {
@@ -160,6 +161,7 @@ export function mapLiveFeaturedMember(
     xp: row.xp ?? 0,
     badges: "",
     gradient: FEATURED_GRADS[index % FEATURED_GRADS.length],
+    avatarUrl: row.avatarUrl,
   };
 }
 
@@ -176,6 +178,7 @@ export type LandingViewCollections = {
   recentConfessions: LandingConfessionItem[];
   blogPosts: LandingBlogPost[];
   activities: LandingActivity[];
+  newMembers: LandingNewMember[];
 };
 
 export function resolveLandingView(
@@ -198,6 +201,7 @@ export function resolveLandingView(
     recentConfessions: data?.recentConfessions ?? (demo ? cfg.recentConfessions : []),
     blogPosts: data?.blogPosts ?? (demo ? cfg.blogPosts : []),
     activities: data?.activities ?? (demo ? cfg.activities : []),
+    newMembers: data?.newMembers ?? [],
   };
 }
 

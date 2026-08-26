@@ -35,6 +35,7 @@ import {
   type LandingPayload,
   type LandingStats,
 } from "@/lib/landing-payload";
+import { publicProfilePath } from "@/lib/public-avatar";
 
 const seoLink =
   "font-semibold text-purple-300 underline-offset-4 hover:underline";
@@ -86,6 +87,7 @@ export type HomeSeoContentProps = {
   recentConfessions?: LandingPayload["recentConfessions"];
   blogPosts?: LandingPayload["blogPosts"];
   activities?: LandingPayload["activities"];
+  newMembers?: LandingPayload["newMembers"];
   theme?: "dark" | "light";
   menuOpen?: boolean;
   pollChoice?: number | null;
@@ -116,6 +118,7 @@ export function HomeSeoContent({
   recentConfessions,
   blogPosts,
   activities,
+  newMembers,
   theme = "dark",
   menuOpen = false,
   pollChoice = null,
@@ -142,9 +145,14 @@ export function HomeSeoContent({
   const confessions = recentConfessions ?? (isDemo ? cfg.recentConfessions : []);
   const blogs = blogPosts ?? (isDemo ? cfg.blogPosts : []);
   const activityItems = activities ?? (isDemo ? cfg.activities : []);
+  const signupItems = newMembers ?? [];
   const pollTotal = pollData?.options.reduce((s, o) => s + (o.votes || 0), 0) || 1;
-  const heroFaces = (isDemo ? ["Amit", "Pooja", "Rahul", "Neha"] : members.map((m) => m.username)).slice(0, 4);
-  while (heroFaces.length < 4) heroFaces.push("Y");
+  const heroPeople = (
+    isDemo
+      ? ["Amit", "Pooja", "Rahul", "Neha"].map((username) => ({ username }))
+      : members.slice(0, 4)
+  ) as Array<{ username: string; avatarUrl?: string }>;
+  while (heroPeople.length < 4) heroPeople.push({ username: "Y" });
 
   return (
     <div
@@ -290,8 +298,8 @@ export function HomeSeoContent({
 
               <div className="mt-6 flex items-center gap-3">
                 <div className="flex -space-x-2">
-                  {heroFaces.map((n, i) => (
-                    <PillAvatar key={`${n}-${i}`} name={n} size={32} />
+                  {heroPeople.map((p, i) => (
+                    <PillAvatar key={`${p.username}-${i}`} name={p.username} size={32} src={p.avatarUrl} lazy={i > 0} />
                   ))}
                 </div>
                 <span className="text-xs text-white/65 sm:text-sm">{cfg.heroSocialProof}</span>
@@ -387,6 +395,7 @@ export function HomeSeoContent({
         <PoetrySeoSection />
         <Discussions items={discussionItems} />
         <FeaturedMembers members={featured} />
+        <LatestSignups members={signupItems} />
         <RecentConfessions items={confessions} />
         <CommunityActivity items={activityItems} />
         <CommunityBlog posts={blogs} />
@@ -718,9 +727,13 @@ function LiveCommunity({
                   >
                     {i + 1}
                   </span>
-                  <PillAvatar name={u.username} size={32} />
+                  <a href={publicProfilePath(u.username)} className="shrink-0" aria-label={u.username}>
+                    <PillAvatar name={u.username} size={32} src={u.avatarUrl} />
+                  </a>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-bold">{u.username}</div>
+                    <a href={publicProfilePath(u.username)} className="truncate text-sm font-bold hover:underline">
+                      {u.username}
+                    </a>
                   </div>
                   <div className="text-xs font-bold text-purple-300">{fmtCount(u.xp)} XP</div>
                 </div>
@@ -746,9 +759,15 @@ function LiveCommunity({
             {post ? (
             <article className="mt-3 rounded-xl bg-white/[0.03] p-3">
               <header className="flex items-center gap-2.5">
-                <PillAvatar name={post.username} size={36} />
+                <PillAvatar name={post.username} size={36} src={post.anonymous ? undefined : post.avatarUrl} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-bold">{post.username}</div>
+                  {post.anonymous ? (
+                    <div className="truncate text-sm font-bold">{post.username}</div>
+                  ) : (
+                    <a href={publicProfilePath(post.username)} className="truncate text-sm font-bold hover:underline">
+                      {post.username}
+                    </a>
+                  )}
                   <div className="text-[11px] text-white/50">{post.ago}</div>
                 </div>
               </header>
@@ -897,9 +916,15 @@ function TrendingPosts({ posts }: { posts: LandingPayload["trendingPosts"] }) {
           {posts.map((p, i) => (
             <article key={i} className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
               <header className="flex items-center gap-2.5">
-                <PillAvatar name={p.user} size={36} />
+                <PillAvatar name={p.user} size={36} src={p.anonymous ? undefined : p.avatarUrl} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-bold">{p.user}</div>
+                  {p.anonymous ? (
+                    <div className="truncate text-sm font-bold">{p.user}</div>
+                  ) : (
+                    <a href={publicProfilePath(p.user)} className="truncate text-sm font-bold hover:underline">
+                      {p.user}
+                    </a>
+                  )}
                   <div className="text-[11px] text-white/50">{p.ago}</div>
                 </div>
                 <Flame className="h-4 w-4 text-orange-400" />
@@ -979,10 +1004,12 @@ function FeaturedMembers({ members }: { members: LandingPayload["featuredMembers
             <div key={m.name} className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${m.gradient} p-4 ring-1 ring-white/10`}>
               <div className="relative flex flex-col items-center text-center">
                 <div className="relative">
-                  <PillAvatar name={m.name} size={64} />
+                  <a href={publicProfilePath(m.name)} aria-label={m.name}>
+                    <PillAvatar name={m.name} size={64} src={m.avatarUrl} />
+                  </a>
                   <Crown className="absolute -right-1 -top-1 h-5 w-5 text-amber-300 drop-shadow" />
                 </div>
-                <div className="mt-2.5 text-sm font-bold">{m.name}</div>
+                <a href={publicProfilePath(m.name)} className="mt-2.5 text-sm font-bold hover:underline">{m.name}</a>
                 <div className="text-[11px] text-white/70">{m.role}</div>
                 <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 text-[11px] font-bold text-amber-200">
                   <Star className="h-3 w-3" /> {m.xp.toLocaleString()} XP
@@ -1037,6 +1064,41 @@ function RecentConfessions({ items }: { items: LandingPayload["recentConfessions
   );
 }
 
+function LatestSignups({ members }: { members: LandingPayload["newMembers"] }) {
+  return (
+    <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+      <WelcomeCard className="p-5 sm:p-6">
+        <SectionTitle icon="👋" title="Latest Signups" suffix="(New members)" href="/find-friends" />
+        {members.length ? (
+          <ul className="mt-4 divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-white/[0.02]">
+            {members.map((m) => (
+              <li key={m.username} className="flex min-w-0 items-center gap-3 px-3 py-3 sm:px-4">
+                <a href={publicProfilePath(m.username)} className="shrink-0" aria-label={m.username}>
+                  <PillAvatar name={m.username} size={36} src={m.avatarUrl} />
+                </a>
+                <div className="min-w-0 flex-1">
+                  <a href={publicProfilePath(m.username)} className="truncate text-sm font-bold hover:underline">
+                    {m.username}
+                  </a>
+                  <div className="truncate text-[11px] text-white/55">Joined {m.ago}</div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <div className="text-[11px] font-bold text-purple-300">Lv {m.level}</div>
+                  <div className="text-[10px] text-white/45">{fmtCount(m.xp)} XP</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyHint href="/" cta="Join Free">
+            New members will appear here.
+          </EmptyHint>
+        )}
+      </WelcomeCard>
+    </section>
+  );
+}
+
 function CommunityActivity({ items }: { items: LandingPayload["activities"] }) {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
@@ -1046,11 +1108,21 @@ function CommunityActivity({ items }: { items: LandingPayload["activities"] }) {
         <ul className="mt-4 divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-white/[0.02]">
           {items.map((a, i) => (
             <li key={i} className="flex items-center gap-3 px-3 py-3 sm:px-4">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-purple-500/30 to-blue-500/20 text-base ring-1 ring-white/10">
-                {a.emoji}
-              </div>
+              {a.action === "shared" || a.who === "Anonymous" ? (
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-purple-500/30 to-blue-500/20 text-base ring-1 ring-white/10">
+                  {a.emoji}
+                </div>
+              ) : (
+                <a href={publicProfilePath(a.who)} className="shrink-0" aria-label={a.who}>
+                  <PillAvatar name={a.who} size={36} src={a.avatarUrl} />
+                </a>
+              )}
               <div className="min-w-0 flex-1 text-sm leading-snug text-white/85">
-                <span className="font-bold text-white">{a.who}</span>{" "}
+                {a.action === "shared" || a.who === "Anonymous" ? (
+                  <span className="font-bold text-white">{a.who}</span>
+                ) : (
+                  <a href={publicProfilePath(a.who)} className="font-bold text-white hover:underline">{a.who}</a>
+                )}{" "}
                 <span className="text-white/65">{a.action}</span>{" "}
                 <a href={a.href || "/feed"} className="font-semibold text-purple-200 hover:underline">{a.target}</a>
               </div>

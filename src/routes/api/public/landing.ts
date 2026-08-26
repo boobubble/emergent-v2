@@ -45,6 +45,7 @@ export const Route = createFileRoute("/api/public/landing")({
               recentConfessions: cfg.recentConfessions,
               blogPosts: cfg.blogPosts,
               activities: cfg.activities,
+              newMembers: [],
             },
             { headers: { "Cache-Control": "public, max-age=30" } },
           );

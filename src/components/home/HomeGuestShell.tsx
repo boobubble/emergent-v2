@@ -97,6 +97,7 @@ export function HomeGuestShell() {
         recentConfessions={view.recentConfessions}
         blogPosts={view.blogPosts}
         activities={view.activities}
+        newMembers={view.newMembers}
         theme={theme}
         menuOpen={menuOpen}
         pollChoice={pollChoice}

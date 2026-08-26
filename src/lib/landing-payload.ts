@@ -9,6 +9,7 @@ import type {
   LandingDemoPoll,
   LandingDiscussion,
   LandingFeaturedMember,
+  LandingNewMember,
   LandingTopMember,
   LandingTrendingPost,
 } from "@/lib/landing-config";
@@ -38,6 +39,7 @@ export interface LandingPayload {
   recentConfessions: LandingConfessionItem[];
   blogPosts: LandingBlogPost[];
   activities: LandingActivity[];
+  newMembers: LandingNewMember[];
 }
 
 export const fmtCount = (n: number) =>

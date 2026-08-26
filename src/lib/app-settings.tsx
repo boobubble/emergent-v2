@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CORE_MODULE_DEFAULTS } from "@/lib/module-flags";
+import { subscribeAuthStateChange } from "@/lib/auth-listener";
 
 export type LayoutPriority = "chatrooms_first" | "feed_first";
 
@@ -67,12 +68,42 @@ const DEFAULTS: { layoutPriority: LayoutPriority; modules: ModulesFlags } = {
 
 const Ctx = createContext<AppSettings | null>(null);
 
+/** Keys needed to boot the guest homepage without downloading every setting row. */
+export const GUEST_HOME_SETTING_KEYS = [
+  "branding",
+  "modules",
+  "layout_priority",
+  "guest_chat",
+] as const;
+
+function hasStoredAuthSession() {
+  if (typeof window === "undefined") return false;
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i) ?? "";
+      if (key.startsWith("sb-") && key.endsWith("-auth-token")) return true;
+    }
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
+
+function shouldLoadFullSettings() {
+  if (typeof window === "undefined") return false;
+  if (hasStoredAuthSession()) return true;
+  return window.location.pathname !== "/";
+}
+
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const [raw, setRaw] = useState<Record<string, unknown>>({});
   const [ready, setReady] = useState(false);
 
-  const load = async () => {
-    const { data } = await supabase.from("app_settings").select("key,value");
+  const load = async (forceFull = false) => {
+    const full = forceFull || shouldLoadFullSettings();
+    let q = supabase.from("app_settings").select("key,value");
+    if (!full) q = q.in("key", [...GUEST_HOME_SETTING_KEYS]);
+    const { data } = await q;
     const map: Record<string, unknown> = {};
     for (const row of data ?? []) map[row.key] = row.value;
     setRaw(map);
@@ -91,10 +122,14 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     }
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let unsubAuth: (() => void) | undefined;
     try {
       void load().catch((e) => {
         console.error("[app-settings] load failed", e);
         setReady(true);
+      });
+      unsubAuth = subscribeAuthStateChange((_event, session) => {
+        if (session?.user) void load(true);
       });
       channel = supabase
         .channel(`app_settings_changes:${Math.random().toString(36).slice(2)}`)
@@ -105,6 +140,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       setReady(true);
     }
     return () => {
+      unsubAuth?.();
       if (!channel) return;
       try { supabase.removeChannel(channel); } catch { /* ignore */ }
     };

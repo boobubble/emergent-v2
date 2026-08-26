@@ -51,6 +51,8 @@ export interface LandingTopMember {
   username: string;
   xp: number;
   emoji?: string;
+  /** Public https avatar only. Omitted when missing/unsafe. */
+  avatarUrl?: string;
 }
 
 export interface LandingDemoFeedPost {
@@ -61,6 +63,8 @@ export interface LandingDemoFeedPost {
   likes: number;
   comments: number;
   coins: number;
+  avatarUrl?: string;
+  anonymous?: boolean;
 }
 
 export interface LandingDemoPoll {
@@ -88,6 +92,8 @@ export interface LandingDemoStats {
 
 export interface LandingTrendingPost {
   user: string; ago: string; text: string; likes: number; comments: number; tag: string;
+  avatarUrl?: string;
+  anonymous?: boolean;
 }
 export interface LandingDiscussion {
   topic: string; room: string; author: string; replies: number; last: string; hot?: boolean;
@@ -95,6 +101,7 @@ export interface LandingDiscussion {
 export interface LandingFeaturedMember {
   name: string; role: string; xp: number; badges: string; // space-separated emojis
   gradient?: string;
+  avatarUrl?: string;
 }
 export interface LandingConfessionItem {
   alias: string; emoji: string; ago: string; text: string; reacts: number;
@@ -106,6 +113,15 @@ export interface LandingBlogPost {
 export interface LandingActivity {
   who: string; action: string; target: string; ago: string; emoji: string;
   tint?: string; accent?: string; href?: string;
+  avatarUrl?: string;
+}
+
+export interface LandingNewMember {
+  username: string;
+  ago: string;
+  level: number;
+  xp: number;
+  avatarUrl?: string;
 }
 
 export interface LandingConfig {

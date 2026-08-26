@@ -104,6 +104,13 @@ export default defineConfig({
     define: clientEnvDefine,
     build: {
       sourcemap: false,
+      modulePreload: {
+        resolveDependencies(_filename, deps) {
+          return deps.filter(
+            (dep) => !/MehfilTrendingWidget|AuthScreen|ChatApp/.test(dep),
+          );
+        },
+      },
       rollupOptions: {
         maxParallelFileOps: 2,
       },
