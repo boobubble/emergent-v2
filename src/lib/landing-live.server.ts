@@ -27,6 +27,7 @@ import {
   sortActivitiesNewest,
 } from "@/lib/landing-live";
 import { resolvePublicAvatarUrl } from "@/lib/public-avatar";
+import { logger } from "@/lib/logger";
 
 type ProfileLite = {
   id: string;
@@ -81,16 +82,62 @@ function bannedIdFilter(ids: string[]): string | null {
 }
 
 async function loadBannedUserIds(): Promise<string[]> {
-  const now = new Date().toISOString();
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("user_bans")
     .select("user_id, expires_at")
     .eq("active", true)
-    .limit(500);
+    .limit(100);
+  if (error) {
+    logger.warn("landing.user_bans", error);
+    return [];
+  }
+  const now = new Date().toISOString();
   return (data ?? [])
     .filter((row) => !row.expires_at || row.expires_at > now)
     .map((row) => row.user_id)
     .filter((id): id is string => Boolean(id));
+}
+
+type SbResult<T> = { data: T | null; error: unknown; count?: number | null };
+
+async function isolate<T>(
+  name: string,
+  run: PromiseLike<SbResult<T>>,
+  fallback: T,
+): Promise<{ data: T; count: number }> {
+  try {
+    const res = await run;
+    if (res.error) {
+      logger.warn(`landing.query.${name}`, res.error);
+      return { data: fallback, count: 0 };
+    }
+    return { data: (res.data ?? fallback) as T, count: res.count ?? 0 };
+  } catch (err) {
+    logger.warn(`landing.query.${name}`, err);
+    return { data: fallback, count: 0 };
+  }
+}
+
+function timed<T>(name: string, timings: Record<string, number>, p: Promise<T>): Promise<T> {
+  const t0 = Date.now();
+  return p.finally(() => {
+    timings[name] = Date.now() - t0;
+  });
+}
+
+async function loadCategoryNames(ids: string[]): Promise<Map<string, string>> {
+  const unique = Array.from(new Set(ids.filter(Boolean)));
+  const map = new Map<string, string>();
+  if (!unique.length) return map;
+  const { data, error } = await supabaseAdmin.from("categories").select("id, name").in("id", unique);
+  if (error) {
+    logger.warn("landing.categories", error);
+    return map;
+  }
+  for (const row of data ?? []) {
+    if (row.id && row.name) map.set(row.id, row.name);
+  }
+  return map;
 }
 
 async function loadPublicProfileMap(ownerIds: string[]): Promise<Map<string, PublicProfileCard>> {
@@ -135,7 +182,30 @@ function roomEmoji(name: string): string {
   return "💬";
 }
 
-export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
+type BlogRow = {
+  title: string | null;
+  slug: string | null;
+  meta_description: string | null;
+  published_at: string | null;
+  status: string | null;
+  is_published: boolean | null;
+  author_id: string | null;
+  category_id: string | null;
+};
+
+type ConfessionLite = {
+  alias: string | null;
+  avatar_emoji?: string | null;
+  text?: string | null;
+  created_at: string;
+  like_count?: number | null;
+  expires_at: string | null;
+};
+
+export async function fetchLiveLandingData(
+  cfg: LandingConfig,
+  extras?: { channelSettings?: unknown },
+): Promise<{
   stats: LandingStats;
   chatrooms: LandingChatroom[];
   topMembers: LandingTopMember[];
@@ -153,154 +223,235 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
   const now = Date.now();
   const nowIso = new Date(now).toISOString();
   const onlineSince = new Date(now - 10 * 60 * 1000).toISOString();
-  const last24h = new Date(now - 24 * 60 * 60 * 1000).toISOString();
-  const bannedIds = await loadBannedUserIds();
-  const banFilter = bannedIdFilter(bannedIds);
+  const timings: Record<string, number> = {};
 
-  const profileCountQ = () => {
-    let q: any = applyPublicProfileFilter(
-      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
-    );
-    if (banFilter) q = q.not("id", "in", banFilter);
-    return q;
-  };
-
-  const topProfileQ = (limit: number) => {
-    let q = applyPublicProfileFilter(
-      supabaseAdmin.from("profiles").select("id, username, xp, level, created_at, is_private, is_bot, avatar_url, avatar_moderation_status"),
-    )
-      .order("xp", { ascending: false })
-      .limit(limit);
-    if (banFilter) q = q.not("id", "in", banFilter);
-    return q;
-  };
-
-  const newProfileQ = () => {
-    let q = applyPublicProfileFilter(
+  const newProfileQ = () =>
+    applyPublicProfileFilter(
       supabaseAdmin.from("profiles").select("id, username, created_at, is_private, is_bot, xp, level, avatar_url, avatar_moderation_status"),
     )
       .order("created_at", { ascending: false })
-      .limit(6);
-    if (banFilter) q = q.not("id", "in", banFilter);
-    return q;
-  };
+      .limit(8);
 
   const [
+    bannedIds,
     totalMembers,
     onlineMembers,
     totalPosts,
     dbRooms,
     publicRoomCount,
-    channelSettings,
     loyaltyRows,
     topUsers,
     latestPosts,
     latestPolls,
-    latestConfession,
     trendingRows,
     discussionRows,
     confessionRows,
-    blogResult,
+    blogRows,
     newProfiles,
-    newPosts,
-    newConfessions,
   ] = await Promise.all([
-    profileCountQ(),
-    (() => {
-      let q = applyPublicProfileFilter(
+    timed("user_bans", timings, loadBannedUserIds()),
+    timed(
+      "profiles_count",
+      timings,
+      isolate("profiles_count", applyPublicProfileFilter(
+        supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
+      ), [] as { id: string }[]),
+    ),
+    timed(
+      "profiles_online",
+      timings,
+      isolate("profiles_online", applyPublicProfileFilter(
         supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).gte("last_seen", onlineSince),
-      );
-      if (banFilter) q = q.not("id", "in", banFilter);
-      return q;
-    })(),
-    applyPublicPostFilter(supabaseAdmin.from("posts").select("id", { count: "exact", head: true })),
-    supabaseAdmin
-      .from("chatrooms")
-      .select("id, slug, name, description, featured, member_count, visibility, archived_at")
-      .is("archived_at", null)
-      .order("featured", { ascending: false })
-      .order("member_count", { ascending: false })
-      .limit(12),
-    supabaseAdmin
-      .from("chatrooms")
-      .select("id", { count: "exact", head: true })
-      .is("archived_at", null)
-      .not("visibility", "in", "(private,hidden,unlisted)"),
-    supabaseAdmin.from("app_settings").select("value").eq("key", "chat_channels").maybeSingle(),
-    supabaseAdmin.from("room_loyalty").select("channel_id, user_id, updated_at").gte("updated_at", last24h).limit(200),
-    topProfileQ(4),
-    applyPublicPostFilter(
-      supabaseAdmin
-        .from("posts")
-        .select("id, text, created_at, owner_id, is_anonymous, reaction_count, comment_count, poll, privacy, hidden_at, moderation_status")
-        .order("created_at", { ascending: false })
-        .limit(6),
+      ), [] as { id: string }[]),
     ),
-    applyPublicPostFilter(
-      supabaseAdmin
-        .from("posts")
-        .select("id, text, poll, created_at, privacy, hidden_at, moderation_status")
-        .not("poll", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(4),
+    timed(
+      "posts_count",
+      timings,
+      isolate("posts_count", applyPublicPostFilter(
+        supabaseAdmin.from("posts").select("id", { count: "exact", head: true }),
+      ), [] as { id: string }[]),
     ),
-    supabaseAdmin
-      .from("confessions")
-      .select("id, text, alias, avatar_emoji, created_at, expires_at")
-      .eq("status", "approved")
-      .order("created_at", { ascending: false })
-      .limit(4),
-    cfg.trendingPostsUseLive
-      ? applyPublicPostFilter(
+    timed(
+      "chatrooms",
+      timings,
+      isolate(
+        "chatrooms",
+        supabaseAdmin
+          .from("chatrooms")
+          .select("id, slug, name, description, featured, member_count, visibility, archived_at")
+          .is("archived_at", null)
+          .not("visibility", "in", "(private,hidden,unlisted)")
+          .order("featured", { ascending: false })
+          .order("member_count", { ascending: false })
+          .limit(5),
+        [] as Array<{
+          id: string;
+          slug: string | null;
+          name: string | null;
+          description: string | null;
+          featured: boolean | null;
+          member_count: number | null;
+          visibility: string | null;
+          archived_at: string | null;
+        }>,
+      ),
+    ),
+    timed(
+      "chatrooms_count",
+      timings,
+      isolate(
+        "chatrooms_count",
+        supabaseAdmin
+          .from("chatrooms")
+          .select("id", { count: "exact", head: true })
+          .is("archived_at", null)
+          .not("visibility", "in", "(private,hidden,unlisted)"),
+        [] as { id: string }[],
+      ),
+    ),
+    timed(
+      "room_loyalty",
+      timings,
+      isolate(
+        "room_loyalty",
+        supabaseAdmin.from("room_loyalty").select("channel_id, user_id, updated_at").gte("updated_at", onlineSince).limit(40),
+        [] as Array<{ channel_id: string; user_id: string; updated_at: string | null }>,
+      ),
+    ),
+    timed(
+      "profiles_top",
+      timings,
+      isolate(
+        "profiles_top",
+        applyPublicProfileFilter(
+          supabaseAdmin.from("profiles").select("id, username, xp, level, created_at, is_private, is_bot, avatar_url, avatar_moderation_status"),
+        )
+          .order("xp", { ascending: false })
+          .limit(8),
+        [] as ProfileLite[],
+      ),
+    ),
+    timed(
+      "posts_latest",
+      timings,
+      isolate(
+        "posts_latest",
+        applyPublicPostFilter(
           supabaseAdmin
             .from("posts")
-            .select("id, text, created_at, owner_id, is_anonymous, reaction_count, comment_count, hashtags, privacy, hidden_at, moderation_status, trending_score")
-            .order("trending_score", { ascending: false })
+            .select("id, text, created_at, owner_id, is_anonymous, reaction_count, comment_count, poll, privacy, hidden_at, moderation_status")
+            .order("created_at", { ascending: false })
             .limit(8),
-        )
-      : Promise.resolve({ data: [] as PostLite[] }),
-    cfg.discussionsUseLive
-      ? applyPublicPostFilter(
+        ),
+        [] as PostLite[],
+      ),
+    ),
+    timed(
+      "posts_poll",
+      timings,
+      isolate(
+        "posts_poll",
+        applyPublicPostFilter(
           supabaseAdmin
             .from("posts")
-            .select("id, text, created_at, updated_at, owner_id, is_anonymous, comment_count, privacy, hidden_at, moderation_status")
-            .order("comment_count", { ascending: false })
-            .limit(8),
-        )
-      : Promise.resolve({ data: [] as PostLite[] }),
-    cfg.recentConfessionsUseLive
-      ? supabaseAdmin
+            .select("id, text, poll, created_at, privacy, hidden_at, moderation_status")
+            .not("poll", "is", null)
+            .order("created_at", { ascending: false })
+            .limit(1),
+        ),
+        [] as PostLite[],
+      ),
+    ),
+    timed(
+      "posts_trending",
+      timings,
+      cfg.trendingPostsUseLive
+        ? isolate(
+            "posts_trending",
+            applyPublicPostFilter(
+              supabaseAdmin
+                .from("posts")
+                .select("id, text, created_at, owner_id, is_anonymous, reaction_count, comment_count, hashtags, privacy, hidden_at, moderation_status, trending_score")
+                .order("trending_score", { ascending: false })
+                .limit(6),
+            ),
+            [] as PostLite[],
+          )
+        : Promise.resolve({ data: [] as PostLite[], count: 0 }),
+    ),
+    timed(
+      "posts_discussions",
+      timings,
+      cfg.discussionsUseLive
+        ? isolate(
+            "posts_discussions",
+            applyPublicPostFilter(
+              supabaseAdmin
+                .from("posts")
+                .select("id, text, created_at, updated_at, owner_id, is_anonymous, comment_count, privacy, hidden_at, moderation_status")
+                .order("comment_count", { ascending: false })
+                .limit(5),
+            ),
+            [] as PostLite[],
+          )
+        : Promise.resolve({ data: [] as PostLite[], count: 0 }),
+    ),
+    timed(
+      "confessions",
+      timings,
+      isolate(
+        "confessions",
+        supabaseAdmin
           .from("confessions")
           .select("alias, avatar_emoji, text, created_at, like_count, expires_at")
           .eq("status", "approved")
           .order("created_at", { ascending: false })
-          .limit(6)
-      : Promise.resolve({ data: [] }),
-    cfg.blogPostsUseLive ? fetchPublishedBlogs(now) : Promise.resolve([] as LandingBlogPost[]),
-    newProfileQ(),
-    cfg.activitiesUseLive
-      ? applyPublicPostFilter(
-          supabaseAdmin
-            .from("posts")
-            .select("text, created_at, owner_id, is_anonymous, privacy, hidden_at, moderation_status, poll")
-            .order("created_at", { ascending: false })
-            .limit(4),
-        )
-      : Promise.resolve({ data: [] as PostLite[] }),
-    cfg.activitiesUseLive
-      ? supabaseAdmin
-          .from("confessions")
-          .select("alias, created_at, expires_at")
-          .eq("status", "approved")
-          .order("created_at", { ascending: false })
-          .limit(2)
-      : Promise.resolve({ data: [] }),
+          .limit(6),
+        [] as ConfessionLite[],
+      ),
+    ),
+    timed(
+      "blog_posts",
+      timings,
+      cfg.blogPostsUseLive ? fetchPublishedBlogRows(now) : Promise.resolve([] as BlogRow[]),
+    ),
+    timed(
+      "profiles_new",
+      timings,
+      isolate("profiles_new", newProfileQ(), [] as ProfileLite[]),
+    ),
   ]);
+
+  let memberCount = totalMembers.count;
+  let onlineCount = onlineMembers.count;
+  if (bannedIds.length) {
+    const filter = bannedIdFilter(bannedIds);
+    if (filter) {
+      const [bannedMembers, bannedOnline] = await Promise.all([
+        isolate(
+          "profiles_banned_count",
+          applyPublicProfileFilter(
+            supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).in("id", bannedIds),
+          ),
+          [] as { id: string }[],
+        ),
+        isolate(
+          "profiles_banned_online",
+          applyPublicProfileFilter(
+            supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).in("id", bannedIds).gte("last_seen", onlineSince),
+          ),
+          [] as { id: string }[],
+        ),
+      ]);
+      memberCount = Math.max(0, memberCount - bannedMembers.count);
+      onlineCount = Math.max(0, onlineCount - bannedOnline.count);
+    }
+  }
 
   const publicRooms = (dbRooms.data ?? []).filter(
     (r) => !r.archived_at && !HIDDEN_ROOMS.has((r.visibility ?? "public").toLowerCase()) && r.name,
   );
-  const platformRooms = platformChannelsFromSettings(channelSettings.data?.value)
+  const platformRooms = platformChannelsFromSettings(extras?.channelSettings)
     .filter((c) => c.id && c.name)
     .slice(0, 8);
 
@@ -312,7 +463,8 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
     onlineByChannel.set(row.channel_id, set);
   }
 
-  const notBanned = (ownerId: string | null | undefined) => !ownerId || !bannedIds.includes(ownerId);
+  const bannedSet = new Set(bannedIds);
+  const notBanned = (ownerId: string | null | undefined) => !ownerId || !bannedSet.has(ownerId);
 
   const liveChatrooms: LandingChatroom[] = [];
   const seenRoom = new Set<string>();
@@ -344,33 +496,37 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
   const chatrooms = liveChatrooms.slice(0, 5);
   const activeRooms = publicRoomCount.count ?? (publicRooms.length || platformRooms.length);
 
-  const liveTopMembers: LandingTopMember[] = (topUsers.data ?? [])
-    .filter((u) => isEligiblePublicProfile(u))
-    .slice(0, 3)
-    .map((u) => ({
-      username: (u.username as string).trim(),
-      xp: (u.xp as number) ?? 0,
-      avatarUrl: cardAvatar(u),
-    }));
+  const eligibleTop = ((topUsers.data ?? []) as ProfileLite[]).filter(
+    (u) => isEligiblePublicProfile(u) && notBanned(u.id),
+  );
+  const liveTopMembers: LandingTopMember[] = eligibleTop.slice(0, 3).map((u) => ({
+    username: (u.username as string).trim(),
+    xp: (u.xp as number) ?? 0,
+    avatarUrl: cardAvatar(u),
+  }));
 
   const eligibleFeed = ((latestPosts.data ?? []) as PostLite[]).filter(
     (row) => isEligiblePublicPost(row) && notBanned(row.owner_id),
   );
   const latest = eligibleFeed[0] ?? null;
-  const feedOwnerMap = await loadPublicProfileMap(
-    [
-      latest && !latest.is_anonymous ? latest.owner_id : null,
-      ...((trendingRows.data ?? []) as PostLite[])
-        .filter((r) => !r.is_anonymous)
-        .map((r) => r.owner_id),
-      ...((discussionRows.data ?? []) as PostLite[])
-        .filter((r) => !r.is_anonymous)
-        .map((r) => r.owner_id),
-      ...((newPosts.data ?? []) as PostLite[])
-        .filter((r) => !r.is_anonymous)
-        .map((r) => r.owner_id),
-    ].filter((id): id is string => Boolean(id)),
-  );
+  const blogAuthorIds = blogRows.map((r) => r.author_id).filter((id): id is string => Boolean(id));
+  const categoryIds = blogRows.map((r) => r.category_id).filter((id): id is string => Boolean(id));
+  const [feedOwnerMap, categoryNames] = await Promise.all([
+    timed(
+      "profiles_authors",
+      timings,
+      loadPublicProfileMap(
+        [
+          latest && !latest.is_anonymous ? latest.owner_id : null,
+          ...((trendingRows.data ?? []) as PostLite[]).filter((r) => !r.is_anonymous).map((r) => r.owner_id),
+          ...((discussionRows.data ?? []) as PostLite[]).filter((r) => !r.is_anonymous).map((r) => r.owner_id),
+          ...eligibleFeed.filter((r) => !r.is_anonymous).map((r) => r.owner_id),
+          ...blogAuthorIds,
+        ].filter((id): id is string => Boolean(id)),
+      ),
+    ),
+    timed("blog_categories", timings, loadCategoryNames(categoryIds)),
+  ]);
 
   const ownerCard = (ownerId: string | null | undefined, anonymous?: boolean | null) =>
     anonymous ? undefined : ownerId ? feedOwnerMap.get(ownerId) : undefined;
@@ -408,7 +564,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
     break;
   }
 
-  const liveConfession = (latestConfession.data ?? []).find(
+  const liveConfession = (confessionRows.data ?? []).find(
     (c) => (!c.expires_at || c.expires_at > nowIso) && (c.text ?? "").trim(),
   );
   const confession: LandingDemoConfession | null = liveConfession
@@ -457,10 +613,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
     : [];
 
   const featuredMembers: LandingFeaturedMember[] = cfg.featuredMembersUseLive
-    ? ((topUsers.data ?? []) as ProfileLite[])
-        .filter((u) => isEligiblePublicProfile(u))
-        .slice(0, 4)
-        .map((u, i) => mapLiveFeaturedMember({ ...u, avatarUrl: cardAvatar(u) }, i))
+    ? eligibleTop.slice(0, 4).map((u, i) => mapLiveFeaturedMember({ ...u, avatarUrl: cardAvatar(u) }, i))
     : [];
 
   const recentConfessions: LandingConfessionItem[] = cfg.recentConfessionsUseLive
@@ -476,12 +629,26 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
         }))
     : [];
 
-  const blogPosts: LandingBlogPost[] = cfg.blogPostsUseLive ? blogResult : [];
+  const blogPosts: LandingBlogPost[] = cfg.blogPostsUseLive
+    ? blogRows.map((row, i) =>
+        mapLiveBlogPost(
+          {
+            title: row.title,
+            slug: row.slug,
+            meta_description: row.meta_description,
+            published_at: row.published_at,
+            author: row.author_id ? feedOwnerMap.get(row.author_id)?.username ?? "" : "",
+            category: row.category_id ? categoryNames.get(row.category_id) ?? "Blog" : "Blog",
+          },
+          i,
+        ),
+      )
+    : [];
 
   const activities: LandingActivity[] = [];
   if (cfg.activitiesUseLive) {
     const drafts: Array<LandingActivity & { at: number }> = [];
-    for (const p of (newProfiles.data ?? []) as ProfileLite[]) {
+    for (const p of ((newProfiles.data ?? []) as ProfileLite[]).filter((u) => notBanned(u.id))) {
       if (!isEligiblePublicProfile(p) || !p.created_at) continue;
       drafts.push({
         who: p.username!.trim(),
@@ -496,8 +663,8 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
         at: new Date(p.created_at).getTime(),
       });
     }
-    for (const p of (newPosts.data ?? []) as PostLite[]) {
-      if (!isEligiblePublicPost(p) || !notBanned(p.owner_id) || !p.created_at) continue;
+    for (const p of eligibleFeed.slice(0, 4)) {
+      if (!p.created_at) continue;
       drafts.push({
         who: publicDisplayName({
           isAnonymous: p.is_anonymous,
@@ -514,7 +681,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
         at: new Date(p.created_at).getTime(),
       });
     }
-    for (const c of newConfessions.data ?? []) {
+    for (const c of (confessionRows.data ?? []).slice(0, 2)) {
       if (c.expires_at && c.expires_at <= nowIso) continue;
       drafts.push({
         who: c.alias || "Anonymous",
@@ -534,7 +701,7 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
   }
 
   const newMembers: LandingNewMember[] = ((newProfiles.data ?? []) as ProfileLite[])
-    .filter((p) => isEligiblePublicProfile(p) && p.created_at)
+    .filter((p) => isEligiblePublicProfile(p) && notBanned(p.id) && p.created_at)
     .slice(0, 6)
     .map((p) => ({
       username: p.username!.trim(),
@@ -544,13 +711,16 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
       avatarUrl: cardAvatar(p),
     }));
 
+  const wallMs = Math.max(0, ...Object.values(timings));
+  logger.info("landing.timing", { wallMs, timings });
+
   return {
     stats: {
-      members: totalMembers.count ?? 0,
-      online: onlineMembers.count ?? 0,
+      members: memberCount,
+      online: onlineCount,
       activeRooms,
       messagesSent: 0,
-      feedPosts: totalPosts.count ?? 0,
+      feedPosts: totalPosts.count,
       gamesPlayed: 0,
     },
     chatrooms,
@@ -568,64 +738,25 @@ export async function fetchLiveLandingData(cfg: LandingConfig): Promise<{
   };
 }
 
-async function fetchPublishedBlogs(now: number): Promise<LandingBlogPost[]> {
-  const db = supabaseAdmin as unknown as {
-    from: (table: string) => ReturnType<typeof supabaseAdmin.from>;
-  };
+async function fetchPublishedBlogRows(now: number): Promise<BlogRow[]> {
   const nowIso = new Date(now).toISOString();
   try {
-    let { data, error } = await db
+    const { data, error } = await supabaseAdmin
       .from("blog_posts")
-      .select("title, slug, meta_description, published_at, status, is_published, author_id, categories(name)")
+      .select("title, slug, meta_description, published_at, status, is_published, author_id, category_id")
       .eq("status", "published")
       .lte("published_at", nowIso)
       .not("published_at", "is", null)
       .order("published_at", { ascending: false })
       .limit(3);
-
     if (error) {
-      const retry = await db
-        .from("blog_posts")
-        .select("title, slug, meta_description, published_at, status, is_published, author_id")
-        .eq("status", "published")
-        .lte("published_at", nowIso)
-        .not("published_at", "is", null)
-        .order("published_at", { ascending: false })
-        .limit(3);
-      data = retry.data;
-      error = retry.error;
+      logger.warn("landing.query.blog_posts", error);
+      return [];
     }
-
-    if (error || !data?.length) return [];
-    const rows = (data as Array<{
-      title: string | null;
-      slug: string | null;
-      meta_description: string | null;
-      published_at: string | null;
-      status: string | null;
-      is_published: boolean | null;
-      author_id: string | null;
-      categories: { name?: string | null } | { name?: string | null }[] | null;
-    }>).filter((row) => isEligiblePublicBlog(row, now));
-
-    const authorIds = rows.map((r) => r.author_id).filter((id): id is string => Boolean(id));
-    const authors = await loadPublicProfileMap(authorIds);
-
-    return rows.map((row, i) => {
-      const cat = Array.isArray(row.categories) ? row.categories[0] : row.categories;
-      return mapLiveBlogPost(
-        {
-          title: row.title,
-          slug: row.slug,
-          meta_description: row.meta_description,
-          published_at: row.published_at,
-          author: row.author_id ? authors.get(row.author_id)?.username ?? "" : "",
-          category: cat?.name ?? "Blog",
-        },
-        i,
-      );
-    });
-  } catch {
+    if (!data?.length) return [];
+    return (data as BlogRow[]).filter((row) => isEligiblePublicBlog(row, now));
+  } catch (err) {
+    logger.warn("landing.query.blog_posts", err);
     return [];
   }
 }

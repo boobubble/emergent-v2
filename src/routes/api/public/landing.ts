@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { LANDING_DEFAULTS, LANDING_SETTINGS_KEY, type LandingConfig } from "@/lib/landing-config";
 import { fetchLiveLandingData } from "@/lib/landing-live.server";
+import { publicLiveConfig } from "@/lib/landing-live";
+
+const LIVE_CACHE = { "Cache-Control": "public, max-age=30" };
 
 /**
  * Public landing-page payload.
@@ -13,11 +16,13 @@ export const Route = createFileRoute("/api/public/landing")({
   server: {
     handlers: {
       GET: async () => {
-        const { data: cfgRow } = await supabaseAdmin
+        const { data: settingRows } = await supabaseAdmin
           .from("app_settings")
-          .select("value")
-          .eq("key", LANDING_SETTINGS_KEY)
-          .maybeSingle();
+          .select("key, value")
+          .in("key", [LANDING_SETTINGS_KEY, "chat_channels"]);
+
+        const cfgRow = (settingRows ?? []).find((row) => row.key === LANDING_SETTINGS_KEY);
+        const channelSettings = (settingRows ?? []).find((row) => row.key === "chat_channels")?.value;
 
         const cfg: LandingConfig = {
           ...LANDING_DEFAULTS,
@@ -47,18 +52,18 @@ export const Route = createFileRoute("/api/public/landing")({
               activities: cfg.activities,
               newMembers: [],
             },
-            { headers: { "Cache-Control": "public, max-age=30" } },
+            { headers: LIVE_CACHE },
           );
         }
 
-        const live = await fetchLiveLandingData(cfg);
+        const live = await fetchLiveLandingData(cfg, { channelSettings });
         return Response.json(
           {
-            config: cfg,
+            config: publicLiveConfig(cfg),
             source: "live" as const,
             ...live,
           },
-          { headers: { "Cache-Control": "public, max-age=30" } },
+          { headers: LIVE_CACHE },
         );
       },
     },

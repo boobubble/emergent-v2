@@ -208,3 +208,28 @@ export function resolveLandingView(
 export function sortActivitiesNewest<T extends { at: number }>(items: T[], limit = 8): T[] {
   return [...items].sort((a, b) => b.at - a.at).slice(0, limit);
 }
+
+/** Live API payload omits demo/curated collections; chrome + flags remain. */
+export function publicLiveConfig(cfg: LandingConfig): LandingConfig {
+  return {
+    ...cfg,
+    demoChatrooms: [],
+    demoTopMembers: [],
+    demoFeedPost: {
+      username: "",
+      ago: "",
+      text: "",
+      likes: 0,
+      comments: 0,
+      coins: 0,
+    },
+    demoPoll: { question: "", ago: "", options: [], daysLeft: 0 },
+    demoConfession: { alias: "", ago: "", text: "", emoji: "" },
+    trendingPosts: [],
+    discussions: [],
+    featuredMembers: [],
+    recentConfessions: [],
+    blogPosts: [],
+    activities: [],
+  };
+}

@@ -9,6 +9,7 @@ import {
   isEligiblePublicPost,
   isEligiblePublicProfile,
   mapLiveBlogPost,
+  publicLiveConfig,
   resolveLandingView,
 } from "@/lib/landing-live";
 
@@ -138,6 +139,14 @@ describe("public visibility filters", () => {
   it("uses XP level labels instead of invented titles", () => {
     expect(featuredMemberRole(12)).toBe("Level 12");
   });
+
+  it("strips demo collections from the live public config", () => {
+    const live = publicLiveConfig(LANDING_DEFAULTS);
+    expect(live.demoChatrooms).toEqual([]);
+    expect(live.trendingPosts).toEqual([]);
+    expect(live.heroTitle).toBe(LANDING_DEFAULTS.heroTitle);
+    expect(live.featureCards.length).toBeGreaterThan(0);
+  });
 });
 
 describe("demo vs live view resolution", () => {
@@ -196,10 +205,18 @@ describe("landing API sources", () => {
     const route = read("routes/api/public/landing.ts");
     expect(server).toContain('.from("blog_posts")');
     expect(server).not.toContain("custom_pages");
+    expect(server).not.toContain("categories(name)");
+    expect(server).not.toContain("fetchPublishedBlogs");
+    expect((server.match(/\.from\("confessions"\)/g) ?? []).length).toBe(1);
+    expect((server.match(/\.from\("posts"\)/g) ?? []).length).toBeLessThanOrEqual(5);
+    expect(server).toContain('timed("user_bans"');
     expect(route).not.toContain("custom_pages");
     expect(route).toContain("fetchLiveLandingData");
-    expect(route).toContain("source: \"live\"");
+    expect(route).toContain("publicLiveConfig");
+    expect(route).toContain("chat_channels");
+    expect(route).toContain('source: "live"');
     expect(route).toContain("if (cfg.useDemoData)");
+    expect(route).toContain("max-age=30");
   });
 
   it("live mode does not fall back to demo collections", () => {
