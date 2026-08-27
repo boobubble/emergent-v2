@@ -1,5 +1,5 @@
 ---
-description: Changes to root/slug/catch-all/public-routes/AuthGate/routeTree need cross-module HTTP smoke
+description: Root, slug, AuthGate, route tree, and shared Supabase routing need golden HTTP smoke
 globs:
   - src/routes/__root.tsx
   - src/routes/$slug.tsx
@@ -7,6 +7,10 @@ globs:
   - src/lib/public-routes.ts
   - src/lib/auth-gate.tsx
   - src/routeTree.gen.ts
+  - src/integrations/supabase/client.ts
+  - src/integrations/supabase/client.server.ts
+  - src/integrations/supabase/env.server.ts
+  - src/integrations/supabase/client-eager.ts
 alwaysApply: false
 ---
 
@@ -17,7 +21,7 @@ Edits here affect every public URL. Before finishing:
 1. Say why this protected file must change and which modules are affected.
 2. Run `npm run test:guard:all` (or the touched modules) plus HTTP smoke:
    - `/` → 200
-   - `/india-chat-room` (or another published CMS slug) → 200
+   - published CMS slug (e.g. `/india-chat-room`) → 200
    - `/blog` → 200
    - `/__yaarzo-nonexistent-route-test__` → **404** (never 500)
    - `/feed` → 200
@@ -25,4 +29,4 @@ Edits here affect every public URL. Before finishing:
 3. `npm run verify:sitemap` against the intended origin when network allows.
 4. Report the protected-file change in the final summary.
 
-Do not map database/infrastructure errors to HTTP 404. Misses are 404; unexpected failures may be 500 and must be logged.
+**Any 5xx on a known public URL blocks deploy.** Do not map DB/infra errors to HTTP 404. Misses are 404; unexpected failures may be 500 and must be logged.

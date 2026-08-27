@@ -1,0 +1,18 @@
+---
+description: Blog is a separate module from Custom Pages; homepage Community Blog uses /blog
+globs:
+  - src/routes/blog.index.tsx
+  - src/routes/blog.$slug.tsx
+  - src/lib/blog.public.ts
+  - src/lib/blog.public.test.ts
+alwaysApply: false
+---
+
+# Blog
+
+BLOG (`/blog`, `/blog/$slug`) is separate from CUSTOM_PAGES (`$slug` CMS).
+
+- Do not implement or render blog posts through `$slug` / pages-cms.
+- Homepage “Community Blog” must keep using the real Blog system (`/blog`), not CMS pages.
+- Blog tasks must not edit `$slug` CMS routing unless a proven shared regression.
+- Guard: `npm run test:guard:blog`. `/blog` stays 200.

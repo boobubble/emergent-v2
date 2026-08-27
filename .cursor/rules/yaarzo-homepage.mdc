@@ -1,0 +1,20 @@
+---
+description: Guest homepage SSR, SEO, real-data, and performance invariants
+globs:
+  - src/routes/index.tsx
+  - src/components/home/**
+  - src/lib/landing-*.ts
+  - src/lib/use-home-page-mode.ts
+  - src/routes/api/public/landing.ts
+  - src/lib/guest-home-bundle.test.ts
+alwaysApply: false
+---
+
+# Homepage
+
+Preserve a crawlable SSR guest `/`: one H1, SEO metadata, real landing data, Latest Signups, approved avatars only, CMS footer, guest performance.
+
+- Do not reintroduce `app-surfaces.css` or heavy app providers/stores onto guest `/`.
+- Homepage Community Blog is the real Blog system (`/blog`), not Custom Pages.
+- Tasks that are **not** HOMEPAGE must not edit these files unless fixing a proven shared regression.
+- Guard: `npm run test:guard:homepage`.

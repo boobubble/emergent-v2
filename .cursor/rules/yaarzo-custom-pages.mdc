@@ -1,0 +1,20 @@
+---
+description: Custom Pages ($slug CMS) stay isolated from homepage, blog, feed, and chatroom work
+globs:
+  - src/routes/$slug.tsx
+  - src/components/PublicCmsPageView.tsx
+  - src/lib/fetch-published-page.ts
+  - src/lib/public-cms-route.ts
+  - src/lib/pages.functions.ts
+  - src/lib/pages-cms/**
+alwaysApply: false
+---
+
+# Custom Pages
+
+`$slug` CMS routing, rendering, SEO, footer, and sitemap eligibility belong to CUSTOM_PAGES only.
+
+- Homepage, blog, feed, chatroom, and perf tasks must not alter these unless this task **is** CUSTOM_PAGES or a proven shared regression.
+- Published sitemap pages stay HTTP 200. Unknown slugs stay **404**, never 500.
+- Custom Pages are not the Blog. Do not reuse `$slug` for `/blog` content.
+- Guard: `npm run test:guard:cms`. Sitemap published URLs must remain 200.

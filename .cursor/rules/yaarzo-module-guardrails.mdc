@@ -1,19 +1,56 @@
 ---
-description: Module isolation — only touch the requested feature; protect shared/core files
+description: Yaarzo persistent project memory — auto-detect module, stay in scope, protect shared files, run gates, report
 alwaysApply: true
 ---
 
 # Yaarzo module guardrails
 
-Full map: `docs/DEVELOPMENT-GUARDRAILS.md`. Task template: `docs/CURSOR-TASK-TEMPLATE.md`.
+Map: `docs/DEVELOPMENT-GUARDRAILS.md`. Template: `docs/CURSOR-TASK-TEMPLATE.md`. Config: `scripts/guard/config.mjs`.
 
-- Change **only** files for the requested module. No drive-by cleanup, refactors, or extra pages.
-- Do **not** edit PROTECTED files unless the task cannot work without them. If required: explain why, list affected modules, run that module’s `test:guard:*` plus golden smoke, and report the protected change.
-- PROTECTED: `__root.tsx`, `$slug.tsx`, `$.tsx`, `public-routes.ts`, `auth-gate.tsx`, `app-settings.tsx`, `src/lib/seo/*`, `routeTree.gen.ts`, `src/styles.css`, `app-surfaces.css`, Supabase client/server/env.
-- Do **not** regenerate `routeTree.gen.ts` unless a route file was added/removed/renamed.
-- Do **not** change AuthGate / `public-routes.ts` during SEO or content work.
-- Do **not** change CUSTOM_PAGES (`$slug`, CMS fetch) during homepage or blog tasks.
-- Do **not** change HOMEPAGE during feed/chatroom tasks.
-- Preserve public URLs and status codes. **Any 5xx blocks deploy.** Unknown slugs must stay **404**, never 500.
-- After shared/core edits run: homepage, a CMS page, `/blog`, invalid slug, `/feed`, `/chatroom`.
-- Baseline (commit `82bdd7fe`): sitemap 35/35 = 200, 5xx = 0, `/blog` = 200, junk slug = 404.
+## Auto-detect TASK MODULE
+
+At the start of every coding/editing task, infer the primary module from the request. If clear, do **not** ask the user to specify TASK MODULE.
+
+Modules: HOMEPAGE, CUSTOM_PAGES, BLOG, FEED, CHATROOM, COMMUNITIES, POETRY, AUTH, GLOBAL_SEO, GLOBAL_SHELL, GUARDRAILS.
+
+- Explicit `TASK MODULE:` in the prompt always wins (supported override).
+- If ambiguous: name the ambiguity, do not start broad edits, ask **or** choose the smallest safe scope.
+
+## Silent task-start (do not dump unless relevant)
+
+Before edits, privately identify: module, ownership map, allowed files, protected files, do-not-touch modules, required regression tests.
+
+## Smallest possible scope
+
+Change **only** files for the detected module. No unrelated refactors, cleanup, renames, CSS, architecture, package updates, or generated files.
+
+## Protected files
+
+Do not edit unless the task cannot ship without them. Prefer a module-local fix. Before a broad shared change: explain why and list affected modules. After: that module’s `test:guard:*` plus golden smoke; report the protected change.
+
+PROTECTED: `__root.tsx`, `$slug.tsx`, `$.tsx`, `public-routes.ts`, `auth-gate.tsx`, `app-settings.tsx`, `app-surface-css.ts`, `src/lib/seo/*`, `routeTree.gen.ts`, `src/styles.css`, `app-surfaces.css`, Supabase client/server/env/client-eager.
+
+- Do not regenerate `routeTree.gen.ts` unless a route file was added/removed/renamed.
+- Do not change AuthGate / `public-routes.ts` during SEO or content work.
+
+## Isolation
+
+- **CUSTOM_PAGES:** homepage/blog/feed/chatroom/perf must not alter `$slug` CMS routing/rendering/SEO/footer/sitemap eligibility unless this task is CUSTOM_PAGES or a proven shared regression. Sitemap published pages stay 200.
+- **BLOG** is separate from Custom Pages. Homepage Community Blog uses the real Blog system (`/blog`).
+- **Outside HOMEPAGE:** keep SSR crawlable `/`, one H1, SEO, real-data, Latest Signups, approved avatars, CMS footer, guest performance. Do not put app-surfaces CSS or heavy app providers on guest `/`.
+- **FEED:** desktop 3-col grid + mobile bottom nav. **CHATROOM:** sidebar closed on mobile, always open on desktop.
+
+## Gates
+
+- Pre-commit: `npm run check:scope -- --module <detected-module>`. Review/remove accidental protected or cross-module edits.
+- Pre-deploy: `npm run test:guard:<module>` (GUARDRAILS: `npm run guard:selfcheck`). If protected/shared changed: `npm run verify:predeploy`.
+- Blockers: build fail, golden 5xx, sitemap 5xx/404, unknown slug 500, serious cross-module layout regression.
+- Unrelated existing `tsc` debt is non-blocking unless `npm run build` fails. **Any 5xx blocks deploy.** Unknown slugs stay **404**, never 500.
+
+## Final report (short)
+
+TASK MODULE · files changed · protected yes/no · cross-module yes/no · guard tests · build · deployment · known regressions.
+
+## Baseline (behavior reference, not a git reset)
+
+Product `82bdd7fe`. Guardrails `b0809284`. Sitemap 35/35 = 200, 5xx = 0, junk slug = 404, `/llms.txt` = 404, `/blog` = 200, app routes = 200.

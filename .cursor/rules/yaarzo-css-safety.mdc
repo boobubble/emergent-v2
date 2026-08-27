@@ -1,5 +1,5 @@
 ---
-description: Keep route-local CSS local; global stylesheet order can break Feed, Chatroom, and Homepage
+description: Route-local UI stays local; global CSS/Tailwind order can break Homepage, Feed, and Chatroom
 globs:
   - src/styles.css
   - src/styles/**/*.css
@@ -11,8 +11,8 @@ alwaysApply: false
 
 # CSS safety
 
-- Fix route-local UI in that route’s component or a colocated stylesheet. Do not “just tweak” global CSS.
+- Fix route-local UI in that route’s component or a colocated stylesheet. Do not patch another route via global CSS.
 - `src/styles.css` is guest-safe. `src/styles/app-surfaces.css` is for app surfaces (feed/chat/etc.).
-- **Do not** load `app-surfaces.css` on guest homepage (`/`) unless the task explicitly requires it. `shouldLoadAppSurfaceStyles("/")` must stay `false`.
-- Changing global utility order, `@source`, or Tailwind layers requires **desktop + mobile** smoke of `/`, `/feed`, and `/chatroom`.
-- Prefer existing layout tests: `src/lib/desktop-app-layout.test.ts`, `src/lib/guest-home-bundle.test.ts`.
+- Guest `/` must **not** load `app-surfaces.css` to fix Feed/Chatroom. `shouldLoadAppSurfaceStyles("/")` stays `false`.
+- If `styles.css`, `app-surfaces.css`, Tailwind `@source` / layer order, or shared theme changes: smoke `/`, `/feed`, and `/chatroom` on **desktop and mobile**.
+- Prefer `src/lib/desktop-app-layout.test.ts` and `src/lib/guest-home-bundle.test.ts`.

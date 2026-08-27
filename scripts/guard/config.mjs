@@ -8,6 +8,7 @@ export const PRODUCTION_ORIGIN = "https://yaarzo.com";
 /** Known-good production baseline after P0 CMS/blog SSR recovery. */
 export const BASELINE = {
   commit: "82bdd7fe",
+  guardrailsCommit: "b0809284",
   capturedAt: "2026-08-27",
   sitemap: {
     total: 35,
@@ -234,6 +235,17 @@ export const MODULES = {
       "src/lib/page-slug-sitemap.test.ts",
     ],
   },
+  guardrails: {
+    id: "guardrails",
+    label: "GUARDRAILS",
+    paths: [
+      ".cursor/rules/",
+      "docs/DEVELOPMENT-GUARDRAILS.md",
+      "docs/CURSOR-TASK-TEMPLATE.md",
+      "scripts/guard/",
+    ],
+    tests: [],
+  },
   global_shell: {
     id: "global_shell",
     label: "GLOBAL_SHELL",
@@ -287,6 +299,8 @@ export const ALIASES = {
   chat: "chatroom",
   seo: "global_seo",
   shell: "global_shell",
+  guard: "guardrails",
+  rules: "guardrails",
 };
 
 export function resolveModuleId(raw) {
@@ -327,6 +341,7 @@ export function unique(list) {
 }
 
 export function testsForModule(id) {
+  if (id === "guardrails") return [];
   if (id === "all") {
     return unique([
       ...SHARED_REGRESSION_TESTS,

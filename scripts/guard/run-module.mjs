@@ -22,8 +22,18 @@ if (raw !== "all" && !moduleId) {
 }
 
 const tests = testsForModule(moduleId);
-console.log(`Guard tests  module=${moduleId}\n  ${tests.join("\n  ")}`);
-await run("npx", ["vitest", "run", ...tests]);
+if (moduleId === "guardrails") {
+  console.log("GUARDRAILS module: run npm run guard:selfcheck (no product vitest).");
+  await run("node", ["scripts/guard/self-check.mjs"]);
+  console.log(`\nModule guard ${moduleId} passed.`);
+  process.exit(0);
+}
+if (!tests.length) {
+  console.log(`Guard tests  module=${moduleId}  (none)`);
+} else {
+  console.log(`Guard tests  module=${moduleId}\n  ${tests.join("\n  ")}`);
+  await run("npx", ["vitest", "run", ...tests]);
+}
 
 const httpBase = args.skipHttp || args.offline ? "" : args.base || PRODUCTION_ORIGIN;
 if (httpBase && MODULE_GOLDEN[moduleId]) {

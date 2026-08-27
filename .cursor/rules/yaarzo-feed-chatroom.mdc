@@ -1,0 +1,20 @@
+---
+description: Feed desktop grid / mobile bottom nav; Chatroom sidebar closed mobile, open desktop
+globs:
+  - src/routes/feed.index.tsx
+  - src/routes/feed.$slug.tsx
+  - src/components/feed/**
+  - src/routes/chatroom.tsx
+  - src/components/chat/**
+  - src/styles/app-surfaces.css
+  - src/lib/desktop-app-layout.test.ts
+alwaysApply: false
+---
+
+# Feed and Chatroom layout
+
+- **FEED desktop:** 3-col grid (`lg:grid-cols-[260px_minmax(0,1fr)_320px]`); side columns `hidden lg:block`.
+- **FEED mobile:** fixed bottom nav (`lg:hidden`); keep `pb-24 lg:pb-0`.
+- **CHATROOM:** left sidebar starts closed on mobile (`sidebarOpen = false`, drawer `-translate-x-full`); always open as a static column on desktop (`md:static`, `md:translate-x-0`). Do not persist a closed desktop sidebar.
+- Do not “fix” these layouts by loading app-surfaces CSS on guest `/`.
+- Guard: `npm run test:guard:feed` / `test:guard:chatroom` plus desktop and mobile smoke.
