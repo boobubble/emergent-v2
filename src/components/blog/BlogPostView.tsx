@@ -45,6 +45,19 @@ export function BlogPostView({ post }: { post: PublicBlogPost }) {
           <CopyLinkButton />
         </div>
 
+        {post.tags.length > 0 && (
+          <ul className="mt-4 flex flex-wrap gap-2" aria-label="Tags">
+            {post.tags.map((tag) => (
+              <li
+                key={tag}
+                className="rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground"
+              >
+                {tag}
+              </li>
+            ))}
+          </ul>
+        )}
+
         <div className="mt-8">
           <BlogProse html={post.content} />
         </div>

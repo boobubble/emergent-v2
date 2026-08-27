@@ -10,6 +10,7 @@
   font-size: 1.125rem;
   line-height: 1.8;
   color: var(--foreground);
+  overflow-x: hidden;
 }
 
 .yz-blog-prose > *:first-child {
@@ -118,12 +119,35 @@
   font-size: inherit;
 }
 
-.yz-blog-prose img {
+.yz-blog-prose img,
+.yz-blog-prose img.yz-blog-img {
   display: block;
-  width: 100%;
+  max-width: 100%;
   height: auto;
   margin: 1.5rem 0;
   border-radius: 0.9rem;
+}
+
+.yz-blog-prose img.yz-blog-img-center,
+.yz-blog-prose img[data-align="center"] {
+  margin-inline: auto;
+}
+
+.yz-blog-prose img.yz-blog-img-left,
+.yz-blog-prose img[data-align="left"] {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.yz-blog-prose img.yz-blog-img-right,
+.yz-blog-prose img[data-align="right"] {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.yz-blog .tiptap img.ProseMirror-selectednode {
+  outline: 2px solid color-mix(in oklab, var(--primary) 45%, transparent);
+  outline-offset: 2px;
 }
 
 .yz-blog-prose table {

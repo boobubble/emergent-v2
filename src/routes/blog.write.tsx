@@ -6,10 +6,16 @@ import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogEditorView } from "@/components/blog/BlogEditorView";
+import { BlogImage } from "@/lib/blog-image";
+import { sanitizeBlogHtml } from "@/lib/blog-sanitize";
+import { normalizeTagList, serializeKeywords } from "@/lib/blog-taxonomy";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/blog/write")({
   component: WritePostPage,
 });
+
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 function slugify(text: string) {
   return text
@@ -32,6 +38,34 @@ async function generateUniqueSlug(title: string): Promise<string> {
   }
 }
 
+async function uploadBlogImage(file: File): Promise<string | null> {
+  if (!file.type.startsWith("image/")) {
+    toast.error("Only image files are supported");
+    return null;
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    toast.error("Image must be under 8 MB");
+    return null;
+  }
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth.user?.id;
+  if (!uid) {
+    toast.error("You must be signed in to upload");
+    return null;
+  }
+  const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+  const path = `${uid}/blog/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await supabase.storage.from("feed-media").upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+  });
+  if (error) {
+    toast.error(error.message);
+    return null;
+  }
+  return supabase.storage.from("feed-media").getPublicUrl(path).data.publicUrl;
+}
+
 function WritePostPage() {
   const [user, setUser] = useState<any>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -39,14 +73,21 @@ function WritePostPage() {
   const [title, setTitle] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      StarterKit.configure({ link: false }),
+      StarterKit.configure({
+        link: false,
+        heading: { levels: [2, 3] },
+      }),
       Link,
+      BlogImage.configure({ inline: false, allowBase64: false }),
       Placeholder.configure({ placeholder: "Start writing your post here…" }),
     ],
     content: "<p></p>",
@@ -67,6 +108,15 @@ function WritePostPage() {
     });
   }, []);
 
+  async function handleUploadImage(file: File): Promise<string | null> {
+    setUploadingImage(true);
+    try {
+      return await uploadBlogImage(file);
+    } finally {
+      setUploadingImage(false);
+    }
+  }
+
   async function handleSubmit() {
     if (!user || !editor) return;
     if (!title.trim() || !categoryId) {
@@ -80,9 +130,11 @@ function WritePostPage() {
       title,
       slug,
       meta_description: metaDescription,
-      content: editor.getHTML(),
+      content: sanitizeBlogHtml(editor.getHTML()),
       category_id: categoryId,
       author_id: user.id,
+      tags: normalizeTagList(tags),
+      keywords: serializeKeywords(keywords),
     });
 
     setSubmitting(false);
@@ -137,10 +189,16 @@ function WritePostPage() {
       categoryId={categoryId}
       onCategoryChange={setCategoryId}
       categories={categories}
+      tags={tags}
+      onTagsChange={setTags}
+      keywords={keywords}
+      onKeywordsChange={setKeywords}
       editor={editor}
       submitting={submitting}
       onSubmit={handleSubmit}
       authorLabel={user.email || user.id}
+      uploadingImage={uploadingImage}
+      onUploadImage={handleUploadImage}
     />
   );
 }

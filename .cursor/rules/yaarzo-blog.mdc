@@ -8,6 +8,9 @@ globs:
   - src/components/blog/**
   - src/lib/blog.public.ts
   - src/lib/blog.public.test.ts
+  - src/lib/blog-taxonomy.ts
+  - src/lib/blog-sanitize.ts
+  - src/lib/blog-image.ts
 alwaysApply: false
 ---
 

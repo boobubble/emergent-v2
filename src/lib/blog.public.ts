@@ -16,6 +16,7 @@ export type PublicBlogPost = {
   meta_description: string | null;
   content: string;
   published_at: string | null;
+  tags: string[];
   categories: { name: string; slug: string } | null;
 };
 
@@ -26,7 +27,14 @@ type BlogRow = {
   content?: string;
   published_at: string | null;
   category_id: string | null;
+  tags?: string[] | null;
 };
+
+/** Older posts with null/missing tags still render. */
+export function publicBlogTags(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((t): t is string => typeof t === "string" && t.trim().length > 0);
+}
 
 function attachCategory(
   row: BlogRow,
@@ -86,7 +94,7 @@ export async function getPublishedBlogBySlug(slug: string): Promise<PublicBlogPo
   const [{ data, error }, categories] = await Promise.all([
     db
       .from("blog_posts")
-      .select("title, slug, meta_description, content, published_at, category_id")
+      .select("title, slug, meta_description, content, published_at, category_id, tags")
       .eq("slug", trimmed)
       .eq("status", "published")
       .maybeSingle(),
@@ -100,6 +108,7 @@ export async function getPublishedBlogBySlug(slug: string): Promise<PublicBlogPo
     meta_description: row.meta_description,
     content: row.content ?? "",
     published_at: row.published_at,
+    tags: publicBlogTags(row.tags),
     categories: attachCategory(row, categories),
   };
 }

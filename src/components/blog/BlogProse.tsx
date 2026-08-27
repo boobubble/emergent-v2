@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { sanitizeBlogHtml } from "@/lib/blog-sanitize";
 import "@/components/blog/blog-ui.css";
 
 export function BlogProse({
@@ -8,10 +9,11 @@ export function BlogProse({
   html: string;
   className?: string;
 }) {
+  const safe = sanitizeBlogHtml(html ?? "");
   return (
     <div
       className={cn("yz-blog-prose", className)}
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: safe }}
     />
   );
 }
