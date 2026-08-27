@@ -31,8 +31,10 @@ import { isPublicCmsSlugPath } from "@/lib/route-slug";
 import { isPublicPath as isPublicPathBase, isReadOnlyPublicAppPath, isPrivateUtilityPath } from "@/lib/public-routes";
 import { hasStoredAuthToken } from "@/lib/stored-auth";
 import { HOME_CRITICAL_CSS } from "@/components/home/home-critical-css";
+import { shouldLoadAppSurfaceStyles } from "@/lib/app-surface-css";
 
 import appCss from "../styles.css?url";
+import appSurfacesCss from "../styles/app-surfaces.css?url";
 
 const AuthenticatedAppShell = lazy(() =>
   import("@/components/app/app-shells").then((m) => ({ default: m.AuthenticatedAppShell })),
@@ -134,10 +136,16 @@ function AppStylesheet() {
   // Guest `/` still uses a blocking stylesheet so Tailwind utilities cannot
   // restyle the H1 after first paint (async CSS produced CLS ~0.94).
   // The sheet is the reduced guest CSS (~34 KB gzip), not the old 57 KB bundle.
+  // App routes also need app-surfaces.css in the document so lg:/md: layout
+  // utilities are not overridden by a later JS-injected copy of .hidden/.flex.
+  // Never preload that sheet on guest `/`.
+  const pathname = useRouter().state.location.pathname;
+  const isGuestHome = !shouldLoadAppSurfaceStyles(pathname);
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: HOME_CRITICAL_CSS }} />
+      {isGuestHome ? <style dangerouslySetInnerHTML={{ __html: HOME_CRITICAL_CSS }} /> : null}
       <link rel="stylesheet" href={appCss} />
+      {isGuestHome ? null : <link rel="stylesheet" href={appSurfacesCss} />}
     </>
   );
 }

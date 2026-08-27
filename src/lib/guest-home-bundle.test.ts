@@ -110,10 +110,14 @@ describe("guest homepage initial graph", () => {
     expect(styles).toContain('@source not "./components/chat"');
     expect(read("styles/app-surfaces.css")).toContain("gaming_arena");
     expect(read("styles/app-surfaces.css")).toContain('@import "tw-animate-css"');
+    expect(read("styles/app-surfaces.css")).toContain("source(none)");
+    expect(read("styles/app-surfaces.css")).toContain('@source ".."');
     expect(read("components/app/app-shells.tsx")).toContain('import "@/styles/app-surfaces.css"');
     expect(read("components/feed/MehfilTrendingWidget.tsx")).not.toContain("app-surfaces.css");
     expect(styles).toContain("MehfilTrendingWidget.tsx");
     expect(root).toContain("HOME_CRITICAL_CSS");
+    expect(root).toContain("shouldLoadAppSurfaceStyles");
+    expect(root).toContain("app-surfaces.css?url");
     expect(root).toContain('rel="stylesheet"');
     expect(root).not.toContain('rel="preload"');
     expect(read("components/home/HomeSeoContent.tsx")).not.toContain("text-balance");

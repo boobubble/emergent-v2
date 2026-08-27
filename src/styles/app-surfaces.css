@@ -1,20 +1,11 @@
 /* Route-specific surfaces: chat, feed, games, admin, CMS, hub.
-   Loaded by app shells / CMS / heropage — not on guest / first paint. */
-@import "tailwindcss/utilities" layer(utilities) source(none);
-@source "../components/chat";
-@source "../components/feed";
-@source "../components/games";
-@source "../components/admin";
-@source "../components/broadcaster";
-@source "../components/competitions";
-@source "../components/cosmetics";
-@source "../components/mehfil";
-@source "../components/moderation";
-@source "../components/journey";
-@source "../components/discovery";
-@source "../components/profile";
-@source "../components/subscription";
-@source "../components/community";
+   Loaded by app shells / CMS / heropage — not on guest / first paint.
+
+   Full `tailwindcss` import (not utilities-only) so lg:/md: variants
+   generate. utilities+source(none) emitted .hidden/.flex without
+   breakpoints, so this later sheet overrode guest-CSS desktop layout. */
+@import "tailwindcss" source(none);
+@source "..";
 @import "tw-animate-css";
 
 /* ===== Feed Premium UI ===== */
