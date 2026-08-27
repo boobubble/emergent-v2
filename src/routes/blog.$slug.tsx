@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { getPublishedBlogBySlug } from "@/lib/blog.public";
 import { notFoundSeoHead } from "@/lib/seo";
+import { BlogPostView } from "@/components/blog/BlogPostView";
 
 export const Route = createFileRoute("/blog/$slug")({
   loader: async ({ params }) => {
@@ -35,11 +36,5 @@ function BlogPostNotFound() {
 
 function BlogPostPage() {
   const { post } = Route.useLoaderData();
-  return (
-    <article className="max-w-3xl mx-auto px-4 py-10">
-      <span className="text-sm text-blue-600 font-medium">{post.categories?.name}</span>
-      <h1 className="text-3xl font-bold mb-4 mt-2">{post.title}</h1>
-      <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
-    </article>
-  );
+  return <BlogPostView post={post} />;
 }

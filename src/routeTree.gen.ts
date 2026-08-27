@@ -142,6 +142,7 @@ import { Route as AdminWalletAnalyticsRouteImport } from './routes/admin.wallet-
 import { Route as AdminWalletRulesRouteImport } from './routes/admin.wallet-rules'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as BlogWriteRouteImport } from './routes/blog.write'
 import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
 import { Route as BroadcasterAnalyticsRouteImport } from './routes/broadcaster.analytics'
 import { Route as BroadcasterAnnouncementsRouteImport } from './routes/broadcaster.announcements'
@@ -177,6 +178,7 @@ import { Route as PoetryLeaderboardRouteImport } from './routes/poetry.leaderboa
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as AuthenticatedSettingsDiscoveryRouteImport } from './routes/_authenticated.settings.discovery'
 import { Route as AuthenticatedSettingsPrivacyRouteImport } from './routes/_authenticated.settings.privacy'
+import { Route as AdminBlogModerateRouteImport } from './routes/admin.blog.moderate'
 import { Route as AdminPagesIndexRouteImport } from './routes/admin.pages.index'
 import { Route as AdminPagesAllRouteImport } from './routes/admin.pages.all'
 import { Route as AdminPagesBulkRouteImport } from './routes/admin.pages.bulk'
@@ -901,6 +903,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogWriteRoute = BlogWriteRouteImport.update({
+  id: '/blog/write',
+  path: '/blog/write',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BroadcasterIndexRoute = BroadcasterIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -1079,6 +1086,11 @@ const AuthenticatedSettingsPrivacyRoute =
     path: '/settings/privacy',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AdminBlogModerateRoute = AdminBlogModerateRouteImport.update({
+  id: '/blog/moderate',
+  path: '/blog/moderate',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPagesIndexRoute = AdminPagesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -1500,6 +1512,7 @@ export interface FileRoutesByFullPath {
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/blog/write': typeof BlogWriteRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -1537,6 +1550,7 @@ export interface FileRoutesByFullPath {
   '/poetry/': typeof PoetryIndexRoute
   '/settings/discovery': typeof AuthenticatedSettingsDiscoveryRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
+  '/admin/blog/moderate': typeof AdminBlogModerateRoute
   '/admin/pages/all': typeof AdminPagesAllRoute
   '/admin/pages/bulk': typeof AdminPagesBulkRoute
   '/admin/pages/categories': typeof AdminPagesCategoriesRoute
@@ -1720,6 +1734,7 @@ export interface FileRoutesByTo {
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/blog/write': typeof BlogWriteRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -1756,6 +1771,7 @@ export interface FileRoutesByTo {
   '/poetry': typeof PoetryIndexRoute
   '/settings/discovery': typeof AuthenticatedSettingsDiscoveryRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
+  '/admin/blog/moderate': typeof AdminBlogModerateRoute
   '/admin/pages/all': typeof AdminPagesAllRoute
   '/admin/pages/bulk': typeof AdminPagesBulkRoute
   '/admin/pages/categories': typeof AdminPagesCategoriesRoute
@@ -1945,6 +1961,7 @@ export interface FileRoutesById {
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/blog/write': typeof BlogWriteRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -1982,6 +1999,7 @@ export interface FileRoutesById {
   '/poetry/': typeof PoetryIndexRoute
   '/_authenticated/settings/discovery': typeof AuthenticatedSettingsDiscoveryRoute
   '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
+  '/admin/blog/moderate': typeof AdminBlogModerateRoute
   '/admin/pages/all': typeof AdminPagesAllRoute
   '/admin/pages/bulk': typeof AdminPagesBulkRoute
   '/admin/pages/categories': typeof AdminPagesCategoriesRoute
@@ -2171,6 +2189,7 @@ export interface FileRouteTypes {
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
     | '/blog/$slug'
+    | '/blog/write'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -2208,6 +2227,7 @@ export interface FileRouteTypes {
     | '/poetry/'
     | '/settings/discovery'
     | '/settings/privacy'
+    | '/admin/blog/moderate'
     | '/admin/pages/all'
     | '/admin/pages/bulk'
     | '/admin/pages/categories'
@@ -2391,6 +2411,7 @@ export interface FileRouteTypes {
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
     | '/blog/$slug'
+    | '/blog/write'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -2427,6 +2448,7 @@ export interface FileRouteTypes {
     | '/poetry'
     | '/settings/discovery'
     | '/settings/privacy'
+    | '/admin/blog/moderate'
     | '/admin/pages/all'
     | '/admin/pages/bulk'
     | '/admin/pages/categories'
@@ -2615,6 +2637,7 @@ export interface FileRouteTypes {
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
     | '/blog/$slug'
+    | '/blog/write'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -2652,6 +2675,7 @@ export interface FileRouteTypes {
     | '/poetry/'
     | '/_authenticated/settings/discovery'
     | '/_authenticated/settings/privacy'
+    | '/admin/blog/moderate'
     | '/admin/pages/all'
     | '/admin/pages/bulk'
     | '/admin/pages/categories'
@@ -2751,6 +2775,7 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
   BlogSlugRoute: typeof BlogSlugRoute
+  BlogWriteRoute: typeof BlogWriteRoute
   FeedSlugRoute: typeof FeedSlugRoute
   FeedbackIdRoute: typeof FeedbackIdRoute
   InviteCodeRoute: typeof InviteCodeRoute
@@ -3734,6 +3759,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/write': {
+      id: '/blog/write'
+      path: '/blog/write'
+      fullPath: '/blog/write'
+      preLoaderRoute: typeof BlogWriteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/broadcaster/': {
       id: '/broadcaster/'
       path: '/'
@@ -3978,6 +4010,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/privacy'
       preLoaderRoute: typeof AuthenticatedSettingsPrivacyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/admin/blog/moderate': {
+      id: '/admin/blog/moderate'
+      path: '/blog/moderate'
+      fullPath: '/admin/blog/moderate'
+      preLoaderRoute: typeof AdminBlogModerateRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/pages/': {
       id: '/admin/pages/'
@@ -4538,6 +4577,7 @@ interface AdminRouteChildren {
   AdminWalletAnalyticsRoute: typeof AdminWalletAnalyticsRoute
   AdminWalletRulesRoute: typeof AdminWalletRulesRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminBlogModerateRoute: typeof AdminBlogModerateRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -4632,6 +4672,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminWalletAnalyticsRoute: AdminWalletAnalyticsRoute,
   AdminWalletRulesRoute: AdminWalletRulesRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminBlogModerateRoute: AdminBlogModerateRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
@@ -4781,6 +4822,7 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
   BlogSlugRoute: BlogSlugRoute,
+  BlogWriteRoute: BlogWriteRoute,
   FeedSlugRoute: FeedSlugRoute,
   FeedbackIdRoute: FeedbackIdRoute,
   InviteCodeRoute: InviteCodeRoute,

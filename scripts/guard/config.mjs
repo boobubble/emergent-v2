@@ -149,6 +149,9 @@ export const MODULES = {
     paths: [
       "src/routes/blog.index.tsx",
       "src/routes/blog.$slug.tsx",
+      "src/routes/blog.write.tsx",
+      "src/routes/admin.blog.moderate.tsx",
+      "src/components/blog/",
       "src/lib/blog.public.ts",
       "src/lib/blog.public.test.ts",
     ],

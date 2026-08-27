@@ -1,0 +1,205 @@
+/* Blog-only surfaces. Imported from Blog components — not global CSS. */
+
+.yz-blog {
+  --yz-blog-measure: 46rem;
+  color: var(--foreground);
+  background: var(--background);
+}
+
+.yz-blog-prose {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: var(--foreground);
+}
+
+.yz-blog-prose > *:first-child {
+  margin-top: 0;
+}
+
+.yz-blog-prose h2 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  margin: 2.25rem 0 0.85rem;
+}
+
+.yz-blog-prose h3 {
+  font-size: 1.2rem;
+  line-height: 1.35;
+  font-weight: 620;
+  letter-spacing: -0.015em;
+  margin: 1.75rem 0 0.65rem;
+}
+
+.yz-blog-prose p {
+  margin: 0 0 1.15rem;
+}
+
+.yz-blog-prose a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.yz-blog-prose a:hover {
+  opacity: 0.88;
+}
+
+.yz-blog-prose strong {
+  font-weight: 650;
+}
+
+.yz-blog-prose em {
+  font-style: italic;
+}
+
+.yz-blog-prose ul,
+.yz-blog-prose ol {
+  margin: 0 0 1.15rem;
+  padding-left: 1.35rem;
+}
+
+.yz-blog-prose ul {
+  list-style: disc;
+}
+
+.yz-blog-prose ol {
+  list-style: decimal;
+}
+
+.yz-blog-prose li {
+  margin: 0.35rem 0;
+}
+
+.yz-blog-prose li > p {
+  margin: 0;
+}
+
+.yz-blog-prose blockquote {
+  margin: 1.5rem 0;
+  padding: 0.15rem 0 0.15rem 1.1rem;
+  border-left: 3px solid color-mix(in oklab, var(--primary) 55%, transparent);
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.yz-blog-prose blockquote > p {
+  margin: 0;
+}
+
+.yz-blog-prose pre,
+.yz-blog-prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.yz-blog-prose code {
+  font-size: 0.9em;
+  background: var(--muted);
+  border-radius: 0.35rem;
+  padding: 0.1em 0.35em;
+}
+
+.yz-blog-prose pre {
+  display: block;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  padding: 1rem 1.1rem;
+  border-radius: 0.85rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.yz-blog-prose pre code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+}
+
+.yz-blog-prose img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 1.5rem 0;
+  border-radius: 0.9rem;
+}
+
+.yz-blog-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.95rem;
+}
+
+.yz-blog-prose th,
+.yz-blog-prose td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+}
+
+.yz-blog-prose th {
+  background: var(--muted);
+  font-weight: 600;
+}
+
+.yz-blog-prose hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.yz-blog .tiptap {
+  outline: none;
+  min-height: 22rem;
+}
+
+.yz-blog .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--muted-foreground);
+  opacity: 0.72;
+}
+
+.yz-blog-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.15rem;
+  height: 2.15rem;
+  padding: 0 0.45rem;
+  border-radius: 0.5rem;
+  color: var(--foreground);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.yz-blog-toolbar-btn:hover,
+.yz-blog-toolbar-btn:focus-visible {
+  background: var(--muted);
+  outline: none;
+}
+
+.yz-blog-toolbar-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.yz-blog-toolbar-btn[data-active="true"] {
+  background: color-mix(in oklab, var(--primary) 16%, transparent);
+  color: var(--foreground);
+}
+
+.yz-blog-toolbar-sep {
+  width: 1px;
+  height: 1.15rem;
+  background: var(--border);
+  margin: 0 0.2rem;
+  flex-shrink: 0;
+}

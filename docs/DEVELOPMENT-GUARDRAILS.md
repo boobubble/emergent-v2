@@ -40,7 +40,7 @@ reset the repo to these commits unless a task explicitly asks for that.
 |---|---|---|
 | **HOMEPAGE** | `/` | `HomeGuestShell`, `HomeSeoContent`, `/api/public/landing`, `src/lib/landing-*` |
 | **CUSTOM_PAGES** | `/$slug` | `fetch-published-page`, `public-cms-route`, `pages-cms/`, `PublicCmsPageView` |
-| **BLOG** | `/blog`, `/blog/$slug` | `blog.public.ts`, `blog.index.tsx`, `blog.$slug.tsx` |
+| **BLOG** | `/blog`, `/blog/$slug`, `/blog/write` | `blog.public.ts`, `blog.index.tsx`, `blog.$slug.tsx`, `blog.write.tsx`, `src/components/blog/` |
 | **FEED** | `/feed` | `feed.index.tsx`, `src/components/feed/` |
 | **CHATROOM** | `/chatroom` | `chatroom.tsx`, `src/components/chat/` |
 | **COMMUNITIES** | `/communities`, `/community/$slug` | `communities.tsx`, `community.functions.ts` |

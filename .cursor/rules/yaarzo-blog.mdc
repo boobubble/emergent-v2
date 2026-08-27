@@ -3,6 +3,9 @@ description: Blog is a separate module from Custom Pages; homepage Community Blo
 globs:
   - src/routes/blog.index.tsx
   - src/routes/blog.$slug.tsx
+  - src/routes/blog.write.tsx
+  - src/routes/admin.blog.moderate.tsx
+  - src/components/blog/**
   - src/lib/blog.public.ts
   - src/lib/blog.public.test.ts
 alwaysApply: false
