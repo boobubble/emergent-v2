@@ -2,17 +2,18 @@ import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-route
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedPage } from "@/lib/pages.functions";
-import { getCommunityBySlug } from "@/lib/community.functions";
 import { isReservedSlug } from "@/lib/reserved-routes";
 import { isNavigableSlug } from "@/lib/route-slug";
 import {
   customPageQueryKey,
   publishedPageMatchesSlug,
 } from "@/lib/fetch-published-page";
+import { resolvePublicTopLevelSlug } from "@/lib/public-cms-route";
 import { PublicCmsPageView, type PublicCmsPage } from "@/components/PublicCmsPageView";
 import {
   loadDynamicRouteSeo,
   headFromRouteSeo,
+  notFoundSeoHead,
   buildCmsPageSeoVars,
   buildCmsFallbackJsonLd,
   loadSeoSiteContext,
@@ -71,12 +72,13 @@ export const Route = createFileRoute("/$slug")({
     const slug = params.slug;
     if (!isNavigableSlug(slug)) throw notFound();
     if (isReservedSlug(slug)) redirectReservedSlug(slug);
-    const community = await getCommunityBySlug({ data: { slug } });
-    if (community) {
-      throw redirect({ to: "/community/$slug", params: { slug }, replace: true });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const resolved = await resolvePublicTopLevelSlug(supabaseAdmin as never, slug);
+    if (resolved.type === "community") {
+      throw redirect({ to: "/community/$slug", params: { slug: resolved.slug }, replace: true });
     }
-    const page = await getPublishedPage({ data: { slug } });
-    if (!page) throw notFound();
+    if (resolved.type === "missing") throw notFound();
+    const page = resolved.page;
     if (page.redirectedFrom) {
       throw redirect({
         to: "/$slug",
@@ -137,7 +139,8 @@ export const Route = createFileRoute("/$slug")({
     return { page, slug, seoData };
   },
 
-  head: ({ loaderData }) => headFromRouteSeo(loaderData?.seoData),
+  head: ({ loaderData }) =>
+    loaderData?.seoData ? headFromRouteSeo(loaderData.seoData) : notFoundSeoHead(),
   notFoundComponent: PublicPageNotFound,
   errorComponent: PublicPageError,
   // Do NOT set pendingComponent: Suspense fallback streamed empty markup to crawlers.

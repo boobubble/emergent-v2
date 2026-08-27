@@ -44,8 +44,9 @@ export interface Community {
 // ---------- Public server client (for anon-safe reads) ----------
 async function serverPublicClient() {
   const { createClient } = await import("@supabase/supabase-js");
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-  return createClient(process.env.SUPABASE_URL!, key, {
+  const { getSupabasePublicEnv } = await import("@/integrations/supabase/env.server");
+  const { url, publishableKey: key } = getSupabasePublicEnv();
+  return createClient(url, key, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
     global: {
       fetch: (input, init) => {
@@ -86,14 +87,14 @@ export const getCommunityBySlug = createServerFn({ method: "GET" })
   .inputValidator((d: { slug: string }) => z.object({ slug: z.string().min(1).max(80) }).parse(d))
   .handler(async ({ data }) => {
     const sb = await serverPublicClient();
-    const { data: row } = await sb
+    const { data: row, error } = await sb
       .from("communities")
       .select("id,owner_id,slug,name,description,welcome_text,logo_url,banner_url,background_url,accent_color,rules,announcement,social_links,privacy_mode,visibility,category,tags,is_featured,is_verified,is_official,is_partner,is_trusted,verification_status,language,country,status,member_count,online_count,meta,created_at,updated_at")
       .eq("slug", data.slug)
       .in("status", ["active", "archived"])
       .maybeSingle();
-    if (!row) return null;
-    return row as any;
+    const { publishedLookupResult } = await import("@/lib/fetch-published-page");
+    return publishedLookupResult(row, error, "Failed to look up community") as any;
   });
 
 /**

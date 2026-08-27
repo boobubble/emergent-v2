@@ -68,6 +68,28 @@ function logPublishedPageFetch(meta: {
 const PAGE_SELECT =
   "id,slug,title,content,intro_content,excerpt,tags,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,h1,noindex,nofollow,views,published_at";
 
+/** PostgREST "no rows" from `.single()` — treat as miss, not infrastructure failure. */
+export function isMissingRowError(error: { code?: string } | null | undefined): boolean {
+  return error?.code === "PGRST116";
+}
+
+/**
+ * Map a PostgREST read to a value or throw.
+ * - no row (maybeSingle null / PGRST116) → null (HTTP 404)
+ * - query/connection/schema error → throw (HTTP 500)
+ */
+export function publishedLookupResult<T>(
+  data: T | null | undefined,
+  error: { code?: string; message?: string } | null | undefined,
+  fallbackMessage = "Failed to load page",
+): T | null {
+  if (error) {
+    if (isMissingRowError(error)) return null;
+    throw new Error(error.message ?? fallbackMessage);
+  }
+  return data ?? null;
+}
+
 async function loadPublishedRow(
   sb: PublishedPageDbClient,
   slug: string,
@@ -78,8 +100,7 @@ async function loadPublishedRow(
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
-  if (error) throw new Error(error.message ?? "Failed to load page");
-  return row as PublishedCustomPage | null;
+  return publishedLookupResult(row as PublishedCustomPage | null, error);
 }
 
 async function resolveRedirectTarget(

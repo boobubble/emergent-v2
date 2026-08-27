@@ -57,6 +57,7 @@ export const READ_ONLY_PUBLIC_APP_PREFIXES = [
   "/pages",
   "/communities",
   "/community",
+  "/blog",
   "/invite",
   "/trust",
   "/pricing",

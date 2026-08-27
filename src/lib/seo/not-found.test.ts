@@ -37,7 +37,7 @@ describe("404 SEO template", () => {
   it("keeps unknown CMS slugs and missing profiles on throw notFound()", () => {
     const slugSrc = readFileSync(resolve(process.cwd(), "src/routes/$slug.tsx"), "utf8");
     const profileSrc = readFileSync(resolve(process.cwd(), "src/routes/u.$username.tsx"), "utf8");
-    expect(slugSrc).toContain("if (!page) throw notFound()");
+    expect(slugSrc).toContain("if (resolved.type === \"missing\") throw notFound()");
     expect(profileSrc).toContain("if (!profile) throw notFound()");
     expect(profileSrc).toContain("notFoundComponent: MissingProfileNotFound");
   });

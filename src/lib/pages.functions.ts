@@ -3,8 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isReservedSlug } from "@/lib/reserved-routes";
 import { slugify, slugifyPageSlug, validatePageSlug, assertUniquePageSlug } from "@/lib/page-slug";
-import { fetchPublishedPageBySlug, buildPublicCmsPageHtml } from "@/lib/fetch-published-page";
-import { loadRelatedChatRoomsForPage } from "@/lib/pages-cms/related-chat-rooms";
+import { fetchPublishedPageBySlug } from "@/lib/fetch-published-page";
+import { hydratePublishedPageForPublic } from "@/lib/public-cms-route";
 import { withRateLimit } from "./rate-limit-middleware";
 import { findSlugConflicts } from "@/lib/pages-cms/slug-conflicts";
 import {
@@ -531,11 +531,7 @@ export const getPublishedPage = createServerFn({ method: "POST" })
     const sb = await getSupabaseAdmin();
     const page = await fetchPublishedPageBySlug(sb, data.slug);
     if (!page) return null;
-    const [publicHtml, relatedChatRooms] = await Promise.all([
-      buildPublicCmsPageHtml(sb, page),
-      loadRelatedChatRoomsForPage(sb, page),
-    ]);
-    return { ...page, publicHtml, relatedChatRooms };
+    return hydratePublishedPageForPublic(sb, page);
   });
 
 export const listPublishedPages = createServerFn({ method: "GET" })

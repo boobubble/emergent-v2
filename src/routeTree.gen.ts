@@ -140,6 +140,8 @@ import { Route as AdminVoiceNotesRouteImport } from './routes/admin.voice-notes'
 import { Route as AdminWalletRouteImport } from './routes/admin.wallet'
 import { Route as AdminWalletAnalyticsRouteImport } from './routes/admin.wallet-analytics'
 import { Route as AdminWalletRulesRouteImport } from './routes/admin.wallet-rules'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as BroadcasterIndexRouteImport } from './routes/broadcaster.index'
 import { Route as BroadcasterAnalyticsRouteImport } from './routes/broadcaster.analytics'
 import { Route as BroadcasterAnnouncementsRouteImport } from './routes/broadcaster.announcements'
@@ -889,6 +891,16 @@ const AdminWalletRulesRoute = AdminWalletRulesRouteImport.update({
   path: '/wallet-rules',
   getParentRoute: () => AdminRoute,
 } as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BroadcasterIndexRoute = BroadcasterIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -1487,6 +1499,7 @@ export interface FileRoutesByFullPath {
   '/admin/wallet': typeof AdminWalletRoute
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -1515,6 +1528,7 @@ export interface FileRoutesByFullPath {
   '/poetry/leaderboard': typeof PoetryLeaderboardRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/feed/': typeof FeedIndexRoute
@@ -1705,6 +1719,7 @@ export interface FileRoutesByTo {
   '/admin/wallet': typeof AdminWalletRoute
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -1732,6 +1747,7 @@ export interface FileRoutesByTo {
   '/poetry/leaderboard': typeof PoetryLeaderboardRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
+  '/blog': typeof BlogIndexRoute
   '/broadcaster': typeof BroadcasterIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/feed': typeof FeedIndexRoute
@@ -1928,6 +1944,7 @@ export interface FileRoutesById {
   '/admin/wallet': typeof AdminWalletRoute
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
   '/broadcaster/announcements': typeof BroadcasterAnnouncementsRoute
   '/broadcaster/mic': typeof BroadcasterMicRoute
@@ -1956,6 +1973,7 @@ export interface FileRoutesById {
   '/poetry/leaderboard': typeof PoetryLeaderboardRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/broadcaster/': typeof BroadcasterIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/feed/': typeof FeedIndexRoute
@@ -2152,6 +2170,7 @@ export interface FileRouteTypes {
     | '/admin/wallet'
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
+    | '/blog/$slug'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -2180,6 +2199,7 @@ export interface FileRouteTypes {
     | '/poetry/leaderboard'
     | '/u/$username'
     | '/admin/'
+    | '/blog/'
     | '/broadcaster/'
     | '/competitions/'
     | '/feed/'
@@ -2370,6 +2390,7 @@ export interface FileRouteTypes {
     | '/admin/wallet'
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
+    | '/blog/$slug'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -2397,6 +2418,7 @@ export interface FileRouteTypes {
     | '/poetry/leaderboard'
     | '/u/$username'
     | '/admin'
+    | '/blog'
     | '/broadcaster'
     | '/competitions'
     | '/feed'
@@ -2592,6 +2614,7 @@ export interface FileRouteTypes {
     | '/admin/wallet'
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
+    | '/blog/$slug'
     | '/broadcaster/analytics'
     | '/broadcaster/announcements'
     | '/broadcaster/mic'
@@ -2620,6 +2643,7 @@ export interface FileRouteTypes {
     | '/poetry/leaderboard'
     | '/u/$username'
     | '/admin/'
+    | '/blog/'
     | '/broadcaster/'
     | '/competitions/'
     | '/feed/'
@@ -2726,6 +2750,7 @@ export interface RootRouteChildren {
   TrustRoute: typeof TrustRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
+  BlogSlugRoute: typeof BlogSlugRoute
   FeedSlugRoute: typeof FeedSlugRoute
   FeedbackIdRoute: typeof FeedbackIdRoute
   InviteCodeRoute: typeof InviteCodeRoute
@@ -2742,6 +2767,7 @@ export interface RootRouteChildren {
   PoetryHallOfFameRoute: typeof PoetryHallOfFameRoute
   PoetryLeaderboardRoute: typeof PoetryLeaderboardRoute
   UUsernameRoute: typeof UUsernameRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   FeedIndexRoute: typeof FeedIndexRoute
   FeedbackIndexRoute: typeof FeedbackIndexRoute
   MehfilIndexRoute: typeof MehfilIndexRoute
@@ -3693,6 +3719,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/wallet-rules'
       preLoaderRoute: typeof AdminWalletRulesRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/broadcaster/': {
       id: '/broadcaster/'
@@ -4740,6 +4780,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrustRoute: TrustRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
+  BlogSlugRoute: BlogSlugRoute,
   FeedSlugRoute: FeedSlugRoute,
   FeedbackIdRoute: FeedbackIdRoute,
   InviteCodeRoute: InviteCodeRoute,
@@ -4756,6 +4797,7 @@ const rootRouteChildren: RootRouteChildren = {
   PoetryHallOfFameRoute: PoetryHallOfFameRoute,
   PoetryLeaderboardRoute: PoetryLeaderboardRoute,
   UUsernameRoute: UUsernameRoute,
+  BlogIndexRoute: BlogIndexRoute,
   FeedIndexRoute: FeedIndexRoute,
   FeedbackIndexRoute: FeedbackIndexRoute,
   MehfilIndexRoute: MehfilIndexRoute,

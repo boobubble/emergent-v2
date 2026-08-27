@@ -51,6 +51,7 @@ describe("public routes — logged-out browse allowlist", () => {
       "/poetry",
       "/community",
       "/communities",
+      "/blog",
     ];
     for (const path of required) {
       expect(READ_ONLY_PUBLIC_APP_PREFIXES).toContain(path);
