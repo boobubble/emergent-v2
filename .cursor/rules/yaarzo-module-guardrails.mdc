@@ -1,0 +1,19 @@
+---
+description: Module isolation — only touch the requested feature; protect shared/core files
+alwaysApply: true
+---
+
+# Yaarzo module guardrails
+
+Full map: `docs/DEVELOPMENT-GUARDRAILS.md`. Task template: `docs/CURSOR-TASK-TEMPLATE.md`.
+
+- Change **only** files for the requested module. No drive-by cleanup, refactors, or extra pages.
+- Do **not** edit PROTECTED files unless the task cannot work without them. If required: explain why, list affected modules, run that module’s `test:guard:*` plus golden smoke, and report the protected change.
+- PROTECTED: `__root.tsx`, `$slug.tsx`, `$.tsx`, `public-routes.ts`, `auth-gate.tsx`, `app-settings.tsx`, `src/lib/seo/*`, `routeTree.gen.ts`, `src/styles.css`, `app-surfaces.css`, Supabase client/server/env.
+- Do **not** regenerate `routeTree.gen.ts` unless a route file was added/removed/renamed.
+- Do **not** change AuthGate / `public-routes.ts` during SEO or content work.
+- Do **not** change CUSTOM_PAGES (`$slug`, CMS fetch) during homepage or blog tasks.
+- Do **not** change HOMEPAGE during feed/chatroom tasks.
+- Preserve public URLs and status codes. **Any 5xx blocks deploy.** Unknown slugs must stay **404**, never 500.
+- After shared/core edits run: homepage, a CMS page, `/blog`, invalid slug, `/feed`, `/chatroom`.
+- Baseline (commit `82bdd7fe`): sitemap 35/35 = 200, 5xx = 0, `/blog` = 200, junk slug = 404.
