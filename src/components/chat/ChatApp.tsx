@@ -1,4 +1,4 @@
-import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { Navigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -40,7 +40,6 @@ import { useAuth } from "@/lib/auth-store";
 import { getDiscoveryPrefs } from "@/lib/discovery/functions";
 import { shouldShowFullScreenDiscovery } from "@/lib/discovery/country";
 import { YaarzoDiscoverySheet } from "@/components/discovery/YaarzoDiscoverySheet";
-import { readSidebarOpenPreference, writeSidebarOpenPreference } from "@/lib/sidebar-prefs";
 import { cn } from "@/lib/utils";
 
 interface EngageToast { key: number; kind: "buzz" | "streak" | "badge"; title: string; body: string; }
@@ -223,21 +222,9 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
     const t = window.setTimeout(() => setFeedbotChip(null), 30_000);
     return () => window.clearTimeout(t);
   }, [feedbotChip]);
-  // SSR-safe default; hydrate saved preference after mount.
-  const [sidebarOpen, setSidebarOpenState] = useState(true);
-  const sidebarPrefHydrated = useRef(false);
-
-  useEffect(() => {
-    if (sidebarPrefHydrated.current) return;
-    sidebarPrefHydrated.current = true;
-    const mobile = window.matchMedia("(max-width: 768px)").matches;
-    setSidebarOpenState(readSidebarOpenPreference(mobile));
-  }, []);
-
-  const setSidebarOpen = useCallback((next: boolean) => {
-    setSidebarOpenState(next);
-    writeSidebarOpenPreference(next);
-  }, []);
+  // Mobile drawer only. Default closed so small screens never flash an overlay;
+  // desktop layout ignores this flag via md:static (always a visible column).
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -365,13 +352,13 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
         )}
         <div
           className={cn(
-            "fixed inset-y-0 left-0 z-40 w-[85vw] max-w-xs shadow-2xl transition-[transform,width,opacity] duration-200 ease-out",
-            "md:static md:z-auto md:shrink-0 md:shadow-none",
+            "fixed inset-y-0 left-0 z-40 w-[85vw] max-w-xs shadow-2xl transition-transform duration-200 ease-out",
+            "md:static md:z-auto md:w-auto md:max-w-none md:shrink-0 md:translate-x-0 md:opacity-100 md:pointer-events-auto md:shadow-none",
             sidebarOpen
-              ? "translate-x-0 md:w-auto md:max-w-none md:opacity-100"
-              : "-translate-x-full pointer-events-none md:pointer-events-none md:w-0 md:max-w-0 md:translate-x-0 md:overflow-hidden md:opacity-0",
+              ? "translate-x-0"
+              : "-translate-x-full pointer-events-none md:pointer-events-auto",
           )}
-          aria-hidden={!sidebarOpen}
+          aria-hidden={isMobile && !sidebarOpen}
         >
           <SidebarPanelBoundary onFail={() => setSidebarOpen(false)}>
             <Sidebar
@@ -379,7 +366,10 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
               onOpenLeaderboard={() => setLbOpen(true)}
               onOpenAchievements={() => setAchOpen(true)}
               onCollapse={() => setSidebarOpen(false)}
-              onSelectDiscoveryChannel={(id) => chat.joinRoom(id)}
+              onSelectDiscoveryChannel={(id) => {
+                chat.joinRoom(id);
+                setSidebarOpen(false);
+              }}
             />
           </SidebarPanelBoundary>
         </div>
@@ -387,7 +377,7 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
           {!sidebarOpen && (
             <button
               onClick={() => setSidebarOpen(true)}
-              className="absolute left-3 top-3.5 z-30 grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/30 transition-all hover:scale-110 hover:shadow-xl hover:ring-primary/50"
+              className="absolute left-3 top-3.5 z-30 grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/30 transition-all hover:scale-110 hover:shadow-xl hover:ring-primary/50 md:hidden"
               style={{ boxShadow: "var(--shadow-glow)" }}
               title="Show sidebar"
               aria-label="Show sidebar"

@@ -31,7 +31,7 @@ export function ChatHeader(_props: ChatHeaderProps = {}) {
     const statusLabel = isOnline ? "online" : "offline";
     return (
       <>
-      <header className="chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-3 px-6 pl-14">
+      <header className="chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-3 px-6 pl-14 md:pl-6">
 
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar user={u} size={36} />
@@ -88,7 +88,7 @@ export function ChatHeader(_props: ChatHeaderProps = {}) {
   if (!room) return null;
 
   return (
-    <header className="chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-1 px-2 pl-12 sm:gap-2 sm:px-6 sm:pl-14">
+    <header className="chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-1 px-2 pl-12 sm:gap-2 sm:px-6 sm:pl-14 md:pl-6">
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden sm:gap-3">
         <BrandMark
           slot="chat"

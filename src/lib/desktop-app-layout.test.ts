@@ -41,6 +41,20 @@ describe("desktop app layout CSS split", () => {
     expect(read("components/app/app-shells.tsx")).toContain('import "@/styles/app-surfaces.css"');
   });
 
+  it("chatroom left menu is a closed mobile drawer and an always-open desktop column", () => {
+    expect(chat).toContain("const [sidebarOpen, setSidebarOpen] = useState(false)");
+    expect(chat).toContain("md:static");
+    expect(chat).toContain("md:translate-x-0");
+    expect(chat).toContain("-translate-x-full");
+    expect(chat).not.toContain("md:w-0");
+    expect(chat).not.toContain("md:opacity-0");
+    expect(chat).not.toContain("readSidebarOpenPreference");
+    expect(chat).toContain("md:hidden");
+    const sidebar = read("components/chat/Sidebar.tsx");
+    expect(sidebar).toContain("md:hidden");
+    expect(sidebar).toContain("onCollapse?.()");
+  });
+
   it("mobile feed still declares the bottom nav for small screens", () => {
     expect(feed).toContain("lg:hidden pb-[env(safe-area-inset-bottom)]");
     expect(feed).toContain("pb-24 lg:pb-0");
