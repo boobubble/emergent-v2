@@ -7,6 +7,7 @@ import {
   filterUnpublishedCmsLinks,
 } from "@/lib/pages-cms/public-links";
 import { rewriteCmsHtml } from "@/lib/pages-cms/content-quality";
+import { placeCmsImagesInContent } from "@/lib/pages-cms/cms-image-placement";
 
 /** Supabase client surface for public CMS page reads. */
 export type PublishedPageDbClient = SupabaseClient<Database>;
@@ -153,7 +154,7 @@ export async function buildPublicCmsPageHtml(
   const unpublished = rows.filter((r) => r.status !== "published").map((r) => r.slug);
   const published = rows.filter((r) => r.status === "published").map((r) => r.slug);
   const filtered = filterUnpublishedCmsLinks(raw, unpublished);
-  return rewriteCmsHtml(filtered, { h1: page.h1, publishedSlugs: published });
+  return placeCmsImagesInContent(rewriteCmsHtml(filtered, { h1: page.h1, publishedSlugs: published }));
 }
 
 /**

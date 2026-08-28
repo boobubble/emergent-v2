@@ -1,0 +1,26 @@
+/**
+ * Display-only CMS image alignment (scoped to .custom-page-content).
+ * Default is centered. Left/right apply only when explicitly marked.
+ * Do not use flex `order` — placement is handled in cms-image-placement.ts.
+ */
+.custom-page-content img {
+  display: block;
+  margin-inline: auto;
+}
+
+.custom-page-content img[data-align="center"],
+.custom-page-content img.custom-page-img-center {
+  margin-inline: auto;
+}
+
+.custom-page-content img[data-align="left"],
+.custom-page-content img.custom-page-img-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.custom-page-content img[data-align="right"],
+.custom-page-content img.custom-page-img-right {
+  margin-left: auto;
+  margin-right: 0;
+}

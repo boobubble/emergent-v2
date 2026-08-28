@@ -115,6 +115,29 @@ describe("PublicCmsPageView real SSR markup", () => {
     const { body } = renderPublishedFixture();
     expect(body.match(/<h1\b/gi)?.length ?? 0).toBe(1);
   });
+
+  it("renders a post-CTA image in article order, not after the CTA", () => {
+    const img =
+      '<img src="https://example.com/kuwait.webp" alt="Kuwait chat room" width="1402" height="1122" data-optimized="true" data-bytes="186910">';
+    const publicHtml = [
+      "<p>Late nights in Kuwait have a rhythm of their own.</p>",
+      "<h2>Why a Kuwait Chat Room, Specifically?</h2>",
+      "<p>General chat apps are fine.</p>",
+      '<p><a class="custom-page-cta-button" href="/chatrooms">Start Chatting Now→</a></p>',
+      "<p>Free to explore • Join when you are ready</p>",
+      img,
+      "<p></p>",
+    ].join("");
+    const page = { ...fixturePage, publicHtml };
+    const body = renderToString(React.createElement(PublicCmsPageView, { page }));
+    const imgAt = body.indexOf("<img");
+    expect(body.match(/<img\b/gi)?.length).toBe(1);
+    expect(body).toContain('alt="Kuwait chat room"');
+    expect(body).toContain('data-optimized="true"');
+    expect(imgAt).toBeGreaterThan(-1);
+    expect(imgAt).toBeLessThan(body.indexOf("Why a Kuwait Chat Room"));
+    expect(imgAt).toBeLessThan(body.indexOf("custom-page-cta-button"));
+  });
 });
 
 describe("sanitizeHtml SSR module safety", () => {

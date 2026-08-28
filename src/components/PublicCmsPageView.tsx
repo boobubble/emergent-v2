@@ -4,6 +4,8 @@
  */
 import { sanitizeHtml } from "@/lib/pages-io";
 import "@/styles/app-surfaces.css";
+import "@/lib/pages-cms/cms-page-images.css";
+import { placeCmsImagesInContent } from "@/lib/pages-cms/cms-image-placement";
 import { injectHeadingIds } from "@/lib/heading-ids";
 import { resolvePublicCmsH1 } from "@/lib/pages-cms/public-page-ssr";
 import { RelatedChatRooms } from "@/components/RelatedChatRooms";
@@ -20,7 +22,7 @@ export type PublicCmsPage = PublishedCustomPage & {
 
 export function PublicCmsPageView({ page }: { page: PublicCmsPage }) {
   const rawHtml = page.publicHtml ?? page.content;
-  const safeHtml = sanitizeHtml(injectHeadingIds(rawHtml));
+  const safeHtml = sanitizeHtml(injectHeadingIds(placeCmsImagesInContent(rawHtml)));
 
   const layout = (page.layout ?? "boxed") as "full" | "boxed";
   const leftSidebar = (page.sidebar_left ?? "none") as "none" | "ads" | "feed";

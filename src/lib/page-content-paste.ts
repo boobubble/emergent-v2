@@ -22,6 +22,7 @@ const ALLOWED_TAGS = [
 const ALLOWED_ATTR = [
   "href", "target", "rel", "id", "class", "src", "alt", "title",
   "colspan", "rowspan", "width", "height",
+  "loading", "decoding",
   "type", "checked", "disabled", "data-type", "data-checked",
   "aria-label", "aria-hidden", "role",
 ];
@@ -38,6 +39,10 @@ export const ALLOWED_PAGE_CONTENT_CLASSES = new Set([
   "toc-title",
   "toc-l2",
   "toc-l3",
+  "custom-page-img",
+  "custom-page-img-left",
+  "custom-page-img-center",
+  "custom-page-img-right",
 ]);
 
 export { ALLOWED_TAGS, ALLOWED_ATTR };

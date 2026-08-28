@@ -20,6 +20,7 @@ const ALLOWED = new Set([
 const ATTR_OK = new Set([
   "href", "target", "rel", "id", "class", "src", "alt", "title",
   "colspan", "rowspan", "width", "height",
+  "loading", "decoding",
   "aria-label", "aria-hidden", "role",
 ]);
 
@@ -35,6 +36,10 @@ const ALLOWED_CLASSES = new Set([
   "toc-l2",
   "toc-l3",
   "custom-page-content",
+  "custom-page-img",
+  "custom-page-img-left",
+  "custom-page-img-center",
+  "custom-page-img-right",
 ]);
 
 function isSafeUrl(value: string): boolean {

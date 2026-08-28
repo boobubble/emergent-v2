@@ -2,6 +2,7 @@
  * Public CMS page SSR / crawlability helpers.
  * Ensures crawlers receive H1 + body in the initial HTML (not only after hydration).
  */
+import { placeCmsImagesInContent } from "@/lib/pages-cms/cms-image-placement";
 
 export type PublicCmsPageSeoFields = {
   slug: string;
@@ -27,8 +28,11 @@ export function resolvePublicCmsH1(page: Pick<PublicCmsPageSeoFields, "h1" | "ti
 export function resolvePublicCmsBodyHtml(
   page: Pick<PublicCmsPageSeoFields, "publicHtml" | "content" | "intro_content">,
 ): string {
-  if (typeof page.publicHtml === "string" && page.publicHtml.trim()) return page.publicHtml;
-  return [page.intro_content, page.content].filter((p) => (p || "").trim()).join("\n");
+  const raw =
+    typeof page.publicHtml === "string" && page.publicHtml.trim()
+      ? page.publicHtml
+      : [page.intro_content, page.content].filter((p) => (p || "").trim()).join("\n");
+  return placeCmsImagesInContent(raw);
 }
 
 /**

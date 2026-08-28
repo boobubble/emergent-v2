@@ -50,6 +50,25 @@ describe("buildPublicCmsArticleInitialHtml", () => {
     expect(html).toContain("<h2>About Pakistan Chat</h2>");
   });
 
+  it("places a post-CTA image after the lead paragraph in initial body HTML", () => {
+    const img =
+      '<img src="https://example.com/kuwait.webp" alt="Kuwait chat room" data-optimized="true">';
+    const publicHtml = [
+      "<p>Late nights in Kuwait.</p>",
+      "<h2>Why a Kuwait Chat Room?</h2>",
+      "<p>General chat apps are fine.</p>",
+      '<p><a class="custom-page-cta-button" href="/chatrooms">Start Chatting Now→</a></p>',
+      "<p>Free to explore • Join when you are ready</p>",
+      img,
+    ].join("");
+    const html = buildPublicCmsArticleInitialHtml({ ...publishedFixture, publicHtml });
+    const imgAt = html.indexOf("<img");
+    expect(imgAt).toBeGreaterThan(-1);
+    expect(imgAt).toBeLessThan(html.indexOf("<h2>Why a Kuwait Chat Room?"));
+    expect(imgAt).toBeLessThan(html.indexOf("custom-page-cta-button"));
+    expect(html.match(/<img\b/gi)?.length).toBe(1);
+  });
+
   it("does not duplicate H1 when body already has headings", () => {
     const html = buildPublicCmsArticleInitialHtml({
       ...publishedFixture,

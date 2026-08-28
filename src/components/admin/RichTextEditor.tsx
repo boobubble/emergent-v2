@@ -27,15 +27,15 @@ import { InsertCtaDialog } from "@/components/admin/InsertCtaDialog";
 import { DEFAULT_PAGE_CTA_DEFAULTS, type PageCtaDefaults } from "@/lib/page-cta";
 import { ContentImageDialog, type ContentImageDraft } from "@/components/content-images/ContentImageDialog";
 import {
-  insertEditorImage,
   removeEditorImage,
   selectEditorImage,
   updateEditorImage,
 } from "@/components/content-images/editor-images";
 import { optimizeImageFromUrl } from "@/lib/content-image-optimize";
-import { CmsImage } from "@/lib/pages-cms/cms-image";
+import { CmsImage, insertCmsEditorImage, rememberCmsImageInsertPos } from "@/lib/pages-cms/cms-image";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import "@/lib/pages-cms/cms-page-images.css";
 
 export type RichTextEditorHandle = {
   openInsert: () => void;
@@ -68,6 +68,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
   const [optimizing, setOptimizing] = useState(false);
   const detectPlainTextRef = useRef(false);
   const editorRef = useRef<Editor | null>(null);
+  const insertPosRef = useRef<number | null>(null);
 
   useEffect(() => {
     detectPlainTextRef.current = detectPlainTextHeadings;
@@ -83,7 +84,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
       }),
       Underline,
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" } }),
-      CmsImage.configure({ inline: false, allowBase64: false, HTMLAttributes: { class: "max-w-full h-auto rounded-md" } }),
+      CmsImage.configure({ inline: false, allowBase64: false }),
       Placeholder.configure({ placeholder: placeholder ?? "Write your page content…" }),
       TaskList.configure({ HTMLAttributes: { class: "not-prose space-y-1" } }),
       TaskItem.configure({ nested: true, HTMLAttributes: { class: "flex gap-2 items-start" } }),
@@ -138,6 +139,15 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
     onDestroy: () => {
       editorRef.current = null;
     },
+    onFocus: ({ editor: ed }) => {
+      insertPosRef.current = rememberCmsImageInsertPos(ed, insertPosRef.current);
+    },
+    onSelectionUpdate: ({ editor: ed }) => {
+      insertPosRef.current = rememberCmsImageInsertPos(ed, insertPosRef.current);
+    },
+    onBlur: ({ editor: ed }) => {
+      insertPosRef.current = rememberCmsImageInsertPos(ed, insertPosRef.current);
+    },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   });
 
@@ -172,10 +182,17 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
     }
   }, [uploadFolder]);
 
+  const beginImageInsert = () => {
+    if (editor) {
+      insertPosRef.current = rememberCmsImageInsertPos(editor, insertPosRef.current);
+    }
+    setReplaceIndex(null);
+    setImageOpen(true);
+  };
+
   useImperativeHandle(ref, () => ({
     openInsert() {
-      setReplaceIndex(null);
-      setImageOpen(true);
+      beginImageInsert();
     },
     fixImage(index: number) {
       selectEditorImage(editor, index);
@@ -192,7 +209,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
     if (!file || !editor) return;
     const url = await uploadFile(file);
     if (url) {
-      insertEditorImage(editor, {
+      insertCmsEditorImage(editor, {
         src: url,
         alt: file.name.replace(/\.[^.]+$/, ""),
         title: "",
@@ -202,7 +219,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
         height: null,
         optimized: file.type.includes("webp") || file.type.includes("avif") ? "true" : null,
         bytes: file.size,
-      });
+      }, insertPosRef.current);
     }
   };
 
@@ -216,8 +233,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
   };
 
   const insertImageByUrl = () => {
-    setReplaceIndex(null);
-    setImageOpen(true);
+    beginImageInsert();
   };
 
   const insertCallout = (variant: "info" | "warning" | "success" | "danger" = "info") => {
@@ -284,7 +300,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
         <TB active={editor.isActive("codeBlock")} onClick={() => editor.chain().focus().toggleCodeBlock().run()} title="Code block"><Code2 className="h-3.5 w-3.5" /></TB>
         <Sep />
         <TB active={editor.isActive("link")} onClick={insertLink} title="Link"><LinkIcon className="h-3.5 w-3.5" /></TB>
-        <TB onClick={() => { setReplaceIndex(null); setImageOpen(true); }} title="Upload image">
+        <TB onClick={beginImageInsert} title="Upload image">
           {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
         </TB>
         <TB onClick={insertImageByUrl} title="Image by URL"><ImageIcon className="h-3.5 w-3.5" /></TB>
@@ -401,7 +417,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
           e.preventDefault();
           const url = await uploadFile(file);
           if (url) {
-            insertEditorImage(editor, {
+            insertCmsEditorImage(editor, {
               src: url,
               alt: file.name.replace(/\.[^.]+$/, ""),
               title: "",
@@ -411,7 +427,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
               height: null,
               optimized: file.type.includes("webp") || file.type.includes("avif") ? "true" : null,
               bytes: file.size,
-            });
+            }, rememberCmsImageInsertPos(editor, insertPosRef.current));
           }
         }}
         onPaste={async (e) => {
@@ -422,7 +438,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
           e.preventDefault();
           const url = await uploadFile(file);
           if (url) {
-            insertEditorImage(editor, {
+            insertCmsEditorImage(editor, {
               src: url,
               alt: "",
               title: "",
@@ -432,7 +448,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
               height: null,
               optimized: file.type.includes("webp") || file.type.includes("avif") ? "true" : null,
               bytes: file.size,
-            });
+            }, rememberCmsImageInsertPos(editor, insertPosRef.current));
           }
         }}
       >
@@ -461,12 +477,12 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
           setImageOpen(next);
         }}
         mode={replaceIndex != null ? "replace" : "insert"}
-        showAlign={false}
+        showAlign
         uploading={uploading}
         onUpload={uploadFile}
         onInsert={(draft: ContentImageDraft) => {
           if (replaceIndex != null) updateEditorImage(editor, replaceIndex, draft);
-          else insertEditorImage(editor, draft);
+          else insertCmsEditorImage(editor, draft, insertPosRef.current);
         }}
       />
     </div>
