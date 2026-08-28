@@ -8,11 +8,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { BlogEditorView } from "@/components/blog/BlogEditorView";
 import { BlogImage } from "@/lib/blog-image";
 import { sanitizeBlogHtml } from "@/lib/blog-sanitize";
-import { normalizeTagList, serializeKeywords } from "@/lib/blog-taxonomy";
+import { normalizeTagList, parseKeywordPhrases, serializeKeywords } from "@/lib/blog-taxonomy";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/blog/write")({
   component: WritePostPage,
+  validateSearch: (s: Record<string, unknown>) => ({
+    id: typeof s.id === "string" && s.id ? s.id : undefined,
+    imageSeo: s.imageSeo === "1" || s.imageSeo === true || s.imageSeo === "true",
+  }),
 });
 
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
@@ -66,15 +70,29 @@ async function uploadBlogImage(file: File): Promise<string | null> {
   return supabase.storage.from("feed-media").getPublicUrl(path).data.publicUrl;
 }
 
+async function userIsAdmin(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["admin", "super_admin"]);
+  return (data?.length ?? 0) > 0;
+}
+
 function WritePostPage() {
+  const search = Route.useSearch();
+  const editId = search.id;
   const [user, setUser] = useState<any>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [title, setTitle] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [keywords, setKeywords] = useState<string[]>([]);
+  const [postStatus, setPostStatus] = useState<string | null>(null);
+  const [loadedHtml, setLoadedHtml] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -99,7 +117,7 @@ function WritePostPage() {
   });
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       setUser(data.user);
       setCheckingAuth(false);
     });
@@ -107,6 +125,42 @@ function WritePostPage() {
       setCategories(data ?? []);
     });
   }, []);
+
+  useEffect(() => {
+    if (!editId || !user) return;
+    let cancelled = false;
+    (async () => {
+      if (!(await userIsAdmin(user.id))) {
+        if (!cancelled) setLoadError("Only admins can edit existing posts.");
+        return;
+      }
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .select("id, title, content, meta_description, category_id, tags, keywords, status")
+        .eq("id", editId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error || !data) {
+        setLoadError("Post not found.");
+        return;
+      }
+      setTitle(data.title ?? "");
+      setCategoryId(data.category_id ?? "");
+      setMetaDescription(data.meta_description ?? "");
+      setTags(normalizeTagList(data.tags));
+      setKeywords(parseKeywordPhrases(data.keywords));
+      setPostStatus(data.status);
+      setLoadedHtml(data.content || "<p></p>");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editId, user]);
+
+  useEffect(() => {
+    if (!editor || loadedHtml == null) return;
+    editor.commands.setContent(loadedHtml, { emitUpdate: false });
+  }, [editor, loadedHtml]);
 
   async function handleUploadImage(file: File): Promise<string | null> {
     setUploadingImage(true);
@@ -125,12 +179,34 @@ function WritePostPage() {
     }
     setSubmitting(true);
 
+    const content = sanitizeBlogHtml(editor.getHTML());
+    if (editId) {
+      const { error } = await supabase
+        .from("blog_posts")
+        .update({
+          title,
+          meta_description: metaDescription,
+          content,
+          category_id: categoryId,
+          tags: normalizeTagList(tags),
+          keywords: serializeKeywords(keywords),
+        })
+        .eq("id", editId);
+      setSubmitting(false);
+      if (error) {
+        alert("Error: " + error.message);
+        return;
+      }
+      toast.success(postStatus === "published" ? "Published post updated. Status unchanged." : "Post saved.");
+      return;
+    }
+
     const slug = await generateUniqueSlug(title);
     const { error } = await supabase.from("blog_posts").insert({
       title,
       slug,
       meta_description: metaDescription,
-      content: sanitizeBlogHtml(editor.getHTML()),
+      content,
       category_id: categoryId,
       author_id: user.id,
       tags: normalizeTagList(tags),
@@ -164,6 +240,9 @@ function WritePostPage() {
       </div>
     );
   }
+  if (loadError) {
+    return <p className="grid min-h-screen place-items-center bg-background p-8 text-foreground">{loadError}</p>;
+  }
   if (submitted) {
     return (
       <div className="grid min-h-screen place-items-center bg-background px-4 text-foreground">
@@ -171,6 +250,7 @@ function WritePostPage() {
           <h2 className="text-xl font-semibold tracking-tight">Submit ho gaya!</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Tumhara post review ke liye bhej diya gaya hai. Admin approve karega uske baad hi live hoga.
+            Image improvements can be completed later.
           </p>
           <a href="/blog" className="mt-6 inline-block text-sm font-medium text-primary underline underline-offset-4">
             Back to blog
@@ -178,6 +258,9 @@ function WritePostPage() {
         </div>
       </div>
     );
+  }
+  if (editId && loadedHtml == null && !loadError) {
+    return <p className="grid min-h-screen place-items-center bg-background p-8 text-muted-foreground">Loading post…</p>;
   }
 
   return (
@@ -199,6 +282,9 @@ function WritePostPage() {
       authorLabel={user.email || user.id}
       uploadingImage={uploadingImage}
       onUploadImage={handleUploadImage}
+      mode={editId ? "edit" : "create"}
+      postStatus={postStatus}
+      highlightImageSeo={search.imageSeo}
     />
   );
 }

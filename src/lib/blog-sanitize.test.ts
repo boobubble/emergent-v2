@@ -46,4 +46,13 @@ describe("sanitizeBlogHtml", () => {
     expect(out).toMatch(/alt="two"[^>]*loading="lazy"|loading="lazy"[^>]*alt="two"/);
     expect(sanitizeBlogHtml("<p>Hello</p>")).toContain("<p>Hello</p>");
   });
+
+  it("keeps optimization and decorative flags", () => {
+    const out = sanitizeBlogHtml(
+      '<img src="https://yaarzo.com/ok.webp" alt="ok" data-optimized="true" data-bytes="12000" data-decorative="true">',
+    );
+    expect(out).toContain('data-optimized="true"');
+    expect(out).toContain('data-bytes="12000"');
+    expect(out).toContain('data-decorative="true"');
+  });
 });

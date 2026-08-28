@@ -32,6 +32,16 @@ import {
 import { previewSlugFromTitle } from "@/components/blog/blog-format";
 import { BlogChipField } from "@/components/blog/BlogChipField";
 import { BlogImageDialog, type BlogImageDraft } from "@/components/blog/BlogImageDialog";
+import { ImageSeoPanel } from "@/components/content-images/ImageSeoPanel";
+import {
+  insertEditorImage,
+  removeEditorImage,
+  selectEditorImage,
+  updateEditorImage,
+  updateEditorImageAttrs,
+} from "@/components/content-images/editor-images";
+import { optimizeImageFromUrl } from "@/lib/content-image-optimize";
+import { summarizeContentImages } from "@/lib/content-image-seo";
 import {
   MAX_BLOG_KEYWORD_LENGTH,
   MAX_BLOG_KEYWORDS,
@@ -39,6 +49,7 @@ import {
   MAX_BLOG_TAGS,
 } from "@/lib/blog-taxonomy";
 import { normalizeBlogImageAlign, type BlogImageAlign } from "@/lib/blog-image";
+import { toast } from "sonner";
 import "@/components/blog/blog-ui.css";
 
 export type BlogEditorViewProps = {
@@ -59,6 +70,9 @@ export type BlogEditorViewProps = {
   authorLabel: string;
   uploadingImage: boolean;
   onUploadImage: (file: File) => Promise<string | null>;
+  mode?: "create" | "edit";
+  postStatus?: string | null;
+  highlightImageSeo?: boolean;
 };
 
 function useEditorTick(editor: Editor | null) {
@@ -77,7 +91,67 @@ function useEditorTick(editor: Editor | null) {
 
 export function BlogEditorView(props: BlogEditorViewProps) {
   const [imageOpen, setImageOpen] = useState(false);
+  const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
+  const [optimizing, setOptimizing] = useState(false);
   useEditorTick(props.editor);
+
+  useEffect(() => {
+    if (!props.highlightImageSeo) return;
+    const t = window.setTimeout(() => {
+      document.getElementById("image-seo-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 200);
+    return () => window.clearTimeout(t);
+  }, [props.highlightImageSeo]);
+
+  const html = props.editor?.getHTML() ?? "";
+  const imageStatus = summarizeContentImages(html);
+  const isEdit = props.mode === "edit";
+  const published = props.postStatus === "published";
+
+  async function optimizeAt(index: number) {
+    const img = imageStatus.images[index];
+    if (!img?.src) {
+      setImageOpen(true);
+      return;
+    }
+    setOptimizing(true);
+    try {
+      const result = await optimizeImageFromUrl(img.src);
+      if (!result) {
+        updateEditorImageAttrs(props.editor, index, { optimized: "unavailable" });
+        toast.message("Optimization unavailable. You can still publish.");
+        return;
+      }
+      const url = result.file !== undefined && result.status === "ok" ? await props.onUploadImage(result.file) : null;
+      if (url) {
+        updateEditorImageAttrs(props.editor, index, {
+          src: url,
+          width: result.width || null,
+          height: result.height || null,
+          optimized: "true",
+          bytes: result.outputBytes,
+        });
+      } else {
+        updateEditorImageAttrs(props.editor, index, { optimized: result.status === "ok" ? "true" : "unavailable" });
+      }
+    } finally {
+      setOptimizing(false);
+    }
+  }
+
+  function fixImage(index: number) {
+    const img = imageStatus.images[index];
+    selectEditorImage(props.editor, index);
+    if (!img?.uploaded) {
+      setReplaceIndex(index);
+      return;
+    }
+    if (!img.altOk) {
+      selectEditorImage(props.editor, index);
+      return;
+    }
+    if (img.optimization !== "ok") void optimizeAt(index);
+  }
 
   return (
     <div className="yz-blog min-h-screen bg-background text-foreground">
@@ -90,11 +164,13 @@ export function BlogEditorView(props: BlogEditorViewProps) {
             Back
           </a>
           <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            Draft
+            {published ? "Published" : isEdit ? props.postStatus || "Draft" : "Draft"}
           </span>
-          <span className="hidden text-xs text-muted-foreground sm:inline">Unsaved</span>
+          <span className="hidden text-xs text-muted-foreground sm:inline">
+            {published ? "Editing live post" : "Unsaved"}
+          </span>
           <div className="ml-auto flex items-center gap-2">
-            <Sheet>
+            <Sheet defaultOpen={props.highlightImageSeo}>
               <SheetTrigger asChild>
                 <Button type="button" variant="outline" size="sm" className="lg:hidden">
                   <SlidersHorizontal className="h-4 w-4" />
@@ -106,12 +182,17 @@ export function BlogEditorView(props: BlogEditorViewProps) {
                   <SheetTitle>Post settings</SheetTitle>
                 </SheetHeader>
                 <div className="mt-4">
-                  <EditorSidebar {...props} />
+                  <EditorSidebar
+                    {...props}
+                    onAddImage={() => { setReplaceIndex(null); setImageOpen(true); }}
+                    onFixImage={fixImage}
+                    onRemoveImage={(index) => removeEditorImage(props.editor, index)}
+                  />
                 </div>
               </SheetContent>
             </Sheet>
             <Button type="button" onClick={props.onSubmit} disabled={props.submitting} size="sm">
-              {props.submitting ? "Submitting…" : "Submit for Review"}
+              {props.submitting ? "Saving…" : isEdit ? (published ? "Save" : "Save") : "Submit for Review"}
             </Button>
           </div>
         </div>
@@ -134,8 +215,14 @@ export function BlogEditorView(props: BlogEditorViewProps) {
             <p className="mb-5 text-[11px] leading-relaxed text-muted-foreground">
               The article title is the H1. Use H2/H3 for sections.
             </p>
-            <EditorToolbar editor={props.editor} onAddImage={() => setImageOpen(true)} />
-            <SelectedImageControls editor={props.editor} />
+            <EditorToolbar editor={props.editor} onAddImage={() => { setReplaceIndex(null); setImageOpen(true); }} />
+            <SelectedImageControls
+              editor={props.editor}
+              onReplace={() => setReplaceIndex(selectedImageIndex(props.editor))}
+              onRemove={() => removeEditorImage(props.editor, selectedImageIndex(props.editor))}
+              onOptimize={() => void optimizeAt(selectedImageIndex(props.editor))}
+              optimizing={optimizing}
+            />
             <div className="yz-blog-prose rounded-xl border border-border bg-card/40 px-4 py-5 sm:px-6 sm:py-6">
               {props.editor ? (
                 <EditorContent editor={props.editor} />
@@ -148,38 +235,58 @@ export function BlogEditorView(props: BlogEditorViewProps) {
 
         <aside className="hidden border-l border-border bg-card/30 lg:block">
           <div className="sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto p-5">
-            <EditorSidebar {...props} />
+            <EditorSidebar
+              {...props}
+              onAddImage={() => { setReplaceIndex(null); setImageOpen(true); }}
+              onFixImage={fixImage}
+              onRemoveImage={(index) => removeEditorImage(props.editor, index)}
+            />
           </div>
         </aside>
       </div>
 
       <BlogImageDialog
-        open={imageOpen}
-        onOpenChange={setImageOpen}
-        uploading={props.uploadingImage}
+        open={imageOpen || replaceIndex != null}
+        onOpenChange={(next) => {
+          if (!next) setReplaceIndex(null);
+          setImageOpen(next);
+        }}
+        mode={replaceIndex != null ? "replace" : "insert"}
+        initial={
+          replaceIndex != null
+            ? {
+                src: imageStatus.images[replaceIndex]?.src,
+                alt: imageStatus.images[replaceIndex]?.alt,
+                decorative: imageStatus.images[replaceIndex]?.decorative,
+              }
+            : null
+        }
+        uploading={props.uploadingImage || optimizing}
         onUpload={props.onUploadImage}
-        onInsert={(draft) => insertBlogImage(props.editor, draft)}
+        onInsert={(draft) => {
+          if (replaceIndex != null) updateEditorImage(props.editor, replaceIndex, draft);
+          else insertBlogImage(props.editor, draft);
+        }}
       />
     </div>
   );
 }
 
+function selectedImageIndex(editor: Editor | null): number {
+  if (!editor) return 0;
+  let index = 0;
+  let found = 0;
+  editor.state.doc.descendants((node, pos) => {
+    if (node.type.name !== "image") return;
+    const { from } = editor.state.selection;
+    if (from >= pos && from <= pos + node.nodeSize) found = index;
+    index += 1;
+  });
+  return found;
+}
+
 function insertBlogImage(editor: Editor | null, draft: BlogImageDraft) {
-  if (!editor) return;
-  editor
-    .chain()
-    .focus()
-    .insertContent({
-      type: "image",
-      attrs: {
-        src: draft.src,
-        alt: draft.decorative ? "" : draft.alt,
-        title: draft.title || null,
-        align: draft.align,
-        decorative: draft.decorative,
-      },
-    })
-    .run();
+  insertEditorImage(editor, draft);
 }
 
 function EditorSidebar({
@@ -194,20 +301,43 @@ function EditorSidebar({
   keywords,
   onKeywordsChange,
   authorLabel,
-}: BlogEditorViewProps) {
+  editor,
+  highlightImageSeo,
+  onAddImage,
+  onFixImage,
+  onRemoveImage,
+  postStatus,
+  mode,
+}: BlogEditorViewProps & {
+  onAddImage: () => void;
+  onFixImage: (index: number) => void;
+  onRemoveImage: (index: number) => void;
+}) {
   const slugPreview = previewSlugFromTitle(title) || "your-post-title";
   const serpTitle = title.trim() || "Untitled post";
   const serpDesc = metaDescription.trim() || "A short description will appear here.";
+  const imageStatus = summarizeContentImages(editor?.getHTML() ?? "");
+  const published = postStatus === "published";
 
   return (
     <div className="space-y-5">
+      <ImageSeoPanel
+        status={imageStatus}
+        highlight={highlightImageSeo}
+        onAddImage={onAddImage}
+        onFixImage={onFixImage}
+        onRemoveImage={onRemoveImage}
+      />
+
       <section className="rounded-xl border border-border bg-background p-4">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Publish</h2>
         <p className="mt-2 text-sm text-foreground">
-          Status: <span className="font-medium">Pending review</span>
+          Status: <span className="font-medium capitalize">{published ? "Published" : mode === "edit" ? postStatus || "pending" : "Pending review"}</span>
         </p>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          Submitting sends this post for admin approval. It goes live only after it is published.
+          {published
+            ? "Saving updates this published post. Image status does not unpublish it or change the slug."
+            : "Submitting sends this post for admin approval. Image improvements can be completed later."}
         </p>
       </section>
 
@@ -381,7 +511,19 @@ function EditorToolbar({ editor, onAddImage }: { editor: Editor | null; onAddIma
   );
 }
 
-function SelectedImageControls({ editor }: { editor: Editor | null }) {
+function SelectedImageControls({
+  editor,
+  onReplace,
+  onRemove,
+  onOptimize,
+  optimizing,
+}: {
+  editor: Editor | null;
+  onReplace: () => void;
+  onRemove: () => void;
+  onOptimize: () => void;
+  optimizing: boolean;
+}) {
   if (!editor || !editor.isActive("image")) return null;
   const attrs = editor.getAttributes("image") as {
     alt?: string;
@@ -424,6 +566,17 @@ function SelectedImageControls({ editor }: { editor: Editor | null }) {
         <p className="mt-1 text-[11px] text-muted-foreground">
           Describe the image for accessibility and search engines.
         </p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]" onClick={onReplace}>
+            Replace Image
+          </Button>
+          <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]" onClick={onOptimize} disabled={optimizing}>
+            {optimizing ? "Optimizing…" : "Optimize"}
+          </Button>
+          <Button type="button" size="sm" variant="ghost" className="h-7 text-[11px]" onClick={onRemove}>
+            Remove Image
+          </Button>
+        </div>
       </div>
     </div>
   );

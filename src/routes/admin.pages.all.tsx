@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { listPages, deletePage } from "@/lib/pages.functions";
+import { ImageStatusBadge } from "@/components/content-images/ImageStatusBadge";
+import type { ImageStatusSummary } from "@/lib/content-image-seo";
 import {
   listPageCountries,
   listPageStates,
@@ -78,6 +80,7 @@ type PageRow = {
   noindex: boolean;
   language: string | null;
   updated_at: string | null;
+  image_status?: ImageStatusSummary | null;
 };
 
 type FilterState = Partial<ListPagesQuery>;
@@ -552,6 +555,7 @@ function AllPagesPage() {
                   </th>
                   <th className="p-2">Page</th>
                   <th className="p-2">Slug</th>
+                  <th className="p-2 hidden sm:table-cell">Image</th>
                   <th className="p-2">Type</th>
                   <th className="p-2">Country</th>
                   <th className="p-2">State</th>
@@ -582,8 +586,32 @@ function AllPagesPage() {
                       >
                         {r.title || "(untitled)"}
                       </Link>
+                      {r.image_status && (
+                        <Link
+                          to="/pages-editor/$id"
+                          params={{ id: r.id }}
+                          search={{ imageSeo: true }}
+                          className="mt-1 inline-flex sm:hidden"
+                        >
+                          <ImageStatusBadge status={r.image_status} compact />
+                        </Link>
+                      )}
                     </td>
                     <td className="p-2 font-mono text-xs">{r.slug}</td>
+                    <td className="p-2 hidden sm:table-cell">
+                      {r.image_status ? (
+                        <Link
+                          to="/pages-editor/$id"
+                          params={{ id: r.id }}
+                          search={{ imageSeo: true }}
+                          className="inline-flex"
+                        >
+                          <ImageStatusBadge status={r.image_status} compact />
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td className="p-2">
                       <Badge variant="outline" className={pageTypeBadgeClass(r.page_type)}>
                         {pageTypeLabel(r.page_type)}
@@ -621,7 +649,7 @@ function AllPagesPage() {
                 ))}
                 {!rows.length && (
                   <tr>
-                    <td colSpan={17} className="p-8 text-center text-muted-foreground">No pages match filters.</td>
+                    <td colSpan={18} className="p-8 text-center text-muted-foreground">No pages match filters.</td>
                   </tr>
                 )}
               </tbody>

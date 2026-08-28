@@ -20,6 +20,7 @@ import { deriveContentStatus, computeSeoScore } from "@/lib/pages-cms/template-e
 import { recalculateInternalLinkCount } from "@/lib/pages-cms/internal-links";
 import { syncRelatedChatRoomsToInternalLinks } from "@/lib/pages-cms/related-chat-rooms-sync";
 import { parseRelatedChatRoomsConfig } from "@/lib/pages-cms/related-chat-rooms-config";
+import { attachImageStatus } from "@/lib/content-image-seo";
 
 export { slugify } from "@/lib/page-slug";
 export { isPubliclyVisibleStatus };
@@ -41,7 +42,7 @@ async function assertAdmin(userId: string) {
 }
 
 const LIST_SELECT =
-  "id,slug,title,excerpt,tags,status,featured,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,noindex,nofollow,views,created_at,updated_at,published_at,page_type,country_id,state_id,city_id,category_id,keyword_group_id,template_id,h1,primary_keyword,secondary_keywords,language,content_status,seo_score,internal_link_count,scheduled_at,show_in_footer,footer_order,footer_group";
+  "id,slug,title,excerpt,tags,status,featured,layout,sidebar_left,sidebar_right,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,noindex,nofollow,views,created_at,updated_at,published_at,page_type,country_id,state_id,city_id,category_id,keyword_group_id,template_id,h1,primary_keyword,secondary_keywords,language,content_status,seo_score,internal_link_count,scheduled_at,show_in_footer,footer_order,footer_group,content,intro_content";
 
 // ===== Admin list (server-side pagination / filters / sort) =====
 export const listPages = createServerFn({ method: "GET" })
@@ -74,7 +75,13 @@ export const listPages = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
 
     const hydrated = await hydratePageTaxonomyLabels(sb, rows ?? []);
-    return buildPaginatedResult(hydrated, total, page, pageSize);
+    const withImages = hydrated.map((row) =>
+      attachImageStatus(row, [
+        typeof row.content === "string" ? row.content : "",
+        typeof row.intro_content === "string" ? row.intro_content : "",
+      ]),
+    );
+    return buildPaginatedResult(withImages, total, page, pageSize);
   });
 
 type ListPageRow = {

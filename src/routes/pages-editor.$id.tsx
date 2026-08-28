@@ -22,7 +22,10 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { RichTextEditor, type RichTextEditorHandle } from "@/components/admin/RichTextEditor";
+import { ImageSeoPanel } from "@/components/content-images/ImageSeoPanel";
+import { ImageStatusBadge } from "@/components/content-images/ImageStatusBadge";
+import { summarizeContentImages } from "@/lib/content-image-seo";
 import { SeoManagerLink } from "@/components/admin/seo/SeoPreviewPanels";
 import { pageTypeLabel } from "@/components/admin/pages/PagesSubnav";
 import { PAGE_TYPE_OPTIONS, contentStatusLabel } from "@/components/admin/pages/pages-ui";
@@ -65,7 +68,12 @@ import {
 import { useAuth } from "@/lib/auth-store";
 import { getMyRoles } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/pages-editor/$id")({ component: PageEditorGate });
+export const Route = createFileRoute("/pages-editor/$id")({
+  component: PageEditorGate,
+  validateSearch: (s: Record<string, unknown>) => ({
+    imageSeo: s.imageSeo === "1" || s.imageSeo === true || s.imageSeo === "true",
+  }),
+});
 
 const UNCLASSIFIED = "__unclassified__";
 const NONE = "__none__";
@@ -246,10 +254,12 @@ function PageEditorGate() {
 
 function PageEditor() {
   const { id } = Route.useParams();
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const isNew = id === "new";
   const pageId = !isNew ? id : null;
+  const editorRef = useRef<RichTextEditorHandle>(null);
 
   const fetchPage = useServerFn(getPage);
   const save = useServerFn(savePage);
@@ -469,6 +479,14 @@ function PageEditor() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [draftStatus]);
 
+  useEffect(() => {
+    if (!search.imageSeo) return;
+    const t = window.setTimeout(() => {
+      document.getElementById("image-seo-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 250);
+    return () => window.clearTimeout(t);
+  }, [search.imageSeo]);
+
   async function handleSyncLinkCount() {
     if (!pageId) return;
     setSyncingLinks(true);
@@ -674,6 +692,7 @@ function PageEditor() {
 
           {/* CONTENT */}
           <TabsContent value="content" className="space-y-4">
+            <div className="grid gap-4 overflow-x-hidden lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
             <div className="rounded-xl border border-border bg-background p-4 shadow-sm sm:p-6">
               <div className="mb-4 grid gap-3">
                 <div>
@@ -767,7 +786,10 @@ function PageEditor() {
                 <Badge variant={qualityStatusBadgeVariant(quality.status)} className="text-[10px]">
                   Quality: {quality.status}
                 </Badge>
-                <span className="text-[10px] text-muted-foreground">(SEO score on save · quality live, does not block publish)</span>
+                <a href="#image-seo-panel" className="inline-flex">
+                  <ImageStatusBadge status={summarizeContentImages(row.content, row.intro_content)} compact />
+                </a>
+                <span className="text-[10px] text-muted-foreground">(SEO score on save · quality live · image status does not block publish)</span>
               </div>
               {quality.warnings.length > 0 && (
                 <Alert className="mb-4">
@@ -786,6 +808,7 @@ function PageEditor() {
               )}
 
               <RichTextEditor
+                ref={editorRef}
                 value={row.content}
                 ctaDefaults={isNew ? DEFAULT_PAGE_CTA_DEFAULTS : undefined}
                 onChange={(html) => {
@@ -816,6 +839,16 @@ function PageEditor() {
                   />
                 </div>
               </div>
+            </div>
+            <aside className="lg:sticky lg:top-16">
+              <ImageSeoPanel
+                status={summarizeContentImages(row.content, row.intro_content)}
+                highlight={search.imageSeo}
+                onAddImage={() => editorRef.current?.openInsert()}
+                onFixImage={(index) => editorRef.current?.fixImage(index)}
+                onRemoveImage={(index) => editorRef.current?.removeImage(index)}
+              />
+            </aside>
             </div>
           </TabsContent>
 
@@ -1248,6 +1281,9 @@ function PageEditor() {
           <TabsContent value="settings" className="space-y-4">
             <SidebarCard icon={<Calendar className="h-4 w-4" />} title="Publish">
               <div className="space-y-3 text-sm">
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  Image improvements can be completed later. Image status does not block publishing or unpublish this page.
+                </p>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Status</span>
                   <Select value={row.status} onValueChange={(v) => update("status", v as PageRow["status"])}>

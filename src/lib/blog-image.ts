@@ -42,6 +42,21 @@ export const BlogImage = Image.extend({
         parseHTML: (element) => element.getAttribute("data-decorative") === "true",
         renderHTML: (attributes) => (attributes.decorative ? { "data-decorative": "true" } : {}),
       },
+      optimized: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-optimized"),
+        renderHTML: (attributes) =>
+          attributes.optimized ? { "data-optimized": String(attributes.optimized) } : {},
+      },
+      bytes: {
+        default: null,
+        parseHTML: (element) => {
+          const v = element.getAttribute("data-bytes");
+          return v && /^\d+$/.test(v) ? Number(v) : null;
+        },
+        renderHTML: (attributes) =>
+          attributes.bytes != null ? { "data-bytes": String(attributes.bytes) } : {},
+      },
     };
   },
 });

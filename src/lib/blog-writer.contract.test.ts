@@ -54,4 +54,16 @@ describe("blog writer contracts", () => {
     expect(publicLib).not.toMatch(/keywords/);
     expect(view).toContain("post.tags");
   });
+
+  it("shows Image SEO status and never treats missing images as a publish blocker", () => {
+    const editor = read("src/components/blog/BlogEditorView.tsx");
+    const write = read("src/routes/blog.write.tsx");
+    const moderate = read("src/components/blog/BlogModerateView.tsx");
+    expect(editor).toContain("ImageSeoPanel");
+    expect(editor).toContain("Image improvements can be completed later");
+    expect(moderate).toContain("ImageStatusBadge");
+    expect(write).toContain(".update(");
+    expect(write).toContain(".eq(\"id\", editId)");
+    expect(write).not.toMatch(/\.update\(\{[^}]*\bstatus:/);
+  });
 });

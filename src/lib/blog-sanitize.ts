@@ -44,6 +44,8 @@ const ATTR_OK = new Set([
   "decoding",
   "data-align",
   "data-decorative",
+  "data-optimized",
+  "data-bytes",
 ]);
 
 const ALLOWED_CLASSES = new Set([
@@ -104,6 +106,16 @@ function sanitizeOpenTag(tag: string, rawAttrs: string): string {
     if (attr === "data-decorative") {
       if (value !== "true") continue;
       attrs.push('data-decorative="true"');
+      continue;
+    }
+    if (attr === "data-optimized") {
+      if (value !== "true" && value !== "unavailable") continue;
+      attrs.push(`data-optimized="${value}"`);
+      continue;
+    }
+    if (attr === "data-bytes") {
+      if (!/^\d{1,12}$/.test(value)) continue;
+      attrs.push(`data-bytes="${value}"`);
       continue;
     }
     if (attr === "width" || attr === "height") {

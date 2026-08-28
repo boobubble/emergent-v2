@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
@@ -26,6 +25,23 @@ import { processPastedPageContent } from "@/lib/page-content-paste";
 import { Switch } from "@/components/ui/switch";
 import { InsertCtaDialog } from "@/components/admin/InsertCtaDialog";
 import { DEFAULT_PAGE_CTA_DEFAULTS, type PageCtaDefaults } from "@/lib/page-cta";
+import { ContentImageDialog, type ContentImageDraft } from "@/components/content-images/ContentImageDialog";
+import {
+  insertEditorImage,
+  removeEditorImage,
+  selectEditorImage,
+  updateEditorImage,
+} from "@/components/content-images/editor-images";
+import { optimizeImageFromUrl } from "@/lib/content-image-optimize";
+import { CmsImage } from "@/lib/pages-cms/cms-image";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export type RichTextEditorHandle = {
+  openInsert: () => void;
+  fixImage: (index: number) => void;
+  removeImage: (index: number) => void;
+};
 
 interface Props {
   value: string;
@@ -38,12 +54,18 @@ interface Props {
 
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
-export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "pages", ctaDefaults }: Props) {
+export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichTextEditor(
+  { value, onChange, placeholder, uploadFolder = "pages", ctaDefaults },
+  ref,
+) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [detectPlainTextHeadings, setDetectPlainTextHeadings] = useState(false);
   const [ctaDialogOpen, setCtaDialogOpen] = useState(false);
+  const [imageOpen, setImageOpen] = useState(false);
+  const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
+  const [optimizing, setOptimizing] = useState(false);
   const detectPlainTextRef = useRef(false);
   const editorRef = useRef<Editor | null>(null);
 
@@ -61,7 +83,7 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
       }),
       Underline,
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" } }),
-      Image.configure({ HTMLAttributes: { class: "max-w-full h-auto rounded-md" } }),
+      CmsImage.configure({ inline: false, allowBase64: false, HTMLAttributes: { class: "max-w-full h-auto rounded-md" } }),
       Placeholder.configure({ placeholder: placeholder ?? "Write your page content…" }),
       TaskList.configure({ HTMLAttributes: { class: "not-prose space-y-1" } }),
       TaskItem.configure({ nested: true, HTMLAttributes: { class: "flex gap-2 items-start" } }),
@@ -150,12 +172,38 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
     }
   }, [uploadFolder]);
 
+  useImperativeHandle(ref, () => ({
+    openInsert() {
+      setReplaceIndex(null);
+      setImageOpen(true);
+    },
+    fixImage(index: number) {
+      selectEditorImage(editor, index);
+      setReplaceIndex(index);
+    },
+    removeImage(index: number) {
+      removeEditorImage(editor, index);
+    },
+  }), [editor]);
+
   const handlePickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file || !editor) return;
     const url = await uploadFile(file);
-    if (url) editor.chain().focus().setImage({ src: url, alt: file.name.replace(/\.[^.]+$/, "") }).run();
+    if (url) {
+      insertEditorImage(editor, {
+        src: url,
+        alt: file.name.replace(/\.[^.]+$/, ""),
+        title: "",
+        align: "center",
+        decorative: false,
+        width: null,
+        height: null,
+        optimized: file.type.includes("webp") || file.type.includes("avif") ? "true" : null,
+        bytes: file.size,
+      });
+    }
   };
 
   const insertLink = () => {
@@ -168,10 +216,8 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
   };
 
   const insertImageByUrl = () => {
-    if (!editor) return;
-    const url = window.prompt("Image URL");
-    if (!url) return;
-    editor.chain().focus().setImage({ src: url }).run();
+    setReplaceIndex(null);
+    setImageOpen(true);
   };
 
   const insertCallout = (variant: "info" | "warning" | "success" | "danger" = "info") => {
@@ -206,6 +252,11 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
     toast.success("Table of contents inserted");
   };
 
+  const previewHtml = useMemo(
+    () => (editor ? sanitizeHtml(injectHeadingIds(editor.getHTML())) : ""),
+    [editor, mode],
+  );
+
   if (!editor) {
     return (
       <div className="rounded-md border border-input bg-background p-4 text-sm text-muted-foreground">
@@ -213,8 +264,6 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
       </div>
     );
   }
-
-  const previewHtml = useMemo(() => sanitizeHtml(injectHeadingIds(editor.getHTML())), [editor, mode]);
 
   return (
     <div className="rounded-md border border-input bg-background">
@@ -235,7 +284,7 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
         <TB active={editor.isActive("codeBlock")} onClick={() => editor.chain().focus().toggleCodeBlock().run()} title="Code block"><Code2 className="h-3.5 w-3.5" /></TB>
         <Sep />
         <TB active={editor.isActive("link")} onClick={insertLink} title="Link"><LinkIcon className="h-3.5 w-3.5" /></TB>
-        <TB onClick={() => fileRef.current?.click()} title="Upload image">
+        <TB onClick={() => { setReplaceIndex(null); setImageOpen(true); }} title="Upload image">
           {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
         </TB>
         <TB onClick={insertImageByUrl} title="Image by URL"><ImageIcon className="h-3.5 w-3.5" /></TB>
@@ -277,6 +326,73 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
 
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePickFile} />
 
+      {editor.isActive("image") && (
+        <div className="flex flex-col gap-2 border-b border-border bg-muted/30 px-3 py-2 sm:flex-row sm:items-end">
+          <div className="min-w-0 flex-1">
+            <Label htmlFor="cms-selected-alt" className="text-[11px] text-muted-foreground">Alt text</Label>
+            <Input
+              id="cms-selected-alt"
+              className="mt-1 h-8"
+              value={String(editor.getAttributes("image").alt ?? "")}
+              onChange={(e) => editor.chain().updateAttributes("image", { alt: e.target.value, decorative: false }).run()}
+              placeholder="Describe the image for accessibility and search engines."
+            />
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => {
+              let index = 0;
+              let found = 0;
+              editor.state.doc.descendants((node, pos) => {
+                if (node.type.name !== "image") return;
+                const { from } = editor.state.selection;
+                if (from >= pos && from <= pos + node.nodeSize) found = index;
+                index += 1;
+              });
+              setReplaceIndex(found);
+            }}>
+              Replace Image
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 text-[11px]"
+              disabled={optimizing}
+              onClick={async () => {
+                const src = String(editor.getAttributes("image").src ?? "");
+                if (!src) return;
+                setOptimizing(true);
+                try {
+                  const result = await optimizeImageFromUrl(src);
+                  if (!result) {
+                    editor.chain().updateAttributes("image", { optimized: "unavailable" }).run();
+                    toast.message("Optimization unavailable. Publishing is not blocked.");
+                    return;
+                  }
+                  const url = await uploadFile(result.file);
+                  if (url) {
+                    editor.chain().updateAttributes("image", {
+                      src: url,
+                      width: result.width || null,
+                      height: result.height || null,
+                      optimized: "true",
+                      bytes: result.outputBytes,
+                    }).run();
+                  }
+                } finally {
+                  setOptimizing(false);
+                }
+              }}
+            >
+              {optimizing ? "Optimizing…" : "Optimize"}
+            </Button>
+            <Button type="button" size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => editor.chain().deleteSelection().run()}>
+              Remove Image
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div
         onDragOver={(e) => e.preventDefault()}
         onDrop={async (e) => {
@@ -284,7 +400,19 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
           if (!file) return;
           e.preventDefault();
           const url = await uploadFile(file);
-          if (url) editor.chain().focus().setImage({ src: url, alt: file.name.replace(/\.[^.]+$/, "") }).run();
+          if (url) {
+            insertEditorImage(editor, {
+              src: url,
+              alt: file.name.replace(/\.[^.]+$/, ""),
+              title: "",
+              align: "center",
+              decorative: false,
+              width: null,
+              height: null,
+              optimized: file.type.includes("webp") || file.type.includes("avif") ? "true" : null,
+              bytes: file.size,
+            });
+          }
         }}
         onPaste={async (e) => {
           const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith("image/"));
@@ -293,7 +421,19 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
           if (!file) return;
           e.preventDefault();
           const url = await uploadFile(file);
-          if (url) editor.chain().focus().setImage({ src: url }).run();
+          if (url) {
+            insertEditorImage(editor, {
+              src: url,
+              alt: "",
+              title: "",
+              align: "center",
+              decorative: false,
+              width: null,
+              height: null,
+              optimized: file.type.includes("webp") || file.type.includes("avif") ? "true" : null,
+              bytes: file.size,
+            });
+          }
         }}
       >
         {mode === "edit" ? (
@@ -314,9 +454,24 @@ export function RichTextEditor({ value, onChange, placeholder, uploadFolder = "p
           toast.success("CTA inserted");
         }}
       />
+      <ContentImageDialog
+        open={imageOpen || replaceIndex != null}
+        onOpenChange={(next) => {
+          if (!next) setReplaceIndex(null);
+          setImageOpen(next);
+        }}
+        mode={replaceIndex != null ? "replace" : "insert"}
+        showAlign={false}
+        uploading={uploading}
+        onUpload={uploadFile}
+        onInsert={(draft: ContentImageDraft) => {
+          if (replaceIndex != null) updateEditorImage(editor, replaceIndex, draft);
+          else insertEditorImage(editor, draft);
+        }}
+      />
     </div>
   );
-}
+});
 
 function TB({ children, onClick, title, active }: { children: React.ReactNode; onClick: () => void; title: string; active?: boolean }) {
   return (
