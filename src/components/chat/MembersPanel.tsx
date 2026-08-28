@@ -125,7 +125,14 @@ function MemberRow({
   );
 }
 
-export function MembersPanel({ roomId }: { roomId: string }) {
+export function MembersPanel({
+  roomId,
+  forceDesktopColumn = false,
+}: {
+  roomId: string;
+  /** Client lg+ mount: show the column without waiting for lg:flex CSS. */
+  forceDesktopColumn?: boolean;
+}) {
   const { state, startDM, closeDM, dmChannelFor, isDmUnread, dmUnreadCount } = useChat();
   const { user: authUser } = useAuth();
   const { requireAuth } = useAuthGate();
@@ -699,7 +706,15 @@ export function MembersPanel({ roomId }: { roomId: string }) {
 
   return (
     <>
-      <aside className="hidden h-full w-60 shrink-0 flex-col border-l border-border bg-card lg:flex">
+      <aside
+        data-chatroom-members=""
+        className={
+          forceDesktopColumn
+            ? "flex h-full w-60 shrink-0 flex-col border-l border-border bg-card"
+            : "hidden h-full w-60 shrink-0 flex-col border-l border-border bg-card lg:flex"
+        }
+        style={forceDesktopColumn ? { display: "flex" } : undefined}
+      >
         {body}
       </aside>
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

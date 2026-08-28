@@ -41,6 +41,18 @@ import { getDiscoveryPrefs } from "@/lib/discovery/functions";
 import { shouldShowFullScreenDiscovery } from "@/lib/discovery/country";
 import { YaarzoDiscoverySheet } from "@/components/discovery/YaarzoDiscoverySheet";
 import { cn } from "@/lib/utils";
+import {
+  CHATROOM_LG_MQ,
+  CHATROOM_MD_MQ,
+  chatroomSidebarBackdropVisible,
+  chatroomSidebarClassName,
+  chatroomSidebarStyle,
+  chatroomSidebarToggleVisible,
+  chatroomShellLayoutAttr,
+  isClientLargeDesktopShell,
+  isClientDesktopShell,
+  readChatroomShellLayout,
+} from "@/components/chat/chatroom-shell";
 
 interface EngageToast { key: number; kind: "buzz" | "streak" | "badge"; title: string; body: string; }
 
@@ -81,6 +93,9 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
   const [isMobile, setIsMobile] = useState<boolean>(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 768px)").matches : false,
   );
+  // Client-only first paint: desktop vs mobile from matchMedia, not from md: CSS.
+  // SSR keeps the placeholder so hydration still uses md:/lg: utilities.
+  const [shellLayout, setShellLayout] = useState(readChatroomShellLayout);
   const [feedbotChip, setFeedbotChip] = useState<{ title: string; body: string } | null>(null);
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
   const discoveryAutoChecked = useRef(false);
@@ -110,9 +125,18 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(max-width: 768px)");
+    const md = window.matchMedia(CHATROOM_MD_MQ);
+    const lg = window.matchMedia(CHATROOM_LG_MQ);
     const onChange = () => setIsMobile(mq.matches);
+    const onShell = () => setShellLayout(readChatroomShellLayout());
     mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
+    md.addEventListener("change", onShell);
+    lg.addEventListener("change", onShell);
+    return () => {
+      mq.removeEventListener("change", onChange);
+      md.removeEventListener("change", onShell);
+      lg.removeEventListener("change", onShell);
+    };
   }, []);
 
   useEffect(() => {
@@ -340,9 +364,16 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
   return (
     <ProfilePopupProvider>
     <>
-      <div ref={rootRef} data-chat-theme={chatTheme} data-theme-variant={chatVariantFor(chatTheme)} className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+      <div
+        ref={rootRef}
+        data-chat-theme={chatTheme}
+        data-theme-variant={chatVariantFor(chatTheme)}
+        data-chatroom-shell=""
+        data-chatroom-layout={chatroomShellLayoutAttr(shellLayout)}
+        className="flex h-screen w-full overflow-hidden bg-background text-foreground"
+      >
         <DjPlayerHost />
-        {sidebarOpen && (
+        {chatroomSidebarBackdropVisible(shellLayout, sidebarOpen) && (
           <button
             type="button"
             aria-label="Close sidebar"
@@ -351,13 +382,9 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
           />
         )}
         <div
-          className={cn(
-            "fixed inset-y-0 left-0 z-40 w-[85vw] max-w-xs shadow-2xl transition-transform duration-200 ease-out",
-            "md:static md:z-auto md:w-auto md:max-w-none md:shrink-0 md:translate-x-0 md:opacity-100 md:pointer-events-auto md:shadow-none",
-            sidebarOpen
-              ? "translate-x-0"
-              : "-translate-x-full pointer-events-none md:pointer-events-auto",
-          )}
+          data-chatroom-sidebar=""
+          className={cn(chatroomSidebarClassName(shellLayout, sidebarOpen))}
+          style={chatroomSidebarStyle(shellLayout, sidebarOpen)}
           aria-hidden={isMobile && !sidebarOpen}
         >
           <SidebarPanelBoundary onFail={() => setSidebarOpen(false)}>
@@ -374,8 +401,9 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
           </SidebarPanelBoundary>
         </div>
         <main className="relative flex h-full min-w-0 flex-1 flex-col">
-          {!sidebarOpen && (
+          {chatroomSidebarToggleVisible(shellLayout, sidebarOpen) && (
             <button
+              data-chatroom-sidebar-toggle=""
               onClick={() => setSidebarOpen(true)}
               className="absolute left-3 top-3.5 z-30 grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/30 transition-all hover:scale-110 hover:shadow-xl hover:ring-primary/50 md:hidden"
               style={{ boxShadow: "var(--shadow-glow)" }}
@@ -395,7 +423,12 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             return (
               <>
                 {!(chatTheme === "gaming_arena" && !activeIsDM) && (
-                  <ChatHeader onOpenHub={() => setHubOpen(true)} hubOpen={hubOpen} />
+                  <ChatHeader
+                    onOpenHub={() => setHubOpen(true)}
+                    hubOpen={hubOpen}
+                    desktopShell={isClientDesktopShell(shellLayout)}
+                    largeDesktop={isClientLargeDesktopShell(shellLayout)}
+                  />
                 )}
                 <div className="relative flex min-h-0 flex-1 flex-col">
                   {activeIsDM && (
@@ -454,7 +487,12 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             );
           })()}
         </main>
-        {!isDM(state.activeChannel) && <MembersPanel roomId={state.activeChannel} />}
+        {!isDM(state.activeChannel) && (
+          <MembersPanel
+            roomId={state.activeChannel}
+            forceDesktopColumn={isClientLargeDesktopShell(shellLayout)}
+          />
+        )}
         <FloatingDMDock />
         <MobileDMMinimizedDock />
         <TrioRoomsDock />
