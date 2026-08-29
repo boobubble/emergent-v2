@@ -307,7 +307,6 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
         <TB onClick={insertTable} title="Insert table"><TableIcon className="h-3.5 w-3.5" /></TB>
         <TB onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider"><Minus className="h-3.5 w-3.5" /></TB>
         <TB onClick={() => insertCallout("info")} title="Callout / Info box"><Info className="h-3.5 w-3.5" /></TB>
-        <TB onClick={() => setCtaDialogOpen(true)} title="Insert CTA"><MousePointerClick className="h-3.5 w-3.5" /></TB>
         <TB onClick={insertTOC} title="Insert Table of Contents"><ListTree className="h-3.5 w-3.5" /></TB>
         <Sep />
         <TB onClick={() => editor.chain().focus().undo().run()} title="Undo"><Undo2 className="h-3.5 w-3.5" /></TB>
