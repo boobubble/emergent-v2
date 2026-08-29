@@ -91,7 +91,8 @@ describe("blog writer contracts", () => {
     expect(route).toContain("tags");
     expect(route).toContain("keywords");
     expect(route).toContain('update({ status })');
-    expect(route).not.toMatch(/\.delete\(/);
+    expect(route).toContain(".delete()");
+    expect(route).toContain('.eq("id", id)');
   });
 
   it("builds a display excerpt from HTML without keeping tags", () => {

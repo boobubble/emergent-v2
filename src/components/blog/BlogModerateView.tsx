@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Eye, Pencil, Plus, X } from "lucide-react";
+import { Check, Eye, Image as ImageIcon, Pencil, Plus, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -20,6 +22,7 @@ import { ImageStatusBadge } from "@/components/content-images/ImageStatusBadge";
 import { summarizeContentImages, type ImageStatusKind } from "@/lib/content-image-seo";
 import { publicBlogTags } from "@/lib/blog.public";
 import { parseKeywordPhrases } from "@/lib/blog-taxonomy";
+import { canStartBlogDelete, nextPageAfterDelete } from "@/lib/blog-delete";
 import { cn } from "@/lib/utils";
 
 export type ModeratePost = {
@@ -68,10 +71,12 @@ export function BlogModerateView({
   posts,
   loading,
   onUpdateStatus,
+  onDelete,
 }: {
   posts: ModeratePost[];
   loading: boolean;
   onUpdateStatus: (id: string, status: "published" | "rejected") => void;
+  onDelete: (id: string) => Promise<{ ok: boolean; error?: string }>;
 }) {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -82,6 +87,9 @@ export function BlogModerateView({
   const [pageSize, setPageSize] = useState<25 | 50 | 100>(50);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
@@ -134,6 +142,10 @@ export function BlogModerateView({
     });
   }, [rows, debouncedSearch, statusFilter, categoryFilter, imageFilter]);
 
+  useEffect(() => {
+    setPage((p) => nextPageAfterDelete(p, filtered.length, pageSize));
+  }, [filtered.length, pageSize]);
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize) || 1);
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize);
   const allSelected = pageRows.length > 0 && pageRows.every((r) => selected.has(r.post.id));
@@ -163,6 +175,27 @@ export function BlogModerateView({
   function previewHref(row: (typeof rows)[number]) {
     if (row.status === "published" && row.slug) return `/blog/${row.slug}`;
     return null;
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    if (!canStartBlogDelete(deleting)) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const result = await onDelete(deleteTarget.id);
+    if (!result.ok) {
+      setDeleteError(result.error ?? "Delete failed.");
+      setDeleting(false);
+      return;
+    }
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.delete(deleteTarget.id);
+      return next;
+    });
+    setDeleteTarget(null);
+    setDeleting(false);
+    toast.success("Blog deleted successfully.");
   }
 
   return (
@@ -290,6 +323,11 @@ export function BlogModerateView({
                         else setPreviewId(row.post.id);
                       }}
                       onUpdateStatus={onUpdateStatus}
+                      onRequestDelete={() => {
+                        setDeleteError(null);
+                        setDeleteTarget({ id: row.post.id, title: row.post.title || "(untitled)" });
+                      }}
+                      deleting={deleting}
                     />
                   ))}
                   {!pageRows.length && (
@@ -324,6 +362,11 @@ export function BlogModerateView({
                   else setPreviewId(row.post.id);
                 }}
                 onUpdateStatus={onUpdateStatus}
+                onRequestDelete={() => {
+                  setDeleteError(null);
+                  setDeleteTarget({ id: row.post.id, title: row.post.title || "(untitled)" });
+                }}
+                deleting={deleting}
               />
             ))}
           </div>
@@ -367,6 +410,46 @@ export function BlogModerateView({
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (deleting) return;
+          if (!open) {
+            setDeleteTarget(null);
+            setDeleteError(null);
+          }
+        }}
+      >
+        <DialogContent
+          onPointerDownOutside={(e) => {
+            if (deleting) e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            if (deleting) e.preventDefault();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Delete Blog Post?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to permanently delete:
+              <br />
+              "{deleteTarget?.title ?? "(untitled)"}"
+              <br />
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+          <DialogFooter>
+            <Button variant="outline" disabled={deleting} onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" disabled={deleting} onClick={confirmDelete}>
+              {deleting ? "Deleting…" : "Delete Permanently"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -389,12 +472,16 @@ function BlogTableRow({
   onToggle,
   onPreview,
   onUpdateStatus,
+  onRequestDelete,
+  deleting,
 }: {
   row: RowModel;
   selected: boolean;
   onToggle: () => void;
   onPreview: () => void;
   onUpdateStatus: (id: string, status: "published" | "rejected") => void;
+  onRequestDelete: () => void;
+  deleting: boolean;
 }) {
   const pending = row.status === "pending";
   const extraTags = Math.max(0, row.tags.length - 2);
@@ -442,6 +529,8 @@ function BlogTableRow({
           pending={pending}
           onPreview={onPreview}
           onUpdateStatus={onUpdateStatus}
+          onRequestDelete={onRequestDelete}
+          deleting={deleting}
         />
       </td>
     </tr>
@@ -454,12 +543,16 @@ function BlogMobileCard({
   onToggle,
   onPreview,
   onUpdateStatus,
+  onRequestDelete,
+  deleting,
 }: {
   row: RowModel;
   selected: boolean;
   onToggle: () => void;
   onPreview: () => void;
   onUpdateStatus: (id: string, status: "published" | "rejected") => void;
+  onRequestDelete: () => void;
+  deleting: boolean;
 }) {
   const pending = row.status === "pending";
   return (
@@ -491,6 +584,8 @@ function BlogMobileCard({
           pending={pending}
           onPreview={onPreview}
           onUpdateStatus={onUpdateStatus}
+          onRequestDelete={onRequestDelete}
+          deleting={deleting}
         />
       </CardContent>
     </Card>
@@ -502,11 +597,15 @@ function RowActions({
   pending,
   onPreview,
   onUpdateStatus,
+  onRequestDelete,
+  deleting,
 }: {
   id: string;
   pending: boolean;
   onPreview: () => void;
   onUpdateStatus: (id: string, status: "published" | "rejected") => void;
+  onRequestDelete: () => void;
+  deleting: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-0.5">
@@ -518,6 +617,11 @@ function RowActions({
       <Button size="icon" variant="ghost" title="Preview" onClick={onPreview}>
         <Eye className="h-4 w-4" />
       </Button>
+      <a href={editorHref(id, true)}>
+        <Button size="icon" variant="ghost" title="Image SEO">
+          <ImageIcon className="h-4 w-4" />
+        </Button>
+      </a>
       {pending && (
         <>
           <Button
@@ -538,6 +642,16 @@ function RowActions({
           </Button>
         </>
       )}
+      <Button
+        size="icon"
+        variant="ghost"
+        title="Delete"
+        className="text-destructive hover:text-destructive"
+        disabled={deleting}
+        onClick={onRequestDelete}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

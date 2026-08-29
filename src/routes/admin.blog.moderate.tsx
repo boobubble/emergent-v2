@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogModerateView, type ModeratePost } from "@/components/blog/BlogModerateView";
+import { isValidBlogDeleteId, planBlogImageCleanup, removeBlogFromList } from "@/lib/blog-delete";
 
 export const Route = createFileRoute("/admin/blog/moderate")({
   component: ModeratePage,
@@ -56,10 +57,34 @@ function ModeratePage() {
     setPosts((prev) => prev.filter((p) => p.id !== id));
   }
 
+  async function deletePost(id: string): Promise<{ ok: boolean; error?: string }> {
+    if (!isValidBlogDeleteId(id)) {
+      return { ok: false, error: "Missing blog post id." };
+    }
+    // Images may be reused across Blog, Custom Pages, and Feed. Never remove storage.
+    void planBlogImageCleanup(posts.find((p) => p.id === id)?.content);
+    const { data, error } = await supabase.from("blog_posts").delete().eq("id", id).select("id");
+    if (error || !data?.length) {
+      return {
+        ok: false,
+        error: error?.message ?? "Delete failed. Admin authorization required or the post was already gone.",
+      };
+    }
+    setPosts((prev) => removeBlogFromList(prev, id));
+    return { ok: true };
+  }
+
   if (checking) return <p className="p-8 text-muted-foreground">Loading…</p>;
   if (!isAdmin) {
     return <p className="p-8 text-foreground">Access denied. Admin/moderator hi ye page dekh sakte hain.</p>;
   }
 
-  return <BlogModerateView posts={posts} loading={loading} onUpdateStatus={updateStatus} />;
+  return (
+    <BlogModerateView
+      posts={posts}
+      loading={loading}
+      onUpdateStatus={updateStatus}
+      onDelete={deletePost}
+    />
+  );
 }
