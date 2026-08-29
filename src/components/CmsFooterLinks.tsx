@@ -45,6 +45,16 @@ export function CmsFooterLinks({ className }: { className?: string }) {
           </div>
         );
       })}
+      <div className={className}>
+        <h3 className="text-sm font-bold text-white">Site Directory</h3>
+        <ul className="mt-3 space-y-2">
+          <li>
+            <Link to="/site-directory" className="text-sm text-white/55 hover:text-white">
+              Site Directory
+            </Link>
+          </li>
+        </ul>
+      </div>
     </>
   );
 }

@@ -45,6 +45,7 @@ import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SetupWizardRouteImport } from './routes/setup-wizard'
+import { Route as SiteDirectoryRouteImport } from './routes/site-directory'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as WalletRouteImport } from './routes/wallet'
@@ -412,6 +413,11 @@ const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
 const SetupWizardRoute = SetupWizardRouteImport.update({
   id: '/setup-wizard',
   path: '/setup-wizard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteDirectoryRoute = SiteDirectoryRouteImport.update({
+  id: '/site-directory',
+  path: '/site-directory',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -1417,6 +1423,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup-wizard': typeof SetupWizardRoute
+  '/site-directory': typeof SiteDirectoryRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
@@ -1640,6 +1647,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup-wizard': typeof SetupWizardRoute
+  '/site-directory': typeof SiteDirectoryRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
@@ -1866,6 +1874,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup-wizard': typeof SetupWizardRoute
+  '/site-directory': typeof SiteDirectoryRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/trust': typeof TrustRoute
   '/wallet': typeof WalletRoute
@@ -2094,6 +2103,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/robots.txt'
     | '/setup-wizard'
+    | '/site-directory'
     | '/sitemap.xml'
     | '/trust'
     | '/wallet'
@@ -2317,6 +2327,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/robots.txt'
     | '/setup-wizard'
+    | '/site-directory'
     | '/sitemap.xml'
     | '/trust'
     | '/wallet'
@@ -2542,6 +2553,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/robots.txt'
     | '/setup-wizard'
+    | '/site-directory'
     | '/sitemap.xml'
     | '/trust'
     | '/wallet'
@@ -2770,6 +2782,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SetupWizardRoute: typeof SetupWizardRoute
+  SiteDirectoryRoute: typeof SiteDirectoryRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrustRoute: typeof TrustRoute
   WalletRoute: typeof WalletRoute
@@ -3078,6 +3091,13 @@ declare module '@tanstack/react-router' {
       path: '/setup-wizard'
       fullPath: '/setup-wizard'
       preLoaderRoute: typeof SetupWizardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/site-directory': {
+      id: '/site-directory'
+      path: '/site-directory'
+      fullPath: '/site-directory'
+      preLoaderRoute: typeof SiteDirectoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -4817,6 +4837,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SetupWizardRoute: SetupWizardRoute,
+  SiteDirectoryRoute: SiteDirectoryRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrustRoute: TrustRoute,
   WalletRoute: WalletRoute,
