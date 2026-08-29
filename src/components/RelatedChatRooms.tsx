@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Globe, MapPin, MessageCircle } from "lucide-react";
 import {
   RELATED_CHAT_ROOMS_HEADING,
   type RelatedChatRoomLink,
@@ -29,7 +29,7 @@ export function RelatedChatRooms({
               href={link.href}
               className={[
                 "group inline-flex items-center gap-1.5 rounded-full",
-                "border border-primary/15 bg-primary/[0.06]",
+                "border border-primary/25 bg-primary/10",
                 "px-4 py-2 text-sm font-medium text-foreground/90",
                 "shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
                 "no-underline outline-none",
@@ -40,6 +40,13 @@ export function RelatedChatRooms({
                 "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               ].join(" ")}
             >
+              {link.kind === "city" ? (
+                <MapPin className="h-3.5 w-3.5 shrink-0 text-primary/70" aria-hidden="true" />
+              ) : link.kind === "country" ? (
+                <Globe className="h-3.5 w-3.5 shrink-0 text-primary/70" aria-hidden="true" />
+              ) : link.kind === "category" ? (
+                <MessageCircle className="h-3.5 w-3.5 shrink-0 text-primary/70" aria-hidden="true" />
+              ) : null}
               <span>{link.label}</span>
               <ArrowUpRight
                 className="h-3.5 w-3.5 shrink-0 text-primary/55 transition-colors duration-200 group-hover:text-primary"
