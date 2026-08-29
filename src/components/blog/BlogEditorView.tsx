@@ -73,6 +73,7 @@ export type BlogEditorViewProps = {
   mode?: "create" | "edit";
   postStatus?: string | null;
   highlightImageSeo?: boolean;
+  existingSlug?: string | null;
 };
 
 function useEditorTick(editor: Editor | null) {
@@ -107,6 +108,8 @@ export function BlogEditorView(props: BlogEditorViewProps) {
   const imageStatus = summarizeContentImages(html);
   const isEdit = props.mode === "edit";
   const published = props.postStatus === "published";
+  const backHref = isEdit ? "/admin/blog/moderate" : "/blog";
+  const backLabel = isEdit ? "Blogs" : "Back";
 
   async function optimizeAt(index: number) {
     const img = imageStatus.images[index];
@@ -154,22 +157,34 @@ export function BlogEditorView(props: BlogEditorViewProps) {
   }
 
   return (
-    <div className="yz-blog min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
+    <div className={isEdit ? "yz-blog min-h-screen bg-muted/30 text-foreground" : "yz-blog min-h-screen bg-background text-foreground"}>
+      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-[1180px] items-center gap-2 px-3 sm:px-5">
           <a
-            href="/blog"
+            href={backHref}
             className="rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            Back
+            {backLabel}
           </a>
+          {isEdit && (
+            <span className="hidden min-w-0 truncate text-sm font-semibold sm:inline">
+              {props.title.trim() || "Edit Blog"}
+            </span>
+          )}
           <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             {published ? "Published" : isEdit ? props.postStatus || "Draft" : "Draft"}
           </span>
           <span className="hidden text-xs text-muted-foreground sm:inline">
-            {published ? "Editing live post" : "Unsaved"}
+            {published ? "Editing live post" : isEdit ? "Editing submission" : "Unsaved"}
           </span>
           <div className="ml-auto flex items-center gap-2">
+            {published && props.existingSlug && (
+              <a href={`/blog/${props.existingSlug}`} target="_blank" rel="noreferrer">
+                <Button type="button" variant="outline" size="sm">
+                  View
+                </Button>
+              </a>
+            )}
             <Sheet defaultOpen={props.highlightImageSeo}>
               <SheetTrigger asChild>
                 <Button type="button" variant="outline" size="sm" className="lg:hidden">
@@ -192,7 +207,7 @@ export function BlogEditorView(props: BlogEditorViewProps) {
               </SheetContent>
             </Sheet>
             <Button type="button" onClick={props.onSubmit} disabled={props.submitting} size="sm">
-              {props.submitting ? "Saving…" : isEdit ? (published ? "Save" : "Save") : "Submit for Review"}
+              {props.submitting ? "Saving…" : isEdit ? (published ? "Update" : "Save") : "Submit for Review"}
             </Button>
           </div>
         </div>
@@ -308,16 +323,18 @@ function EditorSidebar({
   onRemoveImage,
   postStatus,
   mode,
+  existingSlug,
 }: BlogEditorViewProps & {
   onAddImage: () => void;
   onFixImage: (index: number) => void;
   onRemoveImage: (index: number) => void;
 }) {
-  const slugPreview = previewSlugFromTitle(title) || "your-post-title";
+  const slugPreview = existingSlug || previewSlugFromTitle(title) || "your-post-title";
   const serpTitle = title.trim() || "Untitled post";
   const serpDesc = metaDescription.trim() || "A short description will appear here.";
   const imageStatus = summarizeContentImages(editor?.getHTML() ?? "");
   const published = postStatus === "published";
+  const slugLocked = Boolean(existingSlug);
 
   return (
     <div className="space-y-5">
@@ -408,7 +425,9 @@ function EditorSidebar({
             <p className="mt-1 text-[11px] text-muted-foreground">{metaDescription.length}/160</p>
           </div>
           <div>
-            <p className="text-[11px] text-muted-foreground">Slug preview (generated on submit)</p>
+            <p className="text-[11px] text-muted-foreground">
+              {slugLocked ? "Slug (not changed on save)" : "Slug preview (generated on submit)"}
+            </p>
             <p className="mt-0.5 break-all font-mono text-xs text-foreground">/blog/{slugPreview}</p>
           </div>
           <div className="rounded-lg border border-border bg-muted/40 p-3">

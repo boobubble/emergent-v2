@@ -92,6 +92,7 @@ function WritePostPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [keywords, setKeywords] = useState<string[]>([]);
   const [postStatus, setPostStatus] = useState<string | null>(null);
+  const [existingSlug, setExistingSlug] = useState<string | null>(null);
   const [loadedHtml, setLoadedHtml] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -136,7 +137,7 @@ function WritePostPage() {
       }
       const { data, error } = await supabase
         .from("blog_posts")
-        .select("id, title, content, meta_description, category_id, tags, keywords, status")
+        .select("id, title, slug, content, meta_description, category_id, tags, keywords, status")
         .eq("id", editId)
         .maybeSingle();
       if (cancelled) return;
@@ -150,6 +151,7 @@ function WritePostPage() {
       setTags(normalizeTagList(data.tags));
       setKeywords(parseKeywordPhrases(data.keywords));
       setPostStatus(data.status);
+      setExistingSlug(data.slug ?? null);
       setLoadedHtml(data.content || "<p></p>");
     })();
     return () => {
@@ -285,6 +287,7 @@ function WritePostPage() {
       mode={editId ? "edit" : "create"}
       postStatus={postStatus}
       highlightImageSeo={search.imageSeo}
+      existingSlug={existingSlug}
     />
   );
 }

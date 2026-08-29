@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { excerptFromHtml } from "@/components/blog/blog-format";
 import { parseBlogImageAlign } from "./blog-image";
 
 function read(rel: string) {
@@ -65,5 +66,39 @@ describe("blog writer contracts", () => {
     expect(write).toContain(".update(");
     expect(write).toContain(".eq(\"id\", editId)");
     expect(write).not.toMatch(/\.update\(\{[^}]*\bstatus:/);
+    expect(write).not.toMatch(/\.update\(\{[^}]*\bslug:/);
+    expect(editor).toContain("/admin/blog/moderate");
+    expect(editor).toContain("Slug (not changed on save)");
+  });
+
+  it("keeps Blog Management compact without dumping full article HTML in the list", () => {
+    const moderate = read("src/components/blog/BlogModerateView.tsx");
+    const route = read("src/routes/admin.blog.moderate.tsx");
+    expect(moderate).toContain('title="Blogs"');
+    expect(moderate).toContain("Manage, review, edit and publish blog posts.");
+    expect(moderate).toContain("New Blog");
+    expect(moderate).toContain("Reset Filters");
+    expect(moderate).toContain("<table");
+    expect(moderate).toContain("No blogs match filters.");
+    expect(moderate).toContain("onUpdateStatus");
+    expect(moderate).toContain("/blog/write?id=");
+    expect(moderate).toContain("imageSeo=1");
+    expect(moderate).toContain('href="/blog/write"');
+    expect(moderate).not.toContain("max-h-64");
+    expect(moderate).not.toMatch(/from\("blog_posts"\)\.delete/);
+    expect(route).toContain('from("blog_posts")');
+    expect(route).toContain("slug");
+    expect(route).toContain("tags");
+    expect(route).toContain("keywords");
+    expect(route).toContain('update({ status })');
+    expect(route).not.toMatch(/\.delete\(/);
+  });
+
+  it("builds a display excerpt from HTML without keeping tags", () => {
+    expect(excerptFromHtml("<p>Hello <strong>world</strong> from Yaarzo.</p>")).toBe(
+      "Hello world from Yaarzo.",
+    );
+    expect(excerptFromHtml("<p>" + "word ".repeat(80) + "</p>").endsWith("…")).toBe(true);
+    expect(excerptFromHtml("<p>" + "word ".repeat(80) + "</p>")).not.toContain("<p>");
   });
 });

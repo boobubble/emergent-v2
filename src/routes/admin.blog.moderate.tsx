@@ -41,7 +41,7 @@ function ModeratePage() {
     setLoading(true);
     const { data } = await supabase
       .from("blog_posts")
-      .select("id, title, content, meta_description, published_at, status, category_id, author_id, categories(name)")
+      .select("id, title, slug, content, meta_description, published_at, status, category_id, author_id, tags, keywords, categories(name)")
       .order("published_at", { ascending: false });
     setPosts((data as ModeratePost[] | null) ?? []);
     setLoading(false);
