@@ -5,11 +5,13 @@ import {
   publishedLookupResult,
 } from "@/lib/fetch-published-page";
 import { loadRelatedChatRoomsForPage, type RelatedChatRoomLink } from "@/lib/pages-cms/related-chat-rooms";
+import { loadExploreFeatureLinks, type ExploreFeatureLink } from "@/lib/explore-features-links";
 import { logger } from "@/lib/logger";
 
 export type HydratedPublicCmsPage = PublishedCustomPage & {
   publicHtml: string;
   relatedChatRooms: RelatedChatRoomLink[];
+  exploreFeatureLinks: ExploreFeatureLink[];
 };
 
 export type PublicSlugResolution =
@@ -38,12 +40,18 @@ export async function hydratePublishedPageForPublic(
 ): Promise<HydratedPublicCmsPage> {
   const publicHtml = await buildPublicCmsPageHtml(sb, page);
   let relatedChatRooms: RelatedChatRoomLink[] = [];
+  let exploreFeatureLinks: ExploreFeatureLink[] = [];
   try {
     relatedChatRooms = await loadRelatedChatRoomsForPage(sb, page);
   } catch (err) {
     logger.error("custom-page related chat rooms failed", err, { slug: page.slug });
   }
-  return { ...page, publicHtml, relatedChatRooms };
+  try {
+    exploreFeatureLinks = await loadExploreFeatureLinks(sb, page.slug);
+  } catch (err) {
+    logger.error("custom-page explore feature links failed", err, { slug: page.slug });
+  }
+  return { ...page, publicHtml, relatedChatRooms, exploreFeatureLinks };
 }
 
 /**

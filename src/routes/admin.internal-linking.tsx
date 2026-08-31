@@ -313,10 +313,11 @@ function OrphansTab() {
     <div className="space-y-3">
       {isLoading ? <Skeleton className="h-40" /> : (
         <>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="Total targets" value={data?.total ?? 0} />
             <Stat label="Orphan pages (zero incoming)" value={data?.orphans.length ?? 0} />
             <Stat label="Low-link pages (1-2 incoming)" value={data?.lowLinks.length ?? 0} />
+            <Stat label="Well-linked (3+ incoming)" value={data?.wellLinked?.length ?? 0} />
           </div>
           <Card>
             <CardHeader><CardTitle className="text-base">Orphan targets</CardTitle></CardHeader>

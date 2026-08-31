@@ -3,6 +3,12 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { withRateLimit } from "./rate-limit-middleware";
+import {
+  buildOrphanReport,
+  canonicalPagePath,
+  normalizeInternalHref,
+} from "@/lib/internal-linking-orphans";
+import { exploreFeatureGraphLinks, isExploreFeatureTarget } from "@/lib/explore-features-links";
 
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -111,7 +117,7 @@ export const syncLinkTargets = createServerFn({ method: "POST" })
       rows.push({
         title: p.title || p.slug,
         slug: p.slug,
-        url: `/p/${p.slug}`,
+        url: canonicalPagePath(p.slug),
         description: p.excerpt || p.meta_description || null,
         keywords: kw,
         category: p.category,
@@ -169,6 +175,18 @@ export const syncLinkTargets = createServerFn({ method: "POST" })
         .upsert({ ...r, updated_at: new Date().toISOString() }, { onConflict: "url" });
       if (!error) inserted++;
     }
+
+    // Drop leftover legacy /p/{slug} rows now that canonical /{slug} exists.
+    const { data: legacy } = await supabaseAdmin
+      .from("internal_link_targets")
+      .select("id, url")
+      .like("url", "/p/%");
+    for (const row of legacy ?? []) {
+      const canonical = normalizeInternalHref(row.url);
+      if (!canonical || canonical === row.url) continue;
+      await supabaseAdmin.from("internal_link_targets").delete().eq("id", row.id);
+    }
+
     return { ok: true, count: inserted, total: rows.length };
   });
 
@@ -189,7 +207,7 @@ export const listLinkablePages = createServerFn({ method: "GET" })
       id: p.id,
       slug: p.slug,
       title: p.title || p.slug,
-      url: `/p/${p.slug}`,
+      url: canonicalPagePath(p.slug),
       content: (p.content as string) ?? "",
     }));
   });
@@ -408,40 +426,67 @@ export const getOrphanReport = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     const { data: pages } = await supabaseAdmin
       .from("custom_pages")
       .select("id, slug, title, content, status")
       .eq("status", "published")
-      .limit(1000);
+      .limit(2000);
+    const { data: posts } = await supabaseAdmin
+      .from("blog_posts")
+      .select("slug, content, status")
+      .eq("status", "published")
+      .limit(500);
     const { data: targets } = await supabaseAdmin
       .from("internal_link_targets")
-      .select("url, title, type")
+      .select("url, title, type, category")
       .eq("is_active", true)
       .limit(2000);
+    const { data: graphRows } = await supabaseAdmin
+      .from("page_internal_links")
+      .select("page_id, target_url")
+      .limit(10000);
 
-    const incoming: Record<string, number> = {};
-    const outgoing: Record<string, number> = {};
-    for (const p of pages ?? []) {
-      const out = (p.content as string).match(/href="(\/[^"]+)"/g) ?? [];
-      outgoing[`/p/${p.slug}`] = out.length;
-      for (const h of out) {
-        const url = h.match(/href="([^"]+)"/)?.[1];
-        if (url) incoming[url] = (incoming[url] ?? 0) + 1;
-      }
-    }
+    const publishedPages = pages ?? [];
+    const idToPath = new Map(publishedPages.map((p) => [p.id, canonicalPagePath(p.slug)]));
 
-    const report = (targets ?? []).map((t) => ({
-      url: t.url,
-      title: t.title,
-      type: t.type,
-      incoming: incoming[t.url] ?? 0,
-      outgoing: outgoing[t.url] ?? 0,
-    }));
-    return {
-      orphans: report.filter((r) => r.incoming === 0).sort((a, b) => a.outgoing - b.outgoing),
-      lowLinks: report.filter((r) => r.incoming > 0 && r.incoming < 3),
-      total: report.length,
-    };
+    const documents = [
+      ...publishedPages.map((p) => ({
+        canonicalUrl: canonicalPagePath(p.slug),
+        html: typeof p.content === "string" ? p.content : "",
+      })),
+      ...(posts ?? []).map((b) => ({
+        canonicalUrl: `/blog/${b.slug}`,
+        html: typeof b.content === "string" ? b.content : "",
+      })),
+    ];
+
+    const graphLinks = (graphRows ?? [])
+      .map((row) => {
+        const sourceUrl = idToPath.get(row.page_id);
+        if (!sourceUrl) return null;
+        return { sourceUrl, targetUrl: row.target_url };
+      })
+      .filter((row): row is { sourceUrl: string; targetUrl: string } => row !== null);
+
+    // Explore-feature chips are SSR <a href> outside stored content (like Related
+    // Chat Rooms). Count the same deterministic subset the public pages render.
+    const featurePool = (targets ?? []).filter(isExploreFeatureTarget);
+    graphLinks.push(
+      ...exploreFeatureGraphLinks(
+        [
+          ...publishedPages.map((p) => ({ slug: p.slug, canonicalUrl: canonicalPagePath(p.slug) })),
+          ...(posts ?? []).map((b) => ({ slug: `blog/${b.slug}`, canonicalUrl: `/blog/${b.slug}` })),
+        ],
+        featurePool,
+      ),
+    );
+
+    return buildOrphanReport({
+      targets: (targets ?? []).map((t) => ({ url: t.url, title: t.title, type: t.type })),
+      documents,
+      graphLinks,
+    });
   });
 
 // ---------- ANALYTICS ----------

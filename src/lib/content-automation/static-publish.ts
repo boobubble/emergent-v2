@@ -8,6 +8,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { chatroomUrls } from "@/lib/content-automation/chatroom-urls";
 import { db, getAutomationSettings, pausedResponse } from "@/lib/content-automation/db";
+import {
+  PEER_GEO_LINK_SOURCE,
+  canonicalPeerHref,
+  pickPeerPages,
+  planPeerLinkEdges,
+  peerAnchorLabel,
+  type GeoPage,
+} from "@/lib/content-automation/peer-geo-links";
 
 export type StaticPageEntry = {
   slug: string;
@@ -73,19 +81,6 @@ async function getKeywordGroup(slug: string) {
   return data ?? null;
 }
 
-function labelFromUrl(url: string) {
-  const slug = url.replace(/\/$/, "").split("/").pop() ?? "";
-  const base = slug.replace(/-chat-room$/, "").replace(/-chat$/, "").replace(/-/g, " ");
-  return base.replace(/\b\w/g, (c) => c.toUpperCase()) + " Chat Room";
-}
-
-function pickRelatedChatRooms(excludeSlug: string, count = 4) {
-  const pool = [...chatroomUrls.interest, ...chatroomUrls.type]
-    .filter((url) => !url.endsWith(`/${excludeSlug}`));
-  const shuffled = pool.sort(() => Math.random() - 0.5).slice(0, count);
-  return shuffled.map((url) => ({ title: labelFromUrl(url), url }));
-}
-
 /**
  * Matches the site's own buildPageCtaHtml() output, but href is /chatroom
  * (canonical). /chatrooms is a redirect-only alias.
@@ -103,11 +98,12 @@ function buildCtaHtml() {
   ].join("");
 }
 
-/** Ensures both required links exist — adds them in code if the AI forgot. */
+/** Ensures required links exist — adds them in code if the AI forgot. */
 function ensureRequiredLinks(
   html: string,
   chatroomUrl: string,
   blogPost: { url: string; title: string } | null,
+  peerPages: GeoPage[] = [],
 ) {
   let finalHtml = html;
 
@@ -127,6 +123,14 @@ function ensureRequiredLinks(
     const blogPhrases = ["this related read", "a related article", "more on this topic", "further reading here"];
     const phrase = blogPhrases[Math.floor(Math.random() * blogPhrases.length)];
     finalHtml += `<p>Curious to dig deeper? Check out <a href="${blogPost.url}">${phrase}</a> for more.</p>`;
+  }
+
+  for (const peer of peerPages) {
+    const href = canonicalPeerHref(peer.slug);
+    if (!href) continue;
+    if (finalHtml.includes(href) || finalHtml.includes(`yaarzo.com/${peer.slug}`)) continue;
+    const label = peerAnchorLabel(peer);
+    finalHtml += `<p>Nearby, you can also jump into the <a href="${href}">${label}</a> room.</p>`;
   }
 
   return finalHtml;
@@ -163,6 +167,56 @@ function pickInternalLink(excludeSlug: string) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+async function loadPublishedGeoPages(): Promise<GeoPage[]> {
+  const { data } = await db()
+    .from("custom_pages")
+    .select("id, slug, title, h1, page_type, category, country_id, city_id, link_priority")
+    .eq("status", "published");
+  return (data ?? []) as GeoPage[];
+}
+
+function geoSourceFromEntry(
+  entry: StaticPageEntry,
+  cityId: string | null,
+  countryId: string | null,
+  pageId = "",
+): GeoPage {
+  const isCity = CITY_SECTIONS.includes(entry.section);
+  return {
+    id: pageId,
+    slug: entry.slug,
+    title: entry.base_name,
+    h1: null,
+    page_type: isCity ? "city" : entry.section === "country" ? "country" : null,
+    category: entry.section,
+    country_id: countryId,
+    city_id: cityId,
+    link_priority: 0,
+  };
+}
+
+async function persistPeerGraph(source: GeoPage, pool: GeoPage[]) {
+  if (!source.id) return;
+  const withSelf = pool.some((p) => p.id === source.id) ? pool : [...pool, source];
+  const edges = planPeerLinkEdges([source], withSelf, { maxPeers: 3, reciprocal: true });
+  for (const edge of edges) {
+    if (!edge.from.id || !edge.to.id) continue;
+    const { error } = await db().from("page_internal_links").insert({
+      page_id: edge.from.id,
+      target_page_id: edge.to.id,
+      target_url: canonicalPeerHref(edge.to.slug),
+      anchor_text: peerAnchorLabel(edge.to),
+      sort_order: 200,
+      is_manual: true,
+      source: PEER_GEO_LINK_SOURCE,
+      updated_at: new Date().toISOString(),
+    });
+    if (error && !/duplicate|unique/i.test(error.message || "")) {
+      console.error(`peer link ${edge.from.slug} → ${edge.to.slug}:`, error.message);
+    }
+  }
+}
+
 async function pickRelevantBlogPost(baseName: string) {
   const { data: posts } = await db().from("blog_posts").select("title, slug").eq("status", "published");
   if (!posts || posts.length === 0) return null;
@@ -172,7 +226,7 @@ async function pickRelevantBlogPost(baseName: string) {
   return { url: `https://yaarzo.com/blog/${chosen.slug}`, title: chosen.title as string };
 }
 
-async function generatePageContent(entry: StaticPageEntry) {
+async function generatePageContent(entry: StaticPageEntry, peerPages: GeoPage[] = []) {
   const contextLine = entry.section === "country_language"
     ? `This page is for people from a specific country who want to chat in a specific language: "${entry.base_name}".`
     : entry.lookup_city
@@ -191,6 +245,18 @@ async function generatePageContent(entry: StaticPageEntry) {
   const blogLinkInstruction = blogPost
     ? `3. Exactly one mention of the blog article titled "${blogPost.title}" — this MUST be a real HTML hyperlink: <a href="${blogPost.url}">short natural anchor text about the topic</a>. Do NOT mention the article as plain text without the <a> tag. Keep the anchor text itself to 2-5 words.`
     : "";
+
+  const peerStart = blogPost ? 4 : 3;
+  const peerLinkInstruction = peerPages.length
+    ? peerPages
+        .map((p, i) => {
+          const href = canonicalPeerHref(p.slug);
+          return `${peerStart + i}. One link to ${href} (${peerAnchorLabel(p)}) — short 2-4 word natural anchor. Use the path exactly as written (canonical /{slug}, not /p/{slug}).`;
+        })
+        .join("\n")
+    : "";
+
+  const requiredCount = (blogPost ? 3 : 2) + peerPages.length;
 
   const anthropic = getAnthropic();
   const message = await anthropic.messages.create({
@@ -214,10 +280,11 @@ Requirements:
 - Do NOT include any view counters, placeholder text, or meta-commentary in the visible content itself
 - Right after the intro paragraph, insert exactly this on its own line: <!-- IMAGE: a real 5-10 word description of an image that would fit here --> (a human will manually replace this with a real image later — do not embed an actual <img> tag)
 
-Include EXACTLY ${blogPost ? "3" : "2"} internal links, each a real <a href="..."> tag, naturally placed in different sections (not clustered together):
+Include EXACTLY ${requiredCount} internal links, each a real <a href="..."> tag, naturally placed in different sections (not clustered together):
 1. One link to ${internalLink} — anchor text must be SHORT (2-4 words) and read like a natural phrase mid-sentence — never the full page title. Good: "chat rooms in Lahore", "our gaming community". Bad: dumping the page's SEO title as the link text.
 2. One link to https://yaarzo.com/signup — vary the anchor text each time, never just "Yaarzo" (e.g. "sign up on Yaarzo", "join for free", "create your account")
 ${blogLinkInstruction}
+${peerLinkInstruction}
 
 Both/all links above are REQUIRED — do not skip any of them. Do not add any other links. Do not reuse the same anchor text pattern across sentences.
 
@@ -237,7 +304,7 @@ FAQ3_A: <2-3 sentence answer>`,
   const [contentHtml, metaBlock] = fullText.split("---META---");
   const get = (key: string) => metaBlock?.match(new RegExp(`${key}:\\s*(.+)`, "i"))?.[1]?.trim() ?? "";
 
-  const linkedHtml = ensureRequiredLinks(contentHtml.trim(), internalLink, blogPost);
+  const linkedHtml = ensureRequiredLinks(contentHtml.trim(), internalLink, blogPost, peerPages);
 
   return {
     contentHtml: linkedHtml + buildCtaHtml(),
@@ -247,7 +314,12 @@ FAQ3_A: <2-3 sentence answer>`,
       { question: get("FAQ2_Q"), answer: get("FAQ2_A") },
       { question: get("FAQ3_Q"), answer: get("FAQ3_A") },
     ].filter((f) => f.question && f.answer),
-    linksUsed: [internalLink, "https://yaarzo.com/signup", blogPost?.url].filter(Boolean),
+    linksUsed: [
+      internalLink,
+      "https://yaarzo.com/signup",
+      blogPost?.url,
+      ...peerPages.map((p) => canonicalPeerHref(p.slug)),
+    ].filter(Boolean),
   };
 }
 
@@ -258,7 +330,6 @@ async function buildRowPayload(
   countryId: string | null,
 ) {
   const fallbackH1 = `${entry.base_name.replace(/\b\w/g, (c) => c.toUpperCase())} Chat Room`;
-  const relatedRooms = pickRelatedChatRooms(entry.slug, 4);
 
   const groupSlug = keywordGroupSlugFor(entry.section);
   const group = await getKeywordGroup(groupSlug);
@@ -317,9 +388,13 @@ async function regeneratePage(entry: StaticPageEntry): Promise<PagePublishOutcom
     console.log(`\n🔄 Regenerating: ${entry.slug}...`);
     const { cityId, countryId: cityCountryId } = await findCityId(entry.lookup_city, entry.lookup_country_hint);
     const directCountryId = entry.section === "country" ? await findCountryId(entry.base_name) : cityCountryId;
+    const geoPool = await loadPublishedGeoPages();
+    const existing = geoPool.find((p) => p.slug === entry.slug);
+    const source = geoSourceFromEntry(entry, cityId, directCountryId, existing?.id ?? "");
+    const peerPages = pickPeerPages(source, geoPool, { max: 2 });
     let generated: Awaited<ReturnType<typeof generatePageContent>>;
     try {
-      generated = await generatePageContent(entry);
+      generated = await generatePageContent(entry, peerPages);
     } catch (err) {
       const error = failureMessage(err);
       console.error(`❌ Content generation failed for "${entry.slug}":`, error);
@@ -331,6 +406,10 @@ async function regeneratePage(entry: StaticPageEntry): Promise<PagePublishOutcom
     if (error) {
       console.error(`❌ Failed to update "${entry.slug}":`, error.message);
       return { success: false, error: error.message };
+    }
+    const pageId = existing?.id;
+    if (pageId) {
+      await persistPeerGraph({ ...source, id: pageId }, geoPool);
     }
     console.log(`✅ Regenerated: yaarzo.com/${entry.slug}`);
     return { success: true };
@@ -346,9 +425,12 @@ async function publishNewPage(entry: StaticPageEntry): Promise<PagePublishOutcom
     console.log(`\n📝 Generating: ${entry.slug}...`);
     const { cityId, countryId: cityCountryId } = await findCityId(entry.lookup_city, entry.lookup_country_hint);
     const directCountryId = entry.section === "country" ? await findCountryId(entry.base_name) : cityCountryId;
+    const geoPool = await loadPublishedGeoPages();
+    const source = geoSourceFromEntry(entry, cityId, directCountryId);
+    const peerPages = pickPeerPages(source, geoPool, { max: 2 });
     let generated: Awaited<ReturnType<typeof generatePageContent>>;
     try {
-      generated = await generatePageContent(entry);
+      generated = await generatePageContent(entry, peerPages);
     } catch (err) {
       const error = failureMessage(err);
       console.error(`❌ Content generation failed for "${entry.slug}":`, error);
@@ -356,10 +438,17 @@ async function publishNewPage(entry: StaticPageEntry): Promise<PagePublishOutcom
     }
     const payload = await buildRowPayload(entry, generated, cityId, directCountryId);
 
-    const { error } = await db().from("custom_pages").insert({ slug: entry.slug, ...payload });
+    const { data: inserted, error } = await db()
+      .from("custom_pages")
+      .insert({ slug: entry.slug, ...payload })
+      .select("id")
+      .single();
     if (error) {
       console.error(`❌ Failed to insert "${entry.slug}":`, error.message);
       return { success: false, error: error.message };
+    }
+    if (inserted?.id) {
+      await persistPeerGraph({ ...source, id: inserted.id }, geoPool);
     }
     console.log(`✅ Published: yaarzo.com/${entry.slug}`);
     return { success: true };

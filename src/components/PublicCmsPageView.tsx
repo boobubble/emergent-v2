@@ -10,15 +10,18 @@ import { placeCmsImagesInContent } from "@/lib/pages-cms/cms-image-placement";
 import { injectHeadingIds } from "@/lib/heading-ids";
 import { resolvePublicCmsH1 } from "@/lib/pages-cms/public-page-ssr";
 import { RelatedChatRooms } from "@/components/RelatedChatRooms";
+import { ExploreFeaturesLinks } from "@/components/ExploreFeaturesLinks";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Eye } from "lucide-react";
 import type { PublishedCustomPage } from "@/lib/fetch-published-page";
 import type { RelatedChatRoomLink } from "@/lib/pages-cms/related-chat-rooms";
+import type { ExploreFeatureLink } from "@/lib/explore-features-links";
 
 export type PublicCmsPage = PublishedCustomPage & {
   publicHtml?: string;
   relatedChatRooms?: RelatedChatRoomLink[] | null;
+  exploreFeatureLinks?: ExploreFeatureLink[] | null;
 };
 
 export type CityDirectoryEntry = {
@@ -132,6 +135,7 @@ export function PublicCmsPageView({
 
             {/* Outside custom_pages.content — reusable SSR links from page_internal_links */}
             <RelatedChatRooms links={page.relatedChatRooms} />
+            <ExploreFeaturesLinks links={page.exploreFeatureLinks} />
           </article>
 
           {hasRight && <PageSidebar mode={rightSidebar} side="right" />}

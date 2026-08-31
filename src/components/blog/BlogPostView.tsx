@@ -4,9 +4,17 @@ import type { PublicBlogPost } from "@/lib/blog.public";
 import { formatBlogDate, readingTimeFromHtml } from "@/components/blog/blog-format";
 import { BlogProse } from "@/components/blog/BlogProse";
 import { BlogReadingProgress } from "@/components/blog/BlogReadingProgress";
+import { ExploreFeaturesLinks } from "@/components/ExploreFeaturesLinks";
+import type { ExploreFeatureLink } from "@/lib/explore-features-links";
 import "@/components/blog/blog-ui.css";
 
-export function BlogPostView({ post }: { post: PublicBlogPost }) {
+export function BlogPostView({
+  post,
+  exploreFeatureLinks,
+}: {
+  post: PublicBlogPost;
+  exploreFeatureLinks?: ExploreFeatureLink[] | null;
+}) {
   const readTime = readingTimeFromHtml(post.content);
   const date = formatBlogDate(post.published_at);
 
@@ -61,6 +69,7 @@ export function BlogPostView({ post }: { post: PublicBlogPost }) {
         <div className="mt-8">
           <BlogProse html={post.content} />
         </div>
+        <ExploreFeaturesLinks links={exploreFeatureLinks} />
       </article>
     </div>
   );
