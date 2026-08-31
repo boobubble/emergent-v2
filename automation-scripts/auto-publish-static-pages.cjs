@@ -1,4 +1,8 @@
 /**
+ * DEPRECATED for automatic use as of 2026-08-31 — superseded by
+ * /api/run-static-publish (see /admin/content-automation).
+ * Kept for reference / manual emergency use only.
+ *
  * auto-publish-static-pages.cjs
  * -----------------------------------------------------
  * Handles two things:

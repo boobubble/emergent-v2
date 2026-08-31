@@ -2,10 +2,19 @@
  * Port of automation-scripts/auto-publish-blog.cjs.
  * Generation logic is unchanged; topics come from blog_topic_ideas
  * and the per-run count from automation_settings.blog_posts_per_day.
+ *
+ * Internal chatroom links are filtered to published custom_pages slugs
+ * (never /chatrooms). AI tags pass sanitizePipelineTags / detectHashtagDump
+ * before insert.
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { chatroomUrls } from "@/lib/content-automation/chatroom-urls";
 import { db, getAutomationSettings, pausedResponse } from "@/lib/content-automation/db";
+import {
+  filterPublishedHrefs,
+  pickPublishedInternalHref,
+  preparePublishablePage,
+} from "@/lib/content-automation/publish-quality";
 
 export type BlogTopic = {
   title: string;
@@ -47,13 +56,23 @@ async function generateUniqueSlug(title: string) {
   }
 }
 
-function pickChatroomUrl(title: string) {
+function pickChatroomUrl(title: string, publishedSlugs: Set<string>) {
   const lower = title.toLowerCase();
+  const mapped: string[] = [];
   for (const [keyword, url] of Object.entries(chatroomUrls.keywordMap)) {
-    if (lower.includes(keyword)) return url;
+    if (lower.includes(keyword)) mapped.push(url);
   }
-  const pool = [...chatroomUrls.interest, ...chatroomUrls.type];
-  return pool[Math.floor(Math.random() * pool.length)];
+  const preferred = filterPublishedHrefs(mapped, publishedSlugs);
+  if (preferred.length > 0) return preferred[0];
+  return pickPublishedInternalHref(
+    [...chatroomUrls.interest, ...chatroomUrls.type],
+    publishedSlugs,
+  );
+}
+
+async function loadPublishedPageSlugs(): Promise<Set<string>> {
+  const { data } = await db().from("custom_pages").select("slug").eq("status", "published");
+  return new Set((data ?? []).map((p: { slug: string }) => String(p.slug).replace(/^\/+/, "").toLowerCase()));
 }
 
 /** Ensures both required links exist in the HTML — adds them in code if the AI forgot. */
@@ -100,12 +119,12 @@ Include EXACTLY 2 internal links, naturally placed in different sections (not ne
 1. One link to https://yaarzo.com/signup — vary the anchor text each time, e.g. "sign up on Yaarzo", "join Yaarzo for free", "create a free account", "get started on Yaarzo". Never just the word "Yaarzo" as the link text.
 2. One link to ${chatroomUrl} — write short (2-5 word), natural anchor text that fits the sentence, based on what that page is about (infer from the URL slug). Never dump a full page title as anchor text.
 
-Both links are REQUIRED — do not skip either one. Do not add any other links. Do not reuse the same anchor text pattern across sentences.
+Both links are REQUIRED — do not skip either one. Do not add any other links. Do not reuse the same anchor text pattern across sentences. Never use /chatrooms (use /chatroom only if linking the chat hub). Do not invent unpublished slugs.
 
 After the article, on a new line, output exactly:
 ---META---
 KEYWORDS: keyword one, keyword two, keyword three, keyword four, keyword five
-TAGS: tag-one, tag-two, tag-three
+TAGS: 8-12 topical tags (places, languages, cultures, themes). At most 3 tags may contain the word "chat". Do not repeat the title with minor variations.
 READING_TIME: <integer minutes>`,
     }],
   });
@@ -161,7 +180,8 @@ async function publishTopic(topic: BlogTopic): Promise<PublishResult> {
   try {
     console.log(`\n📝 Generating: ${topic.title}...`);
 
-    const chatroomUrl = pickChatroomUrl(topic.title);
+    const publishedSlugs = await loadPublishedPageSlugs();
+    const chatroomUrl = pickChatroomUrl(topic.title, publishedSlugs);
     let generated: Awaited<ReturnType<typeof generateContent>>;
     let slug: string;
     let categoryId: string | null;
@@ -185,6 +205,21 @@ async function publishTopic(topic: BlogTopic): Promise<PublishResult> {
 
     const relatedPosts = await getRelatedBlogPosts(categoryId, slug);
     const relatedHtml = buildRelatedHtml(relatedPosts);
+    const prepared = preparePublishablePage({
+      slug,
+      title: topic.title,
+      h1: topic.title,
+      meta_title: topic.title,
+      meta_description: topic.metaDescription,
+      content: generated.contentHtml + relatedHtml,
+      tags: generated.tags,
+      publishedSlugs,
+    });
+    if (prepared.blocked) {
+      const error = `Quality gate: ${prepared.blockReason}`;
+      console.error(`❌ ${error} — skipping "${topic.title}"`);
+      return { title: topic.title, success: false, error };
+    }
 
     const { data: inserted, error: insertError } = await db()
       .from("blog_posts")
@@ -192,9 +227,9 @@ async function publishTopic(topic: BlogTopic): Promise<PublishResult> {
         title: topic.title,
         slug,
         meta_description: topic.metaDescription,
-        content: generated.contentHtml + relatedHtml,
+        content: prepared.content,
         keywords: topic.keywords?.trim() || generated.keywords,
-        tags: generated.tags,
+        tags: prepared.tags,
         reading_time_minutes: generated.readingTime,
         category_id: categoryId,
         author_id: null,

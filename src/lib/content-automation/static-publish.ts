@@ -4,6 +4,9 @@
  * and the per-run count from automation_settings.static_pages_per_day.
  *
  * CTA href uses /chatroom (canonical route). /chatrooms only redirects there.
+ * Internal interest/type links are filtered to published slugs; unwrap-list
+ * URLs are never inserted. Tags are not written today; sanitizePipelineTags
+ * must be used if that field is added later.
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { chatroomUrls } from "@/lib/content-automation/chatroom-urls";
@@ -16,6 +19,10 @@ import {
   peerAnchorLabel,
   type GeoPage,
 } from "@/lib/content-automation/peer-geo-links";
+import {
+  pickPublishedInternalHref,
+  preparePublishablePage,
+} from "@/lib/content-automation/publish-quality";
 
 export type StaticPageEntry = {
   slug: string;
@@ -162,9 +169,12 @@ async function findCountryId(name: string | null) {
   return data?.id ?? null;
 }
 
-function pickInternalLink(excludeSlug: string) {
-  const pool = [...chatroomUrls.interest, ...chatroomUrls.type].filter((url) => !url.endsWith(`/${excludeSlug}`));
-  return pool[Math.floor(Math.random() * pool.length)];
+function pickInternalLink(excludeSlug: string, publishedSlugs: Set<string>) {
+  return pickPublishedInternalHref(
+    [...chatroomUrls.interest, ...chatroomUrls.type],
+    publishedSlugs,
+    excludeSlug,
+  );
 }
 
 async function loadPublishedGeoPages(): Promise<GeoPage[]> {
@@ -226,7 +236,11 @@ async function pickRelevantBlogPost(baseName: string) {
   return { url: `https://yaarzo.com/blog/${chosen.slug}`, title: chosen.title as string };
 }
 
-async function generatePageContent(entry: StaticPageEntry, peerPages: GeoPage[] = []) {
+async function generatePageContent(
+  entry: StaticPageEntry,
+  peerPages: GeoPage[] = [],
+  publishedSlugs: Set<string> = new Set(),
+) {
   const contextLine = entry.section === "country_language"
     ? `This page is for people from a specific country who want to chat in a specific language: "${entry.base_name}".`
     : entry.lookup_city
@@ -239,7 +253,7 @@ async function generatePageContent(entry: StaticPageEntry, peerPages: GeoPage[] 
     ? `This page is for people who want to chat in "${entry.base_name}".`
     : `This page is themed around "${entry.base_name}".`;
 
-  const internalLink = pickInternalLink(entry.slug);
+  const internalLink = pickInternalLink(entry.slug, publishedSlugs);
   const blogPost = await pickRelevantBlogPost(entry.base_name);
 
   const blogLinkInstruction = blogPost
@@ -272,6 +286,8 @@ Requirements:
 - 500-750 words total
 - Do NOT include an <h1> tag (rendered separately)
 - Do NOT include a "join now" or "start chatting" call-to-action button or link — that is added separately
+- Never use /chatrooms (redirect-only alias). The chat hub path is /chatroom, and this prompt already forbids adding that CTA yourself
+- Only use the exact internal URLs listed below — do not invent slugs
 - Use 2-4 <h2> subheadings
 - Warm, inviting, conversational tone — written for a real visitor deciding whether to join
 - If this is a city/country/region page, naturally reference local flavor (local slang, popular topics, culture) without stereotyping — keep it genuine and light
@@ -381,6 +397,32 @@ async function buildRowPayload(
   };
 }
 
+function publishedSlugSet(geoPool: GeoPage[]): Set<string> {
+  return new Set(geoPool.map((p) => p.slug.replace(/^\/+/, "").toLowerCase()));
+}
+
+function applyStaticQualityGate(
+  entry: StaticPageEntry,
+  payload: Awaited<ReturnType<typeof buildRowPayload>>,
+  publishedSlugs: Set<string>,
+): { payload: Awaited<ReturnType<typeof buildRowPayload>>; error?: string } {
+  const prepared = preparePublishablePage({
+    slug: entry.slug,
+    title: payload.title,
+    h1: payload.h1,
+    meta_title: payload.meta_title,
+    meta_description: payload.meta_description,
+    canonical_url: payload.canonical_url,
+    content: payload.content,
+    tags: [],
+    publishedSlugs,
+  });
+  if (prepared.blocked) {
+    return { payload, error: `Quality gate: ${prepared.blockReason}` };
+  }
+  return { payload: { ...payload, content: prepared.content } };
+}
+
 type PagePublishOutcome = { success: boolean; error?: string };
 
 async function regeneratePage(entry: StaticPageEntry): Promise<PagePublishOutcome> {
@@ -392,15 +434,22 @@ async function regeneratePage(entry: StaticPageEntry): Promise<PagePublishOutcom
     const existing = geoPool.find((p) => p.slug === entry.slug);
     const source = geoSourceFromEntry(entry, cityId, directCountryId, existing?.id ?? "");
     const peerPages = pickPeerPages(source, geoPool, { max: 2 });
+    const publishedSlugs = publishedSlugSet(geoPool);
     let generated: Awaited<ReturnType<typeof generatePageContent>>;
     try {
-      generated = await generatePageContent(entry, peerPages);
+      generated = await generatePageContent(entry, peerPages, publishedSlugs);
     } catch (err) {
       const error = failureMessage(err);
       console.error(`❌ Content generation failed for "${entry.slug}":`, error);
       return { success: false, error };
     }
-    const payload = await buildRowPayload(entry, generated, cityId, directCountryId);
+    const ungated = await buildRowPayload(entry, generated, cityId, directCountryId);
+    const gated = applyStaticQualityGate(entry, ungated, publishedSlugs);
+    if (gated.error) {
+      console.error(`❌ ${gated.error} — skipping "${entry.slug}"`);
+      return { success: false, error: gated.error };
+    }
+    const payload = gated.payload;
 
     const { error } = await db().from("custom_pages").update(payload).eq("slug", entry.slug);
     if (error) {
@@ -428,15 +477,22 @@ async function publishNewPage(entry: StaticPageEntry): Promise<PagePublishOutcom
     const geoPool = await loadPublishedGeoPages();
     const source = geoSourceFromEntry(entry, cityId, directCountryId);
     const peerPages = pickPeerPages(source, geoPool, { max: 2 });
+    const publishedSlugs = publishedSlugSet(geoPool);
     let generated: Awaited<ReturnType<typeof generatePageContent>>;
     try {
-      generated = await generatePageContent(entry, peerPages);
+      generated = await generatePageContent(entry, peerPages, publishedSlugs);
     } catch (err) {
       const error = failureMessage(err);
       console.error(`❌ Content generation failed for "${entry.slug}":`, error);
       return { success: false, error };
     }
-    const payload = await buildRowPayload(entry, generated, cityId, directCountryId);
+    const ungated = await buildRowPayload(entry, generated, cityId, directCountryId);
+    const gated = applyStaticQualityGate(entry, ungated, publishedSlugs);
+    if (gated.error) {
+      console.error(`❌ ${gated.error} — skipping "${entry.slug}"`);
+      return { success: false, error: gated.error };
+    }
+    const payload = gated.payload;
 
     const { data: inserted, error } = await db()
       .from("custom_pages")
