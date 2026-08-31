@@ -1,4 +1,7 @@
 {
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
   "crons": [
     { "path": "/api/run-blog-publish", "schedule": "0 6 * * *" },
     { "path": "/api/run-static-publish", "schedule": "0 7 * * *" }
