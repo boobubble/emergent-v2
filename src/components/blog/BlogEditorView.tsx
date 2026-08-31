@@ -18,6 +18,7 @@ import {
   Redo2,
   SlidersHorizontal,
   Undo2,
+  CodeXml,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ import {
   MAX_BLOG_TAGS,
 } from "@/lib/blog-taxonomy";
 import { normalizeBlogImageAlign, type BlogImageAlign } from "@/lib/blog-image";
+import { applyHtmlSource } from "@/lib/tiptap-html-source";
 import { toast } from "sonner";
 import "@/components/blog/blog-ui.css";
 
@@ -94,7 +96,32 @@ export function BlogEditorView(props: BlogEditorViewProps) {
   const [imageOpen, setImageOpen] = useState(false);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const [optimizing, setOptimizing] = useState(false);
+  const [sourceMode, setSourceMode] = useState(false);
+  const [sourceHtml, setSourceHtml] = useState("");
+  const [sourceError, setSourceError] = useState<string | null>(null);
   useEditorTick(props.editor);
+
+  function leaveSourceMode(): boolean {
+    const result = applyHtmlSource(props.editor, sourceHtml);
+    if (!result.ok) {
+      setSourceError(result.error);
+      return false;
+    }
+    setSourceError(null);
+    setSourceMode(false);
+    return true;
+  }
+
+  function toggleSourceMode() {
+    if (sourceMode) {
+      leaveSourceMode();
+      return;
+    }
+    if (!props.editor) return;
+    setSourceError(null);
+    setSourceHtml(props.editor.getHTML());
+    setSourceMode(true);
+  }
 
   useEffect(() => {
     if (!props.highlightImageSeo) return;
@@ -206,7 +233,10 @@ export function BlogEditorView(props: BlogEditorViewProps) {
                 </div>
               </SheetContent>
             </Sheet>
-            <Button type="button" onClick={props.onSubmit} disabled={props.submitting} size="sm">
+            <Button type="button" onClick={() => {
+              if (sourceMode && !leaveSourceMode()) return;
+              props.onSubmit();
+            }} disabled={props.submitting} size="sm">
               {props.submitting ? "Saving…" : isEdit ? (published ? "Update" : "Save") : "Submit for Review"}
             </Button>
           </div>
@@ -214,7 +244,7 @@ export function BlogEditorView(props: BlogEditorViewProps) {
       </header>
 
       <div className="mx-auto grid max-w-[1180px] lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <main className="min-w-0 overflow-x-hidden px-4 py-8 sm:px-8 lg:px-10">
+        <main className="min-w-0 overflow-x-clip px-4 py-8 sm:px-8 lg:px-10">
           <div className="mx-auto w-full max-w-[820px]">
             <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground" htmlFor="blog-title">
               Article Title (H1)
@@ -230,16 +260,40 @@ export function BlogEditorView(props: BlogEditorViewProps) {
             <p className="mb-5 text-[11px] leading-relaxed text-muted-foreground">
               The article title is the H1. Use H2/H3 for sections.
             </p>
-            <EditorToolbar editor={props.editor} onAddImage={() => { setReplaceIndex(null); setImageOpen(true); }} />
-            <SelectedImageControls
+            <EditorToolbar
               editor={props.editor}
-              onReplace={() => setReplaceIndex(selectedImageIndex(props.editor))}
-              onRemove={() => removeEditorImage(props.editor, selectedImageIndex(props.editor))}
-              onOptimize={() => void optimizeAt(selectedImageIndex(props.editor))}
-              optimizing={optimizing}
+              onAddImage={() => { setReplaceIndex(null); setImageOpen(true); }}
+              sourceMode={sourceMode}
+              onToggleSource={toggleSourceMode}
             />
+            {sourceError && (
+              <p className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+                {sourceError}
+              </p>
+            )}
+            {!sourceMode && (
+              <SelectedImageControls
+                editor={props.editor}
+                onReplace={() => setReplaceIndex(selectedImageIndex(props.editor))}
+                onRemove={() => removeEditorImage(props.editor, selectedImageIndex(props.editor))}
+                onOptimize={() => void optimizeAt(selectedImageIndex(props.editor))}
+                optimizing={optimizing}
+              />
+            )}
             <div className="yz-blog-prose rounded-xl border border-border bg-card/40 px-4 py-5 sm:px-6 sm:py-6">
-              {props.editor ? (
+              {sourceMode ? (
+                <textarea
+                  value={sourceHtml}
+                  onChange={(e) => {
+                    setSourceHtml(e.target.value);
+                    setSourceError(null);
+                  }}
+                  rows={18}
+                  spellCheck={false}
+                  aria-label="HTML source"
+                  className="min-h-[22rem] w-full resize-y border-0 bg-transparent p-0 font-mono text-xs leading-relaxed text-foreground outline-none focus-visible:ring-0"
+                />
+              ) : props.editor ? (
                 <EditorContent editor={props.editor} />
               ) : (
                 <p className="text-sm text-muted-foreground">Loading editor…</p>
@@ -442,7 +496,17 @@ function EditorSidebar({
   );
 }
 
-function EditorToolbar({ editor, onAddImage }: { editor: Editor | null; onAddImage: () => void }) {
+function EditorToolbar({
+  editor,
+  onAddImage,
+  sourceMode,
+  onToggleSource,
+}: {
+  editor: Editor | null;
+  onAddImage: () => void;
+  sourceMode: boolean;
+  onToggleSource: () => void;
+}) {
   if (!editor) return null;
 
   const setLink = () => {
@@ -451,11 +515,12 @@ function EditorToolbar({ editor, onAddImage }: { editor: Editor | null; onAddIma
   };
 
   return (
-    <div className="sticky top-14 z-20 mb-3 -mx-1 overflow-x-auto rounded-xl border border-border bg-background/95 p-1 backdrop-blur [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="sticky top-14 z-20 mb-3 -mx-1 overflow-x-auto rounded-xl border border-border bg-background/95 p-1 shadow-[0_1px_3px_0_rgb(0_0_0_/_.08)] backdrop-blur [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex min-w-max items-center gap-0.5 px-0.5">
         <TB
           label="Paragraph"
           active={editor.isActive("paragraph")}
+          disabled={sourceMode}
           onClick={() => editor.chain().focus().setParagraph().run()}
         >
           <Pilcrow className="h-3.5 w-3.5" />
@@ -463,6 +528,7 @@ function EditorToolbar({ editor, onAddImage }: { editor: Editor | null; onAddIma
         <TB
           label="Heading 2"
           active={editor.isActive("heading", { level: 2 })}
+          disabled={sourceMode}
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         >
           <Heading2 className="h-3.5 w-3.5" />
@@ -470,6 +536,7 @@ function EditorToolbar({ editor, onAddImage }: { editor: Editor | null; onAddIma
         <TB
           label="Heading 3"
           active={editor.isActive("heading", { level: 3 })}
+          disabled={sourceMode}
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         >
           <Heading3 className="h-3.5 w-3.5" />
@@ -478,6 +545,7 @@ function EditorToolbar({ editor, onAddImage }: { editor: Editor | null; onAddIma
         <TB
           label="Bold"
           active={editor.isActive("bold")}
+          disabled={sourceMode}
           onClick={() => editor.chain().focus().toggleBold().run()}
         >
           <Bold className="h-3.5 w-3.5" />
@@ -485,6 +553,7 @@ function EditorToolbar({ editor, onAddImage }: { editor: Editor | null; onAddIma
         <TB
           label="Italic"
           active={editor.isActive("italic")}
+          disabled={sourceMode}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         >
           <Italic className="h-3.5 w-3.5" />
@@ -493,6 +562,7 @@ function EditorToolbar({ editor, onAddImage }: { editor: Editor | null; onAddIma
         <TB
           label="Bullet list"
           active={editor.isActive("bulletList")}
+          disabled={sourceMode}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         >
           <List className="h-3.5 w-3.5" />
@@ -500,6 +570,7 @@ function EditorToolbar({ editor, onAddImage }: { editor: Editor | null; onAddIma
         <TB
           label="Numbered list"
           active={editor.isActive("orderedList")}
+          disabled={sourceMode}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
           <ListOrdered className="h-3.5 w-3.5" />
@@ -507,23 +578,27 @@ function EditorToolbar({ editor, onAddImage }: { editor: Editor | null; onAddIma
         <TB
           label="Quote"
           active={editor.isActive("blockquote")}
+          disabled={sourceMode}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
         >
           <Quote className="h-3.5 w-3.5" />
         </TB>
         <span className="yz-blog-toolbar-sep" />
-        <TB label="Link" active={editor.isActive("link")} onClick={setLink}>
+        <TB label="Link" active={editor.isActive("link")} disabled={sourceMode} onClick={setLink}>
           <LinkIcon className="h-3.5 w-3.5" />
         </TB>
-        <TB label="Add Image" onClick={onAddImage}>
+        <TB label="Add Image" disabled={sourceMode} onClick={onAddImage}>
           <ImagePlus className="h-3.5 w-3.5" />
         </TB>
         <span className="yz-blog-toolbar-sep" />
-        <TB label="Undo" onClick={() => editor.chain().focus().undo().run()}>
+        <TB label="Undo" disabled={sourceMode} onClick={() => editor.chain().focus().undo().run()}>
           <Undo2 className="h-3.5 w-3.5" />
         </TB>
-        <TB label="Redo" onClick={() => editor.chain().focus().redo().run()}>
+        <TB label="Redo" disabled={sourceMode} onClick={() => editor.chain().focus().redo().run()}>
           <Redo2 className="h-3.5 w-3.5" />
+        </TB>
+        <TB label="HTML / code view" active={sourceMode} onClick={onToggleSource}>
+          <CodeXml className="h-3.5 w-3.5" />
         </TB>
       </div>
     </div>
@@ -606,11 +681,13 @@ function TB({
   onClick,
   label,
   active,
+  disabled,
 }: {
   children: ReactNode;
   onClick: () => void;
   label: string;
   active?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
@@ -621,6 +698,7 @@ function TB({
       aria-label={label}
       aria-pressed={active}
       title={label}
+      disabled={disabled}
     >
       {children}
     </button>

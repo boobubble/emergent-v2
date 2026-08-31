@@ -215,9 +215,9 @@
   box-shadow: 0 0 0 2px var(--ring);
 }
 
-.yz-blog-toolbar-btn[data-active="true"] {
-  background: color-mix(in oklab, var(--primary) 16%, transparent);
-  color: var(--foreground);
+.yz-blog-toolbar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .yz-blog-toolbar-sep {
