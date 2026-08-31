@@ -138,8 +138,10 @@ export function buildOrphanReport(input: {
 
   return {
     orphans: report.filter((r) => r.incoming === 0).sort((a, b) => a.outgoing - b.outgoing),
-    lowLinks: report.filter((r) => r.incoming > 0 && r.incoming < 3),
-    wellLinked: report.filter((r) => r.incoming >= 3),
+    lowLinks: report
+      .filter((r) => r.incoming > 0 && r.incoming < 3)
+      .sort((a, b) => a.incoming - b.incoming || a.title.localeCompare(b.title)),
+    wellLinked: report.filter((r) => r.incoming >= 3).sort((a, b) => a.title.localeCompare(b.title)),
     total: report.length,
   };
 }

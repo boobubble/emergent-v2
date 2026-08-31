@@ -18,6 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link2, RefreshCw, Plus, Trash2, Pencil, Sparkles, Search, AlertCircle, BarChart3, Layers, X } from "lucide-react";
+import { Collapsible } from "@/components/admin/Collapsible";
 import {
   listLinkTargets, upsertLinkTarget, deleteLinkTarget, syncLinkTargets,
   suggestLinks, applyLinksToPage, getOrphanReport, getLinkAnalytics,
@@ -305,9 +306,58 @@ function SuggestionsTab() {
 }
 
 // =================== ORPHANS ===================
+function IncomingTargetsTable({
+  rows,
+  empty,
+}: {
+  rows: Array<{ url: string; title: string; type: string; incoming: number }>;
+  empty: string;
+}) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Title</TableHead>
+          <TableHead>URL</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead className="text-center">Incoming</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+              {empty}
+            </TableCell>
+          </TableRow>
+        ) : (
+          rows.map((o) => (
+            <TableRow key={o.url}>
+              <TableCell>{o.title}</TableCell>
+              <TableCell><code className="text-xs">{o.url}</code></TableCell>
+              <TableCell><Badge variant="outline" className="text-[10px]">{o.type}</Badge></TableCell>
+              <TableCell className="text-center tabular-nums">{o.incoming}</TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  );
+}
+
 function OrphansTab() {
   const fetch = useServerFn(getOrphanReport);
   const { data, isLoading } = useQuery({ queryKey: ["ilt-orphans"], queryFn: () => fetch({}) });
+
+  const lowLinks = useMemo(
+    () =>
+      [...(data?.lowLinks ?? [])].sort(
+        (a: { incoming: number; title: string }, b: { incoming: number; title: string }) =>
+          a.incoming - b.incoming || a.title.localeCompare(b.title),
+      ),
+    [data?.lowLinks],
+  );
+  const wellLinked = data?.wellLinked ?? [];
 
   return (
     <div className="space-y-3">
@@ -316,27 +366,30 @@ function OrphansTab() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="Total targets" value={data?.total ?? 0} />
             <Stat label="Orphan pages (zero incoming)" value={data?.orphans.length ?? 0} />
-            <Stat label="Low-link pages (1-2 incoming)" value={data?.lowLinks.length ?? 0} />
-            <Stat label="Well-linked (3+ incoming)" value={data?.wellLinked?.length ?? 0} />
+            <Stat label="Low-link pages (1-2 incoming)" value={lowLinks.length} />
+            <Stat label="Well-linked (3+ incoming)" value={wellLinked.length} />
           </div>
           <Card>
             <CardHeader><CardTitle className="text-base">Orphan targets</CardTitle></CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>URL</TableHead><TableHead>Type</TableHead><TableHead className="text-center">Incoming</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {(data?.orphans ?? []).map((o: any) => (
-                    <TableRow key={o.url}>
-                      <TableCell>{o.title}</TableCell>
-                      <TableCell><code className="text-xs">{o.url}</code></TableCell>
-                      <TableCell><Badge variant="outline" className="text-[10px]">{o.type}</Badge></TableCell>
-                      <TableCell className="text-center">{o.incoming}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <IncomingTargetsTable rows={data?.orphans ?? []} empty="No orphan targets." />
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader><CardTitle className="text-base">Low-link targets (1-2 incoming)</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <IncomingTargetsTable rows={lowLinks} empty="No low-link targets." />
+            </CardContent>
+          </Card>
+          <Collapsible
+            title="Well-linked targets (3+ incoming)"
+            description="Largest set — collapsed by default. These already have enough inbound links."
+            badge={<Badge variant="outline" className="text-[10px]">{wellLinked.length}</Badge>}
+          >
+            <div className="-m-4">
+              <IncomingTargetsTable rows={wellLinked} empty="No well-linked targets yet." />
+            </div>
+          </Collapsible>
         </>
       )}
     </div>
