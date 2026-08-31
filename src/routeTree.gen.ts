@@ -63,6 +63,7 @@ import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
 import { Route as AdminAuthBackgroundRouteImport } from './routes/admin.auth-background'
 import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
+import { Route as AdminContentAutomationRouteImport } from './routes/admin.content-automation'
 import { Route as AdminAvatarSafetyRouteImport } from './routes/admin.avatar-safety'
 import { Route as AdminBackupRouteImport } from './routes/admin.backup'
 import { Route as AdminBoobubbleRouteImport } from './routes/admin.boobubble'
@@ -211,6 +212,10 @@ import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/co
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
+import { Route as ApiRunBlogPublishRouteImport } from './routes/api/run-blog-publish'
+import { Route as ApiRunStaticPublishRouteImport } from './routes/api/run-static-publish'
+import { Route as ApiAdminAutomationSettingsRouteImport } from './routes/api/admin/automation-settings'
+import { Route as ApiAdminTopicIdeasRouteImport } from './routes/api/admin/topic-ideas'
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
 import { Route as CommunitySlugCompetitionsRouteImport } from './routes/community.$slug.competitions'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
@@ -503,6 +508,11 @@ const AdminAuthBackgroundRoute = AdminAuthBackgroundRouteImport.update({
 const AdminAutomationRoute = AdminAutomationRouteImport.update({
   id: '/automation',
   path: '/automation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContentAutomationRoute = AdminContentAutomationRouteImport.update({
+  id: '/content-automation',
+  path: '/content-automation',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAvatarSafetyRoute = AdminAvatarSafetyRouteImport.update({
@@ -1254,6 +1264,26 @@ const ApiPublicLandingRoute = ApiPublicLandingRouteImport.update({
   path: '/api/public/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRunBlogPublishRoute = ApiRunBlogPublishRouteImport.update({
+  id: '/api/run-blog-publish',
+  path: '/api/run-blog-publish',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRunStaticPublishRoute = ApiRunStaticPublishRouteImport.update({
+  id: '/api/run-static-publish',
+  path: '/api/run-static-publish',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminAutomationSettingsRoute = ApiAdminAutomationSettingsRouteImport.update({
+  id: '/api/admin/automation-settings',
+  path: '/api/admin/automation-settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminTopicIdeasRoute = ApiAdminTopicIdeasRouteImport.update({
+  id: '/api/admin/topic-ideas',
+  path: '/api/admin/topic-ideas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CommunitySlugIndexRoute = CommunitySlugIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -1440,6 +1470,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/content-automation': typeof AdminContentAutomationRoute
   '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
@@ -1588,6 +1619,10 @@ export interface FileRoutesByFullPath {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
+  '/api/run-static-publish': typeof ApiRunStaticPublishRoute
+  '/api/admin/automation-settings': typeof ApiAdminAutomationSettingsRoute
+  '/api/admin/topic-ideas': typeof ApiAdminTopicIdeasRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
@@ -1664,6 +1699,7 @@ export interface FileRoutesByTo {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/content-automation': typeof AdminContentAutomationRoute
   '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
@@ -1810,6 +1846,10 @@ export interface FileRoutesByTo {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
+  '/api/run-static-publish': typeof ApiRunStaticPublishRoute
+  '/api/admin/automation-settings': typeof ApiAdminAutomationSettingsRoute
+  '/api/admin/topic-ideas': typeof ApiAdminTopicIdeasRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
@@ -1891,6 +1931,7 @@ export interface FileRoutesById {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
+  '/admin/content-automation': typeof AdminContentAutomationRoute
   '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
@@ -2039,6 +2080,10 @@ export interface FileRoutesById {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
+  '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
+  '/api/run-static-publish': typeof ApiRunStaticPublishRoute
+  '/api/admin/automation-settings': typeof ApiAdminAutomationSettingsRoute
+  '/api/admin/topic-ideas': typeof ApiAdminTopicIdeasRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
@@ -2120,6 +2165,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/content-automation'
     | '/admin/avatar-safety'
     | '/admin/backup'
     | '/admin/boobubble'
@@ -2268,6 +2314,10 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
+    | '/api/run-blog-publish'
+    | '/api/run-static-publish'
+    | '/api/admin/automation-settings'
+    | '/api/admin/topic-ideas'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
@@ -2344,6 +2394,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/content-automation'
     | '/admin/avatar-safety'
     | '/admin/backup'
     | '/admin/boobubble'
@@ -2490,6 +2541,10 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
+    | '/api/run-blog-publish'
+    | '/api/run-static-publish'
+    | '/api/admin/automation-settings'
+    | '/api/admin/topic-ideas'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
@@ -2570,6 +2625,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
+    | '/admin/content-automation'
     | '/admin/avatar-safety'
     | '/admin/backup'
     | '/admin/boobubble'
@@ -2718,6 +2774,10 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
+    | '/api/run-blog-publish'
+    | '/api/run-static-publish'
+    | '/api/admin/automation-settings'
+    | '/api/admin/topic-ideas'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
@@ -2823,6 +2883,10 @@ export interface RootRouteChildren {
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
   ApiPublicLandingRoute: typeof ApiPublicLandingRoute
+  ApiRunBlogPublishRoute: typeof ApiRunBlogPublishRoute
+  ApiRunStaticPublishRoute: typeof ApiRunStaticPublishRoute
+  ApiAdminAutomationSettingsRoute: typeof ApiAdminAutomationSettingsRoute
+  ApiAdminTopicIdeasRoute: typeof ApiAdminTopicIdeasRoute
   MehfilCategorySlugRoute: typeof MehfilCategorySlugRoute
   PoetryCategorySlugRoute: typeof PoetryCategorySlugRoute
   ApiPublicHooksFeedbotDispatchRoute: typeof ApiPublicHooksFeedbotDispatchRoute
@@ -3217,6 +3281,13 @@ declare module '@tanstack/react-router' {
       path: '/automation'
       fullPath: '/admin/automation'
       preLoaderRoute: typeof AdminAutomationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/content-automation': {
+      id: '/admin/content-automation'
+      path: '/content-automation'
+      fullPath: '/admin/content-automation'
+      preLoaderRoute: typeof AdminContentAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/avatar-safety': {
@@ -4255,6 +4326,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLandingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/run-blog-publish': {
+      id: '/api/run-blog-publish'
+      path: '/api/run-blog-publish'
+      fullPath: '/api/run-blog-publish'
+      preLoaderRoute: typeof ApiRunBlogPublishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/run-static-publish': {
+      id: '/api/run-static-publish'
+      path: '/api/run-static-publish'
+      fullPath: '/api/run-static-publish'
+      preLoaderRoute: typeof ApiRunStaticPublishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/automation-settings': {
+      id: '/api/admin/automation-settings'
+      path: '/api/admin/automation-settings'
+      fullPath: '/api/admin/automation-settings'
+      preLoaderRoute: typeof ApiAdminAutomationSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/topic-ideas': {
+      id: '/api/admin/topic-ideas'
+      path: '/api/admin/topic-ideas'
+      fullPath: '/api/admin/topic-ideas'
+      preLoaderRoute: typeof ApiAdminTopicIdeasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/community/$slug/': {
       id: '/community/$slug/'
       path: '/'
@@ -4518,6 +4617,7 @@ interface AdminRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminAuthBackgroundRoute: typeof AdminAuthBackgroundRoute
   AdminAutomationRoute: typeof AdminAutomationRoute
+  AdminContentAutomationRoute: typeof AdminContentAutomationRoute
   AdminAvatarSafetyRoute: typeof AdminAvatarSafetyRoute
   AdminBackupRoute: typeof AdminBackupRoute
   AdminBoobubbleRoute: typeof AdminBoobubbleRoute
@@ -4613,6 +4713,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminAuthBackgroundRoute: AdminAuthBackgroundRoute,
   AdminAutomationRoute: AdminAutomationRoute,
+  AdminContentAutomationRoute: AdminContentAutomationRoute,
   AdminAvatarSafetyRoute: AdminAvatarSafetyRoute,
   AdminBackupRoute: AdminBackupRoute,
   AdminBoobubbleRoute: AdminBoobubbleRoute,
@@ -4878,6 +4979,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
   ApiPublicLandingRoute: ApiPublicLandingRoute,
+  ApiRunBlogPublishRoute: ApiRunBlogPublishRoute,
+  ApiRunStaticPublishRoute: ApiRunStaticPublishRoute,
+  ApiAdminAutomationSettingsRoute: ApiAdminAutomationSettingsRoute,
+  ApiAdminTopicIdeasRoute: ApiAdminTopicIdeasRoute,
   MehfilCategorySlugRoute: MehfilCategorySlugRoute,
   PoetryCategorySlugRoute: PoetryCategorySlugRoute,
   ApiPublicHooksFeedbotDispatchRoute: ApiPublicHooksFeedbotDispatchRoute,

@@ -142,6 +142,9 @@ export const MODULES = {
       "src/components/admin/RichTextEditor.tsx",
       "src/routes/admin.pages.all.tsx",
       "src/routes/pages-editor.$id.tsx",
+      "src/lib/content-automation/",
+      "src/routes/admin.content-automation.tsx",
+      "src/routes/api/run-static-publish.ts",
     ],
     tests: [
       "src/lib/public-cms-route.test.ts",
@@ -181,6 +184,12 @@ export const MODULES = {
       "src/lib/content-image-seo.test.ts",
       "src/lib/content-image-optimize.ts",
       "src/components/content-images/",
+      "src/lib/content-automation/",
+      "src/routes/admin.content-automation.tsx",
+      "src/routes/api/run-blog-publish.ts",
+      "src/routes/api/run-static-publish.ts",
+      "src/routes/api/admin/automation-settings.ts",
+      "src/routes/api/admin/topic-ideas.ts",
     ],
     tests: [
       "src/lib/blog.public.test.ts",
