@@ -4,6 +4,7 @@
  * canonical /chatroom, no unpublished internal slugs, no tag dumps.
  */
 import { isReservedSlug } from "@/lib/reserved-routes";
+import { extractInternalHrefs as extractOrphanInternalHrefs } from "@/lib/internal-linking-orphans";
 import {
   CMS_BROKEN_HREF_UNWRAP,
   detectHashtagDump,
@@ -18,10 +19,25 @@ export const CANONICAL_CHATROOM_PATH = "/chatroom";
 /** Live hub pages used when a requested peer/interest slug is not published yet. */
 export const SAFE_FALLBACK_SLUGS = ["international-chat-room", "friendship-chat-room"] as const;
 
+export const STATIC_INTERNAL_LINK_MIN = 8;
+export const STATIC_INTERNAL_LINK_MAX = 10;
+export const BLOG_INTERNAL_LINK_MIN = 4;
+export const BLOG_INTERNAL_LINK_MAX = 5;
+
+/** Reserved feature URLs that are always safe to link (not custom_pages slugs). */
+export const PIPELINE_FEATURE_LINKS: Array<{ href: string; label: string }> = [
+  { href: "https://yaarzo.com/signup", label: "create your free account" },
+  { href: "https://yaarzo.com/feed", label: "community feed" },
+  { href: "https://yaarzo.com/find-friends", label: "find friends" },
+  { href: "https://yaarzo.com/poetry", label: "poetry hub" },
+];
+
 export const PIPELINE_BLOCKING_CODES = [
   "broken_internal_link",
   "chatrooms_alias",
   "hashtag_dump",
+  "too_few_internal_links",
+  "too_many_internal_links",
 ] as const;
 
 export type PipelineBlockingCode = (typeof PIPELINE_BLOCKING_CODES)[number];
@@ -77,17 +93,126 @@ export function pickPublishedInternalHref(
   publishedSlugs: Iterable<string>,
   excludeSlug?: string,
 ): string {
-  const published = publishedSet(publishedSlugs);
-  const ok = filterPublishedHrefs(candidates, published, excludeSlug);
-  if (ok.length > 0) return ok[Math.floor(Math.random() * ok.length)];
-  for (const slug of SAFE_FALLBACK_SLUGS) {
-    if (excludeSlug && slug === excludeSlug.replace(/^\/+/, "").toLowerCase()) continue;
-    if (published.size === 0 || published.has(slug)) return hrefForSlug(slug);
-  }
-  return hrefForSlug(SAFE_FALLBACK_SLUGS[0]);
+  const picked = pickPublishedInternalHrefs(candidates, publishedSlugs, { excludeSlug, count: 1 });
+  return picked[0] ?? hrefForSlug(SAFE_FALLBACK_SLUGS[0]);
 }
 
-/** Rewrite /chatrooms aliases and retarget unpublished/unwrap hrefs to a published fallback. */
+export function pickPublishedInternalHrefs(
+  candidates: string[],
+  publishedSlugs: Iterable<string>,
+  opts?: { excludeSlug?: string; count?: number },
+): string[] {
+  const count = Math.max(0, opts?.count ?? 1);
+  const ok = filterPublishedHrefs(candidates, publishedSlugs, opts?.excludeSlug);
+  const shuffled = [...ok].sort(() => Math.random() - 0.5);
+  const unique: string[] = [];
+  const seen = new Set<string>();
+  for (const url of shuffled) {
+    const slug = slugFromInternalHref(url);
+    if (!slug || seen.has(slug)) continue;
+    seen.add(slug);
+    unique.push(url);
+    if (unique.length >= count) return unique;
+  }
+  for (const slug of SAFE_FALLBACK_SLUGS) {
+    if (unique.length >= count) break;
+    if (opts?.excludeSlug && slug === opts.excludeSlug.replace(/^\/+/, "").toLowerCase()) continue;
+    if (seen.has(slug)) continue;
+    const published = publishedSet(publishedSlugs);
+    if (published.size > 0 && !published.has(slug)) continue;
+    seen.add(slug);
+    unique.push(hrefForSlug(slug));
+  }
+  return unique;
+}
+
+export function countInternalLinks(html: string): number {
+  return extractOrphanInternalHrefs(html).length;
+}
+
+export function uniqueAnchorTexts(html: string): string[] {
+  const texts: string[] = [];
+  const re = /<a\b[^>]*>([\s\S]*?)<\/a>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html || ""))) {
+    const text = m[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+    if (text) texts.push(text);
+  }
+  return texts;
+}
+
+export function hasRepeatedAnchorText(html: string): boolean {
+  const texts = uniqueAnchorTexts(html);
+  return new Set(texts).size !== texts.length;
+}
+
+export type PlannedInternalLink = { href: string; label: string };
+
+/** Append unused planned links until `min`, never exceeding `max`. */
+export function padInternalLinks(
+  html: string,
+  extras: PlannedInternalLink[],
+  min: number,
+  max: number,
+): string {
+  let out = html || "";
+  let n = countInternalLinks(out);
+  if (n >= min) return out;
+  for (const extra of extras) {
+    if (n >= min || n >= max) break;
+    if (!extra.href || htmlHasHref(out, extra.href)) continue;
+    const label = extra.label.trim() || "related page";
+    out += `<p>You can also explore the <a href="${extra.href}">${label}</a>.</p>`;
+    n = countInternalLinks(out);
+  }
+  return out;
+}
+
+export function internalLinkCountIssue(html: string, min: number, max: number): string | null {
+  const n = countInternalLinks(html);
+  if (n < min) return `too_few_internal_links: ${n} (need ${min}–${max})`;
+  if (n > max) return `too_many_internal_links: ${n} (need ${min}–${max})`;
+  return null;
+}
+
+/** Canonicalize /chatrooms → /chatroom and /p/{slug} → /{slug}. */
+export function canonicalizePipelineHref(href: string): string {
+  let next = String(href || "").trim();
+  next = next.replace(/\/chatrooms(?=\/|$|\?|#)/gi, CANONICAL_CHATROOM_PATH);
+  next = next.replace(/^(https?:\/\/(?:www\.)?yaarzo\.com)\/p\/([^/?#]+)/i, "$1/$2");
+  next = next.replace(/^\/p\/([^/?#]+)/i, "/$1");
+  return next;
+}
+
+export function htmlHasHref(html: string, href: string): boolean {
+  const raw = String(href || "").trim();
+  if (!raw) return false;
+  if (html.includes(raw)) return true;
+  const path = normalizeInternalPath(raw);
+  if (path && html.includes(path)) return true;
+  const slug = path?.replace(/^\//, "") || "";
+  return Boolean(slug && html.includes(`yaarzo.com/${slug}`));
+}
+
+export function htmlHasPeerGeoLink(html: string, peerHrefs: string[]): boolean {
+  return peerHrefs.some((href) => htmlHasHref(html, href));
+}
+
+export function ensurePeerGeoLinks(
+  html: string,
+  peers: Array<{ href: string; label: string }>,
+): string {
+  let out = html || "";
+  for (const peer of peers) {
+    if (!peer.href) continue;
+    if (htmlHasHref(out, peer.href)) continue;
+    const label = peer.label.trim() || "related room";
+    out += `<p>Nearby, you can also jump into the <a href="${peer.href}">${label}</a> room.</p>`;
+  }
+  return out;
+}
+
+/** Rewrite /chatrooms and /p/{slug}; retarget unpublished/unwrap hrefs to a published fallback. */
 export function rewritePipelineHtml(
   html: string,
   publishedSlugs: Iterable<string>,
@@ -100,7 +225,7 @@ export function rewritePipelineHtml(
     (full, pre: string, q: string, href: string, post: string, inner: string) => {
       const raw = String(href).trim();
       if (!raw.startsWith("/") && !/^https?:\/\/(www\.)?yaarzo\.com/i.test(raw)) return full;
-      let next = raw.replace(/\/chatrooms(?=\/|$|\?|#)/gi, CANONICAL_CHATROOM_PATH);
+      let next = canonicalizePipelineHref(raw);
       if (isAllowedPipelineHref(next, published)) {
         if (next === raw) return full;
         return `<a${pre}href=${q}${next}${q}${post}>${inner}</a>`;
@@ -140,10 +265,13 @@ export type PreparePublishResult = {
   warnings: CmsQualityWarning[];
 };
 
-/** Auto-correct the 3 pipeline quality rules, then block if they still fail. */
-export function preparePublishablePage(
-  input: CmsQualityInput & { content: string },
-): PreparePublishResult {
+export type PreparePublishOptions = CmsQualityInput & {
+  content: string;
+  linkCount?: { min: number; max: number };
+};
+
+/** Auto-correct quality rules, then block if they still fail (including link-count range). */
+export function preparePublishablePage(input: PreparePublishOptions): PreparePublishResult {
   const published = publishedSet(input.publishedSlugs);
   const fallback = pickPublishedInternalHref([], published);
   const content = rewritePipelineHtml(input.content ?? "", published, fallback);
@@ -157,6 +285,12 @@ export function preparePublishablePage(
   const blocking = quality.warnings.filter((w) =>
     (PIPELINE_BLOCKING_CODES as readonly string[]).includes(w.code),
   );
+  const range = input.linkCount;
+  const countIssue = range ? internalLinkCountIssue(content, range.min, range.max) : null;
+  if (countIssue) {
+    const code = countIssue.startsWith("too_few") ? "too_few_internal_links" : "too_many_internal_links";
+    blocking.push({ code, severity: "warning", message: countIssue });
+  }
   if (blocking.length) {
     const blockReason = blocking.map((w) => `${w.code}: ${w.message}`).join("; ");
     console.error(`[publish-quality] blocked ${input.slug}: ${blockReason}`);

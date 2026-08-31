@@ -11,6 +11,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { chatroomUrls } from "@/lib/content-automation/chatroom-urls";
 import { db, getAutomationSettings, pausedResponse } from "@/lib/content-automation/db";
+import { YAARZO_MASTER_SYSTEM_PROMPT } from "@/lib/content-automation/master-content-rules";
 import {
   PEER_GEO_LINK_SOURCE,
   canonicalPeerHref,
@@ -20,8 +21,15 @@ import {
   type GeoPage,
 } from "@/lib/content-automation/peer-geo-links";
 import {
-  pickPublishedInternalHref,
+  STATIC_INTERNAL_LINK_MAX,
+  STATIC_INTERNAL_LINK_MIN,
+  ensurePeerGeoLinks,
+  htmlHasHref,
+  htmlHasPeerGeoLink,
+  padInternalLinks,
+  pickPublishedInternalHrefs,
   preparePublishablePage,
+  type PlannedInternalLink,
 } from "@/lib/content-automation/publish-quality";
 
 export type StaticPageEntry = {
@@ -105,44 +113,6 @@ function buildCtaHtml() {
   ].join("");
 }
 
-/** Ensures required links exist — adds them in code if the AI forgot. */
-function ensureRequiredLinks(
-  html: string,
-  chatroomUrl: string,
-  blogPost: { url: string; title: string } | null,
-  peerPages: GeoPage[] = [],
-) {
-  let finalHtml = html;
-
-  if (!finalHtml.includes("/signup")) {
-    const signupPhrases = ["sign up on Yaarzo", "join for free", "create your free account", "get started here"];
-    const phrase = signupPhrases[Math.floor(Math.random() * signupPhrases.length)];
-    finalHtml += `<p>Ready to get started? <a href="https://yaarzo.com/signup">${phrase}</a>.</p>`;
-  }
-
-  if (!finalHtml.includes(chatroomUrl)) {
-    const fallbackPhrases = ["chat rooms like this one", "a similar chat space", "this related room"];
-    const phrase = fallbackPhrases[Math.floor(Math.random() * fallbackPhrases.length)];
-    finalHtml += `<p>You might also like <a href="${chatroomUrl}">${phrase}</a>.</p>`;
-  }
-
-  if (blogPost && !finalHtml.includes(blogPost.url)) {
-    const blogPhrases = ["this related read", "a related article", "more on this topic", "further reading here"];
-    const phrase = blogPhrases[Math.floor(Math.random() * blogPhrases.length)];
-    finalHtml += `<p>Curious to dig deeper? Check out <a href="${blogPost.url}">${phrase}</a> for more.</p>`;
-  }
-
-  for (const peer of peerPages) {
-    const href = canonicalPeerHref(peer.slug);
-    if (!href) continue;
-    if (finalHtml.includes(href) || finalHtml.includes(`yaarzo.com/${peer.slug}`)) continue;
-    const label = peerAnchorLabel(peer);
-    finalHtml += `<p>Nearby, you can also jump into the <a href="${href}">${label}</a> room.</p>`;
-  }
-
-  return finalHtml;
-}
-
 async function getExistingSlugs() {
   const { data } = await db().from("custom_pages").select("slug");
   return new Set((data ?? []).map((p: { slug: string }) => p.slug));
@@ -169,12 +139,19 @@ async function findCountryId(name: string | null) {
   return data?.id ?? null;
 }
 
-function pickInternalLink(excludeSlug: string, publishedSlugs: Set<string>) {
-  return pickPublishedInternalHref(
-    [...chatroomUrls.interest, ...chatroomUrls.type],
-    publishedSlugs,
-    excludeSlug,
-  );
+function labelFromHref(href: string): string {
+  const slug = href.replace(/^https?:\/\/(www\.)?yaarzo\.com/i, "").replace(/^\//, "").split("/")[0] || "";
+  return slug.replace(/-chat-room$/i, "").replace(/-/g, " ") || "related page";
+}
+
+function ensurePlannedLinks(html: string, planned: PlannedInternalLink[]): string {
+  let out = html;
+  for (const item of planned) {
+    if (!item.href) continue;
+    if (htmlHasHref(out, item.href)) continue;
+    out += `<p>You might also like <a href="${item.href}">${item.label}</a>.</p>`;
+  }
+  return out;
 }
 
 async function loadPublishedGeoPages(): Promise<GeoPage[]> {
@@ -253,29 +230,37 @@ async function generatePageContent(
     ? `This page is for people who want to chat in "${entry.base_name}".`
     : `This page is themed around "${entry.base_name}".`;
 
-  const internalLink = pickInternalLink(entry.slug, publishedSlugs);
+  const extraRooms = pickPublishedInternalHrefs(
+    [...chatroomUrls.interest, ...chatroomUrls.type],
+    publishedSlugs,
+    { excludeSlug: entry.slug, count: 3 },
+  );
   const blogPost = await pickRelevantBlogPost(entry.base_name);
 
-  const blogLinkInstruction = blogPost
-    ? `3. Exactly one mention of the blog article titled "${blogPost.title}" — this MUST be a real HTML hyperlink: <a href="${blogPost.url}">short natural anchor text about the topic</a>. Do NOT mention the article as plain text without the <a> tag. Keep the anchor text itself to 2-5 words.`
-    : "";
+  const planned: PlannedInternalLink[] = [];
+  const seen = new Set<string>();
+  const addPlanned = (href: string, label: string) => {
+    const key = href.replace(/^https?:\/\/(www\.)?yaarzo\.com/i, "").replace(/\/+$/, "").toLowerCase() || href;
+    if (!href || seen.has(key)) return;
+    seen.add(key);
+    planned.push({ href, label });
+  };
+  addPlanned("https://yaarzo.com/signup", "create your free account");
+  for (const href of extraRooms) addPlanned(href, labelFromHref(href));
+  if (blogPost) addPlanned(blogPost.url, "this related read");
+  for (const peer of peerPages) addPlanned(canonicalPeerHref(peer.slug), peerAnchorLabel(peer));
+  addPlanned("https://yaarzo.com/feed", "community feed");
+  addPlanned("https://yaarzo.com/find-friends", "find friends");
 
-  const peerStart = blogPost ? 4 : 3;
-  const peerLinkInstruction = peerPages.length
-    ? peerPages
-        .map((p, i) => {
-          const href = canonicalPeerHref(p.slug);
-          return `${peerStart + i}. One link to ${href} (${peerAnchorLabel(p)}) — short 2-4 word natural anchor. Use the path exactly as written (canonical /{slug}, not /p/{slug}).`;
-        })
-        .join("\n")
-    : "";
-
-  const requiredCount = (blogPost ? 3 : 2) + peerPages.length;
+  const linkLines = planned
+    .map((item, i) => `${i + 1}. <a href="${item.href}"> — short 2-4 word natural anchor about "${item.label}". Never dump a full SEO title.`)
+    .join("\n");
 
   const anthropic = getAnthropic();
   const message = await anthropic.messages.create({
     model: "claude-sonnet-5",
     max_tokens: 2000,
+    system: YAARZO_MASTER_SYSTEM_PROMPT,
     messages: [{
       role: "user",
       content: `Write SEO landing page content for Yaarzo, a free online chatroom platform, for the page: "${entry.base_name} chat room".
@@ -285,24 +270,23 @@ ${contextLine}
 Requirements:
 - 500-750 words total
 - Do NOT include an <h1> tag (rendered separately)
-- Do NOT include a "join now" or "start chatting" call-to-action button or link — that is added separately
-- Never use /chatrooms (redirect-only alias). The chat hub path is /chatroom, and this prompt already forbids adding that CTA yourself
-- Only use the exact internal URLs listed below — do not invent slugs
+- Do NOT include a "join now" or "start chatting" call-to-action button or link — that is added separately as /chatroom
+- HARD: Never output "/chatrooms" — the chat hub is "/chatroom". Never output "/p/{slug}" — use "/{slug}" or https://yaarzo.com/{slug}
+- HARD: Only use the exact internal URLs listed below — do not invent slugs
+- HARD: If peer-geography URLs are listed below, include at least one of them (country hub or sibling city/country), not only generic interest/type rooms
+- HARD: Place 7-9 internal links in the body from the list (the automatic /chatroom CTA brings the published page to 8-10). Every link must be relevant to the surrounding sentence. Varied anchors — never repeat the same link text.
 - Use 2-4 <h2> subheadings
 - Warm, inviting, conversational tone — written for a real visitor deciding whether to join
-- If this is a city/country/region page, naturally reference local flavor (local slang, popular topics, culture) without stereotyping — keep it genuine and light
+- If this is a city/country/region page, naturally reference local flavor (local slang, popular topics, culture) without stereotyping — keep it genuine and light. Include at least 2-3 unique local elements (opening hook, a real local detail, unique FAQ angles)
 - Vary sentence rhythm — mix short and long sentences like a real writer would
 - Output clean HTML only (h2, p, ul/li, strong, a, and the one HTML comment described below) — no <html>/<body>/<h1>
 - Do NOT include any view counters, placeholder text, or meta-commentary in the visible content itself
-- Right after the intro paragraph, insert exactly this on its own line: <!-- IMAGE: a real 5-10 word description of an image that would fit here --> (a human will manually replace this with a real image later — do not embed an actual <img> tag)
+- Right after the intro paragraph, insert exactly this on its own line: <!-- IMAGE: a real 5-10 word description of an image that would fit here --> (a human will manually replace this with a real image later — do not embed an actual <img> tag). If you emit <img>, alt text must be descriptive.
 
-Include EXACTLY ${requiredCount} internal links, each a real <a href="..."> tag, naturally placed in different sections (not clustered together):
-1. One link to ${internalLink} — anchor text must be SHORT (2-4 words) and read like a natural phrase mid-sentence — never the full page title. Good: "chat rooms in Lahore", "our gaming community". Bad: dumping the page's SEO title as the link text.
-2. One link to https://yaarzo.com/signup — vary the anchor text each time, never just "Yaarzo" (e.g. "sign up on Yaarzo", "join for free", "create your account")
-${blogLinkInstruction}
-${peerLinkInstruction}
+Allowed internal links (use 7-9 of these, each at most once, naturally placed in different sections):
+${linkLines}
 
-Both/all links above are REQUIRED — do not skip any of them. Do not add any other links. Do not reuse the same anchor text pattern across sentences.
+Do not add any other links. Do not reuse the same anchor text pattern across sentences.
 
 After the content, on a new line, output exactly:
 ---META---
@@ -320,22 +304,22 @@ FAQ3_A: <2-3 sentence answer>`,
   const [contentHtml, metaBlock] = fullText.split("---META---");
   const get = (key: string) => metaBlock?.match(new RegExp(`${key}:\\s*(.+)`, "i"))?.[1]?.trim() ?? "";
 
-  const linkedHtml = ensureRequiredLinks(contentHtml.trim(), internalLink, blogPost, peerPages);
+  let linkedHtml = ensurePlannedLinks(contentHtml.trim(), planned);
+  linkedHtml = padInternalLinks(linkedHtml, planned, STATIC_INTERNAL_LINK_MIN - 1, STATIC_INTERNAL_LINK_MAX - 1);
+  if (!htmlHasHref(linkedHtml, "/chatroom") && !htmlHasHref(linkedHtml, "https://yaarzo.com/chatroom")) {
+    linkedHtml += buildCtaHtml();
+  }
+  linkedHtml = padInternalLinks(linkedHtml, planned, STATIC_INTERNAL_LINK_MIN, STATIC_INTERNAL_LINK_MAX);
 
   return {
-    contentHtml: linkedHtml + buildCtaHtml(),
+    contentHtml: linkedHtml,
     aiKeywords: get("KEYWORDS"),
     faq: [
       { question: get("FAQ1_Q"), answer: get("FAQ1_A") },
       { question: get("FAQ2_Q"), answer: get("FAQ2_A") },
       { question: get("FAQ3_Q"), answer: get("FAQ3_A") },
     ].filter((f) => f.question && f.answer),
-    linksUsed: [
-      internalLink,
-      "https://yaarzo.com/signup",
-      blogPost?.url,
-      ...peerPages.map((p) => canonicalPeerHref(p.slug)),
-    ].filter(Boolean),
+    linksUsed: planned.map((p) => p.href),
   };
 }
 
@@ -405,7 +389,13 @@ function applyStaticQualityGate(
   entry: StaticPageEntry,
   payload: Awaited<ReturnType<typeof buildRowPayload>>,
   publishedSlugs: Set<string>,
+  peerPages: GeoPage[] = [],
 ): { payload: Awaited<ReturnType<typeof buildRowPayload>>; error?: string } {
+  const peers = peerPages
+    .map((p) => ({ href: canonicalPeerHref(p.slug), label: peerAnchorLabel(p) }))
+    .filter((p) => p.href);
+  const withPeers = ensurePeerGeoLinks(payload.content, peers);
+  const padded = padInternalLinks(withPeers, peers, STATIC_INTERNAL_LINK_MIN, STATIC_INTERNAL_LINK_MAX);
   const prepared = preparePublishablePage({
     slug: entry.slug,
     title: payload.title,
@@ -413,12 +403,18 @@ function applyStaticQualityGate(
     meta_title: payload.meta_title,
     meta_description: payload.meta_description,
     canonical_url: payload.canonical_url,
-    content: payload.content,
+    content: padded,
     tags: [],
     publishedSlugs,
+    linkCount: { min: STATIC_INTERNAL_LINK_MIN, max: STATIC_INTERNAL_LINK_MAX },
   });
   if (prepared.blocked) {
     return { payload, error: `Quality gate: ${prepared.blockReason}` };
+  }
+  const isGeo = CITY_SECTIONS.includes(entry.section) || entry.section === "country";
+  if (isGeo && peers.length > 0 && !htmlHasPeerGeoLink(prepared.content, peers.map((p) => p.href))) {
+    const reason = `Quality gate: missing peer-geo link (${peers.map((p) => p.href).join(", ")})`;
+    return { payload, error: reason };
   }
   return { payload: { ...payload, content: prepared.content } };
 }
@@ -444,7 +440,7 @@ async function regeneratePage(entry: StaticPageEntry): Promise<PagePublishOutcom
       return { success: false, error };
     }
     const ungated = await buildRowPayload(entry, generated, cityId, directCountryId);
-    const gated = applyStaticQualityGate(entry, ungated, publishedSlugs);
+    const gated = applyStaticQualityGate(entry, ungated, publishedSlugs, peerPages);
     if (gated.error) {
       console.error(`❌ ${gated.error} — skipping "${entry.slug}"`);
       return { success: false, error: gated.error };
@@ -487,7 +483,7 @@ async function publishNewPage(entry: StaticPageEntry): Promise<PagePublishOutcom
       return { success: false, error };
     }
     const ungated = await buildRowPayload(entry, generated, cityId, directCountryId);
-    const gated = applyStaticQualityGate(entry, ungated, publishedSlugs);
+    const gated = applyStaticQualityGate(entry, ungated, publishedSlugs, peerPages);
     if (gated.error) {
       console.error(`❌ ${gated.error} — skipping "${entry.slug}"`);
       return { success: false, error: gated.error };

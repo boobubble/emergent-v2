@@ -10,10 +10,17 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { chatroomUrls } from "@/lib/content-automation/chatroom-urls";
 import { db, getAutomationSettings, pausedResponse } from "@/lib/content-automation/db";
+import { YAARZO_MASTER_SYSTEM_PROMPT } from "@/lib/content-automation/master-content-rules";
 import {
+  BLOG_INTERNAL_LINK_MAX,
+  BLOG_INTERNAL_LINK_MIN,
   filterPublishedHrefs,
+  htmlHasHref,
+  padInternalLinks,
   pickPublishedInternalHref,
+  pickPublishedInternalHrefs,
   preparePublishablePage,
+  type PlannedInternalLink,
 } from "@/lib/content-automation/publish-quality";
 
 export type BlogTopic = {
@@ -56,6 +63,10 @@ async function generateUniqueSlug(title: string) {
   }
 }
 
+function slugFromChatroom(url: string): string {
+  return url.replace(/^https?:\/\/(www\.)?yaarzo\.com/i, "").replace(/^\//, "").split("/")[0] || "";
+}
+
 function pickChatroomUrl(title: string, publishedSlugs: Set<string>) {
   const lower = title.toLowerCase();
   const mapped: string[] = [];
@@ -75,30 +86,31 @@ async function loadPublishedPageSlugs(): Promise<Set<string>> {
   return new Set((data ?? []).map((p: { slug: string }) => String(p.slug).replace(/^\/+/, "").toLowerCase()));
 }
 
-/** Ensures both required links exist in the HTML — adds them in code if the AI forgot. */
-function ensureRequiredLinks(html: string, chatroomUrl: string) {
-  let finalHtml = html;
-
-  if (!finalHtml.includes("/signup")) {
-    const signupPhrases = ["sign up on Yaarzo", "join for free", "create your free account", "get started here"];
-    const phrase = signupPhrases[Math.floor(Math.random() * signupPhrases.length)];
-    finalHtml += `<p>Ready to get started? <a href="https://yaarzo.com/signup">${phrase}</a>.</p>`;
-  }
-
-  if (!finalHtml.includes(chatroomUrl)) {
-    const fallbackPhrases = ["give it a try here", "check it out", "take a look", "see what it's like"];
-    const phrase = fallbackPhrases[Math.floor(Math.random() * fallbackPhrases.length)];
-    finalHtml += `<p>Want to jump straight in? <a href="${chatroomUrl}">${phrase}</a>.</p>`;
-  }
-
-  return finalHtml;
+function labelFromHref(href: string): string {
+  const slug = href.replace(/^https?:\/\/(www\.)?yaarzo\.com/i, "").replace(/^\//, "").split("/")[0] || "";
+  return slug.replace(/-chat-room$/i, "").replace(/-/g, " ") || "related page";
 }
 
-async function generateContent(title: string, chatroomUrl: string) {
+/** Ensures planned links exist — adds them in code if the AI forgot. */
+function ensurePlannedLinks(html: string, planned: PlannedInternalLink[]): string {
+  let out = html;
+  for (const item of planned) {
+    if (!item.href) continue;
+    if (htmlHasHref(out, item.href)) continue;
+    out += `<p>Want to jump straight in? <a href="${item.href}">${item.label}</a>.</p>`;
+  }
+  return out;
+}
+
+async function generateContent(title: string, planned: PlannedInternalLink[]) {
+  const linkLines = planned
+    .map((item, i) => `${i + 1}. <a href="${item.href}"> — short 2-5 word natural anchor about "${item.label}". Never dump a full page title.`)
+    .join("\n");
   const anthropic = getAnthropic();
   const message = await anthropic.messages.create({
     model: "claude-sonnet-5",
     max_tokens: 2500,
+    system: YAARZO_MASTER_SYSTEM_PROMPT,
     messages: [{
       role: "user",
       content: `Write an SEO-optimized blog post for Yaarzo, a free online chatroom and social community platform, on the topic: "${title}".
@@ -115,11 +127,10 @@ Structure rules:
 - Output clean HTML only (h2, h3, p, ul/li, strong, a, and the one HTML comment described below) — no <html>/<body>/<h1> tags
 - Right after the intro paragraph, insert exactly this on its own line: <!-- IMAGE: a real 5-10 word description of an image that would fit here --> (a human will manually add the real image later — do not embed an actual <img> tag)
 
-Include EXACTLY 2 internal links, naturally placed in different sections (not next to each other):
-1. One link to https://yaarzo.com/signup — vary the anchor text each time, e.g. "sign up on Yaarzo", "join Yaarzo for free", "create a free account", "get started on Yaarzo". Never just the word "Yaarzo" as the link text.
-2. One link to ${chatroomUrl} — write short (2-5 word), natural anchor text that fits the sentence, based on what that page is about (infer from the URL slug). Never dump a full page title as anchor text.
+Include 4-5 internal links from this allowed list only, naturally placed in different sections (not next to each other). Every link must be relevant. Varied anchors — never repeat the same link text.
+${linkLines}
 
-Both links are REQUIRED — do not skip either one. Do not add any other links. Do not reuse the same anchor text pattern across sentences. Never use /chatrooms (use /chatroom only if linking the chat hub). Do not invent unpublished slugs.
+HARD: Never output "/chatrooms" (use "/chatroom" only if linking the chat hub). Never output "/p/{slug}" — use "/{slug}". Do not invent unpublished slugs — only the URLs listed above. Do not add extra links beyond this list.
 
 After the article, on a new line, output exactly:
 ---META---
@@ -136,7 +147,8 @@ READING_TIME: <integer minutes>`,
   const tagsMatch = metaBlock?.match(/TAGS:\s*(.+)/i);
   const readingTimeMatch = metaBlock?.match(/READING_TIME:\s*(\d+)/i);
 
-  const finalHtml = ensureRequiredLinks(contentHtml.trim(), chatroomUrl);
+  let finalHtml = ensurePlannedLinks(contentHtml.trim(), planned);
+  finalHtml = padInternalLinks(finalHtml, planned, BLOG_INTERNAL_LINK_MIN, BLOG_INTERNAL_LINK_MAX);
 
   return {
     contentHtml: finalHtml,
@@ -168,26 +180,15 @@ async function getRelatedBlogPosts(categoryId: string, excludeSlug: string, coun
   return (data ?? []) as Array<{ title: string; slug: string }>;
 }
 
-function buildRelatedHtml(relatedPosts: Array<{ title: string; slug: string }>) {
-  if (relatedPosts.length === 0) return "";
-  const items = relatedPosts
-    .map((p) => `<li><a href="https://yaarzo.com/blog/${p.slug}">${p.title}</a></li>`)
-    .join("");
-  return `<h2>Related Reads</h2><ul>${items}</ul>`;
-}
-
 async function publishTopic(topic: BlogTopic): Promise<PublishResult> {
   try {
     console.log(`\n📝 Generating: ${topic.title}...`);
 
     const publishedSlugs = await loadPublishedPageSlugs();
-    const chatroomUrl = pickChatroomUrl(topic.title, publishedSlugs);
-    let generated: Awaited<ReturnType<typeof generateContent>>;
     let slug: string;
     let categoryId: string | null;
     try {
-      [generated, slug, categoryId] = await Promise.all([
-        generateContent(topic.title, chatroomUrl),
+      [slug, categoryId] = await Promise.all([
         generateUniqueSlug(topic.title),
         getCategoryId(topic.category_slug),
       ]);
@@ -203,17 +204,48 @@ async function publishTopic(topic: BlogTopic): Promise<PublishResult> {
       return { title: topic.title, success: false, error };
     }
 
-    const relatedPosts = await getRelatedBlogPosts(categoryId, slug);
-    const relatedHtml = buildRelatedHtml(relatedPosts);
+    const chatroomUrl = pickChatroomUrl(topic.title, publishedSlugs);
+    const extraRooms = pickPublishedInternalHrefs(
+      [...chatroomUrls.interest, ...chatroomUrls.type],
+      publishedSlugs,
+      { excludeSlug: slugFromChatroom(chatroomUrl), count: 2 },
+    );
+    const relatedPosts = await getRelatedBlogPosts(categoryId, slug, 1);
+    const planned: PlannedInternalLink[] = [];
+    const seen = new Set<string>();
+    const add = (href: string, label: string) => {
+      const key = href.replace(/^https?:\/\/(www\.)?yaarzo\.com/i, "").replace(/\/+$/, "").toLowerCase();
+      if (!href || seen.has(key)) return;
+      seen.add(key);
+      planned.push({ href, label });
+    };
+    add("https://yaarzo.com/signup", "create your free account");
+    add(chatroomUrl, labelFromHref(chatroomUrl));
+    for (const href of extraRooms) add(href, labelFromHref(href));
+    if (relatedPosts[0]) add(`https://yaarzo.com/blog/${relatedPosts[0].slug}`, "this related read");
+    add("https://yaarzo.com/feed", "community feed");
+    const linkPlan = planned.slice(0, 5);
+
+    let generated: Awaited<ReturnType<typeof generateContent>>;
+    try {
+      generated = await generateContent(topic.title, linkPlan);
+    } catch (err) {
+      const error = failureMessage(err);
+      console.error(`❌ Content generation failed for "${topic.title}":`, error);
+      return { title: topic.title, success: false, error };
+    }
+
+    const padded = padInternalLinks(generated.contentHtml, linkPlan, BLOG_INTERNAL_LINK_MIN, BLOG_INTERNAL_LINK_MAX);
     const prepared = preparePublishablePage({
       slug,
       title: topic.title,
       h1: topic.title,
       meta_title: topic.title,
       meta_description: topic.metaDescription,
-      content: generated.contentHtml + relatedHtml,
+      content: padded,
       tags: generated.tags,
       publishedSlugs,
+      linkCount: { min: BLOG_INTERNAL_LINK_MIN, max: BLOG_INTERNAL_LINK_MAX },
     });
     if (prepared.blocked) {
       const error = `Quality gate: ${prepared.blockReason}`;
