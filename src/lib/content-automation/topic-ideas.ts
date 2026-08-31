@@ -8,17 +8,25 @@ export type NormalizedIdea = {
   identifier: string;
   grouping: string;
   status: IdeaStatus;
+  keywords: string | null;
 };
 
 type BlogIdeaRow = {
   title: string;
   category_slug: string;
+  keywords: string | null;
 };
 
 type PageIdeaRow = {
   slug: string;
   section: string;
+  keywords: string | null;
 };
+
+function emptyToNull(value?: string | null): string | null {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  return trimmed ? trimmed : null;
+}
 
 function asStatus(published: boolean): IdeaStatus {
   return published ? "published" : "pending";
@@ -26,7 +34,7 @@ function asStatus(published: boolean): IdeaStatus {
 
 async function fetchBlogIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea[]> {
   const [{ data: ideas, error: ideasError }, { data: posts, error: postsError }] = await Promise.all([
-    db().from("blog_topic_ideas").select("title, category_slug").order("created_at", { ascending: true }),
+    db().from("blog_topic_ideas").select("title, category_slug, keywords").order("created_at", { ascending: true }),
     db().from("blog_posts").select("title"),
   ]);
   if (ideasError) throw new Error(ideasError.message);
@@ -41,6 +49,7 @@ async function fetchBlogIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea
     identifier: row.title,
     grouping: row.category_slug,
     status: asStatus(publishedTitles.has(row.title.trim())),
+    keywords: emptyToNull(row.keywords),
   }));
 
   if (!statusFilter) return rows;
@@ -49,7 +58,7 @@ async function fetchBlogIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea
 
 async function fetchPageIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea[]> {
   const [{ data: ideas, error: ideasError }, { data: pages, error: pagesError }] = await Promise.all([
-    db().from("static_page_ideas").select("slug, section").order("created_at", { ascending: true }),
+    db().from("static_page_ideas").select("slug, section, keywords").order("created_at", { ascending: true }),
     db().from("custom_pages").select("slug"),
   ]);
   if (ideasError) throw new Error(ideasError.message);
@@ -62,6 +71,7 @@ async function fetchPageIdeas(statusFilter?: IdeaStatus): Promise<NormalizedIdea
     identifier: row.slug,
     grouping: row.section,
     status: asStatus(publishedSlugs.has(row.slug)),
+    keywords: emptyToNull(row.keywords),
   }));
 
   if (!statusFilter) return rows;
@@ -91,6 +101,7 @@ export type BlogIdeaInput = {
   title?: string;
   categorySlug?: string;
   metaDescription?: string;
+  keywords?: string | null;
 };
 
 export type PageIdeaInput = {
@@ -100,6 +111,7 @@ export type PageIdeaInput = {
   baseName?: string;
   lookupCity?: string | null;
   lookupCountryHint?: string | null;
+  keywords?: string | null;
 };
 
 export type TopicIdeaInput = BlogIdeaInput | PageIdeaInput | Record<string, unknown>;
@@ -119,6 +131,7 @@ export async function upsertTopicIdeas(items: TopicIdeaInput[]) {
       title: String(item.title ?? "").trim(),
       category_slug: String(item.categorySlug ?? "").trim(),
       meta_description: item.metaDescription ? String(item.metaDescription).trim() : null,
+      keywords: emptyToNull(item.keywords),
     }))
     .filter((row) => row.title && row.category_slug);
 
@@ -130,6 +143,7 @@ export async function upsertTopicIdeas(items: TopicIdeaInput[]) {
       base_name: String(item.baseName ?? "").trim(),
       lookup_city: item.lookupCity ? String(item.lookupCity).trim() : null,
       lookup_country_hint: item.lookupCountryHint ? String(item.lookupCountryHint).trim() : null,
+      keywords: emptyToNull(item.keywords),
     }))
     .filter((row) => row.slug && row.section && row.base_name);
 

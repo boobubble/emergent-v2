@@ -15,6 +15,7 @@ export type StaticPageEntry = {
   base_name: string;
   lookup_city: string | null;
   lookup_country_hint: string | null;
+  keywords: string | null;
 };
 
 export type StaticPublishResult = {
@@ -260,7 +261,10 @@ async function buildRowPayload(
   const secondaryKeywords = group ? group.secondary_patterns.map((p: string) => fillPattern(p, entry.base_name)) : [];
 
   const aiKeywordList = generated.aiKeywords ? generated.aiKeywords.split(",").map((k) => k.trim()).filter(Boolean) : [];
-  const combinedKeywords = [...new Set([primaryKeyword, ...secondaryKeywords, ...aiKeywordList])];
+  const providedKeywords = entry.keywords
+    ? entry.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+    : [];
+  const combinedKeywords = [...new Set([primaryKeyword, ...secondaryKeywords, ...providedKeywords, ...aiKeywordList])];
 
   return {
     title,
@@ -346,7 +350,7 @@ export async function runStaticPublish(request: Request): Promise<Response> {
 
   const { data: ideaRows, error: ideasError } = await db()
     .from("static_page_ideas")
-    .select("slug, section, base_name, lookup_city, lookup_country_hint")
+    .select("slug, section, base_name, lookup_city, lookup_country_hint, keywords")
     .order("created_at", { ascending: true });
 
   if (ideasError) {

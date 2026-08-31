@@ -198,6 +198,8 @@ export const MODULES = {
       "src/lib/blog-writer.contract.test.ts",
       "src/lib/blog-delete.test.ts",
       "src/lib/admin-blog-nav.test.ts",
+      "src/lib/content-automation/parse-bulk-ideas.test.ts",
+      "src/lib/content-automation/excel-ideas.test.ts",
       "src/lib/content-image-seo.test.ts",
       "src/lib/public-routes.test.ts",
       "src/lib/seo/not-found.test.ts",

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Play, Upload } from "lucide-react";
+import { Download, FileSpreadsheet, Loader2, Play, Upload } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { NumberField, ToggleRow } from "@/components/admin/SettingsSection";
+import { parseBulkContentIdeas } from "@/lib/content-automation/parse-bulk-ideas";
+import { appendBulkText, excelRowsToBulkText, pickExcelIdeasSheetName } from "@/lib/content-automation/excel-ideas";
 
 export const Route = createFileRoute("/admin/content-automation")({
   component: ContentAutomationPage,
@@ -28,6 +30,7 @@ type NormalizedIdea = {
   identifier: string;
   grouping: string;
   status: "pending" | "published";
+  keywords: string | null;
 };
 
 function adminHeaders(): HeadersInit {
@@ -54,6 +57,11 @@ function ContentAutomationPage() {
   const [typeFilter, setTypeFilter] = useState<"all" | "blog" | "page">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "published">("all");
   const [runResult, setRunResult] = useState<string | null>(null);
+  const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [excelMessage, setExcelMessage] = useState<string | null>(null);
+  const [excelBusy, setExcelBusy] = useState(false);
+  const excelInputRef = useRef<HTMLInputElement>(null);
+  const bulkTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const settingsQ = useQuery({
     queryKey: ["content-automation-settings"],
@@ -124,7 +132,6 @@ function ContentAutomationPage() {
     },
     onSuccess: (json) => {
       toast.success(`Uploaded — blog ${json.blogUpserted ?? 0}, pages ${json.pageUpserted ?? 0}`);
-      setBulkText("");
       qc.invalidateQueries({ queryKey: ["content-automation-ideas"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -140,51 +147,56 @@ function ContentAutomationPage() {
     [allIdeas, typeFilter, statusFilter],
   );
 
-  function handleBulkUpload() {
-    const lines = bulkText.split("\n").filter((l) => l.trim());
-    const items: Array<Record<string, unknown>> = [];
-    const invalid: string[] = [];
-
-    for (const line of lines) {
-      const parts = line.split("|").map((s) => s.trim());
-      const type = parts[0]?.toLowerCase();
-      if (type === "blog") {
-        if (!parts[1] || !parts[2]) {
-          invalid.push(line);
-          continue;
-        }
-        items.push({
-          type: "blog",
-          title: parts[1],
-          categorySlug: parts[2],
-          metaDescription: parts[3] || "",
-        });
-      } else if (type === "page") {
-        if (!parts[1] || !parts[2] || !parts[3]) {
-          invalid.push(line);
-          continue;
-        }
-        items.push({
-          type: "page",
-          slug: parts[1],
-          section: parts[2],
-          baseName: parts[3],
-          lookupCity: parts[4] || null,
-          lookupCountryHint: parts[5] || null,
-        });
-      } else {
-        invalid.push(line);
+  async function handleExcelFile(file: File) {
+    setExcelBusy(true);
+    setExcelMessage(null);
+    try {
+      const XLSX = await import("xlsx");
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const sheetName = pickExcelIdeasSheetName(workbook.SheetNames);
+      if (!sheetName) {
+        setExcelMessage("No valid Blog or Page rows found in this file — check the Kind column.");
+        return;
       }
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
+      const { text, imported } = excelRowsToBulkText(rows);
+      if (imported === 0) {
+        setExcelMessage("No valid Blog or Page rows found in this file — check the Kind column.");
+        return;
+      }
+      setBulkText((prev) => appendBulkText(prev, text));
+      toast.success(`Imported ${imported} idea${imported === 1 ? "" : "s"} into the textarea — review, then click Upload.`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not read that Excel file";
+      setExcelMessage(message);
+    } finally {
+      setExcelBusy(false);
+      if (excelInputRef.current) excelInputRef.current.value = "";
     }
+  }
 
-    if (invalid.length > 0) {
-      toast.error(`${invalid.length} line(s) skipped — each line must start with "blog" or "page"`);
+  function handleBulkUpload() {
+    const raw = bulkTextareaRef.current?.value ?? bulkText;
+    if (import.meta.env.DEV) {
+      console.log("[content-automation] bulk raw", JSON.stringify(raw));
     }
+    const parsed = parseBulkContentIdeas(raw);
+    if (import.meta.env.DEV) {
+      console.log("[content-automation] parse result", parsed);
+    }
+    setParseErrors(parsed.errors.map((e) => e.reason));
+    const items = [...parsed.blogItems, ...parsed.pageItems];
     if (items.length === 0) {
-      toast.error("No valid ideas to upload");
+      toast.error(parsed.errors.length > 0 ? "Nothing valid to upload — see the warnings below" : "No ideas to upload");
       return;
     }
-    uploadIdeas.mutate(items);
+    uploadIdeas.mutate(items, {
+      onSuccess: () => {
+        if (parsed.errors.length === 0) setBulkText("");
+      },
+    });
   }
 
   const missingSecret = !import.meta.env.VITE_ADMIN_API_SECRET;
@@ -270,24 +282,89 @@ function ContentAutomationPage() {
           <Card>
             <CardContent className="space-y-3 p-5">
               <h3 className="text-sm font-semibold">Bulk Add Content Ideas</h3>
-              <p className="text-xs text-muted-foreground">
-                Format — one per line:<br />
-                <code>blog | Title | categorySlug | metaDescription</code><br />
-                <code>page | slug | section | baseName | lookupCity | lookupCountryHint</code>
-              </p>
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <p>Add content ideas below. Separate each idea with a blank line.</p>
+                <p>
+                  For a blog post:<br />
+                  <code>Blog: &lt;title&gt;</code><br />
+                  <code>About: &lt;short description&gt;</code><br />
+                  <code>Keywords: &lt;comma-separated keywords, optional&gt;</code>
+                </p>
+                <p>
+                  For a chat-room page:<br />
+                  <code>Page: &lt;city or topic name&gt;</code><br />
+                  <code>Country: &lt;e.g. Pakistan, India — helps categorize automatically&gt;</code><br />
+                  <code>Keywords: &lt;comma-separated keywords, optional&gt;</code>
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <a href="/templates/yaarzo-content-ideas-import-template.xlsx" download>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download template
+                  </a>
+                </Button>
+                <input
+                  ref={excelInputRef}
+                  type="file"
+                  accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void handleExcelFile(file);
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={excelBusy}
+                  onClick={() => excelInputRef.current?.click()}
+                >
+                  {excelBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSpreadsheet className="mr-2 h-4 w-4" />}
+                  Import from Excel
+                </Button>
+              </div>
+              {excelMessage && (
+                <p className="text-xs text-amber-700 dark:text-amber-300">{excelMessage}</p>
+              )}
               <Textarea
+                ref={bulkTextareaRef}
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
-                rows={6}
+                rows={12}
                 className="font-mono text-xs"
-                placeholder={"blog | How to Make Friends After College | social-network | Practical tips...\npage | rawalpindi-chat-room | pakistan_city | rawalpindi | Rawalpindi | Pakistan"}
+                placeholder={`Blog: How to Make Friends After College
+About: Practical tips for building a social circle after graduating.
+Keywords: make friends after college, social circle tips
+
+Page: Rawalpindi
+Country: Pakistan
+Keywords: rawalpindi chat room, pakistan chat online
+
+Page: Quetta Girls
+Country: Pakistan
+Type: girls`}
               />
-              <Button onClick={handleBulkUpload} disabled={uploadIdeas.isPending}>
+              <Button type="button" onClick={handleBulkUpload} disabled={uploadIdeas.isPending}>
                 {uploadIdeas.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                 Upload
               </Button>
             </CardContent>
           </Card>
+
+          {parseErrors.length > 0 && (
+            <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+              <p className="font-medium text-amber-800 dark:text-amber-200">
+                {parseErrors.length} block{parseErrors.length === 1 ? "" : "s"} need fixing. Valid ideas were still uploaded.
+              </p>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-amber-800 dark:text-amber-200">
+                {parseErrors.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-muted-foreground">Type:</span>
@@ -329,6 +406,7 @@ function ContentAutomationPage() {
                         <th className="px-4 py-3 font-medium">Type</th>
                         <th className="px-4 py-3 font-medium">Title / Slug</th>
                         <th className="px-4 py-3 font-medium">Category / Section</th>
+                        <th className="w-48 max-w-[12rem] px-4 py-3 font-medium">Keywords</th>
                         <th className="px-4 py-3 font-medium">Status</th>
                       </tr>
                     </thead>
@@ -338,6 +416,15 @@ function ContentAutomationPage() {
                           <td className="px-4 py-2">{idea.type === "blog" ? "Blog" : "Page"}</td>
                           <td className="px-4 py-2">{idea.identifier}</td>
                           <td className="px-4 py-2 text-muted-foreground">{idea.grouping}</td>
+                          <td className="w-48 max-w-[12rem] px-4 py-2">
+                            {idea.keywords ? (
+                              <span className="block truncate text-xs text-muted-foreground" title={idea.keywords}>
+                                {idea.keywords}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </td>
                           <td className="px-4 py-2">
                             <Badge variant={idea.status === "published" ? "default" : "secondary"}>
                               {idea.status === "published" ? "Published" : "Pending"}
@@ -347,7 +434,7 @@ function ContentAutomationPage() {
                       ))}
                       {filtered.length === 0 && (
                         <tr>
-                          <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
+                          <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
                             No ideas match these filters. Upload some, or run{" "}
                             <code>node migrate-json-to-db.cjs</code> once.
                           </td>

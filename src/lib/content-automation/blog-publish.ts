@@ -11,6 +11,7 @@ export type BlogTopic = {
   title: string;
   category_slug: string;
   metaDescription: string;
+  keywords: string | null;
 };
 
 export type PublishResult = { title: string; success: boolean };
@@ -172,7 +173,7 @@ async function publishTopic(topic: BlogTopic): Promise<boolean> {
       slug,
       meta_description: topic.metaDescription,
       content: generated.contentHtml + relatedHtml,
-      keywords: generated.keywords,
+      keywords: topic.keywords?.trim() || generated.keywords,
       tags: generated.tags,
       reading_time_minutes: generated.readingTime,
       category_id: categoryId,
@@ -212,7 +213,7 @@ export async function runBlogPublish(): Promise<Response> {
 
   const { data: ideaRows, error: ideasError } = await db()
     .from("blog_topic_ideas")
-    .select("title, category_slug, meta_description")
+    .select("title, category_slug, meta_description, keywords")
     .order("created_at", { ascending: true });
 
   if (ideasError) {
@@ -223,10 +224,12 @@ export async function runBlogPublish(): Promise<Response> {
     title: string;
     category_slug: string;
     meta_description: string | null;
+    keywords: string | null;
   }) => ({
     title: row.title,
     category_slug: row.category_slug,
     metaDescription: row.meta_description ?? "",
+    keywords: row.keywords?.trim() || null,
   }));
 
   const publishedTitles = await getAlreadyPublishedTitles();
