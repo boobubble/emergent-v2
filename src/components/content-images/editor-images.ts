@@ -31,9 +31,14 @@ export function imageDraftAttrs(draft: ContentImageDraft): Record<string, unknow
   };
 }
 
-export function insertEditorImage(editor: Editor | null, draft: ContentImageDraft) {
+export function insertEditorImage(editor: Editor | null, draft: ContentImageDraft, pos?: number | null) {
   if (!editor) return;
-  editor.chain().focus().insertContent({ type: "image", attrs: imageDraftAttrs(draft) }).run();
+  const content = { type: "image" as const, attrs: imageDraftAttrs(draft) };
+  if (typeof pos === "number" && pos >= 0) {
+    editor.chain().insertContentAt(pos, content).focus().run();
+    return;
+  }
+  editor.chain().focus().insertContent(content).run();
 }
 
 export function updateEditorImage(editor: Editor | null, index: number, draft: ContentImageDraft) {

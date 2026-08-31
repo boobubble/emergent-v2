@@ -63,7 +63,6 @@ import { Route as AdminAppearanceRouteImport } from './routes/admin.appearance'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
 import { Route as AdminAuthBackgroundRouteImport } from './routes/admin.auth-background'
 import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
-import { Route as AdminContentAutomationRouteImport } from './routes/admin.content-automation'
 import { Route as AdminAvatarSafetyRouteImport } from './routes/admin.avatar-safety'
 import { Route as AdminBackupRouteImport } from './routes/admin.backup'
 import { Route as AdminBoobubbleRouteImport } from './routes/admin.boobubble'
@@ -81,6 +80,7 @@ import { Route as AdminCompetitionCategoriesRouteImport } from './routes/admin.c
 import { Route as AdminCompetitionsRouteImport } from './routes/admin.competitions'
 import { Route as AdminCompetitionsFeedRouteImport } from './routes/admin.competitions-feed'
 import { Route as AdminConfessionsRouteImport } from './routes/admin.confessions'
+import { Route as AdminContentAutomationRouteImport } from './routes/admin.content-automation'
 import { Route as AdminDemoRouteImport } from './routes/admin.demo'
 import { Route as AdminDiscoveryLocalizationRouteImport } from './routes/admin.discovery-localization'
 import { Route as AdminDiscoveryWidgetsRouteImport } from './routes/admin.discovery-widgets'
@@ -142,6 +142,8 @@ import { Route as AdminVoiceNotesRouteImport } from './routes/admin.voice-notes'
 import { Route as AdminWalletRouteImport } from './routes/admin.wallet'
 import { Route as AdminWalletAnalyticsRouteImport } from './routes/admin.wallet-analytics'
 import { Route as AdminWalletRulesRouteImport } from './routes/admin.wallet-rules'
+import { Route as ApiRunBlogPublishRouteImport } from './routes/api/run-blog-publish'
+import { Route as ApiRunStaticPublishRouteImport } from './routes/api/run-static-publish'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as BlogWriteRouteImport } from './routes/blog.write'
@@ -199,6 +201,8 @@ import { Route as AdminSystemJobsRouteImport } from './routes/admin.system.jobs'
 import { Route as AdminSystemQueueRouteImport } from './routes/admin.system.queue'
 import { Route as AdminSystemStorageRouteImport } from './routes/admin.system.storage'
 import { Route as AdminUpcomingKeyRouteImport } from './routes/admin.upcoming.$key'
+import { Route as ApiAdminAutomationSettingsRouteImport } from './routes/api/admin/automation-settings'
+import { Route as ApiAdminTopicIdeasRouteImport } from './routes/api/admin/topic-ideas'
 import { Route as ApiGamesAchievementRouteImport } from './routes/api/games.achievement'
 import { Route as ApiGamesCoinsRouteImport } from './routes/api/games.coins'
 import { Route as ApiGamesEventRouteImport } from './routes/api/games.event'
@@ -212,10 +216,6 @@ import { Route as ApiPublicCommunityBgRouteImport } from './routes/api/public/co
 import { Route as ApiPublicDemoCleanupRouteImport } from './routes/api/public/demo-cleanup'
 import { Route as ApiPublicFeedbackShowcaseRouteImport } from './routes/api/public/feedback-showcase'
 import { Route as ApiPublicLandingRouteImport } from './routes/api/public/landing'
-import { Route as ApiRunBlogPublishRouteImport } from './routes/api/run-blog-publish'
-import { Route as ApiRunStaticPublishRouteImport } from './routes/api/run-static-publish'
-import { Route as ApiAdminAutomationSettingsRouteImport } from './routes/api/admin/automation-settings'
-import { Route as ApiAdminTopicIdeasRouteImport } from './routes/api/admin/topic-ideas'
 import { Route as CommunitySlugIndexRouteImport } from './routes/community.$slug.index'
 import { Route as CommunitySlugCompetitionsRouteImport } from './routes/community.$slug.competitions'
 import { Route as CommunitySlugDashboardRouteImport } from './routes/community.$slug.dashboard'
@@ -510,11 +510,6 @@ const AdminAutomationRoute = AdminAutomationRouteImport.update({
   path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminContentAutomationRoute = AdminContentAutomationRouteImport.update({
-  id: '/content-automation',
-  path: '/content-automation',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminAvatarSafetyRoute = AdminAvatarSafetyRouteImport.update({
   id: '/avatar-safety',
   path: '/avatar-safety',
@@ -601,6 +596,11 @@ const AdminCompetitionsFeedRoute = AdminCompetitionsFeedRouteImport.update({
 const AdminConfessionsRoute = AdminConfessionsRouteImport.update({
   id: '/confessions',
   path: '/confessions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContentAutomationRoute = AdminContentAutomationRouteImport.update({
+  id: '/content-automation',
+  path: '/content-automation',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDemoRoute = AdminDemoRouteImport.update({
@@ -909,6 +909,16 @@ const AdminWalletRulesRoute = AdminWalletRulesRouteImport.update({
   path: '/wallet-rules',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiRunBlogPublishRoute = ApiRunBlogPublishRouteImport.update({
+  id: '/api/run-blog-publish',
+  path: '/api/run-blog-publish',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRunStaticPublishRoute = ApiRunStaticPublishRouteImport.update({
+  id: '/api/run-static-publish',
+  path: '/api/run-static-publish',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -1197,6 +1207,17 @@ const AdminUpcomingKeyRoute = AdminUpcomingKeyRouteImport.update({
   path: '/$key',
   getParentRoute: () => AdminUpcomingRoute,
 } as any)
+const ApiAdminAutomationSettingsRoute =
+  ApiAdminAutomationSettingsRouteImport.update({
+    id: '/api/admin/automation-settings',
+    path: '/api/admin/automation-settings',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiAdminTopicIdeasRoute = ApiAdminTopicIdeasRouteImport.update({
+  id: '/api/admin/topic-ideas',
+  path: '/api/admin/topic-ideas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGamesAchievementRoute = ApiGamesAchievementRouteImport.update({
   id: '/api/games/achievement',
   path: '/api/games/achievement',
@@ -1262,26 +1283,6 @@ const ApiPublicFeedbackShowcaseRoute =
 const ApiPublicLandingRoute = ApiPublicLandingRouteImport.update({
   id: '/api/public/landing',
   path: '/api/public/landing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRunBlogPublishRoute = ApiRunBlogPublishRouteImport.update({
-  id: '/api/run-blog-publish',
-  path: '/api/run-blog-publish',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRunStaticPublishRoute = ApiRunStaticPublishRouteImport.update({
-  id: '/api/run-static-publish',
-  path: '/api/run-static-publish',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminAutomationSettingsRoute = ApiAdminAutomationSettingsRouteImport.update({
-  id: '/api/admin/automation-settings',
-  path: '/api/admin/automation-settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminTopicIdeasRoute = ApiAdminTopicIdeasRouteImport.update({
-  id: '/api/admin/topic-ideas',
-  path: '/api/admin/topic-ideas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunitySlugIndexRoute = CommunitySlugIndexRouteImport.update({
@@ -1470,7 +1471,6 @@ export interface FileRoutesByFullPath {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
-  '/admin/content-automation': typeof AdminContentAutomationRoute
   '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
@@ -1488,6 +1488,7 @@ export interface FileRoutesByFullPath {
   '/admin/competitions': typeof AdminCompetitionsRoute
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
+  '/admin/content-automation': typeof AdminContentAutomationRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/discovery-localization': typeof AdminDiscoveryLocalizationRoute
   '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
@@ -1549,6 +1550,8 @@ export interface FileRoutesByFullPath {
   '/admin/wallet': typeof AdminWalletRoute
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
+  '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
+  '/api/run-static-publish': typeof ApiRunStaticPublishRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/write': typeof BlogWriteRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
@@ -1606,6 +1609,8 @@ export interface FileRoutesByFullPath {
   '/admin/system/queue': typeof AdminSystemQueueRoute
   '/admin/system/storage': typeof AdminSystemStorageRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/admin/automation-settings': typeof ApiAdminAutomationSettingsRoute
+  '/api/admin/topic-ideas': typeof ApiAdminTopicIdeasRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/event': typeof ApiGamesEventRoute
@@ -1619,10 +1624,6 @@ export interface FileRoutesByFullPath {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
-  '/api/run-static-publish': typeof ApiRunStaticPublishRoute
-  '/api/admin/automation-settings': typeof ApiAdminAutomationSettingsRoute
-  '/api/admin/topic-ideas': typeof ApiAdminTopicIdeasRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
@@ -1699,7 +1700,6 @@ export interface FileRoutesByTo {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
-  '/admin/content-automation': typeof AdminContentAutomationRoute
   '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
@@ -1717,6 +1717,7 @@ export interface FileRoutesByTo {
   '/admin/competitions': typeof AdminCompetitionsRoute
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
+  '/admin/content-automation': typeof AdminContentAutomationRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/discovery-localization': typeof AdminDiscoveryLocalizationRoute
   '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
@@ -1777,6 +1778,8 @@ export interface FileRoutesByTo {
   '/admin/wallet': typeof AdminWalletRoute
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
+  '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
+  '/api/run-static-publish': typeof ApiRunStaticPublishRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/write': typeof BlogWriteRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
@@ -1833,6 +1836,8 @@ export interface FileRoutesByTo {
   '/admin/system/queue': typeof AdminSystemQueueRoute
   '/admin/system/storage': typeof AdminSystemStorageRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/admin/automation-settings': typeof ApiAdminAutomationSettingsRoute
+  '/api/admin/topic-ideas': typeof ApiAdminTopicIdeasRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/event': typeof ApiGamesEventRoute
@@ -1846,10 +1851,6 @@ export interface FileRoutesByTo {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
-  '/api/run-static-publish': typeof ApiRunStaticPublishRoute
-  '/api/admin/automation-settings': typeof ApiAdminAutomationSettingsRoute
-  '/api/admin/topic-ideas': typeof ApiAdminTopicIdeasRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
@@ -1931,7 +1932,6 @@ export interface FileRoutesById {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/auth-background': typeof AdminAuthBackgroundRoute
   '/admin/automation': typeof AdminAutomationRoute
-  '/admin/content-automation': typeof AdminContentAutomationRoute
   '/admin/avatar-safety': typeof AdminAvatarSafetyRoute
   '/admin/backup': typeof AdminBackupRoute
   '/admin/boobubble': typeof AdminBoobubbleRoute
@@ -1949,6 +1949,7 @@ export interface FileRoutesById {
   '/admin/competitions': typeof AdminCompetitionsRoute
   '/admin/competitions-feed': typeof AdminCompetitionsFeedRoute
   '/admin/confessions': typeof AdminConfessionsRoute
+  '/admin/content-automation': typeof AdminContentAutomationRoute
   '/admin/demo': typeof AdminDemoRoute
   '/admin/discovery-localization': typeof AdminDiscoveryLocalizationRoute
   '/admin/discovery-widgets': typeof AdminDiscoveryWidgetsRoute
@@ -2010,6 +2011,8 @@ export interface FileRoutesById {
   '/admin/wallet': typeof AdminWalletRoute
   '/admin/wallet-analytics': typeof AdminWalletAnalyticsRoute
   '/admin/wallet-rules': typeof AdminWalletRulesRoute
+  '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
+  '/api/run-static-publish': typeof ApiRunStaticPublishRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/write': typeof BlogWriteRoute
   '/broadcaster/analytics': typeof BroadcasterAnalyticsRoute
@@ -2067,6 +2070,8 @@ export interface FileRoutesById {
   '/admin/system/queue': typeof AdminSystemQueueRoute
   '/admin/system/storage': typeof AdminSystemStorageRoute
   '/admin/upcoming/$key': typeof AdminUpcomingKeyRoute
+  '/api/admin/automation-settings': typeof ApiAdminAutomationSettingsRoute
+  '/api/admin/topic-ideas': typeof ApiAdminTopicIdeasRoute
   '/api/games/achievement': typeof ApiGamesAchievementRoute
   '/api/games/coins': typeof ApiGamesCoinsRoute
   '/api/games/event': typeof ApiGamesEventRoute
@@ -2080,10 +2085,6 @@ export interface FileRoutesById {
   '/api/public/demo-cleanup': typeof ApiPublicDemoCleanupRoute
   '/api/public/feedback-showcase': typeof ApiPublicFeedbackShowcaseRoute
   '/api/public/landing': typeof ApiPublicLandingRoute
-  '/api/run-blog-publish': typeof ApiRunBlogPublishRoute
-  '/api/run-static-publish': typeof ApiRunStaticPublishRoute
-  '/api/admin/automation-settings': typeof ApiAdminAutomationSettingsRoute
-  '/api/admin/topic-ideas': typeof ApiAdminTopicIdeasRoute
   '/community/$slug/competitions': typeof CommunitySlugCompetitionsRoute
   '/community/$slug/dashboard': typeof CommunitySlugDashboardRoute
   '/community/$slug/feed': typeof CommunitySlugFeedRoute
@@ -2165,7 +2166,6 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
-    | '/admin/content-automation'
     | '/admin/avatar-safety'
     | '/admin/backup'
     | '/admin/boobubble'
@@ -2183,6 +2183,7 @@ export interface FileRouteTypes {
     | '/admin/competitions'
     | '/admin/competitions-feed'
     | '/admin/confessions'
+    | '/admin/content-automation'
     | '/admin/demo'
     | '/admin/discovery-localization'
     | '/admin/discovery-widgets'
@@ -2244,6 +2245,8 @@ export interface FileRouteTypes {
     | '/admin/wallet'
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
+    | '/api/run-blog-publish'
+    | '/api/run-static-publish'
     | '/blog/$slug'
     | '/blog/write'
     | '/broadcaster/analytics'
@@ -2301,6 +2304,8 @@ export interface FileRouteTypes {
     | '/admin/system/queue'
     | '/admin/system/storage'
     | '/admin/upcoming/$key'
+    | '/api/admin/automation-settings'
+    | '/api/admin/topic-ideas'
     | '/api/games/achievement'
     | '/api/games/coins'
     | '/api/games/event'
@@ -2314,10 +2319,6 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
-    | '/api/run-blog-publish'
-    | '/api/run-static-publish'
-    | '/api/admin/automation-settings'
-    | '/api/admin/topic-ideas'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
@@ -2394,7 +2395,6 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
-    | '/admin/content-automation'
     | '/admin/avatar-safety'
     | '/admin/backup'
     | '/admin/boobubble'
@@ -2412,6 +2412,7 @@ export interface FileRouteTypes {
     | '/admin/competitions'
     | '/admin/competitions-feed'
     | '/admin/confessions'
+    | '/admin/content-automation'
     | '/admin/demo'
     | '/admin/discovery-localization'
     | '/admin/discovery-widgets'
@@ -2472,6 +2473,8 @@ export interface FileRouteTypes {
     | '/admin/wallet'
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
+    | '/api/run-blog-publish'
+    | '/api/run-static-publish'
     | '/blog/$slug'
     | '/blog/write'
     | '/broadcaster/analytics'
@@ -2528,6 +2531,8 @@ export interface FileRouteTypes {
     | '/admin/system/queue'
     | '/admin/system/storage'
     | '/admin/upcoming/$key'
+    | '/api/admin/automation-settings'
+    | '/api/admin/topic-ideas'
     | '/api/games/achievement'
     | '/api/games/coins'
     | '/api/games/event'
@@ -2541,10 +2546,6 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
-    | '/api/run-blog-publish'
-    | '/api/run-static-publish'
-    | '/api/admin/automation-settings'
-    | '/api/admin/topic-ideas'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
@@ -2625,7 +2626,6 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/auth-background'
     | '/admin/automation'
-    | '/admin/content-automation'
     | '/admin/avatar-safety'
     | '/admin/backup'
     | '/admin/boobubble'
@@ -2643,6 +2643,7 @@ export interface FileRouteTypes {
     | '/admin/competitions'
     | '/admin/competitions-feed'
     | '/admin/confessions'
+    | '/admin/content-automation'
     | '/admin/demo'
     | '/admin/discovery-localization'
     | '/admin/discovery-widgets'
@@ -2704,6 +2705,8 @@ export interface FileRouteTypes {
     | '/admin/wallet'
     | '/admin/wallet-analytics'
     | '/admin/wallet-rules'
+    | '/api/run-blog-publish'
+    | '/api/run-static-publish'
     | '/blog/$slug'
     | '/blog/write'
     | '/broadcaster/analytics'
@@ -2761,6 +2764,8 @@ export interface FileRouteTypes {
     | '/admin/system/queue'
     | '/admin/system/storage'
     | '/admin/upcoming/$key'
+    | '/api/admin/automation-settings'
+    | '/api/admin/topic-ideas'
     | '/api/games/achievement'
     | '/api/games/coins'
     | '/api/games/event'
@@ -2774,10 +2779,6 @@ export interface FileRouteTypes {
     | '/api/public/demo-cleanup'
     | '/api/public/feedback-showcase'
     | '/api/public/landing'
-    | '/api/run-blog-publish'
-    | '/api/run-static-publish'
-    | '/api/admin/automation-settings'
-    | '/api/admin/topic-ideas'
     | '/community/$slug/competitions'
     | '/community/$slug/dashboard'
     | '/community/$slug/feed'
@@ -2847,6 +2848,8 @@ export interface RootRouteChildren {
   TrustRoute: typeof TrustRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
+  ApiRunBlogPublishRoute: typeof ApiRunBlogPublishRoute
+  ApiRunStaticPublishRoute: typeof ApiRunStaticPublishRoute
   BlogSlugRoute: typeof BlogSlugRoute
   BlogWriteRoute: typeof BlogWriteRoute
   FeedSlugRoute: typeof FeedSlugRoute
@@ -2870,6 +2873,8 @@ export interface RootRouteChildren {
   FeedbackIndexRoute: typeof FeedbackIndexRoute
   MehfilIndexRoute: typeof MehfilIndexRoute
   PoetryIndexRoute: typeof PoetryIndexRoute
+  ApiAdminAutomationSettingsRoute: typeof ApiAdminAutomationSettingsRoute
+  ApiAdminTopicIdeasRoute: typeof ApiAdminTopicIdeasRoute
   ApiGamesAchievementRoute: typeof ApiGamesAchievementRoute
   ApiGamesCoinsRoute: typeof ApiGamesCoinsRoute
   ApiGamesEventRoute: typeof ApiGamesEventRoute
@@ -2883,10 +2888,6 @@ export interface RootRouteChildren {
   ApiPublicDemoCleanupRoute: typeof ApiPublicDemoCleanupRoute
   ApiPublicFeedbackShowcaseRoute: typeof ApiPublicFeedbackShowcaseRoute
   ApiPublicLandingRoute: typeof ApiPublicLandingRoute
-  ApiRunBlogPublishRoute: typeof ApiRunBlogPublishRoute
-  ApiRunStaticPublishRoute: typeof ApiRunStaticPublishRoute
-  ApiAdminAutomationSettingsRoute: typeof ApiAdminAutomationSettingsRoute
-  ApiAdminTopicIdeasRoute: typeof ApiAdminTopicIdeasRoute
   MehfilCategorySlugRoute: typeof MehfilCategorySlugRoute
   PoetryCategorySlugRoute: typeof PoetryCategorySlugRoute
   ApiPublicHooksFeedbotDispatchRoute: typeof ApiPublicHooksFeedbotDispatchRoute
@@ -3283,13 +3284,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/content-automation': {
-      id: '/admin/content-automation'
-      path: '/content-automation'
-      fullPath: '/admin/content-automation'
-      preLoaderRoute: typeof AdminContentAutomationRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/avatar-safety': {
       id: '/admin/avatar-safety'
       path: '/avatar-safety'
@@ -3407,6 +3401,13 @@ declare module '@tanstack/react-router' {
       path: '/confessions'
       fullPath: '/admin/confessions'
       preLoaderRoute: typeof AdminConfessionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/content-automation': {
+      id: '/admin/content-automation'
+      path: '/content-automation'
+      fullPath: '/admin/content-automation'
+      preLoaderRoute: typeof AdminContentAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/demo': {
@@ -3836,6 +3837,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWalletRulesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/run-blog-publish': {
+      id: '/api/run-blog-publish'
+      path: '/api/run-blog-publish'
+      fullPath: '/api/run-blog-publish'
+      preLoaderRoute: typeof ApiRunBlogPublishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/run-static-publish': {
+      id: '/api/run-static-publish'
+      path: '/api/run-static-publish'
+      fullPath: '/api/run-static-publish'
+      preLoaderRoute: typeof ApiRunStaticPublishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog/': {
       id: '/blog/'
       path: '/blog'
@@ -4235,6 +4250,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUpcomingKeyRouteImport
       parentRoute: typeof AdminUpcomingRoute
     }
+    '/api/admin/automation-settings': {
+      id: '/api/admin/automation-settings'
+      path: '/api/admin/automation-settings'
+      fullPath: '/api/admin/automation-settings'
+      preLoaderRoute: typeof ApiAdminAutomationSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/topic-ideas': {
+      id: '/api/admin/topic-ideas'
+      path: '/api/admin/topic-ideas'
+      fullPath: '/api/admin/topic-ideas'
+      preLoaderRoute: typeof ApiAdminTopicIdeasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/games/achievement': {
       id: '/api/games/achievement'
       path: '/api/games/achievement'
@@ -4324,34 +4353,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/landing'
       fullPath: '/api/public/landing'
       preLoaderRoute: typeof ApiPublicLandingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/run-blog-publish': {
-      id: '/api/run-blog-publish'
-      path: '/api/run-blog-publish'
-      fullPath: '/api/run-blog-publish'
-      preLoaderRoute: typeof ApiRunBlogPublishRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/run-static-publish': {
-      id: '/api/run-static-publish'
-      path: '/api/run-static-publish'
-      fullPath: '/api/run-static-publish'
-      preLoaderRoute: typeof ApiRunStaticPublishRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/automation-settings': {
-      id: '/api/admin/automation-settings'
-      path: '/api/admin/automation-settings'
-      fullPath: '/api/admin/automation-settings'
-      preLoaderRoute: typeof ApiAdminAutomationSettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/topic-ideas': {
-      id: '/api/admin/topic-ideas'
-      path: '/api/admin/topic-ideas'
-      fullPath: '/api/admin/topic-ideas'
-      preLoaderRoute: typeof ApiAdminTopicIdeasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community/$slug/': {
@@ -4617,7 +4618,6 @@ interface AdminRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminAuthBackgroundRoute: typeof AdminAuthBackgroundRoute
   AdminAutomationRoute: typeof AdminAutomationRoute
-  AdminContentAutomationRoute: typeof AdminContentAutomationRoute
   AdminAvatarSafetyRoute: typeof AdminAvatarSafetyRoute
   AdminBackupRoute: typeof AdminBackupRoute
   AdminBoobubbleRoute: typeof AdminBoobubbleRoute
@@ -4635,6 +4635,7 @@ interface AdminRouteChildren {
   AdminCompetitionsRoute: typeof AdminCompetitionsRoute
   AdminCompetitionsFeedRoute: typeof AdminCompetitionsFeedRoute
   AdminConfessionsRoute: typeof AdminConfessionsRoute
+  AdminContentAutomationRoute: typeof AdminContentAutomationRoute
   AdminDemoRoute: typeof AdminDemoRoute
   AdminDiscoveryLocalizationRoute: typeof AdminDiscoveryLocalizationRoute
   AdminDiscoveryWidgetsRoute: typeof AdminDiscoveryWidgetsRoute
@@ -4713,7 +4714,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminAuthBackgroundRoute: AdminAuthBackgroundRoute,
   AdminAutomationRoute: AdminAutomationRoute,
-  AdminContentAutomationRoute: AdminContentAutomationRoute,
   AdminAvatarSafetyRoute: AdminAvatarSafetyRoute,
   AdminBackupRoute: AdminBackupRoute,
   AdminBoobubbleRoute: AdminBoobubbleRoute,
@@ -4731,6 +4731,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCompetitionsRoute: AdminCompetitionsRoute,
   AdminCompetitionsFeedRoute: AdminCompetitionsFeedRoute,
   AdminConfessionsRoute: AdminConfessionsRoute,
+  AdminContentAutomationRoute: AdminContentAutomationRoute,
   AdminDemoRoute: AdminDemoRoute,
   AdminDiscoveryLocalizationRoute: AdminDiscoveryLocalizationRoute,
   AdminDiscoveryWidgetsRoute: AdminDiscoveryWidgetsRoute,
@@ -4943,6 +4944,8 @@ const rootRouteChildren: RootRouteChildren = {
   TrustRoute: TrustRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
+  ApiRunBlogPublishRoute: ApiRunBlogPublishRoute,
+  ApiRunStaticPublishRoute: ApiRunStaticPublishRoute,
   BlogSlugRoute: BlogSlugRoute,
   BlogWriteRoute: BlogWriteRoute,
   FeedSlugRoute: FeedSlugRoute,
@@ -4966,6 +4969,8 @@ const rootRouteChildren: RootRouteChildren = {
   FeedbackIndexRoute: FeedbackIndexRoute,
   MehfilIndexRoute: MehfilIndexRoute,
   PoetryIndexRoute: PoetryIndexRoute,
+  ApiAdminAutomationSettingsRoute: ApiAdminAutomationSettingsRoute,
+  ApiAdminTopicIdeasRoute: ApiAdminTopicIdeasRoute,
   ApiGamesAchievementRoute: ApiGamesAchievementRoute,
   ApiGamesCoinsRoute: ApiGamesCoinsRoute,
   ApiGamesEventRoute: ApiGamesEventRoute,
@@ -4979,10 +4984,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDemoCleanupRoute: ApiPublicDemoCleanupRoute,
   ApiPublicFeedbackShowcaseRoute: ApiPublicFeedbackShowcaseRoute,
   ApiPublicLandingRoute: ApiPublicLandingRoute,
-  ApiRunBlogPublishRoute: ApiRunBlogPublishRoute,
-  ApiRunStaticPublishRoute: ApiRunStaticPublishRoute,
-  ApiAdminAutomationSettingsRoute: ApiAdminAutomationSettingsRoute,
-  ApiAdminTopicIdeasRoute: ApiAdminTopicIdeasRoute,
   MehfilCategorySlugRoute: MehfilCategorySlugRoute,
   PoetryCategorySlugRoute: PoetryCategorySlugRoute,
   ApiPublicHooksFeedbotDispatchRoute: ApiPublicHooksFeedbotDispatchRoute,

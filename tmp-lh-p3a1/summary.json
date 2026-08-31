@@ -1,0 +1,214 @@
+{
+  "performance": {
+    "best": 65,
+    "worst": 59,
+    "median": 62
+  },
+  "lcp": {
+    "best": 2027,
+    "worst": 3283,
+    "median": 2936
+  },
+  "fcp": {
+    "best": 1646,
+    "worst": 2518,
+    "median": 2439
+  },
+  "tbt": {
+    "best": 2504,
+    "worst": 4097,
+    "median": 2967
+  },
+  "cls": {
+    "best": 0,
+    "worst": 0,
+    "median": 0
+  },
+  "rows": [
+    {
+      "run": 1,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T10:40:02.134Z",
+      "performance": 62,
+      "lcp": 3095,
+      "fcp": 1646,
+      "tbt": 3809,
+      "cls": 0,
+      "ttfbMs": 119,
+      "renderDelayMs": 2136,
+      "loadDelayMs": null,
+      "loadTimeMs": null,
+      "cssTransferKb": 54,
+      "cssDecodedKb": 400,
+      "cssUrls": [
+        {
+          "url": "/assets/styles-CfwZc1u7.css",
+          "transfer": 32579,
+          "decoded": 286466
+        },
+        {
+          "url": "/assets/app-surfaces-C-iosxsL.css",
+          "transfer": 22090,
+          "decoded": 122169
+        },
+        {
+          "url": "/assets/inter-latin-D1jZwX_T.css",
+          "transfer": 1064,
+          "decoded": 861
+        }
+      ],
+      "renderBlockingMs": null,
+      "renderBlockingDisplay": null,
+      "styleLayoutMs": 4684,
+      "requestCount": 22
+    },
+    {
+      "run": 2,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T10:41:33.551Z",
+      "performance": 65,
+      "lcp": 2027,
+      "fcp": 2027,
+      "tbt": 4097,
+      "cls": 0,
+      "ttfbMs": 182,
+      "renderDelayMs": 1176,
+      "loadDelayMs": null,
+      "loadTimeMs": null,
+      "cssTransferKb": 54,
+      "cssDecodedKb": 400,
+      "cssUrls": [
+        {
+          "url": "/assets/styles-CfwZc1u7.css",
+          "transfer": 32495,
+          "decoded": 286466
+        },
+        {
+          "url": "/assets/app-surfaces-C-iosxsL.css",
+          "transfer": 22086,
+          "decoded": 122169
+        },
+        {
+          "url": "/assets/inter-latin-D1jZwX_T.css",
+          "transfer": 1020,
+          "decoded": 861
+        }
+      ],
+      "renderBlockingMs": null,
+      "renderBlockingDisplay": null,
+      "styleLayoutMs": 5179,
+      "requestCount": 22
+    },
+    {
+      "run": 3,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T10:42:42.923Z",
+      "performance": 61,
+      "lcp": 2936,
+      "fcp": 2485,
+      "tbt": 2525,
+      "cls": 0,
+      "ttfbMs": 97,
+      "renderDelayMs": 2170,
+      "loadDelayMs": null,
+      "loadTimeMs": null,
+      "cssTransferKb": 54,
+      "cssDecodedKb": 400,
+      "cssUrls": [
+        {
+          "url": "/assets/styles-CfwZc1u7.css",
+          "transfer": 32495,
+          "decoded": 286466
+        },
+        {
+          "url": "/assets/app-surfaces-C-iosxsL.css",
+          "transfer": 22109,
+          "decoded": 122169
+        },
+        {
+          "url": "/assets/inter-latin-D1jZwX_T.css",
+          "transfer": 1020,
+          "decoded": 861
+        }
+      ],
+      "renderBlockingMs": null,
+      "renderBlockingDisplay": null,
+      "styleLayoutMs": 4549,
+      "requestCount": 22
+    },
+    {
+      "run": 4,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T10:43:52.578Z",
+      "performance": 62,
+      "lcp": 2809,
+      "fcp": 2439,
+      "tbt": 2967,
+      "cls": 0,
+      "ttfbMs": 323,
+      "renderDelayMs": 1853,
+      "loadDelayMs": null,
+      "loadTimeMs": null,
+      "cssTransferKb": 54,
+      "cssDecodedKb": 400,
+      "cssUrls": [
+        {
+          "url": "/assets/styles-CfwZc1u7.css",
+          "transfer": 32499,
+          "decoded": 286466
+        },
+        {
+          "url": "/assets/app-surfaces-C-iosxsL.css",
+          "transfer": 22132,
+          "decoded": 122169
+        },
+        {
+          "url": "/assets/inter-latin-D1jZwX_T.css",
+          "transfer": 1020,
+          "decoded": 861
+        }
+      ],
+      "renderBlockingMs": null,
+      "renderBlockingDisplay": null,
+      "styleLayoutMs": 3908,
+      "requestCount": 22
+    },
+    {
+      "run": 5,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T10:44:58.266Z",
+      "performance": 59,
+      "lcp": 3283,
+      "fcp": 2518,
+      "tbt": 2504,
+      "cls": 0,
+      "ttfbMs": 50,
+      "renderDelayMs": 2289,
+      "loadDelayMs": null,
+      "loadTimeMs": null,
+      "cssTransferKb": 54,
+      "cssDecodedKb": 400,
+      "cssUrls": [
+        {
+          "url": "/assets/styles-CfwZc1u7.css",
+          "transfer": 32556,
+          "decoded": 286466
+        },
+        {
+          "url": "/assets/app-surfaces-C-iosxsL.css",
+          "transfer": 22085,
+          "decoded": 122169
+        },
+        {
+          "url": "/assets/inter-latin-D1jZwX_T.css",
+          "transfer": 1026,
+          "decoded": 861
+        }
+      ],
+      "renderBlockingMs": null,
+      "renderBlockingDisplay": null,
+      "styleLayoutMs": 3976,
+      "requestCount": 22
+    }
+  ]
+}

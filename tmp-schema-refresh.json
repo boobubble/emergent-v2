@@ -1,0 +1,291 @@
+[
+  {
+    "requested": "https://yaarzo.com/",
+    "finalUrl": "https://yaarzo.com/",
+    "status": 200,
+    "ms": 4537,
+    "bytes": 78842,
+    "meta": {
+      "title": "Yaarzo – Free Online Chatrooms, Make Friends & Communities",
+      "canonical": "https://yaarzo.com/",
+      "robots": "index, follow",
+      "desc": "Join Yaarzo for free online chatrooms, make new friends, share posts and discover communities. Explore conversations and start chatting today.",
+      "h1": [
+        "Free Online Chatrooms, Make Friends & Join Communities"
+      ],
+      "microdata": {
+        "itemscope": 0,
+        "itemtype": [],
+        "itemprop": 0
+      },
+      "rdfa": {
+        "typeof": 0,
+        "vocab": 0,
+        "property": 5,
+        "rdfaProperty": 0
+      },
+      "faqHints": {
+        "faqPageInHtml": false,
+        "faqHeading": false
+      }
+    },
+    "jsonld": [
+      {
+        "valid": true,
+        "parsed": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "name": "Yaarzo",
+              "url": "https://yaarzo.com/",
+              "description": "Join Yaarzo for free online chatrooms, make new friends, share posts and discover communities. Explore conversations and start chatting today."
+            },
+            {
+              "@type": "Organization",
+              "name": "Yaarzo",
+              "url": "https://yaarzo.com/"
+            }
+          ]
+        },
+        "bytes": 336
+      }
+    ],
+    "types": [
+      "WebSite",
+      "Organization"
+    ],
+    "jsonLdCount": 1
+  },
+  {
+    "requested": "https://yaarzo.com/lahore-chat-room",
+    "finalUrl": "https://yaarzo.com/lahore-chat-room",
+    "status": 200,
+    "ms": 3646,
+    "bytes": 36350,
+    "meta": {
+      "title": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo",
+      "canonical": "https://yaarzo.com/lahore-chat-room",
+      "robots": "index, follow",
+      "desc": "Join free Lahore chat rooms on Yaarzo. Meet people, talk in English or Urdu, and build friendly connections online. Join Lahore chat rooms for free on Yaarzo.",
+      "h1": [
+        "Lahore Chat Room"
+      ],
+      "microdata": {
+        "itemscope": 0,
+        "itemtype": [],
+        "itemprop": 0
+      },
+      "rdfa": {
+        "typeof": 0,
+        "vocab": 0,
+        "property": 5,
+        "rdfaProperty": 0
+      },
+      "faqHints": {
+        "faqPageInHtml": false,
+        "faqHeading": false
+      }
+    },
+    "jsonld": [
+      {
+        "valid": true,
+        "parsed": {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": "Lahore Chat Room – Free Online Chat & Community on Yaarzo",
+          "description": "Join free Lahore chat rooms on Yaarzo. Meet people, talk in English or Urdu, and build friendly connections online. Join Lahore chat rooms for free on Yaarzo.",
+          "url": "https://yaarzo.com/lahore-chat-room",
+          "datePublished": "2026-08-04T08:29:36.866+00:00",
+          "image": [
+            "https://ibb.co/jNkfkTT"
+          ]
+        },
+        "bytes": 424
+      }
+    ],
+    "types": [
+      "Article"
+    ],
+    "jsonLdCount": 1
+  },
+  {
+    "requested": "https://yaarzo.com/about-us",
+    "finalUrl": "https://yaarzo.com/about-us",
+    "status": 200,
+    "ms": 3897,
+    "bytes": 30757,
+    "meta": {
+      "title": "About Yaarzo | A Social Network Built for Real Connections",
+      "canonical": "https://yaarzo.com/about-us",
+      "robots": "index, follow",
+      "desc": "Learn about Yaarzo, a social network built for meaningful connections — public chatrooms, a social feed, friend-finding, and a community that feels like home.",
+      "h1": [
+        "About Yaarzo"
+      ],
+      "microdata": {
+        "itemscope": 0,
+        "itemtype": [],
+        "itemprop": 0
+      },
+      "rdfa": {
+        "typeof": 0,
+        "vocab": 0,
+        "property": 4,
+        "rdfaProperty": 0
+      },
+      "faqHints": {
+        "faqPageInHtml": false,
+        "faqHeading": false
+      }
+    },
+    "jsonld": [
+      {
+        "valid": true,
+        "parsed": {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": "About Us",
+          "description": "Learn about Yaarzo, a social network built for meaningful connections — public chatrooms, a social feed, friend-finding, and a community that feels like home.",
+          "url": "https://yaarzo.com/about-us",
+          "datePublished": "2026-08-12T14:43:57.321+00:00"
+        },
+        "bytes": 332
+      }
+    ],
+    "types": [
+      "Article"
+    ],
+    "jsonLdCount": 1
+  },
+  {
+    "requested": "https://yaarzo.com/blog",
+    "finalUrl": "https://yaarzo.com/blog",
+    "status": 200,
+    "ms": 812,
+    "bytes": 2918,
+    "meta": {
+      "title": "Blog — Yaarzo",
+      "canonical": null,
+      "robots": null,
+      "desc": "Tips on making friends online, chatroom guides, and community stories from Yaarzo.",
+      "h1": [],
+      "microdata": {
+        "itemscope": 0,
+        "itemtype": [],
+        "itemprop": 0
+      },
+      "rdfa": {
+        "typeof": 0,
+        "vocab": 0,
+        "property": 0,
+        "rdfaProperty": 0
+      },
+      "faqHints": {
+        "faqPageInHtml": false,
+        "faqHeading": false
+      }
+    },
+    "jsonld": [],
+    "types": [],
+    "jsonLdCount": 0
+  },
+  {
+    "requested": "https://yaarzo.com/blog/yahoo",
+    "finalUrl": "https://yaarzo.com/blog/yahoo",
+    "status": 200,
+    "ms": 885,
+    "bytes": 2264,
+    "meta": {
+      "title": "yahoo — Yaarzo Blog",
+      "canonical": null,
+      "robots": "index, follow",
+      "desc": "yahoo",
+      "h1": [],
+      "microdata": {
+        "itemscope": 0,
+        "itemtype": [],
+        "itemprop": 0
+      },
+      "rdfa": {
+        "typeof": 0,
+        "vocab": 0,
+        "property": 0,
+        "rdfaProperty": 0
+      },
+      "faqHints": {
+        "faqPageInHtml": false,
+        "faqHeading": false
+      }
+    },
+    "jsonld": [],
+    "types": [],
+    "jsonLdCount": 0
+  },
+  {
+    "requested": "https://yaarzo.com/feed",
+    "finalUrl": "https://yaarzo.com/feed",
+    "status": 200,
+    "ms": 363,
+    "bytes": 10739,
+    "meta": {
+      "title": "Feed",
+      "canonical": "https://yaarzo.com/feed",
+      "robots": "index, follow",
+      "desc": "Share posts, react, comment, and connect with friends.",
+      "h1": [],
+      "microdata": {
+        "itemscope": 0,
+        "itemtype": [],
+        "itemprop": 0
+      },
+      "rdfa": {
+        "typeof": 0,
+        "vocab": 0,
+        "property": 4,
+        "rdfaProperty": 0
+      },
+      "faqHints": {
+        "faqPageInHtml": false,
+        "faqHeading": false
+      }
+    },
+    "jsonld": [],
+    "types": [],
+    "jsonLdCount": 0
+  },
+  {
+    "requested": "https://yaarzo.com/communities",
+    "finalUrl": "https://yaarzo.com/communities",
+    "status": 200,
+    "ms": 442,
+    "bytes": 23798,
+    "meta": {
+      "title": "Discover Communities — BooBubble",
+      "canonical": "https://yaarzo.com/communities",
+      "robots": "index, follow",
+      "desc": "Find and join creator communities: gaming, music, tech, art, sports and more. Live chat, feed, competitions and radio.",
+      "h1": [
+        "Find your community"
+      ],
+      "microdata": {
+        "itemscope": 0,
+        "itemtype": [],
+        "itemprop": 0
+      },
+      "rdfa": {
+        "typeof": 0,
+        "vocab": 0,
+        "property": 4,
+        "rdfaProperty": 0
+      },
+      "faqHints": {
+        "faqPageInHtml": false,
+        "faqHeading": false
+      }
+    },
+    "jsonld": [],
+    "types": [],
+    "jsonLdCount": 0
+  }
+]

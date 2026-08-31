@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { getPublishedPage } from "@/lib/pages.functions";
+import { getPublishedPage, getCountryCityDirectory } from "@/lib/pages.functions";
 import { isReservedSlug } from "@/lib/reserved-routes";
 import { isNavigableSlug } from "@/lib/route-slug";
 import {
@@ -136,7 +136,21 @@ export const Route = createFileRoute("/$slug")({
         image: ogImage,
       }),
     });
-    return { page, slug, seoData };
+    let cityDirectory: Awaited<ReturnType<typeof getCountryCityDirectory>> = [];
+    try {
+      const { data: geo } = await supabaseAdmin
+        .from("custom_pages")
+        .select("category,page_type,country_id")
+        .eq("id", page.id)
+        .maybeSingle();
+      const isCountryPage = geo?.category === "country" || geo?.page_type === "country";
+      if (isCountryPage && geo?.country_id) {
+        cityDirectory = await getCountryCityDirectory({ data: { countryId: geo.country_id } });
+      }
+    } catch {
+      cityDirectory = [];
+    }
+    return { page, slug, seoData, cityDirectory };
   },
 
   head: ({ loaderData }) =>
@@ -173,5 +187,11 @@ function PublicPage() {
     return <PublicPageLoading />;
   }
 
-  return <PublicCmsPageView key={`${page.id}:${page.slug}`} page={page} />;
+  return (
+    <PublicCmsPageView
+      key={`${page.id}:${page.slug}`}
+      page={page}
+      cityDirectory={loaderData.cityDirectory}
+    />
+  );
 }

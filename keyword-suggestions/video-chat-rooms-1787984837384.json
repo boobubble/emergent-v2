@@ -1,0 +1,70 @@
+{
+  "seed": "video chat rooms",
+  "related_keywords": [
+    "free video chat rooms",
+    "video chat with strangers",
+    "random video chat online",
+    "live video chat rooms",
+    "webcam chat rooms free",
+    "online video chat room no signup",
+    "group video chat room",
+    "video call chat room",
+    "text and video chat room",
+    "video chat app free online",
+    "face to face video chat online",
+    "video chat rooms for singles",
+    "anonymous video chat room",
+    "video chat rooms without registration",
+    "one on one video chat online"
+  ],
+  "suggested_blog_topics": [
+    {
+      "title": "Is Video Chat Safe? A Beginner's Guide to Staying Secure in Online Video Rooms",
+      "reason": "addresses safety concerns specific to video (not text) chat, a distinct trust barrier"
+    },
+    {
+      "title": "Text Chat vs Video Chat: Which One Helps You Connect Faster on Yaarzo",
+      "reason": "helps users choose format, positions Yaarzo's hybrid offering"
+    },
+    {
+      "title": "Video Chat Etiquette: Dos and Don'ts for First-Time Users",
+      "reason": "unique behavioral/etiquette angle not covered by generic friendship blogs"
+    },
+    {
+      "title": "No Webcam? Here's How You Can Still Join Video-Style Chatrooms",
+      "reason": "addresses a real user friction point unique to video chat adoption"
+    }
+  ],
+  "suggested_static_pages": [
+    {
+      "slug": "video-chat-room",
+      "base_name": "video",
+      "reason": "core landing page to capture the seed keyword directly"
+    },
+    {
+      "slug": "random-video-chat-room",
+      "base_name": "random video",
+      "reason": "high search intent for spontaneous stranger video chat, distinct from type/interest rooms"
+    },
+    {
+      "slug": "webcam-chat-room",
+      "base_name": "webcam",
+      "reason": "captures webcam-specific search variant of video chat"
+    },
+    {
+      "slug": "group-video-chat-room",
+      "base_name": "group video",
+      "reason": "targets multi-person video sessions, different intent from 1:1 chat"
+    },
+    {
+      "slug": "no-signup-video-chat-room",
+      "base_name": "no signup video",
+      "reason": "captures frictionless/anonymous access intent common in video chat searches"
+    },
+    {
+      "slug": "one-on-one-video-chat-room",
+      "base_name": "one on one video",
+      "reason": "distinct intent from group video, high-volume pairing search term"
+    }
+  ]
+}

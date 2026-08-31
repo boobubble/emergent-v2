@@ -1,0 +1,268 @@
+{
+  "startedAt": "2026-08-24T08:28:29.776Z",
+  "homepage": {
+    "status": 200,
+    "ms": 1063,
+    "bytes": 22307,
+    "type": "text/html; charset=utf-8",
+    "headers": {
+      "x-robots-tag": null,
+      "cache-control": "public, max-age=0, must-revalidate",
+      "content-security-policy": null,
+      "strict-transport-security": "max-age=63072000",
+      "x-frame-options": null,
+      "content-type": "text/html; charset=utf-8"
+    },
+    "seo": {
+      "titles": [
+        "Yaarzo – Free Online Chatrooms, Make Friends & Communities"
+      ],
+      "titleCount": 1,
+      "descriptions": [
+        "Join Yaarzo for free online chatrooms, make new friends, share posts and discover communities. Explore conversations and start chatting today."
+      ],
+      "descCount": 1,
+      "canonicals": [
+        "https://yaarzo.com/"
+      ],
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "robotsCount": 1,
+      "h1": [
+        "Free Online Chatrooms, Make Friends & Join Communities"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Meet New People Through Online Chatrooms",
+        "More Than Just a Chat Room",
+        "Find Communities That Match Your Interests",
+        "Start Exploring Yaarzo"
+      ],
+      "h3": [],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Free Online Chatrooms, Make Friends & Join Communities"
+        },
+        {
+          "tag": "h2",
+          "text": "Meet New People Through Online Chatrooms"
+        },
+        {
+          "tag": "h2",
+          "text": "More Than Just a Chat Room"
+        },
+        {
+          "tag": "h2",
+          "text": "Find Communities That Match Your Interests"
+        },
+        {
+          "tag": "h2",
+          "text": "Start Exploring Yaarzo"
+        }
+      ],
+      "jsonld": [
+        {
+          "valid": true,
+          "parsed": {
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "WebSite",
+                "name": "Yaarzo",
+                "url": "https://yaarzo.com/",
+                "description": "Join Yaarzo for free online chatrooms, make new friends, share posts and discover communities. Explore conversations and start chatting today."
+              },
+              {
+                "@type": "Organization",
+                "name": "Yaarzo",
+                "url": "https://yaarzo.com/"
+              }
+            ]
+          }
+        }
+      ],
+      "hrefs": [
+        "/",
+        "/chatroom",
+        "/feed",
+        "/communities",
+        "/competitions",
+        "/poetry",
+        "/welcome",
+        "/feed",
+        "/communities",
+        "/competitions",
+        "/poetry",
+        "/chatroom",
+        "/india-chat-room",
+        "/pakistan-chat-room",
+        "/lahore-chat-room",
+        "/feed",
+        "/communities",
+        "/competitions",
+        "/poetry",
+        "/communities",
+        "/chatroom",
+        "/feed",
+        "/communities",
+        "/welcome",
+        "/chatroom"
+      ],
+      "imgs": [],
+      "textSample": "Yaarzo – Free Online Chatrooms, Make Friends &amp; Communities Yaarzo Chatrooms Feed Communities Competitions Poetry Join free Yaarzo Free Online Chatrooms, Make Friends &amp; Join Communities Yaarzo is a free place to meet people in live online chatrooms and keep conversations going with friends around the world. Whether you want a quick hello after work or a longer talk about something you love,",
+      "textWords": 462,
+      "hasLoadingOnly": false,
+      "og": {
+        "title": "Yaarzo – Free Online Chatrooms, Make Friends &amp; Communities",
+        "description": "Join Yaarzo for free online chatrooms, make new friends, share posts and discover communities. Explore conversations and start chatting today.",
+        "url": "https://yaarzo.com/",
+        "type": "website",
+        "image": "https://yaarzo.com/og/yaarzo-share.png",
+        "titleCount": 1,
+        "descCount": 1,
+        "urlCount": 1,
+        "typeCount": 1,
+        "imageCount": 1
+      },
+      "twitter": {
+        "card": "summary_large_image",
+        "title": "Yaarzo – Free Online Chatrooms, Make Friends &amp; Communities",
+        "description": "Join Yaarzo for free online chatrooms, make new friends, share posts and discover communities. Explore conversations and start chatting today.",
+        "image": "https://yaarzo.com/og/yaarzo-share.png",
+        "cardCount": 1
+      },
+      "jsonLdTypes": [
+        "WebSite",
+        "Organization"
+      ]
+    }
+  },
+  "robots": {
+    "status": 200,
+    "type": "text/plain; charset=utf-8",
+    "body": "User-agent: *\nAllow: /\n\nSitemap: https://yaarzo.com/sitemap.xml"
+  },
+  "sitemapIndex": {
+    "status": 200,
+    "type": "application/xml; charset=utf-8",
+    "isIndex": false,
+    "locs": [
+      "https://yaarzo.com/chatrooms",
+      "https://yaarzo.com/welcome",
+      "https://yaarzo.com/feed",
+      "https://yaarzo.com/find-friends",
+      "https://yaarzo.com/games",
+      "https://yaarzo.com",
+      "https://yaarzo.com/leaderboard",
+      "https://yaarzo.com/girls-chat-room",
+      "https://yaarzo.com/faisalabad-chat-room",
+      "https://yaarzo.com/chennai-chat-room",
+      "https://yaarzo.com/hyderabad-india-chat-room",
+      "https://yaarzo.com/islamabad-chat-room",
+      "https://yaarzo.com/usa-chat-room",
+      "https://yaarzo.com/rawalpindi-chat-room",
+      "https://yaarzo.com/bengaluru-chat-room",
+      "https://yaarzo.com/english-chat-room-free-online-chat",
+      "https://yaarzo.com/multan-chat-room",
+      "https://yaarzo.com/karachi-girls-chat-room",
+      "https://yaarzo.com/chat-rooms-without-registration-2026",
+      "https://yaarzo.com/teen-chat-room",
+      "https://yaarzo.com/kolkata-chat-room",
+      "https://yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo",
+      "https://yaarzo.com/karachi-chat-room",
+      "https://yaarzo.com/friendship-chat-room",
+      "https://yaarzo.com/about-us",
+      "https://yaarzo.com/privacy-policy",
+      "https://yaarzo.com/chatib-alternative-chat-room",
+      "https://yaarzo.com/terms-conditions",
+      "https://yaarzo.com/dating-chat-room",
+      "https://yaarzo.com/contact-us",
+      "https://yaarzo.com/india-chat-room",
+      "https://yaarzo.com/pakistan-chat-room",
+      "https://yaarzo.com/delhi-chat-room",
+      "https://yaarzo.com/mumbai-chat-room",
+      "https://yaarzo.com/lahore-chat-room",
+      "https://yaarzo.com/uk-chat-room"
+    ],
+    "rawCount": 36
+  },
+  "_allLocs": [
+    "https://yaarzo.com/chatrooms",
+    "https://yaarzo.com/welcome",
+    "https://yaarzo.com/feed",
+    "https://yaarzo.com/find-friends",
+    "https://yaarzo.com/games",
+    "https://yaarzo.com",
+    "https://yaarzo.com/leaderboard",
+    "https://yaarzo.com/girls-chat-room",
+    "https://yaarzo.com/faisalabad-chat-room",
+    "https://yaarzo.com/chennai-chat-room",
+    "https://yaarzo.com/hyderabad-india-chat-room",
+    "https://yaarzo.com/islamabad-chat-room",
+    "https://yaarzo.com/usa-chat-room",
+    "https://yaarzo.com/rawalpindi-chat-room",
+    "https://yaarzo.com/bengaluru-chat-room",
+    "https://yaarzo.com/english-chat-room-free-online-chat",
+    "https://yaarzo.com/multan-chat-room",
+    "https://yaarzo.com/karachi-girls-chat-room",
+    "https://yaarzo.com/chat-rooms-without-registration-2026",
+    "https://yaarzo.com/teen-chat-room",
+    "https://yaarzo.com/kolkata-chat-room",
+    "https://yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo",
+    "https://yaarzo.com/karachi-chat-room",
+    "https://yaarzo.com/friendship-chat-room",
+    "https://yaarzo.com/about-us",
+    "https://yaarzo.com/privacy-policy",
+    "https://yaarzo.com/chatib-alternative-chat-room",
+    "https://yaarzo.com/terms-conditions",
+    "https://yaarzo.com/dating-chat-room",
+    "https://yaarzo.com/contact-us",
+    "https://yaarzo.com/india-chat-room",
+    "https://yaarzo.com/pakistan-chat-room",
+    "https://yaarzo.com/delhi-chat-room",
+    "https://yaarzo.com/mumbai-chat-room",
+    "https://yaarzo.com/lahore-chat-room",
+    "https://yaarzo.com/uk-chat-room"
+  ],
+  "childSitemaps": [],
+  "sitemapSummary": {
+    "totalRaw": 36,
+    "unique": 36,
+    "duplicates": []
+  },
+  "sitemapUrlsSample": [
+    "https://yaarzo.com/chatrooms",
+    "https://yaarzo.com/welcome",
+    "https://yaarzo.com/feed",
+    "https://yaarzo.com/find-friends",
+    "https://yaarzo.com/games",
+    "https://yaarzo.com",
+    "https://yaarzo.com/leaderboard",
+    "https://yaarzo.com/girls-chat-room",
+    "https://yaarzo.com/faisalabad-chat-room",
+    "https://yaarzo.com/chennai-chat-room",
+    "https://yaarzo.com/hyderabad-india-chat-room",
+    "https://yaarzo.com/islamabad-chat-room",
+    "https://yaarzo.com/usa-chat-room",
+    "https://yaarzo.com/rawalpindi-chat-room",
+    "https://yaarzo.com/bengaluru-chat-room",
+    "https://yaarzo.com/english-chat-room-free-online-chat",
+    "https://yaarzo.com/multan-chat-room",
+    "https://yaarzo.com/karachi-girls-chat-room",
+    "https://yaarzo.com/chat-rooms-without-registration-2026",
+    "https://yaarzo.com/teen-chat-room",
+    "https://yaarzo.com/kolkata-chat-room",
+    "https://yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo",
+    "https://yaarzo.com/karachi-chat-room",
+    "https://yaarzo.com/friendship-chat-room",
+    "https://yaarzo.com/about-us",
+    "https://yaarzo.com/privacy-policy",
+    "https://yaarzo.com/chatib-alternative-chat-room",
+    "https://yaarzo.com/terms-conditions",
+    "https://yaarzo.com/dating-chat-room",
+    "https://yaarzo.com/contact-us"
+  ]
+}

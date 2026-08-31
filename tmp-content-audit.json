@@ -1,0 +1,2887 @@
+{
+  "fetchedAt": "2026-08-27T08:50:43.041Z",
+  "sitemapStatus": 200,
+  "sitemapCount": 35,
+  "pages": [
+    {
+      "url": "https://yaarzo.com/",
+      "title": "Yaarzo – Free Online Chatrooms, Make Friends & Communities",
+      "titles": [
+        "Yaarzo – Free Online Chatrooms, Make Friends & Communities"
+      ],
+      "description": "Join Yaarzo for free online chatrooms, make new friends, share posts and discover communities. Explore conversations and start chatting today.",
+      "canonical": "https://yaarzo.com/",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Free Online Chatrooms, Make Friends & Join Communities"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "What you can do on Yaarzo",
+        "Meet New People Through Online Chatrooms",
+        "More Than Just a Chat Room",
+        "Find Communities That Match Your Interests",
+        "Trending Chatrooms",
+        "Top Members",
+        "Latest Feed",
+        "Popular Games",
+        "Today&#x27;s Missions",
+        "Trending Posts",
+        "Trending on Poetry Hub",
+        "Poetry and Shayari"
+      ],
+      "h2Count": 20,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Yaarzo – Free Online Chatrooms, Make Friends & Communities",
+        "h1": "Free Online Chatrooms, Make Friends & Join Communities",
+        "unique": true
+      },
+      "wordCountFull": 1089,
+      "wordCountMain": 1041,
+      "mainSample": "A live social community Free Online Chatrooms, Make Friends & Join Communities Join The Ultimate Active Community Chat in real-time, share your thoughts, play games, earn rewards and make new friends. 💬 Chatrooms 📱 Social Feed 🎮 Games ⭐ Rewards Start Chatting ✨ Create Account Y Y Y Y 15,240+ members joined this week 💬 Yaarzo 🇮🇳 Live Chat Online now M Member 10:30 AM Hello everyone! 👋 F Friend 10:31 AM Good morning all ☀️ G Guest 10:32 AM Anyone up for a game? Y You 10:33 AM Hey! How&#x27;",
+      "textSample": "Yaarzo – Free Online Chatrooms, Make Friends & Communities 💬 Yaarzo Home Chatrooms Feed Communities Competitions Poetry Login Join Free A live social community Free Online Chatrooms, Make Friends & Join Communities Join The Ultimate Active Community Chat in real-time, share your thoughts, play games, earn rewards and make new friends. 💬 Chatrooms 📱 Social Feed 🎮 Games ⭐ Rewards Start Chatting ",
+      "emptyHits": [
+        "no public posts yet",
+        "be one of the first members"
+      ],
+      "emptySnippets": [
+        "No public posts yet — start the conversation. <a href=\"/feed\" class=\"mt-3 inline-flex items-cent",
+        "Be one of the first members to join. <a href=\"/\" class=\"mt-3 inline-flex items-center justify-center rou"
+      ],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "WebSite",
+        "Organization"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/",
+      "ms": 614,
+      "bytes": 78995
+    },
+    {
+      "url": "https://yaarzo.com/chatroom",
+      "title": "Chatrooms",
+      "titles": [
+        "Chatrooms"
+      ],
+      "description": "Join public chat rooms, send DMs, share files and play in-chat games.",
+      "canonical": "https://yaarzo.com/chatroom",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [],
+      "h1Count": 0,
+      "h2": [],
+      "h2Count": 0,
+      "titleEqualsH1": "",
+      "titleContainsH1": "",
+      "h1VsTitle": {
+        "title": "Chatrooms",
+        "h1": "",
+        "unique": false
+      },
+      "wordCountFull": 1,
+      "wordCountMain": 1,
+      "mainSample": "Chatrooms",
+      "textSample": "Chatrooms",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/chatroom",
+      "ms": 427,
+      "bytes": 15500
+    },
+    {
+      "url": "https://yaarzo.com/communities",
+      "title": "Discover Communities — BooBubble",
+      "titles": [
+        "Discover Communities — BooBubble"
+      ],
+      "description": "Find and join creator communities: gaming, music, tech, art, sports and more. Live chat, feed, competitions and radio.",
+      "canonical": "https://yaarzo.com/communities",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Find your community"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Categories",
+        "All communities"
+      ],
+      "h2Count": 2,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Discover Communities — BooBubble",
+        "h1": "Find your community",
+        "unique": true
+      },
+      "wordCountFull": 57,
+      "wordCountMain": 57,
+      "mainSample": "Discover Communities — BooBubble Community Discovery Find your community Trending creator communities with live chat, feeds, competitions and radio. Sign in to create a community Communities 0 Members 0 Online now 0 Categories Gaming Music Entertainment Technology Art Sports Memes Education Business Podcasts Radio Lifestyle Regional Global Sort: trending newest members active Featured only All communities Loading…",
+      "textSample": "Discover Communities — BooBubble Community Discovery Find your community Trending creator communities with live chat, feeds, competitions and radio. Sign in to create a community Communities 0 Members 0 Online now 0 Categories Gaming Music Entertainment Technology Art Sports Memes Education Business Podcasts Radio Lifestyle Regional Global Sort: trending newest members active Featured only All com",
+      "emptyHits": [
+        "sign in to"
+      ],
+      "emptySnippets": [],
+      "booBubble": [
+        "BooBubble"
+      ],
+      "booInTitle": true,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/communities",
+      "ms": 1071,
+      "bytes": 23814
+    },
+    {
+      "url": "https://yaarzo.com/competitions",
+      "title": "Community Competitions — Live, Trending & Upcoming",
+      "titles": [
+        "Community Competitions — Live, Trending & Upcoming"
+      ],
+      "description": "Discover live competitions, join tournaments, vote for your favorite nominees, and win prizes across every category.",
+      "canonical": "https://yaarzo.com/competitions",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [],
+      "h1Count": 0,
+      "h2": [],
+      "h2Count": 0,
+      "titleEqualsH1": "",
+      "titleContainsH1": "",
+      "h1VsTitle": {
+        "title": "Community Competitions — Live, Trending & Upcoming",
+        "h1": "",
+        "unique": false
+      },
+      "wordCountFull": 7,
+      "wordCountMain": 7,
+      "mainSample": "Community Competitions — Live, Trending & Upcoming",
+      "textSample": "Community Competitions — Live, Trending & Upcoming",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/competitions",
+      "ms": 1302,
+      "bytes": 8349
+    },
+    {
+      "url": "https://yaarzo.com/poetry",
+      "title": "Poetry Hub",
+      "titles": [
+        "Poetry Hub"
+      ],
+      "description": "Read, write and share original poetry.",
+      "canonical": "https://yaarzo.com/poetry",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [],
+      "h1Count": 0,
+      "h2": [],
+      "h2Count": 0,
+      "titleEqualsH1": "",
+      "titleContainsH1": "",
+      "h1VsTitle": {
+        "title": "Poetry Hub",
+        "h1": "",
+        "unique": false
+      },
+      "wordCountFull": 2,
+      "wordCountMain": 2,
+      "mainSample": "Poetry Hub",
+      "textSample": "Poetry Hub",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/poetry",
+      "ms": 245,
+      "bytes": 4597
+    },
+    {
+      "url": "https://yaarzo.com/feed",
+      "title": "Feed",
+      "titles": [
+        "Feed"
+      ],
+      "description": "Share posts, react, comment, and connect with friends.",
+      "canonical": "https://yaarzo.com/feed",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [],
+      "h1Count": 0,
+      "h2": [],
+      "h2Count": 0,
+      "titleEqualsH1": "",
+      "titleContainsH1": "",
+      "h1VsTitle": {
+        "title": "Feed",
+        "h1": "",
+        "unique": false
+      },
+      "wordCountFull": 1,
+      "wordCountMain": 1,
+      "mainSample": "Feed",
+      "textSample": "Feed",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [
+        "boobubble"
+      ],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/feed",
+      "ms": 219,
+      "bytes": 10739
+    },
+    {
+      "url": "https://yaarzo.com/girls-chat-room",
+      "title": "Girls Chat Room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Girls Chat Room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Girls Chat rooms on Yaarzo. Topic-first conversation with clear boundaries — pair with city hubs when you want a local angle.",
+      "canonical": "https://yaarzo.com/girls-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Girls Chat Room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "What Girls Chat is for",
+        "Conversation examples",
+        "Related hubs",
+        "Stay comfortable",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 5,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Girls Chat Room | Free Online Chat on Yaarzo",
+        "h1": "Girls Chat Room",
+        "unique": true
+      },
+      "wordCountFull": 203,
+      "wordCountMain": 129,
+      "mainSample": "Girls Chat Room Girls Chat Room on Yaarzo is for topic-first conversation — not a city directory. Use it when you want girls chat rooms rather than browsing by Lahore, Delhi, or another location. What Girls Chat is for People open Girls Chat when the conversation type matters more than geography. Keep expectations clear, be respectful, and avoid pressure. This page does not invent who is online. Conversation examples Friendly hangouts and shared hobbies Study or workday check-ins Moving between ",
+      "textSample": "Girls Chat Room | Free Online Chat on Yaarzo Back 0 views Home / Girls Chat Room | Yaarzo Girls Chat Room Girls Chat Room on Yaarzo is for topic-first conversation — not a city directory. Use it when you want girls chat rooms rather than browsing by Lahore, Delhi, or another location. What Girls Chat is for People open Girls Chat when the conversation type matters more than geography. Keep expecta",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/girls-chat-room",
+      "ms": 3849,
+      "bytes": 22178
+    },
+    {
+      "url": "https://yaarzo.com/lahore-chat-room",
+      "title": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo",
+      "titles": [
+        "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo"
+      ],
+      "description": "Join free Lahore chat rooms on Yaarzo. Meet people, talk in English or Urdu, and build friendly connections online. Join Lahore chat rooms for free on Yaarzo.",
+      "canonical": "https://yaarzo.com/lahore-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Lahore Chat Room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Key Takeaways",
+        "What Makes a Lahore Chat Room Worth Joining",
+        "Topics That Actually Get Conversations Going",
+        "Browsing vs. Participating: How It Actually Works",
+        "Who Joins Lahore Chat Rooms",
+        "Chatting Safely and Respectfully",
+        "Frequently Asked Questions",
+        "Join the Conversation",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 9,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo",
+        "h1": "Lahore Chat Room",
+        "unique": true
+      },
+      "wordCountFull": 920,
+      "wordCountMain": 874,
+      "mainSample": "Lahore Chat Room Lahore Chat Room Without Registration 2026. Join Lahore cahte room to chat with lahore girls and boys and make new online freinds for free. Lahore Chat Room – Free Online Chat & Community on Yaarzo Looking for a Lahore chat room that feels less like a random stranger box and more like an actual community? Yaarzo brings together public chatrooms and social features in one place, so you can talk about Lahore life, Pakistani culture, or whatever's on your mind, and stick around lon",
+      "textSample": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo Back 0 views Home / Lahore Chat Room – Free Online Chat & Community on Yaarzo Lahore Chat Room Lahore Chat Room Without Registration 2026. Join Lahore cahte room to chat with lahore girls and boys and make new online freinds for free. Lahore Chat Room – Free Online Chat & Community on Yaarzo Looking for a Lahore chat room that feels less li",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/lahore-chat-room",
+      "ms": 3620,
+      "bytes": 36470
+    },
+    {
+      "url": "https://yaarzo.com/chennai-chat-room",
+      "title": "Chennai Chat Room Online – Free Tamil Dosti Chat | Yaarzo",
+      "titles": [
+        "Chennai Chat Room Online – Free Tamil Dosti Chat | Yaarzo"
+      ],
+      "description": "Chennai ke logon se free mein baat karo. Yaarzo ka Chennai chat room join karein aur naye dost banao — simple, safe, active.",
+      "canonical": "https://yaarzo.com/chennai-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Chennai Chat Room: Marina Beach Se OMR Tak Ki Baatcheet"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Chennai Ki Apni Pehchaan",
+        "Sirf Random Chat Nahi — Ek Genuine Community",
+        "Cricket Aur Kollywood Ke Deewane",
+        "Tamil Nadu Aur Aas-Paas Ke Shehar",
+        "Signup Bilkul Simple Hai",
+        "FAQs",
+        "Ab Shuru Karo",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 8,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Chennai Chat Room Online – Free Tamil Dosti Chat | Yaarzo",
+        "h1": "Chennai Chat Room: Marina Beach Se OMR Tak Ki Baatcheet",
+        "unique": true
+      },
+      "wordCountFull": 958,
+      "wordCountMain": 907,
+      "mainSample": "Chennai Chat Room: Marina Beach Se OMR Tak Ki Baatcheet Chennai chat on Yaarzo anchors a Tamil Nadu metro focus — useful when Bengaluru or Hyderabad are the wrong South India city for your conversation. Kya aapne kabhi socha hai ki OMR ki IT companies mein kaam karne wale hazaron professionals, ya Marina Beach par shaam ko filter kaapi peete hue log — inme se kitne sirf ek achhe dost ki talaash mein hain? Chennai jaisa fast-growing shehar, jahan traditional temples aur modern tech parks ek saath",
+      "textSample": "Chennai Chat Room Online – Free Tamil Dosti Chat | Yaarzo Back 0 views Home / Chennai Chat Room – Free Online Dosti Chat | Yaarzo Chennai Chat Room: Marina Beach Se OMR Tak Ki Baatcheet Chennai chat on Yaarzo anchors a Tamil Nadu metro focus — useful when Bengaluru or Hyderabad are the wrong South India city for your conversation. Kya aapne kabhi socha hai ki OMR ki IT companies mein kaam karne wa",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/chennai-chat-room",
+      "ms": 3223,
+      "bytes": 40504
+    },
+    {
+      "url": "https://yaarzo.com/usa-chat-room",
+      "title": "USA Chat Room – Free Online Chat with People Across America",
+      "titles": [
+        "USA Chat Room – Free Online Chat with People Across America"
+      ],
+      "description": "Join Yaarzo’s USA chat room to meet people across America. Chat free in English and start live conversations without a complicated signup.",
+      "canonical": "https://yaarzo.com/usa-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "USA Chat Room: Meet and Chat with People Across America for Free"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "FAQ",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 2,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "USA Chat Room – Free Online Chat with People Across America",
+        "h1": "USA Chat Room: Meet and Chat with People Across America for Free",
+        "unique": true
+      },
+      "wordCountFull": 976,
+      "wordCountMain": 930,
+      "mainSample": "USA Chat Room: Meet and Chat with People Across America for Free USA is one of the most diverse, English-speaking online audiences in the world, spanning multiple time zones and cultural backgrounds. People search for a \"USA chat room\" for a few clear reasons: meeting new people while relocating or traveling, connecting with the wider English-speaking diaspora, practicing conversational English, or simply finding a casual place to talk that isn't locked behind an app store account or a phone num",
+      "textSample": "USA Chat Room – Free Online Chat with People Across America Back 0 views Home / USA Chat Room – Free Online Chat with People Across America USA Chat Room: Meet and Chat with People Across America for Free USA is one of the most diverse, English-speaking online audiences in the world, spanning multiple time zones and cultural backgrounds. People search for a \"USA chat room\" for a few clear reasons:",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/usa-chat-room",
+      "ms": 3249,
+      "bytes": 35875
+    },
+    {
+      "url": "https://yaarzo.com/delhi-chat-room",
+      "title": "Delhi Chat Room Online – Free NCR Dosti Chat | Yaarzo",
+      "titles": [
+        "Delhi Chat Room Online – Free NCR Dosti Chat | Yaarzo"
+      ],
+      "description": "Delhi aur NCR ke logon se free mein baat karo. Yaarzo ka Delhi chat room join karein aur naye dost banao — simple, safe, active.",
+      "canonical": "https://yaarzo.com/delhi-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Delhi Chat Room: Purani Dilli Se New Delhi Tak Ki Baatcheet"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Har Kone Ka Apna Rang",
+        "Sirf Random Chat Nahi — Ek Poori Community",
+        "NCR Tak Failaa Hua Connection",
+        "Signup Mein Bas Do Second",
+        "FAQs",
+        "Ab Shuru Karo",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 7,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Delhi Chat Room Online – Free NCR Dosti Chat | Yaarzo",
+        "h1": "Delhi Chat Room: Purani Dilli Se New Delhi Tak Ki Baatcheet",
+        "unique": true
+      },
+      "wordCountFull": 898,
+      "wordCountMain": 844,
+      "mainSample": "Delhi Chat Room: Purani Dilli Se New Delhi Tak Ki Baatcheet Delhi duniya ke sabse purane, sabse zinda shehron mein se ek hai — jahan 400 saal purani Chandni Chowk ki galliyan aur naye zamane ka Delhi Metro network ek saath chalte hain. Purani Dilli ka charm aur New Delhi ki fast-paced modern life — dono ek hi shehar mein, ek doosre se sirf kuch kilometre door. Itne diverse aur dynamic shehar mein logon se judna kabhi asaan nahi hota — sab apni zindagi mein busy hain, Metro pakadne ki jaldi mein ",
+      "textSample": "Delhi Chat Room Online – Free NCR Dosti Chat | Yaarzo Back 0 views Home / Delhi chat room | Yaarzo Delhi Chat Room: Purani Dilli Se New Delhi Tak Ki Baatcheet Delhi duniya ke sabse purane, sabse zinda shehron mein se ek hai — jahan 400 saal purani Chandni Chowk ki galliyan aur naye zamane ka Delhi Metro network ek saath chalte hain. Purani Dilli ka charm aur New Delhi ki fast-paced modern life — d",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/delhi-chat-room",
+      "ms": 3517,
+      "bytes": 39147
+    },
+    {
+      "url": "https://yaarzo.com/hyderabad-india-chat-room",
+      "title": "Hyderabad chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Hyderabad chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Hyderabad chat rooms on Yaarzo. Meet people interested in Hyderabad, India, and chat online anytime.",
+      "canonical": "https://yaarzo.com/hyderabad-india-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Hyderabad chat room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "About this Hyderabad hub",
+        "Conversation ideas for Hyderabad",
+        "Related city chat rooms",
+        "Topic rooms",
+        "Community guidance",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 6,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Hyderabad chat room | Free Online Chat on Yaarzo",
+        "h1": "Hyderabad chat room",
+        "unique": true
+      },
+      "wordCountFull": 217,
+      "wordCountMain": 163,
+      "mainSample": "Hyderabad chat room This is the India Hyderabad chat room (country-qualified slug) — not the Pakistan Hyderabad page. Use it for Telangana/India metro chat only. About this Hyderabad hub This is the India Hyderabad hub in Telangana — not Hyderabad in Pakistan. English, Hindi, Telugu, and other languages appear depending on the room. Conversation ideas for Hyderabad Examples of chat directions people use on this hub (not rankings or traffic claims): food and festivals campus and IT chat travel ac",
+      "textSample": "Hyderabad chat room | Free Online Chat on Yaarzo Back 0 views Home / Hyderabad chat room | Yaarzo Hyderabad chat room This is the India Hyderabad chat room (country-qualified slug) — not the Pakistan Hyderabad page. Use it for Telangana/India metro chat only. About this Hyderabad hub This is the India Hyderabad hub in Telangana — not Hyderabad in Pakistan. English, Hindi, Telugu, and other languag",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/hyderabad-india-chat-room",
+      "ms": 2966,
+      "bytes": 23692
+    },
+    {
+      "url": "https://yaarzo.com/bengaluru-chat-room",
+      "title": "Bengaluru chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Bengaluru chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Bengaluru chat rooms on Yaarzo. Meet people interested in Bengaluru, India, and chat online anytime.",
+      "canonical": "https://yaarzo.com/bengaluru-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Bengaluru chat room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "About this Bengaluru hub",
+        "Conversation ideas for Bengaluru",
+        "Related city chat rooms",
+        "Topic rooms",
+        "Community guidance",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 6,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Bengaluru chat room | Free Online Chat on Yaarzo",
+        "h1": "Bengaluru chat room",
+        "unique": true
+      },
+      "wordCountFull": 228,
+      "wordCountMain": 173,
+      "mainSample": "Bengaluru chat room Bengaluru (Bangalore) chat rooms on Yaarzo fit a Karnataka tech-city focus — English-heavy rooms, campus and office talk, and South India sibling links. About this Bengaluru hub Bengaluru is listed under Karnataka in India. Hyderabad (India), Chennai, and other metros are natural siblings — not Pakistan cities. English is very common; Kannada, Hindi, and other languages appear in mixed rooms. Conversation ideas for Bengaluru Examples of chat directions people use on this hub ",
+      "textSample": "Bengaluru chat room | Free Online Chat on Yaarzo Back 0 views Home / Bengaluru chat room | Yaarzo Bengaluru chat room Bengaluru (Bangalore) chat rooms on Yaarzo fit a Karnataka tech-city focus — English-heavy rooms, campus and office talk, and South India sibling links. About this Bengaluru hub Bengaluru is listed under Karnataka in India. Hyderabad (India), Chennai, and other metros are natural s",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/bengaluru-chat-room",
+      "ms": 2657,
+      "bytes": 23898
+    },
+    {
+      "url": "https://yaarzo.com/english-chat-room-free-online-chat",
+      "title": "English Chat Room – Talk & Practice English Online Free",
+      "titles": [
+        "English Chat Room – Talk & Practice English Online Free"
+      ],
+      "description": "Join a free English chat room on Yaarzo. Practice English, meet people worldwide, and join real conversations — no downloads, no cost.",
+      "canonical": "https://yaarzo.com/english-chat-room-free-online-chat",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "English Chat Room: Chat in English with People from Around the World"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "English Chat Room – Talk & Practice English Online Free",
+        "h1": "English Chat Room: Chat in English with People from Around the World",
+        "unique": true
+      },
+      "wordCountFull": 985,
+      "wordCountMain": 893,
+      "mainSample": "English Chat Room: Chat in English with People from Around the World English Chat Room – Talk & Practice English Online Free People searching for an \"English chat room\" usually aren't looking for a country — they're looking for a language. This includes English learners wanting real conversation practice outside a classroom, native speakers who want to chat with an international crowd, and people from non-English-speaking countries who simply prefer typing in English online. This keyword sits ap",
+      "textSample": "English Chat Room – Talk & Practice English Online Free Back 0 views Home / English Chat Room – Free Online Chat for English Speakers Worldwide English Chat Room: Chat in English with People from Around the World English Chat Room – Talk & Practice English Online Free People searching for an \"English chat room\" usually aren't looking for a country — they're looking for a language. This includes En",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/english-chat-room-free-online-chat",
+      "ms": 2020,
+      "bytes": 40502
+    },
+    {
+      "url": "https://yaarzo.com/teen-chat-room",
+      "title": "Teen Chat Room for Ages 13–16 | Yaarzo",
+      "titles": [
+        "Teen Chat Room for Ages 13–16 | Yaarzo"
+      ],
+      "description": "Join Yaarzo’s moderated teen chat room for ages 13–16. Talk about school, games, music, hobbies and more in a friendly, age-appropriate community.",
+      "canonical": "https://yaarzo.com/teen-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Teen Chat Room for Ages 13–16: A Safer Place to Talk, Share and Make Friends"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "What Is a Teen Chat Room?",
+        "Safety Comes First",
+        "Age-Appropriate Conversations Only",
+        "How to Have Better Conversations",
+        "Protect Your Privacy Online",
+        "Common Mistakes to Avoid",
+        "Frequently Asked Questions",
+        "Join a Positive Teen Community"
+      ],
+      "h2Count": 8,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Teen Chat Room for Ages 13–16 | Yaarzo",
+        "h1": "Teen Chat Room for Ages 13–16: A Safer Place to Talk, Share and Make Friends",
+        "unique": true
+      },
+      "wordCountFull": 736,
+      "wordCountMain": 708,
+      "mainSample": "Teen Chat Room for Ages 13–16: A Safer Place to Talk, Share and Make Friends # 13 to 16 chat room # online teen community # moderated teen chat # teen friendship chat room Finding an online space where teenagers can talk about school, hobbies, games, music and everyday life should not mean giving up privacy or safety. Yaarzo’s teen chat experience is designed for users aged 13 to 16 who want to take part in friendly, age-appropriate conversations inside a moderated community. The focus is simple",
+      "textSample": "Teen Chat Room for Ages 13–16 | Yaarzo Back 0 views Home / Teen Chat Room for Ages 13–16: A Safer Place to Talk, Share and Make Friends Teen Chat Room for Ages 13–16: A Safer Place to Talk, Share and Make Friends # 13 to 16 chat room # online teen community # moderated teen chat # teen friendship chat room Finding an online space where teenagers can talk about school, hobbies, games, music and eve",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/teen-chat-room",
+      "ms": 2860,
+      "bytes": 29411
+    },
+    {
+      "url": "https://yaarzo.com/karachi-chat-room",
+      "title": "Karachi chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Karachi chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Karachi chat rooms on Yaarzo. Meet people interested in Karachi, Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/karachi-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Karachi chat room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "About this Karachi hub",
+        "Conversation ideas for Karachi",
+        "Related city chat rooms",
+        "Topic rooms",
+        "Community guidance",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 6,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Karachi chat room | Free Online Chat on Yaarzo",
+        "h1": "Karachi chat room",
+        "unique": true
+      },
+      "wordCountFull": 246,
+      "wordCountMain": 184,
+      "mainSample": "Karachi chat room Karachi chat on Yaarzo is for people who want a Sindh coastal-city angle — late-night rooms, Urdu/English mix, and a broader circle than a whole-country hub. About this Karachi hub Karachi is listed under Sindh in Pakistan. Use this page when you care about Karachi-first conversation rather than browsing every Pakistan city room. English and Urdu are common here; Sindhi and other regional languages also appear depending on the room. Conversation ideas for Karachi Examples of ch",
+      "textSample": "Karachi chat room | Free Online Chat on Yaarzo Back 0 views Home / Karachi chat room | Yaarzo Karachi chat room Karachi chat on Yaarzo is for people who want a Sindh coastal-city angle — late-night rooms, Urdu/English mix, and a broader circle than a whole-country hub. About this Karachi hub Karachi is listed under Sindh in Pakistan. Use this page when you care about Karachi-first conversation rat",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/karachi-chat-room",
+      "ms": 3009,
+      "bytes": 24171
+    },
+    {
+      "url": "https://yaarzo.com/about-us",
+      "title": "About Yaarzo | A Social Network Built for Real Connections",
+      "titles": [
+        "About Yaarzo | A Social Network Built for Real Connections"
+      ],
+      "description": "Learn about Yaarzo, a social network built for meaningful connections — public chatrooms, a social feed, friend-finding, and a community that feels like home.",
+      "canonical": "https://yaarzo.com/about-us",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "About Yaarzo"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "About Yaarzo | A Social Network Built for Real Connections",
+        "h1": "About Yaarzo",
+        "unique": true
+      },
+      "wordCountFull": 438,
+      "wordCountMain": 354,
+      "mainSample": "About Yaarzo # about yaarzo # yaarzo social network # chat platform # online community # yaarzo mission # yaarzo features # social network Pakistan India Who We Are Yaarzo is a social network built around one simple idea: making it easy for people to connect, chat, and build real friendships online. Whether you're looking to join a lively public chatroom, share your thoughts on your feed, or find new friends nearby or across the world, Yaarzo brings it all together in one place. The name \"Yaarzo",
+      "textSample": "About Yaarzo | A Social Network Built for Real Connections Back 0 views Home / About Us About Yaarzo # about yaarzo # yaarzo social network # chat platform # online community # yaarzo mission # yaarzo features # social network Pakistan India Who We Are Yaarzo is a social network built around one simple idea: making it easy for people to connect, chat, and build real friendships online. Whether you",
+      "emptyHits": [
+        "empty"
+      ],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/about-us",
+      "ms": 2801,
+      "bytes": 30807
+    },
+    {
+      "url": "https://yaarzo.com/terms-conditions",
+      "title": "Terms & Conditions | Yaarzo Platform Rules",
+      "titles": [
+        "Terms & Conditions | Yaarzo Platform Rules"
+      ],
+      "description": "Read Yaarzo&#x27;s Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.",
+      "canonical": "https://yaarzo.com/terms-conditions",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Terms & Conditions"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Terms & Conditions | Yaarzo Platform Rules",
+        "h1": "Terms & Conditions",
+        "unique": true
+      },
+      "wordCountFull": 686,
+      "wordCountMain": 603,
+      "mainSample": "Terms & Conditions # terms and conditions # terms of service # Yaarzo rules # community guidelines # user agreement # chatroom policy # platform terms Last Updated: 15/8/2026 These Terms & Conditions (\"Terms\") govern your access to and use of Yaarzo, including our chatrooms, social feed, find-friends feature, profiles, and all related services (the \"Platform\"), operated by [INSERT LEGAL ENTITY NAME] (\"Yaarzo,\" \"we,\" \"us,\" or \"our\"). By creating an account or using the Platform, you agree to thes",
+      "textSample": "Terms & Conditions | Yaarzo Platform Rules Back 0 views Home / Terms & Conditions Terms & Conditions # terms and conditions # terms of service # Yaarzo rules # community guidelines # user agreement # chatroom policy # platform terms Last Updated: 15/8/2026 These Terms & Conditions (\"Terms\") govern your access to and use of Yaarzo, including our chatrooms, social feed, find-friends feature, profile",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [
+        "",
+        "\\x3C/li>\\x3C/ul>\\x3Ch3>3. Acceptable Use\\x3C/h3>\\x3Cp>When using Yaarzo's chatrooms, feed, or any community feature, you agree not to:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>Post content that is illegal, harassing, hateful, threatening, or sexually explicit\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Impersonate another person or misrepresent your identity\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Share another user's private information without consent\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Spam, scam, or attempt to defraud other users\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Upload malware or attempt to disrupt the Platform's functionality\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Use automated tools (bots, scrapers) to access the Platform without permission\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Violate any applicable local, national, or international law\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Cp>We reserve the right to remove content or suspend accounts that violate these rules.\\x3C/p>\\x3Ch3>4. Content You Post\\x3C/h3>\\x3Cp>You retain ownership of the content you post on Yaarzo (messages, profile content, poetry/shayari, feed posts, etc.). By posting content, you grant Yaarzo a non-exclusive, worldwide, royalty-free license to display, distribute, and use that content as necessary to operate and promote the Platform.\\x3C/p>\\x3Cp>You are solely responsible for the content you share. Public chatrooms and feed posts are visible to other users and, depending on settings, may be visible publicly.\\x3C/p>\\x3Ch3>5. Community Features\\x3C/h3>\\x3Cp>Yaarzo offers community-style features including public chatrooms, a friendship chat room, and an anonymous chat room category. These are community-based spaces intended for group interaction and are not private, one-on-one anonymous matching services. Standard community moderation rules apply across all chatroom categories.\\x3C/p>\\x3Ch3>6. Account Suspension and Termination\\x3C/h3>\\x3Cp>We may suspend or terminate your account if you violate these Terms, engage in harmful behavior, or if required by law. You may also delete your account at any time through your account settings.\\x3C/p>\\x3Ch3>7. Disclaimers\\x3C/h3>\\x3Cp>Yaarzo is provided on an \\\"as is\\\" and \\\"as available\\\" basis. We do not guarantee that the Platform will be error-free, uninterrupted, or free of harmful content posted by users. We are not responsible for the accuracy of user-generated content or interactions between users.\\x3C/p>\\x3Ch3>8. Limitation of Liability\\x3C/h3>\\x3Cp>To the maximum extent permitted by law, Yaarzo and its affiliates shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Platform, including but not limited to loss of data, loss of profits, or damages resulting from interactions with other users.\\x3C/p>\\x3Ch3>9. Indemnification\\x3C/h3>\\x3Cp>You agree to indemnify and hold Yaarzo harmless from any claims, damages, or expenses arising from your use of the Platform or violation of these Terms.\\x3C/p>\\x3Ch3>10. Governing Law\\x3C/h3>\\x3Cp>These Terms are governed by the laws of [INSERT JURISDICTION], without regard to conflict of law principles.\\x3C/p>\\x3Ch3>11. Changes to These Terms\\x3C/h3>\\x3Cp>We may update these Terms periodically. Continued use of the Platform after updates take effect constitutes acceptance of the revised Terms. Material changes will be communicated where appropriate.\\x3C/p>\\x3Ch3>12. Contact Us\\x3C/h3>\\x3Cp>For questions about these Terms, reach out to us at:\\x3C/p>\\x3Cp>📧 support@yaarzo.com 🌐\\x3Ca target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\" href=\\\"https://yaarzo.com/contact-us\\\">Contact Us page\\x3C/a>\\x3C/p>\\x3Cp>\\x3Cbr>\\n\\n\\x3C/p>\",intro_content:null,excerpt:null,tags:$R[16]=[\"terms and conditions\",\"terms of service\",\"Yaarzo rules\",\"community guidelines\",\"user agreement\",\"chatroom policy\",\"platform terms\"],layout:\"boxed\",sidebar_left:\"none\",sidebar_right:\"none\",meta_title:\"Terms & Conditions | Yaarzo Platform Rules\",meta_description:\"Read Yaarzo's Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.\",meta_keywords:null,og_title:null,og_description:null,og_image:null,canonical_url:\"https://yaarzo.com/terms-conditions\",h1:\"Terms & Conditions\",noindex:!1,nofollow:!1,views:0,published_at:\"2026-08-12T14:55:08.832+00:00\",redirectedFrom:null,publicHtml:\"\\x3Cp>\\n\\n\\x3C/p>\\x3Cp>\\x3Cstrong>Last Updated: 15/8/2026\\x3C/strong>\\x3C/p>\\x3Cp>These Terms & Conditions (\\\"Terms\\\") govern your access to and use of Yaarzo, including our chatrooms, social feed, find-friends feature, profiles, and all related services (the \\\"Platform\\\"), operated by [INSERT LEGAL ENTITY NAME] (\\\"Yaarzo,\\\" \\\"we,\\\" \\\"us,\\\" or \\\"our\\\"). By creating an account or using the Platform, you agree to these Terms.\\x3C/p>\\x3Ch3>1. Eligibility\\x3C/h3>\\x3Cp>You must be at least 16 years old to use Yaarzo. By registering, you confirm that you meet this age requirement and that all information you provide is accurate.\\x3C/p>\\x3Ch3>2. Your Account\\x3C/h3>\\x3Cul>\\x3Cli>\\x3Cp>You are responsible for maintaining the confidentiality of your login credentials.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>You must provide accurate information when creating your profile.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>You are responsible for all activity that occurs under your account.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Notify us immediately if you suspect unauthorized access to your account.\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Ch3>3. Acceptable Use\\x3C/h3>\\x3Cp>When using Yaarzo's chatrooms, feed, or any community feature, you agree not to:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>Post content that is illegal, harassing, hateful, threatening, or sexually explicit\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Impersonate another person or misrepresent your identity\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Share another user's private information without consent\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Spam, scam, or attempt to defraud other users\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Upload malware or attempt to disrupt the Platform's functionality\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Use automated tools (bots, scrapers) to access the Platform without permission\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Violate any applicable local, national, or international law\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Cp>We reserve the right to remove content or suspend accounts that violate these rules.\\x3C/p>\\x3Ch3>4. Content You Post\\x3C/h3>\\x3Cp>You retain ownership of the content you post on Yaarzo (messages, profile content, poetry/shayari, feed posts, etc.). By posting content, you grant Yaarzo a non-exclusive, worldwide, royalty-free license to display, distribute, and use that content as necessary to operate and promote the Platform.\\x3C/p>\\x3Cp>You are solely responsible for the content you share. Public chatrooms and feed posts are visible to other users and, depending on settings, may be visible publicly.\\x3C/p>\\x3Ch3>5. Community Features\\x3C/h3>\\x3Cp>Yaarzo offers community-style features including public chatrooms, a friendship chat room, and an anonymous chat room category. These are community-based spaces intended for group interaction and are not private, one-on-one anonymous matching services. Standard community moderation rules apply across all chatroom categories.\\x3C/p>\\x3Ch3>6. Account Suspension and Termination\\x3C/h3>\\x3Cp>We may suspend or terminate your account if you violate these Terms, engage in harmful behavior, or if required by law. You may also delete your account at any time through your account settings.\\x3C/p>\\x3Ch3>7. Disclaimers\\x3C/h3>\\x3Cp>Yaarzo is provided on an \\\"as is\\\" and \\\"as available\\\" basis. We do not guarantee that the Platform will be error-free, uninterrupted, or free of harmful content posted by users. We are not responsible for the accuracy of user-generated content or interactions between users.\\x3C/p>\\x3Ch3>8. Limitation of Liability\\x3C/h3>\\x3Cp>To the maximum extent permitted by law, Yaarzo and its affiliates shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Platform, including but not limited to loss of data, loss of profits, or damages resulting from interactions with other users.\\x3C/p>\\x3Ch3>9. Indemnification\\x3C/h3>\\x3Cp>You agree to indemnify and hold Yaarzo harmless from any claims, damages, or expenses arising from your use of the Platform or violation of these Terms.\\x3C/p>\\x3Ch3>10. Governing Law\\x3C/h3>\\x3Cp>These Terms are governed by the laws of [INSERT JURISDICTION], without regard to conflict of law principles.\\x3C/p>\\x3Ch3>11. Changes to These Terms\\x3C/h3>\\x3Cp>We may update these Terms periodically. Continued use of the Platform after updates take effect constitutes acceptance of the revised Terms. Material changes will be communicated where appropriate.\\x3C/p>\\x3Ch3>12. Contact Us\\x3C/h3>\\x3Cp>For questions about these Terms, reach out to us at:\\x3C/p>\\x3Cp>📧 support@yaarzo.com 🌐\\x3Ca target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\" href=\\\"https://yaarzo.com/contact-us\\\">Contact Us page\\x3C/a>\\x3C/p>\\x3Cp>\\x3Cbr>\\n\\n\\x3C/p>\",relatedChatRooms:$R[17]=[$R[18]={slug:\"india-chat-room\",href:\"/india-chat-room\",label:\"India chat hubs\",kind:\"country\"},$R[19]={slug:\"pakistan-chat-room\",href:\"/pakistan-chat-room\",label:\"Pakistan chat hubs\",kind:\"country\"},$R[20]={slug:\"bengaluru-chat-room\",href:\"/bengaluru-chat-room\",label:\"Bengaluru rooms\",kind:\"city\"},$R[21]={slug:\"delhi-chat-room\",href:\"/delhi-chat-room\",label:\"chat in Delhi Chat Room: Purani Dilli Se New Delhi Tak Ki Baatcheet\",kind:\"city\"},$R[22]={slug:\"chennai-chat-room\",href:\"/chennai-chat-room\",label:\"Chennai Chat Room: Marina Beach Se OMR Tak Ki Baatcheet chat room\",kind:\"city\"},$R[23]={slug:\"faisalabad-chat-room\",href:\"/faisalabad-chat-room\",label:\"Faisalabad Chat Room | Free Chat & Community – Yaarzo chat room\",kind:\"city\"},$R[24]={slug:\"hyderabad-india-chat-room\",href:\"/hyderabad-india-chat-room\",label:\"Hyderabad chat room\",kind:\"city\"},$R[25]={slug:\"islamabad-chat-room\",href:\"/islamabad-chat-room\",label:\"Islamabad Chat Room — Margalla Ke Daaman Mein Basi City Ka Apna Online Dosti Adda rooms\",kind:\"city\"}]},slug:\"terms-conditions\",seoData:$R[26]={global:null,seo:$R[27]={title:\"Terms & Conditions | Yaarzo Platform Rules\",description:\"Read Yaarzo's Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.\",keywords:\"terms and conditions, terms of service, Yaarzo rules, community guidelines, user agreement, chatroom policy, platform terms\",canonical:\"https://yaarzo.com/terms-conditions\",robots:\"index, follow\",ogTitle:\"Terms & Conditions | Yaarzo Platform Rules\",ogDescription:\"Read Yaarzo's Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.\",ogImage:\"\",ogType:\"website\",twitterCard:\"summary_large_image\",twitterTitle:\"Terms & Conditions | Yaarzo Platform Rules\",twitterDescription:\"Read Yaarzo's Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.\",twitterImage:\"\",jsonLd:$R[28]={\"@context\":\"https://schema.org\",\"@type\":\"Article\",headline:\"Terms & Conditions\",description:\"Read Yaarzo's Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.\",url:\"https://yaarzo.com/terms-conditions\",datePublished:\"2026-08-12T14:55:08.832+00:00\"},noindex:!1,nofollow:!1},fallbackJsonLd:$R[28]}},ssr:!0}],lastMatchId:\"\u0000$slug\u0000terms-conditions\"})($R[\"tsr\"]);$_TSR.e();document.currentScript.remove()"
+      ],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/terms-conditions",
+      "ms": 3637,
+      "bytes": 35480
+    },
+    {
+      "url": "https://yaarzo.com/chatib-alternative-chat-room",
+      "title": "Best Chatib Alternative Chat Room – Yaarzo",
+      "titles": [
+        "Best Chatib Alternative Chat Room – Yaarzo"
+      ],
+      "description": "Searching for a Chatib alternative? Yaarzo offers chat rooms, a social feed, AI chat, and more — a fuller community experience, free to join.",
+      "canonical": "https://yaarzo.com/chatib-alternative-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Chatib Alternative – Try Yaarzo&#x27;s Chat Rooms & Social Community"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Best Chatib Alternative Chat Room – Yaarzo",
+        "h1": "Chatib Alternative – Try Yaarzo&#x27;s Chat Rooms & Social Community",
+        "unique": true
+      },
+      "wordCountFull": 993,
+      "wordCountMain": 901,
+      "mainSample": "Chatib Alternative – Try Yaarzo&#x27;s Chat Rooms & Social Community Looking for a Chatib Alternative? Yaarzo Ke Chat Rooms Try Karo \"Yaar, koi aur chat site batao jo Chatib jaisi ho lekin thodi better ho.\" — yeh ek common sawal hai jo bohot log online forums aur groups mein poochte hain. Log kisi bhi single platform pe stick nahi rehna chahte — woh options explore karna chahte hain, naye features try karna chahte hain, aur dekhna chahte hain ke kaunsi jagah unki actual needs ko best fulfill kar",
+      "textSample": "Best Chatib Alternative Chat Room – Yaarzo Back 0 views Home / Chatib Alternative – Try Yaarzo&#x27;s Chat Rooms & Social Community Chatib Alternative – Try Yaarzo&#x27;s Chat Rooms & Social Community Looking for a Chatib Alternative? Yaarzo Ke Chat Rooms Try Karo \"Yaar, koi aur chat site batao jo Chatib jaisi ho lekin thodi better ho.\" — yeh ek common sawal hai jo bohot log online forums aur grou",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/chatib-alternative-chat-room",
+      "ms": 3221,
+      "bytes": 42071
+    },
+    {
+      "url": "https://yaarzo.com/rawalpindi-chat-room",
+      "title": "Rawalpindi chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Rawalpindi chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Rawalpindi chat rooms on Yaarzo. Meet people interested in Rawalpindi, Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/rawalpindi-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Rawalpindi chat room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "About this Rawalpindi hub",
+        "Conversation ideas for Rawalpindi",
+        "Related city chat rooms",
+        "Topic rooms",
+        "Community guidance",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 6,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Rawalpindi chat room | Free Online Chat on Yaarzo",
+        "h1": "Rawalpindi chat room",
+        "unique": true
+      },
+      "wordCountFull": 237,
+      "wordCountMain": 172,
+      "mainSample": "Rawalpindi chat room Rawalpindi chat on Yaarzo sits next to Islamabad — use this page when you want the Pindi side of the twin-city conversation, not the capital-territory page. About this Rawalpindi hub Rawalpindi is listed under Punjab in Pakistan. Nearby navigation keeps Islamabad one click away without mixing India city pages. Urdu and English are typical; Punjabi threads appear in some rooms. Conversation ideas for Rawalpindi Examples of chat directions people use on this hub (not rankings ",
+      "textSample": "Rawalpindi chat room | Free Online Chat on Yaarzo Back 0 views Home / Rawalpindi chat room | Yaarzo Rawalpindi chat room Rawalpindi chat on Yaarzo sits next to Islamabad — use this page when you want the Pindi side of the twin-city conversation, not the capital-territory page. About this Rawalpindi hub Rawalpindi is listed under Punjab in Pakistan. Nearby navigation keeps Islamabad one click away ",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/rawalpindi-chat-room",
+      "ms": 2645,
+      "bytes": 24123
+    },
+    {
+      "url": "https://yaarzo.com/chat-rooms-without-registration-2026",
+      "title": "Chat Rooms Without Registration – Start Chatting Instantly on Yaarzo",
+      "titles": [
+        "Chat Rooms Without Registration – Start Chatting Instantly on Yaarzo"
+      ],
+      "description": "Skip the signup wait — join free chat rooms without registration on Yaarzo and start talking to new people instantly, no email or long forms needed.",
+      "canonical": "https://yaarzo.com/chat-rooms-without-registration-2026",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Chat Rooms Without Registration – Chat Karo Bina Signup Ke, Instantly"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Chat Rooms Without Registration – Start Chatting Instantly on Yaarzo",
+        "h1": "Chat Rooms Without Registration – Chat Karo Bina Signup Ke, Instantly",
+        "unique": true
+      },
+      "wordCountFull": 1206,
+      "wordCountMain": 1118,
+      "mainSample": "Chat Rooms Without Registration – Chat Karo Bina Signup Ke, Instantly Chat Rooms Without Registration – Chat Karo Bina Signup Ke, Instantly Ever opened a chat website, only to be greeted by a five-step signup form asking for your email, phone number, and a photo before you can even say \"hi\"? Frustrating, right? Yeh exactly wahi wajah hai jis ki wajah se chat rooms without registration itni tezi se popular ho rahe hain — log fast, hassle-free conversations chahte hain, na ke ek lambi form fill ka",
+      "textSample": "Chat Rooms Without Registration – Start Chatting Instantly on Yaarzo Back 0 views Home / Chat Rooms Without Registration 2026 Chat Rooms Without Registration – Chat Karo Bina Signup Ke, Instantly Chat Rooms Without Registration – Chat Karo Bina Signup Ke, Instantly Ever opened a chat website, only to be greeted by a five-step signup form asking for your email, phone number, and a photo before you ",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/chat-rooms-without-registration-2026",
+      "ms": 3647,
+      "bytes": 47594
+    },
+    {
+      "url": "https://yaarzo.com/mumbai-chat-room",
+      "title": "Mumbai chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Mumbai chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Mumbai chat room par free mein naye dost banao, baat karo aur dosti badhao. Yaarzo par safe, active Mumbai community abhi join karein.",
+      "canonical": "https://yaarzo.com/mumbai-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Mumbai chat room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Mumbai Jaisa Hi Fast, Real Aur Alive",
+        "Yaarzo Par Kya Milega",
+        "Registration Ka Jhanjhat Nahi",
+        "FAQs",
+        "Ab Shuru Karo",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 6,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Mumbai chat room | Free Online Chat on Yaarzo",
+        "h1": "Mumbai chat room",
+        "unique": true
+      },
+      "wordCountFull": 913,
+      "wordCountMain": 860,
+      "mainSample": "Mumbai chat room Mumbai chat on Yaarzo leans into a Maharashtra coastal-metro angle — entertainment, workday energy, and English/Hindi rooms with a local Mumbai frame. Local train mein khadi ek ladki apne phone mein scroll kar rahi hai. Andheri se Churchgate tak ka safar lamba hai, aur is bheed bhare shehar mein — jahan har koi kahin na kahin bhaag raha hai — asli baat cheet ke liye time nikalna mushkil ho jaata hai. Yehi Mumbai ki reality hai: shehar kabhi sota nahi, par yahan ke log kabhi kabh",
+      "textSample": "Mumbai chat room | Free Online Chat on Yaarzo Back 0 views Home / Mumbai chat room | Yaarzo Mumbai chat room Mumbai chat on Yaarzo leans into a Maharashtra coastal-metro angle — entertainment, workday energy, and English/Hindi rooms with a local Mumbai frame. Local train mein khadi ek ladki apne phone mein scroll kar rahi hai. Andheri se Churchgate tak ka safar lamba hai, aur is bheed bhare shehar",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/mumbai-chat-room",
+      "ms": 3071,
+      "bytes": 39270
+    },
+    {
+      "url": "https://yaarzo.com/faisalabad-chat-room",
+      "title": "Faisalabad chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Faisalabad chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Faisalabad chat rooms on Yaarzo. Meet people interested in Faisalabad, Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/faisalabad-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Faisalabad Chat Room | Free Chat & Community – Yaarzo"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Faisalabad chat room | Free Online Chat on Yaarzo",
+        "h1": "Faisalabad Chat Room | Free Chat & Community – Yaarzo",
+        "unique": true
+      },
+      "wordCountFull": 1002,
+      "wordCountMain": 948,
+      "mainSample": "Faisalabad Chat Room | Free Chat & Community – Yaarzo Faisalabad chat rooms on Yaarzo cover a central Punjab industrial-city focus — practical for people who want that local circle instead of Lahore or Multan. Ask anyone from Faisalabad about their city's reputation, and jugat comes up fast — that quick, funny, half-teasing wit Punjabi speakers are known for. It's built into how people talk in Lyallpur, and it's the kind of energy a good chat room should carry too. Yaarzo puts public chatrooms a",
+      "textSample": "Faisalabad chat room | Free Online Chat on Yaarzo Back 0 views Home / Faisalabad chat room | Yaarzo Faisalabad Chat Room | Free Chat & Community – Yaarzo Faisalabad chat rooms on Yaarzo cover a central Punjab industrial-city focus — practical for people who want that local circle instead of Lahore or Multan. Ask anyone from Faisalabad about their city's reputation, and jugat comes up fast — that q",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/faisalabad-chat-room",
+      "ms": 3078,
+      "bytes": 40516
+    },
+    {
+      "url": "https://yaarzo.com/karachi-girls-chat-room",
+      "title": "Karachi Girls Chat Room – Safe & Judgment-Free Space | Yaarzo",
+      "titles": [
+        "Karachi Girls Chat Room – Safe & Judgment-Free Space | Yaarzo"
+      ],
+      "description": "Karachi ki larkiyon ke liye ek safe, judgment-free chat room — dosti karo, apni baat share karo, bina kisi pressure ke. Free join karo Yaarzo pe.",
+      "canonical": "https://yaarzo.com/karachi-girls-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Karachi Girls Chat Room — Apni Jaisi Larkiyon Se Milne Ka Safe Adda"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Frequently Asked Questions",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 2,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Karachi Girls Chat Room – Safe & Judgment-Free Space | Yaarzo",
+        "h1": "Karachi Girls Chat Room — Apni Jaisi Larkiyon Se Milne Ka Safe Adda",
+        "unique": true
+      },
+      "wordCountFull": 967,
+      "wordCountMain": 871,
+      "mainSample": "Karachi Girls Chat Room — Apni Jaisi Larkiyon Se Milne Ka Safe Adda Karachi ki koi larki jab pehli baar kisi online chat room ka naam sunti hai, to sab se pehla sawal yehi hota hai — \"kya ye safe hai?\" Ye sawal bilkul jaayez hai, kyunke internet pe har jagah har kisi ke liye judgment-free aur comfortable space nahi hota, khaas kar larkiyon ke liye. Yehi wo gap hai jo Karachi girls chat room fill karta hai — ek aisi jagah jahan larkiyan bina kisi awkwardness ke apni baat kar sakein, apni umar ki ",
+      "textSample": "Karachi Girls Chat Room – Safe & Judgment-Free Space | Yaarzo Back 0 views Home / Karachi Girls Chat Room – Safe & Judgment-Free Space | Yaarzo Karachi Girls Chat Room — Apni Jaisi Larkiyon Se Milne Ka Safe Adda Karachi ki koi larki jab pehli baar kisi online chat room ka naam sunti hai, to sab se pehla sawal yehi hota hai — \"kya ye safe hai?\" Ye sawal bilkul jaayez hai, kyunke internet pe har jag",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/karachi-girls-chat-room",
+      "ms": 3035,
+      "bytes": 39977
+    },
+    {
+      "url": "https://yaarzo.com/privacy-policy",
+      "title": "Privacy Policy | How Yaarzo Protects Your Data",
+      "titles": [
+        "Privacy Policy | How Yaarzo Protects Your Data"
+      ],
+      "description": "Read Yaarzo&#x27;s Privacy Policy to learn what information we collect, how it&#x27;s used, and the choices you have to control your data on our chat and social platform.",
+      "canonical": "https://yaarzo.com/privacy-policy",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Privacy Policy"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Privacy Policy | How Yaarzo Protects Your Data",
+        "h1": "Privacy Policy",
+        "unique": true
+      },
+      "wordCountFull": 734,
+      "wordCountMain": 650,
+      "mainSample": "Privacy Policy # privacy policy # data protection # Yaarzo privacy # user data # cookies policy # GDPR # online safety # chat platform privacy Last Updated: 15/08/2026 Welcome to Yaarzo. This Privacy Policy explains how Yaarzo (\"Yaarzo,\" \"we,\" \"us,\" or \"our\") collects, uses, shares, and protects your information when you use our website, chatrooms, social feed, and related features (collectively, the \"Platform\"). By using Yaarzo, you agree to the practices described in this policy. 1. Informatio",
+      "textSample": "Privacy Policy | How Yaarzo Protects Your Data Back 0 views Home / Privacy Policy Privacy Policy # privacy policy # data protection # Yaarzo privacy # user data # cookies policy # GDPR # online safety # chat platform privacy Last Updated: 15/08/2026 Welcome to Yaarzo. This Privacy Policy explains how Yaarzo (\"Yaarzo,\" \"we,\" \"us,\" or \"our\") collects, uses, shares, and protects your information when",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [
+        "6. Children's Privacy",
+        "\\x3Ch3>6. Children's Privacy\\x3C/h3>\\x3Cp>Yaarzo is intended for users who meet the minimum age requirement stated in our Terms & Conditions [INSERT MINIMUM AGE]. We do not knowingly collect information from users under this age. If we become aware that we have collected data from an underage user, we will take steps to delete it promptly.\\x3C/p>\\x3Ch3>7. Your Rights and Choices\\x3C/h3>\\x3Cp>Depending on your location, you may have rights to:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>Access, correct, or delete your personal information\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Object to or restrict certain processing of your data\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Download a copy of your data\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Withdraw consent where processing is based on consent\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Cp>To exercise these rights, contact us using the details in Section 10.\\x3C/p>\\x3Ch3>8. International Users\\x3C/h3>\\x3Cp>Yaarzo may be accessed from different countries. By using the Platform, you understand that your information may be processed in locations outside your own country, subject to applicable data protection laws.\\x3C/p>\\x3Ch3>9. Changes to This Policy\\x3C/h3>\\x3Cp>We may update this Privacy Policy from time to time. Material changes will be communicated through the Platform or via email. Continued use of Yaarzo after changes take effect constitutes acceptance of the updated policy.\\x3C/p>\\x3Ch3>10. Contact Us\\x3C/h3>\\x3Cp>If you have questions about this Privacy Policy or how your data is handled, contact us at:\\x3C/p>\\x3Cp>📧 support@yaarzo.com 🌐\\x3Ca target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\" href=\\\"https://yaarzo.com/contact-us\\\">Contact Us page link\\x3C/a>\\x3C/p>\\x3Cp>\\n\\n\\x3C/p>\",intro_content:null,excerpt:null,tags:$R[16]=[\"privacy policy\",\"data protection\",\"Yaarzo privacy\",\"user data\",\"cookies policy\",\"GDPR\",\"online safety\",\"chat platform privacy\"],layout:\"boxed\",sidebar_left:\"none\",sidebar_right:\"none\",meta_title:\"Privacy Policy | How Yaarzo Protects Your Data\",meta_description:\"Read Yaarzo's Privacy Policy to learn what information we collect, how it's used, and the choices you have to control your data on our chat and social platform.\",meta_keywords:null,og_title:null,og_description:null,og_image:null,canonical_url:null,h1:\"Privacy Policy\",noindex:!1,nofollow:!1,views:0,published_at:\"2026-08-12T15:06:35.154+00:00\",redirectedFrom:null,publicHtml:\"\\x3Cp>\\n\\n\\x3C/p>\\x3Cp>\\x3Cstrong>Last Updated: 15/08/2026\\x3C/strong>\\x3C/p>\\x3Cp>Welcome to Yaarzo. This Privacy Policy explains how Yaarzo (\\\"Yaarzo,\\\" \\\"we,\\\" \\\"us,\\\" or \\\"our\\\") collects, uses, shares, and protects your information when you use our website, chatrooms, social feed, and related features (collectively, the \\\"Platform\\\"). By using Yaarzo, you agree to the practices described in this policy.\\x3C/p>\\x3Ch3>1. Information We Collect\\x3C/h3>\\x3Cp>We collect information in the following ways:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>\\x3Cstrong>Account Information:\\x3C/strong>When you register, we collect details such as your name, username, email address, date of birth, and profile information you choose to add.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Content You Share:\\x3C/strong>Messages, chatroom posts, feed updates, profile photos, poetry/shayari submissions, and other content you create or share on the Platform.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Usage Data:\\x3C/strong>Information about how you interact with Yaarzo, including pages visited, features used, and time spent on the Platform.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Device and Technical Data:\\x3C/strong>IP address, browser type, device identifiers, and operating system, collected automatically when you access the Platform.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Cookies and Similar Technologies:\\x3C/strong>See Section 4 below.\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Ch3>2. How We Use Your Information\\x3C/h3>\\x3Cp>We use the information we collect to:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>Create and manage your Yaarzo account\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Enable core features such as chatrooms, the social feed, find-friends, and profiles\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Personalize your experience and show relevant content or suggestions\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Maintain platform safety, detect abuse, and enforce our Terms & Conditions\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Communicate with you about updates, support requests, or policy changes\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Improve and develop new features\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Comply with legal obligations\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Ch3>3. Sharing of Information\\x3C/h3>\\x3Cp>We do not sell your personal information. We may share information with:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>\\x3Cstrong>Service Providers:\\x3C/strong>Vendors who help us operate the Platform (e.g., hosting, analytics, customer support)\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Legal Requirements:\\x3C/strong>When required by law, court order, or to protect the rights, safety, or property of Yaarzo, our users, or others\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Business Transfers:\\x3C/strong>In connection with a merger, acquisition, or sale of assets, subject to standard confidentiality protections\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>With Your Consent:\\x3C/strong>Any other sharing will only happen with your explicit permission\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Cp>Content you post publicly (e.g., in public chatrooms or your social feed) is visible to other users and may be seen by anyone who accesses the Platform.\\x3C/p>\\x3Ch3>4. Cookies and Tracking Technologies\\x3C/h3>\\x3Cp>Yaarzo uses cookies and similar technologies to keep you logged in, remember preferences, and understand how the Platform is used. You can manage cookie preferences through your browser settings, though disabling cookies may affect some features.\\x3C/p>\\x3Ch3>5. Data Security\\x3C/h3>\\x3Cp>We use reasonable technical and organizational measures to protect your information from unauthorized access, alteration, or loss. However, no method of transmission or storage is completely secure, and we cannot guarantee absolute security.\\x3C/p>\\x3Ch3>6. Children's Privacy\\x3C/h3>\\x3Cp>Yaarzo is intended for users who meet the minimum age requirement stated in our Terms & Conditions [INSERT MINIMUM AGE]. We do not knowingly collect information from users under this age. If we become aware that we have collected data from an underage user, we will take steps to delete it promptly.\\x3C/p>\\x3Ch3>7. Your Rights and Choices\\x3C/h3>\\x3Cp>Depending on your location, you may have rights to:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>Access, correct, or delete your personal information\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Object to or restrict certain processing of your data\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Download a copy of your data\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Withdraw consent where processing is based on consent\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Cp>To exercise these rights, contact us using the details in Section 10.\\x3C/p>\\x3Ch3>8. International Users\\x3C/h3>\\x3Cp>Yaarzo may be accessed from different countries. By using the Platform, you understand that your information may be processed in locations outside your own country, subject to applicable data protection laws.\\x3C/p>\\x3Ch3>9. Changes to This Policy\\x3C/h3>\\x3Cp>We may update this Privacy Policy from time to time. Material changes will be communicated through the Platform or via email. Continued use of Yaarzo after changes take effect constitutes acceptance of the updated policy.\\x3C/p>\\x3Ch3>10. Contact Us\\x3C/h3>\\x3Cp>If you have questions about this Privacy Policy or how your data is handled, contact us at:\\x3C/p>\\x3Cp>📧 support@yaarzo.com 🌐\\x3Ca target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\" href=\\\"https://yaarzo.com/contact-us\\\">Contact Us page link\\x3C/a>\\x3C/p>\\x3Cp>\\n\\n\\x3C/p>\",relatedChatRooms:$R[17]=[$R[18]={slug:\"india-chat-room\",href:\"/india-chat-room\",label:\"India chat room\",kind:\"country\"},$R[19]={slug:\"pakistan-chat-room\",href:\"/pakistan-chat-room\",label:\"Pakistan chat room\",kind:\"country\"},$R[20]={slug:\"bengaluru-chat-room\",href:\"/bengaluru-chat-room\",label:\"chat in Bengaluru\",kind:\"city\"},$R[21]={slug:\"delhi-chat-room\",href:\"/delhi-chat-room\",label:\"chat in Delhi Chat Room: Purani Dilli Se New Delhi Tak Ki Baatcheet\",kind:\"city\"},$R[22]={slug:\"islamabad-chat-room\",href:\"/islamabad-chat-room\",label:\"chat in Islamabad Chat Room — Margalla Ke Daaman Mein Basi City Ka Apna Online Dosti Adda\",kind:\"city\"},$R[23]={slug:\"chennai-chat-room\",href:\"/chennai-chat-room\",label:\"Chennai Chat Room: Marina Beach Se OMR Tak Ki Baatcheet chat room\",kind:\"city\"},$R[24]={slug:\"faisalabad-chat-room\",href:\"/faisalabad-chat-room\",label:\"Faisalabad Chat Room | Free Chat & Community – Yaarzo rooms\",kind:\"city\"},$R[25]={slug:\"hyderabad-india-chat-room\",href:\"/hyderabad-india-chat-room\",label:\"Hyderabad chat room\",kind:\"city\"}]},slug:\"privacy-policy\",seoData:$R[26]={global:null,seo:$R[27]={title:\"Privacy Policy | How Yaarzo Protects Your Data\",description:\"Read Yaarzo's Privacy Policy to learn what information we collect, how it's used, and the choices you have to control your data on our chat and social platform.\",keywords:\"privacy policy, data protection, Yaarzo privacy, user data, cookies policy, GDPR, online safety, chat platform privacy\",canonical:\"https://yaarzo.com/privacy-policy\",robots:\"index, follow\",ogTitle:\"Privacy Policy | How Yaarzo Protects Your Data\",ogDescription:\"Read Yaarzo's Privacy Policy to learn what information we collect, how it's used, and the choices you have to control your data on our chat and social platform.\",ogImage:\"\",ogType:\"website\",twitterCard:\"summary_large_image\",twitterTitle:\"Privacy Policy | How Yaarzo Protects Your Data\",twitterDescription:\"Read Yaarzo's Privacy Policy to learn what information we collect, how it's used, and the choices you have to control your data on our chat and social platform.\",twitterImage:\"\",jsonLd:$R[28]={\"@context\":\"https://schema.org\",\"@type\":\"Article\",headline:\"Privacy Policy\",description:\"Read Yaarzo's Privacy Policy to learn what information we collect, how it's used, and the choices you have to control your data on our chat and social platform.\",url:\"https://yaarzo.com/privacy-policy\",datePublished:\"2026-08-12T15:06:35.154+00:00\"},noindex:!1,nofollow:!1},fallbackJsonLd:$R[28]}},ssr:!0}],lastMatchId:\"\u0000$slug\u0000privacy-policy\"})($R[\"tsr\"]);$_TSR.e();document.currentScript.remove()"
+      ],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/privacy-policy",
+      "ms": 2900,
+      "bytes": 37763
+    },
+    {
+      "url": "https://yaarzo.com/india-chat-room",
+      "title": "India chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "India chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free India chat rooms on Yaarzo. Browse city hubs, meet people across India, and chat online anytime.",
+      "canonical": "https://yaarzo.com/india-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "India chat room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "How the India hub works",
+        "Priority city chat rooms in India",
+        "Chat categories from this hub",
+        "Community guidance",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 5,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "India chat room | Free Online Chat on Yaarzo",
+        "h1": "India chat room",
+        "unique": true
+      },
+      "wordCountFull": 212,
+      "wordCountMain": 167,
+      "mainSample": "India chat room India chat room is Yaarzo’s country hub for India: begin here for the national directory, then open metro city rooms when you want Delhi, Mumbai, Bengaluru, or another local angle. How the India hub works City pages (Delhi, Mumbai, Bengaluru, Hyderabad India, and others) narrow the conversation. This hub stays India-only for local siblings and links topic categories when interest matters more than city. Use city chat pages when location matters. Use Girls Chat, Dating Chat, or Fr",
+      "textSample": "India chat room | Free Online Chat on Yaarzo Back 0 views Home / India chat room | Yaarzo India chat room India chat room is Yaarzo’s country hub for India: begin here for the national directory, then open metro city rooms when you want Delhi, Mumbai, Bengaluru, or another local angle. How the India hub works City pages (Delhi, Mumbai, Bengaluru, Hyderabad India, and others) narrow the conversatio",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/india-chat-room",
+      "ms": 3036,
+      "bytes": 23615
+    },
+    {
+      "url": "https://yaarzo.com/pakistan-chat-room",
+      "title": "Pakistan chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Pakistan chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Pakistan chat rooms on Yaarzo. Browse city hubs, meet people across Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/pakistan-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Pakistan chat room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "How the Pakistan hub works",
+        "Priority city chat rooms in Pakistan",
+        "Chat categories from this hub",
+        "Community guidance",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 5,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Pakistan chat room | Free Online Chat on Yaarzo",
+        "h1": "Pakistan chat room",
+        "unique": true
+      },
+      "wordCountFull": 219,
+      "wordCountMain": 174,
+      "mainSample": "Pakistan chat room Pakistan chat room is Yaarzo’s country hub for Pakistan: start with a country-wide overview, then move into city rooms across Punjab, Sindh, and the capital territory when you want a local focus. How the Pakistan hub works City pages (Lahore, Karachi, Islamabad, and others) narrow the conversation. This hub does not invent audience sizes — it explains how Pakistan pages relate and points you to rooms that already exist. Use city chat pages when location matters. Use Girls Chat",
+      "textSample": "Pakistan chat room | Free Online Chat on Yaarzo Back 0 views Home / Pakistan chat room | Yaarzo Pakistan chat room Pakistan chat room is Yaarzo’s country hub for Pakistan: start with a country-wide overview, then move into city rooms across Punjab, Sindh, and the capital territory when you want a local focus. How the Pakistan hub works City pages (Lahore, Karachi, Islamabad, and others) narrow the",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/pakistan-chat-room",
+      "ms": 2269,
+      "bytes": 23762
+    },
+    {
+      "url": "https://yaarzo.com/kolkata-chat-room",
+      "title": "Kolkata chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Kolkata chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Kolkata chat rooms on Yaarzo. Meet people interested in Kolkata, India, and chat online anytime.",
+      "canonical": "https://yaarzo.com/kolkata-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Kolkata chat room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "About this Kolkata hub",
+        "Conversation ideas for Kolkata",
+        "Related city chat rooms",
+        "Topic rooms",
+        "Community guidance",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 6,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Kolkata chat room | Free Online Chat on Yaarzo",
+        "h1": "Kolkata chat room",
+        "unique": true
+      },
+      "wordCountFull": 220,
+      "wordCountMain": 166,
+      "mainSample": "Kolkata chat room Kolkata chat rooms on Yaarzo cover an eastern India metro angle — culture-forward hangouts and a different regional frame from Delhi or Mumbai. About this Kolkata hub Kolkata is listed under West Bengal in India. Sibling metros remain India-only in this priority graph. Bengali, English, and Hindi commonly appear depending on the room. Conversation ideas for Kolkata Examples of chat directions people use on this hub (not rankings or traffic claims): books and culture campus chat",
+      "textSample": "Kolkata chat room | Free Online Chat on Yaarzo Back 0 views Home / Kolkata chat room | Yaarzo Kolkata chat room Kolkata chat rooms on Yaarzo cover an eastern India metro angle — culture-forward hangouts and a different regional frame from Delhi or Mumbai. About this Kolkata hub Kolkata is listed under West Bengal in India. Sibling metros remain India-only in this priority graph. Bengali, English, ",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/kolkata-chat-room",
+      "ms": 2651,
+      "bytes": 23662
+    },
+    {
+      "url": "https://yaarzo.com/uk-chat-room",
+      "title": "UK Chat Room – Free Online Chat with People in Britain",
+      "titles": [
+        "UK Chat Room – Free Online Chat with People in Britain"
+      ],
+      "description": "Join Yaarzo&#x27;s UK chat room for free. Chat live with people across Britain, make new friends, and join real conversations — no downloads required.",
+      "canonical": "https://yaarzo.com/uk-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "UK Chat Room: Chat with People from Across Britain for Free"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "FAQ",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 2,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "UK Chat Room – Free Online Chat with People in Britain",
+        "h1": "UK Chat Room: Chat with People from Across Britain for Free",
+        "unique": true
+      },
+      "wordCountFull": 839,
+      "wordCountMain": 745,
+      "mainSample": "UK Chat Room: Chat with People from Across Britain for Free People use the UK chat room to talk with others in Britain, stay in touch from the English-speaking diaspora, or join conversations around British culture and everyday life. Unlike a general English chat room, this page is for chatting with a UK focus — an ongoing community rather than a dead forum or anonymous stranger-pairing tool. There's a particular kind of small talk that only really works in the UK — the weather complaint that's ",
+      "textSample": "UK Chat Room – Free Online Chat with People in Britain Back 0 views Home / UK Chat Room – Free Live Chat with People Across Britain UK Chat Room: Chat with People from Across Britain for Free People use the UK chat room to talk with others in Britain, stay in touch from the English-speaking diaspora, or join conversations around British culture and everyday life. Unlike a general English chat room",
+      "emptyHits": [
+        "empty"
+      ],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/uk-chat-room",
+      "ms": 2793,
+      "bytes": 36777
+    },
+    {
+      "url": "https://yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo",
+      "title": "Shayari Community – Write, Compete & Get Ranked | Yaarzo",
+      "titles": [
+        "Shayari Community – Write, Compete & Get Ranked | Yaarzo"
+      ],
+      "description": "Join Yaarzo Shayari Community to write and share Hindi & Urdu shayari, participate in poetry competitions, earn votes, climb rankings and discover talented shayars.",
+      "canonical": "https://yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Apni Shayari share karo, competitions mein participate karo aur Yaarzo ke Top Shayars mein apni jagah banao."
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Write Shayari. Win Hearts. Become a Top Shayar.",
+        "Share Your Shayari With Everyone",
+        "Participate in Shayari Competitions",
+        "Climb the Shayari Rankings",
+        "Discover New Shayars",
+        "Hindi, Urdu & Roman Urdu Shayari",
+        "Shayari Bina Sarhad Ke",
+        "Your Shayari Profile",
+        "Original Words Matter",
+        "Frequently Asked Questions",
+        "Apne Alfaaz Ko Pehchaan Do",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 12,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Shayari Community – Write, Compete & Get Ranked | Yaarzo",
+        "h1": "Apni Shayari share karo, competitions mein participate karo aur Yaarzo ke Top Shayars mein apni jagah banao.",
+        "unique": true
+      },
+      "wordCountFull": 986,
+      "wordCountMain": 945,
+      "mainSample": "Apni Shayari share karo, competitions mein participate karo aur Yaarzo ke Top Shayars mein apni jagah banao. # shayari community # online shayari # shayari competition # urdu shayari # hindi shayari # online poetry competition # shayari contest # shayari platform Write Shayari. Win Hearts. Become a Top Shayar. Welcome to Yaarzo Shayari , a community for people who love words, emotions and poetry. Write your own Shayari, share it with the community, discover new poets, participate in Shayari comp",
+      "textSample": "Shayari Community – Write, Compete & Get Ranked | Yaarzo Back 0 views Home / Shayari Community – Write, Compete & Get Ranked | Yaarzo Apni Shayari share karo, competitions mein participate karo aur Yaarzo ke Top Shayars mein apni jagah banao. # shayari community # online shayari # shayari competition # urdu shayari # hindi shayari # online poetry competition # shayari contest # shayari platform Wr",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo",
+      "ms": 1980,
+      "bytes": 41518
+    },
+    {
+      "url": "https://yaarzo.com/friendship-chat-room",
+      "title": "Friendship Chat Room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Friendship Chat Room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Friendship Chat rooms on Yaarzo. Make friends online with clear expectations — pair with city hubs when you want a local angle.",
+      "canonical": "https://yaarzo.com/friendship-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Friendship Chat Room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Friendship-first rooms",
+        "Good fits for this category",
+        "Related hubs",
+        "Community guidance",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 5,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Friendship Chat Room | Free Online Chat on Yaarzo",
+        "h1": "Friendship Chat Room",
+        "unique": true
+      },
+      "wordCountFull": 181,
+      "wordCountMain": 116,
+      "mainSample": "Friendship Chat Room Friendship Chat Room on Yaarzo is for making friends online without forcing a dating frame — topic-first, location-optional. Friendship-first rooms Use Friendship Chat when you want low-pressure conversation, shared hobbies, or long-distance friends. It is not a city clone and not a popularity contest. Good fits for this category Language exchange and culture talk Study buddies and hobby groups Staying in touch after moving cities Related hubs Browse Pakistan chat room or In",
+      "textSample": "Friendship Chat Room | Free Online Chat on Yaarzo Back 0 views Home / Friendship Chat Room | Yaarzo Friendship Chat Room Friendship Chat Room on Yaarzo is for making friends online without forcing a dating frame — topic-first, location-optional. Friendship-first rooms Use Friendship Chat when you want low-pressure conversation, shared hobbies, or long-distance friends. It is not a city clone and n",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/friendship-chat-room",
+      "ms": 2163,
+      "bytes": 22142
+    },
+    {
+      "url": "https://yaarzo.com/dating-chat-room",
+      "title": "Dating Chat Room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Dating Chat Room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Explore free Dating Chat rooms on Yaarzo. Clear intentions, respectful chat, and safety guidance — without fabricated match claims.",
+      "canonical": "https://yaarzo.com/dating-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Dating Chat Room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Dating chat intent",
+        "Healthy conversation starters",
+        "Related hubs",
+        "Safety first",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 5,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Dating Chat Room | Free Online Chat on Yaarzo",
+        "h1": "Dating Chat Room",
+        "unique": true
+      },
+      "wordCountFull": 204,
+      "wordCountMain": 131,
+      "mainSample": "Dating Chat Room Dating Chat Room on Yaarzo is for people exploring dating conversations online — with clear consent, respectful tone, and no fabricated “match” claims. Dating chat intent Use Dating Chat when you want that topic explicitly. It is not a city template and not a promise of matches. Be honest about intentions and kind when you are not interested. Healthy conversation starters Shared interests and hobbies Culture and weekend plans Moving from friendship chat when both people agree Re",
+      "textSample": "Dating Chat Room | Free Online Chat on Yaarzo Back 0 views Home / Dating Chat Room | Yaarzo Dating Chat Room Dating Chat Room on Yaarzo is for people exploring dating conversations online — with clear consent, respectful tone, and no fabricated “match” claims. Dating chat intent Use Dating Chat when you want that topic explicitly. It is not a city template and not a promise of matches. Be honest a",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/dating-chat-room",
+      "ms": 2253,
+      "bytes": 22248
+    },
+    {
+      "url": "https://yaarzo.com/islamabad-chat-room",
+      "title": "Islamabad chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Islamabad chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Islamabad chat rooms on Yaarzo. Meet people interested in Islamabad, Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/islamabad-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Islamabad Chat Room — Margalla Ke Daaman Mein Basi City Ka Apna Online Dosti Adda"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Frequently Asked Questions",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 2,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Islamabad chat room | Free Online Chat on Yaarzo",
+        "h1": "Islamabad Chat Room — Margalla Ke Daaman Mein Basi City Ka Apna Online Dosti Adda",
+        "unique": true
+      },
+      "wordCountFull": 1001,
+      "wordCountMain": 931,
+      "mainSample": "Islamabad Chat Room — Margalla Ke Daaman Mein Basi City Ka Apna Online Dosti Adda Islamabad chat rooms on Yaarzo suit a capital-territory focus — quieter browse than megacity hubs, with Rawalpindi as the natural twin-city sibling. Islamabad Pakistan ka sab se planned aur green shehar hai — seedhi sectors mein bati hui city, Margalla Hills ke daaman mein basi hui, jahan har gali mein pedon ki chaon aur saaf sutri sarkein milti hain. Ye shehar sirf federal capital hi nahi, balke Pakistan ke sab se",
+      "textSample": "Islamabad chat room | Free Online Chat on Yaarzo Back 0 views Home / Islamabad Chat Room – Free Online Chatting for Islamabadis | Yaarzo Islamabad Chat Room — Margalla Ke Daaman Mein Basi City Ka Apna Online Dosti Adda Islamabad chat rooms on Yaarzo suit a capital-territory focus — quieter browse than megacity hubs, with Rawalpindi as the natural twin-city sibling. Islamabad Pakistan ka sab se pla",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/islamabad-chat-room",
+      "ms": 2270,
+      "bytes": 41743
+    },
+    {
+      "url": "https://yaarzo.com/multan-chat-room",
+      "title": "Multan chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Multan chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Multan chat rooms on Yaarzo. Meet people interested in Multan, Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/multan-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Multan Chat Room – Free Gupshup & Community on Yaarzo"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Multan chat room | Free Online Chat on Yaarzo",
+        "h1": "Multan Chat Room – Free Gupshup & Community on Yaarzo",
+        "unique": true
+      },
+      "wordCountFull": 777,
+      "wordCountMain": 733,
+      "mainSample": "Multan Chat Room – Free Gupshup & Community on Yaarzo Multan chat on Yaarzo is the southern Punjab entry in this priority set — useful when Lahore or Faisalabad feel like the wrong local focus. Socho — raat ke 10 baje ho, phone hath mein hai, aur dil chahta hai koi Multan wala mil jaye jisse thodi gupshup ho sake, apni city ki baatein ho, thoda hasi mazak ho. Yehi feeling leke Yaarzo ka Multan chat room banaya gaya hai — na ke sirf ek aur \"join now, free chat\" wali generic site. City of Saints, ",
+      "textSample": "Multan chat room | Free Online Chat on Yaarzo Back 0 views Home / Multan chat room | Yaarzo Multan Chat Room – Free Gupshup & Community on Yaarzo Multan chat on Yaarzo is the southern Punjab entry in this priority set — useful when Lahore or Faisalabad feel like the wrong local focus. Socho — raat ke 10 baje ho, phone hath mein hai, aur dil chahta hai koi Multan wala mil jaye jisse thodi gupshup h",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/multan-chat-room",
+      "ms": 1955,
+      "bytes": 34554
+    },
+    {
+      "url": "https://yaarzo.com/contact-us",
+      "title": "Contact Us | Yaarzo",
+      "titles": [
+        "Contact Us | Yaarzo"
+      ],
+      "description": "Have a question, feedback, or need support? Contact the Yaarzo team directly — we&#x27;re here to help with your chatroom, profile, or account queries.",
+      "canonical": "https://yaarzo.com/contact-us",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Contact Us"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Contact Us | Yaarzo",
+        "h1": "Contact Us",
+        "unique": true
+      },
+      "wordCountFull": 238,
+      "wordCountMain": 159,
+      "mainSample": "Contact Us # contact yaarzo # yaarzo support # customer support # help center # yaarzo feedback # report issue We'd Love to Hear From You Got a question about your account, facing an issue in a chatroom, or just want to share feedback? The Yaarzo team is here to help. Reach out using any of the options below and we'll get back to you as soon as we can. Get in Touch 📧 Email Support: support@yaarzo.com 🕒 Response Time: We typically respond within 24–48 hours What Can We Help You With? Account or",
+      "textSample": "Contact Us | Yaarzo Back 0 views Home / Contact Us Contact Us # contact yaarzo # yaarzo support # customer support # help center # yaarzo feedback # report issue We'd Love to Hear From You Got a question about your account, facing an issue in a chatroom, or just want to share feedback? The Yaarzo team is here to help. Reach out using any of the options below and we'll get back to you as soon as we",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/contact-us",
+      "ms": 2919,
+      "bytes": 25293
+    },
+    {
+      "url": "https://yaarzo.com/blog",
+      "title": "Blog — Yaarzo",
+      "titles": [
+        "Blog — Yaarzo"
+      ],
+      "description": "Tips on making friends online, chatroom guides, and community stories from Yaarzo.",
+      "canonical": null,
+      "robots": [],
+      "h1": [],
+      "h1Count": 0,
+      "h2": [],
+      "h2Count": 0,
+      "titleEqualsH1": "",
+      "titleContainsH1": "",
+      "h1VsTitle": {
+        "title": "Blog — Yaarzo",
+        "h1": "",
+        "unique": false
+      },
+      "wordCountFull": 3,
+      "wordCountMain": 3,
+      "mainSample": "Blog — Yaarzo",
+      "textSample": "Blog — Yaarzo",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/blog",
+      "ms": 449,
+      "bytes": 2920
+    },
+    {
+      "url": "https://yaarzo.com/blog/yahoo",
+      "title": "yahoo — Yaarzo Blog",
+      "titles": [
+        "yahoo — Yaarzo Blog"
+      ],
+      "description": "yahoo",
+      "canonical": null,
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [],
+      "h1Count": 0,
+      "h2": [],
+      "h2Count": 0,
+      "titleEqualsH1": "",
+      "titleContainsH1": "",
+      "h1VsTitle": {
+        "title": "yahoo — Yaarzo Blog",
+        "h1": "",
+        "unique": false
+      },
+      "wordCountFull": 4,
+      "wordCountMain": 4,
+      "mainSample": "yahoo — Yaarzo Blog",
+      "textSample": "yahoo — Yaarzo Blog",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/blog/yahoo",
+      "ms": 440,
+      "bytes": 2266
+    }
+  ],
+  "statusCounts": {
+    "200": 37
+  },
+  "focus": [
+    {
+      "url": "https://yaarzo.com/",
+      "title": "Yaarzo – Free Online Chatrooms, Make Friends & Communities",
+      "titles": [
+        "Yaarzo – Free Online Chatrooms, Make Friends & Communities"
+      ],
+      "description": "Join Yaarzo for free online chatrooms, make new friends, share posts and discover communities. Explore conversations and start chatting today.",
+      "canonical": "https://yaarzo.com/",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Free Online Chatrooms, Make Friends & Join Communities"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "What you can do on Yaarzo",
+        "Meet New People Through Online Chatrooms",
+        "More Than Just a Chat Room",
+        "Find Communities That Match Your Interests",
+        "Trending Chatrooms",
+        "Top Members",
+        "Latest Feed",
+        "Popular Games",
+        "Today&#x27;s Missions",
+        "Trending Posts",
+        "Trending on Poetry Hub",
+        "Poetry and Shayari"
+      ],
+      "h2Count": 20,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Yaarzo – Free Online Chatrooms, Make Friends & Communities",
+        "h1": "Free Online Chatrooms, Make Friends & Join Communities",
+        "unique": true
+      },
+      "wordCountFull": 1089,
+      "wordCountMain": 1041,
+      "mainSample": "A live social community Free Online Chatrooms, Make Friends & Join Communities Join The Ultimate Active Community Chat in real-time, share your thoughts, play games, earn rewards and make new friends. 💬 Chatrooms 📱 Social Feed 🎮 Games ⭐ Rewards Start Chatting ✨ Create Account Y Y Y Y 15,240+ members joined this week 💬 Yaarzo 🇮🇳 Live Chat Online now M Member 10:30 AM Hello everyone! 👋 F Friend 10:31 AM Good morning all ☀️ G Guest 10:32 AM Anyone up for a game? Y You 10:33 AM Hey! How&#x27;",
+      "textSample": "Yaarzo – Free Online Chatrooms, Make Friends & Communities 💬 Yaarzo Home Chatrooms Feed Communities Competitions Poetry Login Join Free A live social community Free Online Chatrooms, Make Friends & Join Communities Join The Ultimate Active Community Chat in real-time, share your thoughts, play games, earn rewards and make new friends. 💬 Chatrooms 📱 Social Feed 🎮 Games ⭐ Rewards Start Chatting ",
+      "emptyHits": [
+        "no public posts yet",
+        "be one of the first members"
+      ],
+      "emptySnippets": [
+        "No public posts yet — start the conversation. <a href=\"/feed\" class=\"mt-3 inline-flex items-cent",
+        "Be one of the first members to join. <a href=\"/\" class=\"mt-3 inline-flex items-center justify-center rou"
+      ],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "WebSite",
+        "Organization"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/",
+      "ms": 614,
+      "bytes": 78995
+    },
+    {
+      "url": "https://yaarzo.com/communities",
+      "title": "Discover Communities — BooBubble",
+      "titles": [
+        "Discover Communities — BooBubble"
+      ],
+      "description": "Find and join creator communities: gaming, music, tech, art, sports and more. Live chat, feed, competitions and radio.",
+      "canonical": "https://yaarzo.com/communities",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Find your community"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Categories",
+        "All communities"
+      ],
+      "h2Count": 2,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Discover Communities — BooBubble",
+        "h1": "Find your community",
+        "unique": true
+      },
+      "wordCountFull": 57,
+      "wordCountMain": 57,
+      "mainSample": "Discover Communities — BooBubble Community Discovery Find your community Trending creator communities with live chat, feeds, competitions and radio. Sign in to create a community Communities 0 Members 0 Online now 0 Categories Gaming Music Entertainment Technology Art Sports Memes Education Business Podcasts Radio Lifestyle Regional Global Sort: trending newest members active Featured only All communities Loading…",
+      "textSample": "Discover Communities — BooBubble Community Discovery Find your community Trending creator communities with live chat, feeds, competitions and radio. Sign in to create a community Communities 0 Members 0 Online now 0 Categories Gaming Music Entertainment Technology Art Sports Memes Education Business Podcasts Radio Lifestyle Regional Global Sort: trending newest members active Featured only All com",
+      "emptyHits": [
+        "sign in to"
+      ],
+      "emptySnippets": [],
+      "booBubble": [
+        "BooBubble"
+      ],
+      "booInTitle": true,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/communities",
+      "ms": 1071,
+      "bytes": 23814
+    },
+    {
+      "url": "https://yaarzo.com/girls-chat-room",
+      "title": "Girls Chat Room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Girls Chat Room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Girls Chat rooms on Yaarzo. Topic-first conversation with clear boundaries — pair with city hubs when you want a local angle.",
+      "canonical": "https://yaarzo.com/girls-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Girls Chat Room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "What Girls Chat is for",
+        "Conversation examples",
+        "Related hubs",
+        "Stay comfortable",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 5,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Girls Chat Room | Free Online Chat on Yaarzo",
+        "h1": "Girls Chat Room",
+        "unique": true
+      },
+      "wordCountFull": 203,
+      "wordCountMain": 129,
+      "mainSample": "Girls Chat Room Girls Chat Room on Yaarzo is for topic-first conversation — not a city directory. Use it when you want girls chat rooms rather than browsing by Lahore, Delhi, or another location. What Girls Chat is for People open Girls Chat when the conversation type matters more than geography. Keep expectations clear, be respectful, and avoid pressure. This page does not invent who is online. Conversation examples Friendly hangouts and shared hobbies Study or workday check-ins Moving between ",
+      "textSample": "Girls Chat Room | Free Online Chat on Yaarzo Back 0 views Home / Girls Chat Room | Yaarzo Girls Chat Room Girls Chat Room on Yaarzo is for topic-first conversation — not a city directory. Use it when you want girls chat rooms rather than browsing by Lahore, Delhi, or another location. What Girls Chat is for People open Girls Chat when the conversation type matters more than geography. Keep expecta",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/girls-chat-room",
+      "ms": 3849,
+      "bytes": 22178
+    },
+    {
+      "url": "https://yaarzo.com/lahore-chat-room",
+      "title": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo",
+      "titles": [
+        "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo"
+      ],
+      "description": "Join free Lahore chat rooms on Yaarzo. Meet people, talk in English or Urdu, and build friendly connections online. Join Lahore chat rooms for free on Yaarzo.",
+      "canonical": "https://yaarzo.com/lahore-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Lahore Chat Room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Key Takeaways",
+        "What Makes a Lahore Chat Room Worth Joining",
+        "Topics That Actually Get Conversations Going",
+        "Browsing vs. Participating: How It Actually Works",
+        "Who Joins Lahore Chat Rooms",
+        "Chatting Safely and Respectfully",
+        "Frequently Asked Questions",
+        "Join the Conversation",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 9,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo",
+        "h1": "Lahore Chat Room",
+        "unique": true
+      },
+      "wordCountFull": 920,
+      "wordCountMain": 874,
+      "mainSample": "Lahore Chat Room Lahore Chat Room Without Registration 2026. Join Lahore cahte room to chat with lahore girls and boys and make new online freinds for free. Lahore Chat Room – Free Online Chat & Community on Yaarzo Looking for a Lahore chat room that feels less like a random stranger box and more like an actual community? Yaarzo brings together public chatrooms and social features in one place, so you can talk about Lahore life, Pakistani culture, or whatever's on your mind, and stick around lon",
+      "textSample": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo Back 0 views Home / Lahore Chat Room – Free Online Chat & Community on Yaarzo Lahore Chat Room Lahore Chat Room Without Registration 2026. Join Lahore cahte room to chat with lahore girls and boys and make new online freinds for free. Lahore Chat Room – Free Online Chat & Community on Yaarzo Looking for a Lahore chat room that feels less li",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/lahore-chat-room",
+      "ms": 3620,
+      "bytes": 36470
+    },
+    {
+      "url": "https://yaarzo.com/teen-chat-room",
+      "title": "Teen Chat Room for Ages 13–16 | Yaarzo",
+      "titles": [
+        "Teen Chat Room for Ages 13–16 | Yaarzo"
+      ],
+      "description": "Join Yaarzo’s moderated teen chat room for ages 13–16. Talk about school, games, music, hobbies and more in a friendly, age-appropriate community.",
+      "canonical": "https://yaarzo.com/teen-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Teen Chat Room for Ages 13–16: A Safer Place to Talk, Share and Make Friends"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "What Is a Teen Chat Room?",
+        "Safety Comes First",
+        "Age-Appropriate Conversations Only",
+        "How to Have Better Conversations",
+        "Protect Your Privacy Online",
+        "Common Mistakes to Avoid",
+        "Frequently Asked Questions",
+        "Join a Positive Teen Community"
+      ],
+      "h2Count": 8,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Teen Chat Room for Ages 13–16 | Yaarzo",
+        "h1": "Teen Chat Room for Ages 13–16: A Safer Place to Talk, Share and Make Friends",
+        "unique": true
+      },
+      "wordCountFull": 736,
+      "wordCountMain": 708,
+      "mainSample": "Teen Chat Room for Ages 13–16: A Safer Place to Talk, Share and Make Friends # 13 to 16 chat room # online teen community # moderated teen chat # teen friendship chat room Finding an online space where teenagers can talk about school, hobbies, games, music and everyday life should not mean giving up privacy or safety. Yaarzo’s teen chat experience is designed for users aged 13 to 16 who want to take part in friendly, age-appropriate conversations inside a moderated community. The focus is simple",
+      "textSample": "Teen Chat Room for Ages 13–16 | Yaarzo Back 0 views Home / Teen Chat Room for Ages 13–16: A Safer Place to Talk, Share and Make Friends Teen Chat Room for Ages 13–16: A Safer Place to Talk, Share and Make Friends # 13 to 16 chat room # online teen community # moderated teen chat # teen friendship chat room Finding an online space where teenagers can talk about school, hobbies, games, music and eve",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/teen-chat-room",
+      "ms": 2860,
+      "bytes": 29411
+    },
+    {
+      "url": "https://yaarzo.com/about-us",
+      "title": "About Yaarzo | A Social Network Built for Real Connections",
+      "titles": [
+        "About Yaarzo | A Social Network Built for Real Connections"
+      ],
+      "description": "Learn about Yaarzo, a social network built for meaningful connections — public chatrooms, a social feed, friend-finding, and a community that feels like home.",
+      "canonical": "https://yaarzo.com/about-us",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "About Yaarzo"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "About Yaarzo | A Social Network Built for Real Connections",
+        "h1": "About Yaarzo",
+        "unique": true
+      },
+      "wordCountFull": 438,
+      "wordCountMain": 354,
+      "mainSample": "About Yaarzo # about yaarzo # yaarzo social network # chat platform # online community # yaarzo mission # yaarzo features # social network Pakistan India Who We Are Yaarzo is a social network built around one simple idea: making it easy for people to connect, chat, and build real friendships online. Whether you're looking to join a lively public chatroom, share your thoughts on your feed, or find new friends nearby or across the world, Yaarzo brings it all together in one place. The name \"Yaarzo",
+      "textSample": "About Yaarzo | A Social Network Built for Real Connections Back 0 views Home / About Us About Yaarzo # about yaarzo # yaarzo social network # chat platform # online community # yaarzo mission # yaarzo features # social network Pakistan India Who We Are Yaarzo is a social network built around one simple idea: making it easy for people to connect, chat, and build real friendships online. Whether you",
+      "emptyHits": [
+        "empty"
+      ],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/about-us",
+      "ms": 2801,
+      "bytes": 30807
+    },
+    {
+      "url": "https://yaarzo.com/terms-conditions",
+      "title": "Terms & Conditions | Yaarzo Platform Rules",
+      "titles": [
+        "Terms & Conditions | Yaarzo Platform Rules"
+      ],
+      "description": "Read Yaarzo&#x27;s Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.",
+      "canonical": "https://yaarzo.com/terms-conditions",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Terms & Conditions"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Terms & Conditions | Yaarzo Platform Rules",
+        "h1": "Terms & Conditions",
+        "unique": true
+      },
+      "wordCountFull": 686,
+      "wordCountMain": 603,
+      "mainSample": "Terms & Conditions # terms and conditions # terms of service # Yaarzo rules # community guidelines # user agreement # chatroom policy # platform terms Last Updated: 15/8/2026 These Terms & Conditions (\"Terms\") govern your access to and use of Yaarzo, including our chatrooms, social feed, find-friends feature, profiles, and all related services (the \"Platform\"), operated by [INSERT LEGAL ENTITY NAME] (\"Yaarzo,\" \"we,\" \"us,\" or \"our\"). By creating an account or using the Platform, you agree to thes",
+      "textSample": "Terms & Conditions | Yaarzo Platform Rules Back 0 views Home / Terms & Conditions Terms & Conditions # terms and conditions # terms of service # Yaarzo rules # community guidelines # user agreement # chatroom policy # platform terms Last Updated: 15/8/2026 These Terms & Conditions (\"Terms\") govern your access to and use of Yaarzo, including our chatrooms, social feed, find-friends feature, profile",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [
+        "",
+        "\\x3C/li>\\x3C/ul>\\x3Ch3>3. Acceptable Use\\x3C/h3>\\x3Cp>When using Yaarzo's chatrooms, feed, or any community feature, you agree not to:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>Post content that is illegal, harassing, hateful, threatening, or sexually explicit\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Impersonate another person or misrepresent your identity\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Share another user's private information without consent\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Spam, scam, or attempt to defraud other users\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Upload malware or attempt to disrupt the Platform's functionality\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Use automated tools (bots, scrapers) to access the Platform without permission\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Violate any applicable local, national, or international law\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Cp>We reserve the right to remove content or suspend accounts that violate these rules.\\x3C/p>\\x3Ch3>4. Content You Post\\x3C/h3>\\x3Cp>You retain ownership of the content you post on Yaarzo (messages, profile content, poetry/shayari, feed posts, etc.). By posting content, you grant Yaarzo a non-exclusive, worldwide, royalty-free license to display, distribute, and use that content as necessary to operate and promote the Platform.\\x3C/p>\\x3Cp>You are solely responsible for the content you share. Public chatrooms and feed posts are visible to other users and, depending on settings, may be visible publicly.\\x3C/p>\\x3Ch3>5. Community Features\\x3C/h3>\\x3Cp>Yaarzo offers community-style features including public chatrooms, a friendship chat room, and an anonymous chat room category. These are community-based spaces intended for group interaction and are not private, one-on-one anonymous matching services. Standard community moderation rules apply across all chatroom categories.\\x3C/p>\\x3Ch3>6. Account Suspension and Termination\\x3C/h3>\\x3Cp>We may suspend or terminate your account if you violate these Terms, engage in harmful behavior, or if required by law. You may also delete your account at any time through your account settings.\\x3C/p>\\x3Ch3>7. Disclaimers\\x3C/h3>\\x3Cp>Yaarzo is provided on an \\\"as is\\\" and \\\"as available\\\" basis. We do not guarantee that the Platform will be error-free, uninterrupted, or free of harmful content posted by users. We are not responsible for the accuracy of user-generated content or interactions between users.\\x3C/p>\\x3Ch3>8. Limitation of Liability\\x3C/h3>\\x3Cp>To the maximum extent permitted by law, Yaarzo and its affiliates shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Platform, including but not limited to loss of data, loss of profits, or damages resulting from interactions with other users.\\x3C/p>\\x3Ch3>9. Indemnification\\x3C/h3>\\x3Cp>You agree to indemnify and hold Yaarzo harmless from any claims, damages, or expenses arising from your use of the Platform or violation of these Terms.\\x3C/p>\\x3Ch3>10. Governing Law\\x3C/h3>\\x3Cp>These Terms are governed by the laws of [INSERT JURISDICTION], without regard to conflict of law principles.\\x3C/p>\\x3Ch3>11. Changes to These Terms\\x3C/h3>\\x3Cp>We may update these Terms periodically. Continued use of the Platform after updates take effect constitutes acceptance of the revised Terms. Material changes will be communicated where appropriate.\\x3C/p>\\x3Ch3>12. Contact Us\\x3C/h3>\\x3Cp>For questions about these Terms, reach out to us at:\\x3C/p>\\x3Cp>📧 support@yaarzo.com 🌐\\x3Ca target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\" href=\\\"https://yaarzo.com/contact-us\\\">Contact Us page\\x3C/a>\\x3C/p>\\x3Cp>\\x3Cbr>\\n\\n\\x3C/p>\",intro_content:null,excerpt:null,tags:$R[16]=[\"terms and conditions\",\"terms of service\",\"Yaarzo rules\",\"community guidelines\",\"user agreement\",\"chatroom policy\",\"platform terms\"],layout:\"boxed\",sidebar_left:\"none\",sidebar_right:\"none\",meta_title:\"Terms & Conditions | Yaarzo Platform Rules\",meta_description:\"Read Yaarzo's Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.\",meta_keywords:null,og_title:null,og_description:null,og_image:null,canonical_url:\"https://yaarzo.com/terms-conditions\",h1:\"Terms & Conditions\",noindex:!1,nofollow:!1,views:0,published_at:\"2026-08-12T14:55:08.832+00:00\",redirectedFrom:null,publicHtml:\"\\x3Cp>\\n\\n\\x3C/p>\\x3Cp>\\x3Cstrong>Last Updated: 15/8/2026\\x3C/strong>\\x3C/p>\\x3Cp>These Terms & Conditions (\\\"Terms\\\") govern your access to and use of Yaarzo, including our chatrooms, social feed, find-friends feature, profiles, and all related services (the \\\"Platform\\\"), operated by [INSERT LEGAL ENTITY NAME] (\\\"Yaarzo,\\\" \\\"we,\\\" \\\"us,\\\" or \\\"our\\\"). By creating an account or using the Platform, you agree to these Terms.\\x3C/p>\\x3Ch3>1. Eligibility\\x3C/h3>\\x3Cp>You must be at least 16 years old to use Yaarzo. By registering, you confirm that you meet this age requirement and that all information you provide is accurate.\\x3C/p>\\x3Ch3>2. Your Account\\x3C/h3>\\x3Cul>\\x3Cli>\\x3Cp>You are responsible for maintaining the confidentiality of your login credentials.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>You must provide accurate information when creating your profile.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>You are responsible for all activity that occurs under your account.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Notify us immediately if you suspect unauthorized access to your account.\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Ch3>3. Acceptable Use\\x3C/h3>\\x3Cp>When using Yaarzo's chatrooms, feed, or any community feature, you agree not to:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>Post content that is illegal, harassing, hateful, threatening, or sexually explicit\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Impersonate another person or misrepresent your identity\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Share another user's private information without consent\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Spam, scam, or attempt to defraud other users\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Upload malware or attempt to disrupt the Platform's functionality\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Use automated tools (bots, scrapers) to access the Platform without permission\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Violate any applicable local, national, or international law\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Cp>We reserve the right to remove content or suspend accounts that violate these rules.\\x3C/p>\\x3Ch3>4. Content You Post\\x3C/h3>\\x3Cp>You retain ownership of the content you post on Yaarzo (messages, profile content, poetry/shayari, feed posts, etc.). By posting content, you grant Yaarzo a non-exclusive, worldwide, royalty-free license to display, distribute, and use that content as necessary to operate and promote the Platform.\\x3C/p>\\x3Cp>You are solely responsible for the content you share. Public chatrooms and feed posts are visible to other users and, depending on settings, may be visible publicly.\\x3C/p>\\x3Ch3>5. Community Features\\x3C/h3>\\x3Cp>Yaarzo offers community-style features including public chatrooms, a friendship chat room, and an anonymous chat room category. These are community-based spaces intended for group interaction and are not private, one-on-one anonymous matching services. Standard community moderation rules apply across all chatroom categories.\\x3C/p>\\x3Ch3>6. Account Suspension and Termination\\x3C/h3>\\x3Cp>We may suspend or terminate your account if you violate these Terms, engage in harmful behavior, or if required by law. You may also delete your account at any time through your account settings.\\x3C/p>\\x3Ch3>7. Disclaimers\\x3C/h3>\\x3Cp>Yaarzo is provided on an \\\"as is\\\" and \\\"as available\\\" basis. We do not guarantee that the Platform will be error-free, uninterrupted, or free of harmful content posted by users. We are not responsible for the accuracy of user-generated content or interactions between users.\\x3C/p>\\x3Ch3>8. Limitation of Liability\\x3C/h3>\\x3Cp>To the maximum extent permitted by law, Yaarzo and its affiliates shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Platform, including but not limited to loss of data, loss of profits, or damages resulting from interactions with other users.\\x3C/p>\\x3Ch3>9. Indemnification\\x3C/h3>\\x3Cp>You agree to indemnify and hold Yaarzo harmless from any claims, damages, or expenses arising from your use of the Platform or violation of these Terms.\\x3C/p>\\x3Ch3>10. Governing Law\\x3C/h3>\\x3Cp>These Terms are governed by the laws of [INSERT JURISDICTION], without regard to conflict of law principles.\\x3C/p>\\x3Ch3>11. Changes to These Terms\\x3C/h3>\\x3Cp>We may update these Terms periodically. Continued use of the Platform after updates take effect constitutes acceptance of the revised Terms. Material changes will be communicated where appropriate.\\x3C/p>\\x3Ch3>12. Contact Us\\x3C/h3>\\x3Cp>For questions about these Terms, reach out to us at:\\x3C/p>\\x3Cp>📧 support@yaarzo.com 🌐\\x3Ca target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\" href=\\\"https://yaarzo.com/contact-us\\\">Contact Us page\\x3C/a>\\x3C/p>\\x3Cp>\\x3Cbr>\\n\\n\\x3C/p>\",relatedChatRooms:$R[17]=[$R[18]={slug:\"india-chat-room\",href:\"/india-chat-room\",label:\"India chat hubs\",kind:\"country\"},$R[19]={slug:\"pakistan-chat-room\",href:\"/pakistan-chat-room\",label:\"Pakistan chat hubs\",kind:\"country\"},$R[20]={slug:\"bengaluru-chat-room\",href:\"/bengaluru-chat-room\",label:\"Bengaluru rooms\",kind:\"city\"},$R[21]={slug:\"delhi-chat-room\",href:\"/delhi-chat-room\",label:\"chat in Delhi Chat Room: Purani Dilli Se New Delhi Tak Ki Baatcheet\",kind:\"city\"},$R[22]={slug:\"chennai-chat-room\",href:\"/chennai-chat-room\",label:\"Chennai Chat Room: Marina Beach Se OMR Tak Ki Baatcheet chat room\",kind:\"city\"},$R[23]={slug:\"faisalabad-chat-room\",href:\"/faisalabad-chat-room\",label:\"Faisalabad Chat Room | Free Chat & Community – Yaarzo chat room\",kind:\"city\"},$R[24]={slug:\"hyderabad-india-chat-room\",href:\"/hyderabad-india-chat-room\",label:\"Hyderabad chat room\",kind:\"city\"},$R[25]={slug:\"islamabad-chat-room\",href:\"/islamabad-chat-room\",label:\"Islamabad Chat Room — Margalla Ke Daaman Mein Basi City Ka Apna Online Dosti Adda rooms\",kind:\"city\"}]},slug:\"terms-conditions\",seoData:$R[26]={global:null,seo:$R[27]={title:\"Terms & Conditions | Yaarzo Platform Rules\",description:\"Read Yaarzo's Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.\",keywords:\"terms and conditions, terms of service, Yaarzo rules, community guidelines, user agreement, chatroom policy, platform terms\",canonical:\"https://yaarzo.com/terms-conditions\",robots:\"index, follow\",ogTitle:\"Terms & Conditions | Yaarzo Platform Rules\",ogDescription:\"Read Yaarzo's Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.\",ogImage:\"\",ogType:\"website\",twitterCard:\"summary_large_image\",twitterTitle:\"Terms & Conditions | Yaarzo Platform Rules\",twitterDescription:\"Read Yaarzo's Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.\",twitterImage:\"\",jsonLd:$R[28]={\"@context\":\"https://schema.org\",\"@type\":\"Article\",headline:\"Terms & Conditions\",description:\"Read Yaarzo's Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.\",url:\"https://yaarzo.com/terms-conditions\",datePublished:\"2026-08-12T14:55:08.832+00:00\"},noindex:!1,nofollow:!1},fallbackJsonLd:$R[28]}},ssr:!0}],lastMatchId:\"\u0000$slug\u0000terms-conditions\"})($R[\"tsr\"]);$_TSR.e();document.currentScript.remove()"
+      ],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/terms-conditions",
+      "ms": 3637,
+      "bytes": 35480
+    },
+    {
+      "url": "https://yaarzo.com/privacy-policy",
+      "title": "Privacy Policy | How Yaarzo Protects Your Data",
+      "titles": [
+        "Privacy Policy | How Yaarzo Protects Your Data"
+      ],
+      "description": "Read Yaarzo&#x27;s Privacy Policy to learn what information we collect, how it&#x27;s used, and the choices you have to control your data on our chat and social platform.",
+      "canonical": "https://yaarzo.com/privacy-policy",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Privacy Policy"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Privacy Policy | How Yaarzo Protects Your Data",
+        "h1": "Privacy Policy",
+        "unique": true
+      },
+      "wordCountFull": 734,
+      "wordCountMain": 650,
+      "mainSample": "Privacy Policy # privacy policy # data protection # Yaarzo privacy # user data # cookies policy # GDPR # online safety # chat platform privacy Last Updated: 15/08/2026 Welcome to Yaarzo. This Privacy Policy explains how Yaarzo (\"Yaarzo,\" \"we,\" \"us,\" or \"our\") collects, uses, shares, and protects your information when you use our website, chatrooms, social feed, and related features (collectively, the \"Platform\"). By using Yaarzo, you agree to the practices described in this policy. 1. Informatio",
+      "textSample": "Privacy Policy | How Yaarzo Protects Your Data Back 0 views Home / Privacy Policy Privacy Policy # privacy policy # data protection # Yaarzo privacy # user data # cookies policy # GDPR # online safety # chat platform privacy Last Updated: 15/08/2026 Welcome to Yaarzo. This Privacy Policy explains how Yaarzo (\"Yaarzo,\" \"we,\" \"us,\" or \"our\") collects, uses, shares, and protects your information when",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [
+        "6. Children's Privacy",
+        "\\x3Ch3>6. Children's Privacy\\x3C/h3>\\x3Cp>Yaarzo is intended for users who meet the minimum age requirement stated in our Terms & Conditions [INSERT MINIMUM AGE]. We do not knowingly collect information from users under this age. If we become aware that we have collected data from an underage user, we will take steps to delete it promptly.\\x3C/p>\\x3Ch3>7. Your Rights and Choices\\x3C/h3>\\x3Cp>Depending on your location, you may have rights to:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>Access, correct, or delete your personal information\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Object to or restrict certain processing of your data\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Download a copy of your data\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Withdraw consent where processing is based on consent\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Cp>To exercise these rights, contact us using the details in Section 10.\\x3C/p>\\x3Ch3>8. International Users\\x3C/h3>\\x3Cp>Yaarzo may be accessed from different countries. By using the Platform, you understand that your information may be processed in locations outside your own country, subject to applicable data protection laws.\\x3C/p>\\x3Ch3>9. Changes to This Policy\\x3C/h3>\\x3Cp>We may update this Privacy Policy from time to time. Material changes will be communicated through the Platform or via email. Continued use of Yaarzo after changes take effect constitutes acceptance of the updated policy.\\x3C/p>\\x3Ch3>10. Contact Us\\x3C/h3>\\x3Cp>If you have questions about this Privacy Policy or how your data is handled, contact us at:\\x3C/p>\\x3Cp>📧 support@yaarzo.com 🌐\\x3Ca target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\" href=\\\"https://yaarzo.com/contact-us\\\">Contact Us page link\\x3C/a>\\x3C/p>\\x3Cp>\\n\\n\\x3C/p>\",intro_content:null,excerpt:null,tags:$R[16]=[\"privacy policy\",\"data protection\",\"Yaarzo privacy\",\"user data\",\"cookies policy\",\"GDPR\",\"online safety\",\"chat platform privacy\"],layout:\"boxed\",sidebar_left:\"none\",sidebar_right:\"none\",meta_title:\"Privacy Policy | How Yaarzo Protects Your Data\",meta_description:\"Read Yaarzo's Privacy Policy to learn what information we collect, how it's used, and the choices you have to control your data on our chat and social platform.\",meta_keywords:null,og_title:null,og_description:null,og_image:null,canonical_url:null,h1:\"Privacy Policy\",noindex:!1,nofollow:!1,views:0,published_at:\"2026-08-12T15:06:35.154+00:00\",redirectedFrom:null,publicHtml:\"\\x3Cp>\\n\\n\\x3C/p>\\x3Cp>\\x3Cstrong>Last Updated: 15/08/2026\\x3C/strong>\\x3C/p>\\x3Cp>Welcome to Yaarzo. This Privacy Policy explains how Yaarzo (\\\"Yaarzo,\\\" \\\"we,\\\" \\\"us,\\\" or \\\"our\\\") collects, uses, shares, and protects your information when you use our website, chatrooms, social feed, and related features (collectively, the \\\"Platform\\\"). By using Yaarzo, you agree to the practices described in this policy.\\x3C/p>\\x3Ch3>1. Information We Collect\\x3C/h3>\\x3Cp>We collect information in the following ways:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>\\x3Cstrong>Account Information:\\x3C/strong>When you register, we collect details such as your name, username, email address, date of birth, and profile information you choose to add.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Content You Share:\\x3C/strong>Messages, chatroom posts, feed updates, profile photos, poetry/shayari submissions, and other content you create or share on the Platform.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Usage Data:\\x3C/strong>Information about how you interact with Yaarzo, including pages visited, features used, and time spent on the Platform.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Device and Technical Data:\\x3C/strong>IP address, browser type, device identifiers, and operating system, collected automatically when you access the Platform.\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Cookies and Similar Technologies:\\x3C/strong>See Section 4 below.\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Ch3>2. How We Use Your Information\\x3C/h3>\\x3Cp>We use the information we collect to:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>Create and manage your Yaarzo account\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Enable core features such as chatrooms, the social feed, find-friends, and profiles\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Personalize your experience and show relevant content or suggestions\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Maintain platform safety, detect abuse, and enforce our Terms & Conditions\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Communicate with you about updates, support requests, or policy changes\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Improve and develop new features\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Comply with legal obligations\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Ch3>3. Sharing of Information\\x3C/h3>\\x3Cp>We do not sell your personal information. We may share information with:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>\\x3Cstrong>Service Providers:\\x3C/strong>Vendors who help us operate the Platform (e.g., hosting, analytics, customer support)\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Legal Requirements:\\x3C/strong>When required by law, court order, or to protect the rights, safety, or property of Yaarzo, our users, or others\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>Business Transfers:\\x3C/strong>In connection with a merger, acquisition, or sale of assets, subject to standard confidentiality protections\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>\\x3Cstrong>With Your Consent:\\x3C/strong>Any other sharing will only happen with your explicit permission\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Cp>Content you post publicly (e.g., in public chatrooms or your social feed) is visible to other users and may be seen by anyone who accesses the Platform.\\x3C/p>\\x3Ch3>4. Cookies and Tracking Technologies\\x3C/h3>\\x3Cp>Yaarzo uses cookies and similar technologies to keep you logged in, remember preferences, and understand how the Platform is used. You can manage cookie preferences through your browser settings, though disabling cookies may affect some features.\\x3C/p>\\x3Ch3>5. Data Security\\x3C/h3>\\x3Cp>We use reasonable technical and organizational measures to protect your information from unauthorized access, alteration, or loss. However, no method of transmission or storage is completely secure, and we cannot guarantee absolute security.\\x3C/p>\\x3Ch3>6. Children's Privacy\\x3C/h3>\\x3Cp>Yaarzo is intended for users who meet the minimum age requirement stated in our Terms & Conditions [INSERT MINIMUM AGE]. We do not knowingly collect information from users under this age. If we become aware that we have collected data from an underage user, we will take steps to delete it promptly.\\x3C/p>\\x3Ch3>7. Your Rights and Choices\\x3C/h3>\\x3Cp>Depending on your location, you may have rights to:\\x3C/p>\\x3Cul>\\x3Cli>\\x3Cp>Access, correct, or delete your personal information\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Object to or restrict certain processing of your data\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Download a copy of your data\\x3C/p>\\x3C/li>\\x3Cli>\\x3Cp>Withdraw consent where processing is based on consent\\x3C/p>\\x3C/li>\\x3C/ul>\\x3Cp>To exercise these rights, contact us using the details in Section 10.\\x3C/p>\\x3Ch3>8. International Users\\x3C/h3>\\x3Cp>Yaarzo may be accessed from different countries. By using the Platform, you understand that your information may be processed in locations outside your own country, subject to applicable data protection laws.\\x3C/p>\\x3Ch3>9. Changes to This Policy\\x3C/h3>\\x3Cp>We may update this Privacy Policy from time to time. Material changes will be communicated through the Platform or via email. Continued use of Yaarzo after changes take effect constitutes acceptance of the updated policy.\\x3C/p>\\x3Ch3>10. Contact Us\\x3C/h3>\\x3Cp>If you have questions about this Privacy Policy or how your data is handled, contact us at:\\x3C/p>\\x3Cp>📧 support@yaarzo.com 🌐\\x3Ca target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\" href=\\\"https://yaarzo.com/contact-us\\\">Contact Us page link\\x3C/a>\\x3C/p>\\x3Cp>\\n\\n\\x3C/p>\",relatedChatRooms:$R[17]=[$R[18]={slug:\"india-chat-room\",href:\"/india-chat-room\",label:\"India chat room\",kind:\"country\"},$R[19]={slug:\"pakistan-chat-room\",href:\"/pakistan-chat-room\",label:\"Pakistan chat room\",kind:\"country\"},$R[20]={slug:\"bengaluru-chat-room\",href:\"/bengaluru-chat-room\",label:\"chat in Bengaluru\",kind:\"city\"},$R[21]={slug:\"delhi-chat-room\",href:\"/delhi-chat-room\",label:\"chat in Delhi Chat Room: Purani Dilli Se New Delhi Tak Ki Baatcheet\",kind:\"city\"},$R[22]={slug:\"islamabad-chat-room\",href:\"/islamabad-chat-room\",label:\"chat in Islamabad Chat Room — Margalla Ke Daaman Mein Basi City Ka Apna Online Dosti Adda\",kind:\"city\"},$R[23]={slug:\"chennai-chat-room\",href:\"/chennai-chat-room\",label:\"Chennai Chat Room: Marina Beach Se OMR Tak Ki Baatcheet chat room\",kind:\"city\"},$R[24]={slug:\"faisalabad-chat-room\",href:\"/faisalabad-chat-room\",label:\"Faisalabad Chat Room | Free Chat & Community – Yaarzo rooms\",kind:\"city\"},$R[25]={slug:\"hyderabad-india-chat-room\",href:\"/hyderabad-india-chat-room\",label:\"Hyderabad chat room\",kind:\"city\"}]},slug:\"privacy-policy\",seoData:$R[26]={global:null,seo:$R[27]={title:\"Privacy Policy | How Yaarzo Protects Your Data\",description:\"Read Yaarzo's Privacy Policy to learn what information we collect, how it's used, and the choices you have to control your data on our chat and social platform.\",keywords:\"privacy policy, data protection, Yaarzo privacy, user data, cookies policy, GDPR, online safety, chat platform privacy\",canonical:\"https://yaarzo.com/privacy-policy\",robots:\"index, follow\",ogTitle:\"Privacy Policy | How Yaarzo Protects Your Data\",ogDescription:\"Read Yaarzo's Privacy Policy to learn what information we collect, how it's used, and the choices you have to control your data on our chat and social platform.\",ogImage:\"\",ogType:\"website\",twitterCard:\"summary_large_image\",twitterTitle:\"Privacy Policy | How Yaarzo Protects Your Data\",twitterDescription:\"Read Yaarzo's Privacy Policy to learn what information we collect, how it's used, and the choices you have to control your data on our chat and social platform.\",twitterImage:\"\",jsonLd:$R[28]={\"@context\":\"https://schema.org\",\"@type\":\"Article\",headline:\"Privacy Policy\",description:\"Read Yaarzo's Privacy Policy to learn what information we collect, how it's used, and the choices you have to control your data on our chat and social platform.\",url:\"https://yaarzo.com/privacy-policy\",datePublished:\"2026-08-12T15:06:35.154+00:00\"},noindex:!1,nofollow:!1},fallbackJsonLd:$R[28]}},ssr:!0}],lastMatchId:\"\u0000$slug\u0000privacy-policy\"})($R[\"tsr\"]);$_TSR.e();document.currentScript.remove()"
+      ],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/privacy-policy",
+      "ms": 2900,
+      "bytes": 37763
+    },
+    {
+      "url": "https://yaarzo.com/india-chat-room",
+      "title": "India chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "India chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free India chat rooms on Yaarzo. Browse city hubs, meet people across India, and chat online anytime.",
+      "canonical": "https://yaarzo.com/india-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "India chat room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "How the India hub works",
+        "Priority city chat rooms in India",
+        "Chat categories from this hub",
+        "Community guidance",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 5,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "India chat room | Free Online Chat on Yaarzo",
+        "h1": "India chat room",
+        "unique": true
+      },
+      "wordCountFull": 212,
+      "wordCountMain": 167,
+      "mainSample": "India chat room India chat room is Yaarzo’s country hub for India: begin here for the national directory, then open metro city rooms when you want Delhi, Mumbai, Bengaluru, or another local angle. How the India hub works City pages (Delhi, Mumbai, Bengaluru, Hyderabad India, and others) narrow the conversation. This hub stays India-only for local siblings and links topic categories when interest matters more than city. Use city chat pages when location matters. Use Girls Chat, Dating Chat, or Fr",
+      "textSample": "India chat room | Free Online Chat on Yaarzo Back 0 views Home / India chat room | Yaarzo India chat room India chat room is Yaarzo’s country hub for India: begin here for the national directory, then open metro city rooms when you want Delhi, Mumbai, Bengaluru, or another local angle. How the India hub works City pages (Delhi, Mumbai, Bengaluru, Hyderabad India, and others) narrow the conversatio",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/india-chat-room",
+      "ms": 3036,
+      "bytes": 23615
+    },
+    {
+      "url": "https://yaarzo.com/pakistan-chat-room",
+      "title": "Pakistan chat room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Pakistan chat room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Pakistan chat rooms on Yaarzo. Browse city hubs, meet people across Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/pakistan-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Pakistan chat room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "How the Pakistan hub works",
+        "Priority city chat rooms in Pakistan",
+        "Chat categories from this hub",
+        "Community guidance",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 5,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Pakistan chat room | Free Online Chat on Yaarzo",
+        "h1": "Pakistan chat room",
+        "unique": true
+      },
+      "wordCountFull": 219,
+      "wordCountMain": 174,
+      "mainSample": "Pakistan chat room Pakistan chat room is Yaarzo’s country hub for Pakistan: start with a country-wide overview, then move into city rooms across Punjab, Sindh, and the capital territory when you want a local focus. How the Pakistan hub works City pages (Lahore, Karachi, Islamabad, and others) narrow the conversation. This hub does not invent audience sizes — it explains how Pakistan pages relate and points you to rooms that already exist. Use city chat pages when location matters. Use Girls Chat",
+      "textSample": "Pakistan chat room | Free Online Chat on Yaarzo Back 0 views Home / Pakistan chat room | Yaarzo Pakistan chat room Pakistan chat room is Yaarzo’s country hub for Pakistan: start with a country-wide overview, then move into city rooms across Punjab, Sindh, and the capital territory when you want a local focus. How the Pakistan hub works City pages (Lahore, Karachi, Islamabad, and others) narrow the",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/pakistan-chat-room",
+      "ms": 2269,
+      "bytes": 23762
+    },
+    {
+      "url": "https://yaarzo.com/friendship-chat-room",
+      "title": "Friendship Chat Room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Friendship Chat Room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Join free Friendship Chat rooms on Yaarzo. Make friends online with clear expectations — pair with city hubs when you want a local angle.",
+      "canonical": "https://yaarzo.com/friendship-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Friendship Chat Room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Friendship-first rooms",
+        "Good fits for this category",
+        "Related hubs",
+        "Community guidance",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 5,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Friendship Chat Room | Free Online Chat on Yaarzo",
+        "h1": "Friendship Chat Room",
+        "unique": true
+      },
+      "wordCountFull": 181,
+      "wordCountMain": 116,
+      "mainSample": "Friendship Chat Room Friendship Chat Room on Yaarzo is for making friends online without forcing a dating frame — topic-first, location-optional. Friendship-first rooms Use Friendship Chat when you want low-pressure conversation, shared hobbies, or long-distance friends. It is not a city clone and not a popularity contest. Good fits for this category Language exchange and culture talk Study buddies and hobby groups Staying in touch after moving cities Related hubs Browse Pakistan chat room or In",
+      "textSample": "Friendship Chat Room | Free Online Chat on Yaarzo Back 0 views Home / Friendship Chat Room | Yaarzo Friendship Chat Room Friendship Chat Room on Yaarzo is for making friends online without forcing a dating frame — topic-first, location-optional. Friendship-first rooms Use Friendship Chat when you want low-pressure conversation, shared hobbies, or long-distance friends. It is not a city clone and n",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/friendship-chat-room",
+      "ms": 2163,
+      "bytes": 22142
+    },
+    {
+      "url": "https://yaarzo.com/dating-chat-room",
+      "title": "Dating Chat Room | Free Online Chat on Yaarzo",
+      "titles": [
+        "Dating Chat Room | Free Online Chat on Yaarzo"
+      ],
+      "description": "Explore free Dating Chat rooms on Yaarzo. Clear intentions, respectful chat, and safety guidance — without fabricated match claims.",
+      "canonical": "https://yaarzo.com/dating-chat-room",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Dating Chat Room"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Dating chat intent",
+        "Healthy conversation starters",
+        "Related hubs",
+        "Safety first",
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 5,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Dating Chat Room | Free Online Chat on Yaarzo",
+        "h1": "Dating Chat Room",
+        "unique": true
+      },
+      "wordCountFull": 204,
+      "wordCountMain": 131,
+      "mainSample": "Dating Chat Room Dating Chat Room on Yaarzo is for people exploring dating conversations online — with clear consent, respectful tone, and no fabricated “match” claims. Dating chat intent Use Dating Chat when you want that topic explicitly. It is not a city template and not a promise of matches. Be honest about intentions and kind when you are not interested. Healthy conversation starters Shared interests and hobbies Culture and weekend plans Moving from friendship chat when both people agree Re",
+      "textSample": "Dating Chat Room | Free Online Chat on Yaarzo Back 0 views Home / Dating Chat Room | Yaarzo Dating Chat Room Dating Chat Room on Yaarzo is for people exploring dating conversations online — with clear consent, respectful tone, and no fabricated “match” claims. Dating chat intent Use Dating Chat when you want that topic explicitly. It is not a city template and not a promise of matches. Be honest a",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/dating-chat-room",
+      "ms": 2253,
+      "bytes": 22248
+    },
+    {
+      "url": "https://yaarzo.com/contact-us",
+      "title": "Contact Us | Yaarzo",
+      "titles": [
+        "Contact Us | Yaarzo"
+      ],
+      "description": "Have a question, feedback, or need support? Contact the Yaarzo team directly — we&#x27;re here to help with your chatroom, profile, or account queries.",
+      "canonical": "https://yaarzo.com/contact-us",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Contact Us"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Explore Related Chat Rooms"
+      ],
+      "h2Count": 1,
+      "titleEqualsH1": true,
+      "titleContainsH1": true,
+      "h1VsTitle": {
+        "title": "Contact Us | Yaarzo",
+        "h1": "Contact Us",
+        "unique": true
+      },
+      "wordCountFull": 238,
+      "wordCountMain": 159,
+      "mainSample": "Contact Us # contact yaarzo # yaarzo support # customer support # help center # yaarzo feedback # report issue We'd Love to Hear From You Got a question about your account, facing an issue in a chatroom, or just want to share feedback? The Yaarzo team is here to help. Reach out using any of the options below and we'll get back to you as soon as we can. Get in Touch 📧 Email Support: support@yaarzo.com 🕒 Response Time: We typically respond within 24–48 hours What Can We Help You With? Account or",
+      "textSample": "Contact Us | Yaarzo Back 0 views Home / Contact Us Contact Us # contact yaarzo # yaarzo support # customer support # help center # yaarzo feedback # report issue We'd Love to Hear From You Got a question about your account, facing an issue in a chatroom, or just want to share feedback? The Yaarzo team is here to help. Reach out using any of the options below and we'll get back to you as soon as we",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [
+        "Article"
+      ],
+      "hasContact": true,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/contact-us",
+      "ms": 2919,
+      "bytes": 25293
+    },
+    {
+      "url": "https://yaarzo.com/blog",
+      "title": "Blog — Yaarzo",
+      "titles": [
+        "Blog — Yaarzo"
+      ],
+      "description": "Tips on making friends online, chatroom guides, and community stories from Yaarzo.",
+      "canonical": null,
+      "robots": [],
+      "h1": [],
+      "h1Count": 0,
+      "h2": [],
+      "h2Count": 0,
+      "titleEqualsH1": "",
+      "titleContainsH1": "",
+      "h1VsTitle": {
+        "title": "Blog — Yaarzo",
+        "h1": "",
+        "unique": false
+      },
+      "wordCountFull": 3,
+      "wordCountMain": 3,
+      "mainSample": "Blog — Yaarzo",
+      "textSample": "Blog — Yaarzo",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/blog",
+      "ms": 449,
+      "bytes": 2920
+    },
+    {
+      "url": "https://yaarzo.com/blog/yahoo",
+      "title": "yahoo — Yaarzo Blog",
+      "titles": [
+        "yahoo — Yaarzo Blog"
+      ],
+      "description": "yahoo",
+      "canonical": null,
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [],
+      "h1Count": 0,
+      "h2": [],
+      "h2Count": 0,
+      "titleEqualsH1": "",
+      "titleContainsH1": "",
+      "h1VsTitle": {
+        "title": "yahoo — Yaarzo Blog",
+        "h1": "",
+        "unique": false
+      },
+      "wordCountFull": 4,
+      "wordCountMain": 4,
+      "mainSample": "yahoo — Yaarzo Blog",
+      "textSample": "yahoo — Yaarzo Blog",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/blog/yahoo",
+      "ms": 440,
+      "bytes": 2266
+    }
+  ],
+  "nearDupes": [
+    {
+      "a": "https://yaarzo.com/india-chat-room",
+      "b": "https://yaarzo.com/pakistan-chat-room",
+      "sim": 0.188,
+      "wordsA": 167,
+      "wordsB": 174,
+      "h1a": "India chat room",
+      "h1b": "Pakistan chat room"
+    },
+    {
+      "a": "https://yaarzo.com/hyderabad-india-chat-room",
+      "b": "https://yaarzo.com/kolkata-chat-room",
+      "sim": 0.174,
+      "wordsA": 163,
+      "wordsB": 166,
+      "h1a": "Hyderabad chat room",
+      "h1b": "Kolkata chat room"
+    }
+  ],
+  "duplicateH1s": [],
+  "duplicateTitles": [],
+  "booPages": [
+    {
+      "url": "https://yaarzo.com/communities",
+      "title": "Discover Communities — BooBubble",
+      "titles": [
+        "Discover Communities — BooBubble"
+      ],
+      "description": "Find and join creator communities: gaming, music, tech, art, sports and more. Live chat, feed, competitions and radio.",
+      "canonical": "https://yaarzo.com/communities",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [
+        "Find your community"
+      ],
+      "h1Count": 1,
+      "h2": [
+        "Categories",
+        "All communities"
+      ],
+      "h2Count": 2,
+      "titleEqualsH1": false,
+      "titleContainsH1": false,
+      "h1VsTitle": {
+        "title": "Discover Communities — BooBubble",
+        "h1": "Find your community",
+        "unique": true
+      },
+      "wordCountFull": 57,
+      "wordCountMain": 57,
+      "mainSample": "Discover Communities — BooBubble Community Discovery Find your community Trending creator communities with live chat, feeds, competitions and radio. Sign in to create a community Communities 0 Members 0 Online now 0 Categories Gaming Music Entertainment Technology Art Sports Memes Education Business Podcasts Radio Lifestyle Regional Global Sort: trending newest members active Featured only All communities Loading…",
+      "textSample": "Discover Communities — BooBubble Community Discovery Find your community Trending creator communities with live chat, feeds, competitions and radio. Sign in to create a community Communities 0 Members 0 Online now 0 Categories Gaming Music Entertainment Technology Art Sports Memes Education Business Podcasts Radio Lifestyle Regional Global Sort: trending newest members active Featured only All com",
+      "emptyHits": [
+        "sign in to"
+      ],
+      "emptySnippets": [],
+      "booBubble": [
+        "BooBubble"
+      ],
+      "booInTitle": true,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/communities",
+      "ms": 1071,
+      "bytes": 23814
+    },
+    {
+      "url": "https://yaarzo.com/feed",
+      "title": "Feed",
+      "titles": [
+        "Feed"
+      ],
+      "description": "Share posts, react, comment, and connect with friends.",
+      "canonical": "https://yaarzo.com/feed",
+      "robots": [
+        "index, follow"
+      ],
+      "h1": [],
+      "h1Count": 0,
+      "h2": [],
+      "h2Count": 0,
+      "titleEqualsH1": "",
+      "titleContainsH1": "",
+      "h1VsTitle": {
+        "title": "Feed",
+        "h1": "",
+        "unique": false
+      },
+      "wordCountFull": 1,
+      "wordCountMain": 1,
+      "mainSample": "Feed",
+      "textSample": "Feed",
+      "emptyHits": [],
+      "emptySnippets": [],
+      "booBubble": [
+        "boobubble"
+      ],
+      "booInTitle": false,
+      "author": [],
+      "dates": [],
+      "jsonLdTypes": [],
+      "hasContact": false,
+      "hasHttps": true,
+      "spaShell": false,
+      "errorShell": false,
+      "status": 200,
+      "finalUrl": "https://yaarzo.com/feed",
+      "ms": 219,
+      "bytes": 10739
+    }
+  ],
+  "thinPages": [
+    {
+      "url": "https://yaarzo.com/chatroom",
+      "words": 1,
+      "full": 1,
+      "title": "Chatrooms"
+    },
+    {
+      "url": "https://yaarzo.com/communities",
+      "words": 57,
+      "full": 57,
+      "h1": "Find your community",
+      "title": "Discover Communities — BooBubble"
+    },
+    {
+      "url": "https://yaarzo.com/competitions",
+      "words": 7,
+      "full": 7,
+      "title": "Community Competitions — Live, Trending & Upcoming"
+    },
+    {
+      "url": "https://yaarzo.com/poetry",
+      "words": 2,
+      "full": 2,
+      "title": "Poetry Hub"
+    },
+    {
+      "url": "https://yaarzo.com/feed",
+      "words": 1,
+      "full": 1,
+      "title": "Feed"
+    },
+    {
+      "url": "https://yaarzo.com/girls-chat-room",
+      "words": 129,
+      "full": 203,
+      "h1": "Girls Chat Room",
+      "title": "Girls Chat Room | Free Online Chat on Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/hyderabad-india-chat-room",
+      "words": 163,
+      "full": 217,
+      "h1": "Hyderabad chat room",
+      "title": "Hyderabad chat room | Free Online Chat on Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/bengaluru-chat-room",
+      "words": 173,
+      "full": 228,
+      "h1": "Bengaluru chat room",
+      "title": "Bengaluru chat room | Free Online Chat on Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/karachi-chat-room",
+      "words": 184,
+      "full": 246,
+      "h1": "Karachi chat room",
+      "title": "Karachi chat room | Free Online Chat on Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/rawalpindi-chat-room",
+      "words": 172,
+      "full": 237,
+      "h1": "Rawalpindi chat room",
+      "title": "Rawalpindi chat room | Free Online Chat on Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/india-chat-room",
+      "words": 167,
+      "full": 212,
+      "h1": "India chat room",
+      "title": "India chat room | Free Online Chat on Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/pakistan-chat-room",
+      "words": 174,
+      "full": 219,
+      "h1": "Pakistan chat room",
+      "title": "Pakistan chat room | Free Online Chat on Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/kolkata-chat-room",
+      "words": 166,
+      "full": 220,
+      "h1": "Kolkata chat room",
+      "title": "Kolkata chat room | Free Online Chat on Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/friendship-chat-room",
+      "words": 116,
+      "full": 181,
+      "h1": "Friendship Chat Room",
+      "title": "Friendship Chat Room | Free Online Chat on Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/dating-chat-room",
+      "words": 131,
+      "full": 204,
+      "h1": "Dating Chat Room",
+      "title": "Dating Chat Room | Free Online Chat on Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/contact-us",
+      "words": 159,
+      "full": 238,
+      "h1": "Contact Us",
+      "title": "Contact Us | Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/blog",
+      "words": 3,
+      "full": 3,
+      "title": "Blog — Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/blog/yahoo",
+      "words": 4,
+      "full": 4,
+      "title": "yahoo — Yaarzo Blog"
+    }
+  ]
+}

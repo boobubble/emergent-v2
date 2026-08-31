@@ -14,7 +14,16 @@ export type BlogTopic = {
   keywords: string | null;
 };
 
-export type PublishResult = { title: string; success: boolean };
+export type PublishResult = { title: string; success: boolean; error?: string };
+
+function failureMessage(err: unknown): string {
+  if (err instanceof Error && err.message) return err.message;
+  if (err && typeof err === "object" && "message" in err) {
+    const message = (err as { message: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return String(err);
+}
 
 function getAnthropic() {
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
@@ -148,58 +157,74 @@ function buildRelatedHtml(relatedPosts: Array<{ title: string; slug: string }>) 
   return `<h2>Related Reads</h2><ul>${items}</ul>`;
 }
 
-async function publishTopic(topic: BlogTopic): Promise<boolean> {
-  console.log(`\n📝 Generating: ${topic.title}...`);
+async function publishTopic(topic: BlogTopic): Promise<PublishResult> {
+  try {
+    console.log(`\n📝 Generating: ${topic.title}...`);
 
-  const chatroomUrl = pickChatroomUrl(topic.title);
-  const [generated, slug, categoryId] = await Promise.all([
-    generateContent(topic.title, chatroomUrl),
-    generateUniqueSlug(topic.title),
-    getCategoryId(topic.category_slug),
-  ]);
+    const chatroomUrl = pickChatroomUrl(topic.title);
+    let generated: Awaited<ReturnType<typeof generateContent>>;
+    let slug: string;
+    let categoryId: string | null;
+    try {
+      [generated, slug, categoryId] = await Promise.all([
+        generateContent(topic.title, chatroomUrl),
+        generateUniqueSlug(topic.title),
+        getCategoryId(topic.category_slug),
+      ]);
+    } catch (err) {
+      const error = failureMessage(err);
+      console.error(`❌ Content generation failed for "${topic.title}":`, error);
+      return { title: topic.title, success: false, error };
+    }
 
-  if (!categoryId) {
-    console.error(`❌ Category "${topic.category_slug}" not found — skipping "${topic.title}"`);
-    return false;
+    if (!categoryId) {
+      const error = `Category "${topic.category_slug}" not found in categories table`;
+      console.error(`❌ ${error} — skipping "${topic.title}"`);
+      return { title: topic.title, success: false, error };
+    }
+
+    const relatedPosts = await getRelatedBlogPosts(categoryId, slug);
+    const relatedHtml = buildRelatedHtml(relatedPosts);
+
+    const { data: inserted, error: insertError } = await db()
+      .from("blog_posts")
+      .insert({
+        title: topic.title,
+        slug,
+        meta_description: topic.metaDescription,
+        content: generated.contentHtml + relatedHtml,
+        keywords: topic.keywords?.trim() || generated.keywords,
+        tags: generated.tags,
+        reading_time_minutes: generated.readingTime,
+        category_id: categoryId,
+        author_id: null,
+        last_refreshed_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error(`❌ Insert failed for "${topic.title}":`, insertError.message);
+      return { title: topic.title, success: false, error: insertError.message };
+    }
+
+    const { error: updateError } = await db()
+      .from("blog_posts")
+      .update({ status: "published" })
+      .eq("id", inserted.id);
+
+    if (updateError) {
+      console.error(`❌ Publish step failed for "${topic.title}":`, updateError.message);
+      return { title: topic.title, success: false, error: updateError.message };
+    }
+
+    console.log(`✅ Published: yaarzo.com/blog/${slug}`);
+    return { title: topic.title, success: true };
+  } catch (err) {
+    const error = failureMessage(err);
+    console.error(`❌ "${topic.title}":`, error);
+    return { title: topic.title, success: false, error };
   }
-
-  const relatedPosts = await getRelatedBlogPosts(categoryId, slug);
-  const relatedHtml = buildRelatedHtml(relatedPosts);
-
-  const { data: inserted, error: insertError } = await db()
-    .from("blog_posts")
-    .insert({
-      title: topic.title,
-      slug,
-      meta_description: topic.metaDescription,
-      content: generated.contentHtml + relatedHtml,
-      keywords: topic.keywords?.trim() || generated.keywords,
-      tags: generated.tags,
-      reading_time_minutes: generated.readingTime,
-      category_id: categoryId,
-      author_id: null,
-      last_refreshed_at: new Date().toISOString(),
-    })
-    .select()
-    .single();
-
-  if (insertError) {
-    console.error(`❌ Insert failed for "${topic.title}":`, insertError.message);
-    return false;
-  }
-
-  const { error: updateError } = await db()
-    .from("blog_posts")
-    .update({ status: "published" })
-    .eq("id", inserted.id);
-
-  if (updateError) {
-    console.error(`❌ Publish step failed for "${topic.title}":`, updateError.message);
-    return false;
-  }
-
-  console.log(`✅ Published: yaarzo.com/blog/${slug}`);
-  return true;
 }
 
 export async function runBlogPublish(): Promise<Response> {
@@ -243,14 +268,7 @@ export async function runBlogPublish(): Promise<Response> {
   const results: PublishResult[] = [];
 
   for (const topic of toPublish) {
-    try {
-      const success = await publishTopic(topic);
-      results.push({ title: topic.title, success });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(`❌ "${topic.title}":`, message);
-      results.push({ title: topic.title, success: false });
-    }
+    results.push(await publishTopic(topic));
   }
 
   const published = results.filter((r) => r.success).length;

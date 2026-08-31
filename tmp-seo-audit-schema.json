@@ -1,0 +1,226 @@
+[
+  {
+    "url": "https://yaarzo.com/",
+    "status": 200,
+    "bytes": 22291,
+    "xRobots": null,
+    "csp": null,
+    "xfo": null,
+    "hsts": "max-age=63072000",
+    "cache": "public, max-age=0, must-revalidate",
+    "title": "Yaarzo – Free Online Chatrooms, Make Friends &amp; Communities",
+    "robots": "index, follow",
+    "canon": "https://yaarzo.com/",
+    "desc": "Join Yaarzo for free online chatrooms, make new friends, share posts and discover communities. Explore conversations and start chatting today.",
+    "jsonld": [
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "name": "Yaarzo",
+            "url": "https://yaarzo.com/",
+            "description": "Join Yaarzo for free online chatrooms, make new friends, share posts and discover communities. Explore conversations and start chatting today."
+          },
+          {
+            "@type": "Organization",
+            "name": "Yaarzo",
+            "url": "https://yaarzo.com/"
+          }
+        ]
+      }
+    ],
+    "scripts": [
+      "/assets/index-jPki7fCQ.js"
+    ],
+    "css": 2,
+    "preload": [],
+    "mixedHttp": 0,
+    "text": "Yaarzo – Free Online Chatrooms, Make Friends &amp; Communities Yaarzo Chatrooms Feed Communities Competitions Poetry Join free Yaarzo Free Online Chatrooms, Make Friends &amp; Join Communities Yaarzo "
+  },
+  {
+    "url": "https://yaarzo.com/india-chat-room",
+    "status": 200,
+    "bytes": 25614,
+    "xRobots": null,
+    "csp": null,
+    "xfo": null,
+    "hsts": "max-age=63072000",
+    "cache": "public, max-age=0, must-revalidate",
+    "title": "India chat room | Free Online Chat on Yaarzo",
+    "robots": "index, follow",
+    "canon": "https://yaarzo.com/india-chat-room",
+    "desc": "Join free India chat rooms on Yaarzo. Browse city hubs, meet people across India, and chat online anytime.",
+    "jsonld": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "India chat room | Yaarzo",
+        "description": "Join free India chat rooms on Yaarzo. Browse city hubs, meet people across India, and chat online anytime.",
+        "url": "https://yaarzo.com/india-chat-room",
+        "datePublished": "2026-08-08T07:55:39.075+00:00"
+      }
+    ],
+    "scripts": [
+      "/assets/index-jPki7fCQ.js"
+    ],
+    "css": 2,
+    "preload": [],
+    "mixedHttp": 10,
+    "text": "India chat room | Free Online Chat on Yaarzo Back 0 views Home / India chat room | Yaarzo India chat room India chat room is Yaarzo’s country hub for India: begin here for the national directory, then"
+  },
+  {
+    "url": "https://yaarzo.com/lahore-chat-room",
+    "status": 200,
+    "bytes": 37901,
+    "xRobots": null,
+    "csp": null,
+    "xfo": null,
+    "hsts": "max-age=63072000",
+    "cache": "public, max-age=0, must-revalidate",
+    "title": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo",
+    "robots": "index, follow",
+    "canon": "https://yaarzo.com/lahore-chat-room",
+    "desc": "Join free Lahore chat rooms on Yaarzo. Meet people, talk in English or Urdu, and build friendly connections online. Join Lahore chat rooms for free on Yaarzo.",
+    "jsonld": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Lahore Chat Room – Free Online Chat & Community on Yaarzo",
+        "description": "Join free Lahore chat rooms on Yaarzo. Meet people, talk in English or Urdu, and build friendly connections online. Join Lahore chat rooms for free on Yaarzo.",
+        "url": "https://yaarzo.com/lahore-chat-room",
+        "datePublished": "2026-08-04T08:29:36.866+00:00",
+        "image": [
+          "https://ibb.co/jNkfkTT"
+        ]
+      }
+    ],
+    "scripts": [
+      "/assets/index-jPki7fCQ.js"
+    ],
+    "css": 2,
+    "preload": [],
+    "mixedHttp": 7,
+    "text": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo Back 0 views Home / Lahore Chat Room – Free Online Chat &amp; Community on Yaarzo Lahore Chat Room # Pakistani Chat ROOM # Lahor Girls Chat # "
+  },
+  {
+    "url": "https://yaarzo.com/competitions",
+    "status": 200,
+    "bytes": 16998,
+    "xRobots": null,
+    "csp": null,
+    "xfo": null,
+    "hsts": "max-age=63072000",
+    "cache": "public, max-age=0, must-revalidate",
+    "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+    "robots": "index, follow",
+    "canon": "https://yaarzo.com/competitions",
+    "desc": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+    "jsonld": [],
+    "scripts": [
+      "/assets/index-jPki7fCQ.js"
+    ],
+    "css": 2,
+    "preload": [],
+    "mixedHttp": 6,
+    "text": "Yaarzo – Dosti, Chatrooms and Social Community Competitions Discover, vote, and win across every category. Hall of Fame Leaderboard All Live Now ( 0 ) No live competitions right now — check back soon."
+  },
+  {
+    "url": "https://yaarzo.com/chatroom",
+    "status": 200,
+    "bytes": 64607,
+    "xRobots": null,
+    "csp": null,
+    "xfo": null,
+    "hsts": "max-age=63072000",
+    "cache": "public, max-age=0, must-revalidate",
+    "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+    "robots": "index, follow",
+    "canon": "https://yaarzo.com/chatroom",
+    "desc": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+    "jsonld": [],
+    "scripts": [
+      "/assets/index-jPki7fCQ.js"
+    ],
+    "css": 2,
+    "preload": [
+      "<link rel=\"preload\" as=\"image\" href=\"/assets/gamebot-nSsQX7Sz.png\"/>",
+      "<link rel=\"preload\" as=\"image\" href=\"/assets/ryze-DK8ePVBZ.png\"/>",
+      "<link rel=\"preload\" as=\"image\" href=\"/assets/spambot-DPDcjNMf.png\"/>",
+      "<link rel=\"preload\" as=\"image\" href=\"/assets/digbot-CIH-xchR.png\"/>",
+      "<link rel=\"preload\" as=\"image\" href=\"/assets/echo-Bzt7xQqn.png\"/>",
+      "<link rel=\"preload\" as=\"image\" href=\"/assets/fishbot-am68VkVU.png\"/>",
+      "<link rel=\"preload\" as=\"image\" href=\"/assets/nova-DRsJ4Ch_.png\"/>",
+      "<link rel=\"preload\" as=\"image\" href=\"/assets/pixel-BNCMGLDZ.png\"/>",
+      "<link rel=\"preload\" as=\"image\" href=\"/assets/wine-BHEWvso-.png\"/>"
+    ],
+    "mixedHttp": 36,
+    "text": "Yaarzo – Dosti, Chatrooms and Social Community Yaarzo Talk. Play. Connect. All Joined Country Interests Joined Channels # Lobby 10 # Games 10 Explore Sign in to chat, react, DM and earn XP. Sign in Cr"
+  },
+  {
+    "url": "https://yaarzo.com/login",
+    "status": 200,
+    "bytes": 6717,
+    "xRobots": null,
+    "csp": null,
+    "xfo": null,
+    "hsts": "max-age=63072000",
+    "cache": "public, max-age=0, must-revalidate",
+    "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+    "robots": "noindex, nofollow",
+    "canon": "https://yaarzo.com/login",
+    "desc": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+    "jsonld": [],
+    "scripts": [
+      "/assets/index-jPki7fCQ.js"
+    ],
+    "css": 2,
+    "preload": [],
+    "mixedHttp": 0,
+    "text": "Yaarzo – Dosti, Chatrooms and Social Community Loading…"
+  },
+  {
+    "url": "https://yaarzo.com/admin",
+    "status": 200,
+    "bytes": 8173,
+    "xRobots": null,
+    "csp": null,
+    "xfo": null,
+    "hsts": "max-age=63072000",
+    "cache": "public, max-age=0, must-revalidate",
+    "title": null,
+    "robots": null,
+    "canon": null,
+    "desc": null,
+    "jsonld": [],
+    "scripts": [
+      "/assets/index-jPki7fCQ.js"
+    ],
+    "css": 2,
+    "preload": [],
+    "mixedHttp": 0,
+    "text": "Loading…"
+  },
+  {
+    "url": "https://yaarzo.com/account",
+    "status": 200,
+    "bytes": 5954,
+    "xRobots": null,
+    "csp": null,
+    "xfo": null,
+    "hsts": "max-age=63072000",
+    "cache": "public, max-age=0, must-revalidate",
+    "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+    "robots": "noindex, nofollow",
+    "canon": "https://yaarzo.com/account",
+    "desc": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+    "jsonld": [],
+    "scripts": [
+      "/assets/index-jPki7fCQ.js"
+    ],
+    "css": 2,
+    "preload": [],
+    "mixedHttp": 0,
+    "text": "Yaarzo – Dosti, Chatrooms and Social Community Loading…"
+  }
+]

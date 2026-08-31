@@ -1,0 +1,991 @@
+{
+  "capturedAt": "2026-08-27T08:53:23.463Z",
+  "sitemapHttp": 200,
+  "contentType": "application/xml; charset=utf-8",
+  "bytes": 5991,
+  "locCount": 35,
+  "uniqueLocs": 35,
+  "dupLocs": [],
+  "hasPriority": true,
+  "changefreqCount": 35,
+  "priorityCount": 35,
+  "lastmodCount": 35,
+  "lastmodUnique": [
+    "2026-08-27",
+    "2026-08-05",
+    "2026-08-19",
+    "2026-08-24",
+    "2026-08-08"
+  ],
+  "lastmodInvalid": [],
+  "lastmodAllIdentical": false,
+  "httpLocs": [],
+  "nonYaarzo": [],
+  "loginWallet": [],
+  "newsNs": false,
+  "imageNs": false,
+  "xmlStart": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url>\n    <loc>https://yaarzo.com/</loc>\n    <lastmod>2026-08-27</lastmod>\n   ",
+  "robots": {
+    "status": 200,
+    "text": "User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: https://yaarzo.com/sitemap.xml",
+    "declared": [
+      "https://yaarzo.com/sitemap.xml"
+    ]
+  },
+  "discovery": [
+    {
+      "url": "https://yaarzo.com/sitemap.xml",
+      "status": 200,
+      "bytes": 5991,
+      "locCount": 35,
+      "isUrlset": true,
+      "isIndex": false
+    },
+    {
+      "url": "https://yaarzo.com/sitemap_index.xml",
+      "status": 404,
+      "bytes": 4240,
+      "locCount": 0,
+      "isUrlset": false,
+      "isIndex": false
+    },
+    {
+      "url": "https://yaarzo.com/sitemap-index.xml",
+      "status": 404,
+      "bytes": 4240,
+      "locCount": 0,
+      "isUrlset": false,
+      "isIndex": false
+    },
+    {
+      "url": "https://yaarzo.com/sitemap1.xml",
+      "status": 404,
+      "bytes": 4230,
+      "locCount": 0,
+      "isUrlset": false,
+      "isIndex": false
+    },
+    {
+      "url": "https://yaarzo.com/news-sitemap.xml",
+      "status": 404,
+      "bytes": 4238,
+      "locCount": 0,
+      "isUrlset": false,
+      "isIndex": false
+    }
+  ],
+  "sitemapRows": [
+    {
+      "loc": "https://yaarzo.com/",
+      "lastmod": "2026-08-27",
+      "changefreq": "daily",
+      "priority": "1.0",
+      "url": "https://yaarzo.com/",
+      "path": "/",
+      "status": 200,
+      "ms": 398,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Yaarzo – Free Online Chatrooms, Make Friends & Communities",
+      "canonicals": [
+        "https://yaarzo.com/"
+      ],
+      "bytes": 78995
+    },
+    {
+      "loc": "https://yaarzo.com/chatroom",
+      "lastmod": "2026-08-27",
+      "changefreq": "daily",
+      "priority": "0.9",
+      "url": "https://yaarzo.com/chatroom",
+      "path": "/chatroom",
+      "status": 200,
+      "ms": 245,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Chatrooms",
+      "canonicals": [
+        "https://yaarzo.com/chatroom"
+      ],
+      "bytes": 15500
+    },
+    {
+      "loc": "https://yaarzo.com/communities",
+      "lastmod": "2026-08-27",
+      "changefreq": "weekly",
+      "priority": "0.8",
+      "url": "https://yaarzo.com/communities",
+      "path": "/communities",
+      "status": 200,
+      "ms": 482,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Discover Communities — BooBubble",
+      "canonicals": [
+        "https://yaarzo.com/communities"
+      ],
+      "bytes": 23814
+    },
+    {
+      "loc": "https://yaarzo.com/competitions",
+      "lastmod": "2026-08-27",
+      "changefreq": "weekly",
+      "priority": "0.8",
+      "url": "https://yaarzo.com/competitions",
+      "path": "/competitions",
+      "status": 200,
+      "ms": 268,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Community Competitions — Live, Trending & Upcoming",
+      "canonicals": [
+        "https://yaarzo.com/competitions"
+      ],
+      "bytes": 8349
+    },
+    {
+      "loc": "https://yaarzo.com/poetry",
+      "lastmod": "2026-08-27",
+      "changefreq": "weekly",
+      "priority": "0.8",
+      "url": "https://yaarzo.com/poetry",
+      "path": "/poetry",
+      "status": 200,
+      "ms": 640,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Poetry Hub",
+      "canonicals": [
+        "https://yaarzo.com/poetry"
+      ],
+      "bytes": 4597
+    },
+    {
+      "loc": "https://yaarzo.com/feed",
+      "lastmod": "2026-08-05",
+      "changefreq": "weekly",
+      "priority": "0.5",
+      "url": "https://yaarzo.com/feed",
+      "path": "/feed",
+      "status": 200,
+      "ms": 296,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Feed",
+      "canonicals": [
+        "https://yaarzo.com/feed"
+      ],
+      "bytes": 10739
+    },
+    {
+      "loc": "https://yaarzo.com/girls-chat-room",
+      "lastmod": "2026-08-19",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/girls-chat-room",
+      "path": "/girls-chat-room",
+      "status": 200,
+      "ms": 3067,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Girls Chat Room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/girls-chat-room"
+      ],
+      "bytes": 22178
+    },
+    {
+      "loc": "https://yaarzo.com/lahore-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/lahore-chat-room",
+      "path": "/lahore-chat-room",
+      "status": 200,
+      "ms": 2540,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/lahore-chat-room"
+      ],
+      "bytes": 36470
+    },
+    {
+      "loc": "https://yaarzo.com/chennai-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/chennai-chat-room",
+      "path": "/chennai-chat-room",
+      "status": 200,
+      "ms": 3182,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Chennai Chat Room Online – Free Tamil Dosti Chat | Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/chennai-chat-room"
+      ],
+      "bytes": 40504
+    },
+    {
+      "loc": "https://yaarzo.com/usa-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/usa-chat-room",
+      "path": "/usa-chat-room",
+      "status": 200,
+      "ms": 2461,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "USA Chat Room – Free Online Chat with People Across America",
+      "canonicals": [
+        "https://yaarzo.com/usa-chat-room"
+      ],
+      "bytes": 35875
+    },
+    {
+      "loc": "https://yaarzo.com/delhi-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/delhi-chat-room",
+      "path": "/delhi-chat-room",
+      "status": 200,
+      "ms": 2206,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Delhi Chat Room Online – Free NCR Dosti Chat | Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/delhi-chat-room"
+      ],
+      "bytes": 39147
+    },
+    {
+      "loc": "https://yaarzo.com/hyderabad-india-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/hyderabad-india-chat-room",
+      "path": "/hyderabad-india-chat-room",
+      "status": 200,
+      "ms": 2620,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Hyderabad chat room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/hyderabad-india-chat-room"
+      ],
+      "bytes": 23692
+    },
+    {
+      "loc": "https://yaarzo.com/bengaluru-chat-room",
+      "lastmod": "2026-08-08",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/bengaluru-chat-room",
+      "path": "/bengaluru-chat-room",
+      "status": 200,
+      "ms": 2189,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Bengaluru chat room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/bengaluru-chat-room"
+      ],
+      "bytes": 23898
+    },
+    {
+      "loc": "https://yaarzo.com/english-chat-room-free-online-chat",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/english-chat-room-free-online-chat",
+      "path": "/english-chat-room-free-online-chat",
+      "status": 200,
+      "ms": 1978,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "English Chat Room – Talk & Practice English Online Free",
+      "canonicals": [
+        "https://yaarzo.com/english-chat-room-free-online-chat"
+      ],
+      "bytes": 40502
+    },
+    {
+      "loc": "https://yaarzo.com/teen-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/teen-chat-room",
+      "path": "/teen-chat-room",
+      "status": 200,
+      "ms": 2773,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Teen Chat Room for Ages 13–16 | Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/teen-chat-room"
+      ],
+      "bytes": 29411
+    },
+    {
+      "loc": "https://yaarzo.com/karachi-chat-room",
+      "lastmod": "2026-08-19",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/karachi-chat-room",
+      "path": "/karachi-chat-room",
+      "status": 200,
+      "ms": 2185,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Karachi chat room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/karachi-chat-room"
+      ],
+      "bytes": 24171
+    },
+    {
+      "loc": "https://yaarzo.com/about-us",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/about-us",
+      "path": "/about-us",
+      "status": 200,
+      "ms": 2896,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "About Yaarzo | A Social Network Built for Real Connections",
+      "canonicals": [
+        "https://yaarzo.com/about-us"
+      ],
+      "bytes": 30807
+    },
+    {
+      "loc": "https://yaarzo.com/terms-conditions",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/terms-conditions",
+      "path": "/terms-conditions",
+      "status": 200,
+      "ms": 1992,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Terms & Conditions | Yaarzo Platform Rules",
+      "canonicals": [
+        "https://yaarzo.com/terms-conditions"
+      ],
+      "bytes": 35480
+    },
+    {
+      "loc": "https://yaarzo.com/chatib-alternative-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/chatib-alternative-chat-room",
+      "path": "/chatib-alternative-chat-room",
+      "status": 200,
+      "ms": 2325,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Best Chatib Alternative Chat Room – Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/chatib-alternative-chat-room"
+      ],
+      "bytes": 42071
+    },
+    {
+      "loc": "https://yaarzo.com/rawalpindi-chat-room",
+      "lastmod": "2026-08-08",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/rawalpindi-chat-room",
+      "path": "/rawalpindi-chat-room",
+      "status": 200,
+      "ms": 4850,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Rawalpindi chat room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/rawalpindi-chat-room"
+      ],
+      "bytes": 24123
+    },
+    {
+      "loc": "https://yaarzo.com/chat-rooms-without-registration-2026",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/chat-rooms-without-registration-2026",
+      "path": "/chat-rooms-without-registration-2026",
+      "status": 200,
+      "ms": 4338,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Chat Rooms Without Registration – Start Chatting Instantly on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/chat-rooms-without-registration-2026"
+      ],
+      "bytes": 47594
+    },
+    {
+      "loc": "https://yaarzo.com/mumbai-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/mumbai-chat-room",
+      "path": "/mumbai-chat-room",
+      "status": 200,
+      "ms": 4240,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Mumbai chat room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/mumbai-chat-room"
+      ],
+      "bytes": 39270
+    },
+    {
+      "loc": "https://yaarzo.com/faisalabad-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/faisalabad-chat-room",
+      "path": "/faisalabad-chat-room",
+      "status": 200,
+      "ms": 2747,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Faisalabad chat room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/faisalabad-chat-room"
+      ],
+      "bytes": 40516
+    },
+    {
+      "loc": "https://yaarzo.com/karachi-girls-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/karachi-girls-chat-room",
+      "path": "/karachi-girls-chat-room",
+      "status": 200,
+      "ms": 3568,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Karachi Girls Chat Room – Safe & Judgment-Free Space | Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/karachi-girls-chat-room"
+      ],
+      "bytes": 39977
+    },
+    {
+      "loc": "https://yaarzo.com/privacy-policy",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/privacy-policy",
+      "path": "/privacy-policy",
+      "status": 200,
+      "ms": 2755,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Privacy Policy | How Yaarzo Protects Your Data",
+      "canonicals": [
+        "https://yaarzo.com/privacy-policy"
+      ],
+      "bytes": 37763
+    },
+    {
+      "loc": "https://yaarzo.com/india-chat-room",
+      "lastmod": "2026-08-19",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/india-chat-room",
+      "path": "/india-chat-room",
+      "status": 200,
+      "ms": 2513,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "India chat room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/india-chat-room"
+      ],
+      "bytes": 23615
+    },
+    {
+      "loc": "https://yaarzo.com/pakistan-chat-room",
+      "lastmod": "2026-08-19",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/pakistan-chat-room",
+      "path": "/pakistan-chat-room",
+      "status": 200,
+      "ms": 2184,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Pakistan chat room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/pakistan-chat-room"
+      ],
+      "bytes": 23762
+    },
+    {
+      "loc": "https://yaarzo.com/kolkata-chat-room",
+      "lastmod": "2026-08-19",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/kolkata-chat-room",
+      "path": "/kolkata-chat-room",
+      "status": 200,
+      "ms": 2128,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Kolkata chat room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/kolkata-chat-room"
+      ],
+      "bytes": 23662
+    },
+    {
+      "loc": "https://yaarzo.com/uk-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/uk-chat-room",
+      "path": "/uk-chat-room",
+      "status": 200,
+      "ms": 1927,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "UK Chat Room – Free Online Chat with People in Britain",
+      "canonicals": [
+        "https://yaarzo.com/uk-chat-room"
+      ],
+      "bytes": 36777
+    },
+    {
+      "loc": "https://yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo",
+      "path": "/shayari-community-write-compete-get-ranked-yaarzo",
+      "status": 200,
+      "ms": 2771,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Shayari Community – Write, Compete & Get Ranked | Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo"
+      ],
+      "bytes": 41518
+    },
+    {
+      "loc": "https://yaarzo.com/friendship-chat-room",
+      "lastmod": "2026-08-08",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/friendship-chat-room",
+      "path": "/friendship-chat-room",
+      "status": 200,
+      "ms": 2174,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Friendship Chat Room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/friendship-chat-room"
+      ],
+      "bytes": 22142
+    },
+    {
+      "loc": "https://yaarzo.com/dating-chat-room",
+      "lastmod": "2026-08-08",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/dating-chat-room",
+      "path": "/dating-chat-room",
+      "status": 200,
+      "ms": 2140,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Dating Chat Room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/dating-chat-room"
+      ],
+      "bytes": 22248
+    },
+    {
+      "loc": "https://yaarzo.com/islamabad-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/islamabad-chat-room",
+      "path": "/islamabad-chat-room",
+      "status": 200,
+      "ms": 2175,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Islamabad chat room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/islamabad-chat-room"
+      ],
+      "bytes": 41743
+    },
+    {
+      "loc": "https://yaarzo.com/multan-chat-room",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/multan-chat-room",
+      "path": "/multan-chat-room",
+      "status": 200,
+      "ms": 1997,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Multan chat room | Free Online Chat on Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/multan-chat-room"
+      ],
+      "bytes": 34554
+    },
+    {
+      "loc": "https://yaarzo.com/contact-us",
+      "lastmod": "2026-08-24",
+      "changefreq": "weekly",
+      "priority": "0.6",
+      "url": "https://yaarzo.com/contact-us",
+      "path": "/contact-us",
+      "status": 200,
+      "ms": 1984,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Contact Us | Yaarzo",
+      "canonicals": [
+        "https://yaarzo.com/contact-us"
+      ],
+      "bytes": 25293
+    }
+  ],
+  "extraRows": [
+    {
+      "url": "https://yaarzo.com/blog",
+      "path": "/blog",
+      "status": 200,
+      "ms": 439,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": null,
+      "noindex": false,
+      "title": "Blog — Yaarzo",
+      "canonicals": [],
+      "bytes": 2920
+    },
+    {
+      "url": "https://yaarzo.com/blog/yahoo",
+      "path": "/blog/yahoo",
+      "status": 200,
+      "ms": 446,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "yahoo — Yaarzo Blog",
+      "canonicals": [],
+      "bytes": 2266
+    },
+    {
+      "url": "https://yaarzo.com/login",
+      "path": "/login",
+      "status": 200,
+      "ms": 248,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "noindex, nofollow",
+      "noindex": true,
+      "title": "Community sign in",
+      "canonicals": [
+        "https://yaarzo.com/login"
+      ],
+      "bytes": 6672
+    },
+    {
+      "url": "https://yaarzo.com/wallet",
+      "path": "/wallet",
+      "status": 200,
+      "ms": 237,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "noindex, nofollow",
+      "noindex": true,
+      "title": "Wallet & Coins Store",
+      "canonicals": [
+        "https://yaarzo.com/wallet"
+      ],
+      "bytes": 5829
+    },
+    {
+      "url": "https://yaarzo.com/signup",
+      "path": "/signup",
+      "status": 307,
+      "ms": 225,
+      "contentType": null,
+      "location": "/login",
+      "xRobots": null,
+      "robotsMeta": null,
+      "noindex": false,
+      "title": null,
+      "canonicals": [],
+      "bytes": 0
+    },
+    {
+      "url": "https://yaarzo.com/account",
+      "path": "/account",
+      "status": 200,
+      "ms": 293,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "noindex, nofollow",
+      "noindex": true,
+      "title": "Account",
+      "canonicals": [
+        "https://yaarzo.com/account"
+      ],
+      "bytes": 2913
+    },
+    {
+      "url": "https://yaarzo.com/chatrooms",
+      "path": "/chatrooms",
+      "status": 307,
+      "ms": 1256,
+      "contentType": null,
+      "location": "/chatroom",
+      "xRobots": null,
+      "robotsMeta": null,
+      "noindex": false,
+      "title": null,
+      "canonicals": [],
+      "bytes": 0
+    },
+    {
+      "url": "https://yaarzo.com/welcome",
+      "path": "/welcome",
+      "status": 301,
+      "ms": 240,
+      "contentType": null,
+      "location": "/",
+      "xRobots": null,
+      "robotsMeta": null,
+      "noindex": false,
+      "title": null,
+      "canonicals": [],
+      "bytes": 0
+    },
+    {
+      "url": "https://yaarzo.com/find-friends",
+      "path": "/find-friends",
+      "status": 200,
+      "ms": 246,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Find Friends",
+      "canonicals": [
+        "https://yaarzo.com/find-friends"
+      ],
+      "bytes": 4259
+    },
+    {
+      "url": "https://yaarzo.com/games",
+      "path": "/games",
+      "status": 200,
+      "ms": 267,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Games Hub",
+      "canonicals": [
+        "https://yaarzo.com/games"
+      ],
+      "bytes": 3929
+    },
+    {
+      "url": "https://yaarzo.com/leaderboard",
+      "path": "/leaderboard",
+      "status": 200,
+      "ms": 243,
+      "contentType": "text/html; charset=utf-8",
+      "location": null,
+      "xRobots": null,
+      "robotsMeta": "index, follow",
+      "noindex": false,
+      "title": "Leaderboard",
+      "canonicals": [
+        "https://yaarzo.com/leaderboard"
+      ],
+      "bytes": 3688
+    }
+  ],
+  "mix": {
+    "appHubsPresent": [
+      "/",
+      "/chatroom",
+      "/communities",
+      "/competitions",
+      "/poetry",
+      "/feed"
+    ],
+    "appHubsMissing": [],
+    "trustPresent": [
+      "/about-us",
+      "/privacy-policy",
+      "/terms-conditions",
+      "/contact-us"
+    ],
+    "blogInSitemap": false,
+    "locationishCount": 23,
+    "locationish": [
+      "https://yaarzo.com/girls-chat-room",
+      "https://yaarzo.com/lahore-chat-room",
+      "https://yaarzo.com/chennai-chat-room",
+      "https://yaarzo.com/usa-chat-room",
+      "https://yaarzo.com/delhi-chat-room",
+      "https://yaarzo.com/hyderabad-india-chat-room",
+      "https://yaarzo.com/bengaluru-chat-room",
+      "https://yaarzo.com/teen-chat-room",
+      "https://yaarzo.com/karachi-chat-room",
+      "https://yaarzo.com/chatib-alternative-chat-room",
+      "https://yaarzo.com/rawalpindi-chat-room",
+      "https://yaarzo.com/chat-rooms-without-registration-2026",
+      "https://yaarzo.com/mumbai-chat-room",
+      "https://yaarzo.com/faisalabad-chat-room",
+      "https://yaarzo.com/karachi-girls-chat-room",
+      "https://yaarzo.com/india-chat-room",
+      "https://yaarzo.com/pakistan-chat-room",
+      "https://yaarzo.com/kolkata-chat-room",
+      "https://yaarzo.com/uk-chat-room",
+      "https://yaarzo.com/friendship-chat-room",
+      "https://yaarzo.com/dating-chat-room",
+      "https://yaarzo.com/islamabad-chat-room",
+      "https://yaarzo.com/multan-chat-room"
+    ]
+  }
+}

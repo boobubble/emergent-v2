@@ -1,0 +1,194 @@
+{
+  "performance": {
+    "best": 69,
+    "worst": 40,
+    "median": 63
+  },
+  "lcp": {
+    "best": 1706,
+    "worst": 2652,
+    "median": 2434
+  },
+  "fcp": {
+    "best": 1706,
+    "worst": 2531,
+    "median": 2434
+  },
+  "tbt": {
+    "best": 1404,
+    "worst": 5290,
+    "median": 3114
+  },
+  "cls": {
+    "best": 0,
+    "worst": 0.9355395250622279,
+    "median": 0
+  },
+  "rows": [
+    {
+      "run": 1,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T11:04:25.837Z",
+      "performance": 40,
+      "lcp": 1706,
+      "fcp": 1706,
+      "tbt": 5290,
+      "cls": 0.9355395250622279,
+      "ttfbMs": 45,
+      "renderDelayMs": 1670,
+      "loadDelayMs": null,
+      "loadTimeMs": null,
+      "cssTransferKb": 33,
+      "cssDecodedKb": 281,
+      "cssUrls": [
+        {
+          "url": "/assets/styles-CfRU-ok2.css",
+          "transfer": 32610,
+          "decoded": 286583
+        },
+        {
+          "url": "/assets/inter-latin-D1jZwX_T.css",
+          "transfer": 997,
+          "decoded": 861
+        }
+      ],
+      "renderBlockingMs": 0,
+      "renderBlockingDisplay": null,
+      "styleLayoutMs": 5220,
+      "requestCount": 24,
+      "lcpLabel": null
+    },
+    {
+      "run": 2,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T11:06:27.545Z",
+      "performance": 63,
+      "lcp": 2434,
+      "fcp": 2434,
+      "tbt": 3301,
+      "cls": 0,
+      "ttfbMs": 141,
+      "renderDelayMs": 1201,
+      "loadDelayMs": null,
+      "loadTimeMs": null,
+      "cssTransferKb": 33,
+      "cssDecodedKb": 281,
+      "cssUrls": [
+        {
+          "url": "/assets/styles-CfRU-ok2.css",
+          "transfer": 32671,
+          "decoded": 286583
+        },
+        {
+          "url": "/assets/inter-latin-D1jZwX_T.css",
+          "transfer": 1004,
+          "decoded": 861
+        }
+      ],
+      "renderBlockingMs": 0,
+      "renderBlockingDisplay": null,
+      "styleLayoutMs": 4048,
+      "requestCount": 21,
+      "lcpLabel": null
+    },
+    {
+      "run": 3,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T11:08:13.228Z",
+      "performance": 61,
+      "lcp": 2652,
+      "fcp": 2531,
+      "tbt": 3114,
+      "cls": 0,
+      "ttfbMs": 373,
+      "renderDelayMs": 1085,
+      "loadDelayMs": null,
+      "loadTimeMs": null,
+      "cssTransferKb": 33,
+      "cssDecodedKb": 281,
+      "cssUrls": [
+        {
+          "url": "/assets/styles-CfRU-ok2.css",
+          "transfer": 32611,
+          "decoded": 286583
+        },
+        {
+          "url": "/assets/inter-latin-D1jZwX_T.css",
+          "transfer": 1025,
+          "decoded": 861
+        }
+      ],
+      "renderBlockingMs": 0,
+      "renderBlockingDisplay": null,
+      "styleLayoutMs": 4789,
+      "requestCount": 25,
+      "lcpLabel": null
+    },
+    {
+      "run": 4,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T11:09:38.340Z",
+      "performance": 66,
+      "lcp": 2456,
+      "fcp": 2456,
+      "tbt": 2028,
+      "cls": 0,
+      "ttfbMs": 95,
+      "renderDelayMs": 697,
+      "loadDelayMs": null,
+      "loadTimeMs": null,
+      "cssTransferKb": 33,
+      "cssDecodedKb": 281,
+      "cssUrls": [
+        {
+          "url": "/assets/styles-CfRU-ok2.css",
+          "transfer": 32611,
+          "decoded": 286583
+        },
+        {
+          "url": "/assets/inter-latin-D1jZwX_T.css",
+          "transfer": 1004,
+          "decoded": 861
+        }
+      ],
+      "renderBlockingMs": 0,
+      "renderBlockingDisplay": null,
+      "styleLayoutMs": 3354,
+      "requestCount": 21,
+      "lcpLabel": null
+    },
+    {
+      "run": 5,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T11:10:48.186Z",
+      "performance": 69,
+      "lcp": 2424,
+      "fcp": 2424,
+      "tbt": 1404,
+      "cls": 0,
+      "ttfbMs": 33,
+      "renderDelayMs": 955,
+      "loadDelayMs": null,
+      "loadTimeMs": null,
+      "cssTransferKb": 33,
+      "cssDecodedKb": 281,
+      "cssUrls": [
+        {
+          "url": "/assets/styles-CfRU-ok2.css",
+          "transfer": 32611,
+          "decoded": 286583
+        },
+        {
+          "url": "/assets/inter-latin-D1jZwX_T.css",
+          "transfer": 997,
+          "decoded": 861
+        }
+      ],
+      "renderBlockingMs": 0,
+      "renderBlockingDisplay": null,
+      "styleLayoutMs": 3337,
+      "requestCount": 21,
+      "lcpLabel": null
+    }
+  ]
+}

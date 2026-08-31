@@ -1,0 +1,2396 @@
+[
+  {
+    "slug": "girls-chat-room",
+    "section": "type",
+    "base_name": "girls",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "boys-chat-room",
+    "section": "type",
+    "base_name": "boys",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "friendship-chat-room",
+    "section": "type",
+    "base_name": "friendship",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "dating-chat-room",
+    "section": "type",
+    "base_name": "dating",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "free-chat-room",
+    "section": "type",
+    "base_name": "free",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "online-chat-room",
+    "section": "type",
+    "base_name": "online",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "live-chat-room",
+    "section": "type",
+    "base_name": "live",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "random-chat-room",
+    "section": "type",
+    "base_name": "random",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "anonymous-chat-room",
+    "section": "type",
+    "base_name": "anonymous",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "no-signup-chat",
+    "section": "type",
+    "base_name": "no signup",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "chat-with-strangers",
+    "section": "type",
+    "base_name": "chat with strangers",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "stranger-chat-room",
+    "section": "type",
+    "base_name": "stranger",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "group-chat-room",
+    "section": "type",
+    "base_name": "group",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "public-chat-room",
+    "section": "type",
+    "base_name": "public",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "community-chat-room",
+    "section": "type",
+    "base_name": "community",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "social-chat-room",
+    "section": "type",
+    "base_name": "social",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "text-chat-room",
+    "section": "type",
+    "base_name": "text",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "local-chat-room",
+    "section": "type",
+    "base_name": "local",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "desi-chat-room",
+    "section": "type",
+    "base_name": "desi",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "singles-chat-room",
+    "section": "type",
+    "base_name": "singles",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "friends-chat-room",
+    "section": "type",
+    "base_name": "friends",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "international-chat-room",
+    "section": "type",
+    "base_name": "international",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "worldwide-chat-room",
+    "section": "type",
+    "base_name": "worldwide",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "student-chat-room",
+    "section": "type",
+    "base_name": "student",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "india-chat-room",
+    "section": "country",
+    "base_name": "india",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistan-chat-room",
+    "section": "country",
+    "base_name": "pakistan",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "uk-chat-room",
+    "section": "country",
+    "base_name": "uk",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "usa-chat-room",
+    "section": "country",
+    "base_name": "usa",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "canada-chat-room",
+    "section": "country",
+    "base_name": "canada",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "australia-chat-room",
+    "section": "country",
+    "base_name": "australia",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "uae-chat-room",
+    "section": "country",
+    "base_name": "uae",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "saudi-arabia-chat-room",
+    "section": "country",
+    "base_name": "saudi arabia",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "bangladesh-chat-room",
+    "section": "country",
+    "base_name": "bangladesh",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "nepal-chat-room",
+    "section": "country",
+    "base_name": "nepal",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "sri-lanka-chat-room",
+    "section": "country",
+    "base_name": "sri lanka",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "afghanistan-chat-room",
+    "section": "country",
+    "base_name": "afghanistan",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "qatar-chat-room",
+    "section": "country",
+    "base_name": "qatar",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "oman-chat-room",
+    "section": "country",
+    "base_name": "oman",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "kuwait-chat-room",
+    "section": "country",
+    "base_name": "kuwait",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "bahrain-chat-room",
+    "section": "country",
+    "base_name": "bahrain",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "malaysia-chat-room",
+    "section": "country",
+    "base_name": "malaysia",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "singapore-chat-room",
+    "section": "country",
+    "base_name": "singapore",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "south-africa-chat-room",
+    "section": "country",
+    "base_name": "south africa",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "new-zealand-chat-room",
+    "section": "country",
+    "base_name": "new zealand",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "germany-chat-room",
+    "section": "country",
+    "base_name": "germany",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "france-chat-room",
+    "section": "country",
+    "base_name": "france",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "italy-chat-room",
+    "section": "country",
+    "base_name": "italy",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "spain-chat-room",
+    "section": "country",
+    "base_name": "spain",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "ireland-chat-room",
+    "section": "country",
+    "base_name": "ireland",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "netherlands-chat-room",
+    "section": "country",
+    "base_name": "netherlands",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "turkey-chat-room",
+    "section": "country",
+    "base_name": "turkey",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "indonesia-chat-room",
+    "section": "country",
+    "base_name": "indonesia",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "philippines-chat-room",
+    "section": "country",
+    "base_name": "philippines",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "delhi-chat-room",
+    "section": "india_city",
+    "base_name": "delhi",
+    "lookup_city": "delhi",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "mumbai-chat-room",
+    "section": "india_city",
+    "base_name": "mumbai",
+    "lookup_city": "mumbai",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "bengaluru-chat-room",
+    "section": "india_city",
+    "base_name": "bengaluru",
+    "lookup_city": "bengaluru",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "hyderabad-india-chat-room",
+    "section": "india_city",
+    "base_name": "hyderabad india",
+    "lookup_city": "hyderabad india",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "chennai-chat-room",
+    "section": "india_city",
+    "base_name": "chennai",
+    "lookup_city": "chennai",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "kolkata-chat-room",
+    "section": "india_city",
+    "base_name": "kolkata",
+    "lookup_city": "kolkata",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "pune-chat-room",
+    "section": "india_city",
+    "base_name": "pune",
+    "lookup_city": "pune",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "ahmedabad-chat-room",
+    "section": "india_city",
+    "base_name": "ahmedabad",
+    "lookup_city": "ahmedabad",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "surat-chat-room",
+    "section": "india_city",
+    "base_name": "surat",
+    "lookup_city": "surat",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "jaipur-chat-room",
+    "section": "india_city",
+    "base_name": "jaipur",
+    "lookup_city": "jaipur",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "lucknow-chat-room",
+    "section": "india_city",
+    "base_name": "lucknow",
+    "lookup_city": "lucknow",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "kanpur-chat-room",
+    "section": "india_city",
+    "base_name": "kanpur",
+    "lookup_city": "kanpur",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "nagpur-chat-room",
+    "section": "india_city",
+    "base_name": "nagpur",
+    "lookup_city": "nagpur",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "indore-chat-room",
+    "section": "india_city",
+    "base_name": "indore",
+    "lookup_city": "indore",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "bhopal-chat-room",
+    "section": "india_city",
+    "base_name": "bhopal",
+    "lookup_city": "bhopal",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "patna-chat-room",
+    "section": "india_city",
+    "base_name": "patna",
+    "lookup_city": "patna",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "chandigarh-chat-room",
+    "section": "india_city",
+    "base_name": "chandigarh",
+    "lookup_city": "chandigarh",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "ludhiana-chat-room",
+    "section": "india_city",
+    "base_name": "ludhiana",
+    "lookup_city": "ludhiana",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "amritsar-chat-room",
+    "section": "india_city",
+    "base_name": "amritsar",
+    "lookup_city": "amritsar",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "jalandhar-chat-room",
+    "section": "india_city",
+    "base_name": "jalandhar",
+    "lookup_city": "jalandhar",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "gurugram-chat-room",
+    "section": "india_city",
+    "base_name": "gurugram",
+    "lookup_city": "gurugram",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "noida-chat-room",
+    "section": "india_city",
+    "base_name": "noida",
+    "lookup_city": "noida",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "ghaziabad-chat-room",
+    "section": "india_city",
+    "base_name": "ghaziabad",
+    "lookup_city": "ghaziabad",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "faridabad-chat-room",
+    "section": "india_city",
+    "base_name": "faridabad",
+    "lookup_city": "faridabad",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "agra-chat-room",
+    "section": "india_city",
+    "base_name": "agra",
+    "lookup_city": "agra",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "varanasi-chat-room",
+    "section": "india_city",
+    "base_name": "varanasi",
+    "lookup_city": "varanasi",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "prayagraj-chat-room",
+    "section": "india_city",
+    "base_name": "prayagraj",
+    "lookup_city": "prayagraj",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "dehradun-chat-room",
+    "section": "india_city",
+    "base_name": "dehradun",
+    "lookup_city": "dehradun",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "meerut-chat-room",
+    "section": "india_city",
+    "base_name": "meerut",
+    "lookup_city": "meerut",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "ranchi-chat-room",
+    "section": "india_city",
+    "base_name": "ranchi",
+    "lookup_city": "ranchi",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "raipur-chat-room",
+    "section": "india_city",
+    "base_name": "raipur",
+    "lookup_city": "raipur",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "bhubaneswar-chat-room",
+    "section": "india_city",
+    "base_name": "bhubaneswar",
+    "lookup_city": "bhubaneswar",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "guwahati-chat-room",
+    "section": "india_city",
+    "base_name": "guwahati",
+    "lookup_city": "guwahati",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "kochi-chat-room",
+    "section": "india_city",
+    "base_name": "kochi",
+    "lookup_city": "kochi",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "thiruvananthapuram-chat-room",
+    "section": "india_city",
+    "base_name": "thiruvananthapuram",
+    "lookup_city": "thiruvananthapuram",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "coimbatore-chat-room",
+    "section": "india_city",
+    "base_name": "coimbatore",
+    "lookup_city": "coimbatore",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "madurai-chat-room",
+    "section": "india_city",
+    "base_name": "madurai",
+    "lookup_city": "madurai",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "visakhapatnam-chat-room",
+    "section": "india_city",
+    "base_name": "visakhapatnam",
+    "lookup_city": "visakhapatnam",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "vijayawada-chat-room",
+    "section": "india_city",
+    "base_name": "vijayawada",
+    "lookup_city": "vijayawada",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "mysuru-chat-room",
+    "section": "india_city",
+    "base_name": "mysuru",
+    "lookup_city": "mysuru",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "lahore-chat-room",
+    "section": "pakistan_city",
+    "base_name": "lahore",
+    "lookup_city": "lahore",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "karachi-chat-room",
+    "section": "pakistan_city",
+    "base_name": "karachi",
+    "lookup_city": "karachi",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "islamabad-chat-room",
+    "section": "pakistan_city",
+    "base_name": "islamabad",
+    "lookup_city": "islamabad",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "rawalpindi-chat-room",
+    "section": "pakistan_city",
+    "base_name": "rawalpindi",
+    "lookup_city": "rawalpindi",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "faisalabad-chat-room",
+    "section": "pakistan_city",
+    "base_name": "faisalabad",
+    "lookup_city": "faisalabad",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "multan-chat-room",
+    "section": "pakistan_city",
+    "base_name": "multan",
+    "lookup_city": "multan",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "gujranwala-chat-room",
+    "section": "pakistan_city",
+    "base_name": "gujranwala",
+    "lookup_city": "gujranwala",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "peshawar-chat-room",
+    "section": "pakistan_city",
+    "base_name": "peshawar",
+    "lookup_city": "peshawar",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "quetta-chat-room",
+    "section": "pakistan_city",
+    "base_name": "quetta",
+    "lookup_city": "quetta",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "sialkot-chat-room",
+    "section": "pakistan_city",
+    "base_name": "sialkot",
+    "lookup_city": "sialkot",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "hyderabad-pakistan-chat-room",
+    "section": "pakistan_city",
+    "base_name": "hyderabad pakistan",
+    "lookup_city": "hyderabad",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "bahawalpur-chat-room",
+    "section": "pakistan_city",
+    "base_name": "bahawalpur",
+    "lookup_city": "bahawalpur",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "sargodha-chat-room",
+    "section": "pakistan_city",
+    "base_name": "sargodha",
+    "lookup_city": "sargodha",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "sukkur-chat-room",
+    "section": "pakistan_city",
+    "base_name": "sukkur",
+    "lookup_city": "sukkur",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "larkana-chat-room",
+    "section": "pakistan_city",
+    "base_name": "larkana",
+    "lookup_city": "larkana",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "sheikhupura-chat-room",
+    "section": "pakistan_city",
+    "base_name": "sheikhupura",
+    "lookup_city": "sheikhupura",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "jhang-chat-room",
+    "section": "pakistan_city",
+    "base_name": "jhang",
+    "lookup_city": "jhang",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "gujrat-pakistan-chat-room",
+    "section": "pakistan_city",
+    "base_name": "gujrat pakistan",
+    "lookup_city": "gujrat",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "mardan-chat-room",
+    "section": "pakistan_city",
+    "base_name": "mardan",
+    "lookup_city": "mardan",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "abbottabad-chat-room",
+    "section": "pakistan_city",
+    "base_name": "abbottabad",
+    "lookup_city": "abbottabad",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "sahiwal-chat-room",
+    "section": "pakistan_city",
+    "base_name": "sahiwal",
+    "lookup_city": "sahiwal",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "rahim-yar-khan-chat-room",
+    "section": "pakistan_city",
+    "base_name": "rahim yar khan",
+    "lookup_city": "rahim yar khan",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "kasur-chat-room",
+    "section": "pakistan_city",
+    "base_name": "kasur",
+    "lookup_city": "kasur",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "dera-ghazi-khan-chat-room",
+    "section": "pakistan_city",
+    "base_name": "dera ghazi khan",
+    "lookup_city": "dera ghazi khan",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "mingora-chat-room",
+    "section": "pakistan_city",
+    "base_name": "mingora",
+    "lookup_city": "mingora",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "okara-chat-room",
+    "section": "pakistan_city",
+    "base_name": "okara",
+    "lookup_city": "okara",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "mirpur-chat-room",
+    "section": "pakistan_city",
+    "base_name": "mirpur",
+    "lookup_city": "mirpur",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "punjab-pakistan-chat-room",
+    "section": "pakistan_province",
+    "base_name": "punjab pakistan",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "sindh-chat-room",
+    "section": "pakistan_province",
+    "base_name": "sindh",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "khyber-pakhtunkhwa-chat-room",
+    "section": "pakistan_province",
+    "base_name": "khyber pakhtunkhwa",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "balochistan-chat-room",
+    "section": "pakistan_province",
+    "base_name": "balochistan",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "azad-kashmir-chat-room",
+    "section": "pakistan_province",
+    "base_name": "azad kashmir",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "gilgit-baltistan-chat-room",
+    "section": "pakistan_province",
+    "base_name": "gilgit baltistan",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "punjab-india-chat-room",
+    "section": "india_state",
+    "base_name": "punjab india",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "maharashtra-chat-room",
+    "section": "india_state",
+    "base_name": "maharashtra",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "gujarat-chat-room",
+    "section": "india_state",
+    "base_name": "gujarat",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "rajasthan-chat-room",
+    "section": "india_state",
+    "base_name": "rajasthan",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "uttar-pradesh-chat-room",
+    "section": "india_state",
+    "base_name": "uttar pradesh",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "madhya-pradesh-chat-room",
+    "section": "india_state",
+    "base_name": "madhya pradesh",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "bihar-chat-room",
+    "section": "india_state",
+    "base_name": "bihar",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "west-bengal-chat-room",
+    "section": "india_state",
+    "base_name": "west bengal",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "tamil-nadu-chat-room",
+    "section": "india_state",
+    "base_name": "tamil nadu",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "karnataka-chat-room",
+    "section": "india_state",
+    "base_name": "karnataka",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "kerala-chat-room",
+    "section": "india_state",
+    "base_name": "kerala",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "telangana-chat-room",
+    "section": "india_state",
+    "base_name": "telangana",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "andhra-pradesh-chat-room",
+    "section": "india_state",
+    "base_name": "andhra pradesh",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "haryana-chat-room",
+    "section": "india_state",
+    "base_name": "haryana",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "uttarakhand-chat-room",
+    "section": "india_state",
+    "base_name": "uttarakhand",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "jharkhand-chat-room",
+    "section": "india_state",
+    "base_name": "jharkhand",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "assam-chat-room",
+    "section": "india_state",
+    "base_name": "assam",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "odisha-chat-room",
+    "section": "india_state",
+    "base_name": "odisha",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "urdu-chat-room",
+    "section": "language",
+    "base_name": "urdu",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "hindi-chat-room",
+    "section": "language",
+    "base_name": "hindi",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "punjabi-chat-room",
+    "section": "language",
+    "base_name": "punjabi",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "english-chat-room",
+    "section": "language",
+    "base_name": "english",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "bengali-chat-room",
+    "section": "language",
+    "base_name": "bengali",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "tamil-chat-room",
+    "section": "language",
+    "base_name": "tamil",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "telugu-chat-room",
+    "section": "language",
+    "base_name": "telugu",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "marathi-chat-room",
+    "section": "language",
+    "base_name": "marathi",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "gujarati-chat-room",
+    "section": "language",
+    "base_name": "gujarati",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "malayalam-chat-room",
+    "section": "language",
+    "base_name": "malayalam",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "kannada-chat-room",
+    "section": "language",
+    "base_name": "kannada",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pashto-chat-room",
+    "section": "language",
+    "base_name": "pashto",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "sindhi-chat-room",
+    "section": "language",
+    "base_name": "sindhi",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "nepali-chat-room",
+    "section": "language",
+    "base_name": "nepali",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "arabic-chat-room",
+    "section": "language",
+    "base_name": "arabic",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "spanish-chat-room",
+    "section": "language",
+    "base_name": "spanish",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "french-chat-room",
+    "section": "language",
+    "base_name": "french",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "german-chat-room",
+    "section": "language",
+    "base_name": "german",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistan-girls-chat-room",
+    "section": "pakistan_subcategory",
+    "base_name": "pakistan girls",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistan-boys-chat-room",
+    "section": "pakistan_subcategory",
+    "base_name": "pakistan boys",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistan-friendship-chat-room",
+    "section": "pakistan_subcategory",
+    "base_name": "pakistan friendship",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistan-dating-chat-room",
+    "section": "pakistan_subcategory",
+    "base_name": "pakistan dating",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistan-free-chat-room",
+    "section": "pakistan_subcategory",
+    "base_name": "pakistan free",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistan-online-chat-room",
+    "section": "pakistan_subcategory",
+    "base_name": "pakistan online",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistan-desi-chat-room",
+    "section": "pakistan_subcategory",
+    "base_name": "pakistan desi",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "india-girls-chat-room",
+    "section": "india_subcategory",
+    "base_name": "india girls",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "india-boys-chat-room",
+    "section": "india_subcategory",
+    "base_name": "india boys",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "india-friendship-chat-room",
+    "section": "india_subcategory",
+    "base_name": "india friendship",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "india-dating-chat-room",
+    "section": "india_subcategory",
+    "base_name": "india dating",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "india-free-chat-room",
+    "section": "india_subcategory",
+    "base_name": "india free",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "india-online-chat-room",
+    "section": "india_subcategory",
+    "base_name": "india online",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "india-desi-chat-room",
+    "section": "india_subcategory",
+    "base_name": "india desi",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "lahore-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "lahore girls",
+    "lookup_city": "lahore",
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "lahore-friendship-chat-room",
+    "section": "city_subcategory",
+    "base_name": "lahore friendship",
+    "lookup_city": "lahore",
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "lahore-dating-chat-room",
+    "section": "city_subcategory",
+    "base_name": "lahore dating",
+    "lookup_city": "lahore",
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "karachi-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "karachi girls",
+    "lookup_city": "karachi",
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "karachi-friendship-chat-room",
+    "section": "city_subcategory",
+    "base_name": "karachi friendship",
+    "lookup_city": "karachi",
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "karachi-dating-chat-room",
+    "section": "city_subcategory",
+    "base_name": "karachi dating",
+    "lookup_city": "karachi",
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "mumbai-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "mumbai girls",
+    "lookup_city": "mumbai",
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "mumbai-friendship-chat-room",
+    "section": "city_subcategory",
+    "base_name": "mumbai friendship",
+    "lookup_city": "mumbai",
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "mumbai-dating-chat-room",
+    "section": "city_subcategory",
+    "base_name": "mumbai dating",
+    "lookup_city": "mumbai",
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "cricket-chat-room",
+    "section": "interest",
+    "base_name": "cricket",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "football-chat-room",
+    "section": "interest",
+    "base_name": "football",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "gaming-chat-room",
+    "section": "interest",
+    "base_name": "gaming",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "music-chat-room",
+    "section": "interest",
+    "base_name": "music",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "movies-chat-room",
+    "section": "interest",
+    "base_name": "movies",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "bollywood-chat-room",
+    "section": "interest",
+    "base_name": "bollywood",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistani-drama-chat-room",
+    "section": "interest",
+    "base_name": "pakistani drama",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "anime-chat-room",
+    "section": "interest",
+    "base_name": "anime",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "poetry-chat-room",
+    "section": "interest",
+    "base_name": "poetry",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "shayari-chat-room",
+    "section": "interest",
+    "base_name": "shayari",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "technology-chat-room",
+    "section": "interest",
+    "base_name": "technology",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "sports-chat-room",
+    "section": "interest",
+    "base_name": "sports",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "memes-chat-room",
+    "section": "interest",
+    "base_name": "memes",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "books-chat-room",
+    "section": "interest",
+    "base_name": "books",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "travel-chat-room",
+    "section": "interest",
+    "base_name": "travel",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "food-chat-room",
+    "section": "interest",
+    "base_name": "food",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "study-chat-room",
+    "section": "interest",
+    "base_name": "study",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "relationship-chat-room",
+    "section": "interest",
+    "base_name": "relationship",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "islamabad-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "islamabad girls",
+    "lookup_city": "islamabad",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "rawalpindi-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "rawalpindi girls",
+    "lookup_city": "rawalpindi",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "faisalabad-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "faisalabad girls",
+    "lookup_city": "faisalabad",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "multan-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "multan girls",
+    "lookup_city": "multan",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "gujranwala-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "gujranwala girls",
+    "lookup_city": "gujranwala",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "peshawar-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "peshawar girls",
+    "lookup_city": "peshawar",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "quetta-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "quetta girls",
+    "lookup_city": "quetta",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "sialkot-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "sialkot girls",
+    "lookup_city": "sialkot",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "hyderabad-pakistan-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "hyderabad pakistan girls",
+    "lookup_city": "hyderabad",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "bahawalpur-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "bahawalpur girls",
+    "lookup_city": "bahawalpur",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "sargodha-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "sargodha girls",
+    "lookup_city": "sargodha",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "sukkur-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "sukkur girls",
+    "lookup_city": "sukkur",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "sheikhupura-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "sheikhupura girls",
+    "lookup_city": "sheikhupura",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "gujrat-pakistan-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "gujrat pakistan girls",
+    "lookup_city": "gujrat",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "mardan-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "mardan girls",
+    "lookup_city": "mardan",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "abbottabad-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "abbottabad girls",
+    "lookup_city": "abbottabad",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "sahiwal-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "sahiwal girls",
+    "lookup_city": "sahiwal",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "kasur-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "kasur girls",
+    "lookup_city": "kasur",
+    "lookup_country_hint": "Pakistan"
+  },
+  {
+    "slug": "delhi-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "delhi girls",
+    "lookup_city": "delhi",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "bengaluru-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "bengaluru girls",
+    "lookup_city": "bengaluru",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "hyderabad-india-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "hyderabad india girls",
+    "lookup_city": "hyderabad india",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "chennai-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "chennai girls",
+    "lookup_city": "chennai",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "kolkata-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "kolkata girls",
+    "lookup_city": "kolkata",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "pune-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "pune girls",
+    "lookup_city": "pune",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "ahmedabad-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "ahmedabad girls",
+    "lookup_city": "ahmedabad",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "surat-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "surat girls",
+    "lookup_city": "surat",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "jaipur-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "jaipur girls",
+    "lookup_city": "jaipur",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "lucknow-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "lucknow girls",
+    "lookup_city": "lucknow",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "chandigarh-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "chandigarh girls",
+    "lookup_city": "chandigarh",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "ludhiana-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "ludhiana girls",
+    "lookup_city": "ludhiana",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "amritsar-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "amritsar girls",
+    "lookup_city": "amritsar",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "gurugram-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "gurugram girls",
+    "lookup_city": "gurugram",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "noida-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "noida girls",
+    "lookup_city": "noida",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "agra-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "agra girls",
+    "lookup_city": "agra",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "kochi-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "kochi girls",
+    "lookup_city": "kochi",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "coimbatore-girls-chat-room",
+    "section": "city_subcategory",
+    "base_name": "coimbatore girls",
+    "lookup_city": "coimbatore",
+    "lookup_country_hint": "India"
+  },
+  {
+    "slug": "fitness-chat-room",
+    "section": "interest",
+    "base_name": "fitness",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "photography-chat-room",
+    "section": "interest",
+    "base_name": "photography",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "art-chat-room",
+    "section": "interest",
+    "base_name": "art",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "coding-chat-room",
+    "section": "interest",
+    "base_name": "coding",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "programming-chat-room",
+    "section": "interest",
+    "base_name": "programming",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "startup-chat-room",
+    "section": "interest",
+    "base_name": "startup",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "business-chat-room",
+    "section": "interest",
+    "base_name": "business",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "career-chat-room",
+    "section": "interest",
+    "base_name": "career",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "education-chat-room",
+    "section": "interest",
+    "base_name": "education",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "college-chat-room",
+    "section": "interest",
+    "base_name": "college",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "university-chat-room",
+    "section": "interest",
+    "base_name": "university",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "english-learning-chat-room",
+    "section": "interest",
+    "base_name": "english learning",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "urdu-poetry-chat-room",
+    "section": "interest",
+    "base_name": "urdu poetry",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistani-music-chat-room",
+    "section": "interest",
+    "base_name": "pakistani music",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "indian-music-chat-room",
+    "section": "interest",
+    "base_name": "indian music",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "k-drama-chat-room",
+    "section": "interest",
+    "base_name": "k drama",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "science-chat-room",
+    "section": "interest",
+    "base_name": "science",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "space-chat-room",
+    "section": "interest",
+    "base_name": "space",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "history-chat-room",
+    "section": "interest",
+    "base_name": "history",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "fashion-chat-room",
+    "section": "interest",
+    "base_name": "fashion",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "cooking-chat-room",
+    "section": "interest",
+    "base_name": "cooking",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "cars-chat-room",
+    "section": "interest",
+    "base_name": "cars",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "bikes-chat-room",
+    "section": "interest",
+    "base_name": "bikes",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "nature-chat-room",
+    "section": "interest",
+    "base_name": "nature",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pets-chat-room",
+    "section": "interest",
+    "base_name": "pets",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "writers-chat-room",
+    "section": "interest",
+    "base_name": "writers",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "poets-chat-room",
+    "section": "interest",
+    "base_name": "poets",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "creative-writing-chat-room",
+    "section": "interest",
+    "base_name": "creative writing",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "short-stories-chat-room",
+    "section": "interest",
+    "base_name": "short stories",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "ghazal-chat-room",
+    "section": "interest",
+    "base_name": "ghazal",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "nazm-chat-room",
+    "section": "interest",
+    "base_name": "nazm",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "roman-urdu-chat-room",
+    "section": "language",
+    "base_name": "roman urdu",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "hinglish-chat-room",
+    "section": "language",
+    "base_name": "hinglish",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistan-urdu-chat-room",
+    "section": "country_language",
+    "base_name": "pakistan urdu",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistan-roman-urdu-chat-room",
+    "section": "country_language",
+    "base_name": "pakistan roman urdu",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "pakistan-punjabi-chat-room",
+    "section": "country_language",
+    "base_name": "pakistan punjabi",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "india-hindi-chat-room",
+    "section": "country_language",
+    "base_name": "india hindi",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "india-english-chat-room",
+    "section": "country_language",
+    "base_name": "india english",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "india-punjabi-chat-room",
+    "section": "country_language",
+    "base_name": "india punjabi",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "uk-english-chat-room",
+    "section": "country_language",
+    "base_name": "uk english",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "usa-english-chat-room",
+    "section": "country_language",
+    "base_name": "usa english",
+    "lookup_city": null,
+    "lookup_country_hint": null
+  },
+  {
+    "slug": "new-york-chat-room",
+    "section": "us_city",
+    "base_name": "new york",
+    "lookup_city": "new york",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "los-angeles-chat-room",
+    "section": "us_city",
+    "base_name": "los angeles",
+    "lookup_city": "los angeles",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "chicago-chat-room",
+    "section": "us_city",
+    "base_name": "chicago",
+    "lookup_city": "chicago",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "houston-chat-room",
+    "section": "us_city",
+    "base_name": "houston",
+    "lookup_city": "houston",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "phoenix-chat-room",
+    "section": "us_city",
+    "base_name": "phoenix",
+    "lookup_city": "phoenix",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "philadelphia-chat-room",
+    "section": "us_city",
+    "base_name": "philadelphia",
+    "lookup_city": "philadelphia",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "san-antonio-chat-room",
+    "section": "us_city",
+    "base_name": "san antonio",
+    "lookup_city": "san antonio",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "san-diego-chat-room",
+    "section": "us_city",
+    "base_name": "san diego",
+    "lookup_city": "san diego",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "dallas-chat-room",
+    "section": "us_city",
+    "base_name": "dallas",
+    "lookup_city": "dallas",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "san-jose-chat-room",
+    "section": "us_city",
+    "base_name": "san jose",
+    "lookup_city": "san jose",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "austin-chat-room",
+    "section": "us_city",
+    "base_name": "austin",
+    "lookup_city": "austin",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "san-francisco-chat-room",
+    "section": "us_city",
+    "base_name": "san francisco",
+    "lookup_city": "san francisco",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "seattle-chat-room",
+    "section": "us_city",
+    "base_name": "seattle",
+    "lookup_city": "seattle",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "boston-chat-room",
+    "section": "us_city",
+    "base_name": "boston",
+    "lookup_city": "boston",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "miami-chat-room",
+    "section": "us_city",
+    "base_name": "miami",
+    "lookup_city": "miami",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "atlanta-chat-room",
+    "section": "us_city",
+    "base_name": "atlanta",
+    "lookup_city": "atlanta",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "denver-chat-room",
+    "section": "us_city",
+    "base_name": "denver",
+    "lookup_city": "denver",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "las-vegas-chat-room",
+    "section": "us_city",
+    "base_name": "las vegas",
+    "lookup_city": "las vegas",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "orlando-chat-room",
+    "section": "us_city",
+    "base_name": "orlando",
+    "lookup_city": "orlando",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "washington-dc-chat-room",
+    "section": "us_city",
+    "base_name": "washington dc",
+    "lookup_city": "washington dc",
+    "lookup_country_hint": "United States"
+  },
+  {
+    "slug": "london-chat-room",
+    "section": "uk_city",
+    "base_name": "london",
+    "lookup_city": "london",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "birmingham-chat-room",
+    "section": "uk_city",
+    "base_name": "birmingham",
+    "lookup_city": "birmingham",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "manchester-chat-room",
+    "section": "uk_city",
+    "base_name": "manchester",
+    "lookup_city": "manchester",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "liverpool-chat-room",
+    "section": "uk_city",
+    "base_name": "liverpool",
+    "lookup_city": "liverpool",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "leeds-chat-room",
+    "section": "uk_city",
+    "base_name": "leeds",
+    "lookup_city": "leeds",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "glasgow-chat-room",
+    "section": "uk_city",
+    "base_name": "glasgow",
+    "lookup_city": "glasgow",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "edinburgh-chat-room",
+    "section": "uk_city",
+    "base_name": "edinburgh",
+    "lookup_city": "edinburgh",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "bristol-chat-room",
+    "section": "uk_city",
+    "base_name": "bristol",
+    "lookup_city": "bristol",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "sheffield-chat-room",
+    "section": "uk_city",
+    "base_name": "sheffield",
+    "lookup_city": "sheffield",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "cardiff-chat-room",
+    "section": "uk_city",
+    "base_name": "cardiff",
+    "lookup_city": "cardiff",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "leicester-chat-room",
+    "section": "uk_city",
+    "base_name": "leicester",
+    "lookup_city": "leicester",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "coventry-chat-room",
+    "section": "uk_city",
+    "base_name": "coventry",
+    "lookup_city": "coventry",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "nottingham-chat-room",
+    "section": "uk_city",
+    "base_name": "nottingham",
+    "lookup_city": "nottingham",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "newcastle-chat-room",
+    "section": "uk_city",
+    "base_name": "newcastle",
+    "lookup_city": "newcastle",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "belfast-chat-room",
+    "section": "uk_city",
+    "base_name": "belfast",
+    "lookup_city": "belfast",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "oxford-chat-room",
+    "section": "uk_city",
+    "base_name": "oxford",
+    "lookup_city": "oxford",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "cambridge-chat-room",
+    "section": "uk_city",
+    "base_name": "cambridge",
+    "lookup_city": "cambridge",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "brighton-chat-room",
+    "section": "uk_city",
+    "base_name": "brighton",
+    "lookup_city": "brighton",
+    "lookup_country_hint": "United Kingdom"
+  },
+  {
+    "slug": "toronto-chat-room",
+    "section": "canada_city",
+    "base_name": "toronto",
+    "lookup_city": "toronto",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "montreal-chat-room",
+    "section": "canada_city",
+    "base_name": "montreal",
+    "lookup_city": "montreal",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "vancouver-chat-room",
+    "section": "canada_city",
+    "base_name": "vancouver",
+    "lookup_city": "vancouver",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "calgary-chat-room",
+    "section": "canada_city",
+    "base_name": "calgary",
+    "lookup_city": "calgary",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "edmonton-chat-room",
+    "section": "canada_city",
+    "base_name": "edmonton",
+    "lookup_city": "edmonton",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "ottawa-chat-room",
+    "section": "canada_city",
+    "base_name": "ottawa",
+    "lookup_city": "ottawa",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "winnipeg-chat-room",
+    "section": "canada_city",
+    "base_name": "winnipeg",
+    "lookup_city": "winnipeg",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "quebec-city-chat-room",
+    "section": "canada_city",
+    "base_name": "quebec city",
+    "lookup_city": "quebec city",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "hamilton-chat-room",
+    "section": "canada_city",
+    "base_name": "hamilton",
+    "lookup_city": "hamilton",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "kitchener-chat-room",
+    "section": "canada_city",
+    "base_name": "kitchener",
+    "lookup_city": "kitchener",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "victoria-chat-room",
+    "section": "canada_city",
+    "base_name": "victoria",
+    "lookup_city": "victoria",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "halifax-chat-room",
+    "section": "canada_city",
+    "base_name": "halifax",
+    "lookup_city": "halifax",
+    "lookup_country_hint": "Canada"
+  },
+  {
+    "slug": "sydney-chat-room",
+    "section": "australia_city",
+    "base_name": "sydney",
+    "lookup_city": "sydney",
+    "lookup_country_hint": "Australia"
+  },
+  {
+    "slug": "melbourne-chat-room",
+    "section": "australia_city",
+    "base_name": "melbourne",
+    "lookup_city": "melbourne",
+    "lookup_country_hint": "Australia"
+  },
+  {
+    "slug": "brisbane-chat-room",
+    "section": "australia_city",
+    "base_name": "brisbane",
+    "lookup_city": "brisbane",
+    "lookup_country_hint": "Australia"
+  },
+  {
+    "slug": "perth-chat-room",
+    "section": "australia_city",
+    "base_name": "perth",
+    "lookup_city": "perth",
+    "lookup_country_hint": "Australia"
+  },
+  {
+    "slug": "adelaide-chat-room",
+    "section": "australia_city",
+    "base_name": "adelaide",
+    "lookup_city": "adelaide",
+    "lookup_country_hint": "Australia"
+  },
+  {
+    "slug": "canberra-chat-room",
+    "section": "australia_city",
+    "base_name": "canberra",
+    "lookup_city": "canberra",
+    "lookup_country_hint": "Australia"
+  },
+  {
+    "slug": "gold-coast-chat-room",
+    "section": "australia_city",
+    "base_name": "gold coast",
+    "lookup_city": "gold coast",
+    "lookup_country_hint": "Australia"
+  },
+  {
+    "slug": "newcastle-australia-chat-room",
+    "section": "australia_city",
+    "base_name": "newcastle australia",
+    "lookup_city": "newcastle",
+    "lookup_country_hint": "Australia"
+  },
+  {
+    "slug": "wollongong-chat-room",
+    "section": "australia_city",
+    "base_name": "wollongong",
+    "lookup_city": "wollongong",
+    "lookup_country_hint": "Australia"
+  },
+  {
+    "slug": "geelong-chat-room",
+    "section": "australia_city",
+    "base_name": "geelong",
+    "lookup_city": "geelong",
+    "lookup_country_hint": "Australia"
+  },
+  {
+    "slug": "hobart-chat-room",
+    "section": "australia_city",
+    "base_name": "hobart",
+    "lookup_city": "hobart",
+    "lookup_country_hint": "Australia"
+  },
+  {
+    "slug": "darwin-chat-room",
+    "section": "australia_city",
+    "base_name": "darwin",
+    "lookup_city": "darwin",
+    "lookup_country_hint": "Australia"
+  }
+]

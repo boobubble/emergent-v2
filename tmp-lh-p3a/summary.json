@@ -1,0 +1,109 @@
+{
+  "performance": {
+    "best": 82,
+    "worst": 62,
+    "median": 79
+  },
+  "lcp": {
+    "best": 2602,
+    "worst": 4185,
+    "median": 2665
+  },
+  "fcp": {
+    "best": 2508,
+    "worst": 3201,
+    "median": 2554
+  },
+  "tbt": {
+    "best": 421,
+    "worst": 553,
+    "median": 431
+  },
+  "cls": {
+    "best": 0.001254957956142035,
+    "worst": 0.001254957956142035,
+    "median": 0.001254957956142035
+  },
+  "rows": [
+    {
+      "run": 1,
+      "performance": 81,
+      "lcp": 2629,
+      "fcp": 2529,
+      "tbt": 421,
+      "cls": 0.001254957956142035,
+      "requestCount": 25,
+      "iconReqs": 1,
+      "googleFonts": 0,
+      "supabaseJs": 4,
+      "i18n": 0,
+      "jsTransferKb": 321,
+      "jsDecodedKb": 1042,
+      "longTasks": 12
+    },
+    {
+      "run": 2,
+      "performance": 79,
+      "lcp": 2665,
+      "fcp": 2554,
+      "tbt": 466,
+      "cls": 0.001254957956142035,
+      "requestCount": 25,
+      "iconReqs": 1,
+      "googleFonts": 0,
+      "supabaseJs": 4,
+      "i18n": 0,
+      "jsTransferKb": 321,
+      "jsDecodedKb": 1042,
+      "longTasks": 10
+    },
+    {
+      "run": 3,
+      "performance": 62,
+      "lcp": 4185,
+      "fcp": 3201,
+      "tbt": 553,
+      "cls": 0.001254957956142035,
+      "requestCount": 25,
+      "iconReqs": 1,
+      "googleFonts": 0,
+      "supabaseJs": 4,
+      "i18n": 0,
+      "jsTransferKb": 321,
+      "jsDecodedKb": 1042,
+      "longTasks": 14
+    },
+    {
+      "run": 4,
+      "performance": 79,
+      "lcp": 2922,
+      "fcp": 2674,
+      "tbt": 424,
+      "cls": 0.001254957956142035,
+      "requestCount": 25,
+      "iconReqs": 1,
+      "googleFonts": 0,
+      "supabaseJs": 4,
+      "i18n": 0,
+      "jsTransferKb": 321,
+      "jsDecodedKb": 1042,
+      "longTasks": 13
+    },
+    {
+      "run": 5,
+      "performance": 82,
+      "lcp": 2602,
+      "fcp": 2508,
+      "tbt": 431,
+      "cls": 0.001254957956142035,
+      "requestCount": 25,
+      "iconReqs": 1,
+      "googleFonts": 0,
+      "supabaseJs": 4,
+      "i18n": 0,
+      "jsTransferKb": 321,
+      "jsDecodedKb": 1042,
+      "longTasks": 12
+    }
+  ]
+}

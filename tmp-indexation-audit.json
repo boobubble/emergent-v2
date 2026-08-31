@@ -1,0 +1,2014 @@
+{
+  "robots": {
+    "status": 200,
+    "type": "text/plain; charset=utf-8",
+    "xRobots": null,
+    "body": "User-agent: *\nAllow: /\n\nSitemap: https://yaarzo.com/sitemap.xml",
+    "bytes": 63
+  },
+  "sitemapRaw": {
+    "status": 200,
+    "type": "application/xml; charset=utf-8",
+    "xRobots": null,
+    "bytes": 6150,
+    "isIndex": false,
+    "childSitemaps": [],
+    "locCount": 36,
+    "uniqueLocs": 36,
+    "lastmodCount": 36,
+    "dupLocs": [],
+    "xmlStart": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url>\n    <loc>https://yaarzo.com/chatrooms</loc>\n    <lastmod>2026-08-06</las",
+    "error": null
+  },
+  "allSitemapDocs": [
+    {
+      "url": "https://yaarzo.com/sitemap.xml",
+      "status": 200,
+      "type": "application/xml; charset=utf-8",
+      "isIndex": false,
+      "locs": [
+        "https://yaarzo.com/chatrooms",
+        "https://yaarzo.com/welcome",
+        "https://yaarzo.com/feed",
+        "https://yaarzo.com/find-friends",
+        "https://yaarzo.com/games",
+        "https://yaarzo.com",
+        "https://yaarzo.com/leaderboard",
+        "https://yaarzo.com/girls-chat-room",
+        "https://yaarzo.com/faisalabad-chat-room",
+        "https://yaarzo.com/chennai-chat-room",
+        "https://yaarzo.com/hyderabad-india-chat-room",
+        "https://yaarzo.com/islamabad-chat-room",
+        "https://yaarzo.com/usa-chat-room",
+        "https://yaarzo.com/rawalpindi-chat-room",
+        "https://yaarzo.com/bengaluru-chat-room",
+        "https://yaarzo.com/english-chat-room-free-online-chat",
+        "https://yaarzo.com/multan-chat-room",
+        "https://yaarzo.com/karachi-girls-chat-room",
+        "https://yaarzo.com/chat-rooms-without-registration-2026",
+        "https://yaarzo.com/teen-chat-room",
+        "https://yaarzo.com/kolkata-chat-room",
+        "https://yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo",
+        "https://yaarzo.com/karachi-chat-room",
+        "https://yaarzo.com/friendship-chat-room",
+        "https://yaarzo.com/about-us",
+        "https://yaarzo.com/privacy-policy",
+        "https://yaarzo.com/chatib-alternative-chat-room",
+        "https://yaarzo.com/terms-conditions",
+        "https://yaarzo.com/dating-chat-room",
+        "https://yaarzo.com/contact-us",
+        "https://yaarzo.com/india-chat-room",
+        "https://yaarzo.com/pakistan-chat-room",
+        "https://yaarzo.com/delhi-chat-room",
+        "https://yaarzo.com/mumbai-chat-room",
+        "https://yaarzo.com/lahore-chat-room",
+        "https://yaarzo.com/uk-chat-room"
+      ],
+      "lastmodCount": 36,
+      "bytes": 6150,
+      "error": null
+    }
+  ],
+  "sitemapChecks": [
+    {
+      "loc": "https://yaarzo.com/chatrooms",
+      "status": 307,
+      "location": "/chatroom",
+      "xRobots": null,
+      "robots": [],
+      "noindex": false,
+      "canonical": null,
+      "selfCanonical": false,
+      "title": null,
+      "wordCount": 0,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/welcome",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/welcome",
+      "selfCanonical": true,
+      "title": "Yaarzo – AI-Powered Chatrooms and Social Community",
+      "wordCount": 1173,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/feed",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/feed",
+      "selfCanonical": true,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "wordCount": 269,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/find-friends",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/find-friends",
+      "selfCanonical": true,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "wordCount": 8,
+      "loadingOnly": true,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/games",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/games",
+      "selfCanonical": true,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "wordCount": 8,
+      "loadingOnly": true,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/",
+      "selfCanonical": true,
+      "title": "Yaarzo – Free Online Chatrooms, Make Friends & Communities",
+      "wordCount": 462,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/leaderboard",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/leaderboard",
+      "selfCanonical": true,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "wordCount": 33,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/girls-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/girls-chat-room",
+      "selfCanonical": true,
+      "title": "Girls Chat Room | Free Online Chat on Yaarzo",
+      "wordCount": 203,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/faisalabad-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/faisalabad-chat-room",
+      "selfCanonical": true,
+      "title": "Faisalabad chat room | Free Online Chat on Yaarzo",
+      "wordCount": 1031,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/chennai-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/chennai-chat-room",
+      "selfCanonical": true,
+      "title": "Chennai Chat Room Online – Free Tamil Dosti Chat | Yaarzo",
+      "wordCount": 1040,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/hyderabad-india-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/hyderabad-india-chat-room",
+      "selfCanonical": true,
+      "title": "Hyderabad chat room | Free Online Chat on Yaarzo",
+      "wordCount": 224,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/islamabad-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/yaarzo.com/islamabad-chat-room",
+      "selfCanonical": false,
+      "title": "Islamabad chat room | Free Online Chat on Yaarzo",
+      "wordCount": 1051,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/usa-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/yaarzo.com/usa-chat-room",
+      "selfCanonical": false,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "wordCount": 1071,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/rawalpindi-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/rawalpindi-chat-room",
+      "selfCanonical": true,
+      "title": "Rawalpindi chat room | Free Online Chat on Yaarzo",
+      "wordCount": 237,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/bengaluru-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/bengaluru-chat-room",
+      "selfCanonical": true,
+      "title": "Bengaluru chat room | Free Online Chat on Yaarzo",
+      "wordCount": 228,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/english-chat-room-free-online-chat",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/yaarzo.com/english-chat-room-free-online-chat",
+      "selfCanonical": false,
+      "title": "English Chat Room – Talk & Practice English Online Free",
+      "wordCount": 1041,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/multan-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/Multan%20chat%20room%20|%20Free%20Online%20Chat%20on%20Yaarzo",
+      "selfCanonical": false,
+      "title": "Multan chat room | Free Online Chat on Yaarzo",
+      "wordCount": 806,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/karachi-girls-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/yaarzo.com/karachi-girls-chat-room",
+      "selfCanonical": false,
+      "title": "Karachi Girls Chat Room – Safe & Judgment-Free Space | Yaarzo",
+      "wordCount": 1021,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/chat-rooms-without-registration-2026",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/no-signup-chat",
+      "selfCanonical": false,
+      "title": "Chat Rooms Without Registration – Start Chatting Instantly on Yaarzo",
+      "wordCount": 1373,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/teen-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/yaarzo.com/teen-chat-room",
+      "selfCanonical": false,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "wordCount": 735,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/kolkata-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/kolkata-chat-room",
+      "selfCanonical": true,
+      "title": "Kolkata chat room | Free Online Chat on Yaarzo",
+      "wordCount": 220,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/yaarzo.com/shayari-community-write-compete-get-ranked-yaarzo",
+      "selfCanonical": false,
+      "title": "Shayari Community – Write, Compete & Get Ranked | Yaarzo",
+      "wordCount": 986,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/karachi-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/karachi-chat-room",
+      "selfCanonical": true,
+      "title": "Karachi chat room | Free Online Chat on Yaarzo",
+      "wordCount": 246,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/friendship-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/friendship-chat-room",
+      "selfCanonical": true,
+      "title": "Friendship Chat Room | Free Online Chat on Yaarzo",
+      "wordCount": 181,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/about-us",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/about-us",
+      "selfCanonical": true,
+      "title": "About Yaarzo | A Social Network Built for Real Connections",
+      "wordCount": 438,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/privacy-policy",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/privacy-policy",
+      "selfCanonical": true,
+      "title": "Privacy Policy | How Yaarzo Protects Your Data",
+      "wordCount": 734,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/chatib-alternative-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/yaarzo.com/chatib-alternative-chat-room",
+      "selfCanonical": false,
+      "title": "Best Chatib Alternative Chat Room – Yaarzo",
+      "wordCount": 1033,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/terms-conditions",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/terms-and-conditions",
+      "selfCanonical": false,
+      "title": "Terms & Conditions | Yaarzo Platform Rules",
+      "wordCount": 690,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/dating-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/dating-chat-room",
+      "selfCanonical": true,
+      "title": "Dating Chat Room | Free Online Chat on Yaarzo",
+      "wordCount": 204,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/contact-us",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/contact-us",
+      "selfCanonical": true,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "wordCount": 258,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/india-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/india-chat-room",
+      "selfCanonical": true,
+      "title": "India chat room | Free Online Chat on Yaarzo",
+      "wordCount": 212,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/pakistan-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/pakistan-chat-room",
+      "selfCanonical": true,
+      "title": "Pakistan chat room | Free Online Chat on Yaarzo",
+      "wordCount": 219,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/delhi-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/yaarzo.com/delhi-chat-room",
+      "selfCanonical": false,
+      "title": "Delhi Chat Room Online – Free NCR Dosti Chat | Yaarzo",
+      "wordCount": 986,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/mumbai-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/mumbai-chat-room",
+      "selfCanonical": true,
+      "title": "Mumbai chat room | Free Online Chat on Yaarzo",
+      "wordCount": 942,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/lahore-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/lahore-chat-room",
+      "selfCanonical": true,
+      "title": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo",
+      "wordCount": 919,
+      "loadingOnly": false,
+      "query": false
+    },
+    {
+      "loc": "https://yaarzo.com/uk-chat-room",
+      "status": 200,
+      "location": null,
+      "xRobots": null,
+      "robots": [
+        "index, follow"
+      ],
+      "noindex": false,
+      "canonical": "https://yaarzo.com/uk-chat-room",
+      "selfCanonical": true,
+      "title": "UK Chat Room – Free Online Chat with People in Britain",
+      "wordCount": 945,
+      "loadingOnly": false,
+      "query": false
+    }
+  ],
+  "canonPages": [
+    {
+      "url": "https://yaarzo.com/",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Free Online Chatrooms, Make Friends & Communities",
+      "description": "Join Yaarzo for free online chatrooms, make new friends, share posts and discover communities. Explore conversations and start chatting today.",
+      "canonical": "https://yaarzo.com/",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Free Online Chatrooms, Make Friends & Join Communities"
+      ],
+      "wordCount": 462,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Free Online Chatrooms, Make Friends &amp; Communities Yaarzo Chatrooms Feed Communities Competitions Poetry Join free Yaarzo Free Online Chatrooms, Make Friends &amp; Join Communities Yaarzo is a free place to m"
+    },
+    {
+      "url": "https://yaarzo.com/chatroom",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/chatroom",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [],
+      "wordCount": 86,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community Yaarzo Talk. Play. Connect. All Joined Country Interests Joined Channels # Lobby 10 # Games 10 Explore Sign in to chat, react, DM and earn XP. Sign in Create account Lobby \ud83d"
+    },
+    {
+      "url": "https://yaarzo.com/communities",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/communities",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Find your community"
+      ],
+      "wordCount": 60,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community Community Discovery Find your community Trending creator communities with live chat, feeds, competitions and radio. Sign in to create a community Communities 0 Members 0 Onl"
+    },
+    {
+      "url": "https://yaarzo.com/competitions",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/competitions",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Competitions"
+      ],
+      "wordCount": 55,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community Competitions Discover, vote, and win across every category. Hall of Fame Leaderboard All Live Now ( 0 ) No live competitions right now — check back soon. Upcoming ( 0 ) Noth"
+    },
+    {
+      "url": "https://yaarzo.com/poetry",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/poetry",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Where every verse finds its audience"
+      ],
+      "wordCount": 85,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community 📜 Poetry Hub Poetry Community Discover Battles Leaderboard Hall of Fame Write Poetry Hub Where every verse finds its audience A community of poets, storytellers and dreamer"
+    },
+    {
+      "url": "https://yaarzo.com/india-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "India chat room | Free Online Chat on Yaarzo",
+      "description": "Join free India chat rooms on Yaarzo. Browse city hubs, meet people across India, and chat online anytime.",
+      "canonical": "https://yaarzo.com/india-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "India chat room"
+      ],
+      "wordCount": 212,
+      "loadingOnly": false,
+      "textStart": "India chat room | Free Online Chat on Yaarzo Back 0 views Home / India chat room | Yaarzo India chat room India chat room is Yaarzo’s country hub for India: begin here for the national directory, then open metro city roo"
+    },
+    {
+      "url": "https://yaarzo.com/pakistan-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Pakistan chat room | Free Online Chat on Yaarzo",
+      "description": "Join free Pakistan chat rooms on Yaarzo. Browse city hubs, meet people across Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/pakistan-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Pakistan chat room"
+      ],
+      "wordCount": 219,
+      "loadingOnly": false,
+      "textStart": "Pakistan chat room | Free Online Chat on Yaarzo Back 0 views Home / Pakistan chat room | Yaarzo Pakistan chat room Pakistan chat room is Yaarzo’s country hub for Pakistan: start with a country-wide overview, then move in"
+    },
+    {
+      "url": "https://yaarzo.com/lahore-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo",
+      "description": "Join free Lahore chat rooms on Yaarzo. Meet people, talk in English or Urdu, and build friendly connections online. Join Lahore chat rooms for free on Yaarzo.",
+      "canonical": "https://yaarzo.com/lahore-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Lahore Chat Room"
+      ],
+      "wordCount": 919,
+      "loadingOnly": false,
+      "textStart": "Lahore Chat Room | Free Online Lahore Chat Room on Yaarzo Back 0 views Home / Lahore Chat Room – Free Online Chat &amp; Community on Yaarzo Lahore Chat Room # Pakistani Chat ROOM # Lahor Girls Chat # Lahore Live Chat # l"
+    },
+    {
+      "url": "https://yaarzo.com/delhi-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Delhi Chat Room Online – Free NCR Dosti Chat | Yaarzo",
+      "description": "Delhi aur NCR ke logon se free mein baat karo. Yaarzo ka Delhi chat room join karein aur naye dost banao — simple, safe, active.",
+      "canonical": "https://yaarzo.com/yaarzo.com/delhi-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [
+        "Delhi Chat Room: Purani Dilli Se New Delhi Tak Ki Baatcheet"
+      ],
+      "wordCount": 986,
+      "loadingOnly": false,
+      "textStart": "Delhi Chat Room Online – Free NCR Dosti Chat | Yaarzo Back 0 views Home / Delhi chat room | Yaarzo Delhi Chat Room: Purani Dilli Se New Delhi Tak Ki Baatcheet # Delhi chat room # Yaarzo # NCR chat room # Noida chat # Gur"
+    },
+    {
+      "url": "https://yaarzo.com/mumbai-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Mumbai chat room | Free Online Chat on Yaarzo",
+      "description": "Mumbai chat room par free mein naye dost banao, baat karo aur dosti badhao. Yaarzo par safe, active Mumbai community abhi join karein.",
+      "canonical": "https://yaarzo.com/mumbai-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Mumbai chat room"
+      ],
+      "wordCount": 942,
+      "loadingOnly": false,
+      "textStart": "Mumbai chat room | Free Online Chat on Yaarzo Back 0 views Home / Mumbai chat room | Yaarzo Mumbai chat room # Mumbai chat room # Yaarzo # online chat India # Mumbai dosti # free chat room # Maharashtra chat # Bollywood "
+    },
+    {
+      "url": "https://yaarzo.com/chennai-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Chennai Chat Room Online – Free Tamil Dosti Chat | Yaarzo",
+      "description": "Chennai ke logon se free mein baat karo. Yaarzo ka Chennai chat room join karein aur naye dost banao — simple, safe, active.",
+      "canonical": "https://yaarzo.com/chennai-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Chennai Chat Room: Marina Beach Se OMR Tak Ki Baatcheet"
+      ],
+      "wordCount": 1040,
+      "loadingOnly": false,
+      "textStart": "Chennai Chat Room Online – Free Tamil Dosti Chat | Yaarzo Back 0 views Home / Chennai Chat Room – Free Online Dosti Chat | Yaarzo Chennai Chat Room: Marina Beach Se OMR Tak Ki Baatcheet # Chennai chat room # Yaarzo # Tam"
+    },
+    {
+      "url": "https://yaarzo.com/bengaluru-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Bengaluru chat room | Free Online Chat on Yaarzo",
+      "description": "Join free Bengaluru chat rooms on Yaarzo. Meet people interested in Bengaluru, India, and chat online anytime.",
+      "canonical": "https://yaarzo.com/bengaluru-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Bengaluru chat room"
+      ],
+      "wordCount": 228,
+      "loadingOnly": false,
+      "textStart": "Bengaluru chat room | Free Online Chat on Yaarzo Back 0 views Home / Bengaluru chat room | Yaarzo Bengaluru chat room Bengaluru (Bangalore) chat rooms on Yaarzo fit a Karnataka tech-city focus — English-heavy rooms, camp"
+    },
+    {
+      "url": "https://yaarzo.com/hyderabad-india-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Hyderabad chat room | Free Online Chat on Yaarzo",
+      "description": "Join free Hyderabad chat rooms on Yaarzo. Meet people interested in Hyderabad, India, and chat online anytime.",
+      "canonical": "https://yaarzo.com/hyderabad-india-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Hyderabad chat room"
+      ],
+      "wordCount": 224,
+      "loadingOnly": false,
+      "textStart": "Hyderabad chat room | Free Online Chat on Yaarzo Back 0 views Home / Hyderabad chat room | Yaarzo Hyderabad chat room This is the India Hyderabad chat room (country-qualified slug) — not the Pakistan Hyderabad page. Use "
+    },
+    {
+      "url": "https://yaarzo.com/kolkata-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Kolkata chat room | Free Online Chat on Yaarzo",
+      "description": "Join free Kolkata chat rooms on Yaarzo. Meet people interested in Kolkata, India, and chat online anytime.",
+      "canonical": "https://yaarzo.com/kolkata-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Kolkata chat room"
+      ],
+      "wordCount": 220,
+      "loadingOnly": false,
+      "textStart": "Kolkata chat room | Free Online Chat on Yaarzo Back 0 views Home / Kolkata chat room | Yaarzo Kolkata chat room Kolkata chat rooms on Yaarzo cover an eastern India metro angle — culture-forward hangouts and a different r"
+    },
+    {
+      "url": "https://yaarzo.com/karachi-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Karachi chat room | Free Online Chat on Yaarzo",
+      "description": "Join free Karachi chat rooms on Yaarzo. Meet people interested in Karachi, Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/karachi-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Karachi chat room"
+      ],
+      "wordCount": 246,
+      "loadingOnly": false,
+      "textStart": "Karachi chat room | Free Online Chat on Yaarzo Back 0 views Home / Karachi chat room | Yaarzo Karachi chat room Karachi chat on Yaarzo is for people who want a Sindh coastal-city angle — late-night rooms, Urdu/English mi"
+    },
+    {
+      "url": "https://yaarzo.com/islamabad-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Islamabad chat room | Free Online Chat on Yaarzo",
+      "description": "Join free Islamabad chat rooms on Yaarzo. Meet people interested in Islamabad, Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/yaarzo.com/islamabad-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [
+        "Islamabad Chat Room — Margalla Ke Daaman Mein Basi City Ka Apna Online Dosti Adda"
+      ],
+      "wordCount": 1051,
+      "loadingOnly": false,
+      "textStart": "Islamabad chat room | Free Online Chat on Yaarzo Back 0 views Home / Islamabad Chat Room – Free Online Chatting for Islamabadis | Yaarzo Islamabad Chat Room — Margalla Ke Daaman Mein Basi City Ka Apna Online Dosti Adda #"
+    },
+    {
+      "url": "https://yaarzo.com/rawalpindi-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Rawalpindi chat room | Free Online Chat on Yaarzo",
+      "description": "Join free Rawalpindi chat rooms on Yaarzo. Meet people interested in Rawalpindi, Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/rawalpindi-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Rawalpindi chat room"
+      ],
+      "wordCount": 237,
+      "loadingOnly": false,
+      "textStart": "Rawalpindi chat room | Free Online Chat on Yaarzo Back 0 views Home / Rawalpindi chat room | Yaarzo Rawalpindi chat room Rawalpindi chat on Yaarzo sits next to Islamabad — use this page when you want the Pindi side of th"
+    },
+    {
+      "url": "https://yaarzo.com/faisalabad-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Faisalabad chat room | Free Online Chat on Yaarzo",
+      "description": "Join free Faisalabad chat rooms on Yaarzo. Meet people interested in Faisalabad, Pakistan, and chat online anytime.",
+      "canonical": "https://yaarzo.com/faisalabad-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Faisalabad Chat Room | Free Chat & Community – Yaarzo"
+      ],
+      "wordCount": 1031,
+      "loadingOnly": false,
+      "textStart": "Faisalabad chat room | Free Online Chat on Yaarzo Back 0 views Home / Faisalabad chat room | Yaarzo Faisalabad Chat Room | Free Chat &amp; Community – Yaarzo # Lyallpur Chat # Punjabi Chat Room # Faisalabad Community # F"
+    },
+    {
+      "url": "https://yaarzo.com/girls-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Girls Chat Room | Free Online Chat on Yaarzo",
+      "description": "Join free Girls Chat rooms on Yaarzo. Topic-first conversation with clear boundaries — pair with city hubs when you want a local angle.",
+      "canonical": "https://yaarzo.com/girls-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Girls Chat Room"
+      ],
+      "wordCount": 203,
+      "loadingOnly": false,
+      "textStart": "Girls Chat Room | Free Online Chat on Yaarzo Back 0 views Home / Girls Chat Room | Yaarzo Girls Chat Room Girls Chat Room on Yaarzo is for topic-first conversation — not a city directory. Use it when you want girls chat "
+    },
+    {
+      "url": "https://yaarzo.com/friendship-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Friendship Chat Room | Free Online Chat on Yaarzo",
+      "description": "Join free Friendship Chat rooms on Yaarzo. Make friends online with clear expectations — pair with city hubs when you want a local angle.",
+      "canonical": "https://yaarzo.com/friendship-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Friendship Chat Room"
+      ],
+      "wordCount": 181,
+      "loadingOnly": false,
+      "textStart": "Friendship Chat Room | Free Online Chat on Yaarzo Back 0 views Home / Friendship Chat Room | Yaarzo Friendship Chat Room Friendship Chat Room on Yaarzo is for making friends online without forcing a dating frame — topic-"
+    },
+    {
+      "url": "https://yaarzo.com/dating-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Dating Chat Room | Free Online Chat on Yaarzo",
+      "description": "Explore free Dating Chat rooms on Yaarzo. Clear intentions, respectful chat, and safety guidance — without fabricated match claims.",
+      "canonical": "https://yaarzo.com/dating-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Dating Chat Room"
+      ],
+      "wordCount": 204,
+      "loadingOnly": false,
+      "textStart": "Dating Chat Room | Free Online Chat on Yaarzo Back 0 views Home / Dating Chat Room | Yaarzo Dating Chat Room Dating Chat Room on Yaarzo is for people exploring dating conversations online — with clear consent, respectful"
+    },
+    {
+      "url": "https://yaarzo.com/usa-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/yaarzo.com/usa-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [
+        "USA Chat Room: Meet and Chat with People Across America for Free"
+      ],
+      "wordCount": 1071,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community Back 0 views Home / USA Chat Room – Free Online Chat with People Across America USA Chat Room: Meet and Chat with People Across America for Free # USA chat room # American c"
+    },
+    {
+      "url": "https://yaarzo.com/uk-chat-room",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "UK Chat Room – Free Online Chat with People in Britain",
+      "description": "Join Yaarzo&#x27;s UK chat room for free. Chat live with people across Britain, make new friends, and join real conversations — no downloads required.",
+      "canonical": "https://yaarzo.com/uk-chat-room",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "UK Chat Room: Chat with People from Across Britain for Free"
+      ],
+      "wordCount": 945,
+      "loadingOnly": false,
+      "textStart": "UK Chat Room – Free Online Chat with People in Britain Back 0 views Home / UK Chat Room – Free Live Chat with People Across Britain UK Chat Room: Chat with People from Across Britain for Free # UK chat room # British cha"
+    },
+    {
+      "url": "https://yaarzo.com/english-chat-room-free-online-chat",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "English Chat Room – Talk & Practice English Online Free",
+      "description": "Join a free English chat room on Yaarzo. Practice English, meet people worldwide, and join real conversations — no downloads, no cost.",
+      "canonical": "https://yaarzo.com/yaarzo.com/english-chat-room-free-online-chat",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [
+        "English Chat Room: Chat in English with People from Around the World"
+      ],
+      "wordCount": 1041,
+      "loadingOnly": false,
+      "textStart": "English Chat Room – Talk &amp; Practice English Online Free Back 0 views Home / English Chat Room – Free Online Chat for English Speakers Worldwide English Chat Room: Chat in English with People from Around the World # E"
+    }
+  ],
+  "privatePages": [
+    {
+      "url": "https://yaarzo.com/login",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/login",
+      "canonCount": 1,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "indexable": false,
+      "selfCanonical": true,
+      "h1": [],
+      "wordCount": 8,
+      "loadingOnly": true,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community Loading…"
+    },
+    {
+      "url": "https://yaarzo.com/signup",
+      "status": 307,
+      "location": "/login",
+      "type": null,
+      "xRobots": null,
+      "error": null,
+      "title": null,
+      "description": null,
+      "canonical": null,
+      "canonCount": 0,
+      "robots": [],
+      "indexable": false,
+      "selfCanonical": false,
+      "h1": [],
+      "wordCount": 0,
+      "loadingOnly": false,
+      "textStart": ""
+    },
+    {
+      "url": "https://yaarzo.com/admin",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": null,
+      "description": null,
+      "canonical": null,
+      "canonCount": 0,
+      "robots": [],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [],
+      "wordCount": 1,
+      "loadingOnly": true,
+      "textStart": "Loading…"
+    },
+    {
+      "url": "https://yaarzo.com/account",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/account",
+      "canonCount": 1,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "indexable": false,
+      "selfCanonical": true,
+      "h1": [],
+      "wordCount": 8,
+      "loadingOnly": true,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community Loading…"
+    },
+    {
+      "url": "https://yaarzo.com/settings",
+      "status": 307,
+      "location": "/welcome",
+      "type": null,
+      "xRobots": null,
+      "error": null,
+      "title": null,
+      "description": null,
+      "canonical": null,
+      "canonCount": 0,
+      "robots": [],
+      "indexable": false,
+      "selfCanonical": false,
+      "h1": [],
+      "wordCount": 0,
+      "loadingOnly": false,
+      "textStart": ""
+    },
+    {
+      "url": "https://yaarzo.com/notifications",
+      "status": 307,
+      "location": "/welcome",
+      "type": null,
+      "xRobots": null,
+      "error": null,
+      "title": null,
+      "description": null,
+      "canonical": null,
+      "canonCount": 0,
+      "robots": [],
+      "indexable": false,
+      "selfCanonical": false,
+      "h1": [],
+      "wordCount": 0,
+      "loadingOnly": false,
+      "textStart": ""
+    },
+    {
+      "url": "https://yaarzo.com/api/public/feedback-showcase",
+      "status": 200,
+      "location": null,
+      "type": "application/json",
+      "xRobots": null,
+      "error": null,
+      "title": null,
+      "description": null,
+      "canonical": null,
+      "canonCount": 0,
+      "robots": [],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [],
+      "wordCount": 5,
+      "loadingOnly": false,
+      "textStart": "{\"enabled\":true,\"title\":\"What our community is saying\",\"items\":[]}"
+    }
+  ],
+  "invalidPages": [
+    {
+      "url": "https://yaarzo.com/this-page-definitely-does-not-exist-xyz123",
+      "status": 404,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "App",
+      "description": "App on our community platform.",
+      "canonical": "https://holo-chat-quest.lovable.app",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": false,
+      "selfCanonical": false,
+      "h1": [
+        "Page not found"
+      ],
+      "wordCount": 12,
+      "loadingOnly": false,
+      "textStart": "App Page not found This page is not available. Go to welcome"
+    },
+    {
+      "url": "https://yaarzo.com/chat-room-fake-city-zzzz",
+      "status": 404,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "App",
+      "description": "App on our community platform.",
+      "canonical": "https://holo-chat-quest.lovable.app",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": false,
+      "selfCanonical": false,
+      "h1": [
+        "Page not found"
+      ],
+      "wordCount": 12,
+      "loadingOnly": false,
+      "textStart": "App Page not found This page is not available. Go to welcome"
+    },
+    {
+      "url": "https://yaarzo.com/ahmedabad-chat-room",
+      "status": 404,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "App",
+      "description": "App on our community platform.",
+      "canonical": "https://holo-chat-quest.lovable.app",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": false,
+      "selfCanonical": false,
+      "h1": [
+        "Page not found"
+      ],
+      "wordCount": 12,
+      "loadingOnly": false,
+      "textStart": "App Page not found This page is not available. Go to welcome"
+    },
+    {
+      "url": "https://yaarzo.com/community/not-a-real-community-zzz",
+      "status": 404,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "App",
+      "description": "App on our community platform.",
+      "canonical": "https://holo-chat-quest.lovable.app",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": false,
+      "selfCanonical": false,
+      "h1": [
+        "Community not found"
+      ],
+      "wordCount": 7,
+      "loadingOnly": false,
+      "textStart": "App Community not found Back to feed"
+    },
+    {
+      "url": "https://yaarzo.com/competitions/not-a-real-comp-zzz",
+      "status": 404,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Competition not found",
+      "description": null,
+      "canonical": null,
+      "canonCount": 0,
+      "robots": [
+        "noindex"
+      ],
+      "indexable": false,
+      "selfCanonical": false,
+      "h1": [
+        "Competition not found"
+      ],
+      "wordCount": 16,
+      "loadingOnly": false,
+      "textStart": "Competition not found Competition not found This competition does not exist or was removed. Browse competitions"
+    },
+    {
+      "url": "https://yaarzo.com/poetry/not-a-real-poem-slug-zzz",
+      "status": 404,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Poem not found · Poetry Hub",
+      "description": null,
+      "canonical": "https://holo-chat-quest.lovable.app/poetry/unknown",
+      "canonCount": 1,
+      "robots": [
+        "noindex"
+      ],
+      "indexable": false,
+      "selfCanonical": false,
+      "h1": [],
+      "wordCount": 25,
+      "loadingOnly": false,
+      "textStart": "Poem not found · Poetry Hub 📜 Poetry Hub Poetry Community Discover Battles Leaderboard Hall of Fame Write Poem not found Back to Poetry Hub"
+    },
+    {
+      "url": "https://yaarzo.com/page",
+      "status": 301,
+      "location": "/lahore-chat-room",
+      "type": null,
+      "xRobots": null,
+      "error": null,
+      "title": null,
+      "description": null,
+      "canonical": null,
+      "canonCount": 0,
+      "robots": [],
+      "indexable": false,
+      "selfCanonical": false,
+      "h1": [],
+      "wordCount": 0,
+      "loadingOnly": false,
+      "textStart": ""
+    }
+  ],
+  "redirectHops": [
+    {
+      "url": "http://yaarzo.com/",
+      "hops": [
+        {
+          "url": "http://yaarzo.com/",
+          "status": 308,
+          "location": "https://yaarzo.com/",
+          "type": "text/plain",
+          "error": null
+        },
+        {
+          "url": "https://yaarzo.com/",
+          "status": 200,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    },
+    {
+      "url": "http://www.yaarzo.com/",
+      "hops": [
+        {
+          "url": "http://www.yaarzo.com/",
+          "status": 308,
+          "location": "https://www.yaarzo.com/",
+          "type": "text/plain",
+          "error": null
+        },
+        {
+          "url": "https://www.yaarzo.com/",
+          "status": 0,
+          "location": null,
+          "type": null,
+          "error": "fetch failed",
+          "cause": "Host: www.yaarzo.com. is not in the cert's altnames: DNS:yaarzo.com"
+        }
+      ]
+    },
+    {
+      "url": "https://www.yaarzo.com/",
+      "hops": [
+        {
+          "url": "https://www.yaarzo.com/",
+          "status": 0,
+          "location": null,
+          "type": null,
+          "error": "fetch failed",
+          "cause": "Host: www.yaarzo.com. is not in the cert's altnames: DNS:yaarzo.com"
+        }
+      ]
+    },
+    {
+      "url": "https://yaarzo.com/",
+      "hops": [
+        {
+          "url": "https://yaarzo.com/",
+          "status": 200,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    },
+    {
+      "url": "https://yaarzo.com/delhi-chat-room",
+      "hops": [
+        {
+          "url": "https://yaarzo.com/delhi-chat-room",
+          "status": 200,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    },
+    {
+      "url": "https://yaarzo.com/delhi-chat-room/",
+      "hops": [
+        {
+          "url": "https://yaarzo.com/delhi-chat-room/",
+          "status": 307,
+          "location": "/delhi-chat-room",
+          "type": null,
+          "error": null
+        },
+        {
+          "url": "https://yaarzo.com/delhi-chat-room",
+          "status": 200,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    },
+    {
+      "url": "https://yaarzo.com/pakistani-chat-rooms",
+      "hops": [
+        {
+          "url": "https://yaarzo.com/pakistani-chat-rooms",
+          "status": 404,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    },
+    {
+      "url": "https://yaarzo.com/pakistani-chat-room",
+      "hops": [
+        {
+          "url": "https://yaarzo.com/pakistani-chat-room",
+          "status": 404,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    },
+    {
+      "url": "https://yaarzo.com/pakistan-chat-rooms",
+      "hops": [
+        {
+          "url": "https://yaarzo.com/pakistan-chat-rooms",
+          "status": 404,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    },
+    {
+      "url": "https://yaarzo.com/pakistan-chat-room",
+      "hops": [
+        {
+          "url": "https://yaarzo.com/pakistan-chat-room",
+          "status": 200,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    },
+    {
+      "url": "https://yaarzo.com/lahore-chat-rooms",
+      "hops": [
+        {
+          "url": "https://yaarzo.com/lahore-chat-rooms",
+          "status": 404,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    },
+    {
+      "url": "https://yaarzo.com/lahore-chat-room",
+      "hops": [
+        {
+          "url": "https://yaarzo.com/lahore-chat-room",
+          "status": 200,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    },
+    {
+      "url": "https://yaarzo.com/chatrooms",
+      "hops": [
+        {
+          "url": "https://yaarzo.com/chatrooms",
+          "status": 307,
+          "location": "/chatroom",
+          "type": null,
+          "error": null
+        },
+        {
+          "url": "https://yaarzo.com/chatroom",
+          "status": 200,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    },
+    {
+      "url": "https://yaarzo.com/chatroom",
+      "hops": [
+        {
+          "url": "https://yaarzo.com/chatroom",
+          "status": 200,
+          "location": null,
+          "type": "text/html; charset=utf-8",
+          "error": null
+        }
+      ]
+    }
+  ],
+  "paramPages": [
+    {
+      "url": "https://yaarzo.com/feed?tab=account",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/feed",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [],
+      "wordCount": 269,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community P Feed 🔎 Sign in Create account Feed For You Trending Friends Saved Notifications Create Add Story Stories Explore Chatrooms Hall of Fame Communities Community Forum Poetry"
+    },
+    {
+      "url": "https://yaarzo.com/feed?tab=trending",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/feed",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [],
+      "wordCount": 269,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community P Feed 🔎 Sign in Create account Feed For You Trending Friends Saved Notifications Create Add Story Stories Explore Chatrooms Hall of Fame Communities Community Forum Poetry"
+    },
+    {
+      "url": "https://yaarzo.com/communities?sort=trending",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/communities",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [
+        "Find your community"
+      ],
+      "wordCount": 60,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community Community Discovery Find your community Trending creator communities with live chat, feeds, competitions and radio. Sign in to create a community Communities 0 Members 0 Onl"
+    },
+    {
+      "url": "https://yaarzo.com/communities?category=gaming",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/communities",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [
+        "Find your community"
+      ],
+      "wordCount": 60,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community Community Discovery Find your community Trending creator communities with live chat, feeds, competitions and radio. Sign in to create a community Communities 0 Members 0 Onl"
+    },
+    {
+      "url": "https://yaarzo.com/poetry?category=Love",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/poetry",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [
+        "Where every verse finds its audience"
+      ],
+      "wordCount": 85,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community 📜 Poetry Hub Poetry Community Discover Battles Leaderboard Hall of Fame Write Poetry Hub Where every verse finds its audience A community of poets, storytellers and dreamer"
+    },
+    {
+      "url": "https://yaarzo.com/search?q=lahore",
+      "status": 404,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "App",
+      "description": "App on our community platform.",
+      "canonical": "https://holo-chat-quest.lovable.app",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": false,
+      "selfCanonical": false,
+      "h1": [
+        "Page not found"
+      ],
+      "wordCount": 12,
+      "loadingOnly": false,
+      "textStart": "App Page not found This page is not available. Go to welcome"
+    },
+    {
+      "url": "https://yaarzo.com/chatroom?room=lobby",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/chatroom",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [],
+      "wordCount": 86,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community Yaarzo Talk. Play. Connect. All Joined Country Interests Joined Channels # Lobby 10 # Games 10 Explore Sign in to chat, react, DM and earn XP. Sign in Create account Lobby \ud83d"
+    }
+  ],
+  "extraPages": [
+    {
+      "url": "https://yaarzo.com/about-us",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "About Yaarzo | A Social Network Built for Real Connections",
+      "description": "Learn about Yaarzo, a social network built for meaningful connections — public chatrooms, a social feed, friend-finding, and a community that feels like home.",
+      "canonical": "https://yaarzo.com/about-us",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "About Yaarzo"
+      ],
+      "wordCount": 438,
+      "loadingOnly": false,
+      "textStart": "About Yaarzo | A Social Network Built for Real Connections Back 0 views Home / About Us About Yaarzo # about yaarzo # yaarzo social network # chat platform # online community # yaarzo mission # yaarzo features # social n"
+    },
+    {
+      "url": "https://yaarzo.com/privacy-policy",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Privacy Policy | How Yaarzo Protects Your Data",
+      "description": "Read Yaarzo&#x27;s Privacy Policy to learn what information we collect, how it&#x27;s used, and the choices you have to control your data on our chat and social platform.",
+      "canonical": "https://yaarzo.com/privacy-policy",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Privacy Policy"
+      ],
+      "wordCount": 734,
+      "loadingOnly": false,
+      "textStart": "Privacy Policy | How Yaarzo Protects Your Data Back 0 views Home / Privacy Policy Privacy Policy # privacy policy # data protection # Yaarzo privacy # user data # cookies policy # GDPR # online safety # chat platform pri"
+    },
+    {
+      "url": "https://yaarzo.com/terms-conditions",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Terms & Conditions | Yaarzo Platform Rules",
+      "description": "Read Yaarzo&#x27;s Terms & Conditions covering account eligibility, user conduct, content rules, and platform policies for chatrooms, feed, and profiles.",
+      "canonical": "https://yaarzo.com/terms-and-conditions",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": false,
+      "h1": [
+        "Terms & Conditions"
+      ],
+      "wordCount": 690,
+      "loadingOnly": false,
+      "textStart": "Terms &amp; Conditions | Yaarzo Platform Rules Back 0 views Home / Terms &amp; Conditions Terms &amp; Conditions # terms and conditions # terms of service # Yaarzo rules # community guidelines # user agreement # chatroom"
+    },
+    {
+      "url": "https://yaarzo.com/welcome",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – AI-Powered Chatrooms and Social Community",
+      "description": "Join live chatrooms, discover social posts, play games, earn rewards and connect with friends on Yaarzo.",
+      "canonical": "https://yaarzo.com/welcome",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Join The UltimateActive Community"
+      ],
+      "wordCount": 1173,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – AI-Powered Chatrooms and Social Community 💬 ChitChat Home Feed Chatrooms Games Confessions Battle Hub Leaderboard Login Sign Up Join The Ultimate Active Community Chat in real-time, share your thoughts, play ga"
+    },
+    {
+      "url": "https://yaarzo.com/heropage",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Community — Connect, Chat, Share & Grow Together 💫",
+      "description": "Join realtime chatrooms, discover social feeds, listen to live radio, play games, and become part of a thriving community.",
+      "canonical": "https://yaarzo.com/heropage",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Connect, Chat, Share & Grow Together 💫"
+      ],
+      "wordCount": 927,
+      "loadingOnly": false,
+      "textStart": "Community — Connect, Chat, Share &amp; Grow Together 💫 ✨ Community Home Chatrooms Feed Confessions Battle Hub Games Leaderboard Login Join Now Welcome to Community Connect, Chat, Share &amp; Grow Together 💫 Join realti"
+    },
+    {
+      "url": "https://yaarzo.com/u/not-a-real-user-zzz",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "not-a-real-user-zzz (@not-a-real-user-zzz) | Yaarzo",
+      "description": "View not-a-real-user-zzz&#x27;s profile, posts, communities and activity on Yaarzo.",
+      "canonical": "https://yaarzo.com/u/not-a-real-user-zzz",
+      "canonCount": 1,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "indexable": false,
+      "selfCanonical": true,
+      "h1": [],
+      "wordCount": 4,
+      "loadingOnly": false,
+      "textStart": "not-a-real-user-zzz (@not-a-real-user-zzz) | Yaarzo"
+    },
+    {
+      "url": "https://yaarzo.com/hall-of-fame",
+      "status": 200,
+      "location": null,
+      "type": "text/html; charset=utf-8",
+      "xRobots": null,
+      "error": null,
+      "title": "Yaarzo – Dosti, Chatrooms and Social Community",
+      "description": "Yaarzo -social community for friendship, live chatrooms, posts, poetry, competitions, games and conversations with people from India, Pakistan and around the world.",
+      "canonical": "https://yaarzo.com/hall-of-fame",
+      "canonCount": 1,
+      "robots": [
+        "index, follow"
+      ],
+      "indexable": true,
+      "selfCanonical": true,
+      "h1": [
+        "Hall of Fame"
+      ],
+      "wordCount": 54,
+      "loadingOnly": false,
+      "textStart": "Yaarzo – Dosti, Chatrooms and Social Community Hall of Fame The greatest creators in platform history. Museum of Champions Hall of Fame The greatest creators in platform history. Competition champions and poetry laureate"
+    }
+  ]
+}

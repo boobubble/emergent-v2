@@ -1,0 +1,289 @@
+{
+  "summary": {
+    "health_score": 58,
+    "previous_health_score": 28,
+    "business_type": "Consumer social / live chat community with programmatic city, country, and interest landers",
+    "audit_date": "2026-08-27",
+    "audit_type": "refresh",
+    "url": "https://yaarzo.com",
+    "baseline_commit": "82bdd7fe",
+    "guardrails_commit": "b0809284",
+    "top_findings": [
+      "Teen chat page targets ages 13–16 while Terms require 16+ (YMYL)",
+      "/communities title still Discover Communities — BooBubble",
+      "Thin programmatic cluster (~10 landers, 180–250 words)",
+      "Homepage empty live modules vs 15,240+ members claim",
+      "Indexed test blog /blog/yahoo; /blog missing from sitemap"
+    ],
+    "quick_wins": [
+      "Align teen page with Terms/Privacy or noindex it",
+      "Replace BooBubble site_name fallbacks with Yaarzo",
+      "Noindex test blog posts; add /blog to sitemap when editorial",
+      "CNAME www to apex",
+      "Add nosniff and Referrer-Policy"
+    ]
+  },
+  "categories": [
+    {
+      "name": "Technical SEO",
+      "score": 72,
+      "what_works": [
+        "HTTPS + HSTS",
+        "robots.txt allows / and disallows /api/",
+        "sitemap.xml 200 with 35 unique locs, 35/35 HTTP 200",
+        "Unknown slugs and /llms.txt return 404 noindex",
+        "Homepage indexable with self-canonical"
+      ],
+      "findings": [
+        {
+          "title": "www.yaarzo.com does not resolve",
+          "severity": "High",
+          "description": "Live fetch to https://www.yaarzo.com/ failed (DNS).",
+          "recommendation": "CNAME www to apex and 301 to https://yaarzo.com/."
+        },
+        {
+          "title": "Only HSTS among security headers",
+          "severity": "High",
+          "description": "No CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, or Permissions-Policy.",
+          "recommendation": "Set nosniff, Referrer-Policy, and frame-ancestors or X-Frame-Options at the host."
+        },
+        {
+          "title": "Public /blog missing from sitemap",
+          "severity": "Medium",
+          "description": "/blog returns 200 without robots/canonical and is absent from the 35-URL sitemap.",
+          "recommendation": "Add /blog after it is a real index; keep test posts out."
+        }
+      ]
+    },
+    {
+      "name": "Content Quality",
+      "score": 54,
+      "what_works": [
+        "Homepage unique product copy and single H1 (~1089 words)",
+        "CMS landers and trust pages HTTP 200",
+        "Several city pages 800–1200 words with unique H1s"
+      ],
+      "findings": [
+        {
+          "title": "Teen 13–16 vs Terms 16+",
+          "severity": "Critical",
+          "description": "/teen-chat-room invites ages 13–16. Terms require at least 16. Privacy has [INSERT MINIMUM AGE].",
+          "recommendation": "One age policy across page, Terms, and Privacy — or noindex the teen URL."
+        },
+        {
+          "title": "Thin programmatic cluster",
+          "severity": "High",
+          "description": "India, Pakistan, Friendship, Dating, Girls, Hyderabad, Bengaluru, Karachi, Rawalpindi, Kolkata ~180–250 words on a shared skeleton.",
+          "recommendation": "Enrich or consolidate. Do not add more location URLs."
+        },
+        {
+          "title": "Homepage empty states vs social proof",
+          "severity": "High",
+          "description": "0 Members / 0 Online / 0 Chatrooms / 0 Feed Posts next to 15,240+ members copy.",
+          "recommendation": "Fix /api/public/landing payload or remove the claim."
+        },
+        {
+          "title": "Indexed test blog",
+          "severity": "High",
+          "description": "/blog/yahoo is index, follow with title/description yahoo.",
+          "recommendation": "Noindex or unpublish stubs before adding /blog to the sitemap."
+        }
+      ]
+    },
+    {
+      "name": "On-Page SEO",
+      "score": 58,
+      "what_works": [
+        "Homepage title, description, canonical, H1 unique",
+        "CMS canonicals match sitemap locs; no doubled yaarzo.com/yaarzo.com on this crawl",
+        "404 template uses Page Not Found | Yaarzo and noindex, follow"
+      ],
+      "findings": [
+        {
+          "title": "BooBubble in /communities title",
+          "severity": "High",
+          "description": "Live title: Discover Communities — BooBubble.",
+          "recommendation": "Default site name to Yaarzo; never BooBubble in public head."
+        },
+        {
+          "title": "Generic app titles and missing H1s",
+          "severity": "High",
+          "description": "/feed Feed, /chatroom Chatrooms, /poetry Poetry Hub; feed/chatroom/poetry/competitions have no SSR H1.",
+          "recommendation": "Query-shaped unique titles and one H1 per public app route."
+        }
+      ]
+    },
+    {
+      "name": "Schema / Structured Data",
+      "score": 54,
+      "what_works": [
+        "All sampled URLs HTTP 200",
+        "Homepage WebSite + Organization JSON-LD parses",
+        "No invalid JSON-LD; no FAQPage"
+      ],
+      "findings": [
+        {
+          "title": "Organization missing logo and sameAs",
+          "severity": "High",
+          "description": "Homepage Organization has only name and url.",
+          "recommendation": "Add ImageObject logo and social sameAs; link WebSite via @id."
+        },
+        {
+          "title": "No JSON-LD on blog routes",
+          "severity": "High",
+          "description": "/blog and /blog/yahoo emit no structured data.",
+          "recommendation": "BlogPosting only on real posts; skip schema on yahoo stub."
+        },
+        {
+          "title": "Article on chat hubs and About",
+          "severity": "Medium",
+          "description": "Landers and About-us use Article.",
+          "recommendation": "WebPage + BreadcrumbList on landers; AboutPage on /about-us. Do not add FAQPage."
+        }
+      ]
+    },
+    {
+      "name": "Performance (CWV)",
+      "score": 48,
+      "what_works": [
+        "Homepage lab CLS 0",
+        "OG image URL returns 200"
+      ],
+      "findings": [
+        {
+          "title": "Median lab LCP 2.70s",
+          "severity": "High",
+          "description": "Lighthouse 13.4.1 mobile, 5 runs, 26 Aug 2026. CrUX unavailable. Landers not re-labbed this refresh.",
+          "recommendation": "Treat as lab only. Connect CrUX before next score."
+        },
+        {
+          "title": "High / unstable TBT",
+          "severity": "High",
+          "description": "Median TBT 2.59s (0.54s–5.43s).",
+          "recommendation": "Profile main-thread JS on homepage."
+        },
+        {
+          "title": "OG PNG ~1.5 MB",
+          "severity": "Medium",
+          "description": "https://yaarzo.com/og/yaarzo-share.png transfer size ~1.5 MB.",
+          "recommendation": "Compress to under 200 KB JPEG/WebP."
+        }
+      ]
+    },
+    {
+      "name": "AI Search Readiness",
+      "score": 56,
+      "what_works": [
+        "robots.txt does not block major AI crawlers",
+        "Homepage and restored CMS landers are SSR and quoteable",
+        "/llms.txt is a correct 404; sitemap.xml is 200"
+      ],
+      "findings": [
+        {
+          "title": "BooBubble vs Yaarzo entity split",
+          "severity": "High",
+          "description": "/communities title still uses BooBubble.",
+          "recommendation": "One public brand name."
+        },
+        {
+          "title": "No third-party entity graph",
+          "severity": "High",
+          "description": "No Wikipedia/Reddit/YouTube presence for Yaarzo.",
+          "recommendation": "sameAs only after real profiles exist; do not invent llms.txt."
+        }
+      ]
+    },
+    {
+      "name": "Images",
+      "score": 44,
+      "what_works": [
+        "Homepage SSR is mostly text/CSS",
+        "Official OG asset exists and 200s"
+      ],
+      "findings": [
+        {
+          "title": "Oversized OG image",
+          "severity": "Medium",
+          "description": "~1.5 MB PNG.",
+          "recommendation": "Re-encode under 200 KB."
+        },
+        {
+          "title": "CMS hotlinked images",
+          "severity": "Medium",
+          "description": "Some lander schema/images still point at ibb.co HTML rather than a file on yaarzo.com.",
+          "recommendation": "Host images on yaarzo.com HTTPS."
+        }
+      ]
+    }
+  ],
+  "action_plan": {
+    "phases": [
+      {
+        "name": "Phase 1: Critical Fixes",
+        "timeframe": "This week",
+        "items": [
+          "Align teen page / Terms / Privacy age",
+          "Resubmit sitemap in GSC after 5xx recovery"
+        ]
+      },
+      {
+        "name": "Phase 2: High-Impact Improvements",
+        "timeframe": "Weeks 2–3",
+        "items": [
+          "Remove BooBubble public titles",
+          "Homepage proof vs empty modules",
+          "Blog hygiene (noindex stubs; add /blog when real)",
+          "www DNS + security headers",
+          "Unique titles and H1 on app routes"
+        ]
+      },
+      {
+        "name": "Phase 3: Content & Authority",
+        "timeframe": "Month 2",
+        "items": [
+          "Enrich or consolidate thin hubs",
+          "Organization logo + sameAs; WebPage on hubs",
+          "Legal entity/jurisdiction placeholders"
+        ]
+      },
+      {
+        "name": "Phase 4: Monitoring & Iteration",
+        "timeframe": "Ongoing",
+        "items": [
+          "Compress OG image",
+          "Connect GSC + CrUX",
+          "verify:sitemap / verify:golden as 5xx gate",
+          "Re-audit in 14 days"
+        ]
+      }
+    ]
+  },
+  "sitemap_live": {
+    "captured_at": "2026-08-27T09:14:55.087Z",
+    "url": "https://yaarzo.com/sitemap.xml",
+    "sitemap_http": 200,
+    "loc_count": 35,
+    "unique_locs": 35,
+    "http_200": 35,
+    "http_500": 0,
+    "http_404": 0,
+    "http_3xx": 0,
+    "noindex": 0,
+    "doubled_canonical": 0,
+    "blog_in_sitemap": false,
+    "blog_live": 200,
+    "junk_slug": 404,
+    "llms_txt": 404,
+    "score": 90,
+    "previous": {
+      "http_200": 6,
+      "http_500": 29,
+      "health_score": 28
+    }
+  },
+  "artifacts": {
+    "findings_dir": "findings/",
+    "screenshots_dir": "screenshots/",
+    "live_refresh": "live-refresh.json"
+  }
+}

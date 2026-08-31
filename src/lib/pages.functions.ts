@@ -541,6 +541,34 @@ export const getPublishedPage = createServerFn({ method: "POST" })
     return hydratePublishedPageForPublic(sb, page);
   });
 
+export type CountryCityDirectoryItem = {
+  slug: string;
+  title: string;
+  h1: string | null;
+};
+
+function isCountryLevelCmsRow(row: { page_type?: string | null; category?: string | null }): boolean {
+  return row.page_type === "country" || row.category === "country";
+}
+
+/** Published city (and other non-country) pages for a country hub. */
+export const getCountryCityDirectory = createServerFn({ method: "GET" })
+  .inputValidator((input) => z.object({ countryId: z.string().uuid() }).parse(input))
+  .handler(async ({ data }): Promise<CountryCityDirectoryItem[]> => {
+    const sb = await getSupabaseAdmin();
+    const { data: rows, error } = await sb
+      .from("custom_pages")
+      .select("slug,title,h1,page_type,category")
+      .eq("status", "published")
+      .eq("country_id", data.countryId)
+      .order("h1", { ascending: true })
+      .limit(200);
+    if (error) throw new Error(error.message);
+    return (rows ?? [])
+      .filter((r) => !isCountryLevelCmsRow(r))
+      .map((r) => ({ slug: r.slug, title: r.title, h1: r.h1 ?? null }));
+  });
+
 export const listPublishedPages = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({
     featured: z.boolean().optional(),
@@ -687,3 +715,18 @@ export const updateFooterPages = createServerFn({ method: "POST" })
 
 // Re-export helpers used by tests / Phase 3
 export { deriveContentStatus, computeSeoScore, cmsPageStatusSchema };
+export const getSiteDirectory = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const sb = await getSupabaseAdmin();
+    const { data } = await sb
+      .from("custom_pages")
+      .select("slug, h1, title, category")
+      .eq("status", "published")
+      .order("category")
+      .order("h1");
+    return (data ?? []).map((p) => ({
+      slug: p.slug,
+      title: p.h1 || p.title,
+      category: p.category || "other",
+    }));
+  });

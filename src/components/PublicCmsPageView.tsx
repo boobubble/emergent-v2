@@ -20,7 +20,18 @@ export type PublicCmsPage = PublishedCustomPage & {
   relatedChatRooms?: RelatedChatRoomLink[] | null;
 };
 
-export function PublicCmsPageView({ page }: { page: PublicCmsPage }) {
+export type CityDirectoryEntry = {
+  slug: string;
+  title: string;
+};
+
+export function PublicCmsPageView({
+  page,
+  cityDirectory,
+}: {
+  page: PublicCmsPage;
+  cityDirectory?: CityDirectoryEntry[];
+}) {
   const rawHtml = page.publicHtml ?? page.content;
   const safeHtml = sanitizeHtml(injectHeadingIds(placeCmsImagesInContent(rawHtml)));
 
@@ -86,6 +97,37 @@ export function PublicCmsPageView({ page }: { page: PublicCmsPage }) {
               className="custom-page-content prose prose-sm dark:prose-invert mt-6 max-w-none"
               dangerouslySetInnerHTML={{ __html: safeHtml }}
             />
+
+            {cityDirectory && cityDirectory.length > 0 && (
+              <nav
+                className="city-directory mt-10 border-t border-border/60 pt-8"
+                aria-label="Browse by City"
+              >
+                <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                  Browse by City
+                </h2>
+                <ul className="mt-5 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
+                  {cityDirectory.map((city) => (
+                    <li key={city.slug} className="m-0 p-0">
+                      <a
+                        href={`/${city.slug}`}
+                        className={[
+                          "flex items-center rounded-lg border border-primary/15 bg-primary/[0.06]",
+                          "px-4 py-2.5 text-sm font-medium text-foreground/90 no-underline",
+                          "shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none",
+                          "transition-[border-color,background-color,color,box-shadow] duration-200 ease-out",
+                          "hover:border-primary/35 hover:bg-primary/[0.11] hover:text-foreground",
+                          "hover:shadow-[0_6px_16px_-8px_rgba(15,23,42,0.28)]",
+                          "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        ].join(" ")}
+                      >
+                        {city.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
 
             {/* Outside custom_pages.content — reusable SSR links from page_internal_links */}
             <RelatedChatRooms links={page.relatedChatRooms} />

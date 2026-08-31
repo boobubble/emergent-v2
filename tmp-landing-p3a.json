@@ -1,0 +1,20 @@
+{
+  "source": "live",
+  "keys": [
+    "config",
+    "source",
+    "stats",
+    "chatrooms",
+    "topMembers",
+    "feedPost",
+    "poll",
+    "confession",
+    "trendingPosts",
+    "discussions",
+    "featuredMembers",
+    "recentConfessions",
+    "blogPosts",
+    "activities",
+    "newMembers"
+  ]
+}

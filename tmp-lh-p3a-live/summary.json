@@ -1,0 +1,549 @@
+{
+  "performance": {
+    "best": 84,
+    "worst": 68,
+    "median": 81
+  },
+  "lcp": {
+    "best": 2597,
+    "worst": 2756,
+    "median": 2619
+  },
+  "fcp": {
+    "best": 2507,
+    "worst": 2525,
+    "median": 2513
+  },
+  "tbt": {
+    "best": 389,
+    "worst": 1017,
+    "median": 461
+  },
+  "cls": {
+    "best": 0.0008155893666107423,
+    "worst": 0.001254957956142035,
+    "median": 0.001254957956142035
+  },
+  "rows": [
+    {
+      "run": 1,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T09:06:06.287Z",
+      "performance": 84,
+      "lcp": 2597,
+      "fcp": 2509,
+      "tbt": 389,
+      "cls": 0.001254957956142035,
+      "requestCount": 25,
+      "iconReqs": 3,
+      "googleFonts": 0,
+      "supabaseJs": 4,
+      "i18n": 0,
+      "interWoff": 5,
+      "jsTransferKb": 321,
+      "jsDecodedKb": 1042,
+      "initialJsTransferKb": 264,
+      "initialJsDecodedKb": 832,
+      "firstPartyJsUrls": [
+        {
+          "url": "/assets/index-CVlEaeZ3.js",
+          "transfer": 246929,
+          "decoded": 778960,
+          "start": 284.02400001883507
+        },
+        {
+          "url": "/assets/index-ULj8pC8e.js",
+          "transfer": 18874,
+          "decoded": 67202,
+          "start": 284.37900000810623
+        },
+        {
+          "url": "/assets/CmsFooterLinks-BFdE_vIS.js",
+          "transfer": 917,
+          "decoded": 686,
+          "start": 284.6950000077486
+        },
+        {
+          "url": "/assets/chevron-right-Bra_GrVt.js",
+          "transfer": 266,
+          "decoded": 131,
+          "start": 759.0069999992847
+        },
+        {
+          "url": "/assets/swords-5x53TI4B.js",
+          "transfer": 683,
+          "decoded": 551,
+          "start": 759.369000017643
+        },
+        {
+          "url": "/assets/MehfilTrendingWidget-BiWKTRC2.js",
+          "transfer": 1299,
+          "decoded": 2489,
+          "start": 773.8500000089407
+        },
+        {
+          "url": "/assets/client-eager-BGLnEMuI.js",
+          "transfer": 973,
+          "decoded": 824,
+          "start": 1377.440000012517
+        },
+        {
+          "url": "/assets/supabase-monitor-CmosqZnA.js",
+          "transfer": 855,
+          "decoded": 1476,
+          "start": 1378.3830000013113
+        },
+        {
+          "url": "/assets/index-B_68OHIs.js",
+          "transfer": 57131,
+          "decoded": 213407,
+          "start": 1509.1440000087023
+        },
+        {
+          "url": "/assets/tslib.es6-CmEaCU22.js",
+          "transfer": 679,
+          "decoded": 1082,
+          "start": 1509.5300000160933
+        }
+      ],
+      "longTaskCount": 13,
+      "longTaskDurations": [
+        418.9999999999999,
+        177,
+        145,
+        136,
+        105,
+        98,
+        98,
+        97,
+        94,
+        77,
+        76,
+        66,
+        61
+      ],
+      "scriptingMs": 1061.467999999996,
+      "mainthreadMs": 3380.8639999999946,
+      "thirdPartyBeforeLcp": [
+        "https://aofjhfsecwsrcvvvcfcy.supabase.co/rest/v1/app_settings?select=key%2Cvalue&key=in.%28branding%2Cmodules%2Clayout_priority%2Cguest_chat%29",
+        "https://aofjhfsecwsrcvvvcfcy.supabase.co/rest/v1/app_settings?select=key%2Cvalue&key=in.%28branding%2Cmodules%2Clayout_priority%2Cguest_chat%29"
+      ],
+      "ttfb": 4,
+      "lcpBreakdown": null
+    },
+    {
+      "run": 2,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T09:06:43.871Z",
+      "performance": 81,
+      "lcp": 2612,
+      "fcp": 2513,
+      "tbt": 455,
+      "cls": 0.001254957956142035,
+      "requestCount": 25,
+      "iconReqs": 3,
+      "googleFonts": 0,
+      "supabaseJs": 4,
+      "i18n": 0,
+      "interWoff": 5,
+      "jsTransferKb": 321,
+      "jsDecodedKb": 1042,
+      "initialJsTransferKb": 263,
+      "initialJsDecodedKb": 830,
+      "firstPartyJsUrls": [
+        {
+          "url": "/assets/index-CVlEaeZ3.js",
+          "transfer": 246929,
+          "decoded": 778960,
+          "start": 484.68600000441074
+        },
+        {
+          "url": "/assets/index-ULj8pC8e.js",
+          "transfer": 18962,
+          "decoded": 67202,
+          "start": 484.90899999439716
+        },
+        {
+          "url": "/assets/CmsFooterLinks-BFdE_vIS.js",
+          "transfer": 829,
+          "decoded": 686,
+          "start": 485.12600000202656
+        },
+        {
+          "url": "/assets/chevron-right-Bra_GrVt.js",
+          "transfer": 270,
+          "decoded": 131,
+          "start": 1090.6340000033379
+        },
+        {
+          "url": "/assets/swords-5x53TI4B.js",
+          "transfer": 733,
+          "decoded": 551,
+          "start": 1091.0519999861717
+        },
+        {
+          "url": "/assets/MehfilTrendingWidget-BiWKTRC2.js",
+          "transfer": 1272,
+          "decoded": 2489,
+          "start": 1107.7980000078678
+        },
+        {
+          "url": "/assets/client-eager-BGLnEMuI.js",
+          "transfer": 966,
+          "decoded": 824,
+          "start": 1712.292999997735
+        },
+        {
+          "url": "/assets/supabase-monitor-CmosqZnA.js",
+          "transfer": 854,
+          "decoded": 1476,
+          "start": 1723.094999998808
+        },
+        {
+          "url": "/assets/index-B_68OHIs.js",
+          "transfer": 57101,
+          "decoded": 213407,
+          "start": 2067.6840000003576
+        },
+        {
+          "url": "/assets/tslib.es6-CmEaCU22.js",
+          "transfer": 752,
+          "decoded": 1082,
+          "start": 2070.9839999973774
+        }
+      ],
+      "longTaskCount": 11,
+      "longTaskDurations": [
+        640,
+        198,
+        183,
+        153,
+        150,
+        112,
+        112,
+        92,
+        88,
+        86,
+        50
+      ],
+      "scriptingMs": 1157.199999999996,
+      "mainthreadMs": 4041.2439999999947,
+      "thirdPartyBeforeLcp": [
+        "https://aofjhfsecwsrcvvvcfcy.supabase.co/rest/v1/app_settings?select=key%2Cvalue&key=in.%28branding%2Cmodules%2Clayout_priority%2Cguest_chat%29"
+      ],
+      "ttfb": 4,
+      "lcpBreakdown": null
+    },
+    {
+      "run": 3,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T09:07:19.012Z",
+      "performance": 68,
+      "lcp": 2756,
+      "fcp": 2507,
+      "tbt": 1017,
+      "cls": 0.001254957956142035,
+      "requestCount": 25,
+      "iconReqs": 3,
+      "googleFonts": 0,
+      "supabaseJs": 4,
+      "i18n": 0,
+      "interWoff": 5,
+      "jsTransferKb": 321,
+      "jsDecodedKb": 1042,
+      "initialJsTransferKb": 260,
+      "initialJsDecodedKb": 827,
+      "firstPartyJsUrls": [
+        {
+          "url": "/assets/index-CVlEaeZ3.js",
+          "transfer": 246925,
+          "decoded": 778960,
+          "start": 549.1670000106096
+        },
+        {
+          "url": "/assets/index-ULj8pC8e.js",
+          "transfer": 18962,
+          "decoded": 67202,
+          "start": 549.3830000013113
+        },
+        {
+          "url": "/assets/CmsFooterLinks-BFdE_vIS.js",
+          "transfer": 829,
+          "decoded": 686,
+          "start": 549.7380000054836
+        },
+        {
+          "url": "/assets/chevron-right-Bra_GrVt.js",
+          "transfer": 316,
+          "decoded": 131,
+          "start": 1760.149000003934
+        },
+        {
+          "url": "/assets/swords-5x53TI4B.js",
+          "transfer": 683,
+          "decoded": 551,
+          "start": 1774.457000002265
+        },
+        {
+          "url": "/assets/MehfilTrendingWidget-BiWKTRC2.js",
+          "transfer": 1272,
+          "decoded": 2489,
+          "start": 1774.8110000044107
+        },
+        {
+          "url": "/assets/client-eager-BGLnEMuI.js",
+          "transfer": 973,
+          "decoded": 824,
+          "start": 2232.8610000014305
+        },
+        {
+          "url": "/assets/supabase-monitor-CmosqZnA.js",
+          "transfer": 861,
+          "decoded": 1476,
+          "start": 2235.5100000053644
+        },
+        {
+          "url": "/assets/index-B_68OHIs.js",
+          "transfer": 57101,
+          "decoded": 213407,
+          "start": 2353.640000000596
+        },
+        {
+          "url": "/assets/tslib.es6-CmEaCU22.js",
+          "transfer": 712,
+          "decoded": 1082,
+          "start": 2354.20300000906
+        }
+      ],
+      "longTaskCount": 14,
+      "longTaskDurations": [
+        884.9999999999999,
+        498,
+        309.0000000000002,
+        196,
+        187,
+        181,
+        144,
+        114,
+        101,
+        100,
+        87,
+        86,
+        72,
+        63
+      ],
+      "scriptingMs": 2006.2239999999908,
+      "mainthreadMs": 5720.679999999983,
+      "thirdPartyBeforeLcp": [
+        "https://aofjhfsecwsrcvvvcfcy.supabase.co/rest/v1/app_settings?select=key%2Cvalue&key=in.%28branding%2Cmodules%2Clayout_priority%2Cguest_chat%29",
+        "https://aofjhfsecwsrcvvvcfcy.supabase.co/rest/v1/app_settings?select=key%2Cvalue&key=in.%28branding%2Cmodules%2Clayout_priority%2Cguest_chat%29"
+      ],
+      "ttfb": 4,
+      "lcpBreakdown": null
+    },
+    {
+      "run": 4,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T09:07:55.602Z",
+      "performance": 78,
+      "lcp": 2629,
+      "fcp": 2525,
+      "tbt": 509,
+      "cls": 0.0008155893666107423,
+      "requestCount": 25,
+      "iconReqs": 3,
+      "googleFonts": 0,
+      "supabaseJs": 4,
+      "i18n": 0,
+      "interWoff": 5,
+      "jsTransferKb": 321,
+      "jsDecodedKb": 1042,
+      "initialJsTransferKb": 263,
+      "initialJsDecodedKb": 830,
+      "firstPartyJsUrls": [
+        {
+          "url": "/assets/index-CVlEaeZ3.js",
+          "transfer": 246929,
+          "decoded": 778960,
+          "start": 629.3070000112057
+        },
+        {
+          "url": "/assets/index-ULj8pC8e.js",
+          "transfer": 18874,
+          "decoded": 67202,
+          "start": 629.5070000141859
+        },
+        {
+          "url": "/assets/CmsFooterLinks-BFdE_vIS.js",
+          "transfer": 940,
+          "decoded": 686,
+          "start": 629.6950000077486
+        },
+        {
+          "url": "/assets/chevron-right-Bra_GrVt.js",
+          "transfer": 293,
+          "decoded": 131,
+          "start": 1417.1680000126362
+        },
+        {
+          "url": "/assets/swords-5x53TI4B.js",
+          "transfer": 683,
+          "decoded": 551,
+          "start": 1420.869000017643
+        },
+        {
+          "url": "/assets/MehfilTrendingWidget-BiWKTRC2.js",
+          "transfer": 1295,
+          "decoded": 2489,
+          "start": 1439.7270000129938
+        },
+        {
+          "url": "/assets/client-eager-BGLnEMuI.js",
+          "transfer": 973,
+          "decoded": 824,
+          "start": 2001.7900000214577
+        },
+        {
+          "url": "/assets/supabase-monitor-CmosqZnA.js",
+          "transfer": 855,
+          "decoded": 1476,
+          "start": 2002.0560000091791
+        },
+        {
+          "url": "/assets/index-B_68OHIs.js",
+          "transfer": 57101,
+          "decoded": 213407,
+          "start": 3330.8720000088215
+        },
+        {
+          "url": "/assets/tslib.es6-CmEaCU22.js",
+          "transfer": 713,
+          "decoded": 1082,
+          "start": 3331.1220000088215
+        }
+      ],
+      "longTaskCount": 10,
+      "longTaskDurations": [
+        683.0000000000001,
+        318,
+        209,
+        161,
+        135,
+        132,
+        130,
+        127,
+        91,
+        76
+      ],
+      "scriptingMs": 1297.0919999999967,
+      "mainthreadMs": 4386.327999999989,
+      "thirdPartyBeforeLcp": [],
+      "ttfb": 4,
+      "lcpBreakdown": null
+    },
+    {
+      "run": 5,
+      "lighthouse": "13.4.1",
+      "fetchTime": "2026-08-26T09:08:44.103Z",
+      "performance": 81,
+      "lcp": 2619,
+      "fcp": 2518,
+      "tbt": 461,
+      "cls": 0.0008155893666107423,
+      "requestCount": 25,
+      "iconReqs": 3,
+      "googleFonts": 0,
+      "supabaseJs": 4,
+      "i18n": 0,
+      "interWoff": 5,
+      "jsTransferKb": 321,
+      "jsDecodedKb": 1042,
+      "initialJsTransferKb": 264,
+      "initialJsDecodedKb": 832,
+      "firstPartyJsUrls": [
+        {
+          "url": "/assets/index-CVlEaeZ3.js",
+          "transfer": 247013,
+          "decoded": 778960,
+          "start": 285.4379999935627
+        },
+        {
+          "url": "/assets/index-ULj8pC8e.js",
+          "transfer": 18877,
+          "decoded": 67202,
+          "start": 285.6719999909401
+        },
+        {
+          "url": "/assets/CmsFooterLinks-BFdE_vIS.js",
+          "transfer": 829,
+          "decoded": 686,
+          "start": 285.8390000015497
+        },
+        {
+          "url": "/assets/chevron-right-Bra_GrVt.js",
+          "transfer": 293,
+          "decoded": 131,
+          "start": 865.3749999850988
+        },
+        {
+          "url": "/assets/swords-5x53TI4B.js",
+          "transfer": 707,
+          "decoded": 551,
+          "start": 865.9279999881983
+        },
+        {
+          "url": "/assets/MehfilTrendingWidget-BiWKTRC2.js",
+          "transfer": 1272,
+          "decoded": 2489,
+          "start": 879.3460000008345
+        },
+        {
+          "url": "/assets/client-eager-BGLnEMuI.js",
+          "transfer": 993,
+          "decoded": 824,
+          "start": 1444.0230000019073
+        },
+        {
+          "url": "/assets/supabase-monitor-CmosqZnA.js",
+          "transfer": 844,
+          "decoded": 1476,
+          "start": 1444.42199999094
+        },
+        {
+          "url": "/assets/index-B_68OHIs.js",
+          "transfer": 57172,
+          "decoded": 213407,
+          "start": 1556.5919999927282
+        },
+        {
+          "url": "/assets/tslib.es6-CmEaCU22.js",
+          "transfer": 678,
+          "decoded": 1082,
+          "start": 1561.1299999952316
+        }
+      ],
+      "longTaskCount": 11,
+      "longTaskDurations": [
+        470,
+        201,
+        180.99999999999955,
+        136,
+        116,
+        114,
+        105,
+        92,
+        79,
+        79,
+        52
+      ],
+      "scriptingMs": 1161.491999999992,
+      "mainthreadMs": 3520.0279999999893,
+      "thirdPartyBeforeLcp": [
+        "https://aofjhfsecwsrcvvvcfcy.supabase.co/rest/v1/app_settings?select=key%2Cvalue&key=in.%28branding%2Cmodules%2Clayout_priority%2Cguest_chat%29",
+        "https://aofjhfsecwsrcvvvcfcy.supabase.co/rest/v1/app_settings?select=key%2Cvalue&key=in.%28branding%2Cmodules%2Clayout_priority%2Cguest_chat%29"
+      ],
+      "ttfb": 3,
+      "lcpBreakdown": null
+    }
+  ]
+}

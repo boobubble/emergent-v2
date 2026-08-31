@@ -22,7 +22,17 @@ export type StaticPublishResult = {
   slug: string;
   success: boolean;
   regenerated?: boolean;
+  error?: string;
 };
+
+function failureMessage(err: unknown): string {
+  if (err instanceof Error && err.message) return err.message;
+  if (err && typeof err === "object" && "message" in err) {
+    const message = (err as { message: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return String(err);
+}
 
 const CITY_SECTIONS = [
   "india_city",
@@ -300,36 +310,64 @@ async function buildRowPayload(
   };
 }
 
-async function regeneratePage(entry: StaticPageEntry): Promise<boolean> {
-  console.log(`\n🔄 Regenerating: ${entry.slug}...`);
-  const { cityId, countryId: cityCountryId } = await findCityId(entry.lookup_city, entry.lookup_country_hint);
-  const directCountryId = entry.section === "country" ? await findCountryId(entry.base_name) : cityCountryId;
-  const generated = await generatePageContent(entry);
-  const payload = await buildRowPayload(entry, generated, cityId, directCountryId);
+type PagePublishOutcome = { success: boolean; error?: string };
 
-  const { error } = await db().from("custom_pages").update(payload).eq("slug", entry.slug);
-  if (error) {
-    console.error(`❌ Failed to update "${entry.slug}":`, error.message);
-    return false;
+async function regeneratePage(entry: StaticPageEntry): Promise<PagePublishOutcome> {
+  try {
+    console.log(`\n🔄 Regenerating: ${entry.slug}...`);
+    const { cityId, countryId: cityCountryId } = await findCityId(entry.lookup_city, entry.lookup_country_hint);
+    const directCountryId = entry.section === "country" ? await findCountryId(entry.base_name) : cityCountryId;
+    let generated: Awaited<ReturnType<typeof generatePageContent>>;
+    try {
+      generated = await generatePageContent(entry);
+    } catch (err) {
+      const error = failureMessage(err);
+      console.error(`❌ Content generation failed for "${entry.slug}":`, error);
+      return { success: false, error };
+    }
+    const payload = await buildRowPayload(entry, generated, cityId, directCountryId);
+
+    const { error } = await db().from("custom_pages").update(payload).eq("slug", entry.slug);
+    if (error) {
+      console.error(`❌ Failed to update "${entry.slug}":`, error.message);
+      return { success: false, error: error.message };
+    }
+    console.log(`✅ Regenerated: yaarzo.com/${entry.slug}`);
+    return { success: true };
+  } catch (err) {
+    const error = failureMessage(err);
+    console.error(`❌ regenerate "${entry.slug}":`, error);
+    return { success: false, error };
   }
-  console.log(`✅ Regenerated: yaarzo.com/${entry.slug}`);
-  return true;
 }
 
-async function publishNewPage(entry: StaticPageEntry): Promise<boolean> {
-  console.log(`\n📝 Generating: ${entry.slug}...`);
-  const { cityId, countryId: cityCountryId } = await findCityId(entry.lookup_city, entry.lookup_country_hint);
-  const directCountryId = entry.section === "country" ? await findCountryId(entry.base_name) : cityCountryId;
-  const generated = await generatePageContent(entry);
-  const payload = await buildRowPayload(entry, generated, cityId, directCountryId);
+async function publishNewPage(entry: StaticPageEntry): Promise<PagePublishOutcome> {
+  try {
+    console.log(`\n📝 Generating: ${entry.slug}...`);
+    const { cityId, countryId: cityCountryId } = await findCityId(entry.lookup_city, entry.lookup_country_hint);
+    const directCountryId = entry.section === "country" ? await findCountryId(entry.base_name) : cityCountryId;
+    let generated: Awaited<ReturnType<typeof generatePageContent>>;
+    try {
+      generated = await generatePageContent(entry);
+    } catch (err) {
+      const error = failureMessage(err);
+      console.error(`❌ Content generation failed for "${entry.slug}":`, error);
+      return { success: false, error };
+    }
+    const payload = await buildRowPayload(entry, generated, cityId, directCountryId);
 
-  const { error } = await db().from("custom_pages").insert({ slug: entry.slug, ...payload });
-  if (error) {
-    console.error(`❌ Failed to insert "${entry.slug}":`, error.message);
-    return false;
+    const { error } = await db().from("custom_pages").insert({ slug: entry.slug, ...payload });
+    if (error) {
+      console.error(`❌ Failed to insert "${entry.slug}":`, error.message);
+      return { success: false, error: error.message };
+    }
+    console.log(`✅ Published: yaarzo.com/${entry.slug}`);
+    return { success: true };
+  } catch (err) {
+    const error = failureMessage(err);
+    console.error(`❌ "${entry.slug}":`, error);
+    return { success: false, error };
   }
-  console.log(`✅ Published: yaarzo.com/${entry.slug}`);
-  return true;
 }
 
 function parseRegenerateSlugs(url: URL): string[] {
@@ -364,17 +402,16 @@ export async function runStaticPublish(request: Request): Promise<Response> {
     for (const slug of regenerateSlugs) {
       const entry = masterList.find((e) => e.slug === slug);
       if (!entry) {
-        results.push({ slug, success: false, regenerated: true });
+        results.push({
+          slug,
+          success: false,
+          regenerated: true,
+          error: `Slug "${slug}" not found in static_page_ideas`,
+        });
         continue;
       }
-      try {
-        const success = await regeneratePage(entry);
-        results.push({ slug, success, regenerated: true });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        console.error(`❌ regenerate "${slug}":`, message);
-        results.push({ slug, success: false, regenerated: true });
-      }
+      const outcome = await regeneratePage(entry);
+      results.push({ slug, success: outcome.success, regenerated: true, error: outcome.error });
     }
   }
 
@@ -383,14 +420,8 @@ export async function runStaticPublish(request: Request): Promise<Response> {
   const toPublish = pending.slice(0, pagesPerRun);
 
   for (const entry of toPublish) {
-    try {
-      const success = await publishNewPage(entry);
-      results.push({ slug: entry.slug, success });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(`❌ "${entry.slug}":`, message);
-      results.push({ slug: entry.slug, success: false });
-    }
+    const outcome = await publishNewPage(entry);
+    results.push({ slug: entry.slug, success: outcome.success, error: outcome.error });
   }
 
   const published = results.filter((r) => r.success && !r.regenerated).length;
