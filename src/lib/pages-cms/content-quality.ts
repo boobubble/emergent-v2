@@ -101,14 +101,9 @@ export const CMS_BROKEN_HREF_UNWRAP = new Set([
   "/food-chat-room",
   "/cricket-chat-room",
   "/movies-chat-room",
-  "/student-chat-room",
-  "/international-chat-room",
-  "/australia-chat-room",
-  "/canada-chat-room",
   "/music-chat-room",
   "/gaming-chat-room",
   "/bollywood-chat-room",
-  "/boys-chat-room",
 ]);
 
 export function htmlToPlainText(html: string): string {

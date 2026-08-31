@@ -157,6 +157,69 @@ describe("quality evaluation", () => {
     expect(q.status).toBe("Excellent");
     expect(q.warnings).toEqual([]);
   });
+
+  it("does not flag a live australia-chat-room href when the admin catalog is empty", () => {
+    const body =
+      `<p>${"word ".repeat(200)}</p><h2>Related rooms</h2>` +
+      `<p><a href="https://yaarzo.com/australia-chat-room">Australia Chat Room</a></p>` +
+      `<p><a href="/chatroom">Start Chatting Now</a></p>`;
+    const q = evaluatePageQuality({
+      slug: "new-zealand-chat-room",
+      title: "New Zealand Chat Room",
+      h1: "New Zealand Chat Room",
+      meta_title: "New Zealand Chat Room Online",
+      meta_description: "Chat with people in New Zealand on Yaarzo. Join free rooms and make Kiwi friends.",
+      content: body,
+      tags: [
+        "New Zealand",
+        "Auckland",
+        "Wellington",
+        "Christchurch",
+        "Kiwi community",
+        "Oceania",
+        "Friendship",
+        "English",
+        "New Zealand chat room",
+        "NZ friends",
+        "Online community",
+        "Yaarzo",
+      ],
+    });
+    expect(q.warnings.some((w) => w.code === "broken_internal_link")).toBe(false);
+    expect(q.warnings.some((w) => w.code === "chatrooms_alias")).toBe(false);
+    expect(q.warnings.some((w) => w.code === "hashtag_dump")).toBe(false);
+  });
+
+  it("still flags /chatrooms, leftover unwrap hrefs, and chat-keyword tag dumps", () => {
+    expect(
+      detectHashtagDump([
+        "New Zealand Chat Room",
+        "New Zealand Chat",
+        "NZ Chat Room",
+        "New Zealand Online Chat",
+        "Chat With New Zealanders",
+        "New Zealand Friends",
+      ]),
+    ).toBe(true);
+    const q = evaluatePageQuality({
+      slug: "new-zealand-chat-room",
+      title: "New Zealand Chat Room",
+      content:
+        `<p><a href="/chatrooms">Start</a></p>` +
+        `<p><a href="https://yaarzo.com/food-chat-room">Food</a></p>`,
+      tags: [
+        "New Zealand Chat Room",
+        "New Zealand Chat",
+        "NZ Chat Room",
+        "New Zealand Online Chat",
+        "Chat With New Zealanders",
+        "New Zealand Friends",
+      ],
+    });
+    expect(q.warnings.some((w) => w.code === "chatrooms_alias")).toBe(true);
+    expect(q.warnings.some((w) => w.code === "hashtag_dump")).toBe(true);
+    expect(q.warnings.some((w) => w.code === "broken_internal_link")).toBe(true);
+  });
 });
 
 describe("link resolver and similarity", () => {
@@ -164,6 +227,7 @@ describe("link resolver and similarity", () => {
     expect(CMS_BROKEN_HREF_REMAP["/noida-chat-room"]).toBe("/delhi-chat-room");
     expect(resolveInternalHref("/food-chat-room", new Set(PUBLISHED)).action).toBe("unwrap");
     expect(resolveInternalHref("/lahore-chat-room", new Set(PUBLISHED)).action).toBe("keep");
+    expect(resolveInternalHref("/australia-chat-room", new Set()).action).toBe("keep");
     expect(resolveInternalHref("/australia-chat-room", new Set(["australia-chat-room"])).action).toBe("keep");
     expect(resolveInternalHref("/bahrain-chat-room", new Set(["india-chat-room"])).action).toBe("keep");
     expect(countWords("<p>one two three</p>")).toBe(3);
