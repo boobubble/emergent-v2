@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { sanitizeBlogHtml } from "@/lib/blog-sanitize";
 import "@/components/blog/blog-ui.css";
+import "@/lib/cta-button.css";
 
 export function BlogProse({
   html,

@@ -57,6 +57,8 @@ describe("sanitizeHtml CTA allow-list", () => {
       "custom-page-cta-button",
       "custom-page-cta-note",
       "custom-page-cta-secondary",
+      "cta-button",
+      "cta-button-link",
     ]) {
       expect(ALLOWED_PAGE_CONTENT_CLASSES.has(cls)).toBe(true);
     }

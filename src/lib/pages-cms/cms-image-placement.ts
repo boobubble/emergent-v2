@@ -6,7 +6,8 @@
  */
 
 const IMG_RE = /<img\b[^>]*>/gi;
-const CTA_RE = /<a\b[^>]*class=["'][^"']*custom-page-cta-button[^"']*["'][^>]*>/i;
+const CTA_RE =
+  /<(?:a|div)\b[^>]*class=["'][^"']*(?:custom-page-cta-button|cta-button(?:-link)?)[^"']*["'][^>]*>/i;
 
 export type CmsImgHit = { tag: string; index: number };
 

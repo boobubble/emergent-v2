@@ -55,4 +55,16 @@ describe("sanitizeBlogHtml", () => {
     expect(out).toContain('data-bytes="12000"');
     expect(out).toContain('data-decorative="true"');
   });
+
+  it("keeps generic CTA button markup", () => {
+    const raw =
+      '<div class="cta-button" data-href="/signup" data-label="Sign Up on Yaarzo"><a href="/signup" class="cta-button-link"><span>Sign Up on Yaarzo</span><span aria-hidden="true">→</span></a></div>';
+    const out = sanitizeBlogHtml(raw);
+    expect(out).toContain('class="cta-button"');
+    expect(out).toContain("cta-button-link");
+    expect(out).toContain('data-href="/signup"');
+    expect(out).toContain('data-label="Sign Up on Yaarzo"');
+    expect(out).toContain("Sign Up on Yaarzo");
+    expect(out).toContain('aria-hidden="true"');
+  });
 });

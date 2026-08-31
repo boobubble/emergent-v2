@@ -7,6 +7,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogEditorView } from "@/components/blog/BlogEditorView";
 import { BlogImage } from "@/lib/blog-image";
+import { CtaButton } from "@/lib/cta-button";
 import { sanitizeBlogHtml } from "@/lib/blog-sanitize";
 import { normalizeTagList, parseKeywordPhrases, serializeKeywords } from "@/lib/blog-taxonomy";
 import { toast } from "sonner";
@@ -107,6 +108,7 @@ function WritePostPage() {
       }),
       Link,
       BlogImage.configure({ inline: false, allowBase64: false }),
+      CtaButton,
       Placeholder.configure({ placeholder: "Start writing your post here…" }),
     ],
     content: "<p></p>",

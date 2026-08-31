@@ -25,6 +25,7 @@ const ALLOWED_ATTR = [
   "loading", "decoding",
   "type", "checked", "disabled", "data-type", "data-checked",
   "aria-label", "aria-hidden", "role",
+  "data-href", "data-label",
 ];
 
 /** Classes permitted on CMS page HTML (CTA, callouts, TOC). Others are stripped on sanitize. */
@@ -43,6 +44,8 @@ export const ALLOWED_PAGE_CONTENT_CLASSES = new Set([
   "custom-page-img-left",
   "custom-page-img-center",
   "custom-page-img-right",
+  "cta-button",
+  "cta-button-link",
 ]);
 
 export { ALLOWED_TAGS, ALLOWED_ATTR };

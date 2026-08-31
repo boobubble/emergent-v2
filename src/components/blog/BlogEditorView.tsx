@@ -18,6 +18,7 @@ import {
   Redo2,
   SlidersHorizontal,
   Undo2,
+  MousePointerClick,
   CodeXml,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,8 +52,10 @@ import {
 } from "@/lib/blog-taxonomy";
 import { normalizeBlogImageAlign, type BlogImageAlign } from "@/lib/blog-image";
 import { applyHtmlSource } from "@/lib/tiptap-html-source";
+import { CtaButtonDialog, useCtaButtonDialog } from "@/components/admin/CtaButtonDialog";
 import { toast } from "sonner";
 import "@/components/blog/blog-ui.css";
+import "@/lib/cta-button.css";
 
 export type BlogEditorViewProps = {
   title: string;
@@ -99,6 +102,7 @@ export function BlogEditorView(props: BlogEditorViewProps) {
   const [sourceMode, setSourceMode] = useState(false);
   const [sourceHtml, setSourceHtml] = useState("");
   const [sourceError, setSourceError] = useState<string | null>(null);
+  const ctaDialog = useCtaButtonDialog(props.editor);
   useEditorTick(props.editor);
 
   function leaveSourceMode(): boolean {
@@ -263,6 +267,7 @@ export function BlogEditorView(props: BlogEditorViewProps) {
             <EditorToolbar
               editor={props.editor}
               onAddImage={() => { setReplaceIndex(null); setImageOpen(true); }}
+              onInsertCta={ctaDialog.openInsert}
               sourceMode={sourceMode}
               onToggleSource={toggleSourceMode}
             />
@@ -336,6 +341,14 @@ export function BlogEditorView(props: BlogEditorViewProps) {
           if (replaceIndex != null) updateEditorImage(props.editor, replaceIndex, draft);
           else insertBlogImage(props.editor, draft);
         }}
+      />
+      <CtaButtonDialog
+        open={ctaDialog.open}
+        onOpenChange={ctaDialog.setOpen}
+        mode={ctaDialog.mode}
+        initialLabel={ctaDialog.initialLabel}
+        initialHref={ctaDialog.initialHref}
+        onConfirm={ctaDialog.confirm}
       />
     </div>
   );
@@ -499,11 +512,13 @@ function EditorSidebar({
 function EditorToolbar({
   editor,
   onAddImage,
+  onInsertCta,
   sourceMode,
   onToggleSource,
 }: {
   editor: Editor | null;
   onAddImage: () => void;
+  onInsertCta: () => void;
   sourceMode: boolean;
   onToggleSource: () => void;
 }) {
@@ -589,6 +604,9 @@ function EditorToolbar({
         </TB>
         <TB label="Add Image" disabled={sourceMode} onClick={onAddImage}>
           <ImagePlus className="h-3.5 w-3.5" />
+        </TB>
+        <TB label="Insert CTA Button" disabled={sourceMode} onClick={onInsertCta}>
+          <MousePointerClick className="h-3.5 w-3.5" />
         </TB>
         <span className="yz-blog-toolbar-sep" />
         <TB label="Undo" disabled={sourceMode} onClick={() => editor.chain().focus().undo().run()}>

@@ -8,7 +8,8 @@ export const HtmlDiv = Node.create({
   content: "block*",
   defining: true,
   parseHTML() {
-    return [{ tag: "div" }];
+    // Generic ctaButton node owns div.cta-button; do not swallow it as a raw wrapper.
+    return [{ tag: "div:not(.cta-button)" }];
   },
   renderHTML({ HTMLAttributes }) {
     return ["div", mergeAttributes(HTMLAttributes), 0];

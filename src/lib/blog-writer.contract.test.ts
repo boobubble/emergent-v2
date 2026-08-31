@@ -20,6 +20,8 @@ describe("blog writer contracts", () => {
     expect(editor).toContain("toggleHeading({ level: 2 })");
     expect(editor).toContain("toggleHeading({ level: 3 })");
     expect(editor).toContain("setParagraph()");
+    expect(editor).toContain("Insert CTA Button");
+    expect(write).toContain("CtaButton");
   });
 
   it("wires tags and SEO keywords into the insert payload", () => {

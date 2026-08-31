@@ -96,6 +96,19 @@ describe("placeCmsImagesInContent", () => {
     expect(safe).toContain('loading="eager"');
     expect(safe).toContain('loading="lazy"');
   });
+
+  it("treats the generic cta-button block as the article CTA for image placement", () => {
+    const html = [
+      "<p>Lead paragraph about the city.</p>",
+      "<h2>Section</h2>",
+      "<p>More article text.</p>",
+      '<div class="cta-button" data-href="/poetry-hub" data-label="Explore Poetry Hub"><a href="/poetry-hub" class="cta-button-link"><span>Explore Poetry Hub</span><span aria-hidden="true">→</span></a></div>',
+      KUWAIT_IMG,
+    ].join("");
+    const out = placeCmsImagesInContent(html);
+    expect(out.indexOf("<img")).toBeLessThan(out.indexOf("cta-button"));
+    expect(out.match(/<img\b/gi)?.length).toBe(1);
+  });
 });
 
 describe("cms image align", () => {

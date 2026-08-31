@@ -3,6 +3,7 @@ import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { ClassedLink, HtmlDiv, HtmlNav } from "@/lib/pages-cms/tiptap-html-blocks";
+import { CtaButton } from "@/lib/cta-button";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
@@ -23,8 +24,8 @@ import { sanitizeHtml } from "@/lib/pages-io";
 import { injectHeadingIds } from "@/lib/heading-ids";
 import { processPastedPageContent } from "@/lib/page-content-paste";
 import { Switch } from "@/components/ui/switch";
-import { InsertCtaDialog } from "@/components/admin/InsertCtaDialog";
-import { DEFAULT_PAGE_CTA_DEFAULTS, type PageCtaDefaults } from "@/lib/page-cta";
+import { CtaButtonDialog, useCtaButtonDialog } from "@/components/admin/CtaButtonDialog";
+import { type PageCtaDefaults } from "@/lib/page-cta";
 import { ContentImageDialog, type ContentImageDraft } from "@/components/content-images/ContentImageDialog";
 import {
   removeEditorImage,
@@ -38,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import "@/lib/pages-cms/cms-page-images.css";
+import "@/lib/cta-button.css";
 
 export type RichTextEditorHandle = {
   openInsert: () => void;
@@ -57,7 +59,7 @@ interface Props {
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichTextEditor(
-  { value, onChange, placeholder, uploadFolder = "pages", ctaDefaults },
+  { value, onChange, placeholder, uploadFolder = "pages", ctaDefaults: _ctaDefaults },
   ref,
 ) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -66,7 +68,6 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
   const [sourceHtml, setSourceHtml] = useState("");
   const [sourceError, setSourceError] = useState<string | null>(null);
   const [detectPlainTextHeadings, setDetectPlainTextHeadings] = useState(false);
-  const [ctaDialogOpen, setCtaDialogOpen] = useState(false);
   const [imageOpen, setImageOpen] = useState(false);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const [optimizing, setOptimizing] = useState(false);
@@ -88,6 +89,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
       }),
       Underline,
       ClassedLink.configure({ openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" } }),
+      CtaButton,
       HtmlDiv,
       HtmlNav,
       CmsImage.configure({ inline: false, allowBase64: false }),
@@ -156,6 +158,8 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   });
+
+  const ctaDialog = useCtaButtonDialog(editor);
 
   // Keep editor in sync when external value changes (e.g., draft restore).
   useEffect(() => {
@@ -331,6 +335,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
           {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
         </TB>
         <TB onClick={insertImageByUrl} title="Image by URL" disabled={mode === "source"}><ImageIcon className="h-3.5 w-3.5" /></TB>
+        <TB onClick={ctaDialog.openInsert} title="Insert CTA Button" disabled={mode === "source"}><MousePointerClick className="h-3.5 w-3.5" /></TB>
         <TB onClick={insertTable} title="Insert table" disabled={mode === "source"}><TableIcon className="h-3.5 w-3.5" /></TB>
         <TB onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider" disabled={mode === "source"}><Minus className="h-3.5 w-3.5" /></TB>
         <TB onClick={() => insertCallout("info")} title="Callout / Info box" disabled={mode === "source"}><Info className="h-3.5 w-3.5" /></TB>
@@ -513,14 +518,13 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
           />
         )}
       </div>
-      <InsertCtaDialog
-        open={ctaDialogOpen}
-        onOpenChange={setCtaDialogOpen}
-        defaults={ctaDefaults ?? DEFAULT_PAGE_CTA_DEFAULTS}
-        onInsert={(html) => {
-          editor?.chain().focus().insertContent(html).run();
-          toast.success("CTA inserted");
-        }}
+      <CtaButtonDialog
+        open={ctaDialog.open}
+        onOpenChange={ctaDialog.setOpen}
+        mode={ctaDialog.mode}
+        initialLabel={ctaDialog.initialLabel}
+        initialHref={ctaDialog.initialHref}
+        onConfirm={ctaDialog.confirm}
       />
       <ContentImageDialog
         open={imageOpen || replaceIndex != null}

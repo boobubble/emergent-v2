@@ -28,6 +28,8 @@ const ALLOWED = new Set([
   "pre",
   "code",
   "img",
+  "div",
+  "span",
 ]);
 
 const ATTR_OK = new Set([
@@ -46,6 +48,9 @@ const ATTR_OK = new Set([
   "data-decorative",
   "data-optimized",
   "data-bytes",
+  "data-href",
+  "data-label",
+  "aria-hidden",
 ]);
 
 const ALLOWED_CLASSES = new Set([
@@ -53,6 +58,8 @@ const ALLOWED_CLASSES = new Set([
   "yz-blog-img-left",
   "yz-blog-img-center",
   "yz-blog-img-right",
+  "cta-button",
+  "cta-button-link",
 ]);
 
 const ALIGN_OK = new Set(["left", "center", "right"]);
@@ -90,7 +97,7 @@ function sanitizeOpenTag(tag: string, rawAttrs: string): string {
     if (attr.startsWith("on") || attr === "style") continue;
     if (!ATTR_OK.has(attr)) continue;
     const value = m[3] ?? m[4] ?? m[5] ?? "";
-    if ((attr === "href" || attr === "src") && !isSafeBlogUrl(value)) continue;
+    if ((attr === "href" || attr === "src" || attr === "data-href") && !isSafeBlogUrl(value)) continue;
     if (attr === "class") {
       const filtered = filterClasses(value);
       if (!filtered) continue;
@@ -116,6 +123,11 @@ function sanitizeOpenTag(tag: string, rawAttrs: string): string {
     if (attr === "data-bytes") {
       if (!/^\d{1,12}$/.test(value)) continue;
       attrs.push(`data-bytes="${value}"`);
+      continue;
+    }
+    if (attr === "aria-hidden") {
+      if (value !== "true") continue;
+      attrs.push('aria-hidden="true"');
       continue;
     }
     if (attr === "width" || attr === "height") {

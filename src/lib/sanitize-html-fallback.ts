@@ -22,6 +22,7 @@ const ATTR_OK = new Set([
   "colspan", "rowspan", "width", "height",
   "loading", "decoding",
   "aria-label", "aria-hidden", "role",
+  "data-href", "data-label",
 ]);
 
 const ALLOWED_CLASSES = new Set([
@@ -40,6 +41,8 @@ const ALLOWED_CLASSES = new Set([
   "custom-page-img-left",
   "custom-page-img-center",
   "custom-page-img-right",
+  "cta-button",
+  "cta-button-link",
 ]);
 
 function isSafeUrl(value: string): boolean {
@@ -68,7 +71,7 @@ function sanitizeOpenTag(tag: string, rawAttrs: string): string {
     if (attr.startsWith("on") || attr === "style") continue;
     if (!ATTR_OK.has(attr) && !attr.startsWith("data-")) continue;
     const value = m[3] ?? m[4] ?? m[5] ?? "";
-    if ((attr === "href" || attr === "src") && !isSafeUrl(value)) continue;
+    if ((attr === "href" || attr === "src" || attr === "data-href") && !isSafeUrl(value)) continue;
     if (attr === "class") {
       const filtered = filterClasses(value);
       if (!filtered) continue;
