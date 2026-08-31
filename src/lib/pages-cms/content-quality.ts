@@ -174,10 +174,10 @@ export function isKeepableInternalPath(path: string, published: Set<string>): bo
   if (!slug) return true;
   if (slug === "chatrooms") return false;
   if (isReservedSlug(slug) && slug !== "chatrooms") return true;
-  // Editor/preview without a catalog must not unwrap every CMS-looking slug.
-  if (!published.size) return true;
+  // Keep unknown slugs. The live page only passes THIS document's published
+  // hrefs — treating that as a complete catalog was stripping manual <a> tags.
   if (published.has(slug)) return true;
-  return false;
+  return true;
 }
 
 export function resolveInternalHref(href: string, published: Set<string>): { href: string | null; action: "keep" | "remap" | "unwrap" } {
@@ -186,11 +186,16 @@ export function resolveInternalHref(href: string, published: Set<string>): { hre
   if (CMS_BROKEN_HREF_REMAP[path]) {
     return { href: CMS_BROKEN_HREF_REMAP[path], action: "remap" };
   }
-  if (CMS_BROKEN_HREF_UNWRAP.has(path)) return { href: null, action: "unwrap" };
+  // Hardcoded unwrap list is historical; do not strip a URL that is a live published page.
+  if (CMS_BROKEN_HREF_UNWRAP.has(path) && !published.has(path.replace(/^\//, ""))) {
+    return { href: null, action: "unwrap" };
+  }
   if (isKeepableInternalPath(path, published)) {
     return { href: path === "/chatrooms" ? "/chatroom" : path, action: path === "/chatrooms" ? "remap" : "keep" };
   }
-  return { href: null, action: "unwrap" };
+  // Partial published catalogs (this page's hrefs only) must not unwrap manual links
+  // that extractPublicCmsHrefSlugs missed. Hardcoded unwrap already ran above.
+  return { href: path, action: "keep" };
 }
 
 const UK_USER_OPENING =

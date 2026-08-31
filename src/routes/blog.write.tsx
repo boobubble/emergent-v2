@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
+import { EDITOR_LINK_OPTIONS } from "@/lib/pages-cms/tiptap-html-blocks";
 import Placeholder from "@tiptap/extension-placeholder";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogEditorView } from "@/components/blog/BlogEditorView";
@@ -106,7 +107,7 @@ function WritePostPage() {
         link: false,
         heading: { levels: [2, 3] },
       }),
-      Link,
+      Link.configure(EDITOR_LINK_OPTIONS),
       BlogImage.configure({ inline: false, allowBase64: false }),
       CtaButton,
       Placeholder.configure({ placeholder: "Start writing your post here…" }),

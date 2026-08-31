@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRe
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
-import { ClassedLink, HtmlDiv, HtmlNav } from "@/lib/pages-cms/tiptap-html-blocks";
+import { ClassedLink, HtmlDiv, HtmlNav, EDITOR_LINK_OPTIONS, applyEditorTextLink, unsetEditorTextLink } from "@/lib/pages-cms/tiptap-html-blocks";
 import { CtaButton } from "@/lib/cta-button";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
@@ -79,6 +79,8 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
     detectPlainTextRef.current = detectPlainTextHeadings;
   }, [detectPlainTextHeadings]);
 
+  const lastEmittedHtml = useRef(value || "");
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -88,7 +90,10 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
         underline: false,
       }),
       Underline,
-      ClassedLink.configure({ openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" } }),
+      ClassedLink.configure({
+        ...EDITOR_LINK_OPTIONS,
+        HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" },
+      }),
       CtaButton,
       HtmlDiv,
       HtmlNav,
@@ -156,17 +161,25 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
     onBlur: ({ editor: ed }) => {
       insertPosRef.current = rememberCmsImageInsertPos(ed, insertPosRef.current);
     },
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      lastEmittedHtml.current = html;
+      onChange(html);
+    },
   });
 
   const ctaDialog = useCtaButtonDialog(editor);
 
-  // Keep editor in sync when external value changes (e.g., draft restore).
+  // Keep editor in sync when external value changes (e.g., draft restore / save normalize).
+  // Skip when the incoming HTML is what this editor just emitted — getHTML() is not a
+  // stable string, and setContent() would re-parse and can drop marks.
   useEffect(() => {
     if (!editor || mode === "source") return;
+    if (value === lastEmittedHtml.current) return;
     const current = editor.getHTML();
     if (value !== current && !editor.isFocused) {
       editor.commands.setContent(value || "", { emitUpdate: false });
+      lastEmittedHtml.current = editor.getHTML();
     }
   }, [value, editor, mode]);
 
@@ -236,10 +249,14 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
   const insertLink = () => {
     if (!editor) return;
     const prev = editor.getAttributes("link").href as string | undefined;
+    const selection = { from: editor.state.selection.from, to: editor.state.selection.to };
     const url = window.prompt("URL (https://… or /internal-slug)", prev ?? "https://");
     if (url === null) return;
-    if (url === "") { editor.chain().focus().extendMarkRange("link").unsetLink().run(); return; }
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    if (url === "") {
+      unsetEditorTextLink(editor, selection);
+      return;
+    }
+    applyEditorTextLink(editor, url, selection);
   };
 
   const insertImageByUrl = () => {

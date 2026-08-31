@@ -4,6 +4,7 @@
  * (it throws on import/eval without `window`) so /$slug can still emit real markup.
  */
 import { PAGE_CTA_CLASSES } from "./page-cta";
+import { isSafeHref } from "./safe-href";
 
 const VOID_OK = new Set(["br", "hr", "img"]);
 
@@ -46,11 +47,7 @@ const ALLOWED_CLASSES = new Set([
 ]);
 
 function isSafeUrl(value: string): boolean {
-  const v = value.trim();
-  if (!v) return false;
-  if (v.startsWith("#") || v.startsWith("/") || v.startsWith("./") || v.startsWith("../")) return true;
-  if (/^(https?:|mailto:)/i.test(v)) return true;
-  return false;
+  return isSafeHref(value);
 }
 
 function filterClasses(value: string): string {

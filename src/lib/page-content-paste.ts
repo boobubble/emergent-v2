@@ -8,6 +8,7 @@
  */
 import { PAGE_CTA_CLASSES } from "./page-cta";
 import { sanitizeHtmlFallback } from "./sanitize-html-fallback";
+import { rewriteAnchorHrefs } from "./safe-href";
 
 const ALLOWED_TAGS = [
   "h1", "h2", "h3", "h4", "h5", "h6",
@@ -140,11 +141,12 @@ export type PageContentNormalizeResult = {
 };
 
 export function sanitizePageContentHtml(html: string): string {
+  const rewritten = rewriteAnchorHrefs(html ?? "");
   const DOMPurify = loadPurifyApi();
   if (!DOMPurify) {
-    return sanitizeHtmlFallback(html ?? "");
+    return sanitizeHtmlFallback(rewritten);
   }
-  return DOMPurify.sanitize(html ?? "", createPageContentPurifyConfig());
+  return DOMPurify.sanitize(rewritten, createPageContentPurifyConfig());
 }
 
 /** Strip Word / Google Docs noise while keeping semantic heading tags. */

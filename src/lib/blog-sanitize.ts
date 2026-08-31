@@ -3,6 +3,8 @@
  * classes and image attrs can be allow-listed without opening Custom Pages XSS.
  */
 
+import { isSafeHref, rewriteAnchorHrefs } from "./safe-href";
+
 const VOID_OK = new Set(["br", "hr", "img"]);
 
 const ALLOWED = new Set([
@@ -65,12 +67,7 @@ const ALLOWED_CLASSES = new Set([
 const ALIGN_OK = new Set(["left", "center", "right"]);
 
 export function isSafeBlogUrl(value: string): boolean {
-  const v = value.trim();
-  if (!v) return false;
-  if (/^\s*javascript:/i.test(v) || /^\s*data:/i.test(v) || /^\s*vbscript:/i.test(v)) return false;
-  if (v.startsWith("/") || v.startsWith("./") || v.startsWith("../")) return true;
-  if (/^https?:\/\//i.test(v)) return true;
-  return false;
+  return isSafeHref(value);
 }
 
 function filterClasses(value: string): string {
@@ -195,7 +192,7 @@ function applyImageLoading(html: string): string {
 
 /** Strip unsafe markup. Body h1 is demoted to h2 so the article title stays the only H1. */
 export function sanitizeBlogHtml(html: string): string {
-  let out = html ?? "";
+  let out = rewriteAnchorHrefs(html ?? "");
   out = out.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
   out = out.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "");
   out = out.replace(/<!--[\s\S]*?-->/g, "");

@@ -164,6 +164,8 @@ describe("link resolver and similarity", () => {
     expect(CMS_BROKEN_HREF_REMAP["/noida-chat-room"]).toBe("/delhi-chat-room");
     expect(resolveInternalHref("/food-chat-room", new Set(PUBLISHED)).action).toBe("unwrap");
     expect(resolveInternalHref("/lahore-chat-room", new Set(PUBLISHED)).action).toBe("keep");
+    expect(resolveInternalHref("/australia-chat-room", new Set(["australia-chat-room"])).action).toBe("keep");
+    expect(resolveInternalHref("/bahrain-chat-room", new Set(["india-chat-room"])).action).toBe("keep");
     expect(countWords("<p>one two three</p>")).toBe(3);
     expect(extractHeadingTexts("<h2></h2><h2>Hello</h2>")[0]?.empty).toBe(true);
     expect(detectResearchNotes("<p>Pages CMS slug exists</p>").length).toBeGreaterThan(0);

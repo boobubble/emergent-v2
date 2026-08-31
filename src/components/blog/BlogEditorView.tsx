@@ -52,6 +52,7 @@ import {
 } from "@/lib/blog-taxonomy";
 import { normalizeBlogImageAlign, type BlogImageAlign } from "@/lib/blog-image";
 import { applyHtmlSource } from "@/lib/tiptap-html-source";
+import { applyEditorTextLink } from "@/lib/pages-cms/tiptap-html-blocks";
 import { CtaButtonDialog, useCtaButtonDialog } from "@/components/admin/CtaButtonDialog";
 import { toast } from "sonner";
 import "@/components/blog/blog-ui.css";
@@ -525,8 +526,11 @@ function EditorToolbar({
   if (!editor) return null;
 
   const setLink = () => {
+    if (!editor) return;
+    const selection = { from: editor.state.selection.from, to: editor.state.selection.to };
     const url = window.prompt("Link URL:");
-    if (url) editor.chain().focus().setLink({ href: url }).run();
+    if (!url) return;
+    applyEditorTextLink(editor, url, selection);
   };
 
   return (

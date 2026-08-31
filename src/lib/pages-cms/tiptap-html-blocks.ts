@@ -1,5 +1,7 @@
 import { Node, mergeAttributes } from "@tiptap/core";
+import type { Editor } from "@tiptap/core";
 import Link from "@tiptap/extension-link";
+import { isSafeHref, normalizeSafeHref } from "@/lib/safe-href";
 
 /** Preserve classed <div> wrappers (CTA, callout) through getHTML / setContent. */
 export const HtmlDiv = Node.create({
@@ -54,3 +56,39 @@ export const ClassedLink = Link.extend({
     };
   },
 });
+
+/** Shared Link options for CMS + blog editors (relative /https hrefs must round-trip). */
+export const EDITOR_LINK_OPTIONS = {
+  openOnClick: false,
+  autolink: true,
+  protocols: ["http", "https", "mailto"] as string[],
+  isAllowedUri: (url: string, ctx?: { defaultValidate?: (href: string) => boolean }) => {
+    if (isSafeHref(url)) return true;
+    if (!url || /^(javascript|data|vbscript):/i.test(url)) return false;
+    return ctx?.defaultValidate ? !!ctx.defaultValidate(url) : false;
+  },
+};
+
+/**
+ * Apply a text link after window.prompt(), which often clears the TipTap selection.
+ * Capture from/to before prompting; restore before setLink.
+ */
+export function applyEditorTextLink(
+  editor: Editor,
+  href: string,
+  selection: { from: number; to: number },
+): boolean {
+  const safe = normalizeSafeHref(href);
+  if (!safe) return false;
+  return editor
+    .chain()
+    .focus()
+    .setTextSelection(selection)
+    .extendMarkRange("link")
+    .setLink({ href: safe })
+    .run();
+}
+
+export function unsetEditorTextLink(editor: Editor, selection: { from: number; to: number }): boolean {
+  return editor.chain().focus().setTextSelection(selection).extendMarkRange("link").unsetLink().run();
+}
