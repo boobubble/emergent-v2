@@ -24,6 +24,7 @@ import {
   suggestLinks, applyLinksToPage, getOrphanReport, getLinkAnalytics,
   listLinkablePages,
 } from "@/lib/internal-linking.functions";
+import { incomingCountByUrl, normalizeInternalHref, selectUnderLinkedPages } from "@/lib/internal-linking-orphans";
 
 export const Route = createFileRoute("/admin/internal-linking")({ component: InternalLinkingPage });
 
@@ -223,10 +224,81 @@ function Field({ label, children, className }: { label: string; children: React.
   return <div className={className}><Label className="mb-1 block text-xs">{label}</Label>{children}</div>;
 }
 
+type LinkablePage = { id: string; slug: string; title: string; url: string; content: string };
+
+function usePublishedPagesAndOrphanReport() {
+  const listPages = useServerFn(listLinkablePages);
+  const fetchReport = useServerFn(getOrphanReport);
+  const pagesQ = useQuery({ queryKey: ["ilt-pages"], queryFn: () => listPages({}) });
+  const reportQ = useQuery({ queryKey: ["ilt-orphans"], queryFn: () => fetchReport({}) });
+  return {
+    pages: (pagesQ.data ?? []) as LinkablePage[],
+    report: reportQ.data,
+    isLoading: pagesQ.isLoading || reportQ.isLoading,
+  };
+}
+
+function useUnderLinkedPublishedPages(selectedId?: string) {
+  const { pages, report, isLoading } = usePublishedPagesAndOrphanReport();
+  const options = useMemo(() => {
+    if (!report) return [];
+    const underLinked = selectUnderLinkedPages(pages, report);
+    if (!selectedId) return underLinked;
+    if (underLinked.some((p) => p.id === selectedId)) return underLinked;
+    const selected = pages.find((p) => p.id === selectedId);
+    if (!selected) return underLinked;
+    const incoming = incomingCountByUrl(report).get(normalizeInternalHref(selected.url) ?? selected.url);
+    return [{ ...selected, incoming: incoming ?? 0 }, ...underLinked];
+  }, [pages, report, selectedId]);
+  return { pages, options, isLoading };
+}
+
+function underLinkedPageLabel(title: string, incoming: number) {
+  return `${title} (${incoming} incoming)`;
+}
+
+function PublishedUnderLinkedSelect({
+  value,
+  onPick,
+  disabled,
+}: {
+  value: string;
+  onPick: (page: LinkablePage | null) => void;
+  disabled?: boolean;
+}) {
+  const { pages, options, isLoading } = useUnderLinkedPublishedPages(value);
+  const selectValue = !value || options.some((p) => p.id === value) ? (value || "__none__") : "__none__";
+  return (
+    <Select
+      value={selectValue}
+      onValueChange={(v) => {
+        if (v === "__none__") return onPick(null);
+        const page = pages.find((p) => p.id === v) ?? null;
+        onPick(page);
+      }}
+      disabled={disabled || isLoading}
+    >
+      <SelectTrigger><SelectValue placeholder="Pick an under-linked page…" /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="__none__">— None —</SelectItem>
+        {options.map((p) => (
+          <SelectItem key={p.id} value={p.id}>{underLinkedPageLabel(p.title, p.incoming)}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function invalidateLinkingQueries(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ["ilt-orphans"] });
+  qc.invalidateQueries({ queryKey: ["ilt-pages"] });
+}
+
 // =================== SUGGESTIONS ===================
 function SuggestionsTab() {
   const suggest = useServerFn(suggestLinks);
   const apply = useServerFn(applyLinksToPage);
+  const qc = useQueryClient();
   const [content, setContent] = useState("");
   const [pageId, setPageId] = useState("");
   const [sugs, setSugs] = useState<any[]>([]);
@@ -239,7 +311,10 @@ function SuggestionsTab() {
   });
   const applyMut = useMutation({
     mutationFn: () => apply({ data: { pageId, approved: sugs.filter((_, i) => picked.has(i)).map((s) => ({ target_url: s.target_url, anchor_text: s.anchor_text })) } }),
-    onSuccess: (r: any) => toast.success(`Applied ${r.applied} links to page`),
+    onSuccess: (r: any) => {
+      toast.success(`Applied ${r.applied} links to page`);
+      invalidateLinkingQueries(qc);
+    },
     onError: (e: any) => toast.error(e?.message ?? "Apply failed"),
   });
 
@@ -248,6 +323,16 @@ function SuggestionsTab() {
       <Card>
         <CardHeader><CardTitle className="text-base">Paste content to analyze</CardTitle></CardHeader>
         <CardContent className="space-y-3">
+          <Field label="Load from published page (optional)">
+            <PublishedUnderLinkedSelect
+              value={pageId}
+              onPick={(p) => {
+                if (!p) { setPageId(""); return; }
+                setPageId(p.id);
+                setContent(p.content);
+              }}
+            />
+          </Field>
           <Textarea rows={10} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Paste blog post / page HTML or markdown..." />
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" onClick={() => suggestMut.mutate()} disabled={!content.trim() || suggestMut.isPending}>
@@ -469,8 +554,7 @@ function newBulkItem(partial: Partial<BulkItem> = {}): BulkItem {
 function BulkTab() {
   const suggest = useServerFn(suggestLinks);
   const apply = useServerFn(applyLinksToPage);
-  const listPages = useServerFn(listLinkablePages);
-  const { data: pages } = useQuery({ queryKey: ["ilt-pages"], queryFn: () => listPages({}) });
+  const qc = useQueryClient();
 
   const [items, setItems] = useState<BulkItem[]>([newBulkItem(), newBulkItem()]);
   const [running, setRunning] = useState(false);
@@ -478,12 +562,6 @@ function BulkTab() {
 
   const update = (key: string, patch: Partial<BulkItem>) =>
     setItems((prev) => prev.map((it) => (it.key === key ? { ...it, ...patch } : it)));
-
-  const loadFromPage = (key: string, pageId: string) => {
-    const p = (pages ?? []).find((x: any) => x.id === pageId);
-    if (!p) return update(key, { pageId });
-    update(key, { pageId, label: p.title, content: p.content });
-  };
 
   const runAll = async () => {
     const active = items.filter((it) => it.content.trim().length > 0);
@@ -530,6 +608,7 @@ function BulkTab() {
     setApplying(false);
     if (failed) toast.error(`${failed} page(s) failed`);
     toast.success(`Applied ${total} links across ${eligible.length} page(s)`);
+    invalidateLinkingQueries(qc);
   };
 
   const totalSelected = items.reduce((n, it) => n + it.picked.size, 0);
@@ -575,15 +654,13 @@ function BulkTab() {
           <CardContent className="space-y-3">
             <div className="grid gap-2 sm:grid-cols-2">
               <Field label="Load from published page (optional)">
-                <Select value={it.pageId || "__none__"} onValueChange={(v) => loadFromPage(it.key, v === "__none__" ? "" : v)}>
-                  <SelectTrigger><SelectValue placeholder="Pick a page…" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">— None —</SelectItem>
-                    {(pages ?? []).map((p: any) => (
-                      <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <PublishedUnderLinkedSelect
+                  value={it.pageId}
+                  onPick={(p) => {
+                    if (!p) return update(it.key, { pageId: "" });
+                    update(it.key, { pageId: p.id, label: p.title, content: p.content });
+                  }}
+                />
               </Field>
               <Field label="Or page ID to apply to (UUID)">
                 <Input value={it.pageId} onChange={(e) => update(it.key, { pageId: e.target.value })} placeholder="UUID" />

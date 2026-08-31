@@ -145,3 +145,36 @@ export function buildOrphanReport(input: {
     total: report.length,
   };
 }
+
+function urlKey(url: string): string {
+  return normalizeInternalHref(url) ?? url;
+}
+
+/** Incoming counts keyed by canonical URL (orphans + low-link + well-linked). */
+export function incomingCountByUrl(
+  report: Pick<OrphanReport, "orphans" | "lowLinks"> & { wellLinked?: OrphanReportRow[] },
+): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const row of [...report.orphans, ...report.lowLinks, ...(report.wellLinked ?? [])]) {
+    map.set(urlKey(row.url), row.incoming);
+  }
+  return map;
+}
+
+/**
+ * Published pages that getOrphanReport classifies as orphan (0) or low-link (1–2).
+ * Sorted lowest incoming first so the neediest pages sit at the top of pickers.
+ */
+export function selectUnderLinkedPages<T extends { url: string; title: string }>(
+  pages: T[],
+  report: Pick<OrphanReport, "orphans" | "lowLinks">,
+): Array<T & { incoming: number }> {
+  const incomingByUrl = incomingCountByUrl(report);
+  return pages
+    .map((page) => {
+      const incoming = incomingByUrl.get(urlKey(page.url));
+      return incoming === undefined ? null : { ...page, incoming };
+    })
+    .filter((page): page is T & { incoming: number } => page !== null && page.incoming < 3)
+    .sort((a, b) => a.incoming - b.incoming || a.title.localeCompare(b.title));
+}

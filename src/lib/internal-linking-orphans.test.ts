@@ -4,6 +4,7 @@ import {
   canonicalPagePath,
   extractInternalHrefs,
   normalizeInternalHref,
+  selectUnderLinkedPages,
 } from "./internal-linking-orphans";
 
 describe("normalizeInternalHref", () => {
@@ -113,5 +114,29 @@ describe("buildOrphanReport", () => {
     });
     expect(report.orphans).toHaveLength(1);
     expect(report.orphans[0].outgoing).toBe(1);
+  });
+});
+
+describe("selectUnderLinkedPages", () => {
+  it("keeps orphan and low-link pages, drops well-linked, sorts by incoming then title", () => {
+    const report = {
+      orphans: [{ url: "/bahrain-chat-room", title: "Bahrain", type: "seo_page", incoming: 0, outgoing: 0 }],
+      lowLinks: [
+        { url: "/privacy-policy", title: "Privacy Policy", type: "seo_page", incoming: 1, outgoing: 0 },
+        { url: "/about-us", title: "About Us", type: "seo_page", incoming: 1, outgoing: 0 },
+        { url: "/australia-chat-room", title: "Australia Chat Room", type: "seo_page", incoming: 2, outgoing: 0 },
+      ],
+      wellLinked: [{ url: "/india-chat-room", title: "India", type: "seo_page", incoming: 12, outgoing: 4 }],
+    };
+    const pages = [
+      { id: "in", url: "/india-chat-room", title: "India" },
+      { id: "au", url: "/australia-chat-room", title: "Australia Chat Room" },
+      { id: "bh", url: "/p/bahrain-chat-room", title: "Bahrain" },
+      { id: "ab", url: "/about-us", title: "About Us" },
+      { id: "pr", url: "/privacy-policy", title: "Privacy Policy" },
+      { id: "xx", url: "/not-a-target", title: "Untracked" },
+    ];
+    expect(selectUnderLinkedPages(pages, report).map((p) => p.id)).toEqual(["bh", "ab", "pr", "au"]);
+    expect(selectUnderLinkedPages(pages, report).map((p) => p.incoming)).toEqual([0, 1, 1, 2]);
   });
 });
