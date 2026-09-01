@@ -55,6 +55,13 @@ import {
   recordAttempt,
   type BotEventKind,
 } from "./bot-events";
+import {
+  GAME_BOT_IDS,
+  GAMES_CHANNEL_ID,
+  LOBBY_AUTO_REPLY_BOT_IDS,
+  LOBBY_BOT_IDS,
+  isGameBotId,
+} from "./chat-bot-channels";
 import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 import {
   CHAT_SYNC_CHANNEL,
@@ -212,16 +219,16 @@ const SEED_ROOMS: Room[] = [
   {
     id: "lobby",
     name: "Lobby",
-    topic: "Main hangout. Type !help for games.",
-    members: ["me", ...SEED_BOTS.map(b => b.id)],
-    roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod", "bot-spam": "mod" },
+    topic: "Main hangout — chat, meet people, and hang out.",
+    members: ["me", ...LOBBY_BOT_IDS],
+    roles: { me: "member", "bot-spam": "mod" },
     isPublic: true,
   },
   {
     id: "games",
     name: "Games",
     topic: "🎲 Game room — try !ludo for a 1v1 race, !trivia, !hangman and more.",
-    members: ["me", ...SEED_BOTS.map(b => b.id)],
+    members: ["me", ...GAME_BOT_IDS],
     roles: { me: "member", "bot-gamebot": "owner", "bot-ryze": "mod" },
     isPublic: true,
   },
@@ -263,9 +270,7 @@ function seed(name = "user0000"): State {
   SEED_ROOMS.forEach(r => (rooms[r.id] = r));
   const messages: Record<string, Message[]> = {};
   rooms.lobby && (messages.lobby = [
-    { id: "seed-welcome", channelId: "lobby", authorId: "bot-gamebot", text: `🎉 Welcome, @${name}! Glad to have you here. Type !help to see commands, customize your profile from the account page, and jump into a game anytime.`, ts: SEED_TIME - 60000 },
-    { id: "seed-nova", channelId: "lobby", authorId: "bot-nova", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
-    { id: "seed-ryze", channelId: "lobby", authorId: "bot-ryze", text: "anyone up for trivia?", ts: SEED_TIME - 20000 },
+    { id: "seed-welcome-echo", channelId: "lobby", authorId: "bot-echo", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
   ]);
   rooms.games && (messages.games = [
     { id: "seed-games-intro", channelId: "games", authorId: "bot-gamebot", text: `🎮 **Welcome to the Games room!**\nThis is the place to play with everyone online. Try:\n• **!ludo** — start a 1v1 Ludo race (opponent types **!join**, roll with **!lr**)\n• **!trivia**, **!hangman**, **!roll**, **!fish**, **!dig**\nType **!help** for the full list.`, ts: SEED_TIME - 50000 },
@@ -287,16 +292,17 @@ function seed(name = "user0000"): State {
 
 function ensureWelcome(state: State, name: string): State {
   const lobbyMsgs = state.messages?.lobby || [];
-  const hasWelcome = lobbyMsgs.some(m => m.id === "seed-welcome");
+  const hasLobbyWelcome = lobbyMsgs.some(m =>
+    m.id === "seed-welcome-echo" || m.id === "seed-welcome" || m.id === "seed-nova",
+  );
   const dmMsgs = state.messages?.["dm:bot-gamebot"] || [];
   const hasDmWelcome = dmMsgs.some(m => m.id === "seed-dm-welcome");
-  if (hasWelcome && hasDmWelcome) return state;
-  const welcomeLobby: Message[] = hasWelcome ? [] : [
-    { id: "seed-welcome", channelId: "lobby", authorId: "bot-gamebot", text: `🎉 Welcome, @${name}! Glad to have you here. Type !help to see commands, customize your profile from the account page, and jump into a game anytime.`, ts: SEED_TIME - 60000 },
-    { id: "seed-nova", channelId: "lobby", authorId: "bot-nova", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
+  if (hasLobbyWelcome && hasDmWelcome) return state;
+  const welcomeLobby: Message[] = hasLobbyWelcome ? [] : [
+    { id: "seed-welcome-echo", channelId: "lobby", authorId: "bot-echo", text: `hey @${name} 👋 welcome in!`, ts: SEED_TIME - 40000 },
   ];
   const welcomeDm: Message[] = hasDmWelcome ? [] : [
-    { id: "seed-dm-welcome", channelId: "dm:bot-gamebot", authorId: "bot-gamebot", text: `Hi @${name}! 👋 I'm GameBot. Here's a quick start:\n• Type !help to see all commands\n• Try !trivia, !hangman, or !wordchain to play games\n• Earn XP, coins, and badges as you chat\n• Add friends from any user's profile\nHave fun! 🎮`, ts: SEED_TIME - 10000 },
+    { id: "seed-dm-welcome", channelId: "dm:bot-gamebot", authorId: "bot-gamebot", text: `Hi @${name}! 👋 I'm GameBot. Here's a quick start:\n• Head to **#games** for commands like !trivia, !hangman, and !ludo\n• Earn XP, coins, and badges as you chat\n• Add friends from any user's profile\nHave fun! 🎮`, ts: SEED_TIME - 10000 },
   ];
   const dmOrder = state.dmOrder?.includes("bot-gamebot") ? state.dmOrder : ["bot-gamebot", ...(state.dmOrder || [])];
   return {
@@ -304,7 +310,7 @@ function ensureWelcome(state: State, name: string): State {
     dmOrder,
     messages: {
       ...state.messages,
-      lobby: [...welcomeLobby, ...lobbyMsgs],
+      lobby: [...welcomeLobby, ...lobbyMsgs.filter(m => m.id !== "seed-welcome" && m.id !== "seed-nova" && m.id !== "seed-ryze")],
       "dm:bot-gamebot": [...welcomeDm, ...dmMsgs],
     },
   };
@@ -333,12 +339,22 @@ function ensureBots(state: State): State {
   // Make sure every seeded room exists (handles older cached state without "games")
   SEED_ROOMS.forEach(seedRoom => {
     if (!rooms[seedRoom.id]) {
-      rooms[seedRoom.id] = seedRoom;
+      rooms[seedRoom.id] = { ...seedRoom };
       if (!roomOrder.includes(seedRoom.id)) roomOrder.push(seedRoom.id);
+      return;
     }
     const r = rooms[seedRoom.id];
+    if (seedRoom.id === "lobby" || seedRoom.id === "games") {
+      rooms[seedRoom.id] = {
+        ...r,
+        topic: seedRoom.topic,
+        members: [...seedRoom.members],
+        roles: { ...seedRoom.roles, ...r.roles, me: r.roles?.me ?? seedRoom.roles.me },
+      };
+      return;
+    }
     const members = Array.isArray(r.members) ? r.members : [];
-    const missingBots = SEED_BOTS.map(b => b.id).filter(id => !members.includes(id));
+    const missingBots = seedRoom.members.filter(id => !members.includes(id));
     if (missingBots.length || !Array.isArray(r.members)) {
       rooms[seedRoom.id] = { ...r, members: [...members, ...missingBots] };
     }
@@ -1330,7 +1346,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         // Global scheduled event gate for !fish, !dig, !wine.
         // Replaces the old per-user cooldown with a community event window.
         const cdMatch = trimmed.match(/^!(fish|dig|wine)\b/i);
-        if (cdMatch) {
+        if (cdMatch && channelId === GAMES_CHANNEL_ID) {
           const cmdName = cdMatch[1].toLowerCase() as BotEventKind;
           const cfg = getBotEventsConfig()[cmdName];
           const evt = computeEventState(cmdName, cfg, now);
@@ -1435,7 +1451,16 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       } else {
         const room = next.rooms[channelId];
         if (room) {
-          const candidates = room.id === "games" ? [] : room.members.filter(id => next.users[id]?.isBot && id !== "bot-gamebot");
+          let candidates: string[] = [];
+          if (room.id === GAMES_CHANNEL_ID) {
+            candidates = [];
+          } else if (room.id === "lobby") {
+            candidates = room.members.filter((id) => LOBBY_AUTO_REPLY_BOT_IDS.has(id));
+          } else {
+            candidates = room.members.filter(
+              (id) => next.users[id]?.isBot && !isGameBotId(id),
+            );
+          }
           if (candidates.length && Math.random() > 0.4) {
             const author = candidates[Math.floor(Math.random() * candidates.length)];
             const reply = pickBotReply(trimmed);

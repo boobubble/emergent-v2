@@ -1,3 +1,7 @@
+import { BOT_EVENTS_TARGET_CHANNEL } from "./chat-bot-channels";
+
+export { BOT_EVENTS_TARGET_CHANNEL };
+
 // Global scheduled event system for Fish / Dig / Wine bots.
 // Replaces per-user cooldowns with community-wide event windows.
 // This module is intentionally pure (no React) so both the chat store

@@ -43,7 +43,7 @@ function BotEventsPage() {
     <div className="space-y-4">
       <AdminPageHeader
         title="Bot Events"
-        description="Schedule Fish, Dig and Wine as community-wide events. Everyone can join during each open window, once per round."
+        description="Schedule Fish, Dig and Wine as community-wide events in the #games channel. Everyone can join during each open window, once per round."
         actions={<Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save changes"}</Button>}
       />
 

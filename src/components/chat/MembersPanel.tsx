@@ -226,6 +226,9 @@ export function MembersPanel({
   const remoteIds = Object.keys(profiles).filter(id => !authUser || id !== authUser.id);
   const allIds = Array.from(new Set([...localIds, ...remoteIds]));
 
+  // Bots are room-scoped via members (lobby = social/moderation; games = game bots).
+  const roomMemberSet = useMemo(() => new Set(localIds), [localIds]);
+
   const roleOrder: Record<Role, number> = { owner: 0, admin: 1, mod: 2, member: 3 };
 
   const ONLINE_WINDOW_MS = 5 * 60 * 1000; // treat as offline if not seen in 5 min
@@ -268,13 +271,14 @@ export function MembersPanel({
 
   // Smart user/bot split
   const isBot = (id: string) => !!usersById[id]?.isBot;
+  const isRoomBot = (id: string) => isBot(id) && roomMemberSet.has(id);
   const onlineUsers = useMemo(() => online.filter(id => !isBot(id)), [online]);
-  const onlineBots = useMemo(() => online.filter(id => isBot(id)), [online]);
+  const onlineBots = useMemo(() => online.filter(id => isRoomBot(id)), [online, roomMemberSet]);
   const offlineUsers = useMemo(() => offline.filter(id => !isBot(id)), [offline]);
   const offlineSortedUsers = useMemo(() => offlineSorted.filter(id => !isBot(id)), [offlineSorted]);
   const hiddenOfflineUsers = offlineSortedUsers.length - offlineUsers.length;
   const totalUsersCount = allIds.filter(id => !isBot(id) && !usersById[id]?.isGuest).length;
-  const totalBotsCount = allIds.filter(id => isBot(id)).length;
+  const totalBotsCount = allIds.filter(id => isRoomBot(id)).length;
 
   const effectiveMode: "split" | "merged" =
     botMode === "auto" ? (onlineUsers.length >= 8 ? "split" : "merged") : botMode;

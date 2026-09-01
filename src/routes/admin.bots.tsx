@@ -77,7 +77,7 @@ const defaultBot = (
     name: meta?.defaultName ?? id,
     interval_sec: interval,
     cooldown_sec: cooldown,
-    rooms: "lobby",
+    rooms: id === "ai" ? "lobby" : "games",
     messages: (meta?.defaultMessages ?? []).join("\n"),
   };
 };
@@ -135,7 +135,10 @@ function BotsPage() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Rooms (comma-separated channel IDs)</Label>
-                <Input value={cfg.rooms} onChange={(e) => updateBot(b.id, { rooms: e.target.value })} placeholder="lobby, games" />
+                <Input value={cfg.rooms} onChange={(e) => updateBot(b.id, { rooms: e.target.value })} placeholder={b.id === "ai" ? "lobby" : "games"} />
+                <p className="text-[11px] text-muted-foreground">
+                  Game bots default to <code className="text-xs">games</code>; general AI bot defaults to <code className="text-xs">lobby</code>.
+                </p>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Default messages (one per line)</Label>

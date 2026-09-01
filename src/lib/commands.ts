@@ -1,4 +1,5 @@
 import type { GameState, User } from "./chat-types";
+import { GAMES_CHANNEL_ID } from "./chat-bot-channels";
 import { TRIVIA_QUESTIONS } from "./trivia-questions";
 
 interface CmdCtx {
@@ -61,13 +62,13 @@ function roll(spec: string): string {
 }
 
 
-const GAMES_ONLY_CMDS = new Set([
+export const GAMES_ONLY_CMDS = new Set([
   "roll", "flip", "slots",
+  "fish", "dig", "wine",
   "trivia", "a",
   "hangman", "g",
   "ludo", "join", "lr", "stopludo", "endludo",
 ]);
-const GAMES_CHANNEL_ID = "games";
 
 export function runCommand(input: string, ctx: CmdCtx): CmdResult {
   const [rawCmd, ...rest] = input.slice(1).split(/\s+/);
