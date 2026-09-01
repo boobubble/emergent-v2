@@ -47,8 +47,21 @@ function countryFlag(cc?: string | null): string | null {
 export const Route = createFileRoute("/poetry/$slug")({
   loader: async ({ params }) => {
     if (!isNavigableSlug(params.slug)) throw notFound();
-    const { origin, siteName } = await loadSeoSiteContext();
-    const poem = await getPublishedPoemBySlug(params.slug);
+    // SSR uses service-role lookup. Client navigations cannot import
+    // client.server (stub throws `supabaseAdmin is server-only`), so they RPC
+    // through getPoemBySlug instead.
+    let origin = "";
+    let siteName = "Poetry Hub";
+    try {
+      const ctx = await loadSeoSiteContext();
+      origin = ctx.origin;
+      siteName = ctx.siteName;
+    } catch {
+      origin = typeof window !== "undefined" ? window.location.origin : "";
+    }
+    const poem = typeof window === "undefined"
+      ? await getPublishedPoemBySlug(params.slug)
+      : await getPoemBySlug({ data: { slug: params.slug } });
     if (!poem) throw notFound();
     const p = poem as Record<string, unknown> & typeof poem;
     const slug = params.slug;

@@ -12,10 +12,11 @@ describe("poetry detail SSR boundary", () => {
     expect(src).toContain("getPublishedPoemBySlug");
     expect(src).toContain("if (!poem) throw notFound()");
     expect(src).toContain("loadSeoSiteContext");
+    expect(src).toContain("typeof window === \"undefined\"");
+    expect(src).toContain("getPoemBySlug({ data: { slug: params.slug } })");
     expect(src).toContain("PoemComments");
     expect(src).toContain("deletePublishedPoem");
     expect(src).not.toContain("Comments coming soon");
-    expect(src).not.toMatch(/getPoemBySlug\(\{\s*data:\s*\{\s*slug/);
     expect(src).not.toContain('from "@/integrations/supabase/client"');
     expect(src).not.toContain("@/integrations/supabase/client\"");
     expect(src).not.toContain("useMyRoles");
