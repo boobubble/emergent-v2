@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Send, Trash2 } from "lucide-react";
+import { Loader2, Send, Smile, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { EmojiPicker } from "@/components/chat/EmojiPicker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
@@ -148,15 +150,31 @@ export function PoemComments({ poemId, canModerate }: Props) {
             />
             <div className="mt-2 flex items-center justify-between gap-2">
               <span className="text-[11px] text-muted-foreground">{remaining} left</span>
-              <button
-                type="button"
-                onClick={submit}
-                disabled={!canPost}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
-              >
-                {postMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                Post
-              </button>
+              <div className="flex items-center gap-1.5">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-accent/30 hover:text-foreground"
+                      aria-label="Add emoji"
+                    >
+                      <Smile className="h-4 w-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-auto p-0">
+                    <EmojiPicker onPick={(e) => setText((t) => (t + e).slice(0, POEM_COMMENT_MAX))} />
+                  </PopoverContent>
+                </Popover>
+                <button
+                  type="button"
+                  onClick={submit}
+                  disabled={!canPost}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                >
+                  {postMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                  Post
+                </button>
+              </div>
             </div>
           </div>
         ) : (
