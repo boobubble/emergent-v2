@@ -197,3 +197,28 @@ export function poemPreview(body: string, max = 180): string {
   if (clean.length <= max) return clean;
   return clean.slice(0, max).replace(/[,.\s]+\S*$/, "") + "…";
 }
+
+export const POEM_COMMENT_MAX = 2000;
+
+export interface MehfilPoemComment {
+  id: string;
+  poem_id: string;
+  author_id: string;
+  parent_comment_id: string | null;
+  text: string;
+  created_at: string;
+}
+
+export interface MehfilPoemCommentEnriched extends MehfilPoemComment {
+  author: MehfilAuthor | null;
+}
+
+export function validatePoemCommentText(text: unknown): string {
+  if (typeof text !== "string") throw new Error("Comment is required");
+  const trimmed = text.trim();
+  if (!trimmed) throw new Error("Comment cannot be empty");
+  if (trimmed.length > POEM_COMMENT_MAX) {
+    throw new Error(`Comment must be ${POEM_COMMENT_MAX} characters or less`);
+  }
+  return trimmed;
+}

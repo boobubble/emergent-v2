@@ -2,9 +2,11 @@
  * Poetry Hub realtime hooks — thin wrappers over Supabase Realtime for
  * mehfil_poems row changes (upvote/read/view counters) and battle
  * participant vote counts.
+ *
+ * Browser client is loaded only inside useEffect (never during SSR).
  */
 import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 
 /**
  * Subscribe to a single poem row and invoke `onChange` with the fresh row
@@ -16,18 +18,34 @@ export function useMehfilPoemRealtime(
 ) {
   useEffect(() => {
     if (!poemId) return;
-    const channel = supabase
-      .channel(`mehfil-poem-${poemId}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "mehfil_poems", filter: `id=eq.${poemId}` },
-        (payload) => {
-          if (payload.new) onChange(payload.new as Record<string, unknown>);
-        },
-      )
-      .subscribe();
+    let cancelled = false;
+    let channel: { unsubscribe?: () => Promise<unknown> } | null = null;
+    let sb: Awaited<ReturnType<typeof loadBrowserSupabase>> | null = null;
+
+    void (async () => {
+      const client = await loadBrowserSupabase();
+      if (cancelled) return;
+      sb = client;
+      const next = client
+        .channel(`mehfil-poem-${poemId}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "mehfil_poems", filter: `id=eq.${poemId}` },
+          (payload) => {
+            if (payload.new) onChange(payload.new as Record<string, unknown>);
+          },
+        )
+        .subscribe();
+      if (cancelled) {
+        void client.removeChannel(next);
+        return;
+      }
+      channel = next;
+    })();
+
     return () => {
-      void supabase.removeChannel(channel);
+      cancelled = true;
+      if (sb && channel) void sb.removeChannel(channel as never);
     };
   }, [poemId, onChange]);
 }
@@ -43,21 +61,37 @@ export function useBattleRankingRealtime(
 ) {
   useEffect(() => {
     if (!competitionId) return;
-    const channel = supabase
-      .channel(`poetry-battle-${competitionId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "competition_participants",
-          filter: `competition_id=eq.${competitionId}`,
-        },
-        () => onBump(),
-      )
-      .subscribe();
+    let cancelled = false;
+    let channel: { unsubscribe?: () => Promise<unknown> } | null = null;
+    let sb: Awaited<ReturnType<typeof loadBrowserSupabase>> | null = null;
+
+    void (async () => {
+      const client = await loadBrowserSupabase();
+      if (cancelled) return;
+      sb = client;
+      const next = client
+        .channel(`poetry-battle-${competitionId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "competition_participants",
+            filter: `competition_id=eq.${competitionId}`,
+          },
+          () => onBump(),
+        )
+        .subscribe();
+      if (cancelled) {
+        void client.removeChannel(next);
+        return;
+      }
+      channel = next;
+    })();
+
     return () => {
-      void supabase.removeChannel(channel);
+      cancelled = true;
+      if (sb && channel) void sb.removeChannel(channel as never);
     };
   }, [competitionId, onBump]);
 }

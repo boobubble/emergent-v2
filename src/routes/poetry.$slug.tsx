@@ -1,18 +1,21 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { toast } from "sonner";
 import {
   Bookmark, Heart, Eye, MessageCircle, Share2, Swords, Copy, Check,
-  ChevronLeft, ChevronRight, Minus, Plus, Flame, UserPlus, Clock,
+  ChevronLeft, ChevronRight, Minus, Plus, Flame, UserPlus, Clock, Trash2,
 } from "lucide-react";
 import {
   getPoemBySlug, recordPoemRead, togglePoemBookmark, getMehfilRelated, getPoemNeighbors,
+  getPoetryStaffFlags, deletePublishedPoem,
 } from "@/lib/mehfil.functions";
+import { getPublishedPoemBySlug } from "@/lib/mehfil.public";
 import { MehfilShell } from "@/components/mehfil/MehfilShell";
 import { WriterRankBadge } from "@/components/mehfil/WriterRankBadge";
 import { PoemCard } from "@/components/mehfil/PoemCard";
+import { PoemComments } from "@/components/mehfil/PoemComments";
 import { FollowWriterButton } from "@/components/mehfil/FollowWriterButton";
 import { ReportButton } from "@/components/moderation/ReportButton";
 import { MEHFIL_REACTIONS, poemPreview } from "@/lib/mehfil-types";
@@ -20,7 +23,7 @@ import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { gamify, GAM_EVENTS } from "@/lib/gamification-emit";
 import { useMehfilPoemRealtime } from "@/lib/mehfil-realtime";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { isNavigableSlug } from "@/lib/route-slug";
 import {
   loadDynamicRouteSeo,
@@ -45,7 +48,7 @@ export const Route = createFileRoute("/poetry/$slug")({
   loader: async ({ params }) => {
     if (!isNavigableSlug(params.slug)) throw notFound();
     const { origin, siteName } = await loadSeoSiteContext();
-    const poem = await getPoemBySlug({ data: { slug: params.slug } });
+    const poem = await getPublishedPoemBySlug(params.slug);
     if (!poem) throw notFound();
     const p = poem as Record<string, unknown> & typeof poem;
     const slug = params.slug;
@@ -120,11 +123,14 @@ function PoemDetailPage() {
   const { poem: initial } = Route.useLoaderData();
   const { user } = useAuth();
   const gate = useAuthGate();
+  const navigate = useNavigate();
 
   const fetchPoem = useServerFn(getPoemBySlug);
   const recordRead = useServerFn(recordPoemRead);
   const toggleBookmark = useServerFn(togglePoemBookmark);
   const fetchNeighbors = useServerFn(getPoemNeighbors);
+  const fetchStaffFlags = useServerFn(getPoetryStaffFlags);
+  const removePoem = useServerFn(deletePublishedPoem);
 
   const q = useQuery({
     queryKey: ["mehfil", "poem", slug],
@@ -226,26 +232,43 @@ function PoemDetailPage() {
   useEffect(() => {
     if (!poem?.id) return;
     let cancelled = false;
-    supabase.from("reactions").select("id,user_id,type")
-      .eq("target_type", "mehfil_poem").eq("target_id", poem.id)
-      .then(({ data }) => { if (!cancelled) setReactions((data ?? []) as ReactionRow[]); });
-    const ch = supabase.channel(`mehfil-reactions-${poem.id}`).on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "reactions", filter: `target_id=eq.${poem.id}` },
-      (payload) => {
-        if (payload.eventType === "INSERT") {
-          const row = payload.new as ReactionRow & { target_type: string };
-          if (row.target_type === "mehfil_poem") setReactions((prev) => (prev.some((r) => r.id === row.id) ? prev : [...prev, row]));
-        } else if (payload.eventType === "DELETE") {
-          const row = payload.old as ReactionRow;
-          setReactions((prev) => prev.filter((r) => r.id !== row.id));
-        } else if (payload.eventType === "UPDATE") {
-          const row = payload.new as ReactionRow;
-          setReactions((prev) => prev.map((r) => (r.id === row.id ? row : r)));
-        }
-      },
-    ).subscribe();
-    return () => { cancelled = true; void supabase.removeChannel(ch); };
+    let channel: { unsubscribe?: () => Promise<unknown> } | null = null;
+    let sb: Awaited<ReturnType<typeof loadBrowserSupabase>> | null = null;
+    const poemId = poem.id;
+    void (async () => {
+      const client = await loadBrowserSupabase();
+      if (cancelled) return;
+      sb = client;
+      const { data } = await client.from("reactions").select("id,user_id,type")
+        .eq("target_type", "mehfil_poem").eq("target_id", poemId);
+      if (!cancelled) setReactions((data ?? []) as ReactionRow[]);
+      if (cancelled) return;
+      const next = client.channel(`mehfil-reactions-${poemId}`).on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "reactions", filter: `target_id=eq.${poemId}` },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const row = payload.new as ReactionRow & { target_type: string };
+            if (row.target_type === "mehfil_poem") setReactions((prev) => (prev.some((r) => r.id === row.id) ? prev : [...prev, row]));
+          } else if (payload.eventType === "DELETE") {
+            const row = payload.old as ReactionRow;
+            setReactions((prev) => prev.filter((r) => r.id !== row.id));
+          } else if (payload.eventType === "UPDATE") {
+            const row = payload.new as ReactionRow;
+            setReactions((prev) => prev.map((r) => (r.id === row.id ? row : r)));
+          }
+        },
+      ).subscribe();
+      if (cancelled) {
+        void client.removeChannel(next);
+        return;
+      }
+      channel = next;
+    })();
+    return () => {
+      cancelled = true;
+      if (sb && channel) void sb.removeChannel(channel as never);
+    };
   }, [poem?.id]);
 
   const myReaction = user ? reactions.find((r) => r.user_id === user.id) ?? null : null;
@@ -256,16 +279,17 @@ function PoemDetailPage() {
     if (!user || reactionBusy) return;
     setReactionBusy(true);
     try {
+      const sb = await loadBrowserSupabase();
       if (myReaction?.type === rt) {
         setReactions((prev) => prev.filter((r) => r.id !== myReaction.id));
-        await supabase.from("reactions").delete().eq("id", myReaction.id);
+        await sb.from("reactions").delete().eq("id", myReaction.id);
         return;
       }
       if (myReaction) {
         setReactions((prev) => prev.filter((r) => r.id !== myReaction.id));
-        await supabase.from("reactions").delete().eq("id", myReaction.id);
+        await sb.from("reactions").delete().eq("id", myReaction.id);
       }
-      const { data, error } = await supabase.from("reactions")
+      const { data, error } = await sb.from("reactions")
         .insert({ user_id: user.id, target_type: "mehfil_poem", target_id: poem.id, type: rt as never })
         .select("id,user_id,type").single();
       if (error) throw error;
@@ -307,6 +331,29 @@ function PoemDetailPage() {
   const isOwnPoem = user?.id === poem.author_id;
   const prev = neighborsQ.data?.prev ?? null;
   const next = neighborsQ.data?.next ?? null;
+
+  const staffQ = useQuery({
+    queryKey: ["mehfil", "staff-flags", user?.id],
+    queryFn: () => fetchStaffFlags(),
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+  });
+  const canModerate = !!(staffQ.data?.isAdmin || staffQ.data?.isModerator);
+  const canDeletePoem = !!staffQ.data?.isAdmin;
+
+  const deletePoemMut = useMutation({
+    mutationFn: () => removePoem({ data: { poemId: poem.id } }),
+    onSuccess: () => {
+      toast.success("Poem deleted");
+      void navigate({ to: "/poetry" });
+    },
+    onError: (e: Error) => toast.error(e.message || "Couldn't delete poem"),
+  });
+
+  const confirmDeletePoem = () => {
+    if (!window.confirm("Delete this poem? This cannot be undone.")) return;
+    deletePoemMut.mutate();
+  };
 
   return (
     <MehfilShell showBack>
@@ -476,6 +523,15 @@ function PoemDetailPage() {
             <button onClick={share} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted">
               <Share2 className="h-3.5 w-3.5" /> Share
             </button>
+            {canDeletePoem && (
+              <button
+                onClick={confirmDeletePoem}
+                disabled={deletePoemMut.isPending}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Delete
+              </button>
+            )}
             <ReportButton targetType="post" targetId={poem.id} variant="outline" />
           </div>
         </div>
@@ -525,9 +581,7 @@ function PoemDetailPage() {
           </nav>
         )}
 
-        <div id="comments" className="mt-10 rounded-2xl border border-dashed border-border/60 p-6 text-center text-xs text-muted-foreground">
-          Comments coming soon — the shared platform comments module lands here in Phase 2.
-        </div>
+        <PoemComments poemId={poem.id} canModerate={canModerate} />
 
         {relatedQ.data?.moreFromAuthor && relatedQ.data.moreFromAuthor.length > 0 && (
           <section className="mt-10">
@@ -590,6 +644,15 @@ function PoemDetailPage() {
           <a href="#comments" className="flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold text-muted-foreground">
             <MessageCircle className="h-5 w-5" /><span>Comment</span>
           </a>
+          {canDeletePoem && (
+            <button
+              onClick={confirmDeletePoem}
+              disabled={deletePoemMut.isPending}
+              className="flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold text-destructive"
+            >
+              <Trash2 className="h-5 w-5" /><span>Delete</span>
+            </button>
+          )}
           <div className="flex flex-col items-center gap-0.5 px-1 py-1 text-[10px] font-semibold text-muted-foreground">
             <ReportButton targetType="post" targetId={poem.id} variant="ghost" size="icon" />
             <span>Report</span>

@@ -15,13 +15,15 @@ import { createPublicAnonClient } from "@/integrations/supabase/public-anon-clie
 import type {
   MehfilCategory,
   MehfilPoem,
+  MehfilPoemComment,
+  MehfilPoemCommentEnriched,
   MehfilPoemEnriched,
   MehfilWriterStats,
   MehfilDiscoverySection,
   PoemStatus,
   WriterRank,
 } from "./mehfil-types";
-import { slugifyTitle } from "./mehfil-types";
+import { slugifyTitle, validatePoemCommentText } from "./mehfil-types";
 
 // ---------------------------------------------------------------------------
 // Server publishable client (public reads only)
@@ -592,4 +594,141 @@ export const getPoemNeighbors = createServerFn({ method: "GET" })
       findOne("next", true).then((r) => r ?? findOne("next", false)),
     ]);
     return { prev, next };
+  });
+
+// ---------------------------------------------------------------------------
+// Poem comments (isolated from feed `comments`, which FKs to posts)
+// ---------------------------------------------------------------------------
+
+function poemCommentsTable(sb: { from: (table: string) => any }) {
+  return sb.from("mehfil_poem_comments");
+}
+
+async function attachCommentAuthors(
+  sb: { from: (table: string) => any },
+  rows: MehfilPoemComment[],
+): Promise<MehfilPoemCommentEnriched[]> {
+  if (rows.length === 0) return [];
+  const ids = Array.from(new Set(rows.map((r) => r.author_id)));
+  const { data: profiles } = await sb
+    .from("profiles")
+    .select("id, username, display_name, avatar_url, country_code")
+    .in("id", ids);
+  const pmap = new Map<string, ProfileRow>();
+  ((profiles ?? []) as ProfileRow[]).forEach((p) => pmap.set(p.id, p));
+  return rows.map((r): MehfilPoemCommentEnriched => {
+    const prof = pmap.get(r.author_id);
+    return {
+      ...r,
+      author: prof
+        ? {
+            id: prof.id,
+            username: prof.username ?? "anonymous",
+            display_name: prof.display_name,
+            avatar_url: prof.avatar_url,
+            country_code: prof.country_code,
+          }
+        : null,
+    };
+  });
+}
+
+export const listPoemComments = createServerFn({ method: "GET" })
+  .inputValidator((input: { poemId: string }) => input)
+  .handler(async ({ data }) => {
+    if (!data?.poemId) return [] as MehfilPoemCommentEnriched[];
+    const sb = await publicClient();
+    const { data: rows, error } = await poemCommentsTable(sb)
+      .select("id, poem_id, author_id, parent_comment_id, text, created_at")
+      .eq("poem_id", data.poemId)
+      .order("created_at", { ascending: true })
+      .limit(200);
+    if (error) throw error;
+    return attachCommentAuthors(sb, (rows ?? []) as unknown as MehfilPoemComment[]);
+  });
+
+export const postPoemComment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { poemId: string; text: string; parentCommentId?: string | null }) => {
+    if (!input?.poemId) throw new Error("poemId is required");
+    return {
+      poemId: input.poemId,
+      text: validatePoemCommentText(input.text),
+      parentCommentId: input.parentCommentId ?? null,
+    };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: inserted, error } = await poemCommentsTable(supabase)
+      .insert({
+        poem_id: data.poemId,
+        author_id: userId,
+        parent_comment_id: data.parentCommentId,
+        text: data.text,
+      })
+      .select("id, poem_id, author_id, parent_comment_id, text, created_at")
+      .single();
+    if (error) throw error;
+    const [enriched] = await attachCommentAuthors(supabase, [inserted as unknown as MehfilPoemComment]);
+    return enriched;
+  });
+
+export const deletePoemComment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { commentId: string }) => {
+    if (!input?.commentId) throw new Error("commentId is required");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const [{ data: isAdmin }, { data: isModerator }] = await Promise.all([
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+      supabase.rpc("has_role", { _user_id: userId, _role: "moderator" }),
+    ]);
+    let q = poemCommentsTable(supabase).delete().eq("id", data.commentId);
+    if (!isAdmin && !isModerator) {
+      q = q.eq("author_id", userId);
+    }
+    const { data: deleted, error } = await q.select("id");
+    if (error) throw error;
+    if (!deleted?.length) throw new Error("Not allowed or comment not found");
+    return { ok: true };
+  });
+
+/** Staff flags for poetry UI (do not import useMyRoles — it pulls the browser supabase proxy). */
+export const getPoetryStaffFlags = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const [{ data: isAdmin }, { data: isModerator }] = await Promise.all([
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+      supabase.rpc("has_role", { _user_id: userId, _role: "moderator" }),
+    ]);
+    return { isAdmin: !!isAdmin, isModerator: !!isModerator };
+  });
+
+/**
+ * Delete a published poem. Authors can delete their own row (RLS);
+ * admins and moderators can delete any poem.
+ */
+export const deletePublishedPoem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { poemId: string }) => {
+    if (!input?.poemId) throw new Error("poemId is required");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const [{ data: isAdmin }, { data: isModerator }] = await Promise.all([
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+      supabase.rpc("has_role", { _user_id: userId, _role: "moderator" }),
+    ]);
+    let q = supabase.from("mehfil_poems").delete().eq("id", data.poemId);
+    if (!isAdmin && !isModerator) {
+      q = q.eq("author_id", userId);
+    }
+    const { data: deleted, error } = await q.select("id");
+    if (error) throw error;
+    if (!deleted?.length) throw new Error("Not allowed or poem not found");
+    return { ok: true };
   });
