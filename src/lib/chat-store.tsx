@@ -60,7 +60,12 @@ import {
   GAMES_CHANNEL_ID,
   LOBBY_AUTO_REPLY_BOT_IDS,
   LOBBY_BOT_IDS,
+  LOBBY_CHANNEL_ID,
+  canInsertGameBotMessage,
+  commandReplyAuthor,
   isGameBotId,
+  sanitizeRoomMembers,
+  shouldHideGameBotMessage,
 } from "./chat-bot-channels";
 import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 import {
@@ -84,6 +89,31 @@ export { dmChannelFor } from "./dm-utils";
 
 /** UUID channel ids registered via registerCommunityRoom — use Supabase messages. */
 const dbBackedRemoteChannels = new Set<string>();
+
+function appendChannelMessage(
+  messages: Record<string, Message[]>,
+  channelId: string,
+  msg: Message,
+): Record<string, Message[]> {
+  if (!canInsertGameBotMessage(channelId, msg.authorId)) return messages;
+  return { ...messages, [channelId]: [...(messages[channelId] || []), msg] };
+}
+
+function appendChannelMessages(
+  messages: Record<string, Message[]>,
+  channelId: string,
+  msgs: Message[],
+): Record<string, Message[]> {
+  let next = messages;
+  for (const msg of msgs) {
+    next = appendChannelMessage(next, channelId, msg);
+  }
+  return next;
+}
+
+function filterVisibleMessages(channelId: string, msgs: Message[]): Message[] {
+  return msgs.filter((m) => !shouldHideGameBotMessage(channelId, m.authorId));
+}
 
 function isRemoteChannel(channelId: string, meId: string | null): boolean {
   if (channelId === "lobby" || channelId === "games") return true;
@@ -357,6 +387,16 @@ function ensureBots(state: State): State {
     const missingBots = seedRoom.members.filter(id => !members.includes(id));
     if (missingBots.length || !Array.isArray(r.members)) {
       rooms[seedRoom.id] = { ...r, members: [...members, ...missingBots] };
+    }
+  });
+  // Strip game bots from every room except #games (handles cached/stale membership).
+  Object.keys(rooms).forEach((id) => {
+    if (id === GAMES_CHANNEL_ID) return;
+    const r = rooms[id];
+    if (!r || !Array.isArray(r.members)) return;
+    const cleaned = sanitizeRoomMembers(id, r.members);
+    if (cleaned.length !== r.members.length) {
+      rooms[id] = { ...r, members: cleaned };
     }
   });
   return { ...state, users, rooms, roomOrder };
@@ -921,12 +961,12 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
               const sys: Message = {
                 id: uid(),
                 channelId: ch,
-                authorId: "bot-gamebot",
+                authorId: ch === GAMES_CHANNEL_ID ? "bot-gamebot" : "bot-spam",
                 text: `⚠️ Could not load messages: ${error.message}`,
                 ts: Date.now(),
                 kind: "system",
               };
-              return { ...s, messages: { ...s.messages, [ch]: [...(s.messages[ch] || []), sys] } };
+              return { ...s, messages: appendChannelMessage(s.messages, ch, sys) };
             });
           }
           continue;
@@ -1389,13 +1429,13 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
             });
           }
           return {
-            id, channelId, authorId: r.from || "bot-gamebot",
+            id, channelId, authorId: commandReplyAuthor(r.from, channelId),
             text: r.text, ts: Date.now(), kind: "game",
           };
         });
         next = {
           ...next,
-          messages: { ...next.messages, [channelId]: [...next.messages[channelId], ...sysMsgs] },
+          messages: appendChannelMessages(next.messages, channelId, sysMsgs),
           games: result.gameUpdate
             ? (result.gameUpdate.type
                 ? { ...next.games, [channelId]: result.gameUpdate }
@@ -1419,8 +1459,9 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           const updated: ModEntry = { ...prev, [voteKey]: votes };
           const sysMsgs: Message[] = [];
           const tsNow = Date.now();
+          const modBot = channelId === GAMES_CHANNEL_ID ? "bot-gamebot" : "bot-spam";
           sysMsgs.push({
-            id: uid(), channelId, authorId: "bot-gamebot", kind: "system", ts: tsNow,
+            id: uid(), channelId, authorId: modBot, kind: "system", ts: tsNow,
             text: `⚖️ **${voter}** voted to /${action} **@${targetName}** — ${votes.length}/${threshold} votes`,
           });
           if (votes.length >= threshold) {
@@ -1429,14 +1470,14 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
               updated.mutedUntil = until;
               updated.muteVotes = [];
               sysMsgs.push({
-                id: uid(), channelId, authorId: "bot-gamebot", kind: "system", ts: tsNow + 1,
+                id: uid(), channelId, authorId: modBot, kind: "system", ts: tsNow + 1,
                 text: `🔇 **@${targetName}** has been **MUTED** for 5 minutes by community vote.`,
               });
             } else {
               updated.kickedUntil = until;
               updated.kickVotes = [];
               sysMsgs.push({
-                id: uid(), channelId, authorId: "bot-gamebot", kind: "system", ts: tsNow + 1,
+                id: uid(), channelId, authorId: modBot, kind: "system", ts: tsNow + 1,
                 text: `🚪 **@${targetName}** has been **KICKED** from the room for 5 minutes by community vote.`,
               });
             }
@@ -1445,7 +1486,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           next = {
             ...next,
             moderation: { ...(next.moderation || {}), [channelId]: chanMod },
-            messages: { ...next.messages, [channelId]: [...next.messages[channelId], ...sysMsgs] },
+            messages: appendChannelMessages(next.messages, channelId, sysMsgs),
           };
         }
       } else {
@@ -1453,8 +1494,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         if (room) {
           let candidates: string[] = [];
           if (room.id === GAMES_CHANNEL_ID) {
-            candidates = [];
-          } else if (room.id === "lobby") {
+            candidates = room.members.filter((id) => isGameBotId(id));
+          } else if (room.id === LOBBY_CHANNEL_ID) {
             candidates = room.members.filter((id) => LOBBY_AUTO_REPLY_BOT_IDS.has(id));
           } else {
             candidates = room.members.filter(
@@ -1463,9 +1504,11 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           }
           if (candidates.length && Math.random() > 0.4) {
             const author = candidates[Math.floor(Math.random() * candidates.length)];
-            const reply = pickBotReply(trimmed);
-            const m: Message = { id: uid(), channelId, authorId: author, text: reply, ts: Date.now() + 800 };
-            next = { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], m] } };
+            if (!isGameBotId(author) || channelId === GAMES_CHANNEL_ID) {
+              const reply = pickBotReply(trimmed);
+              const m: Message = { id: uid(), channelId, authorId: author, text: reply, ts: Date.now() + 800 };
+              next = { ...next, messages: appendChannelMessage(next.messages, channelId, m) };
+            }
           }
         } else if (channelId.startsWith("dm:")) {
           const targetId = channelId.slice(3);
@@ -1611,8 +1654,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       const id = name.toLowerCase().replace(/\s+/g, "-") + "-" + uid().slice(0, 4);
       const room: Room = {
         id, name, topic: topic || "New room",
-        members: ["me", "bot-gamebot"],
-        roles: { me: "owner", "bot-gamebot": "admin" },
+        members: ["me"],
+        roles: { me: "owner" },
         isPublic: true,
       };
       const next: State = {
@@ -1748,15 +1791,31 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
 
 
   const pushSystem = useCallback((channelId: string, text: string) => {
-    setState(s => ({
+    if (channelId !== GAMES_CHANNEL_ID) {
+      // Non-game system notices outside #games use SpamBot so they stay visible.
+      setState((s) => ({
+        ...s,
+        messages: appendChannelMessage(s.messages, channelId, {
+          id: uid(),
+          channelId,
+          authorId: "bot-spam",
+          text,
+          ts: Date.now(),
+          kind: "system",
+        }),
+      }));
+      return;
+    }
+    setState((s) => ({
       ...s,
-      messages: {
-        ...s.messages,
-        [channelId]: [
-          ...(s.messages[channelId] || []),
-          { id: uid(), channelId, authorId: "bot-gamebot", text, ts: Date.now(), kind: "system" } as Message,
-        ],
-      },
+      messages: appendChannelMessage(s.messages, channelId, {
+        id: uid(),
+        channelId,
+        authorId: "bot-gamebot",
+        text,
+        ts: Date.now(),
+        kind: "system",
+      }),
     }));
   }, []);
 
@@ -1793,17 +1852,18 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
             topic: c.topic || existing.topic || "",
             kind,
             game: kind === "game" ? normalizeRoomGameConfig(c.game) : undefined,
-            members: Array.isArray(existing.members)
-              ? existing.members
-              : ["me", ...SEED_BOTS.map(b => b.id)],
+            members: sanitizeRoomMembers(
+              c.id,
+              Array.isArray(existing.members) ? existing.members : ["me"],
+            ),
           };
         } else {
           rooms[c.id] = {
             id: c.id,
             name,
             topic: c.topic || "",
-            members: ["me", ...SEED_BOTS.map(b => b.id)],
-            roles: { me: "member", "bot-gamebot": "owner" },
+            members: ["me"],
+            roles: { me: "member" },
             isPublic: true,
             kind,
             game: kind === "game" ? normalizeRoomGameConfig(c.game) : undefined,
@@ -1833,7 +1893,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         id: room.id,
         name: room.name,
         topic: room.topic || room.name,
-        members: existing?.members ?? ["me"],
+        members: sanitizeRoomMembers(room.id, existing?.members ?? ["me"]),
         roles: existing?.roles ?? { me: "member" },
         isPublic: room.isPublic,
         kind: "chat",
@@ -1871,7 +1931,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     isFriend: (id) => (state.me.friends ?? []).includes(id),
     isBlocked: (id) => (state.me.blocked ?? []).includes(id),
     reset,
-    channelMessages: (id) => state.messages[id] || [],
+    channelMessages: (id) => filterVisibleMessages(id, state.messages[id] || []),
     channelLabel: (id) => {
       if (id.startsWith("dm:")) {
         const { peerId } = parseDmChannel(id, authUserId);

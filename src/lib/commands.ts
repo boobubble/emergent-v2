@@ -1,5 +1,5 @@
 import type { GameState, User } from "./chat-types";
-import { GAMES_CHANNEL_ID } from "./chat-bot-channels";
+import { GAMES_CHANNEL_ID, GAMES_ONLY_CMD_REJECTION } from "./chat-bot-channels";
 import { TRIVIA_QUESTIONS } from "./trivia-questions";
 
 interface CmdCtx {
@@ -79,7 +79,7 @@ export function runCommand(input: string, ctx: CmdCtx): CmdResult {
   const who = ctx.actor ? `@${ctx.actor}` : "You";
 
   if (GAMES_ONLY_CMDS.has(cmd) && ctx.channelId !== GAMES_CHANNEL_ID) {
-    return { replies: [{ text: `🎮 **!${cmd}** can only be played in the **#games** channel. Head over there to play!` }] };
+    return { replies: [{ text: `🎮 ${GAMES_ONLY_CMD_REJECTION}` }] };
   }
 
 

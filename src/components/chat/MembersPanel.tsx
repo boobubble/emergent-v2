@@ -4,6 +4,7 @@ import { Crown, Shield, ShieldHalf, MessageCircle, Inbox, Bell, X, UserCog, User
 import { useHubBadge } from "./CommunityHub";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/lib/chat-store";
+import { GAMES_CHANNEL_ID, isGameBotId } from "@/lib/chat-bot-channels";
 import { useAuth } from "@/lib/auth-store";
 import { useAuthGate } from "@/lib/auth-gate";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
@@ -271,7 +272,11 @@ export function MembersPanel({
 
   // Smart user/bot split
   const isBot = (id: string) => !!usersById[id]?.isBot;
-  const isRoomBot = (id: string) => isBot(id) && roomMemberSet.has(id);
+  const isRoomBot = (id: string) => {
+    if (!isBot(id) || !roomMemberSet.has(id)) return false;
+    if (isGameBotId(id) && roomId !== GAMES_CHANNEL_ID) return false;
+    return true;
+  };
   const onlineUsers = useMemo(() => online.filter(id => !isBot(id)), [online]);
   const onlineBots = useMemo(() => online.filter(id => isRoomBot(id)), [online, roomMemberSet]);
   const offlineUsers = useMemo(() => offline.filter(id => !isBot(id)), [offline]);

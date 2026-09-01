@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useBotEvents } from "@/lib/use-bot-events";
 import { BOT_EVENT_META, BOT_EVENTS_TARGET_CHANNEL, type BotEventKind } from "@/lib/bot-events";
+import { GAMES_CHANNEL_ID } from "@/lib/chat-bot-channels";
 import { useOptionalChat } from "@/lib/chat-store";
 
 // Listens for open/close transitions from useBotEvents and posts a
@@ -37,6 +38,7 @@ export function useBotEventsNotifier() {
       markNoticed(key);
       const meta = BOT_EVENT_META[detail.kind];
       if (chat.state.activeChannel.startsWith("dm:")) return;
+      if (!chat.state.rooms[GAMES_CHANNEL_ID]) return;
       const nextInMin = Math.max(1, detail.interval_min - detail.duration_min);
       const text = detail.live
         ? `${meta.emoji} **${detail.golden ? meta.goldenLabel : meta.label} is now LIVE!** ${detail.golden ? "✨ 2× rewards! " : ""}You have ${detail.duration_min} minutes to type **${meta.command}**.`
