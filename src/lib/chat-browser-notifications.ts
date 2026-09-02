@@ -13,6 +13,9 @@ export const CHAT_NOTIF_PERMISSION_EVENT = "palrgo:chat-notif-permission";
 export const OPEN_CHAT_ROOM_STORAGE_KEY = "yaarzo:open-chat-room";
 /** Unhashed public/ asset — dedicated chat notification icon (not the tab favicon). */
 export const CHAT_NOTIFICATION_ICON_PATH = "/notification-icon.png";
+/** Narrow-scope worker used only so Chrome/Edge Windows can paint icon+image. */
+export const CHAT_NOTIFICATION_SW_URL = "/chat-notifications/sw.js";
+export const CHAT_NOTIFICATION_CLICK_MESSAGE = "yaarzo:open-chat-room";
 const DEDUPE_PREFIX = "yaarzo:chat-notif:";
 const DEDUPE_MS = 12_000;
 const BC_NAME = "yaarzo-chat-notif";
@@ -103,7 +106,7 @@ export function shouldNotifyPresence(opts: {
 }
 
 /**
- * Absolute URL for Notification.icon / badge.
+ * Absolute URL for Notification.icon / badge / image.
  * Resolves against origin at notify time so `/notification-icon.png` works from any path
  * (e.g. https://yaarzo.com/chatroom → https://yaarzo.com/notification-icon.png).
  */
@@ -113,6 +116,96 @@ export function chatNotificationIconUrl(origin?: string): string {
     (typeof window !== "undefined" ? window.location.origin : "");
   if (!base) return CHAT_NOTIFICATION_ICON_PATH;
   return new URL(CHAT_NOTIFICATION_ICON_PATH, base).href;
+}
+
+/**
+ * Exact NotificationOptions passed at runtime.
+ * Chrome/Edge on Windows ignore `badge` (Android-only) and often keep the browser
+ * logo as the toast identity. `image` is the Windows Action Center hero slot that
+ * Chromium actually paints; `icon` remains the square content thumbnail.
+ */
+export function buildChatNotificationOptions(
+  input: ChatBrowserNotifInput,
+  origin?: string,
+): NotificationOptions {
+  const icon = chatNotificationIconUrl(origin);
+  const body = input.kind === "message" ? formatChatNotifBody(input) : "";
+  return {
+    body: body || undefined,
+    tag: input.eventId,
+    icon,
+    badge: icon,
+    image: icon,
+    data: { channelId: input.channelId, kind: input.kind },
+  };
+}
+
+export function chatNotificationTitle(input: ChatBrowserNotifInput): string {
+  return input.kind === "message"
+    ? formatChatNotifTitle("message", input.roomName)
+    : formatChatNotifBody(input);
+}
+
+let swClickListenerInstalled = false;
+
+function ensureServiceWorkerClickListener() {
+  if (swClickListenerInstalled || typeof navigator === "undefined") return;
+  if (!("serviceWorker" in navigator)) return;
+  swClickListenerInstalled = true;
+  navigator.serviceWorker.addEventListener("message", (event: MessageEvent) => {
+    const data = event.data as { type?: string; channelId?: string } | null;
+    if (data?.type === CHAT_NOTIFICATION_CLICK_MESSAGE && data.channelId) {
+      navigateToChatRoom(data.channelId);
+    }
+  });
+}
+
+function canUseServiceWorkerNotifications(): boolean {
+  return typeof navigator !== "undefined"
+    && !!navigator.serviceWorker
+    && typeof navigator.serviceWorker.register === "function";
+}
+
+let cachedSwRegistration: Promise<ServiceWorkerRegistration> | null = null;
+
+function chatNotificationWorkerRegistration(): Promise<ServiceWorkerRegistration> {
+  if (!cachedSwRegistration) {
+    cachedSwRegistration = navigator.serviceWorker.register(CHAT_NOTIFICATION_SW_URL);
+  }
+  return cachedSwRegistration;
+}
+
+async function showViaServiceWorker(title: string, options: NotificationOptions): Promise<boolean> {
+  if (!canUseServiceWorkerNotifications()) return false;
+  try {
+    ensureServiceWorkerClickListener();
+    const reg = await chatNotificationWorkerRegistration();
+    if (typeof reg.showNotification !== "function") return false;
+    await reg.showNotification(title, options);
+    return true;
+  } catch {
+    cachedSwRegistration = null;
+    return false;
+  }
+}
+
+function showViaNotificationConstructor(title: string, options: NotificationOptions, channelId: string) {
+  const n = new Notification(title, options);
+  n.onclick = () => {
+    try { window.focus(); } catch { /* ignore */ }
+    navigateToChatRoom(channelId);
+    n.close();
+  };
+}
+
+async function displayChatBrowserNotification(
+  title: string,
+  options: NotificationOptions,
+  channelId: string,
+): Promise<void> {
+  const viaSw = await showViaServiceWorker(title, options);
+  if (viaSw) return;
+  showViaNotificationConstructor(title, options, channelId);
 }
 
 export function isBrowserNotificationSupported(): boolean {
@@ -181,27 +274,17 @@ function showInAppFallback(alert: ChatInAppAlert) {
 
 export function showChatBrowserNotification(input: ChatBrowserNotifInput): boolean {
   if (!claimChatNotifEvent(input.eventId)) return false;
-  const title = input.kind === "message"
-    ? formatChatNotifTitle("message", input.roomName)
-    : formatChatNotifBody(input);
-  const body = input.kind === "message" ? formatChatNotifBody(input) : "";
+  const title = chatNotificationTitle(input);
+  const options = buildChatNotificationOptions(input);
   const perm = getNotificationPermission();
 
   if (perm === "granted") {
+    if (canUseServiceWorkerNotifications()) {
+      void displayChatBrowserNotification(title, options, input.channelId);
+      return true;
+    }
     try {
-      const icon = chatNotificationIconUrl();
-      const n = new Notification(title, {
-        body: body || undefined,
-        tag: input.eventId,
-        icon,
-        badge: icon,
-        data: { channelId: input.channelId, kind: input.kind },
-      });
-      n.onclick = () => {
-        try { window.focus(); } catch { /* ignore */ }
-        navigateToChatRoom(input.channelId);
-        n.close();
-      };
+      showViaNotificationConstructor(title, options, input.channelId);
       return true;
     } catch {
       /* fall through */
@@ -211,7 +294,7 @@ export function showChatBrowserNotification(input: ChatBrowserNotifInput): boole
   if (perm === "unsupported") {
     showInAppFallback({
       title,
-      body: body || title,
+      body: (options.body as string | undefined) || title,
       channelId: input.channelId,
     });
     return true;
@@ -243,6 +326,8 @@ export function consumePendingOpenChatRoom(): string | null {
 /** Reset in-memory dedupe (tests only). */
 export function resetChatNotifDedupeForTests() {
   seenIds.clear();
+  cachedSwRegistration = null;
+  swClickListenerInstalled = false;
 }
 
 export function useChatNotificationPermission(): NotificationPermission | "unsupported" {

@@ -3,7 +3,10 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   CHAT_NOTIFICATION_ICON_PATH,
+  CHAT_NOTIFICATION_SW_URL,
+  buildChatNotificationOptions,
   chatNotificationIconUrl,
+  chatNotificationTitle,
   claimChatNotifEvent,
   formatChatNotifBody,
   formatChatNotifTitle,
@@ -48,6 +51,7 @@ function installNotificationMock(origin = "https://yaarzo.com") {
   };
   vi.stubGlobal("window", win);
   vi.stubGlobal("Notification", FakeNotification);
+  vi.stubGlobal("navigator", { serviceWorker: undefined });
 }
 
 afterEach(() => {
@@ -194,9 +198,13 @@ describe("source wiring", () => {
     expect(src).not.toContain('"/pwa-192.png"');
     expect(src).toMatch(/icon,/);
     expect(src).toMatch(/badge:/);
+    expect(src).toMatch(/image:/);
+    expect(src).toContain("showNotification");
+    expect(src).toContain(CHAT_NOTIFICATION_SW_URL);
     expect(src).not.toMatch(/favicon-blue\.png/);
     expect(src).not.toMatch(/favicon-red\.png/);
     expect(existsSync(resolve(process.cwd(), "public/notification-icon.png"))).toBe(true);
+    expect(existsSync(resolve(process.cwd(), "public/chat-notifications/sw.js"))).toBe(true);
   });
 });
 
@@ -226,10 +234,10 @@ describe("showChatBrowserNotification icon + copy", () => {
   }
 
   function expectDedicatedIcon(options: NotificationOptions) {
-    expect(options.icon).toBeTruthy();
-    expect(String(options.icon)).toMatch(/\/notification-icon\.png$/);
-    expect(String(options.icon)).toBe("https://yaarzo.com/notification-icon.png");
-    expect(String(options.badge)).toBe("https://yaarzo.com/notification-icon.png");
+    const icon = "https://yaarzo.com/notification-icon.png";
+    expect(options.icon).toBe(icon);
+    expect(options.badge).toBe(icon);
+    expect(options.image).toBe(icon);
     expect(String(options.icon)).not.toContain("favicon-blue.png");
     expect(String(options.icon)).not.toContain("favicon-red.png");
     expect(String(options.icon)).not.toContain("pwa-192.png");
@@ -279,5 +287,108 @@ describe("showChatBrowserNotification icon + copy", () => {
     expect(n.title).toBe("Kiran left #Games");
     expect(n.options.body).toBeUndefined();
     expectDedicatedIcon(n.options);
+  });
+});
+
+describe("runtime notification options (absolute Yaarzo icon URL)", () => {
+  const YAARZO_ICON = "https://yaarzo.com/notification-icon.png";
+
+  it("builds the exact icon/badge/image options used at runtime for a new message", () => {
+    const input = {
+      eventId: "msg:runtime-1",
+      kind: "message" as const,
+      channelId: "lobby",
+      roomName: "Lobby",
+      actorName: "Arman",
+      preview: "hello there",
+    };
+    expect(chatNotificationTitle(input)).toBe("New message in #Lobby");
+    expect(buildChatNotificationOptions(input, "https://yaarzo.com")).toEqual({
+      body: "Arman: hello there",
+      tag: "msg:runtime-1",
+      icon: YAARZO_ICON,
+      badge: YAARZO_ICON,
+      image: YAARZO_ICON,
+      data: { channelId: "lobby", kind: "message" },
+    });
+  });
+
+  it("builds the exact options for join and leave", () => {
+    const join = {
+      eventId: "join:runtime-1",
+      kind: "join" as const,
+      channelId: "lobby",
+      roomName: "Lobby",
+      actorName: "Arman",
+    };
+    const leave = {
+      eventId: "leave:runtime-1",
+      kind: "leave" as const,
+      channelId: "games",
+      roomName: "Games",
+      actorName: "Kiran",
+    };
+    expect(chatNotificationTitle(join)).toBe("Arman joined #Lobby");
+    expect(buildChatNotificationOptions(join, "https://yaarzo.com")).toMatchObject({
+      icon: YAARZO_ICON,
+      badge: YAARZO_ICON,
+      image: YAARZO_ICON,
+      tag: "join:runtime-1",
+    });
+    expect(chatNotificationTitle(leave)).toBe("Kiran left #Games");
+    expect(buildChatNotificationOptions(leave, "https://yaarzo.com")).toMatchObject({
+      icon: YAARZO_ICON,
+      badge: YAARZO_ICON,
+      image: YAARZO_ICON,
+      tag: "leave:runtime-1",
+    });
+  });
+});
+
+describe("Chrome/Edge Windows service worker showNotification path", () => {
+  it("prefers registration.showNotification with the same absolute icon options", async () => {
+    FakeNotification.instances = [];
+    FakeNotification.permission = "granted";
+    const shown: { title: string; options: NotificationOptions }[] = [];
+    const storage = new Map<string, string>();
+    const registration = {
+      showNotification: async (title: string, options?: NotificationOptions) => {
+        shown.push({ title, options: options ?? {} });
+      },
+    };
+    vi.stubGlobal("window", {
+      location: { origin: "https://yaarzo.com", pathname: "/chatroom" },
+      Notification: FakeNotification,
+      dispatchEvent: () => true,
+      focus: () => {},
+      localStorage: {
+        getItem: (k: string) => storage.get(k) ?? null,
+        setItem: (k: string, v: string) => { storage.set(k, v); },
+        removeItem: (k: string) => { storage.delete(k); },
+      },
+    });
+    vi.stubGlobal("Notification", FakeNotification);
+    vi.stubGlobal("navigator", {
+      serviceWorker: {
+        register: async () => registration,
+        addEventListener: () => {},
+      },
+    });
+
+    expect(showChatBrowserNotification({
+      eventId: "msg:sw-1",
+      kind: "message",
+      channelId: "lobby",
+      roomName: "Lobby",
+      actorName: "Arman",
+      preview: "hello there",
+    })).toBe(true);
+
+    await vi.waitFor(() => expect(shown.length).toBe(1));
+    expect(shown[0]!.title).toBe("New message in #Lobby");
+    expect(shown[0]!.options.icon).toBe("https://yaarzo.com/notification-icon.png");
+    expect(shown[0]!.options.badge).toBe("https://yaarzo.com/notification-icon.png");
+    expect(shown[0]!.options.image).toBe("https://yaarzo.com/notification-icon.png");
+    expect(FakeNotification.instances.length).toBe(0);
   });
 });
