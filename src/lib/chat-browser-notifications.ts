@@ -11,6 +11,8 @@ export const OPEN_CHAT_ROOM_EVENT = "palrgo:open-chat-room";
 export const CHAT_INAPP_ALERT_EVENT = "palrgo:chat-inapp-alert";
 export const CHAT_NOTIF_PERMISSION_EVENT = "palrgo:chat-notif-permission";
 export const OPEN_CHAT_ROOM_STORAGE_KEY = "yaarzo:open-chat-room";
+/** Unhashed public/ asset — dedicated chat notification icon (not the tab favicon). */
+export const CHAT_NOTIFICATION_ICON_PATH = "/notification-icon.png";
 const DEDUPE_PREFIX = "yaarzo:chat-notif:";
 const DEDUPE_MS = 12_000;
 const BC_NAME = "yaarzo-chat-notif";
@@ -100,6 +102,19 @@ export function shouldNotifyPresence(opts: {
   return name.length > 0;
 }
 
+/**
+ * Absolute URL for Notification.icon / badge.
+ * Resolves against origin at notify time so `/notification-icon.png` works from any path
+ * (e.g. https://yaarzo.com/chatroom → https://yaarzo.com/notification-icon.png).
+ */
+export function chatNotificationIconUrl(origin?: string): string {
+  const base =
+    origin ??
+    (typeof window !== "undefined" ? window.location.origin : "");
+  if (!base) return CHAT_NOTIFICATION_ICON_PATH;
+  return new URL(CHAT_NOTIFICATION_ICON_PATH, base).href;
+}
+
 export function isBrowserNotificationSupported(): boolean {
   return typeof window !== "undefined" && "Notification" in window;
 }
@@ -174,9 +189,12 @@ export function showChatBrowserNotification(input: ChatBrowserNotifInput): boole
 
   if (perm === "granted") {
     try {
+      const icon = chatNotificationIconUrl();
       const n = new Notification(title, {
         body: body || undefined,
         tag: input.eventId,
+        icon,
+        badge: icon,
         data: { channelId: input.channelId, kind: input.kind },
       });
       n.onclick = () => {
