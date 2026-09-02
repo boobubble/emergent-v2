@@ -1,5 +1,7 @@
 import { createFileRoute, Navigate, notFound } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-store";
+import { getPublicProfileByUsernameFn } from "@/lib/profile.functions";
+import { getPublicProfileByUsername, normalizeProfileUsernameParam } from "@/lib/profile.public";
 import {
   loadDynamicRouteSeo,
   headFromRouteSeo,
@@ -10,14 +12,25 @@ import {
 
 export const Route = createFileRoute("/u/$username")({
   loader: async ({ params }) => {
-    const username = params.username;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { origin, siteName } = await loadSeoSiteContext();
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("id,username,display_name,bio,avatar_url,is_private")
-      .ilike("username", username)
-      .maybeSingle();
+    const username = normalizeProfileUsernameParam(params.username);
+    if (!username) throw notFound();
+
+    // SSR uses service-role lookup. Client navigations cannot import
+    // client.server (stub throws `supabaseAdmin is server-only`), so they RPC
+    // through getPublicProfileByUsernameFn instead.
+    let origin = "";
+    let siteName = "Yaarzo";
+    try {
+      const ctx = await loadSeoSiteContext();
+      origin = ctx.origin;
+      siteName = ctx.siteName;
+    } catch {
+      origin = typeof window !== "undefined" ? window.location.origin : "";
+    }
+
+    const profile = typeof window === "undefined"
+      ? await getPublicProfileByUsername(username)
+      : await getPublicProfileByUsernameFn({ data: { username } });
 
     const slug = profile?.username ?? username;
     const url = `${origin}/u/${slug}`;
