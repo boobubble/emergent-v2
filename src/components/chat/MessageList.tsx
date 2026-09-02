@@ -17,6 +17,23 @@ import { useDmUrlMask } from "@/lib/dm-url-mask";
 import { useGuestLobbyFeed } from "@/lib/use-guest-lobby-feed";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { useGuestChat } from "@/lib/guest-chat-context";
+import { isPresenceSystemMessage as isRoomPresenceLine } from "@/lib/presence-ui";
+
+function PresenceSystemLine({ text }: { text: string }) {
+  return (
+    <div className="flex items-center justify-center py-1">
+      <div className="flex max-w-full items-center gap-2 px-2 text-[11px] text-muted-foreground/80">
+        <span className="h-px min-w-[1rem] flex-1 bg-border/60" aria-hidden />
+        <span className="shrink-0 text-center">{text}</span>
+        <span className="h-px min-w-[1rem] flex-1 bg-border/60" aria-hidden />
+      </div>
+    </div>
+  );
+}
+
+function isPresenceSystemMessage(m: Message): boolean {
+  return isRoomPresenceLine(m.authorId, m.kind);
+}
 
 function AttachmentView({ a }: { a: Attachment }) {
   if (a.mime?.startsWith("audio/")) {
@@ -182,9 +199,14 @@ export function MessageList({ channelId }: { channelId: string }) {
 
   const groups: Message[][] = [];
   msgs.forEach(m => {
+    if (isPresenceSystemMessage(m)) {
+      groups.push([m]);
+      return;
+    }
     const last = groups[groups.length - 1];
     if (
       last &&
+      !isPresenceSystemMessage(last[0]) &&
       last[0].authorId === m.authorId &&
       !m.replyToId && !last[last.length - 1].replyToId &&
       m.ts - last[last.length - 1].ts < 5 * 60_000
@@ -210,6 +232,9 @@ export function MessageList({ channelId }: { channelId: string }) {
       )}
       <div className="space-y-3">
         {groups.map((g, gi) => {
+          if (isPresenceSystemMessage(g[0])) {
+            return <PresenceSystemLine key={g[0].id} text={g[0].text} />;
+          }
           const author = usersById[g[0].authorId];
           if (!author) return null;
           const isEphemeralGuest = Boolean(author.isGuest || author.id.startsWith("visitor_"));

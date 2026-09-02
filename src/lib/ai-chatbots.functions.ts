@@ -155,15 +155,31 @@ export const aiChatbotReply = createServerFn({ method: "POST" })
       .eq("enabled", true)
       .contains("allowed_rooms", [data.channel_id]);
     if (!bots || bots.length === 0) return { skipped: "no-bots" };
-    // Don't reply to a bot's own message
-    const bot = bots.find((b) => b.user_id !== context.userId);
-    if (!bot) return { skipped: "self" };
+
+    // Pick the first enabled bot explicitly @mentioned in the message (one reply max).
+    let bot: (typeof bots)[number] | undefined;
+    for (const candidate of bots) {
+      if (candidate.user_id === context.userId) continue;
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("username")
+        .eq("id", candidate.user_id)
+        .maybeSingle();
+      const username = prof?.username?.trim();
+      if (!username) continue;
+      const mentionRe = new RegExp(`@${username.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+      if (mentionRe.test(data.text)) {
+        bot = candidate;
+        break;
+      }
+    }
+    if (!bot) return { skipped: "no-mention" };
+
     // Cooldown
     if (bot.last_reply_at) {
       const since = Date.now() - new Date(bot.last_reply_at).getTime();
       if (since < bot.cooldown_sec * 1000) return { skipped: "cooldown" };
     }
-    if (Math.random() > Number(bot.reply_chance)) return { skipped: "chance" };
 
     // Pull recent context (last 8 messages in room)
     const { data: recent } = await supabaseAdmin

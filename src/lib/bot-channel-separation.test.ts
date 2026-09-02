@@ -7,7 +7,6 @@ import {
   GAME_BOT_IDS,
   GAMES_CHANNEL_ID,
   GAMES_ONLY_CMD_REJECTION,
-  LOBBY_AUTO_REPLY_BOT_IDS,
   LOBBY_BOT_IDS,
   LOBBY_CHANNEL_ID,
   canGameBotAutoReply,
@@ -226,9 +225,9 @@ describe("chat-store guards", () => {
     expect(chatStore).toContain("filterVisibleMessages");
   });
 
-  it("game bot auto-reply only in games", () => {
-    expect(chatStore).toContain("room.id === GAMES_CHANNEL_ID");
-    expect(chatStore).toContain("isGameBotId(id)");
+  it("bot replies require explicit @mention", () => {
+    expect(chatStore).toContain("findMentionedRoomBot");
+    expect(chatStore).not.toMatch(/Math\.random\(\)\s*>\s*0\.4/);
   });
 
   it("event gate for fish/dig/wine only runs in games", () => {
@@ -264,14 +263,5 @@ describe("guest chat unchanged", () => {
     expect(isBotCommandOrAction("!fish")).toBe(true);
     expect(isBotCommandOrAction("!dig")).toBe(true);
     expect(isBotCommandOrAction("!wine")).toBe(true);
-  });
-});
-
-describe("lobby auto-reply bots unchanged", () => {
-  it("lobby auto-replies limited to LOBBY_AUTO_REPLY_BOT_IDS", () => {
-    expect(LOBBY_AUTO_REPLY_BOT_IDS.has("bot-echo")).toBe(true);
-    for (const id of GAME_BOT_IDS) {
-      expect(LOBBY_AUTO_REPLY_BOT_IDS.has(id)).toBe(false);
-    }
   });
 });

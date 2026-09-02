@@ -1,32 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useChat } from "@/lib/chat-store";
 import { useAppSettings } from "@/lib/app-settings";
+import { isRealPresenceUserId } from "@/lib/presence-ui";
 
 /**
- * Lightweight realtime presence overlay for the active public chatroom.
- *
- * - Does NOT touch the existing message store.
- * - Subscribes to a per-room Supabase Realtime presence channel.
- * - Emits a "join" system line only after a user has been continuously
- *   present for >= JOIN_DELAY_MS (default 10s).
- * - Emits a "leave" system line only after a user has been continuously
- *   absent for >= LEAVE_DELAY_MS (default 15s).
- * - Per-user cooldown prevents reconnect spam.
- * - Self events are suppressed.
- * - Toggle via app_settings.presence_messages (boolean, default true).
+ * Room-scoped presence → compact system lines in the chat stream ONLY.
+ * Never popup/toast (the legacy overlay UI was removed intentionally).
+ * Does not broadcast across channels. Self + bot events suppressed.
  */
 
 const JOIN_DELAY_MS = 2_500;
 const LEAVE_DELAY_MS = 8_000;
 const COOLDOWN_MS = 60_000;
-const MAX_VISIBLE = 30;
-
-interface PresenceEvent {
-  id: string;
-  kind: "join" | "leave";
-  name: string;
-}
 
 interface TrackPayload {
   user_id: string;
@@ -34,14 +20,13 @@ interface TrackPayload {
 }
 
 export function PresenceFeed({ channelId }: { channelId: string }) {
-  const { state, isDM } = useChat();
+  const { state, isDM, pushPresenceEvent } = useChat();
   const { raw } = useAppSettings();
-  const enabled = raw.presence_messages !== false; // default ON
-  const [events, setEvents] = useState<PresenceEvent[]>([]);
-
-  // Stable ref for me to avoid re-subscribing on rename.
-  const meRef = useRef({ id: "me", name: state.me.name });
-  meRef.current = { id: state.me.name || "me", name: state.me.name };
+  const enabled = raw.presence_messages !== false;
+  const pushRef = useRef(pushPresenceEvent);
+  const meNameRef = useRef(state.me.name);
+  pushRef.current = pushPresenceEvent;
+  meNameRef.current = state.me.name;
 
   useEffect(() => {
     if (!enabled) return;
@@ -56,14 +41,10 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
     let firstSyncDone = false;
     let userId = "anon-" + Math.random().toString(36).slice(2, 9);
 
-    function push(kind: "join" | "leave", name: string) {
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-      const ev: PresenceEvent = { id, kind, name };
+    function emit(kind: "join" | "leave", uid: string, name: string) {
       if (cancelled) return;
-      setEvents(prev => {
-        const next = [...prev, ev];
-        return next.length > MAX_VISIBLE ? next.slice(next.length - MAX_VISIBLE) : next;
-      });
+      if (!isRealPresenceUserId(uid)) return;
+      pushRef.current(channelId, kind, name);
     }
 
     async function start() {
@@ -86,20 +67,19 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
             const metas = stateMap[key];
             if (!metas || !metas.length) continue;
             const uid = metas[0].user_id || key;
+            if (!isRealPresenceUserId(uid)) continue;
             presentNow.add(uid);
             if (metas[0].name) nameMap.set(uid, metas[0].name);
           }
 
           if (!firstSyncDone) {
-            // Seed known set without announcing existing members.
             knownPresent = presentNow;
             firstSyncDone = true;
             return;
           }
 
-          // Arrivals
-          presentNow.forEach(uid => {
-            if (uid === userId) return; // self
+          presentNow.forEach((uid) => {
+            if (uid === userId) return;
             if (knownPresent.has(uid)) {
               const t = pendingLeave.get(uid);
               if (t) { clearTimeout(t); pendingLeave.delete(uid); }
@@ -112,13 +92,12 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
               const last = lastJoinAt.get(uid) || 0;
               if (Date.now() - last < COOLDOWN_MS) return;
               lastJoinAt.set(uid, Date.now());
-              push("join", nm);
+              emit("join", uid, nm);
             }, JOIN_DELAY_MS);
             pendingJoin.set(uid, t);
           });
 
-          // Departures
-          knownPresent.forEach(uid => {
+          knownPresent.forEach((uid) => {
             if (presentNow.has(uid)) return;
             if (uid === userId) return;
             const tj = pendingJoin.get(uid);
@@ -130,7 +109,7 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
               const last = lastLeaveAt.get(uid) || 0;
               if (Date.now() - last < COOLDOWN_MS) return;
               lastLeaveAt.set(uid, Date.now());
-              push("leave", nameForUid);
+              emit("leave", uid, nameForUid);
             }, LEAVE_DELAY_MS);
             pendingLeave.set(uid, t);
           });
@@ -139,7 +118,7 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
         })
         .subscribe(async (status) => {
           if (status === "SUBSCRIBED") {
-            await channel.track({ user_id: userId, name: meRef.current.name });
+            await channel.track({ user_id: userId, name: meNameRef.current || "Someone" });
           }
         });
 
@@ -150,34 +129,13 @@ export function PresenceFeed({ channelId }: { channelId: string }) {
 
     return () => {
       cancelled = true;
-      pendingJoin.forEach(t => clearTimeout(t));
-      pendingLeave.forEach(t => clearTimeout(t));
+      pendingJoin.forEach((t) => clearTimeout(t));
+      pendingLeave.forEach((t) => clearTimeout(t));
       pendingJoin = new Map();
       pendingLeave = new Map();
-      void channelPromise.then(ch => { if (ch) void supabase.removeChannel(ch); });
+      void channelPromise.then((ch) => { if (ch) void supabase.removeChannel(ch); });
     };
   }, [channelId, enabled, isDM]);
 
-  if (!enabled || isDM(channelId) || events.length === 0) return null;
-
-  return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-1 z-10 flex flex-col items-stretch gap-0.5 px-3">
-      {events.map(ev => (
-        <div
-          key={ev.id}
-          className="presence-msg pointer-events-none flex items-center gap-2 px-1 py-0.5 text-[12px] text-muted-foreground"
-        >
-          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-muted text-[10px] text-muted-foreground/80">
-            {ev.kind === "join" ? "👤" : "👋"}
-          </span>
-          <span>
-            <span className="font-semibold text-foreground/80">{ev.name}</span>
-            <span className="opacity-75">
-              {ev.kind === "join" ? " has joined the room" : " has left the room"}
-            </span>
-          </span>
-        </div>
-      ))}
-    </div>
-  );
+  return null;
 }

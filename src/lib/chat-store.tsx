@@ -58,7 +58,6 @@ import {
 import {
   GAME_BOT_IDS,
   GAMES_CHANNEL_ID,
-  LOBBY_AUTO_REPLY_BOT_IDS,
   LOBBY_BOT_IDS,
   LOBBY_CHANNEL_ID,
   canInsertGameBotMessage,
@@ -82,7 +81,14 @@ import {
   showDmParticipantError,
   storageKeyForUsername,
 } from "./dm-utils";
-import { markDmConversationRead } from "./dm-read";
+import {
+  botMentionAck,
+  canMentionedBotReply,
+  echoMentionReply,
+  findMentionedRoomBot,
+  SYSTEM_PRESENCE_AUTHOR,
+} from "./chat-bot-triggers";
+import { formatPresenceLineText } from "./presence-ui";
 import { removeCorruptedKey } from "./persisted-state-recovery";
 
 export { dmChannelFor } from "./dm-utils";
@@ -535,6 +541,7 @@ interface Ctx {
   staffKick: (targetId: string, channelId: string, targetName: string) => void;
   staffLocalMute: (targetId: string, channelId: string, minutes: number, targetName: string) => void;
   pushSystem: (channelId: string, text: string) => void;
+  pushPresenceEvent: (channelId: string, kind: "join" | "leave", userName: string) => void;
   wipeChannel: (channelId: string) => void;
   deleteRoom: (roomId: string) => void;
   syncAdminChannels: (channels: AdminChannelInput[]) => void;
@@ -1492,31 +1499,29 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       } else {
         const room = next.rooms[channelId];
         if (room) {
-          let candidates: string[] = [];
-          if (room.id === GAMES_CHANNEL_ID) {
-            candidates = room.members.filter((id) => isGameBotId(id));
-          } else if (room.id === LOBBY_CHANNEL_ID) {
-            candidates = room.members.filter((id) => LOBBY_AUTO_REPLY_BOT_IDS.has(id));
-          } else {
-            candidates = room.members.filter(
-              (id) => next.users[id]?.isBot && !isGameBotId(id),
-            );
-          }
-          if (candidates.length && Math.random() > 0.4) {
-            const author = candidates[Math.floor(Math.random() * candidates.length)];
-            if (!isGameBotId(author) || channelId === GAMES_CHANNEL_ID) {
-              const reply = pickBotReply(trimmed);
-              const m: Message = { id: uid(), channelId, authorId: author, text: reply, ts: Date.now() + 800 };
+          const mentionedBot = findMentionedRoomBot(trimmed, next.users, room.members);
+          if (mentionedBot && canMentionedBotReply(mentionedBot, channelId)) {
+            const bot = next.users[mentionedBot];
+            if (bot) {
+              let reply: string;
+              if (mentionedBot === "bot-echo") {
+                reply = echoMentionReply(trimmed, bot.name);
+              } else if (isHelpQuery(trimmed)) {
+                reply = botHelpReply(mentionedBot, bot.name);
+              } else {
+                reply = botMentionAck(bot.name);
+              }
+              const m: Message = {
+                id: uid(), channelId, authorId: mentionedBot, text: reply, ts: Date.now() + 800,
+              };
               next = { ...next, messages: appendChannelMessage(next.messages, channelId, m) };
             }
           }
         } else if (channelId.startsWith("dm:")) {
           const targetId = channelId.slice(3);
           const target = next.users[targetId];
-          if (target?.isBot) {
-            const reply = isHelpQuery(trimmed)
-              ? botHelpReply(targetId, target.name)
-              : pickBotReply(trimmed);
+          if (target?.isBot && isHelpQuery(trimmed)) {
+            const reply = botHelpReply(targetId, target.name);
             const m: Message = { id: uid(), channelId, authorId: targetId, text: reply, ts: Date.now() + 600 };
             next = { ...next, messages: { ...next.messages, [channelId]: [...next.messages[channelId], m] } };
             setTimeout(() => playDmPing(), 600);
@@ -1553,9 +1558,12 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           // Fire-and-forget AI chatbot reply for chatroom messages
           for (const out of safeRemotes) {
             if (out.channelId.startsWith("dm:") || out.kind === "system") continue;
-            import("@/lib/ai-chatbots.functions").then(({ aiChatbotReply }) => {
-              aiChatbotReply({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
-            }).catch(() => {});
+            // AI chatbots only respond when explicitly @mentioned (validated server-side too).
+            if (/@\w/.test(out.text)) {
+              import("@/lib/ai-chatbots.functions").then(({ aiChatbotReply }) => {
+                aiChatbotReply({ data: { channel_id: out.channelId, text: out.text } }).catch(() => {});
+              }).catch(() => {});
+            }
             // BooBubble ChatGPT lobby reply — trigger on any "boobubble" mention (case-insensitive)
             if (out.kind === "text" && /boobubble/i.test(out.text)) {
               import("@/lib/boobubble.functions").then(({ askBoobubbleInLobby }) => {
@@ -1790,6 +1798,21 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   }, []);
 
 
+  const pushPresenceEvent = useCallback((channelId: string, kind: "join" | "leave", userName: string) => {
+    const text = formatPresenceLineText(kind, userName);
+    setState((s) => ({
+      ...s,
+      messages: appendChannelMessage(s.messages, channelId, {
+        id: uid(),
+        channelId,
+        authorId: SYSTEM_PRESENCE_AUTHOR,
+        text,
+        ts: Date.now(),
+        kind: "system",
+      }),
+    }));
+  }, []);
+
   const pushSystem = useCallback((channelId: string, text: string) => {
     if (channelId !== GAMES_CHANNEL_ID) {
       // Non-game system notices outside #games use SpamBot so they stay visible.
@@ -1926,7 +1949,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const value = useMemo<Ctx>(() => ({
     state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe,
     adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser,
-    pushSystem, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom,
+    pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom,
 
     isFriend: (id) => (state.me.friends ?? []).includes(id),
     isBlocked: (id) => (state.me.blocked ?? []).includes(id),
@@ -1986,7 +2009,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     staffKick,
     staffLocalMute,
     markDmRead,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead]);
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;
