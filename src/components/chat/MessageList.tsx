@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, useMemo } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@/lib/chat-store";
 import { Avatar } from "./Avatar";
 import { FrameAvatar, CosmeticName, RankChip } from "@/components/cosmetics/CosmeticBits";
 import { UserMenu } from "./UserMenu";
 import { StaffActionsMenu } from "./StaffActionsMenu";
 import type { Message, Attachment } from "@/lib/chat-types";
-import { Download, Reply, CornerDownRight, CheckCheck } from "lucide-react";
+import { Download, Reply, CornerDownRight, CheckCheck, Clock } from "lucide-react";
 import { NameEmojiBadge, NameAdornments } from "@/lib/name-emoji";
 import { EmojiEffectLayer } from "./EmojiEffectLayer";
 import { HighlightButton } from "./HighlightButton";
@@ -14,9 +15,10 @@ import { linkify } from "@/lib/linkify";
 import { MediaEmbed } from "./MediaEmbed";
 import { VoiceNoteBubble } from "./VoiceNoteBubble";
 import { useDmUrlMask } from "@/lib/dm-url-mask";
-import { useGuestLobbyFeed } from "@/lib/use-guest-lobby-feed";
+import { useGuestLobbyFeed, confirmGuestOptimistic, failGuestOptimistic, markGuestOptimisticSending } from "@/lib/use-guest-lobby-feed";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { useGuestChat } from "@/lib/guest-chat-context";
+import { sendGuestLobbyMessage } from "@/lib/guest-chat.functions";
 import { isPresenceSystemMessage as isRoomPresenceLine } from "@/lib/presence-ui";
 
 function PresenceSystemLine({ text }: { text: string }) {
@@ -135,11 +137,41 @@ function ReplyButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+function SendStatusBits({ m, onRetry }: { m: Message; onRetry?: () => void }) {
+  if (m.sendStatus === "sending") {
+    return (
+      <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-muted-foreground/80" title="Sending">
+        <Clock className="h-3 w-3 animate-pulse" />
+        <span>Sending</span>
+      </span>
+    );
+  }
+  if (m.sendStatus === "failed") {
+    return (
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-0.5 text-[10px] font-medium text-destructive hover:underline"
+      >
+        Couldn't send · Retry
+      </button>
+    );
+  }
+  return null;
+}
+
+function bubblePendingClass(m: Message, extra: string) {
+  if (m.sendStatus === "sending") return `${extra} opacity-70`;
+  if (m.sendStatus === "failed") return `${extra} opacity-80 ring-1 ring-destructive/40`;
+  return extra;
+}
+
 export function MessageList({ channelId }: { channelId: string }) {
-  const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt, replyingTo } = useChat();
+  const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt, replyingTo, retrySend } = useChat();
   const { isIgnored } = useIgnore();
   const { isGuestChatting, session } = useGuestChat();
   const guestFeed = useGuestLobbyFeed(true);
+  const sendGuest = useServerFn(sendGuestLobbyMessage);
   const maskDmUrls = useDmUrlMask();
   const isDmChan = isDM(channelId);
   const applyMask = (authorId: string, text: string) =>
@@ -173,7 +205,7 @@ export function MessageList({ channelId }: { channelId: string }) {
   const lastSeenMeId = useMemo(() => {
     let lastMeIdx = -1;
     for (let i = msgs.length - 1; i >= 0; i--) {
-      if (msgs[i].authorId === "me") { lastMeIdx = i; break; }
+      if (msgs[i].authorId === "me" && !msgs[i].sendStatus) { lastMeIdx = i; break; }
     }
     if (lastMeIdx === -1) return null;
     if (isDM(channelId)) {
@@ -187,6 +219,33 @@ export function MessageList({ channelId }: { channelId: string }) {
     });
     return hasLaterHuman ? msgs[lastMeIdx].id : null;
   }, [msgs, usersById, isDM, channelId, peerReadAt]);
+
+  async function retryGuestMessage(m: Message) {
+    if (!session) return;
+    const optId = m.id.startsWith("guestmsg:") ? m.id.slice("guestmsg:".length) : m.id;
+    markGuestOptimisticSending(optId);
+    try {
+      const real = await sendGuest({
+        data: {
+          visitorId: session.visitorId,
+          channelId: GUEST_LOBBY_CHANNEL_ID,
+          text: m.text,
+        },
+      });
+      confirmGuestOptimistic(optId, {
+        id: real.id,
+        channelId: real.channelId,
+        visitorId: real.visitorId,
+        displayName: real.displayName,
+        text: real.text,
+        createdAt: real.createdAt,
+        expiresAt: real.expiresAt,
+      });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to send";
+      failGuestOptimistic(optId, msg);
+    }
+  }
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -255,15 +314,20 @@ export function MessageList({ channelId }: { channelId: string }) {
                   </div>
                   <div className={`flex flex-col gap-1 ${isOwnGuest ? "items-end" : ""}`}>
                     {g.map((m) => (
-                      <div
-                        key={m.id}
-                        className={
-                          isOwnGuest
-                            ? "max-w-[min(80%,20rem)] rounded-2xl rounded-tr-md bg-primary/90 px-3 py-2 text-xs font-medium text-primary-foreground"
-                            : "max-w-[min(80%,20rem)] rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 text-xs leading-snug text-foreground/90"
-                        }
-                      >
-                        <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                      <div key={m.id} className={`flex flex-col ${isOwnGuest ? "items-end" : ""}`}>
+                        <div
+                          className={bubblePendingClass(
+                            m,
+                            isOwnGuest
+                              ? "max-w-[min(80%,20rem)] rounded-2xl rounded-tr-md bg-primary/90 px-3 py-2 text-xs font-medium text-primary-foreground"
+                              : "max-w-[min(80%,20rem)] rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 text-xs leading-snug text-foreground/90",
+                          )}
+                        >
+                          <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                        </div>
+                        {isOwnGuest && (
+                          <SendStatusBits m={m} onRetry={() => void retryGuestMessage(m)} />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -299,17 +363,19 @@ export function MessageList({ channelId }: { channelId: string }) {
                           <div className="group/msg flex items-center gap-0.5 sm:gap-1">
                             <ReplyButton onClick={() => setReplyingTo(m)} />
                             <div
-                              className={
+                              className={bubblePendingClass(
+                                m,
                                 m.kind === "me"
                                   ? `rounded-2xl bg-white/5 px-3 py-2 text-xs italic text-primary chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary/50" : ""}`
-                                  : `rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`
-                              }
+                                  : `rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in ${isReplyTarget ? "ring-2 ring-primary-foreground/40" : ""}`,
+                              )}
                             >
                               <div className="whitespace-pre-wrap break-words">{renderText(applyMask(m.authorId, m.text))}</div>
                               {m.text && <MediaEmbed text={m.text} />}
                               {m.attachment && <AttachmentView a={m.attachment} />}
                             </div>
                           </div>
+                          <SendStatusBits m={m} onRetry={() => retrySend(m.id)} />
                         </div>
                       );
                     })}

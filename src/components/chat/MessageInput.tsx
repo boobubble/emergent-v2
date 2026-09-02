@@ -10,6 +10,11 @@ import { useGuestChat } from "@/lib/guest-chat-context";
 import { sendGuestLobbyMessage } from "@/lib/guest-chat.functions";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { isBotCommandOrAction } from "@/lib/guest-nickname";
+import {
+  appendGuestOptimistic,
+  confirmGuestOptimistic,
+  failGuestOptimistic,
+} from "@/lib/use-guest-lobby-feed";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
 import { AnimatedEmojiPicker, stickerUrl } from "./AnimatedEmojiPicker";
@@ -227,20 +232,42 @@ export function MessageInput() {
       requireAuth();
       return;
     }
+    const optId = `opt-${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now())}`;
+    const nowIso = new Date().toISOString();
+    appendGuestOptimistic({
+      id: optId,
+      channelId: GUEST_LOBBY_CHANNEL_ID,
+      visitorId: guestChat.session.visitorId,
+      displayName: guestChat.session.displayName,
+      text: plain,
+      createdAt: nowIso,
+      expiresAt: new Date(Date.now() + 60 * 60_000).toISOString(),
+      sendStatus: "sending",
+    });
+    setText("");
+    setAttachment(null);
+    setAttachError("");
+    setReplyingTo(null);
     try {
-      await sendGuest({
+      const real = await sendGuest({
         data: {
           visitorId: guestChat.session.visitorId,
           channelId: GUEST_LOBBY_CHANNEL_ID,
           text: plain,
         },
       });
-      setText("");
-      setAttachment(null);
-      setAttachError("");
-      setReplyingTo(null);
+      confirmGuestOptimistic(optId, {
+        id: real.id,
+        channelId: real.channelId,
+        visitorId: real.visitorId,
+        displayName: real.displayName,
+        text: real.text,
+        createdAt: real.createdAt,
+        expiresAt: real.expiresAt,
+      });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to send";
+      failGuestOptimistic(optId, msg);
       if (msg === "GUEST_BOT_BLOCKED" || /sign up|sign in|login/i.test(msg)) {
         requireAuth();
         return;

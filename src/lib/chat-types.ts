@@ -51,6 +51,9 @@ export interface Message {
   kind?: "text" | "system" | "game" | "me";
   attachment?: Attachment;
   replyToId?: string;         // threading: id of message being replied to
+  /** Sender-local only. Other clients never see this — they get the Realtime row. */
+  sendStatus?: "sending" | "failed";
+  sendError?: string;
 }
 
 export interface RoomGameConfig {

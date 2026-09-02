@@ -160,6 +160,7 @@ describe("no auth-guest regression", () => {
     expect(src).toMatch(/isBotCommandOrAction/);
     expect(src).toMatch(/requireAuth/);
     expect(src).toMatch(/openNicknameDialog/);
+    expect(src).toMatch(/appendGuestOptimistic/);
     expect(src).not.toMatch(/signInAnonymously/);
   });
 
@@ -223,5 +224,25 @@ describe("no auth-guest regression", () => {
     const src = readFileSync(resolve(srcRoot, "routes/admin.chatrooms.tsx"), "utf8");
     expect(src).toMatch(/Guest Chat/);
     expect(src).toMatch(/GUEST_CHAT_SETTING_KEY|guest_chat/);
+  });
+});
+
+describe("guest lobby optimistic UI", () => {
+  it("MessageInput appends locally before awaiting the server send", () => {
+    const src = readFileSync(resolve(srcRoot, "components/chat/MessageInput.tsx"), "utf8");
+    expect(src).toMatch(/appendGuestOptimistic/);
+    expect(src).toMatch(/confirmGuestOptimistic/);
+    expect(src).toMatch(/failGuestOptimistic/);
+    const appendAt = src.indexOf("appendGuestOptimistic");
+    const awaitAt = src.indexOf("await sendGuest");
+    expect(appendAt).toBeGreaterThan(-1);
+    expect(awaitAt).toBeGreaterThan(appendAt);
+  });
+
+  it("MessageList shows sending / retry for own pending messages", () => {
+    const src = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
+    expect(src).toMatch(/SendStatusBits/);
+    expect(src).toMatch(/Couldn't send/);
+    expect(src).toMatch(/retrySend/);
   });
 });
