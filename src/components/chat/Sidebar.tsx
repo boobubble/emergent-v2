@@ -38,7 +38,7 @@ const FILTERS: { id: SidebarRoomFilter; label: string }[] = [
 ];
 
 export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }: Props) {
-  const { state, setActive, createRoom, deleteRoom, reset } = useChat();
+  const { state, setActive, createRoom, deleteRoom, reset, roomUnread } = useChat();
   const { logout, user } = useAuth();
   const { openSignIn, openSignUp, requireAuth } = useAuthGate();
   const guestChat = useGuestChat();
@@ -175,6 +175,11 @@ export function Sidebar({ onOpenProfile, onCollapse, onSelectDiscoveryChannel }:
             <span className={cn("text-sm leading-none", active ? "text-primary" : "opacity-45")}>#</span>
           )}
           <span className="truncate text-[12px]">{r.name}</span>
+          {!active && (roomUnread[id] ?? 0) > 0 && (
+            <span className="unread-pop grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+              {roomUnread[id] > 9 ? "9+" : roomUnread[id]}
+            </span>
+          )}
           {r.dbBacked && (
             <span className="shrink-0 rounded bg-primary/10 px-1 py-px text-[8px] font-bold uppercase text-primary">
               Live

@@ -6,7 +6,12 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import "@/styles/app-surfaces.css";
-import { ChatProvider } from "@/lib/chat-store";
+import { ChatProvider, useOptionalChat } from "@/lib/chat-store";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  consumePendingOpenChatRoom,
+  OPEN_CHAT_ROOM_EVENT,
+} from "@/lib/chat-browser-notifications";
 import { FeedPrefsProvider } from "@/lib/feed-prefs";
 import { SocialGraphProvider } from "@/lib/use-social-graph";
 import { NotificationsProvider } from "@/lib/use-notifications";
@@ -24,6 +29,29 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
 import { useBanGuard } from "@/lib/use-ban-guard";
 import { useSessionChangeDetector } from "@/lib/use-session-change-detector";
+
+function ChatRoomNotificationBridge() {
+  const chat = useOptionalChat();
+  const navigate = useNavigate();
+  useEffect(() => {
+    const open = (channelId: string) => {
+      chat?.setActive(channelId);
+      const path = window.location.pathname;
+      if (path !== "/chatroom" && path !== "/chat" && path !== "/") {
+        void navigate({ to: "/chatroom" });
+      }
+    };
+    const onOpen = (e: Event) => {
+      const id = (e as CustomEvent<{ channelId?: string }>).detail?.channelId;
+      if (id) open(id);
+    };
+    window.addEventListener(OPEN_CHAT_ROOM_EVENT, onOpen);
+    const pending = consumePendingOpenChatRoom();
+    if (pending) open(pending);
+    return () => window.removeEventListener(OPEN_CHAT_ROOM_EVENT, onOpen);
+  }, [chat, navigate]);
+  return null;
+}
 
 function AuthenticatedHooks({ userId }: { userId: string }) {
   usePresenceHeartbeat();
@@ -82,6 +110,7 @@ export function AuthenticatedAppShell({
   if (!requireChat) return inner;
   return (
     <ChatProvider username={username} authUserId={authUserId} isGuest={isGuest}>
+      <ChatRoomNotificationBridge />
       {inner}
     </ChatProvider>
   );

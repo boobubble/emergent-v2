@@ -1,6 +1,12 @@
-import { useState } from "react";
-import { MessageCircle, X, Bot, BotOff, Users, Palette, Minus, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { MessageCircle, X, Bot, BotOff, Users, Palette, Minus, Sparkles, Bell, BellOff } from "lucide-react";
 import { useChat } from "@/lib/chat-store";
+import {
+  CHAT_INAPP_ALERT_EVENT,
+  requestChatNotificationPermission,
+  useChatNotificationPermission,
+  type ChatInAppAlert,
+} from "@/lib/chat-browser-notifications";
 import { useIgnore } from "@/lib/ignore-store";
 import { Avatar } from "./Avatar";
 import { LoyaltyChip } from "./LoyaltyChip";
@@ -25,6 +31,24 @@ export function ChatHeader({
   const { state, isDM, dmUser, channelLabel, closeDM, setActive } = useChat();
   const { ignoreAllBots, setIgnoreAllBots } = useIgnore();
   const [wallpaperOpen, setWallpaperOpen] = useState(false);
+  const notifPerm = useChatNotificationPermission();
+  const [inAppAlert, setInAppAlert] = useState<ChatInAppAlert | null>(null);
+
+  useEffect(() => {
+    const onAlert = (e: Event) => {
+      const detail = (e as CustomEvent<ChatInAppAlert>).detail;
+      if (!detail) return;
+      setInAppAlert(detail);
+    };
+    window.addEventListener(CHAT_INAPP_ALERT_EVENT, onAlert);
+    return () => window.removeEventListener(CHAT_INAPP_ALERT_EVENT, onAlert);
+  }, []);
+
+  useEffect(() => {
+    if (!inAppAlert) return;
+    const t = window.setTimeout(() => setInAppAlert(null), 4000);
+    return () => window.clearTimeout(t);
+  }, [inAppAlert]);
   const id = state.activeChannel;
 
   if (isDM(id)) {
@@ -95,6 +119,19 @@ export function ChatHeader({
   if (!room) return null;
 
   return (
+    <>
+    {inAppAlert && (
+      <button
+        type="button"
+        onClick={() => setInAppAlert(null)}
+        className="sticky top-0 z-30 w-full border-b border-border bg-card px-3 py-1.5 text-left text-xs text-foreground"
+      >
+        <span className="font-semibold">{inAppAlert.title}</span>
+        {inAppAlert.body && inAppAlert.body !== inAppAlert.title && (
+          <span className="ml-2 text-muted-foreground">{inAppAlert.body}</span>
+        )}
+      </button>
+    )}
     <header className={`chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-1 px-2 ${desktopShell ? "pl-6 sm:gap-2 sm:px-6" : "pl-12 sm:gap-2 sm:px-6 sm:pl-14 md:pl-6"}`}>
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden sm:gap-3">
         <BrandMark
@@ -119,6 +156,22 @@ export function ChatHeader({
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-1">
+        {notifPerm === "default" && (
+          <button
+            type="button"
+            onClick={() => { void requestChatNotificationPermission(); }}
+            title="Enable browser notifications"
+            className="hidden sm:flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/25"
+          >
+            <Bell className="h-3.5 w-3.5" />
+            <span>Enable alerts</span>
+          </button>
+        )}
+        {notifPerm === "denied" && (
+          <span className="hidden sm:grid h-8 w-8 place-items-center text-muted-foreground" title="Browser notifications blocked">
+            <BellOff className="h-4 w-4" />
+          </span>
+        )}
         <button
           type="button"
           onClick={() => setIgnoreAllBots(!ignoreAllBots)}
@@ -153,5 +206,6 @@ export function ChatHeader({
         </button>
       </div>
     </header>
+    </>
   );
 }

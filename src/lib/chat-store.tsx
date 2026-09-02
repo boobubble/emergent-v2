@@ -37,7 +37,13 @@ import { evaluateBadges, todayKey, daysBetween } from "./achievements";
 import { supabase } from "@/integrations/supabase/client";
 import { rtLog } from "./realtime-debug";
 import { useRemoteProfiles } from "./use-remote-profiles";
-import { playDmPing, playMentionPing } from "./sounds";
+import { playDmPing, playMentionPing, playPublicChatTick } from "./sounds";
+import {
+  shouldNotifyChatMessage,
+  shouldNotifyPresence,
+  showChatBrowserNotification,
+  roomDisplayName,
+} from "./chat-browser-notifications";
 import gamebotImg from "@/assets/bots/gamebot.png";
 import novaImg from "@/assets/bots/nova.png";
 import pixelImg from "@/assets/bots/pixel.png";
@@ -90,6 +96,7 @@ import {
 } from "./chat-bot-triggers";
 import { formatPresenceLineText } from "./presence-ui";
 import { removeCorruptedKey } from "./persisted-state-recovery";
+import { markDmConversationRead } from "./dm-read";
 
 export { dmChannelFor } from "./dm-utils";
 
@@ -538,6 +545,7 @@ interface Ctx {
   isDmUnread: (peerId: string) => boolean;
   dmUnreadCount: number;
   markDmRead: (channelId: string) => Promise<void>;
+  roomUnread: Record<string, number>;
   staffKick: (targetId: string, channelId: string, targetName: string) => void;
   staffLocalMute: (targetId: string, channelId: string, minutes: number, targetName: string) => void;
   pushSystem: (channelId: string, text: string) => void;
@@ -1063,10 +1071,33 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           if (msg.channelId.startsWith("dm:")) {
             playDmPing();
           } else {
-            // @mention beep for lobby/rooms
+            playPublicChatTick();
             const myName = (typeof window !== "undefined" ? username : "");
             if (myName && new RegExp(`@${myName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(msg.text)) {
               playMentionPing();
+            }
+            if (shouldNotifyChatMessage({
+              authorId: msg.authorId,
+              channelId: msg.channelId,
+              kind: msg.kind,
+              authUserId,
+            })) {
+              const path = typeof window !== "undefined" ? window.location.pathname : "";
+              const onChatPage = path === "/chatroom" || path === "/chat" || path === "/";
+              const viewingThisRoom = onChatPage && stateRef.current.activeChannel === msg.channelId;
+              if (!viewingThisRoom) {
+                setRoomUnread((prev) => ({ ...prev, [msg.channelId]: (prev[msg.channelId] ?? 0) + 1 }));
+              }
+              const roomName = roomDisplayName(msg.channelId, stateRef.current.rooms[msg.channelId]?.name);
+              const actorName = stateRef.current.users[msg.authorId]?.name || "Someone";
+              showChatBrowserNotification({
+                eventId: `msg:${msg.id}`,
+                kind: "message",
+                channelId: msg.channelId,
+                roomName,
+                actorName,
+                preview: msg.text,
+              });
             }
           }
         }
@@ -1155,6 +1186,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   }, [authUserId]);
 
   // Upsert my read marker when I open a DM or new msgs arrive while viewing
+  const [roomUnread, setRoomUnread] = useState<Record<string, number>>({});
   const lastMsgTsRef = useRef<Record<string, number>>({});
   useEffect(() => {
     if (!authUserId) return;
@@ -1214,6 +1246,12 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
   const setActive = useCallback((channelId: string) => {
     setState(s => ({ ...s, activeChannel: channelId }));
     setReplyingTo(null);
+    setRoomUnread((prev) => {
+      if (!prev[channelId]) return prev;
+      const next = { ...prev };
+      delete next[channelId];
+      return next;
+    });
   }, []);
 
   const send = useCallback((text: string, opts?: { attachment?: Attachment; replyToId?: string; channelId?: string }) => {
@@ -1811,7 +1849,17 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         kind: "system",
       }),
     }));
-  }, []);
+    if (shouldNotifyPresence({ userName, channelId, authUserId })) {
+      const roomName = roomDisplayName(channelId, stateRef.current.rooms[channelId]?.name);
+      showChatBrowserNotification({
+        eventId: `presence:${channelId}:${kind}:${userName}:${Math.floor(Date.now() / 30_000)}`,
+        kind,
+        channelId,
+        roomName,
+        actorName: userName.trim() || "Someone",
+      });
+    }
+  }, [authUserId]);
 
   const pushSystem = useCallback((channelId: string, text: string) => {
     if (channelId !== GAMES_CHANNEL_ID) {
@@ -2009,7 +2057,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     staffKick,
     staffLocalMute,
     markDmRead,
-  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead]);
+    roomUnread,
+  }), [state, setActive, send, startDM, closeDM, joinRoom, createRoom, updateMe, adjustPoints, adjustCoins, addFriend, removeFriend, blockUser, unblockUser, reset, replyingTo, findMessage, authUserId, dmReads, dmLatestTs, staffKick, staffLocalMute, pushSystem, pushPresenceEvent, wipeChannel, deleteRoom, syncAdminChannels, registerCommunityRoom, leaveCommunityRoom, markDmRead, roomUnread]);
 
 
   return <ChatCtx.Provider value={value}>{children}</ChatCtx.Provider>;

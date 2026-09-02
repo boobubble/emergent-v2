@@ -2,10 +2,15 @@ import { useState } from "react";
 import { RotateCcw, Plus, X } from "lucide-react";
 import { useFeedPrefs, type DefaultTab, type FeedSort, type DefaultPrivacy } from "@/lib/feed-prefs";
 import { useSoundPrefs, setSoundPref, type SoundKind } from "@/lib/sound-prefs";
+import {
+  requestChatNotificationPermission,
+  useChatNotificationPermission,
+} from "@/lib/chat-browser-notifications";
 
 export function FeedSettingsPanel() {
   const { prefs, setPrefs, reset } = useFeedPrefs();
   const soundPrefs = useSoundPrefs();
+  const chatNotifPerm = useChatNotificationPermission();
   const soundItems: { key: SoundKind; label: string }[] = [
     { key: "public_chat", label: "Public chatroom sounds" },
     { key: "private_chat", label: "Private message sounds" },
@@ -80,6 +85,24 @@ export function FeedSettingsPanel() {
         <Toggle label="Comments on my posts" checked={prefs.notifyComments} onChange={(b) => setPrefs({ notifyComments: b })} />
         <Toggle label="Reactions on my posts" checked={prefs.notifyReactions} onChange={(b) => setPrefs({ notifyReactions: b })} />
         <Toggle label="Direct messages" checked={prefs.notifyDMs} onChange={(b) => setPrefs({ notifyDMs: b })} />
+        {chatNotifPerm === "unsupported" && (
+          <p className="text-xs text-muted-foreground">This browser does not support desktop notifications. Chat alerts stay in-app.</p>
+        )}
+        {chatNotifPerm === "denied" && (
+          <p className="text-xs text-muted-foreground">Browser notifications are blocked. Enable them in your browser settings to get live chatroom alerts.</p>
+        )}
+        {chatNotifPerm === "granted" && (
+          <p className="text-xs text-muted-foreground">Browser notifications are on for chatroom messages, joins, and leaves.</p>
+        )}
+        {chatNotifPerm === "default" && (
+          <button
+            type="button"
+            onClick={() => { void requestChatNotificationPermission(); }}
+            className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
+          >
+            Enable browser notifications
+          </button>
+        )}
       </Section>
 
       <Section title="Sounds">
