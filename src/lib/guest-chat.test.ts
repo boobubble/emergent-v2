@@ -219,6 +219,26 @@ describe("no auth-guest regression", () => {
     expect(src).toMatch(/isEphemeralGuest|visitor_/);
   });
 
+  it("own guest bubbles keep opaque primary contrast in light and dark", () => {
+    const src = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
+    const own = src.match(/isOwnGuest\s*\?\s*"(msg-mine[^"]+)"/);
+    expect(own?.[1]).toBeTruthy();
+    const cls = own![1];
+    expect(cls).toMatch(/\bbg-primary\b/);
+    expect(cls).not.toMatch(/bg-primary\//);
+    expect(cls).toMatch(/\btext-primary-foreground\b/);
+    expect(cls).not.toMatch(/text-transparent|opacity-0|text-background|text-muted/);
+    expect(src).toMatch(/data-message-role=\{isOwnGuest \? "me" : undefined\}/);
+    expect(src).toMatch(/backgroundColor:\s*"var\(--primary\)"/);
+    expect(src).toMatch(/color:\s*"var\(--primary-foreground\)"/);
+    expect(src).toMatch(/\[color:inherit\]/);
+    const other = src.match(/isOwnGuest\s*\?\s*"msg-mine[^"]+"\s*:\s*"([^"]+)"/);
+    expect(other?.[1]).toMatch(/text-foreground\/90/);
+    expect(other?.[1]).not.toMatch(/text-primary-foreground/);
+    expect(src).toMatch(/rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground/);
+    expect(src).not.toMatch(/bg-primary\/90 px-3 py-2 text-xs font-medium text-primary-foreground/);
+  });
+
   it("Admin chatrooms includes Guest Chat settings", () => {
     const src = readFileSync(resolve(srcRoot, "routes/admin.chatrooms.tsx"), "utf8");
     expect(src).toMatch(/Guest Chat/);

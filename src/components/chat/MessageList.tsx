@@ -79,7 +79,7 @@ function renderText(text: string) {
     const tokens = line.split(/(\*\*[^*]+\*\*|`[^`]+`|_[^_]+_)/g);
     tokens.forEach((t, i) => {
       if (/^\*\*.+\*\*$/.test(t))
-        parts.push(<strong key={`${li}-${i}`} className="font-semibold text-foreground">{linkify(t.slice(2, -2), `${li}-${i}`)}</strong>);
+        parts.push(<strong key={`${li}-${i}`} className="font-semibold">{linkify(t.slice(2, -2), `${li}-${i}`)}</strong>);
       else if (/^`.+`$/.test(t))
         parts.push(<code key={`${li}-${i}`} className="rounded-md bg-white/5 px-1.5 py-0.5 font-mono text-xs text-primary">{t.slice(1, -1)}</code>);
       else if (/^_.+_$/.test(t))
@@ -253,17 +253,27 @@ export function MessageList({ channelId }: { channelId: string }) {
                     </span>
                     <Time ts={g[0].ts} />
                   </div>
+                  {/* Own-guest fill must be opaque `bg-primary` (not /90). The guest
+                      stylesheet only emits hover:bg-primary/90, not standalone
+                      .bg-primary/90. Light + purple sets --primary-foreground to
+                      near-white, so missing fill = invisible text until selected. */}
                   <div className={`flex flex-col gap-1 ${isOwnGuest ? "items-end" : ""}`}>
                     {g.map((m) => (
                       <div
                         key={m.id}
+                        data-message-role={isOwnGuest ? "me" : undefined}
                         className={
                           isOwnGuest
-                            ? "max-w-[min(80%,20rem)] rounded-2xl rounded-tr-md bg-primary/90 px-3 py-2 text-xs font-medium text-primary-foreground"
+                            ? "msg-mine max-w-[min(80%,20rem)] rounded-2xl rounded-tr-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/20 chat-bubble-in"
                             : "max-w-[min(80%,20rem)] rounded-2xl rounded-tl-md border border-border bg-muted/40 px-3 py-2 text-xs leading-snug text-foreground/90"
                         }
+                        style={
+                          isOwnGuest
+                            ? { backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }
+                            : undefined
+                        }
                       >
-                        <div className="whitespace-pre-wrap break-words">{renderText(m.text)}</div>
+                        <div className="whitespace-pre-wrap break-words [color:inherit]">{renderText(m.text)}</div>
                       </div>
                     ))}
                   </div>
