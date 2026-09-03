@@ -153,9 +153,11 @@ describe("ctaButton editor wiring", () => {
   it("registers the shared node and toolbar action in both editors", () => {
     const read = (rel: string) => readFileSync(resolve(process.cwd(), rel), "utf8");
     const blogWrite = read("src/routes/blog.write.tsx");
+    const blogExtensions = read("src/lib/blog-writer-editor.ts");
     const blogView = read("src/components/blog/BlogEditorView.tsx");
     const pageEditor = read("src/components/admin/RichTextEditor.tsx");
-    expect(blogWrite).toContain("CtaButton");
+    expect(blogWrite).toContain("blogWriteEditorExtensions");
+    expect(blogExtensions).toContain("CtaButton");
     expect(blogView).toContain("Insert CTA Button");
     expect(blogView).toContain("CtaButtonDialog");
     expect(pageEditor).toContain("CtaButton");
