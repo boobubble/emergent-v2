@@ -15,10 +15,15 @@ import { MediaEmbed } from "./MediaEmbed";
 import { VoiceNoteBubble } from "./VoiceNoteBubble";
 import { useDmUrlMask } from "@/lib/dm-url-mask";
 import { useGuestLobbyFeed } from "@/lib/use-guest-lobby-feed";
-import { fallbackGuestAuthor } from "@/lib/guest-lobby-feed";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { useGuestChat } from "@/lib/guest-chat-context";
 import { isPresenceSystemMessage as isRoomPresenceLine } from "@/lib/presence-ui";
+import { useRemoteProfiles } from "@/lib/use-remote-profiles";
+import {
+  filterChatMessages,
+  resolveMessageAuthor,
+  safeMessageText,
+} from "@/lib/message-list-model";
 
 function PresenceSystemLine({ text }: { text: string }) {
   return (
@@ -75,7 +80,7 @@ function formatTime(ts: number) {
 
 function renderText(text: string) {
   const parts: React.ReactNode[] = [];
-  const lines = text.split("\n");
+  const lines = safeMessageText(text).split("\n");
   lines.forEach((line, li) => {
     const tokens = line.split(/(\*\*[^*]+\*\*|`[^`]+`|_[^_]+_)/g);
     tokens.forEach((t, i) => {
@@ -140,12 +145,13 @@ export function MessageList({ channelId }: { channelId: string }) {
   const { channelMessages, state, setReplyingTo, findMessage, isDM, dmPeerReadAt, replyingTo } = useChat();
   const { isIgnored } = useIgnore();
   const { isGuestChatting, session } = useGuestChat();
-  const guestFeed = useGuestLobbyFeed(true);
+  const { profiles } = useRemoteProfiles();
+  const guestFeed = useGuestLobbyFeed(channelId === GUEST_LOBBY_CHANNEL_ID);
   const maskDmUrls = useDmUrlMask();
-  const isDmChan = isDM(channelId);
+  const isDmChan = typeof channelId === "string" && isDM(channelId);
   const applyMask = (authorId: string, text: string) =>
-    isDmChan && authorId !== "me" ? maskDmUrls(text) : text;
-  const baseMsgs = channelMessages(channelId);
+    isDmChan && authorId !== "me" ? maskDmUrls(safeMessageText(text)) : safeMessageText(text);
+  const baseMsgs = typeof channelId === "string" ? channelMessages(channelId) : [];
   const allMsgs = useMemo(() => {
     if (channelId !== GUEST_LOBBY_CHANNEL_ID) return baseMsgs;
     const merged = [...baseMsgs, ...guestFeed.messages];
@@ -159,15 +165,11 @@ export function MessageList({ channelId }: { channelId: string }) {
       .sort((a, b) => a.ts - b.ts);
   }, [baseMsgs, guestFeed.messages, channelId]);
   const usersById = useMemo(
-    () => ({ ...state.users, ...guestFeed.users }),
-    [state.users, guestFeed.users],
+    () => ({ ...profiles, ...state.users, ...guestFeed.users }),
+    [profiles, state.users, guestFeed.users],
   );
   const msgs = useMemo(
-    () => allMsgs.filter(m => {
-      const u = usersById[m.authorId];
-      if (!u || m.authorId === "me" || m.authorId.startsWith("visitor_")) return true;
-      return !isIgnored(m.authorId, u.isBot);
-    }),
+    () => filterChatMessages(allMsgs, usersById, isIgnored),
     [allMsgs, usersById, isIgnored],
   );
   const peerReadAt = isDM(channelId) ? dmPeerReadAt(channelId) : 0;
@@ -236,7 +238,7 @@ export function MessageList({ channelId }: { channelId: string }) {
           if (isPresenceSystemMessage(g[0])) {
             return <PresenceSystemLine key={g[0].id} text={g[0].text} />;
           }
-          const author = usersById[g[0].authorId] ?? fallbackGuestAuthor(g[0].authorId);
+          const author = resolveMessageAuthor(usersById, g[0].authorId);
           const isEphemeralGuest = Boolean(author.isGuest || author.id.startsWith("visitor_"));
           const isOwnGuest = Boolean(isGuestChatting && session && author.id === session.visitorId);
           const isMe = author.id === "me" || isOwnGuest;

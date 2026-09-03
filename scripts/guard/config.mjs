@@ -262,12 +262,17 @@ export const MODULES = {
       "src/lib/chat-provider-safety.test.ts",
       "src/lib/use-room-online-counts.test.ts",
       "src/lib/dm-utils.test.ts",
+      "src/lib/mini-dm.ts",
+      "src/lib/mini-dm-messages.test.tsx",
+      "src/lib/message-list-model.ts",
+      "src/lib/dm-url-mask.tsx",
     ],
     tests: [
       "src/lib/desktop-app-layout.test.ts",
       "src/lib/guest-chat.test.ts",
       "src/lib/chat-provider-safety.test.ts",
       "src/lib/use-room-online-counts.test.ts",
+      "src/lib/mini-dm-messages.test.tsx",
     ],
   },
   communities: {

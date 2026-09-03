@@ -41,18 +41,19 @@ describe("opening a DM must not trip the Chatrooms error boundary", () => {
   const header = readFileSync(resolve(testDir, "../components/chat/ChatHeader.tsx"), "utf8");
   const chatroomRoute = readFileSync(resolve(testDir, "../routes/chatroom.tsx"), "utf8");
 
-  it("MiniDMWindow runs useTyping / useState / useServerFn before any missing-peer return", () => {
+  it("MiniDMWindow fetches the DM thread even when the peer comes from remote profiles", () => {
     const mini = sliceBetween(dock, "function MiniDMWindow(", "function openMiniDM(");
     const earlyReturn = mini.search(/if\s*\(\s*!channelId\s*\|\|\s*!u\s*\)\s*return\s+null/);
     expect(earlyReturn).toBeGreaterThan(-1);
-    expect(mini.indexOf("useTyping(")).toBeGreaterThan(-1);
+    expect(mini).toContain("resolveMiniDmPeer(");
+    expect(mini).toContain("watchRemoteChannel(channelId)");
+    expect(mini.indexOf("watchRemoteChannel(channelId)")).toBeLessThan(earlyReturn);
+    expect(mini).toContain("useRemoteProfiles(");
     expect(mini.indexOf("useTyping(")).toBeLessThan(earlyReturn);
     expect(mini.indexOf("useState(")).toBeGreaterThan(-1);
     expect(mini.indexOf("useState(")).toBeLessThan(earlyReturn);
     expect(mini.indexOf("useServerFn(")).toBeGreaterThan(-1);
     expect(mini.indexOf("useServerFn(")).toBeLessThan(earlyReturn);
-    expect(mini.indexOf("useRemoteProfiles(")).toBeGreaterThan(-1);
-    expect(mini.indexOf("useRemoteProfiles(")).toBeLessThan(earlyReturn);
   });
 
   it("desktop mini-DM and the main message pane are isolated so a DM throw cannot blank /chatroom", () => {
@@ -70,6 +71,22 @@ describe("opening a DM must not trip the Chatrooms error boundary", () => {
     expect(dmBranch).not.toMatch(/if\s*\(\s*!u\s*\)\s*return\s+null/);
     expect(dmBranch).toContain("Direct message");
     expect(dmBranch).toContain("DMWallpaperSheet");
+  });
+
+  it("MessageList resolves authors from remote profiles and does not crash on incomplete rows", () => {
+    const list = readFileSync(resolve(testDir, "../components/chat/MessageList.tsx"), "utf8");
+    expect(list).toContain("useRemoteProfiles");
+    expect(list).toContain("filterChatMessages");
+    expect(list).toContain("resolveMessageAuthor");
+    expect(list).toContain("useGuestLobbyFeed(channelId === GUEST_LOBBY_CHANNEL_ID)");
+    expect(list).not.toContain("useGuestLobbyFeed(true)");
+  });
+
+  it("history fetch includes watched mini-DM channels, not only activeChannel", () => {
+    const store = readFileSync(resolve(testDir, "chat-store.tsx"), "utf8");
+    expect(store).toContain("extraRemoteDmChannelsToFetch");
+    expect(store).toContain("watchedRemoteChannels");
+    expect(store).toContain("watchRemoteChannel");
   });
 
   it("public rooms still render ChatChannelBody for non-DM channels", () => {

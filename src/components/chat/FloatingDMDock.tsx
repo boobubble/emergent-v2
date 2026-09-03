@@ -7,12 +7,13 @@ import { useChat } from "@/lib/chat-store";
 import { isRemoteDmChannel } from "@/lib/dm-utils";
 import { useAuth } from "@/lib/auth-store";
 import { useRemoteProfiles } from "@/lib/use-remote-profiles";
+import { resolveMiniDmPeer } from "@/lib/mini-dm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MessageList } from "./MessageList";
 import { TypingIndicator } from "./TypingIndicator";
 import { useTyping } from "@/lib/use-typing";
 import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
-import type { Attachment, User } from "@/lib/chat-types";
+import type { Attachment } from "@/lib/chat-types";
 import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 
 const MAX_OPEN = 2;
@@ -25,7 +26,7 @@ const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
  */
 export function FloatingDMDock() {
   const chat = useChat();
-  const { state, send, dmChannelFor, startDM, setActive, markDmRead } = chat;
+  const { state, send, dmChannelFor, startDM, setActive, markDmRead, watchRemoteChannel } = chat;
   const { user: authUser } = useAuth();
   const isMobile = useIsMobile();
 
@@ -202,22 +203,12 @@ export function FloatingDMDock() {
             onActivity={() => bumpToTop(peerId)}
             send={send}
             dmChannelFor={dmChannelFor}
+            watchRemoteChannel={watchRemoteChannel}
           />
         ))}
       </div>
     </div>
   );
-}
-
-function placeholderPeer(peerId: string): User {
-  return {
-    id: peerId,
-    name: "User",
-    avatarColor: "oklch(0.62 0.02 250)",
-    status: "offline",
-    xp: 0,
-    level: 1,
-  };
 }
 
 function MiniDMWindow({
@@ -229,6 +220,7 @@ function MiniDMWindow({
   onActivity,
   send,
   dmChannelFor,
+  watchRemoteChannel,
 }: {
   peerId: string;
   leavingMode?: "minimize" | "close";
@@ -238,6 +230,7 @@ function MiniDMWindow({
   onActivity: () => void;
   send: (text: string, opts?: { channelId?: string; attachment?: Attachment }) => void;
   dmChannelFor: (peerId: string) => string | null;
+  watchRemoteChannel: (channelId: string | null | undefined) => void;
 }) {
   // Hooks must run on every render. MembersPanel can open a DM for a remote
   // profile that is not in chat-store.users yet; returning before these hooks
@@ -247,7 +240,7 @@ function MiniDMWindow({
   const unread = chat.isDmUnread(peerId);
   const { profiles } = useRemoteProfiles();
   const channelId = dmChannelFor(peerId);
-  const u = state.users[peerId] ?? profiles[peerId] ?? (channelId ? placeholderPeer(peerId) : undefined);
+  const u = resolveMiniDmPeer(peerId, state.users, profiles, channelId);
   const me = state.users.me;
   const meForTyping = me && !me.isGuest ? { id: me.id, name: me.name } : null;
   const { typers, sendTyping } = useTyping(channelId, meForTyping, !!(meForTyping && channelId));
@@ -262,6 +255,10 @@ function MiniDMWindow({
   useEffect(() => {
     if (channelId) inputRef.current?.focus();
   }, [channelId]);
+
+  useEffect(() => {
+    watchRemoteChannel(channelId);
+  }, [channelId, watchRemoteChannel]);
 
   if (!channelId || !u) return null;
 
