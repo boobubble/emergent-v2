@@ -15,6 +15,7 @@ import { MediaEmbed } from "./MediaEmbed";
 import { VoiceNoteBubble } from "./VoiceNoteBubble";
 import { useDmUrlMask } from "@/lib/dm-url-mask";
 import { useGuestLobbyFeed } from "@/lib/use-guest-lobby-feed";
+import { fallbackGuestAuthor } from "@/lib/guest-lobby-feed";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { useGuestChat } from "@/lib/guest-chat-context";
 import { isPresenceSystemMessage as isRoomPresenceLine } from "@/lib/presence-ui";
@@ -235,8 +236,7 @@ export function MessageList({ channelId }: { channelId: string }) {
           if (isPresenceSystemMessage(g[0])) {
             return <PresenceSystemLine key={g[0].id} text={g[0].text} />;
           }
-          const author = usersById[g[0].authorId];
-          if (!author) return null;
+          const author = usersById[g[0].authorId] ?? fallbackGuestAuthor(g[0].authorId);
           const isEphemeralGuest = Boolean(author.isGuest || author.id.startsWith("visitor_"));
           const isOwnGuest = Boolean(isGuestChatting && session && author.id === session.visitorId);
           const isMe = author.id === "me" || isOwnGuest;
