@@ -177,6 +177,7 @@ export const MODULES = {
       "src/components/PublicCmsPageView.ssr.test.tsx",
       "src/lib/cms-footer.test.ts",
       "src/lib/content-image-seo.test.ts",
+      "src/lib/pages-cms/pages-editor-new-page.test.tsx",
     ],
   },
   blog: {
