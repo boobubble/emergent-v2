@@ -53,28 +53,33 @@ export function ChatHeader({
 
   if (isDM(id)) {
     const u = dmUser(id);
-    if (!u) return null;
-
+    const peerId = u?.id;
     const ONLINE_WINDOW_MS = 5 * 60 * 1000;
-    const isOnline = u.isBot
-      ? u.status !== "offline"
-      : u.status === "online" && (!u.lastSeen || Date.now() - u.lastSeen <= ONLINE_WINDOW_MS);
+    const isOnline = u
+      ? u.isBot
+        ? u.status !== "offline"
+        : u.status === "online" && (!u.lastSeen || Date.now() - u.lastSeen <= ONLINE_WINDOW_MS)
+      : false;
     const statusLabel = isOnline ? "online" : "offline";
+    const leaveToRoom = () => {
+      const fallback = state.roomOrder?.[0] || "lobby";
+      setActive(fallback);
+    };
     return (
       <>
       <header className={`chat-glass sticky top-0 z-20 flex h-16 items-center justify-between gap-3 px-6 ${desktopShell ? "pl-6" : "pl-14 md:pl-6"}`}>
 
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <Avatar user={u} size={36} />
+          {u ? <Avatar user={u} size={36} /> : <MessageCircle className="h-9 w-9 shrink-0 text-primary" />}
           <div className="min-w-0 leading-tight">
             <div className="flex items-center gap-1.5 truncate font-bold text-foreground">
               <MessageCircle className="h-3.5 w-3.5 shrink-0 text-primary" />
-              <span className="truncate">{u.name}</span>
+              <span className="truncate">{u?.name || "Direct message"}</span>
             </div>
             <div className="truncate text-[11px] capitalize text-muted-foreground flex items-center gap-1.5">
               {isOnline && <span className="chat-online-dot" aria-hidden />}
-              <span className={isOnline ? "text-primary font-semibold" : ""}>{statusLabel}</span>
-              {u.bio ? <span className="truncate">· {u.bio}</span> : null}
+              <span className={isOnline ? "text-primary font-semibold" : ""}>{u ? statusLabel : "Opening…"}</span>
+              {u?.bio ? <span className="truncate">· {u.bio}</span> : null}
             </div>
           </div>
         </div>
@@ -90,9 +95,10 @@ export function ChatHeader({
           </button>
           <button
             onClick={() => {
-              window.dispatchEvent(new CustomEvent("palrgo:minimizeMobileDM", { detail: { peerId: u.id } }));
-              const fallback = state.roomOrder?.[0] || "lobby";
-              setActive(fallback);
+              if (peerId) {
+                window.dispatchEvent(new CustomEvent("palrgo:minimizeMobileDM", { detail: { peerId } }));
+              }
+              leaveToRoom();
             }}
             aria-label="Minimize DM"
             title="Minimize"
@@ -101,7 +107,10 @@ export function ChatHeader({
             <Minus className="h-4 w-4" />
           </button>
           <button
-            onClick={() => closeDM(u.id)}
+            onClick={() => {
+              if (peerId) closeDM(peerId);
+              else leaveToRoom();
+            }}
             aria-label="Close DM"
             className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-destructive/15 hover:text-destructive"
           >

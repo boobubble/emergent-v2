@@ -6,12 +6,14 @@ import { deleteMyDmConversation } from "@/lib/account-dm.functions";
 import { useChat } from "@/lib/chat-store";
 import { isRemoteDmChannel } from "@/lib/dm-utils";
 import { useAuth } from "@/lib/auth-store";
+import { useRemoteProfiles } from "@/lib/use-remote-profiles";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MessageList } from "./MessageList";
 import { TypingIndicator } from "./TypingIndicator";
 import { useTyping } from "@/lib/use-typing";
 import { FrameAvatar, CosmeticName } from "@/components/cosmetics/CosmeticBits";
-import type { Attachment } from "@/lib/chat-types";
+import type { Attachment, User } from "@/lib/chat-types";
+import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 
 const MAX_OPEN = 2;
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
@@ -207,6 +209,17 @@ export function FloatingDMDock() {
   );
 }
 
+function placeholderPeer(peerId: string): User {
+  return {
+    id: peerId,
+    name: "User",
+    avatarColor: "oklch(0.62 0.02 250)",
+    status: "offline",
+    xp: 0,
+    level: 1,
+  };
+}
+
 function MiniDMWindow({
   peerId,
   leavingMode,
@@ -226,15 +239,18 @@ function MiniDMWindow({
   send: (text: string, opts?: { channelId?: string; attachment?: Attachment }) => void;
   dmChannelFor: (peerId: string) => string | null;
 }) {
+  // Hooks must run on every render. MembersPanel can open a DM for a remote
+  // profile that is not in chat-store.users yet; returning before these hooks
+  // crashed /chatroom with the Chatrooms AppErrorBoundary.
   const chat = useChat();
   const { state } = chat;
   const unread = chat.isDmUnread(peerId);
-  const u = state.users[peerId];
+  const { profiles } = useRemoteProfiles();
   const channelId = dmChannelFor(peerId);
-  if (!channelId || !u) return null;
+  const u = state.users[peerId] ?? profiles[peerId] ?? (channelId ? placeholderPeer(peerId) : undefined);
   const me = state.users.me;
   const meForTyping = me && !me.isGuest ? { id: me.id, name: me.name } : null;
-  const { typers, sendTyping } = useTyping(channelId, meForTyping, !!meForTyping);
+  const { typers, sendTyping } = useTyping(channelId, meForTyping, !!(meForTyping && channelId));
   const [text, setText] = useState("");
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
@@ -243,12 +259,11 @@ function MiniDMWindow({
   const fileRef = useRef<HTMLInputElement>(null);
   const deleteDm = useServerFn(deleteMyDmConversation);
 
-
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (channelId) inputRef.current?.focus();
+  }, [channelId]);
 
-  if (!u) return null;
+  if (!channelId || !u) return null;
 
   const submit = () => {
     const t = text.trim();
@@ -363,7 +378,9 @@ function MiniDMWindow({
 
       {/* Body — reuse existing MessageList for full feature parity */}
       <div className="flex min-h-0 flex-1 flex-col">
-        <MessageList channelId={channelId} />
+        <ChatErrorBoundary label="mini-dm-messages">
+          <MessageList channelId={channelId} />
+        </ChatErrorBoundary>
       </div>
 
       {/* Attachment preview */}

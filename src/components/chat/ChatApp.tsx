@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Flame, Award, PanelLeftOpen, Star, X, MessageSquare } from "lucide-react";
 import { CommunityHub, useHubBadge } from "@/components/chat/CommunityHub";
 import { ChatThemeStore } from "@/components/chat/ChatThemeStore";
+import { ChatErrorBoundary } from "@/components/ChatErrorBoundary";
 import { useActiveChatTheme } from "@/lib/chat-themes";
 import { useOptionalChat } from "@/lib/chat-store";
 import { useHomePageMode } from "@/lib/use-home-page-mode";
@@ -424,12 +425,14 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             return (
               <>
                 {!(chatTheme === "gaming_arena" && !activeIsDM) && (
-                  <ChatHeader
-                    onOpenHub={() => setHubOpen(true)}
-                    hubOpen={hubOpen}
-                    desktopShell={isClientDesktopShell(shellLayout)}
-                    largeDesktop={isClientLargeDesktopShell(shellLayout)}
-                  />
+                  <ChatErrorBoundary label="chat-header">
+                    <ChatHeader
+                      onOpenHub={() => setHubOpen(true)}
+                      hubOpen={hubOpen}
+                      desktopShell={isClientDesktopShell(shellLayout)}
+                      largeDesktop={isClientLargeDesktopShell(shellLayout)}
+                    />
+                  </ChatErrorBoundary>
                 )}
                 <div className="relative flex min-h-0 flex-1 flex-col">
                   {activeIsDM && (
@@ -445,7 +448,9 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
                   {!activeIsDM && chatTheme === "gaming_arena" && (
                     <GamingArenaHero channelId={state.activeChannel} />
                   )}
-                  <ChatChannelBody channelId={state.activeChannel} activeIsDM={activeIsDM} />
+                  <ChatErrorBoundary label="chat-messages">
+                    <ChatChannelBody channelId={state.activeChannel} activeIsDM={activeIsDM} />
+                  </ChatErrorBoundary>
                   <PresenceFeed channelId={state.activeChannel} />
 
                 </div>
@@ -494,7 +499,9 @@ function ChatAppLoaded({ chat }: { chat: NonNullable<ReturnType<typeof useOption
             forceDesktopColumn={isClientLargeDesktopShell(shellLayout)}
           />
         )}
-        <FloatingDMDock />
+        <ChatErrorBoundary label="floating-dm">
+          <FloatingDMDock />
+        </ChatErrorBoundary>
         <MobileDMMinimizedDock />
         <TrioRoomsDock />
         <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
