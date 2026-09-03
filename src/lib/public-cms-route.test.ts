@@ -161,7 +161,9 @@ describe("CMS / blog route contracts", () => {
     expect(src).toContain("getPublishedBlogBySlug");
     expect(src).toContain("if (!post) throw notFound()");
     expect(src).toContain("notFoundSeoHead");
-    expect(src).not.toContain("@/integrations/supabase/client");
+    expect(src).toContain('import("@/integrations/supabase/client.server")');
+    expect(src).not.toContain('from "@/integrations/supabase/client"');
+    expect(src).not.toContain("loadBrowserSupabase");
   });
 
   it("treats /blog and /blog/yahoo as public guest paths", () => {
