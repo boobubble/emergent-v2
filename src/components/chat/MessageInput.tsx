@@ -34,14 +34,29 @@ const COMMANDS = [
 ];
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
-export function MessageInput() {
-  const { send, state, replyingTo, setReplyingTo, pushSystem, wipeChannel } = useChat();
+export function MessageInput({
+  channelId: channelIdProp,
+  compact: compactProp,
+  onActivity,
+  autoFocus,
+  placeholder,
+}: {
+  /** When set (desktop mini-DM), send/typing target this thread instead of activeChannel. */
+  channelId?: string;
+  compact?: boolean;
+  onActivity?: () => void;
+  autoFocus?: boolean;
+  placeholder?: string;
+} = {}) {
+  const { send, state, replyingTo, setReplyingTo, pushSystem, wipeChannel, isDM } = useChat();
+  const channelId = channelIdProp || state.activeChannel;
+  const compact = compactProp ?? isDM(channelId);
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const guestChat = useGuestChat();
   const sendGuest = useServerFn(sendGuestLobbyMessage);
   const me = user && !user.isGuest ? { id: user.id, name: user.username } : null;
-  const { typers, sendTyping } = useTyping(state.activeChannel, me, !!me);
+  const { typers, sendTyping } = useTyping(channelId, me, !!me);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [showStickers, setShowStickers] = useState(false);
@@ -51,7 +66,7 @@ export function MessageInput() {
   const { raw: appRaw } = useAppSettings();
   const media = mergeMediaConfig((appRaw as any).media);
   const voiceCfg: VoiceNotesConfig = { ...VOICE_NOTES_DEFAULTS, ...((appRaw as any).voice_notes || {}) };
-  const voiceMax = maxDurationForChannel(state.activeChannel, voiceCfg);
+  const voiceMax = maxDurationForChannel(channelId, voiceCfg);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachError, setAttachError] = useState("");
   const [caret, setCaret] = useState(0);
@@ -113,6 +128,10 @@ export function MessageInput() {
   }, [replyingTo]);
 
   useEffect(() => {
+    if (autoFocus) inputRef.current?.focus();
+  }, [autoFocus, channelId]);
+
+  useEffect(() => {
     function onMention(e: Event) {
       const ce = e as CustomEvent<{ name?: string }>;
       const name = ce.detail?.name;
@@ -137,6 +156,8 @@ export function MessageInput() {
   const earnChat = useServerFn(earnChatMessage);
   const clearChannelFn = useServerFn(clearChannelMessages);
   const queryClient = useQueryClient();
+  const replyForThis =
+    replyingTo && (!replyingTo.channelId || replyingTo.channelId === channelId) ? replyingTo : null;
 
   async function handleClearCache() {
     const ok = await isCurrentUserAdmin();
@@ -150,7 +171,6 @@ export function MessageInput() {
   }
 
   async function handleClearChannel() {
-    const channelId = state.activeChannel;
     if (!me) {
       toast.error("Admins only", { description: "/clear (or /delete) is restricted to admins and room moderators." });
       return;
@@ -189,7 +209,7 @@ export function MessageInput() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to clear chat";
       toast.error("Cannot clear chat", { id: "clearchat", description: msg });
-      pushSystem(state.activeChannel, `⚠️ Couldn't clear chat — ${msg}`);
+      pushSystem(channelId, `⚠️ Couldn't clear chat — ${msg}`);
     }
   }
 
@@ -216,7 +236,7 @@ export function MessageInput() {
       guestChat.openNicknameDialog();
       return;
     }
-    if (state.activeChannel !== GUEST_LOBBY_CHANNEL_ID) {
+    if (channelId !== GUEST_LOBBY_CHANNEL_ID) {
       requireAuth();
       return;
     }
@@ -265,7 +285,7 @@ export function MessageInput() {
       void submitGuestLobby(trimmed);
       return;
     }
-    if (!user && guestChat.enabled && state.activeChannel === GUEST_LOBBY_CHANNEL_ID && !attachment && !isBotCommandOrAction(trimmed)) {
+    if (!user && guestChat.enabled && channelId === GUEST_LOBBY_CHANNEL_ID && !attachment && !isBotCommandOrAction(trimmed)) {
       guestChat.openNicknameDialog();
       return;
     }
@@ -282,13 +302,18 @@ export function MessageInput() {
         return;
       }
       const outgoing = autoMentionUsernames(text);
-      send(outgoing, { attachment: attachment || undefined, replyToId: replyingTo?.id });
+      send(outgoing, {
+        attachment: attachment || undefined,
+        replyToId: replyForThis?.id,
+        ...(channelIdProp ? { channelId: channelIdProp } : {}),
+      });
       if (me) {
-        earnChat({ data: { channelId: state.activeChannel, isReply: !!replyingTo } }).catch(() => {});
+        earnChat({ data: { channelId, isReply: !!replyForThis } }).catch(() => {});
       }
       setText("");
       setAttachment(null);
       setAttachError("");
+      onActivity?.();
     });
   }
 
@@ -298,7 +323,11 @@ export function MessageInput() {
   ) {
     // Media / stickers / gif / voice always require a real account.
     requireAuth(() => {
-      send(body, opts);
+      send(body, {
+        ...opts,
+        ...(channelIdProp ? { channelId: channelIdProp } : {}),
+      });
+      onActivity?.();
     });
   }
 
@@ -318,7 +347,7 @@ export function MessageInput() {
       e.preventDefault();
       submit();
     }
-    if (e.key === "Escape" && replyingTo) {
+    if (e.key === "Escape" && replyForThis) {
       e.preventDefault();
       setReplyingTo(null);
     }
@@ -352,24 +381,36 @@ export function MessageInput() {
     }
   }
 
-  const replyAuthor = replyingTo ? state.users[replyingTo.authorId] : null;
+  const replyAuthor = replyForThis ? state.users[replyForThis.authorId] : null;
 
-  const channelId = state.activeChannel;
   const muteUntil = state.moderation?.[channelId]?.me?.mutedUntil;
   const isChannelMuted = !!(muteUntil && muteUntil > Date.now());
   const muteSecsLeft = isChannelMuted ? Math.ceil((muteUntil! - Date.now()) / 1000) : 0;
   const muteLabel = muteSecsLeft >= 60 ? `${Math.ceil(muteSecsLeft / 60)}m` : `${muteSecsLeft}s`;
   const mutedRoomName = state.rooms[channelId]?.name || channelId;
+  const composerPlaceholder = placeholder
+    ?? (guestChat.isGuestChatting && channelId === GUEST_LOBBY_CHANNEL_ID
+      ? `Message as ${guestChat.session?.displayName ?? "Guest"}…`
+      : !user && guestChat.enabled && channelId === GUEST_LOBBY_CHANNEL_ID
+        ? "Message Lobby as Guest, or sign in…"
+        : replyForThis
+          ? "Write your reply…"
+          : compact
+            ? "Message…"
+            : "Message — try !help or @mention");
 
   return (
-    <div className="min-w-0 overflow-x-hidden px-2 py-1 sm:px-6 sm:py-0">
-      {replyingTo && (
+    <div
+      data-chat-composer={compact ? "dm" : "room"}
+      className={`min-w-0 ${compact ? "overflow-x-auto px-1.5 py-1" : "overflow-x-auto px-2 py-1 sm:px-6 sm:py-0"}`}
+    >
+      {replyForThis && (
         <div className="mb-2 flex min-h-11 items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
           <Reply className="h-4 w-4 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
             <div className="font-semibold text-primary">Replying to {replyAuthor?.name || "user"}</div>
             <div className="line-clamp-2 text-muted-foreground">
-              {replyingTo.text || (replyingTo.attachment ? `📎 ${replyingTo.attachment.name}` : "(message)")}
+              {replyForThis.text || (replyForThis.attachment ? `📎 ${replyForThis.attachment.name}` : "(message)")}
             </div>
           </div>
           <button
@@ -382,7 +423,7 @@ export function MessageInput() {
           </button>
         </div>
       )}
-      {suggestions.length > 0 && (
+      {!compact && suggestions.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1.5">
           {suggestions.map(c => (
             <button key={c} onClick={() => setText(c + " ")} className="rounded-full bg-white/5 px-3 py-1 font-mono text-xs text-primary transition-colors hover:bg-white/10">
@@ -413,14 +454,14 @@ export function MessageInput() {
         </div>
       )}
       {showEmoji && (
-        <div className="mb-2">
+        <div className="mb-2 max-w-full overflow-x-auto">
           <EmojiPicker
             onPick={(e) => { setText(t => t + e); setShowEmoji(false); inputRef.current?.focus(); }}
           />
         </div>
       )}
       {showStickers && (
-        <div className="mb-2">
+        <div className="mb-2 max-w-full overflow-x-auto">
           <AnimatedEmojiPicker
             onPick={(s) => {
               sendAsAuthed("", {
@@ -431,7 +472,7 @@ export function MessageInput() {
                   size: 0,
                   dataUrl: stickerUrl(s),
                 },
-                replyToId: replyingTo?.id,
+                replyToId: replyForThis?.id,
               });
               setShowStickers(false);
             }}
@@ -442,7 +483,7 @@ export function MessageInput() {
         <div className="mb-2">
           <GiphyPicker
             onPick={(g) => {
-              sendAsAuthed(g.pageUrl, { replyToId: replyingTo?.id });
+              sendAsAuthed(g.pageUrl, { replyToId: replyForThis?.id });
               setShowGiphy(false);
             }}
           />
@@ -452,7 +493,7 @@ export function MessageInput() {
         <div className="mb-2">
           <YoutubePicker
             onPick={(url) => {
-              sendAsAuthed(url, { replyToId: replyingTo?.id });
+              sendAsAuthed(url, { replyToId: replyForThis?.id });
               setShowYoutube(false);
             }}
           />
@@ -463,7 +504,7 @@ export function MessageInput() {
           maxSeconds={voiceMax}
           onClose={() => setShowVoice(false)}
           onSend={(a) => {
-            sendAsAuthed("", { attachment: a, replyToId: replyingTo?.id });
+            sendAsAuthed("", { attachment: a, replyToId: replyForThis?.id });
             setShowVoice(false);
           }}
         />
@@ -495,25 +536,21 @@ export function MessageInput() {
           </span>
         </div>
       ) : (
-      <div className="chat-composer-glow group relative flex min-w-0 items-end gap-0.5 rounded-3xl border border-border bg-card/60 pb-0 pl-2 pt-2 pr-1 shadow-sm backdrop-blur-md transition-all sm:gap-1 sm:pl-4 sm:pr-2">
+      <div className={`chat-composer-glow group relative flex min-w-0 items-end gap-0.5 rounded-3xl border border-border bg-card/60 pb-0 pt-2 pr-1 shadow-sm backdrop-blur-md transition-all ${compact ? "pl-1 sm:gap-0.5 sm:pl-2 sm:pr-1" : "pl-2 sm:gap-1 sm:pl-4 sm:pr-2"}`}>
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
         <button onClick={() => requireAuth(() => fileRef.current?.click())} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Attach file" aria-label="Attach file">
           <Paperclip className="h-5 w-5" />
         </button>
+        {!compact && (
         <button onClick={() => requireAuth(() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !")))} className="mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary sm:grid" title="Command" aria-label="Insert command">
           <Sparkles className="h-5 w-5" />
         </button>
-        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); }} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={
-          guestChat.isGuestChatting && state.activeChannel === GUEST_LOBBY_CHANNEL_ID
-            ? `Message as ${guestChat.session?.displayName ?? "Guest"}…`
-            : !user && guestChat.enabled
-              ? "Message Lobby as Guest, or sign in…"
-              : replyingTo ? "Write your reply…" : "Message — try !help or @mention"
-        } className="max-h-[140px] min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm" />
+        )}
+        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); onActivity?.(); }} onFocus={() => onActivity?.()} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={composerPlaceholder} className="max-h-[140px] min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm" />
         <button onClick={() => requireAuth(() => { setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); })} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Animated stickers" aria-label="Animated stickers">
           <Sticker className="h-5 w-5" />
         </button>
-        {media.giphy.enabled && (
+        {!compact && media.giphy.enabled && (
           <button
             onClick={() => requireAuth(() => { setShowGiphy(s => !s); setShowEmoji(false); setShowStickers(false); setShowYoutube(false); })}
             className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-fuchsia-400"
@@ -523,7 +560,7 @@ export function MessageInput() {
             <ImagePlay className="h-5 w-5" />
           </button>
         )}
-        {media.youtube.enabled && (
+        {!compact && media.youtube.enabled && (
           <button
             onClick={() => requireAuth(() => { setShowYoutube(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); })}
             className="mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-red-500 sm:grid"

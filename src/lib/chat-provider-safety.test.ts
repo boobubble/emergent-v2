@@ -49,11 +49,13 @@ describe("opening a DM must not trip the Chatrooms error boundary", () => {
     expect(mini).toContain("watchRemoteChannel(channelId)");
     expect(mini.indexOf("watchRemoteChannel(channelId)")).toBeLessThan(earlyReturn);
     expect(mini).toContain("useRemoteProfiles(");
-    expect(mini.indexOf("useTyping(")).toBeLessThan(earlyReturn);
-    expect(mini.indexOf("useState(")).toBeGreaterThan(-1);
-    expect(mini.indexOf("useState(")).toBeLessThan(earlyReturn);
     expect(mini.indexOf("useServerFn(")).toBeGreaterThan(-1);
     expect(mini.indexOf("useServerFn(")).toBeLessThan(earlyReturn);
+    expect(mini.indexOf("useState(")).toBeGreaterThan(-1);
+    expect(mini.indexOf("useState(")).toBeLessThan(earlyReturn);
+    expect(mini).toContain("<MessageInput");
+    expect(mini).toContain("channelId={channelId}");
+    expect(mini).not.toContain('setText(t => t + "😊")');
   });
 
   it("desktop mini-DM and the main message pane are isolated so a DM throw cannot blank /chatroom", () => {
@@ -93,6 +95,24 @@ describe("opening a DM must not trip the Chatrooms error boundary", () => {
     expect(chatApp).toContain("activeIsDM={activeIsDM}");
     expect(chatApp).toContain("{!isDM(state.activeChannel) && (");
     expect(chatApp).toContain("<MembersPanel");
+  });
+
+  it("DM composers reuse public-room emoji, stickers, and voice (not a dummy 😊 insert)", () => {
+    const input = readFileSync(resolve(testDir, "../components/chat/MessageInput.tsx"), "utf8");
+    const feed = readFileSync(resolve(testDir, "../components/feed/FeedDMDock.tsx"), "utf8");
+    expect(input).toContain('aria-label="Animated stickers"');
+    expect(input).toContain('aria-label="Voice note"');
+    expect(input).toContain('aria-label="Emoji"');
+    expect(input).toContain("AnimatedEmojiPicker");
+    expect(input).toContain("VoiceRecorder");
+    expect(input).toContain("maxDurationForChannel(channelId");
+    expect(input).toContain("channelIdProp");
+    expect(input).toMatch(/data-chat-composer=\{compact \? "dm" : "room"\}/);
+    expect(input).not.toMatch(/if\s*\(\s*isDM\([^)]*\)\s*\)\s*return\s+null/);
+    expect(chatApp).toContain("<MessageInput />");
+    expect(feed).toContain("<MessageInput />");
+    expect(dock).toContain("<MessageInput");
+    expect(dock).toContain("channelId={channelId}");
   });
 });
 
