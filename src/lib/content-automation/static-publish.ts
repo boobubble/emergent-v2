@@ -29,8 +29,10 @@ import {
   padInternalLinks,
   pickPublishedInternalHrefs,
   preparePublishablePage,
+  ensurePlannedLinks,
   type PlannedInternalLink,
 } from "@/lib/content-automation/publish-quality";
+import { coherentGeneratedTitles } from "@/lib/pages-cms/coherent-titles";
 
 export type StaticPageEntry = {
   slug: string;
@@ -144,16 +146,6 @@ function labelFromHref(href: string): string {
   return slug.replace(/-chat-room$/i, "").replace(/-/g, " ") || "related page";
 }
 
-function ensurePlannedLinks(html: string, planned: PlannedInternalLink[]): string {
-  let out = html;
-  for (const item of planned) {
-    if (!item.href) continue;
-    if (htmlHasHref(out, item.href)) continue;
-    out += `<p>You might also like <a href="${item.href}">${item.label}</a>.</p>`;
-  }
-  return out;
-}
-
 async function loadPublishedGeoPages(): Promise<GeoPage[]> {
   const { data } = await db()
     .from("custom_pages")
@@ -233,7 +225,7 @@ async function generatePageContent(
   const extraRooms = pickPublishedInternalHrefs(
     [...chatroomUrls.interest, ...chatroomUrls.type],
     publishedSlugs,
-    { excludeSlug: entry.slug, count: 3 },
+    { excludeSlug: entry.slug, count: 2 },
   );
   const blogPost = await pickRelevantBlogPost(entry.base_name);
 
@@ -249,8 +241,6 @@ async function generatePageContent(
   for (const href of extraRooms) addPlanned(href, labelFromHref(href));
   if (blogPost) addPlanned(blogPost.url, "this related read");
   for (const peer of peerPages) addPlanned(canonicalPeerHref(peer.slug), peerAnchorLabel(peer));
-  addPlanned("https://yaarzo.com/feed", "community feed");
-  addPlanned("https://yaarzo.com/find-friends", "find friends");
 
   const linkLines = planned
     .map((item, i) => `${i + 1}. <a href="${item.href}"> — short 2-4 word natural anchor about "${item.label}". Never dump a full SEO title.`)
@@ -274,7 +264,7 @@ Requirements:
 - HARD: Never output "/chatrooms" — the chat hub is "/chatroom". Never output "/p/{slug}" — use "/{slug}" or https://yaarzo.com/{slug}
 - HARD: Only use the exact internal URLs listed below — do not invent slugs
 - HARD: If peer-geography URLs are listed below, include at least one of them (country hub or sibling city/country), not only generic interest/type rooms
-- HARD: Place 7-9 internal links in the body from the list (the automatic /chatroom CTA brings the published page to 8-10). Every link must be relevant to the surrounding sentence. Varied anchors — never repeat the same link text.
+- HARD: Place 3-4 internal links in the body from the list (the automatic /chatroom CTA plus Related Chat Rooms and Explore widgets bring the published page to about 10-12 total). Every link must be relevant to the surrounding sentence. Varied anchors — never repeat the same link text.
 - Use 2-4 <h2> subheadings
 - Warm, inviting, conversational tone — written for a real visitor deciding whether to join
 - If this is a city/country/region page, naturally reference local flavor (local slang, popular topics, culture) without stereotyping — keep it genuine and light. Include at least 2-3 unique local elements (opening hook, a real local detail, unique FAQ angles)
@@ -283,7 +273,7 @@ Requirements:
 - Do NOT include any view counters, placeholder text, or meta-commentary in the visible content itself
 - Right after the intro paragraph, insert exactly this on its own line: <!-- IMAGE: a real 5-10 word description of an image that would fit here --> (a human will manually replace this with a real image later — do not embed an actual <img> tag). If you emit <img>, alt text must be descriptive.
 
-Allowed internal links (use 7-9 of these, each at most once, naturally placed in different sections):
+Allowed internal links (use 3-4 of these, each at most once, naturally placed in different sections):
 ${linkLines}
 
 Do not add any other links. Do not reuse the same anchor text pattern across sentences.
@@ -304,7 +294,7 @@ FAQ3_A: <2-3 sentence answer>`,
   const [contentHtml, metaBlock] = fullText.split("---META---");
   const get = (key: string) => metaBlock?.match(new RegExp(`${key}:\\s*(.+)`, "i"))?.[1]?.trim() ?? "";
 
-  let linkedHtml = ensurePlannedLinks(contentHtml.trim(), planned);
+  let linkedHtml = ensurePlannedLinks(contentHtml.trim(), planned, STATIC_INTERNAL_LINK_MAX - 1);
   linkedHtml = padInternalLinks(linkedHtml, planned, STATIC_INTERNAL_LINK_MIN - 1, STATIC_INTERNAL_LINK_MAX - 1);
   if (!htmlHasHref(linkedHtml, "/chatroom") && !htmlHasHref(linkedHtml, "https://yaarzo.com/chatroom")) {
     linkedHtml += buildCtaHtml();
@@ -335,10 +325,16 @@ async function buildRowPayload(
   const group = await getKeywordGroup(groupSlug);
 
   const primaryKeyword = group ? fillPattern(group.primary_pattern, entry.base_name) : `${entry.base_name} chat room`;
-  const title = group ? fillPattern(group.title_pattern, entry.base_name) : `${fallbackH1} | Yaarzo`;
+  const titleRaw = group ? fillPattern(group.title_pattern, entry.base_name) : `${fallbackH1} | Yaarzo`;
   const metaTitle = group ? fillPattern(group.meta_title_pattern, entry.base_name) : fallbackH1;
   const metaDescription = group ? fillPattern(group.meta_description_pattern, entry.base_name) : `Join the ${entry.base_name} chat room on Yaarzo for free.`;
-  const h1 = group ? fillPattern(group.h1_pattern, entry.base_name) : fallbackH1;
+  const h1Raw = group ? fillPattern(group.h1_pattern, entry.base_name) : fallbackH1;
+  const titles = coherentGeneratedTitles({
+    metaTitle: metaTitle || titleRaw,
+    h1: h1Raw,
+    baseName: entry.base_name,
+  });
+  const { title, meta_title, og_title, h1 } = titles;
   const secondaryKeywords = group ? group.secondary_patterns.map((p: string) => fillPattern(p, entry.base_name)) : [];
 
   const aiKeywordList = generated.aiKeywords ? generated.aiKeywords.split(",").map((k) => k.trim()).filter(Boolean) : [];
@@ -356,10 +352,10 @@ async function buildRowPayload(
     primary_keyword: primaryKeyword,
     secondary_keywords: secondaryKeywords,
     keyword_group_id: group?.id ?? null,
-    meta_title: metaTitle,
+    meta_title,
     meta_description: metaDescription,
     meta_keywords: combinedKeywords.join(", "),
-    og_title: metaTitle,
+    og_title,
     og_description: metaDescription,
     canonical_url: `https://yaarzo.com/${entry.slug}`,
     faq_content: generated.faq,
@@ -368,7 +364,7 @@ async function buildRowPayload(
     schema_jsonld: {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: metaTitle,
+      name: meta_title,
       description: metaDescription,
     },
     city_id: cityId,
@@ -394,7 +390,7 @@ function applyStaticQualityGate(
   const peers = peerPages
     .map((p) => ({ href: canonicalPeerHref(p.slug), label: peerAnchorLabel(p) }))
     .filter((p) => p.href);
-  const withPeers = ensurePeerGeoLinks(payload.content, peers);
+  const withPeers = ensurePeerGeoLinks(payload.content, peers, STATIC_INTERNAL_LINK_MAX);
   const padded = padInternalLinks(withPeers, peers, STATIC_INTERNAL_LINK_MIN, STATIC_INTERNAL_LINK_MAX);
   const prepared = preparePublishablePage({
     slug: entry.slug,

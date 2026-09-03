@@ -12,7 +12,8 @@ import { normalizeInternalHref } from "@/lib/internal-linking-orphans";
 import { CITY_CATEGORIES } from "@/lib/content-automation/peer-geo-links";
 
 export const EXPLORE_FEATURES_HEADING = "Explore more on Yaarzo";
-export const EXPLORE_FEATURES_COUNT = 4;
+export const EXPLORE_FEATURES_COUNT = 3;
+export const EXPLORE_FEATURES_BLOG_COUNT = 2;
 
 const PLATFORM_TYPES = new Set(["community_page", "game", "feed_page"]);
 
@@ -62,15 +63,16 @@ function hashSlug(slug: string): number {
 }
 
 /**
- * Deterministic 3–4 feature links for a page slug. Same slug always yields
- * the same set; different slugs rotate through the pool.
+ * Deterministic feature links for a page slug (default 3). Same slug always
+ * yields the same set; different slugs rotate through the pool.
  */
 export function pickExploreFeatureLinks(
   pageSlug: string,
   pool: ExploreFeatureTarget[],
   opts?: { count?: number },
 ): ExploreFeatureLink[] {
-  const count = Math.min(Math.max(opts?.count ?? EXPLORE_FEATURES_COUNT, 1), 6);
+  const count = Math.min(Math.max(opts?.count ?? EXPLORE_FEATURES_COUNT, 0), 6);
+  if (count === 0) return [];
   const selfPath = normalizeInternalHref(pageSlug.startsWith("/") ? pageSlug : `/${pageSlug}`);
   const eligible = pool
     .filter(isExploreFeatureTarget)

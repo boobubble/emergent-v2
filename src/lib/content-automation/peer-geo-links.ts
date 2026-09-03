@@ -3,6 +3,8 @@
  * Never cross-links India ↔ Pakistan (or any two different country clusters).
  */
 
+import { placeNameFromLabel } from "@/lib/pages-cms/anchor-label";
+
 export const PEER_GEO_LINK_SOURCE = "peer_geo" as const;
 
 export const CITY_CATEGORIES = new Set([
@@ -100,9 +102,7 @@ export function sameGeoCluster(a: GeoPage, b: GeoPage): boolean {
 }
 
 export function peerAnchorLabel(page: GeoPage): string {
-  const raw = (page.h1 || page.title || page.slug).replace(/\s+/g, " ").trim();
-  const stripped = raw.replace(/\s*[|–—].*$/, "").replace(/\s+chat(\s+room)?$/i, "").trim();
-  return stripped || page.slug.replace(/-/g, " ");
+  return placeNameFromLabel(page.h1 || page.title || "", page.slug);
 }
 
 function byPriorityThenTitle(a: GeoPage, b: GeoPage) {
