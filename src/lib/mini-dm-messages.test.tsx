@@ -1,11 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import {
-  extraRemoteDmChannelsToFetch,
-  miniDmChannelForPeer,
-  resolveMiniDmPeer,
-} from "./mini-dm";
+import { extraRemoteDmChannelsToFetch, miniDmChannelForPeer, resolveMiniDmPeer } from "./mini-dm";
+import { maxDurationForChannel, VOICE_NOTES_DEFAULTS } from "./voice-notes-config";
 import {
   filterChatMessages,
   resolveMessageAuthor,
@@ -62,6 +59,13 @@ describe("mini-DM message-fetch path", () => {
     expect(extraRemoteDmChannelsToFetch(ME, [])).toEqual([]);
     // Opening a mini-DM must not require activeChannel to be that DM.
     expect(extraRemoteDmChannelsToFetch(ME, [channelId])).not.toContain("lobby");
+  });
+
+  it("voice notes are enabled for DM channel ids with the DM duration cap", () => {
+    const channelId = dmChannelFor(ME, PEER)!;
+    expect(VOICE_NOTES_DEFAULTS.enabled).toBe(true);
+    expect(maxDurationForChannel(channelId, VOICE_NOTES_DEFAULTS)).toBe(VOICE_NOTES_DEFAULTS.max_dm);
+    expect(maxDurationForChannel("lobby", VOICE_NOTES_DEFAULTS)).toBe(VOICE_NOTES_DEFAULTS.max_lobby);
   });
 });
 
