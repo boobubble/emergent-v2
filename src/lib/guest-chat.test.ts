@@ -264,8 +264,10 @@ describe("no auth-guest regression", () => {
     const input = readFileSync(resolve(srcRoot, "components/chat/MessageInput.tsx"), "utf8");
     expect(input).toMatch(/publishGuestLobbyRow\(row\)/);
     const list = readFileSync(resolve(srcRoot, "components/chat/MessageList.tsx"), "utf8");
-    expect(list).toMatch(/fallbackGuestAuthor/);
+    expect(list).toMatch(/resolveMessageAuthor/);
     expect(list).not.toMatch(/if \(!author\) return null/);
+    const model = readFileSync(resolve(srcRoot, "lib/message-list-model.ts"), "utf8");
+    expect(model).toMatch(/fallbackGuestAuthor/);
     const app = readFileSync(resolve(srcRoot, "components/chat/ChatApp.tsx"), "utf8");
     expect(app).toMatch(/channelId !== GUEST_LOBBY_CHANNEL_ID/);
     expect(app).toMatch(/useGuestLobbyFeed/);
