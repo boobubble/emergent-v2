@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { buildPageCtaHtml, DEFAULT_PAGE_CTA_DEFAULTS, sanitizeCtaHref } from "@/lib/page-cta";
+import { buildPageCtaHtml, DEFAULT_PAGE_CTA_DEFAULTS, pageEditorCtaDefaults, sanitizeCtaHref } from "@/lib/page-cta";
 import { ALLOWED_PAGE_CONTENT_CLASSES } from "@/lib/page-content-paste";
 import { sanitizeHtml } from "@/lib/pages-io";
 
@@ -47,6 +47,11 @@ describe("buildPageCtaHtml", () => {
 
   it("rejects javascript hrefs via sanitizeCtaHref", () => {
     expect(sanitizeCtaHref("javascript:alert(1)")).toBe(DEFAULT_PAGE_CTA_DEFAULTS.href);
+  });
+
+  it("returns page-editor CTA defaults only for new pages", () => {
+    expect(pageEditorCtaDefaults(true)).toEqual(DEFAULT_PAGE_CTA_DEFAULTS);
+    expect(pageEditorCtaDefaults(false)).toBeUndefined();
   });
 });
 

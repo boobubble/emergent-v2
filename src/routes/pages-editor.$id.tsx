@@ -67,6 +67,7 @@ import {
 } from "@/lib/pages-cms/content-quality";
 import { useAuth } from "@/lib/auth-store";
 import { getMyRoles } from "@/lib/admin.functions";
+import { pageEditorCtaDefaults } from "@/lib/page-cta";
 
 export const Route = createFileRoute("/pages-editor/$id")({
   component: PageEditorGate,
@@ -810,7 +811,7 @@ function PageEditor() {
               <RichTextEditor
                 ref={editorRef}
                 value={row.content}
-                ctaDefaults={isNew ? DEFAULT_PAGE_CTA_DEFAULTS : undefined}
+                ctaDefaults={pageEditorCtaDefaults(isNew)}
                 onChange={(html) => {
                   contentModifiedRef.current = html !== initialContentRef.current;
                   update("content", html);
