@@ -245,6 +245,8 @@ export const MODULES = {
       "src/routes/chatrooms.tsx",
       "src/components/chat/",
       "src/lib/chat-store.tsx",
+      "src/lib/guest-lobby-feed.ts",
+      "src/lib/use-guest-lobby-feed.ts",
       "src/lib/guest-chat.test.ts",
       "src/lib/chat-provider-safety.test.ts",
       "src/lib/use-room-online-counts.test.ts",

@@ -9,6 +9,7 @@ import { useAuthGate } from "@/lib/auth-gate";
 import { useGuestChat } from "@/lib/guest-chat-context";
 import { sendGuestLobbyMessage } from "@/lib/guest-chat.functions";
 import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
+import { publishGuestLobbyRow } from "@/lib/guest-lobby-feed";
 import { isBotCommandOrAction } from "@/lib/guest-nickname";
 import { useTyping } from "@/lib/use-typing";
 import { EmojiPicker } from "./EmojiPicker";
@@ -228,13 +229,14 @@ export function MessageInput() {
       return;
     }
     try {
-      await sendGuest({
+      const row = await sendGuest({
         data: {
           visitorId: guestChat.session.visitorId,
           channelId: GUEST_LOBBY_CHANNEL_ID,
           text: plain,
         },
       });
+      if (row?.id) publishGuestLobbyRow(row);
       setText("");
       setAttachment(null);
       setAttachError("");

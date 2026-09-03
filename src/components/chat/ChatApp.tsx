@@ -12,6 +12,7 @@ import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageInput } from "@/components/chat/MessageInput";
+import { GUEST_LOBBY_CHANNEL_ID } from "@/lib/guest-chat-config";
 import { GameRoomCanvas } from "@/components/chat/GameRoomCanvas";
 import { DMChatBackground } from "@/components/chat/DMChatBackground";
 import { GamingArenaHero } from "@/components/chat/GamingArenaHero";
@@ -587,7 +588,9 @@ function ChatChannelBody({ channelId, activeIsDM }: { channelId: string; activeI
     );
   }
 
-  if (!activeIsDM && messages.length === 0) {
+  // Lobby still has guest_chat_messages even when public.messages is empty.
+  // Skipping MessageList here would never mount useGuestLobbyFeed.
+  if (!activeIsDM && messages.length === 0 && channelId !== GUEST_LOBBY_CHANNEL_ID) {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
         <MessageSquare className="h-10 w-10 text-muted-foreground" aria-hidden />
