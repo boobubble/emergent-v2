@@ -1187,9 +1187,9 @@ function FeedPage() {
             >
               <div className="space-y-4">
                 <div className="feed-card p-4">
-                  <h1 className="flex items-center gap-2 text-lg font-black tracking-tight">
+                  <h2 className="flex items-center gap-2 text-lg font-black tracking-tight">
                     <Compass className="h-5 w-5 text-primary" /> Explore
-                  </h1>
+                  </h2>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Discover people, groups and trending communities.
                     <span className="ml-1 hidden sm:inline">Pull down to refresh.</span>

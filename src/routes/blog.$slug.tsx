@@ -3,17 +3,23 @@ import { getPublishedBlogBySlug } from "@/lib/blog.public";
 import { BlogPostView } from "@/components/blog/BlogPostView";
 import { notFoundSeoHead } from "@/lib/seo/not-found";
 import { loadExploreFeatureLinks } from "@/lib/explore-features-links";
+import { allocateBlogExploreCount, countInBodyInternalLinks } from "@/lib/pages-cms/public-link-budget";
 
 export const Route = createFileRoute("/blog/$slug")({
   loader: async ({ params }) => {
     const post = await getPublishedBlogBySlug(params.slug);
     if (!post) throw notFound();
     let exploreFeatureLinks: Awaited<ReturnType<typeof loadExploreFeatureLinks>> = [];
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      exploreFeatureLinks = await loadExploreFeatureLinks(supabaseAdmin, `blog/${post.slug}`);
-    } catch {
-      exploreFeatureLinks = [];
+    const exploreCount = allocateBlogExploreCount(countInBodyInternalLinks(post.content || ""));
+    if (exploreCount > 0) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        exploreFeatureLinks = await loadExploreFeatureLinks(supabaseAdmin, `blog/${post.slug}`, {
+          count: exploreCount,
+        });
+      } catch {
+        exploreFeatureLinks = [];
+      }
     }
     return { post, exploreFeatureLinks };
   },

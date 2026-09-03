@@ -28,7 +28,7 @@ import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { GlobalErrorMonitoring } from "@/components/GlobalErrorMonitoring";
 import { logger } from "@/lib/logger";
 import { isPublicCmsSlugPath } from "@/lib/route-slug";
-import { isPublicPath as isPublicPathBase, isReadOnlyPublicAppPath, isPrivateUtilityPath } from "@/lib/public-routes";
+import { isPublicPath as isPublicPathBase, isReadOnlyPublicAppPath, isPrivateUtilityPath, needsGuestChatShell, publicSsrHeading } from "@/lib/public-routes";
 import { hasStoredAuthToken } from "@/lib/stored-auth";
 import { HOME_CRITICAL_CSS } from "@/components/home/home-critical-css";
 import { shouldLoadAppSurfaceStyles } from "@/lib/app-surface-css";
@@ -308,15 +308,22 @@ function PublicChrome() {
 function PublicOutlet({ readOnlyApp, pathname }: { readOnlyApp: boolean; pathname: string }) {
   // GuestChatProvider lives on AuthGateProvider so AuthDialogs and chat share
   // one guest session (login popup + /chatroom sidebar).
-  const requireChatProvider = readOnlyApp && !isCommunityNonChatPath(pathname);
+  const requireChatProvider = readOnlyApp && needsGuestChatShell(pathname);
+  const ssrHeading = requireChatProvider ? publicSsrHeading(pathname) : null;
+  const heading = ssrHeading ? (
+    <h1 className="sr-only">{ssrHeading}</h1>
+  ) : null;
   if (!requireChatProvider) {
     return <PublicChrome />;
   }
   return (
-    <Suspense fallback={null}>
-      <PublicReadOnlyAppShell>
-        <PublicChrome />
-      </PublicReadOnlyAppShell>
-    </Suspense>
+    <>
+      {heading}
+      <Suspense fallback={null}>
+        <PublicReadOnlyAppShell>
+          <PublicChrome />
+        </PublicReadOnlyAppShell>
+      </Suspense>
+    </>
   );
 }

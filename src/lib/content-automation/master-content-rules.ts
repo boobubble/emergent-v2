@@ -10,8 +10,8 @@ HARD TECHNICAL CONSTRAINTS (never violate):
 - Never output "/p/{slug}" or "yaarzo.com/p/...". Canonical page URLs are "/{slug}" or "https://yaarzo.com/{slug}".
 - Never invent a URL or slug. Only use internal URLs explicitly listed in the user message (plus https://yaarzo.com/signup when that task requires it). If a desired page is not in that list, omit the link or use a listed fallback such as /international-chat-room, /friendship-chat-room, or /chatroom.
 - For city or country location pages: you MUST include at least one peer-geography link from the user message (the page's country hub and/or a sibling city/country). Do not skip peer-geo links in favor of only generic interest/type rooms (girls-chat-room, dating-chat-room, etc.). Both kinds may appear; peer-geo is required when provided.
-- Static location/topic pages: the finished HTML must contain 8–10 internal links. The user message lists allowed URLs; a /chatroom CTA may be appended automatically — do not add that CTA yourself and do not duplicate it.
-- Blog posts: include 4–5 internal links from the allowed list in the user message.
+- Static location/topic pages: the finished HTML must contain 4–5 in-body internal links. Related Chat Rooms and Explore widgets add more on the live page — do not try to hit a page-total of 8–10 in the body alone. The user message lists allowed URLs; a /chatroom CTA may be appended automatically — do not add that CTA yourself and do not duplicate it.
+- Blog posts: include 2–3 internal links from the allowed list in the user message.
 - Do not pad with irrelevant or repeated links just to hit the number. Every link must be contextually relevant. Use descriptive, varied anchor text — never repeat the same anchor. Do not invent competitions, bots, games, statistics, or features.
 
 ## 1. Yaarzo positioning
@@ -53,7 +53,7 @@ Images: this pipeline uses an HTML comment placeholder, not <img>. If you ever e
 4. Only approved features; no invented claims, bots, competitions, or stats.
 5. No video chat, no Omegle-style matching, not dating-only.
 6. Keywords natural, not stuffed.
-7. Internal links: only listed URLs; "/{slug}" never "/chatrooms" never "/p/{slug}". Static pages 8–10 links; blog posts 4–5.
+7. Internal links: only listed URLs; "/{slug}" never "/chatrooms" never "/p/{slug}". Static pages 4–5 in-body links; blog posts 2–3.
 8. City/country: at least one peer-geo link when the user message listed any.
 9. Varied descriptive anchors.
 10. Tags (if asked): 8–12 topical, no dump.

@@ -15,11 +15,11 @@ import {
   BLOG_INTERNAL_LINK_MAX,
   BLOG_INTERNAL_LINK_MIN,
   filterPublishedHrefs,
-  htmlHasHref,
   padInternalLinks,
   pickPublishedInternalHref,
   pickPublishedInternalHrefs,
   preparePublishablePage,
+  ensurePlannedLinks,
   type PlannedInternalLink,
 } from "@/lib/content-automation/publish-quality";
 
@@ -91,17 +91,6 @@ function labelFromHref(href: string): string {
   return slug.replace(/-chat-room$/i, "").replace(/-/g, " ") || "related page";
 }
 
-/** Ensures planned links exist — adds them in code if the AI forgot. */
-function ensurePlannedLinks(html: string, planned: PlannedInternalLink[]): string {
-  let out = html;
-  for (const item of planned) {
-    if (!item.href) continue;
-    if (htmlHasHref(out, item.href)) continue;
-    out += `<p>Want to jump straight in? <a href="${item.href}">${item.label}</a>.</p>`;
-  }
-  return out;
-}
-
 async function generateContent(title: string, planned: PlannedInternalLink[]) {
   const linkLines = planned
     .map((item, i) => `${i + 1}. <a href="${item.href}"> — short 2-5 word natural anchor about "${item.label}". Never dump a full page title.`)
@@ -127,7 +116,7 @@ Structure rules:
 - Output clean HTML only (h2, h3, p, ul/li, strong, a, and the one HTML comment described below) — no <html>/<body>/<h1> tags
 - Right after the intro paragraph, insert exactly this on its own line: <!-- IMAGE: a real 5-10 word description of an image that would fit here --> (a human will manually add the real image later — do not embed an actual <img> tag)
 
-Include 4-5 internal links from this allowed list only, naturally placed in different sections (not next to each other). Every link must be relevant. Varied anchors — never repeat the same link text.
+Include 2-3 internal links from this allowed list only, naturally placed in different sections (not next to each other). Every link must be relevant. Varied anchors — never repeat the same link text.
 ${linkLines}
 
 HARD: Never output "/chatrooms" (use "/chatroom" only if linking the chat hub). Never output "/p/{slug}" — use "/{slug}". Do not invent unpublished slugs — only the URLs listed above. Do not add extra links beyond this list.
@@ -147,7 +136,7 @@ READING_TIME: <integer minutes>`,
   const tagsMatch = metaBlock?.match(/TAGS:\s*(.+)/i);
   const readingTimeMatch = metaBlock?.match(/READING_TIME:\s*(\d+)/i);
 
-  let finalHtml = ensurePlannedLinks(contentHtml.trim(), planned);
+  let finalHtml = ensurePlannedLinks(contentHtml.trim(), planned, BLOG_INTERNAL_LINK_MAX);
   finalHtml = padInternalLinks(finalHtml, planned, BLOG_INTERNAL_LINK_MIN, BLOG_INTERNAL_LINK_MAX);
 
   return {

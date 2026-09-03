@@ -16,12 +16,13 @@ import type { Database } from "@/integrations/supabase/types";
 import { pagePublicPath, slugifyPageSlug } from "@/lib/page-slug";
 import { isPubliclyVisibleStatus } from "@/lib/pages-cms/schemas";
 import { pickAnchor, cityAnchors, countryAnchors, categoryAnchors } from "@/lib/pages-cms/phase4c-priority";
+import { isNaturalAnchor, placeNameFromLabel } from "@/lib/pages-cms/anchor-label";
 import {
   parseRelatedChatRoomsConfig,
   type RelatedChatRoomsConfig,
 } from "@/lib/pages-cms/related-chat-rooms-config";
 
-export const RELATED_CHAT_ROOMS_MAX = 8;
+export const RELATED_CHAT_ROOMS_MAX = 4;
 export const RELATED_CHAT_ROOMS_HEADING = "Explore Related Chat Rooms";
 
 export type RelatedChatRoomKind = "country" | "city" | "category" | "other";
@@ -148,26 +149,24 @@ export function labelForRelatedTarget(
   salt = "",
 ): string {
   const fromAnchor = cleanRelatedLabel(anchorText || "");
-  if (fromAnchor) return fromAnchor;
+  if (fromAnchor && isNaturalAnchor(fromAnchor)) return fromAnchor;
 
   const kind = classifyRelatedRoomKind(target.page_type);
-  const base =
-    cleanRelatedLabel(target.h1 || "") ||
-    cleanRelatedLabel(target.title || "") ||
-    cleanRelatedLabel(target.slug.replace(/-/g, " "));
+  const place = placeNameFromLabel(
+    target.h1 || target.title || target.slug.replace(/-/g, " "),
+    target.slug,
+  );
 
   if (kind === "city") {
-    const city = base.replace(/\s+chat(\s+room)?$/i, "").trim() || base;
-    return pickAnchor(cityAnchors(city), salt || target.slug);
+    return pickAnchor(cityAnchors(place), salt || target.slug);
   }
   if (kind === "country") {
-    const country = base.replace(/\s+chat(\s+room)?$/i, "").trim() || base;
-    return pickAnchor(countryAnchors(country), salt || target.slug);
+    return pickAnchor(countryAnchors(place), salt || target.slug);
   }
   if (kind === "category") {
-    return pickAnchor(categoryAnchors(base), salt || target.slug);
+    return pickAnchor(categoryAnchors(place), salt || target.slug);
   }
-  return base;
+  return place || target.slug.replace(/-/g, " ");
 }
 
 type RankedCandidate = RelatedChatRoomLink & {

@@ -19,10 +19,11 @@ export const CANONICAL_CHATROOM_PATH = "/chatroom";
 /** Live hub pages used when a requested peer/interest slug is not published yet. */
 export const SAFE_FALLBACK_SLUGS = ["international-chat-room", "friendship-chat-room"] as const;
 
-export const STATIC_INTERNAL_LINK_MIN = 8;
-export const STATIC_INTERNAL_LINK_MAX = 10;
-export const BLOG_INTERNAL_LINK_MIN = 4;
-export const BLOG_INTERNAL_LINK_MAX = 5;
+/** In-body generated links. Widgets (Related + Explore) are counted separately. */
+export const STATIC_INTERNAL_LINK_MIN = 4;
+export const STATIC_INTERNAL_LINK_MAX = 5;
+export const BLOG_INTERNAL_LINK_MIN = 2;
+export const BLOG_INTERNAL_LINK_MAX = 3;
 
 /** Reserved feature URLs that are always safe to link (not custom_pages slugs). */
 export const PIPELINE_FEATURE_LINKS: Array<{ href: string; label: string }> = [
@@ -201,13 +202,34 @@ export function htmlHasPeerGeoLink(html: string, peerHrefs: string[]): boolean {
 export function ensurePeerGeoLinks(
   html: string,
   peers: Array<{ href: string; label: string }>,
+  max?: number,
 ): string {
   let out = html || "";
   for (const peer of peers) {
     if (!peer.href) continue;
+    if (max != null && countInternalLinks(out) >= max) break;
     if (htmlHasHref(out, peer.href)) continue;
     const label = peer.label.trim() || "related room";
     out += `<p>Nearby, you can also jump into the <a href="${peer.href}">${label}</a> room.</p>`;
+  }
+  return out;
+}
+
+/** Append unused planned links, never exceeding `max`. Unlike padInternalLinks, this does not require `n < min`. */
+export function ensurePlannedLinks(
+  html: string,
+  extras: PlannedInternalLink[],
+  max: number,
+): string {
+  let out = html || "";
+  let n = countInternalLinks(out);
+  if (n >= max) return out;
+  for (const extra of extras) {
+    if (n >= max) break;
+    if (!extra.href || htmlHasHref(out, extra.href)) continue;
+    const label = extra.label.trim() || "related page";
+    out += `<p>You can also explore the <a href="${extra.href}">${label}</a>.</p>`;
+    n = countInternalLinks(out);
   }
   return out;
 }

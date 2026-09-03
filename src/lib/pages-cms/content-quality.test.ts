@@ -110,7 +110,42 @@ describe("quality evaluation", () => {
     expect(q.warnings.some((w) => w.code === "missing_meta_title")).toBe(true);
   });
 
-  it("does not treat privacy-style tags as a chat keyword dump", () => {
+  it("flags the live Islamabad tag dump and accepts a topical replacement set", () => {
+    const dump = [
+      "Islamabad Chat Room",
+      "Islamabad Chat",
+      "Pakistan Chat",
+      "Pakistani Chat Room",
+      "Online Chat",
+      "Local Chat Room",
+      "Meet People Online",
+      "Make New Friends",
+      "Social Chat",
+      "Online Community",
+      "Chat With Pakistanis",
+      "Islamabad Community",
+    ];
+    expect(detectHashtagDump(dump)).toBe(true);
+    const cleaned = [
+      "Islamabad",
+      "Margalla Hills",
+      "Rawalpindi",
+      "Pakistan",
+      "Capital Territory",
+      "Urdu",
+      "Friendship",
+      "Students",
+      "Online community",
+      "Islamabad chat room",
+      "Twin cities",
+      "Yaarzo",
+    ];
+    expect(detectHashtagDump(cleaned)).toBe(false);
+    expect(reducedPublicTags(dump)).toEqual([]);
+    expect(reducedPublicTags(cleaned)).toEqual(cleaned);
+  });
+
+  it("does not flag topical non-chat tag lists as dumps", () => {
     expect(
       detectHashtagDump([
         "privacy policy",
@@ -123,6 +158,9 @@ describe("quality evaluation", () => {
         "chat platform privacy",
       ]),
     ).toBe(false);
+  });
+
+  it("hides keyword-stuffed Delhi tags from public display helpers", () => {
     expect(
       reducedPublicTags([
         "Delhi chat room",

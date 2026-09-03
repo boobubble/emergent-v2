@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { staticPublicHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/site-directory")({
   loader: async () => {
@@ -16,12 +17,12 @@ export const Route = createFileRoute("/site-directory")({
     }));
     return { pages };
   },
-  head: () => ({
-    meta: [
-      { title: "Site Directory | Yaarzo" },
-      { name: "description", content: "Browse all chat rooms and pages on Yaarzo, organized by category." },
-    ],
-  }),
+  head: () =>
+    staticPublicHead({
+      title: "Site Directory | Yaarzo",
+      description: "Browse all chat rooms and pages on Yaarzo, organized by category.",
+      path: "/site-directory",
+    }),
   component: SiteDirectoryPage,
 });
 

@@ -62,12 +62,46 @@ export const READ_ONLY_PUBLIC_APP_PREFIXES = [
   "/trust",
   "/pricing",
   "/hall-of-fame",
+  "/find-friends",
+  "/games",
+  "/achievements",
+  "/site-directory",
 ] as const;
 
 export function isReadOnlyPublicAppPath(pathname: string): boolean {
   return READ_ONLY_PUBLIC_APP_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(p + "/"),
   );
+}
+
+/**
+ * Guest surfaces that need GuestChatProvider. Content pages (blog, poetry, CMS)
+ * must SSR without the lazy chat shell so crawlers see H1/body markup.
+ */
+export function needsGuestChatShell(pathname: string): boolean {
+  return (
+    pathname === "/feed" ||
+    pathname.startsWith("/feed/") ||
+    pathname === "/chatroom" ||
+    pathname.startsWith("/chatroom/") ||
+    pathname === "/chatrooms" ||
+    pathname.startsWith("/chatrooms/") ||
+    pathname === "/leaderboard" ||
+    pathname.startsWith("/leaderboard/") ||
+    pathname === "/achievements" ||
+    pathname.startsWith("/achievements/")
+  );
+}
+
+/** Crawler-visible H1 for chat-shell routes whose UI is inside a lazy Suspense boundary. */
+export function publicSsrHeading(pathname: string): string | null {
+  if (pathname === "/feed" || pathname.startsWith("/feed/")) return "Community Feed";
+  if (pathname === "/chatroom" || pathname.startsWith("/chatroom/") || pathname === "/chatrooms") {
+    return "Chatrooms";
+  }
+  if (pathname === "/leaderboard" || pathname.startsWith("/leaderboard/")) return "Leaderboard";
+  if (pathname === "/achievements" || pathname.startsWith("/achievements/")) return "Achievements";
+  return null;
 }
 
 export function isPublicPath(

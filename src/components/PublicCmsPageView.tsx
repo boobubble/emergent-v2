@@ -12,7 +12,6 @@ import { resolvePublicCmsH1 } from "@/lib/pages-cms/public-page-ssr";
 import { RelatedChatRooms } from "@/components/RelatedChatRooms";
 import { ExploreFeaturesLinks } from "@/components/ExploreFeaturesLinks";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Eye } from "lucide-react";
 import type { PublishedCustomPage } from "@/lib/fetch-published-page";
 import type { RelatedChatRoomLink } from "@/lib/pages-cms/related-chat-rooms";
@@ -90,11 +89,6 @@ export function PublicCmsPageView({
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
               {resolvePublicCmsH1(page)}
             </h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-              {(page.tags ?? []).map((t: string) => (
-                <Badge key={t} variant="secondary" className="text-[10px]">#{t}</Badge>
-              ))}
-            </div>
             {page.excerpt && <p className="mt-3 text-sm text-muted-foreground">{page.excerpt}</p>}
 
             <div

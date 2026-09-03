@@ -6,6 +6,7 @@ import {
 } from "@/lib/fetch-published-page";
 import { loadRelatedChatRoomsForPage, type RelatedChatRoomLink } from "@/lib/pages-cms/related-chat-rooms";
 import { loadExploreFeatureLinks, type ExploreFeatureLink } from "@/lib/explore-features-links";
+import { allocatePublicLinkWidgets, countInBodyInternalLinks } from "@/lib/pages-cms/public-link-budget";
 import { logger } from "@/lib/logger";
 
 export type HydratedPublicCmsPage = PublishedCustomPage & {
@@ -39,17 +40,24 @@ export async function hydratePublishedPageForPublic(
   page: PublishedCustomPage,
 ): Promise<HydratedPublicCmsPage> {
   const publicHtml = await buildPublicCmsPageHtml(sb, page);
+  const { related: relatedMax, explore: exploreCount } = allocatePublicLinkWidgets(
+    countInBodyInternalLinks(publicHtml),
+  );
   let relatedChatRooms: RelatedChatRoomLink[] = [];
   let exploreFeatureLinks: ExploreFeatureLink[] = [];
-  try {
-    relatedChatRooms = await loadRelatedChatRoomsForPage(sb, page);
-  } catch (err) {
-    logger.error("custom-page related chat rooms failed", err, { slug: page.slug });
+  if (relatedMax > 0) {
+    try {
+      relatedChatRooms = await loadRelatedChatRoomsForPage(sb, page, { max: relatedMax });
+    } catch (err) {
+      logger.error("custom-page related chat rooms failed", err, { slug: page.slug });
+    }
   }
-  try {
-    exploreFeatureLinks = await loadExploreFeatureLinks(sb, page.slug);
-  } catch (err) {
-    logger.error("custom-page explore feature links failed", err, { slug: page.slug });
+  if (exploreCount > 0) {
+    try {
+      exploreFeatureLinks = await loadExploreFeatureLinks(sb, page.slug, { count: exploreCount });
+    } catch (err) {
+      logger.error("custom-page explore feature links failed", err, { slug: page.slug });
+    }
   }
   return { ...page, publicHtml, relatedChatRooms, exploreFeatureLinks };
 }

@@ -15,9 +15,9 @@ import {
   headFromRouteSeo,
   notFoundSeoHead,
   buildCmsPageSeoVars,
-  buildCmsFallbackJsonLd,
   loadSeoSiteContext,
 } from "@/lib/seo";
+import { buildCmsPageJsonLd, extractFaqItems } from "@/lib/pages-cms/faq-jsonld";
 
 function redirectReservedSlug(slug: string) {
   const key = slug.toLowerCase();
@@ -128,12 +128,13 @@ export const Route = createFileRoute("/$slug")({
         noindex: !!page.noindex,
         nofollow: !!page.nofollow,
       },
-      fallbackJsonLd: buildCmsFallbackJsonLd({
-        title: page.title,
+          fallbackJsonLd: buildCmsPageJsonLd({
+        title,
         description: desc,
         url,
         publishedAt: page.published_at,
         image: ogImage,
+        faqs: extractFaqItems(`${page.content || ""}`),
       }),
     });
     let cityDirectory: Awaited<ReturnType<typeof getCountryCityDirectory>> = [];

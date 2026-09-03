@@ -5,7 +5,7 @@ export * from "./meta-builder";
 export * from "./health";
 export * from "./sitemap";
 
-export { createSeoRouteHead, seoFallback } from "./route-head";
+export { createSeoRouteHead, seoFallback, staticPublicHead } from "./route-head";
 export {
   NOT_FOUND_SEO_TITLE,
   NOT_FOUND_ROBOTS,
@@ -30,9 +30,7 @@ export {
   type DynamicRouteSeoInput,
 } from "./load-route-seo";
 export type { EntitySeoOverride } from "./resolve-seo";
-export {
-  DEFAULT_SITE_ORIGIN,
-} from "./resolve-seo";
+export { formatCanonicalUrl } from "./resolve-seo";
 export {
   HOME_SEO_TITLE,
   HOME_SEO_DESCRIPTION,
