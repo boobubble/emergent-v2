@@ -23,6 +23,11 @@ export const DEFAULT_PAGE_CTA_DEFAULTS: PageCtaDefaults = {
   style: "primary",
 };
 
+/** CTA dialog defaults for /pages-editor/$id when creating a page (`id === "new"`). */
+export function pageEditorCtaDefaults(isNew: boolean): PageCtaDefaults | undefined {
+  return isNew ? DEFAULT_PAGE_CTA_DEFAULTS : undefined;
+}
+
 export type PageCtaInput = {
   buttonText: string;
   href: string;

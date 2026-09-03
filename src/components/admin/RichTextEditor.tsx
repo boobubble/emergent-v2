@@ -50,7 +50,7 @@ interface Props {
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichTextEditor(
-  { value, onChange, placeholder, uploadFolder = "pages", ctaDefaults: _ctaDefaults },
+  { value, onChange, placeholder, uploadFolder = "pages", ctaDefaults },
   ref,
 ) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -137,7 +137,12 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
     },
   });
 
-  const ctaDialog = useCtaButtonDialog(editor);
+  const ctaDialog = useCtaButtonDialog(
+    editor,
+    ctaDefaults
+      ? { label: ctaDefaults.buttonText, href: ctaDefaults.href }
+      : undefined,
+  );
 
   // Keep editor in sync when external value changes (e.g., draft restore / save normalize).
   // Skip when the incoming HTML is what this editor just emitted — getHTML() is not a

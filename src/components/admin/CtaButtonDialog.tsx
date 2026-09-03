@@ -99,7 +99,10 @@ export function CtaButtonDialog({
   );
 }
 
-export function useCtaButtonDialog(editor: Editor | null) {
+export function useCtaButtonDialog(
+  editor: Editor | null,
+  insertDefaults?: { label: string; href: string },
+) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"insert" | "edit">("insert");
   const [initialLabel, setInitialLabel] = useState("");
@@ -117,8 +120,8 @@ export function useCtaButtonDialog(editor: Editor | null) {
 
   function openInsert() {
     setMode("insert");
-    setInitialLabel("");
-    setInitialHref("");
+    setInitialLabel(insertDefaults?.label ?? "");
+    setInitialHref(insertDefaults?.href ?? "");
     setOpen(true);
   }
 
