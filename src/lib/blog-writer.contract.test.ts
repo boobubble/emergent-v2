@@ -12,16 +12,18 @@ describe("blog writer contracts", () => {
   it("keeps the article title as H1 and does not offer body H1 in TipTap", () => {
     const editor = read("src/components/blog/BlogEditorView.tsx");
     const write = read("src/routes/blog.write.tsx");
+    const extensions = read("src/lib/blog-writer-editor.ts");
     expect(editor).toContain("Article Title (H1)");
     expect(editor).toContain("The article title is the H1. Use H2/H3 for sections.");
-    expect(write).toContain("heading: { levels: [2, 3] }");
+    expect(extensions).toContain("heading: { levels: [2, 3] }");
     expect(write).not.toMatch(/toggleHeading\(\{\s*level:\s*1\s*\}\)/);
     expect(editor).not.toMatch(/toggleHeading\(\{\s*level:\s*1\s*\}\)/);
     expect(editor).toContain("toggleHeading({ level: 2 })");
     expect(editor).toContain("toggleHeading({ level: 3 })");
     expect(editor).toContain("setParagraph()");
     expect(editor).toContain("Insert CTA Button");
-    expect(write).toContain("CtaButton");
+    expect(write).toContain("blogWriteEditorExtensions");
+    expect(extensions).toContain("CtaButton");
   });
 
   it("wires tags and SEO keywords into the insert payload", () => {
@@ -37,9 +39,11 @@ describe("blog writer contracts", () => {
 
   it("reuses TipTap Image with persistent alt and alignment", () => {
     const write = read("src/routes/blog.write.tsx");
+    const extensions = read("src/lib/blog-writer-editor.ts");
     const image = read("src/lib/blog-image.ts");
     const editor = read("src/components/blog/BlogEditorView.tsx");
-    expect(write).toContain("BlogImage");
+    expect(write).toContain("blogWriteEditorExtensions");
+    expect(extensions).toContain("BlogImage");
     expect(image).toContain("@tiptap/extension-image");
     expect(image).toContain("data-align");
     expect(editor).toContain("Add Image");
@@ -48,13 +52,36 @@ describe("blog writer contracts", () => {
     expect(parseBlogImageAlign("yz-blog-img yz-blog-img-center", null)).toBe("center");
   });
 
+  it("loads the browser Supabase client on demand instead of the unloaded proxy", () => {
+    const write = read("src/routes/blog.write.tsx");
+    expect(write).toContain("loadBrowserSupabase");
+    expect(write).toContain("useAuth");
+    expect(write).toContain("immediatelyRender: false");
+    expect(write).toContain('content: "<p></p>"');
+    expect(write).not.toContain('from "@/integrations/supabase/client"');
+    expect(write).toContain("blogWriteEditorExtensions");
+  });
+
+  it("shows list thumbnails and article og:image from the same content image", () => {
+    const publicLib = read("src/lib/blog.public.ts");
+    const index = read("src/components/blog/BlogIndexView.tsx");
+    const route = read("src/routes/blog.$slug.tsx");
+    expect(publicLib).toContain("firstBlogCoverImage");
+    expect(publicLib).toContain("cover_image");
+    expect(publicLib).toContain("category_id, content");
+    expect(index).toContain("cover_image");
+    expect(index).toContain("<img");
+    expect(route).toContain("cover_image");
+    expect(route).toContain('property: "og:image"');
+  });
+
   it("does not dump SEO keywords on the public article or emit meta keywords", () => {
     const view = read("src/components/blog/BlogPostView.tsx");
     const route = read("src/routes/blog.$slug.tsx");
     const publicLib = read("src/lib/blog.public.ts");
     expect(view).not.toMatch(/post\.keywords/);
     expect(route).not.toMatch(/name:\s*["']keywords["']/);
-    expect(publicLib).not.toMatch(/keywords/);
+    expect(publicLib).not.toMatch(/\bkeywords\b/);
     expect(view).toContain("post.tags");
   });
 

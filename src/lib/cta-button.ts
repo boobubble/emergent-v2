@@ -85,9 +85,12 @@ export function bindCtaButtonEditHandler(
   editor: Editor,
   handler: (attrs: CtaButtonAttrs) => void,
 ): () => void {
-  editor.storage.ctaButton.requestEdit = handler;
+  const storage = editor.storage.ctaButton as CtaButtonStorage | undefined;
+  if (!storage) return () => {};
+  storage.requestEdit = handler;
   return () => {
-    if (editor.storage.ctaButton) editor.storage.ctaButton.requestEdit = null;
+    const current = editor.storage.ctaButton as CtaButtonStorage | undefined;
+    if (current) current.requestEdit = null;
   };
 }
 

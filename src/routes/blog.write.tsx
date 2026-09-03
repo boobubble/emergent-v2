@@ -1,14 +1,10 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Link from "@tiptap/extension-link";
-import { EDITOR_LINK_OPTIONS } from "@/lib/pages-cms/tiptap-html-blocks";
-import Placeholder from "@tiptap/extension-placeholder";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
+import { useAuth } from "@/lib/auth-store";
 import { BlogEditorView } from "@/components/blog/BlogEditorView";
-import { BlogImage } from "@/lib/blog-image";
-import { CtaButton } from "@/lib/cta-button";
+import { blogWriteEditorExtensions } from "@/lib/blog-writer-editor";
 import { sanitizeBlogHtml } from "@/lib/blog-sanitize";
 import { normalizeTagList, parseKeywordPhrases, serializeKeywords } from "@/lib/blog-taxonomy";
 import { toast } from "sonner";
@@ -32,6 +28,7 @@ function slugify(text: string) {
 }
 
 async function generateUniqueSlug(title: string): Promise<string> {
+  const supabase = await loadBrowserSupabase();
   const base = slugify(title);
   let candidate = base;
   let counter = 2;
@@ -53,6 +50,7 @@ async function uploadBlogImage(file: File): Promise<string | null> {
     toast.error("Image must be under 8 MB");
     return null;
   }
+  const supabase = await loadBrowserSupabase();
   const { data: auth } = await supabase.auth.getUser();
   const uid = auth.user?.id;
   if (!uid) {
@@ -73,6 +71,7 @@ async function uploadBlogImage(file: File): Promise<string | null> {
 }
 
 async function userIsAdmin(userId: string): Promise<boolean> {
+  const supabase = await loadBrowserSupabase();
   const { data } = await supabase
     .from("user_roles")
     .select("role")
@@ -84,8 +83,7 @@ async function userIsAdmin(userId: string): Promise<boolean> {
 function WritePostPage() {
   const search = Route.useSearch();
   const editId = search.id;
-  const [user, setUser] = useState<any>(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const { user, ready: authReady } = useAuth();
   const [loadError, setLoadError] = useState("");
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [title, setTitle] = useState("");
@@ -102,16 +100,7 @@ function WritePostPage() {
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        link: false,
-        heading: { levels: [2, 3] },
-      }),
-      Link.configure(EDITOR_LINK_OPTIONS),
-      BlogImage.configure({ inline: false, allowBase64: false }),
-      CtaButton,
-      Placeholder.configure({ placeholder: "Start writing your post here…" }),
-    ],
+    extensions: blogWriteEditorExtensions(),
     content: "<p></p>",
     editorProps: {
       attributes: {
@@ -121,41 +110,52 @@ function WritePostPage() {
   });
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      setUser(data.user);
-      setCheckingAuth(false);
-    });
-    supabase.from("categories").select("id, name").then(({ data }) => {
-      setCategories(data ?? []);
-    });
+    let cancelled = false;
+    void (async () => {
+      try {
+        const supabase = await loadBrowserSupabase();
+        const { data } = await supabase.from("categories").select("id, name");
+        if (!cancelled) setCategories(data ?? []);
+      } catch {
+        if (!cancelled) setCategories([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     if (!editId || !user) return;
     let cancelled = false;
-    (async () => {
-      if (!(await userIsAdmin(user.id))) {
-        if (!cancelled) setLoadError("Only admins can edit existing posts.");
-        return;
+    void (async () => {
+      try {
+        if (!(await userIsAdmin(user.id))) {
+          if (!cancelled) setLoadError("Only admins can edit existing posts.");
+          return;
+        }
+        const supabase = await loadBrowserSupabase();
+        const { data, error } = await supabase
+          .from("blog_posts")
+          .select("id, title, slug, content, meta_description, category_id, tags, keywords, status")
+          .eq("id", editId)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error || !data) {
+          setLoadError("Post not found.");
+          return;
+        }
+        setTitle(data.title ?? "");
+        setCategoryId(data.category_id ?? "");
+        setMetaDescription(data.meta_description ?? "");
+        setTags(normalizeTagList(data.tags));
+        setKeywords(parseKeywordPhrases(data.keywords));
+        setPostStatus(data.status);
+        setExistingSlug(data.slug ?? null);
+        setLoadedHtml(data.content || "<p></p>");
+      } catch {
+        if (!cancelled) setLoadError("Post not found.");
       }
-      const { data, error } = await supabase
-        .from("blog_posts")
-        .select("id, title, slug, content, meta_description, category_id, tags, keywords, status")
-        .eq("id", editId)
-        .maybeSingle();
-      if (cancelled) return;
-      if (error || !data) {
-        setLoadError("Post not found.");
-        return;
-      }
-      setTitle(data.title ?? "");
-      setCategoryId(data.category_id ?? "");
-      setMetaDescription(data.meta_description ?? "");
-      setTags(normalizeTagList(data.tags));
-      setKeywords(parseKeywordPhrases(data.keywords));
-      setPostStatus(data.status);
-      setExistingSlug(data.slug ?? null);
-      setLoadedHtml(data.content || "<p></p>");
     })();
     return () => {
       cancelled = true;
@@ -184,49 +184,54 @@ function WritePostPage() {
     }
     setSubmitting(true);
 
-    const content = sanitizeBlogHtml(editor.getHTML());
-    if (editId) {
-      const { error } = await supabase
-        .from("blog_posts")
-        .update({
-          title,
-          meta_description: metaDescription,
-          content,
-          category_id: categoryId,
-          tags: normalizeTagList(tags),
-          keywords: serializeKeywords(keywords),
-        })
-        .eq("id", editId);
-      setSubmitting(false);
+    try {
+      const supabase = await loadBrowserSupabase();
+      const content = sanitizeBlogHtml(editor.getHTML());
+      if (editId) {
+        const { error } = await supabase
+          .from("blog_posts")
+          .update({
+            title,
+            meta_description: metaDescription,
+            content,
+            category_id: categoryId,
+            tags: normalizeTagList(tags),
+            keywords: serializeKeywords(keywords),
+          })
+          .eq("id", editId);
+        if (error) {
+          alert("Error: " + error.message);
+          return;
+        }
+        toast.success(postStatus === "published" ? "Published post updated. Status unchanged." : "Post saved.");
+        return;
+      }
+
+      const slug = await generateUniqueSlug(title);
+      const { error } = await supabase.from("blog_posts").insert({
+        title,
+        slug,
+        meta_description: metaDescription,
+        content,
+        category_id: categoryId,
+        author_id: user.id,
+        tags: normalizeTagList(tags),
+        keywords: serializeKeywords(keywords),
+      });
+
       if (error) {
         alert("Error: " + error.message);
         return;
       }
-      toast.success(postStatus === "published" ? "Published post updated. Status unchanged." : "Post saved.");
-      return;
+      setSubmitted(true);
+    } catch (err) {
+      alert("Error: " + (err instanceof Error ? err.message : "Could not save"));
+    } finally {
+      setSubmitting(false);
     }
-
-    const slug = await generateUniqueSlug(title);
-    const { error } = await supabase.from("blog_posts").insert({
-      title,
-      slug,
-      meta_description: metaDescription,
-      content,
-      category_id: categoryId,
-      author_id: user.id,
-      tags: normalizeTagList(tags),
-      keywords: serializeKeywords(keywords),
-    });
-
-    setSubmitting(false);
-    if (error) {
-      alert("Error: " + error.message);
-      return;
-    }
-    setSubmitted(true);
   }
 
-  if (checkingAuth) {
+  if (!authReady) {
     return <p className="grid min-h-screen place-items-center bg-background p-8 text-muted-foreground">Loading…</p>;
   }
   if (!user) {
