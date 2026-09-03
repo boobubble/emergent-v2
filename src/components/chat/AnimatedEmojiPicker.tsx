@@ -55,7 +55,16 @@ function useCustomPacks() {
   return packs;
 }
 
-export function AnimatedEmojiPicker({ onPick, onOpenShop }: { onPick: (s: Sticker) => void; onOpenShop?: () => void }) {
+export function AnimatedEmojiPicker({
+  onPick,
+  onOpenShop,
+  onClose,
+}: {
+  onPick: (s: Sticker) => void;
+  onOpenShop?: () => void;
+  /** When set, picking a sticker (and clicking the backdrop) dismisses the picker. */
+  onClose?: () => void;
+}) {
   const { user } = useAuth();
   const [ownedPacks, setOwnedPacks] = useState<ShopItem[] | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -127,8 +136,24 @@ export function AnimatedEmojiPicker({ onPick, onOpenShop }: { onPick: (s: Sticke
   const imgSize = isEmojiPack ? "h-9 w-9" : "h-14 w-14";
   const cols = isEmojiPack ? "grid-cols-6" : "grid-cols-4";
 
+  function pick(s: Sticker) {
+    onPick(s);
+    onClose?.();
+  }
+
   return (
-    <div className="w-[320px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+    <>
+    {onClose && (
+      <div
+        className="fixed inset-0 z-40"
+        aria-hidden
+        onPointerDown={(ev) => {
+          ev.preventDefault();
+          onClose();
+        }}
+      />
+    )}
+    <div className="relative z-50 w-[320px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
       <div className="flex items-center gap-1 border-b border-border px-2 py-1 overflow-x-auto">
         {allPacks.map(p => (
           <button
@@ -154,8 +179,16 @@ export function AnimatedEmojiPicker({ onPick, onOpenShop }: { onPick: (s: Sticke
         <div className={`grid ${cols} gap-1.5`}>
           {(active.stickers ?? []).map(s => (
             <button
+              type="button"
               key={s.name + s.cp}
-              onClick={() => onPick(s)}
+              onPointerDown={(ev) => {
+                if (ev.pointerType === "mouse" && ev.button !== 0) return;
+                ev.preventDefault();
+                pick(s);
+              }}
+              onClick={(ev) => {
+                if (ev.detail === 0) pick(s);
+              }}
               title={s.label}
               className={`grid ${cellSize} place-items-center rounded-lg transition-transform hover:scale-110 hover:bg-white/5 active:scale-95`}
             >
@@ -173,5 +206,6 @@ export function AnimatedEmojiPicker({ onPick, onOpenShop }: { onPick: (s: Sticke
         Tap to send
       </div>
     </div>
+    </>
   );
 }

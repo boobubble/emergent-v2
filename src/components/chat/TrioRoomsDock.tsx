@@ -1149,8 +1149,8 @@ function TrioRoomWindow({
               <EmojiPicker
                 onPick={(e) => {
                   setText((t) => t + e);
-                  setShowEmoji(false);
                 }}
+                onClose={() => setShowEmoji(false)}
               />
             </div>
           )}

@@ -73,6 +73,23 @@ export function MessageInput({
   const [mentionIdx, setMentionIdx] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  /** Swallow the leftover click after a picker unmounts so the toolbar toggle cannot reopen it. */
+  const ignorePickerToggleUntilRef = useRef(0);
+
+  function markPickerJustClosed() {
+    ignorePickerToggleUntilRef.current = Date.now() + 400;
+  }
+
+  function pickerToggleIsSuppressed() {
+    return Date.now() < ignorePickerToggleUntilRef.current;
+  }
+
+  function closeComposerPickers() {
+    setShowEmoji(false);
+    setShowStickers(false);
+    setShowGiphy(false);
+    setShowYoutube(false);
+  }
 
   const suggestions = text.startsWith("!")
     ? COMMANDS.filter(c => c.startsWith(text.split(" ")[0])).slice(0, 5)
@@ -456,7 +473,8 @@ export function MessageInput({
       {showEmoji && (
         <div className="mb-2 max-w-full overflow-x-auto">
           <EmojiPicker
-            onPick={(e) => { setText(t => t + e); setShowEmoji(false); inputRef.current?.focus(); }}
+            onPick={(e) => { setText(t => t + e); inputRef.current?.focus(); }}
+            onClose={() => { markPickerJustClosed(); closeComposerPickers(); }}
           />
         </div>
       )}
@@ -474,8 +492,8 @@ export function MessageInput({
                 },
                 replyToId: replyForThis?.id,
               });
-              setShowStickers(false);
             }}
+            onClose={() => { markPickerJustClosed(); closeComposerPickers(); }}
           />
         </div>
       )}
@@ -547,7 +565,7 @@ export function MessageInput({
         </button>
         )}
         <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); onActivity?.(); }} onFocus={() => onActivity?.()} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={composerPlaceholder} className="max-h-[140px] min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm" />
-        <button onClick={() => requireAuth(() => { setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); })} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Animated stickers" aria-label="Animated stickers">
+        <button onClick={() => requireAuth(() => { if (pickerToggleIsSuppressed()) return; setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); })} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Animated stickers" aria-label="Animated stickers">
           <Sticker className="h-5 w-5" />
         </button>
         {!compact && media.giphy.enabled && (
@@ -580,7 +598,7 @@ export function MessageInput({
             <Mic className="h-5 w-5" />
           </button>
         )}
-        <button onClick={() => { setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground" title="Emoji" aria-label="Emoji">
+        <button onClick={() => { if (pickerToggleIsSuppressed()) return; setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground" title="Emoji" aria-label="Emoji">
           <Smile className="h-5 w-5" />
         </button>
         <button onClick={submit} disabled={!text.trim() && !attachment} className="mb-1 grid h-11 w-11 shrink-0 place-items-center rounded-full text-primary-foreground shadow-lg transition-all hover:scale-110 active:scale-90 disabled:opacity-40 disabled:hover:scale-100" style={{ background: "var(--gradient-primary)", boxShadow: "0 8px 24px -8px var(--primary-glow)" }} aria-label="Send message">

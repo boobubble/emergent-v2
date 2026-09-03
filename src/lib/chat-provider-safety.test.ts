@@ -116,3 +116,40 @@ describe("opening a DM must not trip the Chatrooms error boundary", () => {
   });
 });
 
+describe("profile popup and composer pickers close after their action", () => {
+  it("opening a DM from ProfilePopup also dismisses the profile dialog", () => {
+    const popup = readFileSync(resolve(testDir, "../components/chat/ProfilePopup.tsx"), "utf8");
+    const messageAction = sliceBetween(
+      popup,
+      "const isMobile = typeof window !== \"undefined\" && window.matchMedia(\"(max-width: 767px)\").matches;",
+      "<MessageCircle className=\"h-4 w-4 shrink-0\" /> Message",
+    );
+    expect(messageAction).toContain("startDM(userId)");
+    expect(messageAction).toContain("palrgo:openMiniDM");
+    expect(messageAction).toContain('closeNow("action")');
+    expect(messageAction.indexOf("palrgo:openMiniDM")).toBeLessThan(messageAction.indexOf('closeNow("action")'));
+  });
+
+  it("chatroom profile opens share one ProfilePopup host (member list, message names)", () => {
+    const userMenu = readFileSync(resolve(testDir, "../components/chat/UserMenu.tsx"), "utf8");
+    const host = readFileSync(resolve(testDir, "../components/chat/ChatProfilePopupHost.tsx"), "utf8");
+    const app = readFileSync(resolve(testDir, "../components/chat/ChatApp.tsx"), "utf8");
+    expect(userMenu).toContain("openProfile(userId)");
+    expect(host).toContain("<ProfilePopup");
+    expect(host).toContain("onClose={closeProfile}");
+    expect(app).toContain("<ChatProfilePopupHost");
+  });
+
+  it("emoji and sticker pickers close on select in MessageInput (rooms and mini-DMs share this composer)", () => {
+    const picker = readFileSync(resolve(testDir, "../components/chat/EmojiPicker.tsx"), "utf8");
+    const stickers = readFileSync(resolve(testDir, "../components/chat/AnimatedEmojiPicker.tsx"), "utf8");
+    const input = readFileSync(resolve(testDir, "../components/chat/MessageInput.tsx"), "utf8");
+    const trio = readFileSync(resolve(testDir, "../components/chat/TrioRoomsDock.tsx"), "utf8");
+    expect(picker).toContain("onClose?.()");
+    expect(stickers).toContain("onClose?.()");
+    expect(input).toContain("onClose={() => { markPickerJustClosed(); closeComposerPickers(); }}");
+    expect(input).toContain("pickerToggleIsSuppressed()");
+    expect(trio).toContain("onClose={() => setShowEmoji(false)}");
+  });
+});
+
