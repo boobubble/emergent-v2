@@ -96,21 +96,157 @@ export function markMessagesSending(
   });
 }
 
-/** Serialize for localStorage: never persist a stuck spinner. */
+/**
+ * Persist sender-local status as-is.
+ * A reload must not rewrite in-flight "sending" into "Couldn't send"; hydrate
+ * reconciliation confirms rows that exist in public.messages and fails the rest.
+ */
 export function persistSendStatus(
   messages: Record<string, Message[]>,
 ): Record<string, Message[]> {
-  let changed = false;
-  const next: Record<string, Message[]> = {};
-  for (const [ch, msgs] of Object.entries(messages)) {
-    const mapped = msgs.map((m) => {
-      if (m.sendStatus !== "sending") return m;
-      changed = true;
-      return { ...m, sendStatus: "failed" as const, sendError: m.sendError || "Send interrupted" };
-    });
-    next[ch] = mapped;
+  return messages;
+}
+
+/** Authenticated public.messages INSERT settlement (DM + lobby share this path). */
+export const AUTH_SEND_TIMEOUT_MS = 15_000;
+export const AUTH_SEND_TIMEOUT_ERROR = "Request timed out";
+export const AUTH_SEND_NETWORK_ERROR = "Failed to send";
+export const AUTH_SEND_INTERRUPTED_ERROR = "Send interrupted";
+
+export type AuthenticatedInsertRow = { id: string; created_at?: string | null };
+
+export type AuthenticatedInsertResult = {
+  data?: AuthenticatedInsertRow[] | null;
+  error?: { message?: string } | null;
+};
+
+export type SettleInsertOutcome =
+  | { action: "confirm"; tsById: Record<string, number> }
+  | { action: "fail"; error: string };
+
+export function withTimeout<T>(
+  promise: PromiseLike<T>,
+  ms: number,
+  message = AUTH_SEND_TIMEOUT_ERROR,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(message));
+    }, ms);
+    Promise.resolve(promise).then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
+export function isDuplicateKeyError(message: string | undefined): boolean {
+  if (!message) return false;
+  return /duplicate key|unique constraint|already exists/i.test(message);
+}
+
+/** HTTP/insert settlement. Realtime is not required for success. */
+export function settleAuthenticatedInsert(
+  error: { message?: string } | null | undefined,
+  data: AuthenticatedInsertRow[] | null | undefined,
+): SettleInsertOutcome {
+  if (error) {
+    if (isDuplicateKeyError(error.message)) {
+      return { action: "confirm", tsById: {} };
+    }
+    return { action: "fail", error: error.message || AUTH_SEND_NETWORK_ERROR };
   }
-  return changed ? next : messages;
+  const tsById: Record<string, number> = {};
+  for (const row of data ?? []) {
+    if (!row?.id || !row.created_at) continue;
+    const ts = new Date(row.created_at).getTime();
+    if (Number.isFinite(ts)) tsById[row.id] = ts;
+  }
+  return { action: "confirm", tsById };
+}
+
+export async function settleAuthenticatedSendPromise(
+  insertPromise: PromiseLike<AuthenticatedInsertResult>,
+  options?: { timeoutMs?: number },
+): Promise<SettleInsertOutcome> {
+  try {
+    const result = await withTimeout(
+      Promise.resolve(insertPromise),
+      options?.timeoutMs ?? AUTH_SEND_TIMEOUT_MS,
+    );
+    return settleAuthenticatedInsert(result?.error, result?.data);
+  } catch (err) {
+    const message =
+      err instanceof Error && err.message ? err.message : AUTH_SEND_NETWORK_ERROR;
+    return { action: "fail", error: message };
+  }
+}
+
+export function applyAuthenticatedInsertOutcome(
+  messages: Record<string, Message[]>,
+  ids: Iterable<string>,
+  outcome: SettleInsertOutcome,
+): Record<string, Message[]> {
+  if (outcome.action === "confirm") {
+    return confirmMessages(messages, ids, outcome.tsById);
+  }
+  return failMessages(messages, ids, outcome.error);
+}
+
+export function isPendingSendMessage(m: Pick<Message, "sendStatus" | "sendError">): boolean {
+  if (m.sendStatus === "sending") return true;
+  return m.sendStatus === "failed" && m.sendError === AUTH_SEND_INTERRUPTED_ERROR;
+}
+
+export function collectPendingSendIds(messages: Record<string, Message[]>): string[] {
+  const ids: string[] = [];
+  for (const msgs of Object.values(messages)) {
+    for (const m of msgs) {
+      if (isPendingSendMessage(m)) ids.push(m.id);
+    }
+  }
+  return ids;
+}
+
+/** Reload: confirm ids found in public.messages; fail still-pending ids that are not. */
+export function applyHydrateSendReconcile(
+  messages: Record<string, Message[]>,
+  pendingIds: string[],
+  foundRows: AuthenticatedInsertRow[] | null | undefined,
+): Record<string, Message[]> {
+  const found = new Map<string, number>();
+  for (const row of foundRows ?? []) {
+    if (!row?.id) continue;
+    const ts = row.created_at ? new Date(row.created_at).getTime() : NaN;
+    found.set(row.id, ts);
+  }
+  const confirmIds = pendingIds.filter((id) => found.has(id));
+  const missingIds = pendingIds.filter((id) => !found.has(id));
+  let next = messages;
+  if (confirmIds.length) {
+    const tsById: Record<string, number> = {};
+    for (const id of confirmIds) {
+      const ts = found.get(id);
+      if (typeof ts === "number" && Number.isFinite(ts)) tsById[id] = ts;
+    }
+    next = confirmMessages(next, confirmIds, tsById);
+  }
+  if (!missingIds.length) return next;
+  const stillPending = missingIds.filter((id) => {
+    for (const msgs of Object.values(next)) {
+      const m = msgs.find((row) => row.id === id);
+      if (m && isPendingSendMessage(m)) return true;
+    }
+    return false;
+  });
+  if (!stillPending.length) return next;
+  return failMessages(next, stillPending, AUTH_SEND_INTERRUPTED_ERROR);
 }
 
 export function mergeGuestLobbyRow<T extends GuestLobbyOptimisticRow>(
@@ -181,9 +317,4 @@ export function markGuestLobbyRowSending<T extends GuestLobbyOptimisticRow>(
     return patched;
   });
   return changed ? next : prev;
-}
-
-export function isDuplicateKeyError(message: string | undefined): boolean {
-  if (!message) return false;
-  return /duplicate key|unique constraint|already exists/i.test(message);
 }

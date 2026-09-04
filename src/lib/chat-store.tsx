@@ -99,11 +99,13 @@ import { formatPresenceLineText } from "./presence-ui";
 import { removeCorruptedKey } from "./persisted-state-recovery";
 import { markDmConversationRead } from "./dm-read";
 import {
+  applyHydrateSendReconcile,
+  collectPendingSendIds,
   confirmMessages,
   failMessages,
-  isDuplicateKeyError,
   markMessagesSending,
   persistSendStatus,
+  settleAuthenticatedSendPromise,
 } from "./chat-optimistic";
 
 export { dmChannelFor } from "./dm-utils";
@@ -761,6 +763,46 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     setState((s) => sanitizeChatState(s, authUserId));
   }, [storageReady, authUserId]);
 
+  // Reload: confirm optimistic rows that already exist in public.messages; fail the rest.
+  // Do not leave sendStatus stuck on "sending" when the INSERT cannot be verified.
+  useEffect(() => {
+    if (!storageReady || !authUserId || isGuest) return;
+    const pendingIds = collectPendingSendIds(state.messages);
+    if (!pendingIds.length) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("messages")
+          .select("id, created_at")
+          .in("id", pendingIds);
+        if (cancelled) return;
+        if (error) {
+          setState((s) => {
+            const next = applyHydrateSendReconcile(s.messages, pendingIds, []);
+            return next === s.messages ? s : { ...s, messages: next };
+          });
+          return;
+        }
+        setState((s) => {
+          const next = applyHydrateSendReconcile(s.messages, pendingIds, data ?? []);
+          return next === s.messages ? s : { ...s, messages: next };
+        });
+      } catch {
+        if (cancelled) return;
+        setState((s) => {
+          const next = applyHydrateSendReconcile(s.messages, pendingIds, []);
+          return next === s.messages ? s : { ...s, messages: next };
+        });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // One-shot per hydrate: snapshot pending ids from this render only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageReady, authUserId, isGuest, username]);
+
   // Daily streak check on first load per user
   useEffect(() => {
     if (!storageReady) return;
@@ -1049,7 +1091,7 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         // Public visitors only receive Lobby messages.
         if (!authUserId && row.channel_id !== "lobby") return;
         if (seenRemoteMsgIds.current.has(row.id)) {
-          // Own optimistic row: confirm sending → sent using the server timestamp.
+          // Secondary sync: INSERT settlement already confirms; this only applies the server timestamp.
           const serverTs = new Date(row.created_at).getTime();
           setState((s) => {
             const next = confirmMessages(s.messages, [row.id], { [row.id]: serverTs });
@@ -1615,36 +1657,30 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
         rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "out", `${out.channelId} · ${out.text.slice(0, 30)}`);
       }
       if (safeRemotes.length) {
-      void supabase.from("messages").insert(
-        safeRemotes.map(out => ({
-          id: out.id,
-          channel_id: out.channelId,
-          author_id: authUserId,
-          text: out.text,
-          kind: out.kind,
-          attachment: out.attachment as unknown as never,
-          reply_to_id: out.replyToId,
-        }))
-      ).select("id, created_at").then(({ data, error }) => {
-        const ids = safeRemotes.map((out) => out.id);
-        if (error) {
-          console.error("send failed", error);
-          rtLog("error", "send-failed", error.message);
-          if (isDuplicateKeyError(error.message)) {
-            setState((s) => ({ ...s, messages: confirmMessages(s.messages, ids) }));
-            return;
-          }
+      const ids = safeRemotes.map((out) => out.id);
+      void settleAuthenticatedSendPromise(
+        supabase.from("messages").insert(
+          safeRemotes.map(out => ({
+            id: out.id,
+            channel_id: out.channelId,
+            author_id: authUserId,
+            text: out.text,
+            kind: out.kind,
+            attachment: out.attachment as unknown as never,
+            reply_to_id: out.replyToId,
+          }))
+        ).select("id, created_at"),
+      ).then((outcome) => {
+        if (outcome.action === "fail") {
+          console.error("send failed", outcome.error);
+          rtLog("error", "send-failed", outcome.error);
           setState((s) => ({
             ...s,
-            messages: failMessages(s.messages, ids, error.message || "Failed to send"),
+            messages: failMessages(s.messages, ids, outcome.error),
           }));
           return;
         }
-        const tsById: Record<string, number> = {};
-        for (const row of data ?? []) {
-          tsById[row.id] = new Date(row.created_at).getTime();
-        }
-        setState((s) => ({ ...s, messages: confirmMessages(s.messages, ids, tsById) }));
+        setState((s) => ({ ...s, messages: confirmMessages(s.messages, ids, outcome.tsById) }));
         // Fire-and-forget AI chatbot reply for chatroom messages
         for (const out of safeRemotes) {
           if (out.channelId.startsWith("dm:") || out.kind === "system") continue;
@@ -1661,6 +1697,14 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
             }).catch(() => {});
           }
         }
+      }).catch((err: unknown) => {
+        const message = err instanceof Error && err.message ? err.message : "Failed to send";
+        console.error("send failed", err);
+        rtLog("error", "send-failed", message);
+        setState((s) => ({
+          ...s,
+          messages: failMessages(s.messages, ids, message),
+        }));
       });
       }
     }
@@ -1697,33 +1741,35 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
     if (!payload) return;
     const out = payload;
     rtLog(out.channelId.startsWith("dm:") ? "dm" : "msg", "retry", `${out.channelId} · ${out.text.slice(0, 30)}`);
-    void supabase.from("messages").insert({
-      id: out.id,
-      channel_id: out.channelId,
-      author_id: authUserId,
-      text: out.text,
-      kind: out.kind,
-      attachment: out.attachment as unknown as never,
-      reply_to_id: out.replyToId,
-    }).select("id, created_at").then(({ data, error }) => {
-      if (error) {
-        console.error("retry send failed", error);
-        rtLog("error", "retry-failed", error.message);
-        if (isDuplicateKeyError(error.message)) {
-          setState((s) => ({ ...s, messages: confirmMessages(s.messages, [out.id]) }));
-          return;
-        }
+    void settleAuthenticatedSendPromise(
+      supabase.from("messages").insert({
+        id: out.id,
+        channel_id: out.channelId,
+        author_id: authUserId,
+        text: out.text,
+        kind: out.kind,
+        attachment: out.attachment as unknown as never,
+        reply_to_id: out.replyToId,
+      }).select("id, created_at"),
+    ).then((outcome) => {
+      if (outcome.action === "fail") {
+        console.error("retry send failed", outcome.error);
+        rtLog("error", "retry-failed", outcome.error);
         setState((s) => ({
           ...s,
-          messages: failMessages(s.messages, [out.id], error.message || "Failed to send"),
+          messages: failMessages(s.messages, [out.id], outcome.error),
         }));
         return;
       }
-      const tsById: Record<string, number> = {};
-      for (const row of data ?? []) {
-        tsById[row.id] = new Date(row.created_at).getTime();
-      }
-      setState((s) => ({ ...s, messages: confirmMessages(s.messages, [out.id], tsById) }));
+      setState((s) => ({ ...s, messages: confirmMessages(s.messages, [out.id], outcome.tsById) }));
+    }).catch((err: unknown) => {
+      const message = err instanceof Error && err.message ? err.message : "Failed to send";
+      console.error("retry send failed", err);
+      rtLog("error", "retry-failed", message);
+      setState((s) => ({
+        ...s,
+        messages: failMessages(s.messages, [out.id], message),
+      }));
     });
   }, [authUserId]);
 
