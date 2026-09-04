@@ -11,35 +11,41 @@ describe("writer role contracts", () => {
     const adminFn = read("src/lib/admin.functions.ts");
     const roles = read("src/lib/use-my-role.ts");
     const users = read("src/routes/admin.users.tsx");
-    expect(adminFn).toContain("summarizeRoles");
+    expect(adminFn).toContain("loadUserRoleState");
     expect(adminFn).toContain('"writer"');
     expect(roles).toContain("summarizeRoles");
     expect(users).toContain('writer: { label: "Writer"');
     expect(users).toContain(">Writer</th>");
-    expect(read("src/lib/content-roles.ts")).toContain('isAdminRole(roles) || isWriterRole(roles)');
+    expect(users).toContain("Can edit existing content");
+    expect(users).toContain("setWriterEditExisting");
+    expect(read("src/lib/content-roles.ts")).toContain("canEditExistingContent");
+    expect(adminFn).toContain("setWriterEditExisting");
+    expect(adminFn).toContain("can_edit_existing_content");
   });
 
-  it("lets writers edit any existing blog post and keeps new-post review", () => {
+  it("lets writers edit existing blog posts only with the flag and keeps new-post review", () => {
     const write = read("src/routes/blog.write.tsx");
-    expect(write).toContain("userCanManageContent");
-    expect(write).toContain('"writer"');
-    expect(write).toContain("Only writers and admins can edit existing posts.");
+    expect(write).toContain("userCanEditExistingContent");
+    expect(write).toContain("can_edit_existing_content");
+    expect(write).toContain("You don't have permission to edit existing posts.");
     expect(write).not.toMatch(/\.update\(\{[^}]*\bstatus:/);
     expect(write).toContain("Submit ho gaya!");
     expect(write).toContain("Admin approve karega");
   });
 
-  it("lets writers open any existing custom page editor and save", () => {
+  it("lets flagged writers open any existing custom page editor and save", () => {
     const editor = read("src/routes/pages-editor.$id.tsx");
     const pages = read("src/lib/pages.functions.ts");
     expect(editor).toContain("canManageContent");
+    expect(editor).toContain("canEditExistingContent");
     expect(editor).toContain("Admin access required");
+    expect(pages).toContain("assertExistingContentEditor");
     expect(pages).toContain("assertContentEditor");
     expect(pages).toContain("await assertAdmin(context.userId)");
     expect(pages).toMatch(/export const deletePage[\s\S]*assertAdmin/);
-    expect(pages).toMatch(/export const savePage[\s\S]*assertContentEditor/);
-    expect(pages).toMatch(/export const getPage[\s\S]*assertContentEditor/);
-    expect(pages).toMatch(/export const listPages[\s\S]*assertContentEditor/);
+    expect(pages).toMatch(/export const savePage[\s\S]*assertExistingContentEditor/);
+    expect(pages).toMatch(/export const getPage[\s\S]*assertExistingContentEditor/);
+    expect(pages).toMatch(/export const listPages[\s\S]*assertExistingContentEditor/);
   });
 
   it("scopes writer admin lists and keeps other admin routes locked", () => {
@@ -49,11 +55,14 @@ describe("writer role contracts", () => {
     const moderate = read("src/components/blog/BlogModerateView.tsx");
     const allPages = read("src/routes/admin.pages.all.tsx");
     expect(layout).toContain("isWriterAllowedAdminPath");
+    expect(layout).toContain("canEditExistingContent");
     expect(layout).toContain("Admin access required");
+    expect(existsSync(resolve(process.cwd(), "supabase/migrations/20260904020000_writer_edit_existing_flag.sql"))).toBe(true);
     expect(helpers).toContain("/admin/blog/moderate");
     expect(helpers).toContain("/admin/pages/all");
     expect(helpers).not.toContain("/admin/content-automation");
     expect(blogs).toContain("canModerate={isAdmin}");
+    expect(blogs).toContain("can_edit_existing_content");
     expect(blogs).toContain('"writer"');
     expect(moderate).toContain("canModerate");
     expect(allPages).toContain("canDelete");

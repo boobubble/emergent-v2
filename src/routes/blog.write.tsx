@@ -70,14 +70,16 @@ async function uploadBlogImage(file: File): Promise<string | null> {
   return supabase.storage.from("feed-media").getPublicUrl(path).data.publicUrl;
 }
 
-async function userCanManageContent(userId: string): Promise<boolean> {
+async function userCanEditExistingContent(userId: string): Promise<boolean> {
   const supabase = await loadBrowserSupabase();
   const { data } = await supabase
     .from("user_roles")
-    .select("role")
+    .select("role, can_edit_existing_content")
     .eq("user_id", userId)
     .in("role", ["admin", "super_admin", "writer"]);
-  return (data?.length ?? 0) > 0;
+  return (data ?? []).some((r) =>
+    r.role === "admin" || r.role === "super_admin" || (r.role === "writer" && !!r.can_edit_existing_content),
+  );
 }
 
 function WritePostPage() {
@@ -130,8 +132,8 @@ function WritePostPage() {
     let cancelled = false;
     void (async () => {
       try {
-        if (!(await userCanManageContent(user.id))) {
-          if (!cancelled) setLoadError("Only writers and admins can edit existing posts.");
+        if (!(await userCanEditExistingContent(user.id))) {
+          if (!cancelled) setLoadError("You don't have permission to edit existing posts.");
           return;
         }
         const supabase = await loadBrowserSupabase();

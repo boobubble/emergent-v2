@@ -57,7 +57,7 @@ function AdminLayout() {
     return <div className="grid min-h-screen place-items-center bg-background text-sm text-muted-foreground">Checking access…</div>;
   }
   const isWriterOnly = !!data?.isWriter && !data?.isAdmin;
-  const writerAllowed = isWriterOnly && isWriterAllowedAdminPath(pathname);
+  const writerAllowed = isWriterOnly && !!data?.canEditExistingContent && isWriterAllowedAdminPath(pathname);
   if (isError || (!data?.isAdmin && !writerAllowed)) {
     return (
       <div className="grid min-h-screen place-items-center bg-background px-4">

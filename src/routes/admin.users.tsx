@@ -24,7 +24,7 @@ import {
 import { toast } from "sonner";
 import { Search, ShieldCheck, Shield, Hammer, Ban, Trash2, ShieldOff, UserCircle2, Pencil, Check, X, KeyRound, Copy, Coins, ImageIcon, FileText } from "lucide-react";
 import {
-  getMyRoles, listUsersWithRoles, setUserRole,
+  getMyRoles, listUsersWithRoles, setUserRole, setWriterEditExisting,
   banUser, unbanUser, deleteUser, updateUserUsername, adminResetUserPassword, adminGrantCoins,
 } from "@/lib/admin.functions";
 import {
@@ -76,6 +76,7 @@ function UsersPage() {
   const qc = useQueryClient();
   const listFn = useServerFn(listUsersWithRoles);
   const setRoleFn = useServerFn(setUserRole);
+  const setWriterEditFn = useServerFn(setWriterEditExisting);
   const myRolesFn = useServerFn(getMyRoles);
   const banFn = useServerFn(banUser);
   const unbanFn = useServerFn(unbanUser);
@@ -128,6 +129,16 @@ function UsersPage() {
       setRoleFn({ data: vars }),
     onSuccess: (_d, vars) => {
       toast.success(`${vars.grant ? "Granted" : "Revoked"} ${ROLE_META[vars.role].label}`);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const writerEditMut = useMutation({
+    mutationFn: (vars: { user_id: string; grant: boolean }) =>
+      setWriterEditFn({ data: vars }),
+    onSuccess: (_d, vars) => {
+      toast.success(vars.grant ? "Writer can edit existing content" : "Writer create-only");
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -285,7 +296,7 @@ function UsersPage() {
                   <th className="py-2 pr-3 font-medium">Mod</th>
                   <th className="py-2 pr-3 font-medium" title="Grants /broadcaster access (broadcaster.access + broadcaster.manage)">DJ</th>
                   <th className="py-2 pr-3 font-medium" title="Grants /broadcaster access (broadcaster.access + broadcaster.manage)">RJ</th>
-                  <th className="py-2 pr-3 font-medium" title="Create and edit blog posts and static pages">Writer</th>
+                  <th className="py-2 pr-3 font-medium" title="Create blog posts and pages. Nested toggle grants editing existing content.">Writer</th>
                   <th className="py-2 pr-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
@@ -382,11 +393,23 @@ function UsersPage() {
                       const has = u.roles.includes(role);
                       return (
                         <td key={role} className="py-2 pr-3">
-                          <Switch
-                            checked={has}
-                            disabled={!isSuperAdmin || roleMut.isPending}
-                            onCheckedChange={(v) => roleMut.mutate({ user_id: u.id, role, grant: v })}
-                          />
+                          <div className="space-y-1">
+                            <Switch
+                              checked={has}
+                              disabled={!isSuperAdmin || roleMut.isPending}
+                              onCheckedChange={(v) => roleMut.mutate({ user_id: u.id, role, grant: v })}
+                            />
+                            {role === "writer" && has && (
+                              <label className="flex items-center gap-1.5 text-[10px] leading-tight text-muted-foreground">
+                                <Switch
+                                  checked={!!u.writer_can_edit_existing}
+                                  disabled={!isSuperAdmin || writerEditMut.isPending}
+                                  onCheckedChange={(v) => writerEditMut.mutate({ user_id: u.id, grant: v })}
+                                />
+                                Can edit existing content
+                              </label>
+                            )}
+                          </div>
                         </td>
                       );
                     })}

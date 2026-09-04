@@ -21,7 +21,7 @@ import { recalculateInternalLinkCount } from "@/lib/pages-cms/internal-links";
 import { syncRelatedChatRoomsToInternalLinks } from "@/lib/pages-cms/related-chat-rooms-sync";
 import { parseRelatedChatRoomsConfig } from "@/lib/pages-cms/related-chat-rooms-config";
 import { attachImageStatus } from "@/lib/content-image-seo";
-import { assertAdminUser, assertContentEditor } from "@/lib/content-roles.server";
+import { assertAdminUser, assertContentEditor, assertExistingContentEditor } from "@/lib/content-roles.server";
 
 export { slugify } from "@/lib/page-slug";
 export { isPubliclyVisibleStatus };
@@ -43,7 +43,7 @@ export const listPages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => parseListPagesQuery(input))
   .handler(async ({ data, context }) => {
-    await assertContentEditor(context.userId);
+    await assertExistingContentEditor(context.userId);
     const sb = await getSupabaseAdmin();
 
     let countQ = sb.from("custom_pages").select("id", { count: "exact", head: true });
@@ -138,7 +138,7 @@ export const getPage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertContentEditor(context.userId);
+    await assertExistingContentEditor(context.userId);
     const { data: row, error } = await (await getSupabaseAdmin())
       .from("custom_pages")
       .select("*")
@@ -152,7 +152,7 @@ export const getPageSeoSource = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertContentEditor(context.userId);
+    await assertExistingContentEditor(context.userId);
     const sb = await getSupabaseAdmin();
     const { data: page, error } = await sb.from("custom_pages").select(
       "id,slug,meta_title,meta_description,meta_keywords,og_title,og_description,og_image,canonical_url,h1,template_id",
@@ -188,7 +188,8 @@ export const savePage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.write")])
   .inputValidator((input) => pageSaveSchema.parse(input))
   .handler(async ({ data, context }) => {
-    await assertContentEditor(context.userId);
+    if (data.id) await assertExistingContentEditor(context.userId);
+    else await assertContentEditor(context.userId);
     const slug = slugifyPageSlug(data.slug);
     const needsSlug = data.status === "published" || data.status === "scheduled";
     const reservedErr = validatePageSlug(slug, { required: needsSlug });
@@ -296,7 +297,7 @@ export const syncPageInternalLinkCount = createServerFn({ method: "POST" })
     z.object({ pageId: z.string().uuid(), refreshJsonCache: z.boolean().optional() }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertContentEditor(context.userId);
+    await assertExistingContentEditor(context.userId);
     const count = await recalculateInternalLinkCount(await getSupabaseAdmin(), data.pageId, {
       refreshJsonCache: data.refreshJsonCache ?? true,
     });
@@ -307,7 +308,7 @@ export const listPageHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .inputValidator((input) => z.object({ pageId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertContentEditor(context.userId);
+    await assertExistingContentEditor(context.userId);
     const { data: rows, error } = await (await getSupabaseAdmin())
       .from("page_history")
       .select("id,action,snapshot,changed_by,created_at")
@@ -322,7 +323,7 @@ export const listPageInternalLinks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .inputValidator((input) => z.object({ pageId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertContentEditor(context.userId);
+    await assertExistingContentEditor(context.userId);
     const sb = await getSupabaseAdmin();
     const [{ data: outgoing }, { data: incoming }, { data: page }] = await Promise.all([
       sb.from("page_internal_links")

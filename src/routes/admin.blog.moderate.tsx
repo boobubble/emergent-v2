@@ -28,13 +28,14 @@ function ModeratePage() {
 
     const { data: roleData } = await supabase
       .from("user_roles")
-      .select("role")
+      .select("role, can_edit_existing_content")
       .eq("user_id", userData.user.id)
       .in("role", ["admin", "super_admin", "writer"]);
 
     const roles = (roleData ?? []).map((r) => r.role as string);
     const admin = roles.includes("admin") || roles.includes("super_admin");
-    const editor = admin || roles.includes("writer");
+    const writerCanEdit = (roleData ?? []).some((r) => r.role === "writer" && !!r.can_edit_existing_content);
+    const editor = admin || writerCanEdit;
     setIsAdmin(admin);
     setCanManageContent(editor);
     setChecking(false);

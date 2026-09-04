@@ -7529,18 +7529,21 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          can_edit_existing_content: boolean
           created_at: string
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          can_edit_existing_content?: boolean
           created_at?: string
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          can_edit_existing_content?: boolean
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]

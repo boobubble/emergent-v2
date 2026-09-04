@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { withRateLimit } from "@/lib/rate-limit-middleware";
-import { assertAdminUser, assertContentEditor } from "@/lib/content-roles.server";
+import { assertAdminUser, assertExistingContentEditor } from "@/lib/content-roles.server";
 
 async function assertAdmin(userId: string) {
   await assertAdminUser(userId);
@@ -175,7 +175,7 @@ const savedFilterSchema = z.object({
 export const listSavedPageFilters = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth, withRateLimit("admin.read")])
   .handler(async ({ context }) => {
-    await assertContentEditor(context.userId);
+    await assertExistingContentEditor(context.userId);
     const { data, error } = await supabaseAdmin
       .from("page_saved_filters")
       .select("*")
