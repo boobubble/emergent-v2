@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { chatComposerAutoSize } from "@/components/chat/composer-layout";
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 
@@ -309,5 +310,41 @@ describe("picker pointer tap vs scroll", () => {
     handlers.onPointerUp(tapUp);
     expect(taps).toEqual(["pick"]);
     expect(tapPrevented).toBe(true);
+  });
+});
+
+describe("mobile chat composer compact layout", () => {
+  const input = readFileSync(resolve(testDir, "../components/chat/MessageInput.tsx"), "utf8");
+  const css = readFileSync(resolve(testDir, "../components/chat/message-input.css"), "utf8");
+
+  it("loads mobile composer CSS and compact hooks without changing send logic", () => {
+    expect(input).toContain('import "./message-input.css"');
+    expect(input).toContain("chatComposerAutoSize");
+    expect(input).toContain("chat-composer-input");
+    expect(input).toContain("chat-composer-send");
+    expect(input).toContain("placeholder:whitespace-nowrap");
+    expect(input).toContain("async function submitGuestLobby");
+    expect(input).toContain("sendStatus");
+    expect(css).toContain("max-width: 767px");
+    expect(css).toContain("min-height: 56px");
+    expect(css).toContain("height: 48px");
+    expect(css).toContain("white-space: nowrap");
+    expect(css).toContain("text-overflow: ellipsis");
+    expect(css).toContain("field-sizing: fixed");
+    expect(css).toContain("env(safe-area-inset-bottom");
+    expect(css).toMatch(/\.chat-composer-input:placeholder-shown/);
+    expect(css).toContain('data-composer-slot="attach"');
+    expect(css).toContain('data-composer-slot="image"');
+    expect(css).toContain('data-composer-slot="sticker"');
+    expect(input).toContain('data-composer-slot="attach"');
+    expect(input).toContain('data-composer-slot="image"');
+    expect(input).toContain('data-composer-slot="sticker"');
+  });
+
+  it("empty placeholder text does not determine composer height", () => {
+    expect(chatComposerAutoSize("", 220, 375)).toEqual({ heightPx: null, overflowY: "hidden" });
+    expect(chatComposerAutoSize("hi", 40, 375)).toEqual({ heightPx: 40, overflowY: "hidden" });
+    expect(chatComposerAutoSize("a\nb\nc\nd\ne", 180, 375)).toEqual({ heightPx: 96, overflowY: "auto" });
+    expect(chatComposerAutoSize("a\nb\nc\nd\ne", 180, 1024)).toEqual({ heightPx: 140, overflowY: "auto" });
   });
 });

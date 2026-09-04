@@ -1,0 +1,87 @@
+/* Chat composer layout. Mobile-only compact rules; md+ stays with existing Tailwind. */
+
+[data-chat-composer] .chat-composer-input {
+  field-sizing: fixed;
+}
+
+@media (max-width: 767px) {
+  .chat-composer-footer {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  [data-chat-composer].chat-composer-root {
+    overflow-x: hidden;
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+  }
+
+  [data-chat-composer] .chat-composer-bar {
+    align-items: center;
+    min-height: 56px;
+    max-height: none;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    gap: 0.25rem;
+  }
+
+  /* attachment | image | input | mic | emoji | send — sticker stays on md+ */
+  [data-chat-composer] [data-composer-slot="attach"] { order: 1; }
+  [data-chat-composer] [data-composer-slot="image"] { order: 2; }
+  [data-chat-composer] [data-composer-slot="input"] { order: 3; }
+  [data-chat-composer] [data-composer-slot="mic"] { order: 4; }
+  [data-chat-composer] [data-composer-slot="emoji"] { order: 5; }
+  [data-chat-composer] [data-composer-slot="send"] { order: 6; }
+  [data-chat-composer] [data-composer-slot="sticker"],
+  [data-chat-composer] [data-composer-slot="command"],
+  [data-chat-composer] [data-composer-slot="youtube"] {
+    display: none;
+  }
+
+  [data-chat-composer] .chat-composer-btn {
+    display: grid;
+    margin-bottom: 0;
+    height: 40px;
+    width: 40px;
+    min-height: 40px;
+    min-width: 40px;
+    flex-shrink: 0;
+    place-items: center;
+  }
+
+  [data-chat-composer] .chat-composer-send {
+    display: grid;
+    margin-bottom: 0;
+    height: 48px;
+    width: 48px;
+    min-height: 48px;
+    min-width: 48px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    place-items: center;
+  }
+
+  [data-chat-composer] .chat-composer-input {
+    min-height: 40px;
+    max-height: 96px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    line-height: 1.5rem;
+    overflow-x: hidden;
+    overflow-y: hidden;
+  }
+
+  /* Empty composer: clip the placeholder to one line so it cannot set height. */
+  [data-chat-composer] .chat-composer-input:placeholder-shown {
+    height: 40px;
+    min-height: 40px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  [data-chat-composer] .chat-composer-input::placeholder {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
