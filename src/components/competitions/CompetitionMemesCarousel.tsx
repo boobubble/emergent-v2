@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Laugh, MessageCircle, Heart, ArrowRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useCompetitionRealtimeEffect } from "@/lib/competition-realtime";
 import { listCompetitionMemes } from "@/lib/competition-memes";
 import type { FeedPost } from "@/lib/feed-types";
 import { isNavigableSlug } from "@/lib/route-slug";
@@ -32,8 +32,12 @@ export function CompetitionMemesCarousel({
       const data = await listCompetitionMemes({ competitionId, nomineeId, limit });
       if (alive) { setMemes(data); setLoading(false); }
     }
-    load();
-    // Realtime: refresh when a meme is posted / reacted to for this competition.
+    void load();
+    return () => { alive = false; };
+  }, [competitionId, nomineeId, limit]);
+
+  useCompetitionRealtimeEffect(!!competitionId, (supabase) => {
+    const load = () => listCompetitionMemes({ competitionId, nomineeId, limit }).then((data) => setMemes(data));
     const ch = supabase
       .channel(`comp-memes-${competitionId}`)
       .on(
@@ -42,7 +46,7 @@ export function CompetitionMemesCarousel({
         () => load(),
       )
       .subscribe();
-    return () => { alive = false; supabase.removeChannel(ch); };
+    return () => { void supabase.removeChannel(ch); };
   }, [competitionId, nomineeId, limit]);
 
   if (loading && memes.length === 0) return null;

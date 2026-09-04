@@ -1,8 +1,9 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Laugh } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBrowserSupabase } from "@/integrations/supabase/load-browser";
 import { getCompetitionBySlug } from "@/lib/competitions.functions";
+import { getPublishedCompetitionBySlug } from "@/lib/competitions.public";
 import { listCompetitionMemes, listCompetitionNominees, type NomineeLite } from "@/lib/competition-memes";
 import { PostCard } from "@/components/feed/PostCard";
 import type { FeedPost } from "@/lib/feed-types";
@@ -16,7 +17,9 @@ export const Route = createFileRoute("/competitions/$slug/memes")({
   }),
   loader: async ({ params }) => {
     if (!isNavigableSlug(params.slug)) throw notFound();
-    const data = await getCompetitionBySlug({ data: { slug: params.slug } });
+    const data = typeof window === "undefined"
+      ? await getPublishedCompetitionBySlug(params.slug)
+      : await getCompetitionBySlug({ data: { slug: params.slug } });
     if (!data?.competition) throw notFound();
     return data;
   },
@@ -51,6 +54,7 @@ function CompetitionMemesPage() {
   useEffect(() => {
     if (!competition?.id) return;
     let alive = true;
+    let cleanup: (() => void) | undefined;
     async function load() {
       const data = await listCompetitionMemes({
         competitionId: competition.id,
@@ -59,20 +63,26 @@ function CompetitionMemesPage() {
       });
       if (alive) setMemes(data);
     }
-    load();
-    const ch = supabase
-      .channel(`comp-memes-page-${competition.id}`)
-      .on("postgres_changes",
-        { event: "*", schema: "public", table: "posts", filter: `competition_id=eq.${competition.id}` },
-        () => load())
-      .subscribe();
-    return () => { alive = false; supabase.removeChannel(ch); };
+    void (async () => {
+      await load();
+      const supabase = await loadBrowserSupabase();
+      if (!alive) return;
+      const ch = supabase
+        .channel(`comp-memes-page-${competition.id}`)
+        .on("postgres_changes",
+          { event: "*", schema: "public", table: "posts", filter: `competition_id=eq.${competition.id}` },
+          () => load())
+        .subscribe();
+      cleanup = () => { void supabase.removeChannel(ch); };
+    })();
+    return () => { alive = false; cleanup?.(); };
   }, [competition?.id, nominee]);
 
   useEffect(() => {
     const ids = Array.from(new Set(memes.map((p) => p.author_id).filter(Boolean)));
     if (!ids.length) return;
     (async () => {
+      const supabase = await loadBrowserSupabase();
       const { data } = await supabase.from("profiles").select("id,username,display_name,avatar_url,avatar_color").in("id", ids);
       const map: Record<string, User> = {};
       for (const p of data ?? []) {

@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Heart, BadgeCheck } from "lucide-react";
 import { listRecentCompetitionVoters } from "@/lib/competitions.functions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { supabase } from "@/integrations/supabase/client";
+import { useCompetitionRealtimeEffect } from "@/lib/competition-realtime";
 
 export interface RecentVoter {
   voter_id: string;
@@ -44,8 +44,7 @@ export function RecentSupporters({ competitionId }: { competitionId: string }) {
   });
 
   // Live broadcast pings — refetch on any vote broadcast (own or peer relay).
-  useEffect(() => {
-    if (!competitionId) return;
+  useCompetitionRealtimeEffect(!!competitionId, (supabase) => {
     const ch = supabase
       .channel(`comp-broadcast:${competitionId}`, { config: { broadcast: { self: false } } })
       .on("broadcast", { event: "vote" }, () => {
@@ -53,7 +52,7 @@ export function RecentSupporters({ competitionId }: { competitionId: string }) {
       })
       .subscribe();
     return () => {
-      supabase.removeChannel(ch);
+      void supabase.removeChannel(ch);
     };
   }, [competitionId, refetch]);
 

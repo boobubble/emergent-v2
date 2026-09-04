@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { AnimatePresence, motion } from "framer-motion";
 import { Activity, Heart, Crown, Trophy } from "lucide-react";
 import { listRecentCompetitionVoters } from "@/lib/competitions.functions";
-import { supabase } from "@/integrations/supabase/client";
+import { useCompetitionRealtimeEffect } from "@/lib/competition-realtime";
 
 interface FeedItem {
   id: string;
@@ -79,8 +79,7 @@ export function BattleActivityFeed({
   }, [totalVotes]);
 
   // Cross-viewer broadcast — flash a transient feed line the moment someone votes
-  useEffect(() => {
-    if (!competitionId) return;
+  useCompetitionRealtimeEffect(!!competitionId, (supabase) => {
     const ch = supabase
       .channel(`comp-broadcast:${competitionId}`, { config: { broadcast: { self: false } } })
       .on("broadcast", { event: "vote" }, (msg) => {
@@ -97,7 +96,7 @@ export function BattleActivityFeed({
       })
       .subscribe();
     return () => {
-      supabase.removeChannel(ch);
+      void supabase.removeChannel(ch);
     };
   }, [competitionId]);
 

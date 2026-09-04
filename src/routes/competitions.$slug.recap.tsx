@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Crown, Trophy, ArrowLeft, Coins, PartyPopper, Sparkles } from "lucide-react";
 import { getCompetitionBySlug } from "@/lib/competitions.functions";
+import { getPublishedCompetitionBySlug } from "@/lib/competitions.public";
 import { loadFunZoneSummary, FUN_META, type FunCategory, type FunZoneSummaryEntry } from "@/lib/competition-memes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,9 @@ import { isNavigableSlug } from "@/lib/route-slug";
 export const Route = createFileRoute("/competitions/$slug/recap")({
   loader: async ({ params }) => {
     if (!isNavigableSlug(params.slug)) throw notFound();
-    const data = await getCompetitionBySlug({ data: { slug: params.slug } });
+    const data = typeof window === "undefined"
+      ? await getPublishedCompetitionBySlug(params.slug)
+      : await getCompetitionBySlug({ data: { slug: params.slug } });
     if (!data?.competition) throw notFound();
     return data;
   },

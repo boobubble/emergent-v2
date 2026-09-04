@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import { useCompetitionRealtimeEffect } from "@/lib/competition-realtime";
 
 interface Reaction {
   id: string;
@@ -17,14 +17,13 @@ const EMOJIS = ["❤️", "🔥", "👏", "🎉", "⭐", "💜"];
 export function FloatingReactions({ competitionId }: { competitionId: string }) {
   const [reactions, setReactions] = useState<Reaction[]>([]);
 
-  useEffect(() => {
-    if (!competitionId) return;
+  useCompetitionRealtimeEffect(!!competitionId, (supabase) => {
     const ch = supabase
       .channel(`comp-broadcast:${competitionId}`, { config: { broadcast: { self: true } } })
       .on("broadcast", { event: "vote" }, () => {
         const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
         const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
-        const x = 20 + Math.random() * 60; // 20–80% viewport width
+        const x = 20 + Math.random() * 60;
         setReactions((prev) => [...prev.slice(-8), { id, emoji, x }]);
         setTimeout(() => {
           setReactions((prev) => prev.filter((r) => r.id !== id));
@@ -32,7 +31,7 @@ export function FloatingReactions({ competitionId }: { competitionId: string }) 
       })
       .subscribe();
     return () => {
-      supabase.removeChannel(ch);
+      void supabase.removeChannel(ch);
     };
   }, [competitionId]);
 
