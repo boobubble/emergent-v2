@@ -326,19 +326,31 @@ describe("mobile chat composer compact layout", () => {
     expect(input).toContain("async function submitGuestLobby");
     expect(input).toContain("sendStatus");
     expect(css).toContain("max-width: 767px");
-    expect(css).toContain("min-height: 56px");
+    expect(css).toContain("min-height: 68px");
     expect(css).toContain("height: 48px");
     expect(css).toContain("white-space: nowrap");
     expect(css).toContain("text-overflow: ellipsis");
     expect(css).toContain("field-sizing: fixed");
     expect(css).toContain("env(safe-area-inset-bottom");
     expect(css).toMatch(/\.chat-composer-input:placeholder-shown/);
+    expect(css).toContain('data-composer-slot="more"');
     expect(css).toContain('data-composer-slot="attach"');
     expect(css).toContain('data-composer-slot="image"');
     expect(css).toContain('data-composer-slot="sticker"');
+    expect(input).toContain('data-composer-slot="more"');
     expect(input).toContain('data-composer-slot="attach"');
     expect(input).toContain('data-composer-slot="image"');
     expect(input).toContain('data-composer-slot="sticker"');
+    expect(input).toContain('aria-label="More composer actions"');
+    expect(input).toContain("pickFromMore");
+    expect(input).toContain("onAttachFile");
+    expect(input).toContain("onToggleGiphy");
+    expect(input).toContain("onToggleStickers");
+    expect(input).toContain("onInsertCommand");
+    expect(input).toContain("onToggleYoutube");
+    expect(input).toContain("chat-composer-more");
+    expect(input).toMatch(/md:hidden/);
+    expect(css).toMatch(/\[data-chat-composer="room"\] \[data-composer-slot="attach"\]/);
   });
 
   it("empty placeholder text does not determine composer height", () => {
