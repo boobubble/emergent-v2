@@ -333,6 +333,12 @@ describe("mobile chat composer compact layout", () => {
     expect(css).toContain("field-sizing: fixed");
     expect(css).toContain("env(safe-area-inset-bottom");
     expect(css).toMatch(/\.chat-composer-input:placeholder-shown/);
+    expect(css).toContain('data-composer-slot="attach"');
+    expect(css).toContain('data-composer-slot="image"');
+    expect(css).toContain('data-composer-slot="sticker"');
+    expect(input).toContain('data-composer-slot="attach"');
+    expect(input).toContain('data-composer-slot="image"');
+    expect(input).toContain('data-composer-slot="sticker"');
   });
 
   it("empty placeholder text does not determine composer height", () => {

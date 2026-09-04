@@ -602,20 +602,21 @@ export function MessageInput({
       ) : (
       <div className={`chat-composer-glow chat-composer-bar group relative flex min-w-0 items-end gap-0.5 rounded-3xl border border-border bg-card/60 pb-0 pt-2 pr-1 shadow-sm backdrop-blur-md transition-[border-color,box-shadow] ${compact ? "pl-1 sm:gap-0.5 sm:pl-2 sm:pr-1" : "pl-2 sm:gap-1 sm:pl-4 sm:pr-2"}`}>
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
-        <button onClick={() => requireAuth(() => fileRef.current?.click())} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Attach file" aria-label="Attach file">
+        <button data-composer-slot="attach" onClick={() => requireAuth(() => fileRef.current?.click())} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Attach file" aria-label="Attach file">
           <Paperclip className="h-5 w-5" />
         </button>
         {!compact && (
-        <button onClick={() => requireAuth(() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !")))} className="chat-composer-btn mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary sm:grid" title="Command" aria-label="Insert command">
+        <button data-composer-slot="command" onClick={() => requireAuth(() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !")))} className="chat-composer-btn mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary sm:grid" title="Command" aria-label="Insert command">
           <Sparkles className="h-5 w-5" />
         </button>
         )}
-        <textarea ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); onActivity?.(); }} onFocus={() => onActivity?.()} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={composerPlaceholder} className="chat-composer-input max-h-[140px] min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-base leading-6 text-foreground outline-none placeholder:truncate placeholder:whitespace-nowrap placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm" />
-        <button onClick={() => requireAuth(() => { if (pickerToggleIsSuppressed()) return; setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); })} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Animated stickers" aria-label="Animated stickers">
+        <textarea data-composer-slot="input" ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); onActivity?.(); }} onFocus={() => onActivity?.()} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={composerPlaceholder} className="chat-composer-input max-h-[140px] min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-base leading-6 text-foreground outline-none placeholder:truncate placeholder:whitespace-nowrap placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm" />
+        <button data-composer-slot="sticker" onClick={() => requireAuth(() => { if (pickerToggleIsSuppressed()) return; setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); })} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Animated stickers" aria-label="Animated stickers">
           <Sticker className="h-5 w-5" />
         </button>
         {!compact && media.giphy.enabled && (
           <button
+            data-composer-slot="image"
             onClick={() => requireAuth(() => { setShowGiphy(s => !s); setShowEmoji(false); setShowStickers(false); setShowYoutube(false); })}
             className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-fuchsia-400"
             title="Share a GIF"
@@ -626,6 +627,7 @@ export function MessageInput({
         )}
         {!compact && media.youtube.enabled && (
           <button
+            data-composer-slot="youtube"
             onClick={() => requireAuth(() => { setShowYoutube(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); })}
             className="chat-composer-btn mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-red-500 sm:grid"
             title="Share a YouTube video"
@@ -636,6 +638,7 @@ export function MessageInput({
         )}
         {voiceCfg.enabled && (
           <button
+            data-composer-slot="mic"
             onClick={() => requireAuth(() => { setShowVoice(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); })}
             className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-red-400"
             title={`Voice note (max ${voiceMax}s)`}
@@ -644,10 +647,10 @@ export function MessageInput({
             <Mic className="h-5 w-5" />
           </button>
         )}
-        <button onClick={() => { if (pickerToggleIsSuppressed()) return; setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground" title="Emoji" aria-label="Emoji">
+        <button data-composer-slot="emoji" onClick={() => { if (pickerToggleIsSuppressed()) return; setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground" title="Emoji" aria-label="Emoji">
           <Smile className="h-5 w-5" />
         </button>
-        <button onClick={submit} disabled={!text.trim() && !attachment} className="chat-composer-send mb-1 grid h-11 w-11 shrink-0 place-items-center rounded-full text-primary-foreground shadow-lg transition-[transform,opacity] hover:scale-110 active:scale-90 disabled:opacity-40 disabled:hover:scale-100" style={{ background: "var(--gradient-primary)", boxShadow: "0 8px 24px -8px var(--primary-glow)" }} aria-label="Send message">
+        <button data-composer-slot="send" onClick={submit} disabled={!text.trim() && !attachment} className="chat-composer-send mb-1 grid h-11 w-11 shrink-0 place-items-center rounded-full text-primary-foreground shadow-lg transition-[transform,opacity] hover:scale-110 active:scale-90 disabled:opacity-40 disabled:hover:scale-100" style={{ background: "var(--gradient-primary)", boxShadow: "0 8px 24px -8px var(--primary-glow)" }} aria-label="Send message">
           <Send className="h-4 w-4" />
         </button>
       </div>
