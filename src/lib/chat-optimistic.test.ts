@@ -9,6 +9,9 @@ import {
   applyAuthenticatedInsertOutcome,
   applyHydrateSendReconcile,
   collectPendingSendIds,
+  confirmExistingRealtimeRow,
+  confirmMessages,
+  confirmPendingHits,
   persistSendStatus,
   settleAuthenticatedInsert,
   settleAuthenticatedSendPromise,
@@ -184,6 +187,8 @@ describe("ChatProviderInner send pipeline wiring", () => {
   it("settles authenticated INSERT with timeout/catch and does not wait for realtime", () => {
     expect(src).toContain("settleAuthenticatedSendPromise");
     expect(src).toContain("applyHydrateSendReconcile");
+    expect(src).toContain("confirmPendingHits");
+    expect(src).toContain("confirmExistingRealtimeRow");
     expect(src).toContain(".catch((err: unknown)");
     expect(src).toContain('from("messages")');
     const sendAt = src.indexOf("const send = useCallback");
@@ -197,5 +202,174 @@ describe("ChatProviderInner send pipeline wiring", () => {
     expect(retrySettleAt).toBeGreaterThan(retryAt);
     expect(realtimeAt).toBeGreaterThan(-1);
     expect(sendSettleAt).not.toBe(realtimeAt);
+  });
+});
+
+/**
+ * Pre-PR#22 history merge: skip rows whose id is already in state.
+ * That leaves sendStatus:"sending" even after public.messages already has the row.
+ */
+function legacyHistoryMergeById<T extends { id: string }>(existing: T[], fetched: T[]): T[] {
+  const existingIds = new Set(existing.map((m) => m.id));
+  const incoming = fetched.filter((r) => !existingIds.has(r.id));
+  if (!incoming.length) return existing;
+  return [...existing, ...incoming];
+}
+
+describe("stuck Sending: optimistic row is rendered but never confirmed", () => {
+  const clientId = "11111111-1111-4111-8111-111111111111";
+  const createdAt = "2026-09-04T15:00:00.000Z";
+
+  function lobbyWithStuckSend(text = "stuck bubble"): Record<string, Message[]> {
+    const peer = msg("peer-sayena", "lobby", { authorId: "sayena-id", text: "Hiii" });
+    delete peer.sendStatus;
+    const prevMine = msg("prev-me", "lobby", { authorId: "me", text: "hyy welocme" });
+    delete prevMine.sendStatus;
+    return {
+      lobby: [
+        peer,
+        prevMine,
+        msg(clientId, "lobby", { authorId: "me", text, sendStatus: "sending" }),
+      ],
+    };
+  }
+
+  it("send() assigns a client UUID + channelId + sendStatus sending (same id is inserted)", () => {
+    const src = readFileSync(resolve(testDir, "chat-store.tsx"), "utf8");
+    expect(src).toMatch(/const msgId = remote \? newUuid\(\) : uid\(\)/);
+    expect(src).toMatch(/id: msgId, channelId, authorId: "me"/);
+    expect(src).toMatch(/\.\.\.\(remote \? \{ sendStatus: "sending" as const \} : \{\}\)/);
+    expect(src).toMatch(/id: out\.id,\s*\n\s*channel_id: out\.channelId/m);
+  });
+
+  it("optimistic message -> successful INSERT -> still rendered -> sendStatus confirmed", async () => {
+    const before = lobbyWithStuckSend("hello from me");
+    expect(before.lobby[2].sendStatus).toBe("sending");
+    expect(before.lobby[2].id).toBe(clientId);
+
+    const outcome = await settleAuthenticatedSendPromise(
+      Promise.resolve({
+        data: [{ id: clientId, created_at: createdAt }],
+        error: null,
+      }),
+    );
+    const after = applyAuthenticatedInsertOutcome(before, [clientId], outcome);
+
+    expect(after.lobby).toHaveLength(3);
+    expect(after.lobby[0].text).toBe("Hiii");
+    expect(after.lobby[1].text).toBe("hyy welocme");
+    expect(after.lobby[2].id).toBe(clientId);
+    expect(after.lobby[2].text).toBe("hello from me");
+    expect(after.lobby[2].sendStatus).toBeUndefined();
+    expect(after.lobby[2].sendError).toBeUndefined();
+    expect(outcome.action).toBe("confirm");
+  });
+
+  it("confirmMessages patches by optimistic/client id, not a different database id", () => {
+    const before = sending("lobby", clientId);
+    const confirmed = confirmMessages(before, [clientId], { [clientId]: 99 });
+    expect(confirmed.lobby[0].id).toBe(clientId);
+    expect(confirmed.lobby[0].sendStatus).toBeUndefined();
+    expect(confirmed.lobby[0].ts).toBe(99);
+
+    const missed = confirmMessages(before, ["some-other-db-id"], { "some-other-db-id": 99 });
+    expect(missed.lobby[0].sendStatus).toBe("sending");
+  });
+
+  it("INSERT uses the optimistic id; success does not append a second row", async () => {
+    const before = lobbyWithStuckSend();
+    const after = applyAuthenticatedInsertOutcome(
+      before,
+      [clientId],
+      await settleAuthenticatedSendPromise(
+        Promise.resolve({ data: [{ id: clientId, created_at: createdAt }], error: null }),
+      ),
+    );
+    expect(after.lobby.filter((m) => m.id === clientId)).toHaveLength(1);
+    expect(after.lobby).toHaveLength(before.lobby.length);
+  });
+
+  it("legacy history merge of the same UUID leaves sendStatus sending (the stuck-Sending hole)", () => {
+    const before = lobbyWithStuckSend();
+    const fetched = [
+      { id: "peer-sayena", text: "Hiii" },
+      { id: "prev-me", text: "hyy welocme" },
+      { id: clientId, text: "stuck bubble" },
+    ];
+    const merged = legacyHistoryMergeById(before.lobby, fetched);
+    expect(merged).toHaveLength(3);
+    expect(merged[2].id).toBe(clientId);
+    expect(merged[2].sendStatus).toBe("sending");
+  });
+
+  it("DB row arriving through hydrate confirms the existing optimistic row (no second copy)", () => {
+    const before = lobbyWithStuckSend();
+    const after = confirmPendingHits(before, [{ id: clientId, created_at: createdAt }]);
+    expect(after.lobby).toHaveLength(3);
+    expect(after.lobby[2].id).toBe(clientId);
+    expect(after.lobby[2].sendStatus).toBeUndefined();
+    expect(after.lobby.filter((m) => m.text === "stuck bubble")).toHaveLength(1);
+  });
+
+  it("history hydrate of other channels does not fail an in-flight lobby send", () => {
+    const before = lobbyWithStuckSend();
+    const after = confirmPendingHits(before, [{ id: "unrelated-dm-row", created_at: createdAt }]);
+    expect(after.lobby[2].sendStatus).toBe("sending");
+  });
+
+  it("delayed realtime echo of the same client UUID confirms sending", () => {
+    const before = lobbyWithStuckSend();
+    const after = confirmExistingRealtimeRow(before, clientId, Date.parse(createdAt));
+    expect(after.lobby[2].sendStatus).toBeUndefined();
+    expect(after.lobby).toHaveLength(3);
+  });
+
+  it("no realtime event is required after INSERT success", async () => {
+    const before = lobbyWithStuckSend();
+    const after = applyAuthenticatedInsertOutcome(
+      before,
+      [clientId],
+      await settleAuthenticatedSendPromise(
+        Promise.resolve({ data: [{ id: clientId, created_at: createdAt }], error: null }),
+      ),
+    );
+    expect(after.lobby[2].sendStatus).toBeUndefined();
+  });
+
+  it("successful INSERT with empty select body still confirms the optimistic id", async () => {
+    const before = lobbyWithStuckSend();
+    const after = applyAuthenticatedInsertOutcome(
+      before,
+      [clientId],
+      await settleAuthenticatedSendPromise(Promise.resolve({ data: [], error: null })),
+    );
+    expect(after.lobby[2].id).toBe(clientId);
+    expect(after.lobby[2].sendStatus).toBeUndefined();
+  });
+
+  it("duplicate-key retry confirms the already-committed optimistic id", () => {
+    const before = lobbyWithStuckSend();
+    const after = applyAuthenticatedInsertOutcome(
+      before,
+      [clientId],
+      settleAuthenticatedInsert(
+        { message: 'duplicate key value violates unique constraint "messages_pkey"' },
+        null,
+      ),
+    );
+    expect(after.lobby[2].sendStatus).toBeUndefined();
+  });
+
+  it("later history merge after confirm does not restore sendStatus sending", () => {
+    const confirmed = confirmMessages(lobbyWithStuckSend(), [clientId], {
+      [clientId]: Date.parse(createdAt),
+    });
+    expect(confirmed.lobby[2].sendStatus).toBeUndefined();
+    const merged = legacyHistoryMergeById(confirmed.lobby, [
+      { ...confirmed.lobby[2], sendStatus: undefined },
+    ]);
+    expect(merged[2].sendStatus).toBeUndefined();
+    const hits = confirmPendingHits({ lobby: merged }, [{ id: clientId, created_at: createdAt }]);
+    expect(hits.lobby[2].sendStatus).toBeUndefined();
   });
 });

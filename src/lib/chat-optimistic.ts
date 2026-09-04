@@ -219,6 +219,7 @@ export function applyHydrateSendReconcile(
   messages: Record<string, Message[]>,
   pendingIds: string[],
   foundRows: AuthenticatedInsertRow[] | null | undefined,
+  options?: { failMissing?: boolean },
 ): Record<string, Message[]> {
   const found = new Map<string, number>();
   for (const row of foundRows ?? []) {
@@ -237,7 +238,7 @@ export function applyHydrateSendReconcile(
     }
     next = confirmMessages(next, confirmIds, tsById);
   }
-  if (!missingIds.length) return next;
+  if (options?.failMissing === false || !missingIds.length) return next;
   const stillPending = missingIds.filter((id) => {
     for (const msgs of Object.values(next)) {
       const m = msgs.find((row) => row.id === id);
@@ -247,6 +248,34 @@ export function applyHydrateSendReconcile(
   });
   if (!stillPending.length) return next;
   return failMessages(next, stillPending, AUTH_SEND_INTERRUPTED_ERROR);
+}
+
+/**
+ * History/resync: confirm pending rows that already exist in the fetched set.
+ * Do not fail in-flight sends that are simply not in this page of results yet.
+ */
+export function confirmPendingHits(
+  messages: Record<string, Message[]>,
+  foundRows: AuthenticatedInsertRow[] | null | undefined,
+): Record<string, Message[]> {
+  const pending = new Set(collectPendingSendIds(messages));
+  const hits = (foundRows ?? []).filter((row) => row?.id && pending.has(row.id));
+  if (!hits.length) return messages;
+  return applyHydrateSendReconcile(
+    messages,
+    hits.map((row) => row.id),
+    hits,
+    { failMissing: false },
+  );
+}
+
+/** Realtime echo of an id that is already in local state: confirm, never keep "sending". */
+export function confirmExistingRealtimeRow(
+  messages: Record<string, Message[]>,
+  rowId: string,
+  serverTs: number,
+): Record<string, Message[]> {
+  return confirmMessages(messages, [rowId], { [rowId]: serverTs });
 }
 
 export function mergeGuestLobbyRow<T extends GuestLobbyOptimisticRow>(

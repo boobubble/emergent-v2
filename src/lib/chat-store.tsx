@@ -101,7 +101,9 @@ import { markDmConversationRead } from "./dm-read";
 import {
   applyHydrateSendReconcile,
   collectPendingSendIds,
+  confirmExistingRealtimeRow,
   confirmMessages,
+  confirmPendingHits,
   failMessages,
   markMessagesSending,
   persistSendStatus,
@@ -1059,6 +1061,8 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           const existing = s.messages[ch] || [];
           const existingIds = new Set(existing.map(m => m.id));
           let games = s.games;
+          const foundRows = data.map((r) => ({ id: r.id, created_at: r.created_at }));
+          const reconciled = confirmPendingHits(s.messages, foundRows);
           const incoming = data
             .filter(r => !existingIds.has(r.id))
             .map(r => {
@@ -1072,9 +1076,12 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
               }
               return m;
             });
-          if (!incoming.length) return s;
-          const merged = [...existing, ...incoming].sort((a, b) => a.ts - b.ts);
-          return { ...s, games, messages: { ...s.messages, [ch]: merged } };
+          if (!incoming.length) {
+            return reconciled === s.messages ? s : { ...s, messages: reconciled };
+          }
+          const existingAfter = reconciled[ch] || existing;
+          const merged = [...existingAfter, ...incoming].sort((a, b) => a.ts - b.ts);
+          return { ...s, games, messages: { ...reconciled, [ch]: merged } };
         });
       }
     })();
@@ -1115,7 +1122,10 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
 
         setState(s => {
           const existing = s.messages[msg.channelId] || [];
-          if (existing.some(m => m.id === msg.id)) return s;
+          if (existing.some(m => m.id === msg.id)) {
+            const next = confirmExistingRealtimeRow(s.messages, msg.id, msg.ts);
+            return next === s.messages ? s : { ...s, messages: next };
+          }
           let games = s.games;
           if (gs) {
             if (gs.type) games = { ...games, [msg.channelId]: gs };
