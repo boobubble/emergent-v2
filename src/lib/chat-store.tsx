@@ -98,6 +98,7 @@ import {
 import { formatPresenceLineText } from "./presence-ui";
 import { removeCorruptedKey } from "./persisted-state-recovery";
 import { markDmConversationRead } from "./dm-read";
+import { decideMutedSend } from "./chat-mute-send";
 import {
   applyHydrateSendReconcile,
   collectPendingSendIds,
@@ -1365,18 +1366,37 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
       const isSlashMod = /^\/(mute|kick)\b/i.test(trimmed);
       const isCmd = trimmed.startsWith("!") || isSlashMod;
       const cmdInput = isSlashMod ? "!" + trimmed.slice(1) : trimmed;
-      // Enforce mute/kick on the sender for this channel
       const now = Date.now();
-      const selfMod = s.moderation?.[channelId]?.me;
       const room = s.rooms[channelId];
-      if (selfMod?.mutedUntil && selfMod.mutedUntil > now) {
-        const secs = Math.ceil((selfMod.mutedUntil - now) / 1000);
+      const muteDecision = decideMutedSend({
+        channelId,
+        now,
+        moderation: s.moderation,
+        authUserId,
+        friends: s.me.friends,
+        dmPeerId: channelId.startsWith("dm:") ? parseDmChannel(channelId, authUserId).peerId : null,
+      });
+      if (muteDecision.blocked) {
         const sysId = uid();
         return {
           ...s,
-          messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-gamebot", text: `🔇 You are muted for another ${Math.ceil(secs/60)}m ${secs%60}s.`, ts: now, kind: "system" }] },
+          messages: {
+            ...s.messages,
+            [channelId]: [
+              ...(s.messages[channelId] || []),
+              {
+                id: sysId,
+                channelId,
+                authorId: muteDecision.warningAuthorId,
+                text: muteDecision.warning,
+                ts: now,
+                kind: "system",
+              },
+            ],
+          },
         };
       }
+      const selfMod = s.moderation?.[channelId]?.me;
       if (room && selfMod?.kickedUntil && selfMod.kickedUntil > now) {
         const secs = Math.ceil((selfMod.kickedUntil - now) / 1000);
         const sysId = uid();
@@ -1384,28 +1404,6 @@ function ChatProviderInner({ username, authUserId = null, isGuest = false, child
           ...s,
           messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-gamebot", text: `🚪 You were kicked. Re-entry in ${Math.ceil(secs/60)}m ${secs%60}s.`, ts: now, kind: "system" }] },
         };
-      }
-      // If muted in lobby, restrict to DMs with existing friends only
-      const lobbyMod = s.moderation?.["lobby"]?.me;
-      if (lobbyMod?.mutedUntil && lobbyMod.mutedUntil > now && channelId !== "lobby") {
-        const secs = Math.ceil((lobbyMod.mutedUntil - now) / 1000);
-        const friends = s.me.friends ?? [];
-        if (channelId.startsWith("dm:")) {
-          const { peerId: otherId } = parseDmChannel(channelId, authUserId);
-          if (otherId && !friends.includes(otherId)) {
-            const sysId = uid();
-            return {
-              ...s,
-              messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-spam", text: `🔇 You're muted (${Math.ceil(secs/60)}m left). While muted you can only DM users on your friends list.`, ts: now, kind: "system" }] },
-            };
-          }
-        } else {
-          const sysId = uid();
-          return {
-            ...s,
-            messages: { ...s.messages, [channelId]: [...(s.messages[channelId] || []), { id: sysId, channelId, authorId: "bot-spam", text: `🔇 You're muted in the lobby. Public chat is paused — DM a friend instead.`, ts: now, kind: "system" }] },
-          };
-        }
       }
 
       // SpamBot — only in public rooms, skip commands and DMs
