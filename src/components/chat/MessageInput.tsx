@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
-import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker, Youtube, ImagePlay, Mic } from "lucide-react";
+import { Send, Smile, Sparkles, Paperclip, X, Reply, Sticker, Youtube, ImagePlay, Mic, Plus } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -70,6 +70,7 @@ export function MessageInput({
   const [showGiphy, setShowGiphy] = useState(false);
   const [showYoutube, setShowYoutube] = useState(false);
   const [showVoice, setShowVoice] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const { raw: appRaw } = useAppSettings();
   const media = mergeMediaConfig((appRaw as any).media);
   const voiceCfg: VoiceNotesConfig = { ...VOICE_NOTES_DEFAULTS, ...((appRaw as any).voice_notes || {}) };
@@ -96,6 +97,58 @@ export function MessageInput({
     setShowStickers(false);
     setShowGiphy(false);
     setShowYoutube(false);
+  }
+
+  function onAttachFile() {
+    requireAuth(() => fileRef.current?.click());
+  }
+  function onInsertCommand() {
+    requireAuth(() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !")));
+  }
+  function onToggleStickers() {
+    requireAuth(() => {
+      if (pickerToggleIsSuppressed()) return;
+      setShowStickers(s => !s);
+      setShowEmoji(false);
+      setShowGiphy(false);
+      setShowYoutube(false);
+    });
+  }
+  function onToggleGiphy() {
+    requireAuth(() => {
+      setShowGiphy(s => !s);
+      setShowEmoji(false);
+      setShowStickers(false);
+      setShowYoutube(false);
+    });
+  }
+  function onToggleYoutube() {
+    requireAuth(() => {
+      setShowYoutube(s => !s);
+      setShowEmoji(false);
+      setShowStickers(false);
+      setShowGiphy(false);
+    });
+  }
+  function onToggleVoice() {
+    requireAuth(() => {
+      setShowVoice(s => !s);
+      setShowEmoji(false);
+      setShowStickers(false);
+      setShowGiphy(false);
+      setShowYoutube(false);
+    });
+  }
+  function onToggleEmoji() {
+    if (pickerToggleIsSuppressed()) return;
+    setShowEmoji(s => !s);
+    setShowStickers(false);
+    setShowGiphy(false);
+    setShowYoutube(false);
+  }
+  function pickFromMore(action: () => void) {
+    setShowMore(false);
+    action();
   }
 
   const suggestions = text.startsWith("!")
@@ -600,24 +653,70 @@ export function MessageInput({
           </span>
         </div>
       ) : (
+      <>
+      {showMore && !compact && (
+        <div className="chat-composer-more mb-2 overflow-hidden rounded-2xl border border-border bg-card shadow-lg md:hidden">
+          <button type="button" onClick={() => pickFromMore(onAttachFile)} className="flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm text-foreground hover:bg-white/5">
+            <Paperclip className="h-5 w-5 shrink-0 text-muted-foreground" />
+            Attach file
+          </button>
+          {media.giphy.enabled && (
+            <button type="button" onClick={() => pickFromMore(onToggleGiphy)} className="flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm text-foreground hover:bg-white/5">
+              <ImagePlay className="h-5 w-5 shrink-0 text-fuchsia-400" />
+              Image / GIF
+            </button>
+          )}
+          <button type="button" onClick={() => pickFromMore(onToggleStickers)} className="flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm text-foreground hover:bg-white/5">
+            <Sticker className="h-5 w-5 shrink-0 text-muted-foreground" />
+            Stickers
+          </button>
+          <button type="button" onClick={() => pickFromMore(onInsertCommand)} className="flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm text-foreground hover:bg-white/5">
+            <Sparkles className="h-5 w-5 shrink-0 text-muted-foreground" />
+            Command
+          </button>
+          {media.youtube.enabled && (
+            <button type="button" onClick={() => pickFromMore(onToggleYoutube)} className="flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm text-foreground hover:bg-white/5">
+              <Youtube className="h-5 w-5 shrink-0 text-red-500" />
+              YouTube
+            </button>
+          )}
+        </div>
+      )}
       <div className={`chat-composer-glow chat-composer-bar group relative flex min-w-0 items-end gap-0.5 rounded-3xl border border-border bg-card/60 pb-0 pt-2 pr-1 shadow-sm backdrop-blur-md transition-[border-color,box-shadow] ${compact ? "pl-1 sm:gap-0.5 sm:pl-2 sm:pr-1" : "pl-2 sm:gap-1 sm:pl-4 sm:pr-2"}`}>
         <input ref={fileRef} type="file" onChange={onFile} className="hidden" accept="image/*,application/pdf,text/plain,.zip,.doc,.docx" />
-        <button data-composer-slot="attach" onClick={() => requireAuth(() => fileRef.current?.click())} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Attach file" aria-label="Attach file">
+        {!compact && (
+        <button
+          type="button"
+          data-composer-slot="more"
+          onClick={() => {
+            closeComposerPickers();
+            setShowVoice(false);
+            setShowMore(s => !s);
+          }}
+          className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary md:hidden"
+          title="More"
+          aria-label="More composer actions"
+          aria-expanded={showMore}
+        >
+          {showMore ? <X className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+        </button>
+        )}
+        <button data-composer-slot="attach" onClick={onAttachFile} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Attach file" aria-label="Attach file">
           <Paperclip className="h-5 w-5" />
         </button>
         {!compact && (
-        <button data-composer-slot="command" onClick={() => requireAuth(() => setText(t => t + (t.endsWith(" ") || !t ? "!" : " !")))} className="chat-composer-btn mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary sm:grid" title="Command" aria-label="Insert command">
+        <button data-composer-slot="command" onClick={onInsertCommand} className="chat-composer-btn mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary sm:grid" title="Command" aria-label="Insert command">
           <Sparkles className="h-5 w-5" />
         </button>
         )}
         <textarea data-composer-slot="input" ref={inputRef} value={text} onChange={e => { setText(e.target.value); setCaret(e.target.selectionStart ?? e.target.value.length); sendTyping(); onActivity?.(); }} onFocus={() => onActivity?.()} onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)} onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)} onKeyDown={onKey} rows={1} placeholder={composerPlaceholder} className="chat-composer-input max-h-[140px] min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-base leading-6 text-foreground outline-none placeholder:truncate placeholder:whitespace-nowrap placeholder:text-muted-foreground/70 sm:py-1.5 sm:text-sm" />
-        <button data-composer-slot="sticker" onClick={() => requireAuth(() => { if (pickerToggleIsSuppressed()) return; setShowStickers(s => !s); setShowEmoji(false); setShowGiphy(false); setShowYoutube(false); })} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Animated stickers" aria-label="Animated stickers">
+        <button data-composer-slot="sticker" onClick={onToggleStickers} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-primary" title="Animated stickers" aria-label="Animated stickers">
           <Sticker className="h-5 w-5" />
         </button>
         {!compact && media.giphy.enabled && (
           <button
             data-composer-slot="image"
-            onClick={() => requireAuth(() => { setShowGiphy(s => !s); setShowEmoji(false); setShowStickers(false); setShowYoutube(false); })}
+            onClick={onToggleGiphy}
             className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-fuchsia-400"
             title="Share a GIF"
             aria-label="Share a GIF"
@@ -628,7 +727,7 @@ export function MessageInput({
         {!compact && media.youtube.enabled && (
           <button
             data-composer-slot="youtube"
-            onClick={() => requireAuth(() => { setShowYoutube(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); })}
+            onClick={onToggleYoutube}
             className="chat-composer-btn mb-1.5 hidden min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-red-500 sm:grid"
             title="Share a YouTube video"
             aria-label="Share a YouTube video"
@@ -639,7 +738,7 @@ export function MessageInput({
         {voiceCfg.enabled && (
           <button
             data-composer-slot="mic"
-            onClick={() => requireAuth(() => { setShowVoice(s => !s); setShowEmoji(false); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); })}
+            onClick={() => { setShowMore(false); onToggleVoice(); }}
             className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-red-400"
             title={`Voice note (max ${voiceMax}s)`}
             aria-label="Voice note"
@@ -647,13 +746,14 @@ export function MessageInput({
             <Mic className="h-5 w-5" />
           </button>
         )}
-        <button data-composer-slot="emoji" onClick={() => { if (pickerToggleIsSuppressed()) return; setShowEmoji(s => !s); setShowStickers(false); setShowGiphy(false); setShowYoutube(false); }} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground" title="Emoji" aria-label="Emoji">
+        <button data-composer-slot="emoji" onClick={() => { setShowMore(false); onToggleEmoji(); }} className="chat-composer-btn mb-1.5 grid min-h-11 min-w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground" title="Emoji" aria-label="Emoji">
           <Smile className="h-5 w-5" />
         </button>
         <button data-composer-slot="send" onClick={submit} disabled={!text.trim() && !attachment} className="chat-composer-send mb-1 grid h-11 w-11 shrink-0 place-items-center rounded-full text-primary-foreground shadow-lg transition-[transform,opacity] hover:scale-110 active:scale-90 disabled:opacity-40 disabled:hover:scale-100" style={{ background: "var(--gradient-primary)", boxShadow: "0 8px 24px -8px var(--primary-glow)" }} aria-label="Send message">
           <Send className="h-4 w-4" />
         </button>
       </div>
+      </>
       )}
     </div>
   );
