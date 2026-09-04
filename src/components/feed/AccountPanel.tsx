@@ -75,19 +75,10 @@ export function AccountPanel() {
         updateMe({ avatarUrl: url });
         await supabase.from("profiles").update({
           avatar_url: url,
-          avatar_moderation_status: "pending",
-          avatar_moderation_reason: "scanning",
+          avatar_moderation_status: "approved",
+          avatar_moderation_reason: "auto_approved",
+          avatar_moderated_at: new Date().toISOString(),
         } as never).eq("id", auth.id);
-        const { moderateMyAvatar } = await import("@/lib/avatar-moderation.functions");
-        const result = await moderateMyAvatar({ data: { avatarUrl: url } });
-        if (result.status === "rejected" || result.status === "needs_review") {
-          updateMe({ avatarUrl: "" });
-          alert(
-            result.status === "rejected"
-              ? "That profile picture was blocked by safety checks. Please choose another image."
-              : "Your profile picture is under review and is hidden until approved.",
-          );
-        }
       } catch (e) {
         console.error(e);
         alert(e instanceof Error ? e.message : "Could not upload avatar");

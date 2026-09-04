@@ -68,14 +68,24 @@ assert(
   "no consent never uses avatar",
 );
 
-for (const status of ["pending", "needs_review", "rejected", "none"]) {
+for (const status of ["pending", "needs_review", "none", "approved"]) {
   const r = resolveManualShareMedia({
     avatarUrl: USER,
     avatarModerationStatus: status,
     allowSocialFeature: true,
     defaultMediaUrl: DEFAULT,
   });
-  assert(r.mediaSource === "default_image", `unsafe ${status} must use default`);
+  assert(r.mediaSource === "user_avatar", `live ${status} may use avatar`);
 }
+
+assert(
+  resolveManualShareMedia({
+    avatarUrl: USER,
+    avatarModerationStatus: "rejected",
+    allowSocialFeature: true,
+    defaultMediaUrl: DEFAULT,
+  }).mediaSource === "default_image",
+  "rejected must use default",
+);
 
 console.log("social-manual-distribution tests: OK");

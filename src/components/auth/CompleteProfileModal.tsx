@@ -106,19 +106,12 @@ export function CompleteProfileModal() {
       };
       if (avatar_url) {
         update.avatar_url = avatar_url;
-        update.avatar_moderation_status = "pending";
-        update.avatar_moderation_reason = "scanning";
+        update.avatar_moderation_status = "approved";
+        update.avatar_moderation_reason = "auto_approved";
+        update.avatar_moderated_at = new Date().toISOString();
       }
       const { error } = await supabase.from("profiles").update(update as never).eq("id", user.id);
       if (error) throw error;
-      if (avatar_url) {
-        try {
-          const { moderateMyAvatar } = await import("@/lib/avatar-moderation.functions");
-          await moderateMyAvatar({ data: { avatarUrl: avatar_url } });
-        } catch (modErr) {
-          console.error("avatar moderation failed", modErr);
-        }
-      }
       markSkipped(user.id);
       setOpen(false);
     } catch (e) {

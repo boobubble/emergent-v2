@@ -6,7 +6,6 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -14,7 +13,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
-  adminApproveAvatar,
   adminDisableSocialFeaturing,
   adminRejectAvatar,
   adminRemoveProfilePicture,
@@ -25,13 +23,11 @@ export const Route = createFileRoute("/admin/avatar-safety")({
   head: () => ({
     meta: [
       { title: "Avatar Safety — Admin" },
-      { name: "description", content: "Review and moderate user profile pictures before social featuring." },
+      { name: "description", content: "Review and remove user profile pictures when needed." },
     ],
   }),
   component: AvatarSafetyPage,
 });
-
-type StatusFilter = "pending" | "needs_review" | "rejected" | "approved";
 
 const STATUS_BADGE: Record<string, string> = {
   pending: "bg-amber-500/15 text-amber-700 border-amber-500/30",
@@ -43,18 +39,16 @@ const STATUS_BADGE: Record<string, string> = {
 
 function AvatarSafetyPage() {
   const qc = useQueryClient();
-  const [filter, setFilter] = useState<StatusFilter>("pending");
   const [removeTarget, setRemoveTarget] = useState<{ id: string; username: string | null } | null>(null);
 
   const listFn = useServerFn(listAvatarModerationQueue);
-  const approveFn = useServerFn(adminApproveAvatar);
   const rejectFn = useServerFn(adminRejectAvatar);
   const removeFn = useServerFn(adminRemoveProfilePicture);
   const disableSocialFn = useServerFn(adminDisableSocialFeaturing);
 
   const queue = useQuery({
-    queryKey: ["avatar-moderation-queue", filter],
-    queryFn: () => listFn({ data: { status: filter, limit: 50 } }),
+    queryKey: ["avatar-moderation-queue", "all"],
+    queryFn: () => listFn({ data: { status: "all", limit: 50 } }),
   });
 
   const invalidate = () => {
@@ -62,11 +56,6 @@ function AvatarSafetyPage() {
     void qc.invalidateQueries({ queryKey: ["admin-users"] });
   };
 
-  const approveMut = useMutation({
-    mutationFn: (userId: string) => approveFn({ data: { userId } }),
-    onSuccess: () => { toast.success("Avatar approved"); invalidate(); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
-  });
   const rejectMut = useMutation({
     mutationFn: (userId: string) => rejectFn({ data: { userId, reason: "admin_rejected" } }),
     onSuccess: () => { toast.success("Avatar rejected"); invalidate(); },
@@ -89,24 +78,15 @@ function AvatarSafetyPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Avatar Safety"
-        description="Pending and flagged profile pictures. Only approved avatars can be sent to Buffer social channels."
+        description="Profile pictures go live immediately on upload. Use this page to remove inappropriate images or disable social featuring after the fact."
       />
-
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as StatusFilter)}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="pending">Pending Image Review</TabsTrigger>
-          <TabsTrigger value="needs_review">Needs Review</TabsTrigger>
-          <TabsTrigger value="rejected">Rejected</TabsTrigger>
-          <TabsTrigger value="approved">Approved</TabsTrigger>
-        </TabsList>
-      </Tabs>
 
       <div className="grid gap-3">
         {queue.isLoading && (
           <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Loading…</CardContent></Card>
         )}
         {!queue.isLoading && rows.length === 0 && (
-          <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No avatars in this filter.</CardContent></Card>
+          <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No profile pictures found.</CardContent></Card>
         )}
         {rows.map((u) => {
           const preview = u.avatar_url || u.avatar_quarantine_url;
@@ -136,10 +116,6 @@ function AvatarSafetyPage() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="secondary" disabled={approveMut.isPending}
-                    onClick={() => approveMut.mutate(u.id)}>
-                    Approve Image
-                  </Button>
                   <Button size="sm" variant="outline" disabled={rejectMut.isPending}
                     onClick={() => rejectMut.mutate(u.id)}>
                     Reject Image

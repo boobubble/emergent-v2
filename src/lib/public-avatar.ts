@@ -1,8 +1,7 @@
 /**
  * Public homepage/feed avatar selection.
- * Reuses the same gate as social publishing: only an https `profiles.avatar_url`
- * with `avatar_moderation_status === "approved"` may be shown.
- * Never emit data:/blob: URLs, quarantine paths, or unmoderated images.
+ * Shows any https `profiles.avatar_url` unless the avatar was admin-rejected.
+ * Never emit data:/blob: URLs or quarantine paths.
  */
 import type { AvatarModStatus } from "@/lib/avatar-social-media";
 import { resolveAvatarForBuffer } from "@/lib/avatar-social-media";
